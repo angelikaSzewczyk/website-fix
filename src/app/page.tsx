@@ -1,13 +1,15 @@
-const EMAIL = "kontakt@deine-mail.de"; // TODO: ersetzen
+const EMAIL = "hello.websitefix.team@web.de";
 
 export default function Page() {
   const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(
-    "Kostenloser Website-Check"
+    "Website-Check Anfrage"
+  )}&body=${encodeURIComponent(
+    "Website-URL:\nZiel (Anfragen/Termine/Verkauf):\nZielgruppe:\nKurze Beschreibung des Angebots:\n\nDanke!"
   )}`;
 
   return (
     <main>
-            {/* NAVBAR */}
+      {/* NAVBAR */}
       <header className="nav">
         <div className="brand">Website-Anfragen-Fix</div>
 
@@ -24,7 +26,7 @@ export default function Page() {
 
       {/* HERO SECTION */}
       <section className="hero">
-        <p className="badge">7-Tage Sprint · Fixpreis · faceless</p>
+        <p className="badge">7-Tage Sprint · Fixpreis · Klarer Scope</p>
 
         <h1>
           Deine Website sieht gut aus – <br />
@@ -51,10 +53,14 @@ export default function Page() {
           <strong>handlungsorientiert</strong>.
         </p>
 
+        {/* Pricing grid: ONLY the 2 offers */}
         <div className="cards">
+          {/* Angebot 1 */}
           <div className="card">
             <h3>Website-Anfragen-Fix</h3>
-            <p className="cardMeta">7-Tage Sprint · ab 1.200 € Fixpreis</p>
+            <p className="cardMeta">
+              7 Tage · <strong>1.200 € Fixpreis</strong>
+            </p>
 
             <ul className="list">
               <li>Analyse deiner Website (URL + Ziel)</li>
@@ -70,22 +76,50 @@ export default function Page() {
             </a>
           </div>
 
+          {/* Angebot 2 */}
           <div className="card">
-            <h3>Was nicht enthalten ist</h3>
-            <p className="cardMeta">Damit der Sprint schnell & klar bleibt.</p>
+            <h3>Conversion-Landingpage-Sprint</h3>
+            <p className="cardMeta">
+              7 Tage · für EIN Angebot · <strong>1.600 € Fixpreis</strong>
+            </p>
 
             <ul className="list">
-              <li>Kompletter Website-Neubau</li>
-              <li>Unbegrenzte Revisionen</li>
-              <li>Wochenlange Design-Diskussionen</li>
-              <li>SEO-Langzeitprojekt</li>
+              <li>Struktur & Conversion-Logik für EIN Angebot</li>
+              <li>Heldenbereich (Nutzen, Zielgruppe, CTA)</li>
+              <li>klare Nutzerführung (Above-the-Fold)</li>
+              <li>Mobile-Optimierung</li>
+              <li>Technische Umsetzung (eine Seite)</li>
+              <li>Kurze Übergabe: „Was & warum“</li>
             </ul>
 
-            <p className="muted" style={{ marginTop: 12 }}>
-              Klarer Scope = Tempo = Ergebnis.
-            </p>
+            <a className="cta ctaSmall" href={mailto}>
+              Beratung anfragen
+            </a>
           </div>
         </div>
+
+        {/* Note card below the grid (no overlap) */}
+        <div className="card cardNote">
+          <h3>Was nicht enthalten ist</h3>
+          <p className="cardMeta">Damit der Sprint schnell & klar bleibt.</p>
+
+          <ul className="list">
+            <li>Kompletter Website-Neubau</li>
+            <li>Unbegrenzte Revisionen</li>
+            <li>Wochenlange Design-Diskussionen</li>
+            <li>SEO-Langzeitprojekt</li>
+          </ul>
+
+          <p className="muted" style={{ marginTop: 12 }}>
+            Klarer Scope = Tempo = Ergebnis.
+          </p>
+        </div>
+
+        <p className="muted" style={{ marginTop: 16 }}>
+          Nicht sicher, was sinnvoller ist? Ich sage dir im kostenlosen Check
+          ehrlich, ob ein Fix an der bestehenden Seite reicht oder eine
+          fokussierte Landingpage besser passt.
+        </p>
       </section>
 
       {/* ABLAUF */}
@@ -151,7 +185,7 @@ export default function Page() {
           </div>
 
           <div className="contactHint muted">
-            Betreff: „Kostenloser Website-Check“ · Bitte: URL + Ziel + Branche
+            Betreff: „Website-Check Anfrage“ · Bitte: URL + Ziel + Zielgruppe
           </div>
 
           <a className="cta" href={mailto} style={{ marginTop: 16 }}>
@@ -159,9 +193,7 @@ export default function Page() {
           </a>
         </div>
 
-        <footer className="footer muted">
-          © {new Date().getFullYear()} · Website-Anfragen-Fix
-        </footer>
+        <footer className="footer muted">© 2026 · Website-Anfragen-Fix</footer>
       </section>
     </main>
   );

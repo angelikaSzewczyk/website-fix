@@ -4,8 +4,8 @@ html {
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
   background: #0b0c10;
   color: #ffffff;
 }
@@ -15,6 +15,8 @@ main {
   margin: 0 auto;
   padding: 40px 20px;
 }
+
+/* ===== HERO ===== */
 .hero {
   padding: 80px 0 60px;
 }
@@ -38,7 +40,7 @@ main {
   font-size: 18px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 32px;
+  margin: 0 0 32px;
 }
 
 .heroText strong {
@@ -46,19 +48,33 @@ main {
   font-weight: 600;
 }
 
+/* ===== CTA ===== */
 .cta {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 14px 28px;
   border-radius: 10px;
   background: linear-gradient(90deg, #8df3d3, #7aa6ff);
   color: #0b0c10;
-  font-weight: 600;
+  font-weight: 600; /* less aggressive */
   text-decoration: none;
+  border: 0;
+  cursor: pointer;
 }
 
 .cta:hover {
-  opacity: 0.9;
+  opacity: 0.92;
 }
+
+.ctaSmall {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600; /* consistent */
+}
+
+/* ===== SECTION ===== */
 .section {
   padding: 70px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -73,6 +89,7 @@ main {
   color: rgba(255, 255, 255, 0.75);
 }
 
+/* ===== CARDS ===== */
 .cards {
   margin-top: 22px;
   display: grid;
@@ -80,35 +97,62 @@ main {
   gap: 16px;
 }
 
+/* Pricing cards behavior:
+   - consistent spacing
+   - button always at bottom */
 .card {
   padding: 18px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px;
+}
+
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.2;
 }
 
 .cardMeta {
-  margin: 8px 0 14px;
+  margin: 0 0 14px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .list {
   margin: 0;
   padding-left: 18px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .list li {
   margin: 10px 0;
 }
 
-.ctaSmall {
-  margin-top: 16px;
-  padding: 12px 18px;
-  border-radius: 10px;
+/* ensures consistent gap before button */
+.card .list {
+  margin-bottom: 22px;
 }
 
+/* push CTA to bottom of pricing cards */
+.card .cta {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* "Note" card: not a pricing card, no forced min-height */
+.cardNote {
+  margin-top: 56px;
+  min-height: unset;
+}
+
+/* ===== STEPS ===== */
 .steps {
   margin-top: 22px;
   display: grid;
@@ -141,6 +185,7 @@ main {
   margin-bottom: 4px;
 }
 
+/* ===== CONTACT ===== */
 .contactBox {
   margin-top: 18px;
   padding: 18px;
@@ -183,12 +228,7 @@ main {
   font-size: 13px;
 }
 
-/* Mobile */
-@media (max-width: 900px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
-}
+/* ===== NAV ===== */
 .nav {
   position: sticky;
   top: 0;
@@ -199,7 +239,7 @@ main {
   gap: 12px;
   padding: 14px 0;
 
-  background: rgba(11, 12, 16, 0.75);
+  background: rgba(11, 12, 16, 0.78);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -233,13 +273,25 @@ main {
   border: 1px solid rgba(141, 243, 211, 0.35);
   background: rgba(141, 243, 211, 0.12);
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 600; /* less bold */
   text-decoration: none;
   font-size: 14px;
 }
 
 .navCta:hover {
-  opacity: 0.9;
+  opacity: 0.92;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 55px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
 }
 
 @media (max-width: 700px) {
