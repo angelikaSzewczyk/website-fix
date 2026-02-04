@@ -46,6 +46,17 @@ export default function Page() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // Auto-reset success state after 8s (UX)
+  useEffect(() => {
+    if (submitState !== "success") return;
+
+    const t = window.setTimeout(() => {
+      setSubmitState("idle");
+    }, 8000);
+
+    return () => window.clearTimeout(t);
+  }, [submitState]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -94,7 +105,7 @@ export default function Page() {
         </nav>
 
         <a className="navCta" href="#kontakt">
-          Check starten
+          Check anfordern
         </a>
       </header>
 
@@ -265,7 +276,6 @@ export default function Page() {
           <strong>24 Stunden</strong> eine Rückmeldung.
         </p>
 
-        {/* WHAT HAPPENS NEXT */}
         <div className="nextCard">
           <h3>Was passiert nach dem Absenden?</h3>
           <ul className="list">
@@ -281,6 +291,7 @@ export default function Page() {
           <form ref={formRef} onSubmit={handleSubmit} className="form">
             <input type="hidden" name="_subject" value="Website-Check Anfrage" />
 
+            {/* REQUIRED */}
             <label className="field">
               <span className="fieldLabel">Website-URL</span>
               <input
@@ -292,7 +303,7 @@ export default function Page() {
               />
             </label>
 
-            {/* Custom Select: Ziel (required via button disabled + hint) */}
+            {/* REQUIRED (via state + disabled submit) */}
             <label className="field">
               <span className="fieldLabel">Ziel</span>
 
@@ -343,7 +354,7 @@ export default function Page() {
               </div>
             </label>
 
-            {/* OPTIONAL now */}
+            {/* OPTIONAL */}
             <label className="field">
               <span className="fieldLabel">Zielgruppe (optional)</span>
               <input

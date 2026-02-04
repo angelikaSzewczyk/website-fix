@@ -554,3 +554,63 @@ a {
   outline: 2px solid rgba(141, 243, 211, 0.35);
   outline-offset: 2px;
 }
+/* =========================
+   MINI-UPDATE: TRUST + NEXT CARD + DIVIDER
+   (einfach unten anhängen)
+   ========================= */
+
+/* Hero Trust Pills */
+.heroTrust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+
+  font-size: 13px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* „Was passiert danach?“ Card (wie eine Card, aber ohne Pricing-MinHeight) */
+.nextCard {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nextCard h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+/* Divider über dem Formular */
+.formDivider {
+  margin: 18px 0 0;
+  height: 1px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* Mobile: Pills schön untereinander, ohne "quetschen" */
+@media (max-width: 600px) {
+  .heroPill {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
