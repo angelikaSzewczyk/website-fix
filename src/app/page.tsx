@@ -1,11 +1,12 @@
+// app/page.tsx (oder die Page-Datei, die du nutzt)
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 const EMAIL = "hello.websitefix.team@web.de";
 const FORMSPREE_ACTION = "https://formspree.io/f/xgoznqno";
 
-const ZIEL_OPTIONS = ["Mehr Anfragen", "Termine", "Verkauf"] as const;
+const ZIEL_OPTIONS = ["Mehr Anfragen", "Mehr Termine", "Mehr Verkäufe"] as const;
 
 type SubmitState = "idle" | "sending" | "success" | "error";
 
@@ -17,13 +18,16 @@ export default function Page() {
   const selectRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
+  const zielBtnId = useId();
+  const zielListId = useId();
+
   const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(
     "Website-Check Anfrage"
   )}&body=${encodeURIComponent(
-    "Website-URL:\nZiel (Anfragen/Termine/Verkauf):\n\nDanke!"
+    "Website-URL:\nZiel (Mehr Anfragen/Termine/Verkäufe):\nZielgruppe:\nKurzbeschreibung:\nE-Mail:\n\nDanke!"
   )}`;
 
-  // Close dropdown on outside click
+  // Dropdown schließen: Outside click
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
       if (!openZiel) return;
@@ -36,7 +40,7 @@ export default function Page() {
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, [openZiel]);
 
-  // Close dropdown on ESC
+  // Dropdown schließen: ESC
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpenZiel(false);
@@ -45,11 +49,12 @@ export default function Page() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Auto-reset success state after 8s
+  // UX: Wenn Erfolg/Fehler, nach einiger Zeit zurück auf idle (optional, aber angenehm)
   useEffect(() => {
-    if (submitState !== "success") return;
-    const t = window.setTimeout(() => setSubmitState("idle"), 8000);
-    return () => window.clearTimeout(t);
+    if (submitState === "success" || submitState === "error") {
+      const t = window.setTimeout(() => setSubmitState("idle"), 8000);
+      return () => window.clearTimeout(t);
+    }
   }, [submitState]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -57,6 +62,9 @@ export default function Page() {
 
     if (!ziel) {
       setOpenZiel(true);
+      // optional: Fokus auf den "Select"
+      const btn = document.getElementById(zielBtnId) as HTMLButtonElement | null;
+      btn?.focus();
       return;
     }
 
@@ -65,6 +73,9 @@ export default function Page() {
     try {
       const form = e.currentTarget;
       const formData = new FormData(form);
+
+      // Safety: falls hidden input nicht gesetzt wäre
+      formData.set("ziel", ziel);
 
       const res = await fetch(FORMSPREE_ACTION, {
         method: "POST",
@@ -92,19 +103,19 @@ export default function Page() {
       <header className="nav">
         <div className="brand">Website-Anfragen-Fix</div>
 
-        <nav className="navLinks">
+        <nav className="navLinks" aria-label="Hauptnavigation">
           <a href="#angebot">Angebot</a>
           <a href="#ablauf">Ablauf</a>
           <a href="#kontakt">Kontakt</a>
         </nav>
 
         <a className="navCta" href="#kontakt">
-          Check anfordern
+          Check starten
         </a>
       </header>
 
       {/* HERO */}
-      <section className="hero">
+      <section className="hero" id="top">
         <p className="badge">7 Tage · Fixpreis · kein Relaunch</p>
 
         <h1>
@@ -113,22 +124,24 @@ export default function Page() {
         </h1>
 
         <p className="heroText">
-          Für <strong>Dienstleister & Selbstständige</strong> mit bestehender
-          Website: Ich schärfe <strong>Message, Struktur und CTA</strong>, damit
-          Besucher in Sekunden verstehen,
+          Für <strong>Dienstleister & Selbstständige</strong> mit bestehender Website:
+          Ich schärfe <strong>Message, Struktur und CTA</strong>, damit Besucher in Sekunden verstehen,
           <strong> was du anbietest</strong> – und <strong>kontaktieren</strong>.
         </p>
 
-        <a className="cta" href="#kontakt">
-          Check anfordern
-        </a>
+        <div className="heroActions">
+          <a className="cta" href="#kontakt">
+            Kostenlosen Website-Check anfordern
+          </a>
 
-        {/* TRUST STRIP */}
-        <div className="heroTrust" aria-label="Vertrauenshinweise">
-          <span className="heroPill">⏱ Rückmeldung in 24h</span>
-          <span className="heroPill">✅ Fixpreis & klarer Scope</span>
-          <span className="heroPill">🧠 Kein Verkaufsgespräch</span>
+          <a className="ghost" href={mailto}>
+            Lieber per E-Mail
+          </a>
         </div>
+
+        <p className="trustStrip">
+          Rückmeldung in <strong>24h</strong> · Kein Verkaufsgespräch · Klarer Scope · Fixpreis
+        </p>
       </section>
 
       {/* ANGEBOT */}
@@ -140,83 +153,60 @@ export default function Page() {
           <strong>anfragefähig</strong>.
         </p>
 
-        {/* Für wen / Nicht für wen */}
-        <div className="fitGrid">
-          <div className="fitCard">
-            <div className="fitTitle">✅ Passt, wenn du…</div>
-            <ul className="list">
-              <li>bereits eine Website hast, aber zu wenig Anfragen bekommst</li>
-              <li>ein konkretes Angebot verkaufst (Dienstleistung / Beratung)</li>
-              <li>klaren Scope & schnelle Umsetzung willst (7 Tage)</li>
-              <li>keinen kompletten Relaunch brauchst</li>
-            </ul>
-          </div>
-
-          <div className="fitCard">
-            <div className="fitTitle">❌ Nicht ideal, wenn…</div>
-            <ul className="list">
-              <li>du „alles neu“ willst (Branding, Designsystem, 20 Seiten)</li>
-              <li>du ein SEO-Langzeitprojekt suchst</li>
-              <li>du keine Entscheidung treffen willst (endlose Revisionen)</li>
-              <li>du noch gar kein klares Angebot hast</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
         <div className="cards">
-          <div className="card">
-            <h3>Website-Anfragen-Fix</h3>
-            <p className="cardMeta">
-              7 Tage · <strong>1.200 € Fixpreis</strong>
-            </p>
+          <div className="card cardPricing">
+            <div>
+              <h3>Website-Anfragen-Fix</h3>
+              <p className="cardMeta">
+                7 Tage · <strong>1.200 € Fixpreis</strong>
+              </p>
 
-            <p className="muted" style={{ marginTop: 6 }}>
-              Ergebnis: Besucher verstehen dein Angebot sofort – und klicken den
-              nächsten Schritt.
-            </p>
+              <p className="cardSub">
+                Ergebnis: Besucher verstehen dein Angebot sofort – und klicken den nächsten Schritt.
+              </p>
 
-            <ul className="list">
-              <li>Analyse deiner Website (URL + Ziel)</li>
-              <li>Hero-Optimierung (Value Proposition + CTA)</li>
-              <li>Struktur & Nutzerführung (Above-the-Fold + 1–2 Sektionen)</li>
-              <li>Mobile-Optimierung (Typo, Abstände, Klickpfade)</li>
-              <li>Quick Wins für Speed & Vertrauen</li>
-              <li>Kurze Übergabe: „Was geändert wurde & warum“</li>
-            </ul>
+              <ul className="list">
+                <li>Analyse deiner Website (URL + Ziel)</li>
+                <li>Hero-Optimierung (Value Proposition + CTA)</li>
+                <li>Struktur & Nutzerführung (Above-the-Fold + 1–2 Sektionen)</li>
+                <li>Mobile-Optimierung (Typo, Abstände, Klickpfade)</li>
+                <li>Quick Wins für Speed & Vertrauen</li>
+                <li>Kurze Übergabe: „Was geändert wurde & warum“</li>
+              </ul>
+            </div>
 
             <a className="cta ctaSmall" href="#kontakt">
-              Check anfordern
+              Check starten
             </a>
           </div>
 
-          <div className="card">
-            <h3>Conversion-Landingpage-Sprint</h3>
-            <p className="cardMeta">
-              7 Tage · für EIN Angebot · <strong>1.600 € Fixpreis</strong>
-            </p>
+          <div className="card cardPricing">
+            <div>
+              <h3>Conversion-Landingpage-Sprint</h3>
+              <p className="cardMeta">
+                7 Tage · für EIN Angebot · <strong>1.600 € Fixpreis</strong>
+              </p>
 
-            <p className="muted" style={{ marginTop: 6 }}>
-              Ergebnis: eine fokussierte Seite, die exakt auf EIN Angebot und EIN
-              Ziel optimiert ist.
-            </p>
+              <p className="cardSub">
+                Ergebnis: eine fokussierte Seite, die exakt auf EIN Angebot und EIN Ziel optimiert ist.
+              </p>
 
-            <ul className="list">
-              <li>Struktur & Conversion-Logik für EIN Angebot</li>
-              <li>Heldenbereich (Nutzen, Zielgruppe, CTA)</li>
-              <li>klare Nutzerführung (Above-the-Fold)</li>
-              <li>Mobile-Optimierung</li>
-              <li>Technische Umsetzung (eine Seite)</li>
-              <li>Kurze Übergabe: „Was & warum“</li>
-            </ul>
+              <ul className="list">
+                <li>Struktur & Conversion-Logik für EIN Angebot</li>
+                <li>Heldenbereich (Nutzen, Zielgruppe, CTA)</li>
+                <li>klare Nutzerführung (Above-the-Fold)</li>
+                <li>Mobile-Optimierung</li>
+                <li>Technische Umsetzung (eine Seite)</li>
+                <li>Kurze Übergabe: „Was & warum“</li>
+              </ul>
+            </div>
 
             <a className="cta ctaSmall" href="#kontakt">
-              Check anfordern
+              Beratung starten
             </a>
           </div>
         </div>
 
-        {/* Note Card */}
         <div className="card cardNote">
           <h3>Was nicht enthalten ist</h3>
           <p className="cardMeta">Damit der Sprint schnell & klar bleibt.</p>
@@ -234,9 +224,8 @@ export default function Page() {
         </div>
 
         <p className="muted" style={{ marginTop: 16 }}>
-          Nicht sicher, was sinnvoller ist? Im kostenlosen Check sage ich dir
-          ehrlich, ob ein Fix an der bestehenden Seite reicht oder eine
-          fokussierte Landingpage besser passt.
+          Nicht sicher, was sinnvoller ist? Im kostenlosen Check sage ich dir ehrlich,
+          ob ein Fix an der bestehenden Seite reicht oder eine fokussierte Landingpage besser passt.
         </p>
       </section>
 
@@ -248,9 +237,7 @@ export default function Page() {
             <div className="stepNum">1</div>
             <div>
               <div className="stepTitle">Kurz-Check</div>
-              <div className="muted">
-                Du schickst URL + Ziel + 2–3 Sätze Kontext.
-              </div>
+              <div className="muted">Du schickst URL + Ziel + 2–3 Sätze Kontext.</div>
             </div>
           </div>
 
@@ -259,8 +246,7 @@ export default function Page() {
             <div>
               <div className="stepTitle">Ehrliche Empfehlung</div>
               <div className="muted">
-                Du bekommst eine Mini-Analyse + Vorschlag, welches Paket sinnvoll
-                ist.
+                Du bekommst eine Mini-Analyse + den nächsten sinnvollen Schritt.
               </div>
             </div>
           </div>
@@ -269,9 +255,7 @@ export default function Page() {
             <div className="stepNum">3</div>
             <div>
               <div className="stepTitle">Umsetzung</div>
-              <div className="muted">
-                Hero, CTA, Struktur, Mobile – fokussiert in 7 Tagen.
-              </div>
+              <div className="muted">Hero, CTA, Struktur, Mobile – fokussiert in 7 Tagen.</div>
             </div>
           </div>
 
@@ -279,9 +263,7 @@ export default function Page() {
             <div className="stepNum">4</div>
             <div>
               <div className="stepTitle">Live + Übergabe</div>
-              <div className="muted">
-                Kurze Doku, damit du es verstehst & halten kannst.
-              </div>
+              <div className="muted">Kurze Doku, damit du es verstehst & halten kannst.</div>
             </div>
           </div>
         </div>
@@ -291,66 +273,69 @@ export default function Page() {
       <section className="section" id="kontakt">
         <h2>Kostenloser Website-Check</h2>
         <p className="muted">
-          Fülle kurz das Formular aus – du erhältst innerhalb von{" "}
-          <strong>24 Stunden</strong> eine Rückmeldung.
+          Beantworte kurz <strong>4 Fragen</strong> – ich melde mich innerhalb von{" "}
+          <strong>24 Stunden</strong> mit einer ehrlichen Einschätzung.
         </p>
 
-        <div className="nextCard">
+        <div className="card cardInfo" style={{ marginTop: 16 }}>
           <h3>Was passiert nach dem Absenden?</h3>
           <ul className="list">
-            <li>Ich prüfe deine Website (Klarheit, CTA, Mobile, Vertrauen).</li>
-            <li>Du bekommst eine kurze Einschätzung + den nächsten Schritt.</li>
-            <li>Wenn es passt: Sprint-Scope + Fixpreis + Startdatum.</li>
+            <li>Ich prüfe deine Website auf Klarheit, CTA, Mobile & Vertrauen.</li>
+            <li>Du erhältst eine kurze Einschätzung + den nächsten sinnvollen Schritt.</li>
+            <li>Wenn es passt: klarer Sprint-Scope, Fixpreis & mögliches Startdatum.</li>
           </ul>
         </div>
 
-        <div className="formDivider" />
-
-        <div className="contactBox">
-          <form ref={formRef} onSubmit={handleSubmit} className="form">
+        <div className="contactBox" style={{ marginTop: 16 }}>
+          <form ref={formRef} onSubmit={handleSubmit} className="form" noValidate>
+            {/* Betreff in Formspree */}
             <input type="hidden" name="_subject" value="Website-Check Anfrage" />
+            {/* Anti-Spam Honeypot (Formspree): Feld MUSS leer bleiben */}
+            <input type="text" name="_gotcha" className="hp" tabIndex={-1} autoComplete="off" />
 
-            {/* REQUIRED */}
             <label className="field">
               <span className="fieldLabel">Website-URL</span>
               <input
                 name="website"
                 type="url"
-                placeholder="https://..."
+                placeholder="z. B. https://deine-website.de"
                 required
                 className="input"
+                autoComplete="url"
               />
             </label>
 
-            {/* REQUIRED (via state + disabled submit) */}
+            {/* Custom Select */}
             <label className="field">
-              <span className="fieldLabel">Ziel</span>
+              <span className="fieldLabel">Was soll deine Website aktuell erreichen?</span>
 
               <div className="cSelect" ref={selectRef}>
                 <input type="hidden" name="ziel" value={ziel} />
 
                 <button
+                  id={zielBtnId}
                   type="button"
                   className="cSelectBtn"
                   aria-haspopup="listbox"
                   aria-expanded={openZiel}
+                  aria-controls={zielListId}
                   onClick={() => setOpenZiel((v) => !v)}
                 >
                   <span className={ziel ? "" : "cSelectPlaceholder"}>
                     {ziel || "Bitte wählen…"}
                   </span>
-                  <span className="cSelectChevron">▾</span>
+                  <span className="cSelectChevron" aria-hidden="true">
+                    ▾
+                  </span>
                 </button>
 
                 {openZiel && (
-                  <div className="cSelectMenu" role="listbox">
+                  <div id={zielListId} className="cSelectMenu" role="listbox">
                     {ZIEL_OPTIONS.map((opt) => (
                       <button
                         key={opt}
                         type="button"
-                        className={`cSelectOption ${
-                          ziel === opt ? "isActive" : ""
-                        }`}
+                        className={`cSelectOption ${ziel === opt ? "isActive" : ""}`}
                         role="option"
                         aria-selected={ziel === opt}
                         onMouseDown={(e) => {
@@ -365,45 +350,40 @@ export default function Page() {
                   </div>
                 )}
 
-                {!ziel && (
-                  <span className="fieldHint muted">
-                    Bitte wähle ein Ziel aus.
-                  </span>
-                )}
+                {!ziel && <span className="fieldHint muted">Bitte wähle das wichtigste Ziel aus.</span>}
               </div>
             </label>
 
-            {/* OPTIONAL */}
             <label className="field">
               <span className="fieldLabel">Zielgruppe (optional)</span>
               <input
                 name="zielgruppe"
                 type="text"
-                placeholder="z. B. Selbstständige im DACH-Raum…"
+                placeholder="z. B. Selbstständige, Coaches, lokale Dienstleister …"
                 className="input"
+                autoComplete="off"
               />
             </label>
 
-            {/* OPTIONAL */}
             <label className="field">
               <span className="fieldLabel">Kurzbeschreibung (optional)</span>
               <textarea
                 name="beschreibung"
                 rows={4}
-                placeholder="Worum geht’s, was bietest du an?"
+                placeholder="Worum geht es bei deinem Angebot? 1–2 Sätze reichen völlig."
                 className="input"
               />
             </label>
 
-            {/* REQUIRED */}
             <label className="field">
-              <span className="fieldLabel">Deine E-Mail (für Rückmeldung)</span>
+              <span className="fieldLabel">Deine E-Mail (für meine Rückmeldung)</span>
               <input
                 name="email"
                 type="email"
                 placeholder="name@firma.de"
                 required
                 className="input"
+                autoComplete="email"
               />
             </label>
 
@@ -414,20 +394,26 @@ export default function Page() {
               aria-disabled={!ziel || submitState === "sending"}
               title={!ziel ? "Bitte Ziel auswählen" : undefined}
             >
-              {submitState === "sending" ? "Wird gesendet…" : "Check anfordern"}
+              {submitState === "sending" ? "Wird gesendet…" : "Kostenlosen Website-Check anfordern"}
             </button>
+
+            {/* Feedback */}
+            <div className="srOnly" aria-live="polite">
+              {submitState === "sending" && "Senden läuft."}
+              {submitState === "success" && "Erfolg."}
+              {submitState === "error" && "Fehler."}
+            </div>
 
             {submitState === "success" && (
               <div className="formMsg formMsgSuccess">
-                ✅ Danke! Deine Anfrage ist raus. Ich melde mich innerhalb von
-                24h zurück.
+                ✅ Danke! Deine Anfrage ist eingegangen. Ich melde mich innerhalb von 24 Stunden mit einer kurzen
+                Einschätzung bei dir.
               </div>
             )}
 
             {submitState === "error" && (
               <div className="formMsg formMsgError">
-                ❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder
-                schreib an{" "}
+                ❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder schreib an{" "}
                 <a className="contactLink" href={mailto}>
                   {EMAIL}
                 </a>
@@ -435,13 +421,16 @@ export default function Page() {
               </div>
             )}
 
-            <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
-              Mit dem Absenden stimmst du der Verarbeitung deiner Daten zur
-              Bearbeitung deiner Anfrage zu.
+            <p className="microNote">
+              Kein Newsletter · Kein Spam · Kein Verkaufsgespräch
+            </p>
+
+            <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+              Deine Daten nutze ich ausschließlich zur Bearbeitung deiner Anfrage.
             </p>
 
             <p className="muted" style={{ marginTop: 10 }}>
-              Lieber per E-Mail?{" "}
+              Lieber direkt per E-Mail?{" "}
               <a className="contactLink" href={mailto}>
                 {EMAIL}
               </a>
@@ -449,16 +438,7 @@ export default function Page() {
           </form>
         </div>
 
-        <footer className="footer muted">
-          © {new Date().getFullYear()} · Website-Anfragen-Fix ·{" "}
-          <a className="footerLink" href="/impressum">
-            Impressum
-          </a>{" "}
-          ·{" "}
-          <a className="footerLink" href="/datenschutz">
-            Datenschutz
-          </a>
-        </footer>
+        <footer className="footer muted">© 2026 · Website-Anfragen-Fix</footer>
       </section>
     </main>
   );

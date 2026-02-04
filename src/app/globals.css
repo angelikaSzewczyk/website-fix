@@ -1,3 +1,5 @@
+/* styles.css / globals.css (einfach ersetzen/übernehmen) */
+
 /* makes width:100% include padding + border (prevents overflow/overlap) */
 *,
 *::before,
@@ -7,6 +9,11 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Sticky-nav offset: wenn du zu #kontakt springst, sitzt es nicht unter der Nav */
+section[id] {
+  scroll-margin-top: 86px;
 }
 
 body {
@@ -47,12 +54,41 @@ main {
   font-size: 18px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 32px;
+  margin: 0 0 22px;
 }
 
 .heroText strong {
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 650;
+}
+
+.heroActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.trustStrip {
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Secondary action */
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ===== CTA ===== */
@@ -61,14 +97,13 @@ main {
   align-items: center;
   justify-content: center;
   padding: 14px 28px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: linear-gradient(90deg, #8df3d3, #7aa6ff);
   color: #0b0c10;
-  font-weight: 600;
+  font-weight: 650;
   text-decoration: none;
   border: 0;
   cursor: pointer;
-  white-space: nowrap;
 }
 
 .cta:hover {
@@ -77,9 +112,16 @@ main {
 
 .ctaSmall {
   padding: 12px 18px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 650;
+}
+
+/* Disabled CTA */
+.cta[disabled],
+.cta[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== SECTION ===== */
@@ -105,17 +147,25 @@ main {
   gap: 16px;
 }
 
-/* Pricing cards behavior */
+/* Card base */
 .card {
   padding: 18px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
 
+/* Pricing cards = equal height + CTA bottom */
+.cardPricing {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 320px;
+  gap: 14px;
+  min-height: 340px;
+}
+
+.cardPricing .cta {
+  margin-top: auto;
+  align-self: flex-start;
 }
 
 .card h3 {
@@ -125,10 +175,17 @@ main {
 }
 
 .cardMeta {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.cardSub {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .list {
@@ -141,21 +198,14 @@ main {
   margin: 10px 0;
 }
 
-/* ensures consistent gap before button */
-.card .list {
-  margin-bottom: 22px;
-}
-
-/* push CTA to bottom of pricing cards */
-.card .cta {
-  margin-top: auto;
-  align-self: flex-start;
-}
-
-/* "Note" card: not a pricing card, no forced min-height */
+/* Note card */
 .cardNote {
   margin-top: 56px;
-  min-height: unset;
+}
+
+/* Info card in Kontakt */
+.cardInfo {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ===== STEPS ===== */
@@ -169,7 +219,7 @@ main {
   display: flex;
   gap: 12px;
   padding: 16px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -181,13 +231,13 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 750;
   background: rgba(141, 243, 211, 0.18);
   border: 1px solid rgba(141, 243, 211, 0.35);
 }
 
 .stepTitle {
-  font-weight: 700;
+  font-weight: 750;
   margin-bottom: 4px;
 }
 
@@ -195,39 +245,34 @@ main {
 .contactBox {
   margin-top: 18px;
   padding: 18px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
+  overflow: hidden; /* verhindert "komische Balken" durch Overflows */
 }
 
-.contactRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-}
-
-.contactLabel {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.75);
+/* Wichtig: falls irgendwo ein <hr> drin ist, killt das den Balken */
+hr {
+  display: none;
 }
 
 .contactLink {
   color: #ffffff;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .contactLink:hover {
   text-decoration: underline;
 }
 
-.contactHint {
-  margin-top: 10px;
+.microNote {
+  margin-top: 12px;
   font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
+/* ===== FOOTER ===== */
 .footer {
   margin-top: 28px;
   padding-top: 18px;
@@ -252,7 +297,7 @@ main {
 }
 
 .brand {
-  font-weight: 700;
+  font-weight: 750;
   letter-spacing: 0.2px;
 }
 
@@ -280,7 +325,7 @@ main {
   border: 1px solid rgba(141, 243, 211, 0.35);
   background: rgba(141, 243, 211, 0.12);
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 650;
   text-decoration: none;
   font-size: 14px;
 }
@@ -293,20 +338,11 @@ main {
 @media (max-width: 900px) {
   .cards {
     grid-template-columns: 1fr;
-    gap: 55px;
+    gap: 16px;
   }
 
   .hero h1 {
     font-size: 36px;
-  }
-
-  .cta {
-    white-space: normal;
-    text-align: center;
-  }
-
-  .card {
-    min-height: unset;
   }
 }
 
@@ -336,7 +372,7 @@ main {
 .input {
   width: 100%;
   padding: 12px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
@@ -348,8 +384,8 @@ main {
 }
 
 .input:focus {
-  border-color: rgba(141, 243, 211, 0.45);
   background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(141, 243, 211, 0.45);
   outline: none;
 }
 
@@ -362,26 +398,14 @@ textarea.input {
   width: 100%;
 }
 
-/* ===== SELECT / OPTION FIX ===== */
-select.input {
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
-  appearance: none;
-}
-
-select.input:focus {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(141, 243, 211, 0.45);
-}
-
-select.input option {
-  background-color: #0b0c10;
-  color: #ffffff;
-}
-
-select.input option[value=""] {
-  color: rgba(255, 255, 255, 0.5);
+/* Honeypot hidden */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ===== Custom Select ===== */
@@ -397,7 +421,7 @@ select.input option[value=""] {
   gap: 10px;
 
   padding: 12px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
@@ -426,7 +450,7 @@ select.input option[value=""] {
   top: calc(100% + 8px);
   z-index: 100;
 
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0b0c10;
   overflow: hidden;
@@ -462,17 +486,11 @@ select.input option[value=""] {
   opacity: 0.85;
 }
 
-/* Submit disabled state */
-.cta[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Form messages */
+/* ===== Form messages ===== */
 .formMsg {
   margin-top: 12px;
   padding: 12px 12px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
   font-size: 14px;
@@ -489,168 +507,15 @@ select.input option[value=""] {
   background: rgba(255, 120, 120, 0.10);
 }
 
-/* =========================
-   FINAL POLISH
-   ========================= */
-
-/* Links generell (außer Buttons) */
-a {
-  color: inherit;
-}
-
-/* Trust Strip unter dem Hero-CTA */
-.heroTrust {
-  margin-top: 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.heroPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-/* “Was passiert danach?” Card */
-.nextCard {
-  margin-top: 16px;
-  padding: 18px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.nextCard h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  line-height: 1.2;
-}
-
-/* Diese Liste soll nicht die Card-CTA nach unten drücken */
-.nextCard .list {
-  margin-bottom: 0;
-}
-
-/* Divider zwischen Next-Card & Formular */
-.formDivider {
-  margin: 14px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Fokus-States */
-.cSelectBtn:focus-visible,
-.cSelectOption:focus-visible,
-.cta:focus-visible,
-.navCta:focus-visible {
-  outline: 2px solid rgba(141, 243, 211, 0.35);
-  outline-offset: 2px;
-}
-/* =========================
-   MINI-UPDATE: TRUST + NEXT CARD + DIVIDER
-   (einfach unten anhängen)
-   ========================= */
-
-/* Hero Trust Pills */
-.heroTrust {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.heroPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 8px 12px;
-  border-radius: 999px;
-
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-
-  font-size: 13px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* „Was passiert danach?“ Card (wie eine Card, aber ohne Pricing-MinHeight) */
-.nextCard {
-  margin-top: 16px;
-  padding: 18px;
-  border-radius: 14px;
-
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.nextCard h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  line-height: 1.2;
-}
-
-/* Divider über dem Formular */
-.formDivider {
-  margin: 18px 0 0;
+/* Accessibility helpers */
+.srOnly {
+  position: absolute;
+  width: 1px;
   height: 1px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.10);
-}
-
-/* Mobile: Pills schön untereinander, ohne "quetschen" */
-@media (max-width: 600px) {
-  .heroPill {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-/* =========================
-   FINALISIERUNG: FIT GRID + FOOTER LINKS
-   ========================= */
-
-.fitGrid {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.fitCard {
-  padding: 16px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.fitTitle {
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-.footerLink {
-  color: rgba(255, 255, 255, 0.78);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.footerLink:hover {
-  color: #ffffff;
-  text-decoration: underline;
-}
-
-/* Mobile */
-@media (max-width: 900px) {
-  .fitGrid {
-    grid-template-columns: 1fr;
-  }
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
