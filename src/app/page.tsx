@@ -12,7 +12,6 @@ type SubmitState = "idle" | "sending" | "success" | "error";
 export default function Page() {
   const [openZiel, setOpenZiel] = useState(false);
   const [ziel, setZiel] = useState<string>("");
-
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
 
   const selectRef = useRef<HTMLDivElement | null>(null);
@@ -21,7 +20,7 @@ export default function Page() {
   const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(
     "Website-Check Anfrage"
   )}&body=${encodeURIComponent(
-    "Website-URL:\nZiel (Anfragen/Termine/Verkauf):\nZielgruppe:\nKurze Beschreibung des Angebots:\n\nDanke!"
+    "Website-URL:\nZiel (Anfragen/Termine/Verkauf):\n\nDanke!"
   )}`;
 
   // Close dropdown on outside click
@@ -46,14 +45,10 @@ export default function Page() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Auto-reset success state after 8s (UX)
+  // Auto-reset success state after 8s
   useEffect(() => {
     if (submitState !== "success") return;
-
-    const t = window.setTimeout(() => {
-      setSubmitState("idle");
-    }, 8000);
-
+    const t = window.setTimeout(() => setSubmitState("idle"), 8000);
     return () => window.clearTimeout(t);
   }, [submitState]);
 
@@ -82,7 +77,6 @@ export default function Page() {
         return;
       }
 
-      // success: reset all fields (including custom select)
       formRef.current?.reset();
       setZiel("");
       setOpenZiel(false);
@@ -126,10 +120,10 @@ export default function Page() {
         </p>
 
         <a className="cta" href="#kontakt">
-          Kostenlosen Website-Check starten
+          Check anfordern
         </a>
 
-        {/* Trust-Pills */}
+        {/* TRUST STRIP */}
         <div className="heroTrust" aria-label="Vertrauenshinweise">
           <span className="heroPill">⏱ Rückmeldung in 24h</span>
           <span className="heroPill">✅ Fixpreis & klarer Scope</span>
@@ -146,6 +140,30 @@ export default function Page() {
           <strong>anfragefähig</strong>.
         </p>
 
+        {/* Für wen / Nicht für wen */}
+        <div className="fitGrid">
+          <div className="fitCard">
+            <div className="fitTitle">✅ Passt, wenn du…</div>
+            <ul className="list">
+              <li>bereits eine Website hast, aber zu wenig Anfragen bekommst</li>
+              <li>ein konkretes Angebot verkaufst (Dienstleistung / Beratung)</li>
+              <li>klaren Scope & schnelle Umsetzung willst (7 Tage)</li>
+              <li>keinen kompletten Relaunch brauchst</li>
+            </ul>
+          </div>
+
+          <div className="fitCard">
+            <div className="fitTitle">❌ Nicht ideal, wenn…</div>
+            <ul className="list">
+              <li>du „alles neu“ willst (Branding, Designsystem, 20 Seiten)</li>
+              <li>du ein SEO-Langzeitprojekt suchst</li>
+              <li>du keine Entscheidung treffen willst (endlose Revisionen)</li>
+              <li>du noch gar kein klares Angebot hast</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Pricing Cards */}
         <div className="cards">
           <div className="card">
             <h3>Website-Anfragen-Fix</h3>
@@ -168,7 +186,7 @@ export default function Page() {
             </ul>
 
             <a className="cta ctaSmall" href="#kontakt">
-              Check starten
+              Check anfordern
             </a>
           </div>
 
@@ -193,11 +211,12 @@ export default function Page() {
             </ul>
 
             <a className="cta ctaSmall" href="#kontakt">
-              Beratung starten
+              Check anfordern
             </a>
           </div>
         </div>
 
+        {/* Note Card */}
         <div className="card cardNote">
           <h3>Was nicht enthalten ist</h3>
           <p className="cardMeta">Damit der Sprint schnell & klar bleibt.</p>
@@ -430,7 +449,16 @@ export default function Page() {
           </form>
         </div>
 
-        <footer className="footer muted">© 2026 · Website-Anfragen-Fix</footer>
+        <footer className="footer muted">
+          © {new Date().getFullYear()} · Website-Anfragen-Fix ·{" "}
+          <a className="footerLink" href="/impressum">
+            Impressum
+          </a>{" "}
+          ·{" "}
+          <a className="footerLink" href="/datenschutz">
+            Datenschutz
+          </a>
+        </footer>
       </section>
     </main>
   );

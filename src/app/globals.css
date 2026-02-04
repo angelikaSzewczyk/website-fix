@@ -614,3 +614,43 @@ a {
     justify-content: flex-start;
   }
 }
+/* =========================
+   FINALISIERUNG: FIT GRID + FOOTER LINKS
+   ========================= */
+
+.fitGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fitCard {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fitTitle {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.footerLink {
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footerLink:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .fitGrid {
+    grid-template-columns: 1fr;
+  }
+}
