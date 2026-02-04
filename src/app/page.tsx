@@ -50,7 +50,6 @@ export default function Page() {
     e.preventDefault();
 
     if (!ziel) {
-      // safety guard
       setOpenZiel(true);
       return;
     }
@@ -64,9 +63,7 @@ export default function Page() {
       const res = await fetch(FORMSPREE_ACTION, {
         method: "POST",
         body: formData,
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
 
       if (!res.ok) {
@@ -96,38 +93,46 @@ export default function Page() {
           <a href="#kontakt">Kontakt</a>
         </nav>
 
-        <a className="navCta" href={mailto}>
-          Check anfragen
+        <a className="navCta" href="#kontakt">
+          Check starten
         </a>
       </header>
 
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="hero">
-        <p className="badge">7-Tage Sprint · Fixpreis · Klarer Scope</p>
+        <p className="badge">7 Tage · Fixpreis · kein Relaunch</p>
 
         <h1>
-          Deine Website sieht gut aus – <br />
-          aber bringt keine Anfragen?
+          Zu wenig Anfragen über deine Website? <br />
+          Wir machen sie anfragefähig.
         </h1>
 
         <p className="heroText">
-          Ich optimiere Websites so, dass Besucher in Sekunden verstehen,
-          <strong> was du anbietest</strong> – und
-          <strong> den nächsten Schritt</strong> gehen.
+          Für <strong>Dienstleister & Selbstständige</strong> mit bestehender
+          Website: Ich schärfe <strong>Message, Struktur und CTA</strong>, damit
+          Besucher in Sekunden verstehen,
+          <strong> was du anbietest</strong> – und <strong>kontaktieren</strong>.
         </p>
 
         <a className="cta" href="#kontakt">
           Kostenlosen Website-Check starten
         </a>
+
+        {/* Trust-Pills */}
+        <div className="heroTrust" aria-label="Vertrauenshinweise">
+          <span className="heroPill">⏱ Rückmeldung in 24h</span>
+          <span className="heroPill">✅ Fixpreis & klarer Scope</span>
+          <span className="heroPill">🧠 Kein Verkaufsgespräch</span>
+        </div>
       </section>
 
       {/* ANGEBOT */}
       <section className="section" id="angebot">
         <h2>Das Angebot</h2>
         <p className="muted">
-          Kein kompletter Relaunch. Wir machen deine Website{" "}
-          <strong>klar</strong>, <strong>anfragefähig</strong> und{" "}
-          <strong>handlungsorientiert</strong>.
+          Kein kompletter Neubau. Wir machen deine Website{" "}
+          <strong>klar</strong>, <strong>handlungsorientiert</strong> und{" "}
+          <strong>anfragefähig</strong>.
         </p>
 
         <div className="cards">
@@ -135,6 +140,11 @@ export default function Page() {
             <h3>Website-Anfragen-Fix</h3>
             <p className="cardMeta">
               7 Tage · <strong>1.200 € Fixpreis</strong>
+            </p>
+
+            <p className="muted" style={{ marginTop: 6 }}>
+              Ergebnis: Besucher verstehen dein Angebot sofort – und klicken den
+              nächsten Schritt.
             </p>
 
             <ul className="list">
@@ -155,6 +165,11 @@ export default function Page() {
             <h3>Conversion-Landingpage-Sprint</h3>
             <p className="cardMeta">
               7 Tage · für EIN Angebot · <strong>1.600 € Fixpreis</strong>
+            </p>
+
+            <p className="muted" style={{ marginTop: 6 }}>
+              Ergebnis: eine fokussierte Seite, die exakt auf EIN Angebot und EIN
+              Ziel optimiert ist.
             </p>
 
             <ul className="list">
@@ -189,7 +204,7 @@ export default function Page() {
         </div>
 
         <p className="muted" style={{ marginTop: 16 }}>
-          Nicht sicher, was sinnvoller ist? Ich sage dir im kostenlosen Check
+          Nicht sicher, was sinnvoller ist? Im kostenlosen Check sage ich dir
           ehrlich, ob ein Fix an der bestehenden Seite reicht oder eine
           fokussierte Landingpage besser passt.
         </p>
@@ -203,15 +218,20 @@ export default function Page() {
             <div className="stepNum">1</div>
             <div>
               <div className="stepTitle">Kurz-Check</div>
-              <div className="muted">Du schickst URL + Ziel + 2–3 Sätze Kontext.</div>
+              <div className="muted">
+                Du schickst URL + Ziel + 2–3 Sätze Kontext.
+              </div>
             </div>
           </div>
 
           <div className="step">
             <div className="stepNum">2</div>
             <div>
-              <div className="stepTitle">Fixpreis-Angebot</div>
-              <div className="muted">Du bekommst Sprint-Scope + Preis + Startdatum.</div>
+              <div className="stepTitle">Ehrliche Empfehlung</div>
+              <div className="muted">
+                Du bekommst eine Mini-Analyse + Vorschlag, welches Paket sinnvoll
+                ist.
+              </div>
             </div>
           </div>
 
@@ -219,7 +239,9 @@ export default function Page() {
             <div className="stepNum">3</div>
             <div>
               <div className="stepTitle">Umsetzung</div>
-              <div className="muted">Hero, CTA, Struktur, Mobile – fokussiert in 7 Tagen.</div>
+              <div className="muted">
+                Hero, CTA, Struktur, Mobile – fokussiert in 7 Tagen.
+              </div>
             </div>
           </div>
 
@@ -227,7 +249,9 @@ export default function Page() {
             <div className="stepNum">4</div>
             <div>
               <div className="stepTitle">Live + Übergabe</div>
-              <div className="muted">Kurze Doku, damit du es verstehst & halten kannst.</div>
+              <div className="muted">
+                Kurze Doku, damit du es verstehst & halten kannst.
+              </div>
             </div>
           </div>
         </div>
@@ -237,8 +261,21 @@ export default function Page() {
       <section className="section" id="kontakt">
         <h2>Kostenloser Website-Check</h2>
         <p className="muted">
-          Fülle kurz das Formular aus – ich antworte mit einer Mini-Analyse und dem nächsten Schritt.
+          Fülle kurz das Formular aus – du erhältst innerhalb von{" "}
+          <strong>24 Stunden</strong> eine Rückmeldung.
         </p>
+
+        {/* WHAT HAPPENS NEXT */}
+        <div className="nextCard">
+          <h3>Was passiert nach dem Absenden?</h3>
+          <ul className="list">
+            <li>Ich prüfe deine Website (Klarheit, CTA, Mobile, Vertrauen).</li>
+            <li>Du bekommst eine kurze Einschätzung + den nächsten Schritt.</li>
+            <li>Wenn es passt: Sprint-Scope + Fixpreis + Startdatum.</li>
+          </ul>
+        </div>
+
+        <div className="formDivider" />
 
         <div className="contactBox">
           <form ref={formRef} onSubmit={handleSubmit} className="form">
@@ -255,7 +292,7 @@ export default function Page() {
               />
             </label>
 
-            {/* ===== Custom Select: Ziel (closes reliably) ===== */}
+            {/* Custom Select: Ziel (required via button disabled + hint) */}
             <label className="field">
               <span className="fieldLabel">Ziel</span>
 
@@ -281,11 +318,12 @@ export default function Page() {
                       <button
                         key={opt}
                         type="button"
-                        className={`cSelectOption ${ziel === opt ? "isActive" : ""}`}
+                        className={`cSelectOption ${
+                          ziel === opt ? "isActive" : ""
+                        }`}
                         role="option"
                         aria-selected={ziel === opt}
                         onMouseDown={(e) => {
-                          // IMPORTANT: mousedown is more reliable than click for immediate close
                           e.preventDefault();
                           setZiel(opt);
                           setOpenZiel(false);
@@ -298,24 +336,27 @@ export default function Page() {
                 )}
 
                 {!ziel && (
-                  <span className="fieldHint muted">Bitte wähle ein Ziel aus.</span>
+                  <span className="fieldHint muted">
+                    Bitte wähle ein Ziel aus.
+                  </span>
                 )}
               </div>
             </label>
 
+            {/* OPTIONAL now */}
             <label className="field">
-              <span className="fieldLabel">Zielgruppe (1 Satz)</span>
+              <span className="fieldLabel">Zielgruppe (optional)</span>
               <input
                 name="zielgruppe"
                 type="text"
                 placeholder="z. B. Selbstständige im DACH-Raum…"
-                required
                 className="input"
               />
             </label>
 
+            {/* OPTIONAL */}
             <label className="field">
-              <span className="fieldLabel">Kurzbeschreibung</span>
+              <span className="fieldLabel">Kurzbeschreibung (optional)</span>
               <textarea
                 name="beschreibung"
                 rows={4}
@@ -324,6 +365,7 @@ export default function Page() {
               />
             </label>
 
+            {/* REQUIRED */}
             <label className="field">
               <span className="fieldLabel">Deine E-Mail (für Rückmeldung)</span>
               <input
@@ -342,19 +384,20 @@ export default function Page() {
               aria-disabled={!ziel || submitState === "sending"}
               title={!ziel ? "Bitte Ziel auswählen" : undefined}
             >
-              {submitState === "sending" ? "Wird gesendet…" : "Kostenlosen Check absenden"}
+              {submitState === "sending" ? "Wird gesendet…" : "Check anfordern"}
             </button>
 
-            {/* feedback */}
             {submitState === "success" && (
               <div className="formMsg formMsgSuccess">
-                ✅ Danke! Deine Anfrage ist raus. Ich melde mich zeitnah zurück.
+                ✅ Danke! Deine Anfrage ist raus. Ich melde mich innerhalb von
+                24h zurück.
               </div>
             )}
 
             {submitState === "error" && (
               <div className="formMsg formMsgError">
-                ❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder schreib an{" "}
+                ❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder
+                schreib an{" "}
                 <a className="contactLink" href={mailto}>
                   {EMAIL}
                 </a>
@@ -363,7 +406,8 @@ export default function Page() {
             )}
 
             <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
-              Mit dem Absenden stimmst du der Verarbeitung deiner Daten zur Bearbeitung deiner Anfrage zu.
+              Mit dem Absenden stimmst du der Verarbeitung deiner Daten zur
+              Bearbeitung deiner Anfrage zu.
             </p>
 
             <p className="muted" style={{ marginTop: 10 }}>
