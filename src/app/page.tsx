@@ -406,6 +406,13 @@ const mapEn = {
       setOpenFix(false);
       setErrors({});
       setSubmitState("success");
+      if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+  (window as any).gtag("event", "fix_request_submitted", {
+    fix_type: fix,
+    language: lang,
+  });
+}
+
     } catch {
       setSubmitState("error");
     }
