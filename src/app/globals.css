@@ -686,3 +686,84 @@ textarea.input {
   border: 1px solid rgba(141, 243, 211, 0.22);
 }
 
+/* ✅ Language toggle (dezenter als CTA) */
+.langToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+.langToggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+.langToggle:active {
+  transform: translateY(0);
+}
+
+/* ✅ Fix meta pills */
+.metaRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+.pillStrong {
+  border-color: rgba(141, 243, 211, 0.28);
+  background: rgba(141, 243, 211, 0.10);
+}
+
+/* ✅ Sticky CTA for mobile (shows only <700px) */
+.stickyCta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px;
+  background: rgba(11, 12, 16, 0.78);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 60;
+  display: none;
+}
+.stickyCtaBtn {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  color: #0b0c10;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+/* prevent content being hidden behind sticky bar */
+@media (max-width: 700px) {
+  .stickyCta {
+    display: block;
+  }
+  main {
+    padding-bottom: 86px;
+  }
+}
