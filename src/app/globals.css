@@ -770,107 +770,162 @@ textarea.input {
 input[type="file"].input {
   padding: 10px 12px;
 }
-/* ===== Upload (Dropzone-light) ===== */
-.uploadBox {
-  border-radius: 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 14px;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+/* ===== Upload ===== */
+.uploadBox{
+  border: 1px dashed rgba(255,255,255,.18);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255,255,255,.03);
+  /* ✅ Opt: nicer spacing + stability */
+  overflow: hidden;
 }
 
-.uploadBox:hover {
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(141, 243, 211, 0.32);
-}
-
-.uploadHead {
+.uploadHead{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 14px;
 }
 
-.uploadTitle {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.uploadTitle{
+  min-width: 0; /* ✅ Opt: prevents overflow with long text */
 }
 
-.uploadTitle strong {
-  font-size: 13px;
+.uploadTitle strong{
+  display: block;
+  font-size: 14px;
   line-height: 1.2;
 }
 
-.uploadTitle span {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.2;
+.uploadMeta{
+  display: block;
+  margin-top: 8px; /* ✅ Abstand nach oben */
+  font-size: 14px;
+  opacity: .75;
+  line-height: 1.35; /* ✅ Opt: better readability */
 }
 
-/* Button-like label */
-.uploadBtn {
+.uploadBtn{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 750;
-  font-size: 13px;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
   cursor: pointer;
-  transition: background 160ms ease, transform 160ms ease, opacity 160ms ease;
+  white-space: nowrap;
   user-select: none;
+  -webkit-tap-highlight-color: transparent; /* ✅ Opt: iOS tap highlight off */
+  touch-action: manipulation; /* ✅ Opt: faster taps on mobile */
+  transition: background .15s ease, transform .05s ease, border-color .15s ease; /* ✅ Opt */
 }
 
-.uploadBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateY(-1px);
-}
-.uploadBtn:active {
-  transform: translateY(0);
+.uploadBtn:hover{
+  background: rgba(255,255,255,.09);
 }
 
-/* Hide actual file input */
-.uploadInput {
-  position: absolute;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
+.uploadBtn:active{
+  transform: translateY(1px); /* ✅ Opt: tactile press */
 }
 
-/* Selected file pill */
-.filePillRow {
+.uploadBtn:focus-visible{
+  outline: 2px solid rgba(141, 243, 211, 0.75); /* ✅ Opt: accessibility */
+  outline-offset: 2px;
+}
+
+.uploadInput{
+  display: none;
+}
+
+/* ===== Preview (macht mobile sichtbar) ===== */
+.uploadPreview{
+  margin-top: 14px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  /* ✅ Opt: better image container */
+  max-height: 320px;
+}
+
+.uploadPreviewImg{
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain; /* ✅ Opt: never crop screenshots */
+}
+
+/* ===== File pill ===== */
+.filePillRow{
+  margin-top: 12px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap; /* ✅ Opt: long filenames */
 }
 
-.filePill {
+/* falls du filePill/fileRemove schon hast -> diese Regeln ergänzen nur UX */
+.filePill{
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 999px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.92);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  min-width: 0;
+  max-width: 100%;
 }
 
-.fileRemove {
-  border: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  font-weight: 800;
-  line-height: 1;
-  padding: 0 2px;
+.filePill{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* ✅ Opt: long names cut nicely */
 }
-.fileRemove:hover {
-  color: #ffffff;
+
+.fileRemove{
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  color: rgba(255,255,255,.85);
+  cursor: pointer;
+  flex: 0 0 auto;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fileRemove:hover{
+  background: rgba(0,0,0,.35);
+}
+
+.fileRemove:focus-visible{
+  outline: 2px solid rgba(141, 243, 211, 0.75);
+  outline-offset: 2px;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 640px){
+  .uploadHead{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .uploadBtn{
+    width: 100%;
+  }
+
+  .uploadTitle strong{
+    font-size: 18px;
+  }
+
+  .uploadPreview{
+    max-height: 260px; /* ✅ Opt: fits better on small screens */
+  }
 }
