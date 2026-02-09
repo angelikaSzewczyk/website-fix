@@ -5,6 +5,16 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 const EMAIL = "hello.websitefix.team@web.de";
 const FORMSPREE_ACTION = "https://formspree.io/f/xgoznqno";
 
+/** ✅ LIVE Stripe Payment Links (Fix #1 → #5) */
+type FixKey = "form" | "speed" | "mobile" | "tracking" | "small";
+const STRIPE_FIX_LINKS = {
+  form: "https://buy.stripe.com/4gM6oz8oubcPd85gKCgIo00",
+  speed: "https://buy.stripe.com/00w28j6gmbcP8RP0LEgIo01",
+  mobile: "https://buy.stripe.com/00w3cn9sygx91pnamegIo02",
+  tracking: "https://buy.stripe.com/00wcMX7kqgx9fgdeCugIo03",
+  small: "https://buy.stripe.com/cNi00b0W20yb1pndyqgIo04",
+} as const satisfies Record<FixKey, string>;
+
 // ✅ Fix-Auswahl (DE/EN)
 const FIX_OPTIONS_DE = [
   "Kontaktformular reparieren",
@@ -35,7 +45,6 @@ type FieldErrors = Partial<{
 }>;
 
 type SectionId = "fixes" | "bundles" | "ablauf" | "beispiele" | "faq" | "book";
-type FixKey = "form" | "speed" | "mobile" | "tracking" | "small";
 
 type FixCard = {
   key: FixKey;
@@ -54,7 +63,10 @@ export default function Page() {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  // ✅ optional: aktiver Nav-Link beim Scrollen
+  // ✅ Upload UI state (MUSS IN DIE KOMPONENTE!)
+  const [fileName, setFileName] = useState<string>("");
+
+  // ✅ aktiver Nav-Link beim Scrollen
   const [activeSection, setActiveSection] = useState<SectionId>("fixes");
 
   const selectRef = useRef<HTMLDivElement | null>(null);
@@ -63,7 +75,10 @@ export default function Page() {
   const fixBtnId = useId();
   const fixListId = useId();
 
-  const fixOptions = useMemo(() => (lang === "de" ? FIX_OPTIONS_DE : FIX_OPTIONS_EN), [lang]);
+  const fixOptions = useMemo(
+    () => (lang === "de" ? FIX_OPTIONS_DE : FIX_OPTIONS_EN),
+    [lang]
+  );
 
   const mailto = useMemo(() => {
     const subject = "WebsiteFix Anfrage";
@@ -73,25 +88,32 @@ export default function Page() {
       "Kurzbeschreibung (optional):\n" +
       "E-Mail:\n\n" +
       "Danke!";
-    return `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return `mailto:${EMAIL}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
   }, []);
 
   const mapDe = {
-  form: "Kontaktformular reparieren",
-  speed: "Website schneller machen",
-  mobile: "Mobile Darstellung reparieren",
-  tracking: "Tracking & Analytics einrichten",
-  small: "Kleine Änderungen & Bugs (bis 60 Minuten)",
-} as const satisfies Record<FixKey, FixOptionDe>;
+    form: "Kontaktformular reparieren",
+    speed: "Website schneller machen",
+    mobile: "Mobile Darstellung reparieren",
+    tracking: "Tracking & Analytics einrichten",
+    small: "Kleine Änderungen & Bugs (bis 60 Minuten)",
+  } as const satisfies Record<FixKey, FixOptionDe>;
 
-const mapEn = {
-  form: "Fix contact form",
-  speed: "Speed up website",
-  mobile: "Fix mobile layout",
-  tracking: "Set up tracking & analytics",
-  small: "Small changes & bugs (up to 60 minutes)",
-} as const satisfies Record<FixKey, FixOptionEn>;
+  const mapEn = {
+    form: "Fix contact form",
+    speed: "Speed up website",
+    mobile: "Fix mobile layout",
+    tracking: "Set up tracking & analytics",
+    small: "Small changes & bugs (up to 60 minutes)",
+  } as const satisfies Record<FixKey, FixOptionEn>;
 
+  function presetFix(key: FixKey) {
+    if (lang === "de") setFix(mapDe[key]);
+    else setFix(mapEn[key]);
+    setOpenFix(false);
+  }
 
   const t = useMemo(() => {
     const isDE = lang === "de";
@@ -99,20 +121,32 @@ const mapEn = {
     const fixes: FixCard[] = [
       {
         key: "form",
-        title: isDE ? "Fix #1 – Kontaktformular reparieren" : "Fix #1 – Contact form repair",
-        eta: isDE ? "24h" : "24h",
+        title: isDE
+          ? "Fix #1 – Kontaktformular reparieren"
+          : "Fix #1 – Contact form repair",
+        eta: "24h",
         price: isDE ? "129 €" : "€129",
         sub: isDE
           ? "Wenn Anfragen nicht ankommen, verlierst du Geld. Wir prüfen Versand, Validierung und Zustellung – und testen final."
           : "If leads don’t arrive, you lose money. We check delivery, validation and sending — and test the full flow.",
         list: isDE
-          ? ["Formular & Mailversand prüfen", "Fix + Testversand", "Kurzbericht: Ursache & Lösung"]
-          : ["Check form & email delivery", "Fix + end-to-end test", "Short note: cause & solution"],
+          ? [
+              "Formular & Mailversand prüfen",
+              "Fix + Testversand",
+              "Kurzbericht: Ursache & Lösung",
+            ]
+          : [
+              "Check form & email delivery",
+              "Fix + end-to-end test",
+              "Short note: cause & solution",
+            ],
       },
       {
         key: "speed",
-        title: isDE ? "Fix #2 – Website schneller machen" : "Fix #2 – Speed up website",
-        eta: isDE ? "48h" : "48h",
+        title: isDE
+          ? "Fix #2 – Website schneller machen"
+          : "Fix #2 – Speed up website",
+        eta: "48h",
         price: isDE ? "179 €" : "€179",
         sub: isDE
           ? "Schnelle Quick-Wins für Ladezeit. Kein Relaunch – wir entfernen die größten Bremsen."
@@ -123,8 +157,10 @@ const mapEn = {
       },
       {
         key: "mobile",
-        title: isDE ? "Fix #3 – Mobile Darstellung reparieren" : "Fix #3 – Fix mobile layout",
-        eta: isDE ? "48h" : "48h",
+        title: isDE
+          ? "Fix #3 – Mobile Darstellung reparieren"
+          : "Fix #3 – Fix mobile layout",
+        eta: "48h",
         price: isDE ? "159 €" : "€159",
         sub: isDE
           ? "Wenn mobil etwas kaputt ist, springen Besucher ab. Wir beheben die wichtigsten Layout- und Klick-Probleme."
@@ -135,8 +171,10 @@ const mapEn = {
       },
       {
         key: "tracking",
-        title: isDE ? "Fix #4 – Tracking & Analytics einrichten" : "Fix #4 – Set up tracking & analytics",
-        eta: isDE ? "24–48h" : "24–48h",
+        title: isDE
+          ? "Fix #4 – Tracking & Analytics einrichten"
+          : "Fix #4 – Set up tracking & analytics",
+        eta: "24–48h",
         price: isDE ? "129 €" : "€129",
         sub: isDE
           ? "Ohne Daten keine Entscheidungen. Wir richten Analytics ein und prüfen, ob alles sauber erfasst."
@@ -160,43 +198,47 @@ const mapEn = {
     ];
 
     return {
-      brand: "WebsiteFix",
-      domain: "websitefix.io", // später echte Domain einsetzen
+      brandLeft: "Website",
+      brandRight: "Fix",
+      domain: "websitefix.io",
       nav: {
-        fixes: isDE ? "Fixes" : "Fixes",
-        bundles: isDE ? "Bundles" : "Bundles",
+        fixes: "Fixes",
+        bundles: "Bundles",
         how: isDE ? "Ablauf" : "How it works",
         examples: isDE ? "Beispiele" : "Examples",
         faq: "FAQ",
-        book: isDE ? "Fix buchen" : "Book a fix",
+        book: isDE ? "Anfrage" : "Request",
       },
       hero: {
-        badge: isDE ? "Fixpreise · 24–72h · Systemunabhängig" : "Fixed prices · 24–72h · Platform-agnostic",
+        badge: isDE
+          ? "Fixpreise · 24–72h · Systemunabhängig"
+          : "Fixed prices · 24–72h · Platform-agnostic",
         h1: isDE ? "Website kaputt? Wir fixen das." : "Website broken? We fix it.",
         sub: isDE
-          ? "Schnelle Hilfe für konkrete Website-Probleme – ohne Agenturprojekt."
-          : "Fast fixes for common website issues — without an agency project.",
+          ? "Wähle einen Fix, bezahle zum Fixpreis – wir prüfen kurz die Machbarkeit und starten sofort."
+          : "Pick a fix, pay the fixed price — we verify feasibility quickly and start right away.",
         bullets: isDE
           ? ["Kontaktformular sendet nicht", "Website lädt zu langsam", "Mobile Ansicht verschoben", "Tracking fehlt"]
           : ["Form not sending", "Site loads too slow", "Mobile layout broken", "No tracking"],
-        cta: isDE ? "Fix buchen" : "Book a fix",
+        cta: isDE ? "Fix auswählen" : "Choose a fix",
         ghost: isDE ? "Lieber per E-Mail" : "Prefer email",
         trust: isDE
-          ? "Kein Abo · Fixpreis · Start nach Machbarkeits-Check · Geld-zurück, wenn nicht umsetzbar"
-          : "No subscription · Fixed price · Start after feasibility check · Money-back if not feasible",
+          ? "Kein Abo · Fixpreis · Machbarkeits-Check inklusive · Nicht umsetzbar = 100% Erstattung"
+          : "No subscription · Fixed price · Feasibility check included · Not feasible = 100% refund",
       },
       fixesTitle: isDE ? "Die 5 Fixes" : "The 5 fixes",
       fixesIntro: isDE
-        ? "Wähle den passenden Fix. Klarer Scope = schnellere Umsetzung."
-        : "Pick the right fix. Clear scope = faster delivery.",
+        ? "Klicke auf den passenden Fix. Du landest direkt bei der sicheren Zahlung."
+        : "Click the fix you need. You’ll go straight to secure checkout.",
+      refundLine: isDE ? "Nicht umsetzbar? → 100% Erstattung." : "Not feasible? → 100% refund.",
       scopeTitle: isDE ? "Scope & Sicherheit" : "Scope & safety",
       scopeText: isDE
-        ? "Wir prüfen vorab, ob der Fix sinnvoll umsetzbar ist. Wenn nicht: Geld zurück. 1 Fix = 1 klar definiertes Problem."
-        : "We verify feasibility first. If it’s not feasible: refund. 1 fix = 1 clearly defined problem.",
+        ? "Du zahlst online zum Fixpreis. Danach prüfen wir kurz Scope & Machbarkeit. Wenn der Fix so nicht umsetzbar ist: 100% Erstattung."
+        : "You pay the fixed price online. Then we quickly verify scope & feasibility. If it’s not feasible: 100% refund.",
       bundlesTitle: isDE ? "Beliebte Bundles" : "Popular bundles",
       bundlesSub: isDE
-        ? "Wenn du zwei Dinge auf einmal lösen willst, ist ein Bundle oft effizienter."
-        : "If you want to solve two issues at once, a bundle is often more efficient.",
+        ? "Bundles bleiben bewusst auf Anfrage (kurzer Check), damit Scope & Kombination wirklich passen."
+        : "Bundles stay request-only (quick check) so scope & combinations match.",
       bundles: isDE
         ? [
             {
@@ -229,54 +271,55 @@ const mapEn = {
       howTitle: isDE ? "Ablauf" : "How it works",
       steps: isDE
         ? [
-            { n: "1", title: "Fix auswählen", text: "Fix auswählen und kurz beschreiben, was kaputt ist." },
-            { n: "2", title: "Machbarkeits-Check", text: "Wir prüfen Scope & Machbarkeit – ohne Überraschungen." },
-            { n: "3", title: "Umsetzung", text: "Umsetzung in 24–72h (je nach Fix/Bündel)." },
-            { n: "4", title: "Übergabe", text: "Kurzes Update: Was geändert wurde & was du beachten solltest." },
+            { n: "1", title: "Fix auswählen", text: "Passenden Fix auswählen." },
+            { n: "2", title: "Bezahlen", text: "Sicher online zum Fixpreis bezahlen." },
+            { n: "3", title: "Kurz-Check", text: "Wir prüfen kurz Machbarkeit/Scope. Nicht machbar = 100% Erstattung." },
+            { n: "4", title: "Umsetzung", text: "Umsetzung in 24–72h (je nach Fix)." },
           ]
         : [
-            { n: "1", title: "Pick a fix", text: "Choose a fix and describe what’s broken." },
-            { n: "2", title: "Feasibility check", text: "We confirm scope and feasibility — no surprises." },
-            { n: "3", title: "Implementation", text: "Implementation in 24–72h depending on the fix/bundle." },
-            { n: "4", title: "Handover", text: "Short update: what changed and what to keep in mind." },
+            { n: "1", title: "Pick a fix", text: "Choose the fix you need." },
+            { n: "2", title: "Pay", text: "Pay securely at the fixed price." },
+            { n: "3", title: "Quick check", text: "We verify feasibility/scope. Not feasible = 100% refund." },
+            { n: "4", title: "Delivery", text: "Delivery in 24–72h depending on the fix." },
           ],
       examplesTitle: isDE ? "Beispiele (anonymisiert)" : "Examples (anonymized)",
       examplesSub: isDE ? "Typische Situationen vor dem Fix" : "Common situations before a fix",
       examples: isDE
         ? [
-            { q: "„Wir haben Besucher, aber kaum Anfragen.“", t: "Formular/CTA geprüft → Fix #1 + kurze CTA-Korrektur.", m: "Lokaler Dienstleister · DE" },
+            { q: "„Wir haben Besucher, aber kaum Anfragen.“", t: "Formular geprüft → Fix #1 + kurze CTA-Korrektur.", m: "Lokaler Dienstleister · DE" },
             { q: "„Mobil ist alles verschoben.“", t: "Spacing/Buttons korrigiert → Fix #3.", m: "Handwerk · DE" },
-            { q: "„Wir wissen nicht, was Marketing bringt.“", t: "Analytics + Event gesetzt → Fix #4.", m: "KMU · DE" },
+            { q: "„Wir wissen nicht, was Marketing bringt.“", t: "Analytics eingerichtet → Fix #4.", m: "KMU · DE" },
           ]
         : [
-            { q: "“We get traffic but hardly any leads.”", t: "Checked form/CTA → Fix #1 + small CTA improvement.", m: "Local business · EU" },
+            { q: "“We get traffic but hardly any leads.”", t: "Fixed form → Fix #1 + small CTA improvement.", m: "Local business · EU" },
             { q: "“Mobile layout is broken.”", t: "Fixed spacing/buttons → Fix #3.", m: "Small business · EU" },
-            { q: "“We don’t know what marketing does.”", t: "Set up analytics + event → Fix #4.", m: "SMB · EU" },
+            { q: "“We don’t know what marketing does.”", t: "Set up analytics → Fix #4.", m: "SMB · EU" },
           ],
       faqTitle: "FAQ",
       faq: isDE
         ? [
-            { q: "Welche Systeme unterstützt ihr?", a: "WordPress, Baukästen, Custom-Websites. Wir sagen dir vorab, ob es sinnvoll umsetzbar ist." },
-            { q: "Wie läuft die Bezahlung?", a: "Du fragst über das Formular an. Danach bekommst du Rechnung/Zahlungsinfo. Checkout kann später ergänzt werden." },
-            { q: "Was, wenn das Problem größer ist?", a: "Dann sagen wir das vor Umsetzung. Du entscheidest, ob du weitergehst." },
+            { q: "Welche Systeme unterstützt ihr?", a: "WordPress, Baukästen, Custom-Websites. Nach Zahlung prüfen wir kurz, ob der Fix in deinem Setup sauber umsetzbar ist." },
+            { q: "Wie läuft die Bezahlung?", a: "Du klickst auf einen Fix und bezahlst online. Danach kurzer Machbarkeits-Check, dann Start." },
+            { q: "Was, wenn es nicht umsetzbar ist?", a: "Dann erstatten wir 100% und sagen dir kurz warum." },
             { q: "Gibt es ein Abo?", a: "Nein. Optional später: monatliche Betreuung." },
           ]
         : [
-            { q: "Which systems do you support?", a: "WordPress, builders, custom sites. We tell you upfront if it’s feasible." },
-            { q: "How does payment work?", a: "Request via the form, then you receive invoice/payment details. Checkout can be added later." },
-            { q: "What if it’s bigger than expected?", a: "We’ll tell you before implementing. You decide how to proceed." },
+            { q: "Which systems do you support?", a: "WordPress, builders, custom sites. After payment we quickly verify feasibility for your setup." },
+            { q: "How does payment work?", a: "Click a fix and pay online. Then a quick feasibility check and we start." },
+            { q: "What if it’s not feasible?", a: "We refund 100% and tell you briefly why." },
             { q: "Is there a subscription?", a: "No. Optional monthly care later." },
           ],
-      bookTitle: isDE ? "Fix buchen" : "Book a fix",
-      bookSub: isDE
-        ? "Wähle den Fix und gib kurz die URL + das Problem an. Wir melden uns schnell mit dem nächsten Schritt."
-        : "Choose a fix and share URL + issue. We’ll reply quickly with next steps.",
+      bookTitle: isDE ? "Anfrage (optional)" : "Request (optional)",
+bookSub: isDE
+  ? "Wenn du vorab kurz abklären möchtest,ob der Fix in deinem Setup passt, nutze das Formular. Für die schnellste Umsetzung: Fix auswählen & direkt bezahlen."
+  : "Want a quick feasibility check before paying? Use the form below. For fastest delivery: choose a fix and pay instantly.",
+
       form: {
         website: isDE ? "Website-URL *" : "Website URL *",
         fix: isDE ? "Welcher Fix? *" : "Which fix? *",
         desc: isDE ? "Kurzbeschreibung (optional)" : "Short description (optional)",
         email: isDE ? "Deine E-Mail *" : "Your email *",
-        submitIdle: isDE ? "Fix anfragen" : "Request fix",
+        submitIdle: isDE ? "Anfrage senden" : "Send request",
         submitSending: isDE ? "Wird gesendet…" : "Sending…",
         success: isDE ? "✅ Danke! Deine Anfrage ist eingegangen. Wir melden uns schnell zurück." : "✅ Thanks! Your request is in. We’ll get back to you shortly.",
         error: isDE ? "❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder schreib an" : "❌ Sending failed. Please try again or email",
@@ -345,7 +388,6 @@ const mapEn = {
     if (!website) next.website = lang === "de" ? "Bitte gib deine Website-URL an." : "Please enter your website URL.";
     else {
       try {
-        // eslint-disable-next-line no-new
         new URL(website);
       } catch {
         next.website =
@@ -405,14 +447,15 @@ const mapEn = {
       setFix("");
       setOpenFix(false);
       setErrors({});
+      setFileName(""); // ✅ wichtig: Upload UI reset
       setSubmitState("success");
-      if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
-  (window as any).gtag("event", "fix_request_submitted", {
-    fix_type: fix,
-    language: lang,
-  });
-}
 
+      if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+        (window as any).gtag("event", "fix_request_submitted", {
+          fix_type: fix,
+          language: lang,
+        });
+      }
     } catch {
       setSubmitState("error");
     }
@@ -421,39 +464,23 @@ const mapEn = {
   const canSubmit = !!fix && submitState !== "sending";
   const navLinkClass = (id: SectionId) => `navLink ${activeSection === id ? "isActive" : ""}`;
 
-  function presetFix(key: FixKey) {
-  if (lang === "de") setFix(mapDe[key]);
-  else setFix(mapEn[key]);
-
-  setOpenFix(false);
-}
-
-
   return (
     <main>
       {/* NAVBAR */}
       <header className="nav">
-        <div className="brand">{t.brand}</div>
+        <div className="brand">
+          {t.brandLeft}
+          <span style={{ opacity: 0.6 }}>{" "}</span>
+          <span style={{ color: "rgba(141, 243, 211, 0.95)" }}>{t.brandRight}</span>
+        </div>
 
         <nav className="navLinks" aria-label="Hauptnavigation">
-          <a className={navLinkClass("fixes")} href="#fixes">
-            {t.nav.fixes}
-          </a>
-          <a className={navLinkClass("bundles")} href="#bundles">
-            {t.nav.bundles}
-          </a>
-          <a className={navLinkClass("ablauf")} href="#ablauf">
-            {t.nav.how}
-          </a>
-          <a className={navLinkClass("beispiele")} href="#beispiele">
-            {t.nav.examples}
-          </a>
-          <a className={navLinkClass("faq")} href="#faq">
-            {t.nav.faq}
-          </a>
-          <a className={navLinkClass("book")} href="#book">
-            {t.nav.book}
-          </a>
+          <a className={navLinkClass("fixes")} href="#fixes">{t.nav.fixes}</a>
+          <a className={navLinkClass("bundles")} href="#bundles">{t.nav.bundles}</a>
+          <a className={navLinkClass("ablauf")} href="#ablauf">{t.nav.how}</a>
+          <a className={navLinkClass("beispiele")} href="#beispiele">{t.nav.examples}</a>
+          <a className={navLinkClass("faq")} href="#faq">{t.nav.faq}</a>
+          <a className={navLinkClass("book")} href="#book">{t.nav.book}</a>
         </nav>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -467,34 +494,23 @@ const mapEn = {
             {lang.toUpperCase()}
           </button>
 
-          <a className="navCta" href="#book">
-            {t.hero.cta}
-          </a>
+          <a className="navCta" href="#fixes">{t.hero.cta}</a>
         </div>
       </header>
 
       {/* HERO */}
       <section className="hero" id="top">
         <p className="badge">{t.hero.badge}</p>
-
         <h1>{t.hero.h1}</h1>
-
         <p className="heroText">{t.hero.sub}</p>
 
         <ul className="list" style={{ maxWidth: 820 }}>
-          {t.hero.bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
+          {t.hero.bullets.map((b) => <li key={b}>{b}</li>)}
         </ul>
 
         <div className="heroActions">
-          <a className="cta" href="#book">
-            {t.hero.cta}
-          </a>
-
-          <a className="ghost" href={mailto}>
-            {t.hero.ghost}
-          </a>
+          <a className="cta" href="#fixes">{t.hero.cta}</a>
+          <a className="ghost" href={mailto}>{t.hero.ghost}</a>
         </div>
 
         <p className="trustStrip">{t.hero.trust}</p>
@@ -505,13 +521,16 @@ const mapEn = {
         <h2>{t.fixesTitle}</h2>
         <p className="muted">{t.fixesIntro}</p>
 
+        <p className="muted" style={{ marginTop: 8 }}>
+          <strong>{t.refundLine}</strong>
+        </p>
+
         <div className="cards">
           {t.fixes.map((fx) => (
             <div key={fx.key} className="card cardPricing">
               <div>
                 <h3>{fx.title}</h3>
 
-                {/* ✅ meta pills */}
                 <div className="metaRow">
                   <span className="pill">{fx.eta}</span>
                   <span className="pill pillStrong">{fx.price}</span>
@@ -519,18 +538,27 @@ const mapEn = {
 
                 <p className="cardSub">{fx.sub}</p>
                 <ul className="list">
-                  {fx.list.map((li) => (
-                    <li key={li}>{li}</li>
-                  ))}
+                  {fx.list.map((li) => <li key={li}>{li}</li>)}
                 </ul>
               </div>
 
               <a
                 className="cta ctaSmall"
-                href="#book"
-                onClick={() => presetFix(fx.key)}
+                href={STRIPE_FIX_LINKS[fx.key]}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  presetFix(fx.key);
+                  if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+                    (window as any).gtag("event", "begin_checkout", {
+                      item_type: "fix",
+                      fix_key: fx.key,
+                      language: lang,
+                    });
+                  }
+                }}
               >
-                {lang === "de" ? "Fix buchen" : "Book this fix"}
+                {lang === "de" ? "Fix jetzt bezahlen" : "Pay now"}
               </a>
             </div>
           ))}
@@ -552,22 +580,16 @@ const mapEn = {
             <div key={b.title} className="card cardPricing">
               <div>
                 <h3>{b.title}</h3>
-                <p className="cardMeta">
-                  <strong>{b.meta}</strong>
-                </p>
+                <p className="cardMeta"><strong>{b.meta}</strong></p>
                 <p className="cardSub">{b.text}</p>
                 <ul className="list">
-                  <li>{lang === "de" ? "Klare Priorität: schnell sichtbares Ergebnis" : "Clear priority: fast visible outcome"}</li>
-                  <li>{lang === "de" ? "Besserer Preis als einzeln" : "Better price vs. separate fixes"}</li>
+                  <li>{lang === "de" ? "Kurzer Check, damit’s wirklich passt" : "Quick check to ensure it fits"}</li>
+                  <li>{lang === "de" ? "Mehr Wert als einzeln" : "More value vs separate fixes"}</li>
                 </ul>
               </div>
 
-              <a
-                className="cta ctaSmall"
-                href="#book"
-                onClick={() => presetFix(b.preset as FixKey)}
-              >
-                {lang === "de" ? "Bundle anfragen" : "Request bundle"}
+              <a className="cta ctaSmall" href="#book" onClick={() => presetFix(b.preset as FixKey)}>
+                {lang === "de" ? "Bundle anfragen (kurzer Check)" : "Request bundle (quick check)"}
               </a>
             </div>
           ))}
@@ -620,152 +642,251 @@ const mapEn = {
         </div>
       </section>
 
-      {/* BOOK */}
+      {/* BOOK (optional Anfrage) */}
       <section className="section" id="book">
         <h2>{t.bookTitle}</h2>
         <p className="muted">{t.bookSub}</p>
 
         <div className="contactBox" style={{ marginTop: 16 }}>
-          <form ref={formRef} onSubmit={handleSubmit} className="form" noValidate>
-            <input type="text" name="_gotcha" className="hp" tabIndex={-1} autoComplete="off" />
+        
 
-            <label className="field">
-              <span className="fieldLabel">{t.form.website}</span>
-              <input
-                name="website"
-                type="url"
-                placeholder={lang === "de" ? "z. B. https://deine-website.de" : "e.g. https://your-site.com"}
-                required
-                className="input"
-                autoComplete="url"
-                aria-invalid={!!errors.website}
-                aria-describedby={errors.website ? "err-website" : undefined}
-                onChange={() => errors.website && setErrors((p) => ({ ...p, website: undefined }))}
-              />
-              {errors.website && (
-                <span id="err-website" className="fieldError">
-                  {errors.website}
-                </span>
-              )}
-            </label>
+<form
+  ref={formRef}
+  onSubmit={handleSubmit}
+  className="form"
+  noValidate
+  encType="multipart/form-data"
+>
+  <input type="text" name="_gotcha" className="hp" tabIndex={-1} autoComplete="off" />
 
-            <label className="field">
-              <span className="fieldLabel">{t.form.fix}</span>
+  <label className="field">
+    <span className="fieldLabel">{t.form.website}</span>
+    <input
+      name="website"
+      type="url"
+      placeholder={lang === "de" ? "z. B. https://deine-website.de" : "e.g. https://your-site.com"}
+      required
+      className="input"
+      autoComplete="url"
+      aria-invalid={!!errors.website}
+      aria-describedby={errors.website ? "err-website" : undefined}
+      onChange={() => errors.website && setErrors((p) => ({ ...p, website: undefined }))}
+    />
+    {errors.website && <span id="err-website" className="fieldError">{errors.website}</span>}
+  </label>
 
-              <div className="cSelect" ref={selectRef}>
-                <input type="hidden" name="fix" value={fix} />
+  <label className="field">
+    <span className="fieldLabel">{t.form.fix}</span>
 
-                <button
-                  id={fixBtnId}
-                  type="button"
-                  className="cSelectBtn"
-                  aria-haspopup="listbox"
-                  aria-expanded={openFix}
-                  aria-controls={fixListId}
-                  aria-invalid={!!errors.fix}
-                  onClick={() => {
-                    setOpenFix((v) => !v);
-                    if (errors.fix) setErrors((p) => ({ ...p, fix: undefined }));
-                  }}
-                >
-                  <span className={fix ? "" : "cSelectPlaceholder"}>{fix || (lang === "de" ? "Bitte wählen…" : "Select…")}</span>
-                  <span className="cSelectChevron" aria-hidden="true">
-                    ▾
-                  </span>
-                </button>
+    <div className="cSelect" ref={selectRef}>
+      <input type="hidden" name="fix" value={fix} />
 
-                {openFix && (
-                  <div id={fixListId} className="cSelectMenu" role="listbox">
-                    {fixOptions.map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        className={`cSelectOption ${fix === opt ? "isActive" : ""}`}
-                        role="option"
-                        aria-selected={fix === opt}
-                        onMouseDown={(ev) => {
-                          ev.preventDefault();
-                          setFix(opt);
-                          setOpenFix(false);
-                          setErrors((p) => ({ ...p, fix: undefined }));
-                        }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                )}
+      <button
+        id={fixBtnId}
+        type="button"
+        className="cSelectBtn"
+        aria-haspopup="listbox"
+        aria-expanded={openFix}
+        aria-controls={fixListId}
+        aria-invalid={!!errors.fix}
+        onClick={() => {
+          setOpenFix((v) => !v);
+          if (errors.fix) setErrors((p) => ({ ...p, fix: undefined }));
+        }}
+      >
+        <span className={fix ? "" : "cSelectPlaceholder"}>
+          {fix || (lang === "de" ? "Bitte wählen…" : "Select…")}
+        </span>
+        <span className="cSelectChevron" aria-hidden="true">▾</span>
+      </button>
 
-                {!fix && <span className="fieldHint muted">{lang === "de" ? "Bitte wähle den passenden Fix." : "Please choose a fix."}</span>}
-                {errors.fix && <span className="fieldError">{errors.fix}</span>}
-              </div>
-            </label>
-
-            <label className="field">
-              <span className="fieldLabel">{t.form.desc}</span>
-              <textarea
-                name="beschreibung"
-                rows={4}
-                placeholder={lang === "de" ? "Was genau ist kaputt / was soll geändert werden? (optional)" : "What’s broken / what should change? (optional)"}
-                className="input"
-              />
-            </label>
-
-            <label className="field">
-              <span className="fieldLabel">{t.form.email}</span>
-              <input
-                name="email"
-                type="email"
-                placeholder={lang === "de" ? "name@firma.de" : "name@company.com"}
-                required
-                className="input"
-                autoComplete="email"
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? "err-email" : undefined}
-                onChange={() => errors.email && setErrors((p) => ({ ...p, email: undefined }))}
-              />
-              {errors.email && (
-                <span id="err-email" className="fieldError">
-                  {errors.email}
-                </span>
-              )}
-            </label>
-
+      {openFix && (
+        <div id={fixListId} className="cSelectMenu" role="listbox">
+          {fixOptions.map((opt) => (
             <button
-              type="submit"
-              className="cta"
-              disabled={!canSubmit}
-              aria-disabled={!canSubmit}
-              title={!fix ? (lang === "de" ? "Bitte Fix auswählen" : "Please choose a fix") : undefined}
+              key={opt}
+              type="button"
+              className={`cSelectOption ${fix === opt ? "isActive" : ""}`}
+              role="option"
+              aria-selected={fix === opt}
+              onMouseDown={(ev) => {
+                ev.preventDefault();
+                setFix(opt);
+                setOpenFix(false);
+                setErrors((p) => ({ ...p, fix: undefined }));
+              }}
             >
-              {submitState === "sending" ? t.form.submitSending : t.form.submitIdle}
+              {opt}
             </button>
+          ))}
+        </div>
+      )}
 
-            {submitState === "success" && <div className="formMsg formMsgSuccess">{t.form.success}</div>}
+      {!fix && (
+        <span className="fieldHint muted">
+          {lang === "de" ? "Bitte wähle den passenden Fix." : "Please choose a fix."}
+        </span>
+      )}
+      {errors.fix && <span className="fieldError">{errors.fix}</span>}
+    </div>
+  </label>
 
-            {submitState === "error" && (
-              <div className="formMsg formMsgError">
-                {t.form.error}{" "}
-                <a className="contactLink" href={mailto}>
-                  {EMAIL}
-                </a>
-                .
-              </div>
-            )}
+  <label className="field">
+    <span className="fieldLabel">{t.form.desc}</span>
+    <textarea
+      name="beschreibung"
+      rows={4}
+      placeholder={
+        lang === "de"
+          ? "Was genau ist kaputt / was soll geändert werden? (optional)"
+          : "What’s broken / what should change? (optional)"
+      }
+      className="input"
+    />
+  </label>
 
-            <p className="microNote">{t.form.micro}</p>
+  {/* ✅ Upload (optional) */}
+  <label className="field">
+    <span className="fieldLabel">
+      {lang === "de" ? "Screenshot (optional)" : "Screenshot (optional)"}
+    </span>
 
-            <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-              {lang === "de" ? "Deine Daten nutze ich ausschließlich zur Bearbeitung deiner Anfrage." : "Your data is only used to handle your request."}
-            </p>
+    <div className="uploadBox">
+      <div className="uploadHead">
+        <div className="uploadTitle">
+          <strong>{lang === "de" ? "UI-/Bug-Screenshot" : "UI / bug screenshot"}</strong>
 
-            <p className="muted" style={{ marginTop: 10 }}>
-              {lang === "de" ? "Lieber direkt per E-Mail?" : "Prefer email?"}{" "}
-              <a className="contactLink" href={mailto}>
-                {EMAIL}
-              </a>
-            </p>
-          </form>
+          <span className="uploadMeta">
+            {lang === "de"
+              ? "PNG / JPG / WebP · max. 8 MB · hilft uns, schneller zu fixen."
+              : "PNG / JPG / WebP · max. 8 MB · helps us fix it faster."}
+          </span>
+        </div>
+
+        <label className="uploadBtn">
+          {fileName
+            ? lang === "de"
+              ? "Anderes Bild wählen"
+              : "Choose another"
+            : lang === "de"
+              ? "Bild auswählen"
+              : "Choose file"}
+
+          <input
+            name="attachment"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="uploadInput"
+            onChange={(e) => {
+              const file = e.currentTarget.files?.[0];
+
+              if (!file) {
+                setFileName("");
+                return;
+              }
+
+              if (file.size > 8 * 1024 * 1024) {
+                alert(
+                  lang === "de"
+                    ? "Datei ist zu groß (maximal 8 MB)."
+                    : "File is too large (max 8 MB)."
+                );
+                e.currentTarget.value = "";
+                setFileName("");
+                return;
+              }
+
+              setFileName(file.name);
+            }}
+          />
+        </label>
+      </div>
+
+      {fileName && (
+        <div className="filePillRow">
+          <span className="filePill">
+            {fileName}
+            <button
+              type="button"
+              className="fileRemove"
+              aria-label={lang === "de" ? "Datei entfernen" : "Remove file"}
+              onClick={() => {
+                const input =
+                  formRef.current?.querySelector<HTMLInputElement>('input[name="attachment"]');
+                if (input) input.value = "";
+                setFileName("");
+              }}
+            >
+              ×
+            </button>
+          </span>
+        </div>
+      )}
+
+      {!fileName && (
+        <span className="fieldHint muted">
+          {lang === "de"
+            ? "Hinweis: iPhone-Fotos ggf. als JPG exportieren."
+            : "Note: iPhone photos may need to be exported as JPG."}
+        </span>
+      )}
+    </div>
+  </label>
+
+  {/* ✅ Email Feld kommt VOR dem Button (logischer Flow) */}
+  <label className="field">
+    <span className="fieldLabel">{t.form.email}</span>
+    <input
+      name="email"
+      type="email"
+      placeholder={lang === "de" ? "name@firma.de" : "name@company.com"}
+      required
+      className="input"
+      autoComplete="email"
+      aria-invalid={!!errors.email}
+      aria-describedby={errors.email ? "err-email" : undefined}
+      onChange={() => errors.email && setErrors((p) => ({ ...p, email: undefined }))}
+    />
+    {errors.email && <span id="err-email" className="fieldError">{errors.email}</span>}
+  </label>
+
+  {/* ✅ NUR EIN Submit Button */}
+  <button
+    type="submit"
+    className="cta"
+    disabled={!canSubmit}
+    aria-disabled={!canSubmit}
+    title={!fix ? (lang === "de" ? "Bitte Fix auswählen" : "Please choose a fix") : undefined}
+  >
+    {submitState === "sending" ? t.form.submitSending : t.form.submitIdle}
+  </button>
+
+  {/* ✅ Microcopy direkt unter CTA */}
+  <p className="microNote microNoteCenter">
+    {lang === "de" ? "Antwort meist innerhalb von 24h (Mo–Fr)" : "Usually replies within 24h (Mon–Fri)."}
+  </p>
+
+  {submitState === "success" && <div className="formMsg formMsgSuccess">{t.form.success}</div>}
+  {submitState === "error" && (
+    <div className="formMsg formMsgError">
+      {t.form.error} <a className="contactLink" href={mailto}>{EMAIL}</a>.
+    </div>
+  )}
+
+  <p className="microNote">{t.form.micro}</p>
+
+  <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+    {lang === "de"
+      ? "Deine Daten nutze ich ausschließlich zur Bearbeitung deiner Anfrage."
+      : "Your data is only used to handle your request."}
+  </p>
+
+  <p className="muted" style={{ marginTop: 10 }}>
+    {lang === "de" ? "Lieber direkt per E-Mail?" : "Prefer email?"}{" "}
+    <a className="contactLink" href={mailto}>{EMAIL}</a>
+  </p>
+</form>
+
         </div>
 
         <footer className="footer muted">
@@ -773,11 +894,9 @@ const mapEn = {
         </footer>
       </section>
 
-      {/* ✅ Sticky CTA (mobile) */}
+      {/* ✅ Sticky CTA (mobile) -> Fix Auswahl */}
       <div className="stickyCta" aria-hidden="false">
-        <a className="stickyCtaBtn" href="#book">
-          {t.hero.cta}
-        </a>
+        <a className="stickyCtaBtn" href="#fixes">{t.hero.cta}</a>
       </div>
     </main>
   );

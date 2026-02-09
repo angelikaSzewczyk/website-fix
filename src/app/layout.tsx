@@ -14,24 +14,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body>
+      <body suppressHydrationWarning>
         {children}
 
-        {/* Google Analytics 4 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-LR9GN3WZJY"
           strategy="afterInteractive"
         />
-
         <Script id="ga4" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             window.gtag = gtag;
             gtag('js', new Date());
-            gtag('config', 'G-LR9GN3WZJY', {
-              anonymize_ip: true
-            });
+            gtag('config', 'G-LR9GN3WZJY', { anonymize_ip: true });
           `}
         </Script>
       </body>

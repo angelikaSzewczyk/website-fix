@@ -767,3 +767,110 @@ textarea.input {
     padding-bottom: 86px;
   }
 }
+input[type="file"].input {
+  padding: 10px 12px;
+}
+/* ===== Upload (Dropzone-light) ===== */
+.uploadBox {
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.uploadBox:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(141, 243, 211, 0.32);
+}
+
+.uploadHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.uploadTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.uploadTitle strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.uploadTitle span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.2;
+}
+
+/* Button-like label */
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 750;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease, opacity 160ms ease;
+  user-select: none;
+}
+
+.uploadBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+.uploadBtn:active {
+  transform: translateY(0);
+}
+
+/* Hide actual file input */
+.uploadInput {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* Selected file pill */
+.filePillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.fileRemove {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 2px;
+}
+.fileRemove:hover {
+  color: #ffffff;
+}
