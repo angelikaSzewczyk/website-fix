@@ -1,6 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // reactCompiler ist in Next 14 nicht nötig / nicht stabil → weglassen
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'website-fix.com',
+          },
+        ],
+        destination: 'https://www.website-fix.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
