@@ -316,10 +316,12 @@ hr {
   opacity: 0.55;
 }
 
-.brand {
-  font-weight: 750;
-  letter-spacing: 0.2px;
+.brand{
+  font-weight: 850;
+  font-size: 18px;
+  letter-spacing: 0.3px;
 }
+
 
 .navLinks {
   display: flex;
@@ -928,4 +930,544 @@ input[type="file"].input {
   .uploadPreview{
     max-height: 260px; /* ✅ Opt: fits better on small screens */
   }
+}
+/* ================================
+   CONVERSION / UX OVERRIDES (ADD AT END)
+   ================================ */
+
+/* 1) Prevent anchors hiding behind sticky nav (you already have section[id]) */
+.section { scroll-margin-top: 86px; }
+
+/* 2) Trust pills (Hero) */
+.trustPills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin: 14px 0 12px;
+}
+.trustPill{
+  display:inline-flex;
+  align-items:center;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  color: rgba(255,255,255,.88);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+/* 3) Hero quick pick buttons */
+.heroQuickPick{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin: 18px 0 10px;
+}
+
+.quickPick{
+  text-align:left;
+  border-radius:14px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.9);
+  cursor:pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.quickPick:hover{
+  background: rgba(255,255,255,.05);
+  transform: translateY(-1px);
+}
+
+.quickPick.isActive{
+  border-color: rgba(141,243,211,.55);
+  background: rgba(141,243,211,.08);
+}
+
+.quickPickSub{
+  display:block;
+  opacity:.78;
+  font-size:12px;
+  margin-top:2px;
+}
+
+/* Mobile: quick pick full width */
+@media (max-width: 640px){
+  .quickPick{ width: 100%; }
+}
+
+/* 4) Clickable pricing cards + premium hover + keyboard focus */
+.cardClickable{
+  position: relative;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+  outline: none;
+}
+
+.cardClickable:hover{
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
+}
+
+.cardClickable:focus-visible{
+  box-shadow: 0 0 0 4px rgba(141,243,211,.12);
+  border-color: rgba(141,243,211,.35);
+}
+
+/* 5) "Beliebt" tag */
+.popularTag{
+  position:absolute;
+  top:14px;
+  right:14px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(141,243,211,.45);
+  background: rgba(141,243,211,.10);
+  color: rgba(255,255,255,.92);
+  font-size:12px;
+  font-weight:700;
+}
+
+/* 6) Extra pill style used in metaRow ("refund if not feasible") */
+.pillGhost{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+}
+
+/* 7) Nav active state: your base rules target `.navLinks a` (generic).
+      We ensure `.navLink` wins without changing your markup. */
+.navLinks a.navLink{
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.navLinks a.navLink:hover{
+  color: #fff;
+  background: rgba(255,255,255,.05);
+}
+
+.navLinks a.navLink.isActive{
+  color: #fff;
+  background: rgba(141,243,211,.10);
+  border: 1px solid rgba(141,243,211,.22);
+}
+
+/* 8) Make nav CTA button behave like link visually (if you switched <a> to <button>) */
+.navCta{
+  cursor:pointer;
+}
+
+/* 9) Minor: ensure cards have subtle depth */
+.card{
+  box-shadow: 0 16px 40px rgba(0,0,0,.18);
+}
+
+/* 10) Better spacing in hero on smaller screens */
+@media (max-width: 900px){
+  .hero{ padding: 64px 0 44px; }
+}
+@media (max-width: 900px){
+  .cardPricing{ min-height: auto; }
+}
+/* ===== Language Segmented Control (DE | EN) ===== */
+.langSegment{
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.langSegBtn{
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+
+  padding: 10px 12px;
+  border-radius: 10px;
+
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .2px;
+
+  color: rgba(255,255,255,.78);
+  background: transparent;
+
+  transition: background 160ms ease, transform 160ms ease, color 160ms ease;
+}
+
+.langSegBtn:hover{
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.92);
+  transform: translateY(-1px);
+}
+
+.langSegBtn:active{
+  transform: translateY(0);
+}
+
+.langSegBtn.isActive{
+  color: rgba(255,255,255,.95);
+  background: rgba(141, 243, 211, 0.14);
+  border: 1px solid rgba(141, 243, 211, 0.22);
+}
+
+.langSegBtn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(141,243,211,.12);
+}
+@media (max-width: 520px){
+  .langSegBtn{
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+}
+/* ===== Premium Language Switch (Slider) ===== */
+.langSwitch{
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+
+  width: 88px;                 /* kompakt */
+  padding: 4px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+
+  /* fühlt sich hochwertig an */
+  backdrop-filter: blur(10px);
+}
+
+.langKnob{
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 10px 24px rgba(0,0,0,.22);
+
+  transform: translateX(0%);
+  transition: transform 220ms ease, background 220ms ease, border-color 220ms ease;
+}
+
+.langSwitch.isEN .langKnob{
+  transform: translateX(100%);
+}
+
+.langBtn{
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  padding: 9px 9px;
+  border-radius: 999px;
+
+  font-weight: 850;
+  font-size: 13px;
+  letter-spacing: .2px;
+
+  color: rgba(255,255,255,.72);
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.langBtn:hover{
+  color: rgba(255,255,255,.92);
+  transform: translateY(-1px);
+}
+
+.langBtn:active{
+  transform: translateY(0);
+}
+
+.langBtn.isActive{
+  color: rgba(255,255,255,.95);
+}
+
+.langBtn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(141,243,211,.12);
+  border-radius: 999px;
+}
+
+/* Mobile slightly tighter */
+@media (max-width: 520px){
+  .langSwitch{ width: 88px; }
+  .langBtn{ padding: 9px 9px; font-size: 12px; }
+}
+/* ===== Brand (Navbar) ===== */
+.brand{
+  font-weight: 850;
+  font-size: 18px;          /* idealer Sweet Spot */
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.brandSpace{
+  opacity: 0.6;
+}
+
+/* Fix = CTA Gradient */
+.brandAccent{
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+
+  /* subtle premium glow */
+  filter: drop-shadow(0 0 4px rgba(141,243,211,.25));
+}
+.brand:hover .brandAccent{
+  filter: drop-shadow(0 0 6px rgba(141,243,211,.35));
+}
+/* ===== FINAL ADDITIONS ===== */
+
+/* brand */
+.brand{
+  font-weight: 850;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  white-space: nowrap;
+}
+.brandSpace{ opacity: 0.6; }
+
+.brandAccent{
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 4px rgba(141,243,211,.25));
+}
+
+/* premium language slider */
+.langSwitch{
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 94px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+  backdrop-filter: blur(10px);
+}
+.langKnob{
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: rgba(141, 243, 211, 0.14);
+  border: 1px solid rgba(141, 243, 211, 0.22);
+  box-shadow: 0 10px 24px rgba(0,0,0,.22);
+  transform: translateX(0%);
+  transition: transform 220ms ease, background 220ms ease, border-color 220ms ease;
+}
+.langSwitch.isEN .langKnob{ transform: translateX(100%); }
+
+.langBtn{
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 10px;
+  border-radius: 999px;
+  font-weight: 850;
+  font-size: 13px;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,.72);
+  transition: color 160ms ease, transform 160ms ease;
+}
+.langBtn:hover{ color: rgba(255,255,255,.92); transform: translateY(-1px); }
+.langBtn:active{ transform: translateY(0); }
+.langBtn.isActive{ color: rgba(255,255,255,.95); }
+.langBtn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(141,243,211,.12);
+}
+
+/* hero trust pills */
+.trustPills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin: 14px 0 12px;
+}
+.trustPill{
+  display:inline-flex;
+  align-items:center;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  color: rgba(255,255,255,.88);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+/* hero quick pick */
+.heroQuickPick{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin: 18px 0 10px;
+}
+.quickPick{
+  text-align:left;
+  border-radius:14px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.9);
+  cursor:pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+.quickPick:hover{ background: rgba(255,255,255,.05); transform: translateY(-1px); }
+.quickPick.isActive{ border-color: rgba(141,243,211,.55); background: rgba(141,243,211,.08); }
+.quickPickSub{ display:block; opacity:.78; font-size:12px; margin-top:2px; }
+
+@media (max-width: 640px){
+  .quickPick{ width: 100%; }
+}
+
+/* clickable cards + popular tag */
+.cardClickable{
+  position: relative;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+  outline: none;
+}
+.cardClickable:hover{
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
+}
+.cardClickable:focus-visible{
+  box-shadow: 0 0 0 4px rgba(141,243,211,.12);
+  border-color: rgba(141,243,211,.35);
+}
+
+.popularTag{
+  position:absolute;
+  top:14px;
+  right:14px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(141,243,211,.45);
+  background: rgba(141,243,211,.10);
+  color: rgba(255,255,255,.92);
+  font-size:12px;
+  font-weight:700;
+}
+
+/* extra pill */
+.pillGhost{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+}
+
+/* inline trust row on fixes */
+.trustInline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top: 14px;
+}
+
+/* pulse highlight when user clicks "Pay now" without a selection */
+.pulse{
+  animation: pulseGlow 900ms ease;
+}
+@keyframes pulseGlow{
+  0% { box-shadow: 0 0 0 0 rgba(141,243,211,.0); }
+  40% { box-shadow: 0 0 0 6px rgba(141,243,211,.10); }
+  100% { box-shadow: 0 0 0 0 rgba(141,243,211,.0); }
+}
+
+/* book top cta row */
+.bookTopCta{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (max-width: 640px){
+  .bookTopCta{ flex-direction: column; align-items: stretch; }
+}
+
+/* sticky CTA safe-area (iOS) */
+.stickyCta{
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+/* ===== Language segmented control ===== */
+.langSeg{
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+  gap: 4px;
+}
+
+.langSegBtn{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,.75);
+  font-weight: 800;
+  font-size: 14px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .16s ease, transform .06s ease, color .16s ease;
+}
+
+.langSegBtn:hover{
+  color: rgba(255,255,255,.9);
+  background: rgba(255,255,255,.04);
+}
+
+.langSegBtn:active{
+  transform: translateY(1px);
+}
+
+.langSegBtn.isActive{
+  color: #0b0c10;
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  box-shadow:
+    0 0 0 4px rgba(141, 243, 211, 0.10),
+    0 10px 20px rgba(0,0,0,0.25);
+}
+
+.brandSpace { opacity: .6; }
+
+.brandAccent{
+  /* same as CTA gradient */
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

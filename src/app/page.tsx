@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -63,12 +64,13 @@ export default function Page() {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  // ✅ Upload UI state (MUSS IN DIE KOMPONENTE!)
+  // ✅ Upload UI state
   const [fileName, setFileName] = useState<string>("");
 
   // ✅ aktiver Nav-Link beim Scrollen
   const [activeSection, setActiveSection] = useState<SectionId>("fixes");
 
+  const navRef = useRef<HTMLElement | null>(null);
   const selectRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
@@ -152,8 +154,16 @@ export default function Page() {
           ? "Schnelle Quick-Wins für Ladezeit. Kein Relaunch – wir entfernen die größten Bremsen."
           : "Quick wins for loading speed. No redesign — we remove the biggest bottlenecks.",
         list: isDE
-          ? ["Performance-Check", "3–5 Quick-Wins umsetzen", "Basic Vorher/Nachher-Check"]
-          : ["Performance check", "Implement 3–5 quick wins", "Basic before/after check"],
+          ? [
+              "Performance-Check",
+              "3–5 Quick-Wins umsetzen",
+              "Basic Vorher/Nachher-Check",
+            ]
+          : [
+              "Performance check",
+              "Implement 3–5 quick wins",
+              "Basic before/after check",
+            ],
       },
       {
         key: "mobile",
@@ -185,7 +195,9 @@ export default function Page() {
       },
       {
         key: "small",
-        title: isDE ? "Fix #5 – Kleine Änderungen & Bugs" : "Fix #5 – Small changes & bugs",
+        title: isDE
+          ? "Fix #5 – Kleine Änderungen & Bugs"
+          : "Fix #5 – Small changes & bugs",
         eta: isDE ? "bis 60 Min" : "up to 60 min",
         price: isDE ? "89 €" : "€89",
         sub: isDE
@@ -230,7 +242,9 @@ export default function Page() {
       fixesIntro: isDE
         ? "Klicke auf den passenden Fix. Du landest direkt bei der sicheren Zahlung."
         : "Click the fix you need. You’ll go straight to secure checkout.",
-      refundLine: isDE ? "Nicht umsetzbar? → 100% Erstattung." : "Not feasible? → 100% refund.",
+      refundLine: isDE
+        ? "Nach Zahlung: du bekommst sofort eine kurze E-Mail mit den nächsten Schritten. Nicht umsetzbar? → 100% Erstattung."
+        : "After payment: you’ll get a short email with next steps. Not feasible? → 100% refund.",
       scopeTitle: isDE ? "Scope & Sicherheit" : "Scope & safety",
       scopeText: isDE
         ? "Du zahlst online zum Fixpreis. Danach prüfen wir kurz Scope & Machbarkeit. Wenn der Fix so nicht umsetzbar ist: 100% Erstattung."
@@ -273,58 +287,108 @@ export default function Page() {
         ? [
             { n: "1", title: "Fix auswählen", text: "Passenden Fix auswählen." },
             { n: "2", title: "Bezahlen", text: "Sicher online zum Fixpreis bezahlen." },
-            { n: "3", title: "Kurz-Check", text: "Wir prüfen kurz Machbarkeit/Scope. Nicht machbar = 100% Erstattung." },
+            {
+              n: "3",
+              title: "Kurz-Check",
+              text: "Wir prüfen kurz Machbarkeit/Scope. Nicht machbar = 100% Erstattung.",
+            },
             { n: "4", title: "Umsetzung", text: "Umsetzung in 24–72h (je nach Fix)." },
           ]
         : [
             { n: "1", title: "Pick a fix", text: "Choose the fix you need." },
             { n: "2", title: "Pay", text: "Pay securely at the fixed price." },
-            { n: "3", title: "Quick check", text: "We verify feasibility/scope. Not feasible = 100% refund." },
+            {
+              n: "3",
+              title: "Quick check",
+              text: "We verify feasibility/scope. Not feasible = 100% refund.",
+            },
             { n: "4", title: "Delivery", text: "Delivery in 24–72h depending on the fix." },
           ],
       examplesTitle: isDE ? "Beispiele (anonymisiert)" : "Examples (anonymized)",
       examplesSub: isDE ? "Typische Situationen vor dem Fix" : "Common situations before a fix",
       examples: isDE
         ? [
-            { q: "„Wir haben Besucher, aber kaum Anfragen.“", t: "Formular geprüft → Fix #1 + kurze CTA-Korrektur.", m: "Lokaler Dienstleister · DE" },
-            { q: "„Mobil ist alles verschoben.“", t: "Spacing/Buttons korrigiert → Fix #3.", m: "Handwerk · DE" },
-            { q: "„Wir wissen nicht, was Marketing bringt.“", t: "Analytics eingerichtet → Fix #4.", m: "KMU · DE" },
+            {
+              q: "„Wir haben Besucher, aber kaum Anfragen.“",
+              t: "Formular geprüft → Fix #1 + kleine CTA-Korrektur.",
+              m: "Lokaler Dienstleister · DE",
+            },
+            {
+              q: "„Mobil ist alles verschoben.“",
+              t: "Spacing/Buttons korrigiert → Fix #3.",
+              m: "Handwerk · DE",
+            },
+            {
+              q: "„Wir wissen nicht, was Marketing bringt.“",
+              t: "Analytics eingerichtet → Fix #4.",
+              m: "KMU · DE",
+            },
           ]
         : [
-            { q: "“We get traffic but hardly any leads.”", t: "Fixed form → Fix #1 + small CTA improvement.", m: "Local business · EU" },
-            { q: "“Mobile layout is broken.”", t: "Fixed spacing/buttons → Fix #3.", m: "Small business · EU" },
-            { q: "“We don’t know what marketing does.”", t: "Set up analytics → Fix #4.", m: "SMB · EU" },
+            {
+              q: "“We get traffic but hardly any leads.”",
+              t: "Fixed form → Fix #1 + small CTA improvement.",
+              m: "Local business · EU",
+            },
+            {
+              q: "“Mobile layout is broken.”",
+              t: "Fixed spacing/buttons → Fix #3.",
+              m: "Small business · EU",
+            },
+            {
+              q: "“We don’t know what marketing does.”",
+              t: "Set up analytics → Fix #4.",
+              m: "SMB · EU",
+            },
           ],
       faqTitle: "FAQ",
       faq: isDE
         ? [
-            { q: "Welche Systeme unterstützt ihr?", a: "WordPress, Baukästen, Custom-Websites. Nach Zahlung prüfen wir kurz, ob der Fix in deinem Setup sauber umsetzbar ist." },
-            { q: "Wie läuft die Bezahlung?", a: "Du klickst auf einen Fix und bezahlst online. Danach kurzer Machbarkeits-Check, dann Start." },
+            {
+              q: "Welche Systeme unterstützt ihr?",
+              a: "WordPress, Baukästen, Custom-Websites. Nach Zahlung prüfen wir kurz, ob der Fix in deinem Setup sauber umsetzbar ist.",
+            },
+            {
+              q: "Wie läuft die Bezahlung?",
+              a: "Du klickst auf einen Fix und bezahlst online. Danach kurzer Machbarkeits-Check, dann Start.",
+            },
             { q: "Was, wenn es nicht umsetzbar ist?", a: "Dann erstatten wir 100% und sagen dir kurz warum." },
             { q: "Gibt es ein Abo?", a: "Nein. Optional später: monatliche Betreuung." },
           ]
         : [
-            { q: "Which systems do you support?", a: "WordPress, builders, custom sites. After payment we quickly verify feasibility for your setup." },
-            { q: "How does payment work?", a: "Click a fix and pay online. Then a quick feasibility check and we start." },
+            {
+              q: "Which systems do you support?",
+              a: "WordPress, builders, custom sites. After payment we quickly verify feasibility for your setup.",
+            },
+            {
+              q: "How does payment work?",
+              a: "Click a fix and pay online. Then a quick feasibility check and we start.",
+            },
             { q: "What if it’s not feasible?", a: "We refund 100% and tell you briefly why." },
             { q: "Is there a subscription?", a: "No. Optional monthly care later." },
           ],
       bookTitle: isDE ? "Anfrage (optional)" : "Request (optional)",
-bookSub: isDE
-  ? "Wenn du vorab kurz abklären möchtest,ob der Fix in deinem Setup passt, nutze das Formular. Für die schnellste Umsetzung: Fix auswählen & direkt bezahlen."
-  : "Want a quick feasibility check before paying? Use the form below. For fastest delivery: choose a fix and pay instantly.",
-
+      bookSub: isDE
+        ? "Wenn du vorab kurz abklären möchtest, ob der Fix in deinem Setup passt, nutze das Formular. Für die schnellste Umsetzung: Fix auswählen & direkt bezahlen."
+        : "Want a quick feasibility check before paying? Use the form below. For fastest delivery: choose a fix and pay instantly.",
       form: {
         website: isDE ? "Website-URL *" : "Website URL *",
         fix: isDE ? "Welcher Fix? *" : "Which fix? *",
         desc: isDE ? "Kurzbeschreibung (optional)" : "Short description (optional)",
         email: isDE ? "Deine E-Mail *" : "Your email *",
-        submitIdle: isDE ? "Anfrage senden" : "Send request",
+        submitIdle: isDE ? "Kurz-Check anfragen" : "Request quick check",
         submitSending: isDE ? "Wird gesendet…" : "Sending…",
-        success: isDE ? "✅ Danke! Deine Anfrage ist eingegangen. Wir melden uns schnell zurück." : "✅ Thanks! Your request is in. We’ll get back to you shortly.",
-        error: isDE ? "❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder schreib an" : "❌ Sending failed. Please try again or email",
+        success: isDE
+          ? "✅ Danke! Deine Anfrage ist eingegangen. Wir melden uns schnell zurück."
+          : "✅ Thanks! Your request is in. We’ll get back to you shortly.",
+        error: isDE
+          ? "❌ Senden hat nicht geklappt. Bitte versuch es nochmal oder schreib an"
+          : "❌ Sending failed. Please try again or email",
         micro: isDE ? "Kein Spam · Kein Abo · Nur für deine Anfrage" : "No spam · No subscription · Only for your request",
       },
+      legalLine: isDE
+        ? "Mit Absenden bestätigst du, dass du unsere Hinweise in Datenschutz & Impressum gelesen hast."
+        : "By submitting you confirm you’ve read our Privacy Policy & Imprint.",
       footer: isDE ? "© 2026 · WebsiteFix" : "© 2026 · WebsiteFix",
       fixes,
     };
@@ -358,24 +422,56 @@ bookSub: isDE
     }
   }, [submitState]);
 
-  // ✅ Active section highlighting via IntersectionObserver
+  /**
+   * ✅ Active section highlighting (robust, fixes "FAQ stays active")
+   * Strategy: choose section whose top is closest to the nav bottom.
+   */
   useEffect(() => {
     const ids: SectionId[] = ["fixes", "bundles", "ablauf", "beispiele", "faq", "book"];
-    const els = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
-    if (els.length === 0) return;
+    const getNavOffset = () => {
+      const navH = navRef.current?.getBoundingClientRect().height ?? 0;
+      return navH + 12; // little breathing room
+    };
 
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0))[0];
-        if (visible?.target?.id) setActiveSection(visible.target.id as SectionId);
-      },
-      { root: null, rootMargin: "-25% 0px -65% 0px", threshold: [0.1, 0.2, 0.35] }
-    );
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
 
-    els.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+        const offset = getNavOffset();
+        const anchorY = offset; // viewport y we "measure" against
+
+        let best: { id: SectionId; dist: number } | null = null;
+
+        for (const id of ids) {
+          const el = document.getElementById(id);
+          if (!el) continue;
+
+          const r = el.getBoundingClientRect();
+          // distance of section top to anchor line
+          const dist = Math.abs(r.top - anchorY);
+
+          // if section is far below and not yet reached, it can still become best later
+          // but we prefer sections that are at least partially on screen
+          const onScreen = r.bottom > anchorY + 40 && r.top < window.innerHeight - 80;
+
+          const score = onScreen ? dist : dist + 9999; // heavily penalize off-screen
+          if (!best || score < best.dist) best = { id, dist: score };
+        }
+
+        if (best?.id) setActiveSection(best.id);
+      });
+    };
+
+    onScroll(); // initial
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
   }, []);
 
   function validate(form: HTMLFormElement): FieldErrors {
@@ -447,7 +543,7 @@ bookSub: isDE
       setFix("");
       setOpenFix(false);
       setErrors({});
-      setFileName(""); // ✅ wichtig: Upload UI reset
+      setFileName("");
       setSubmitState("success");
 
       if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
@@ -467,12 +563,12 @@ bookSub: isDE
   return (
     <main>
       {/* NAVBAR */}
-      <header className="nav">
-        <div className="brand">
-          {t.brandLeft}
-          <span style={{ opacity: 0.6 }}>{" "}</span>
-          <span style={{ color: "rgba(141, 243, 211, 0.95)" }}>{t.brandRight}</span>
-        </div>
+      <header className="nav" ref={navRef}>
+       <div className="brand">
+  {t.brandLeft}
+  <span className="brandSpace"> </span>
+  <span className="brandAccent">{t.brandRight}</span>
+</div>
 
         <nav className="navLinks" aria-label="Hauptnavigation">
           <a className={navLinkClass("fixes")} href="#fixes">{t.nav.fixes}</a>
@@ -484,15 +580,25 @@ bookSub: isDE
         </nav>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button
-            type="button"
-            className="langToggle"
-            onClick={() => setLang((p) => (p === "de" ? "en" : "de"))}
-            aria-label="Sprache wechseln"
-            title="DE / EN"
-          >
-            {lang.toUpperCase()}
-          </button>
+          <div className="langSeg" role="group" aria-label="Language">
+  <button
+    type="button"
+    className={`langSegBtn ${lang === "de" ? "isActive" : ""}`}
+    onClick={() => setLang("de")}
+    aria-pressed={lang === "de"}
+  >
+    DE
+  </button>
+  <button
+    type="button"
+    className={`langSegBtn ${lang === "en" ? "isActive" : ""}`}
+    onClick={() => setLang("en")}
+    aria-pressed={lang === "en"}
+  >
+    EN
+  </button>
+</div>
+
 
           <a className="navCta" href="#fixes">{t.hero.cta}</a>
         </div>
@@ -542,24 +648,32 @@ bookSub: isDE
                 </ul>
               </div>
 
-              <a
-                className="cta ctaSmall"
-                href={STRIPE_FIX_LINKS[fx.key]}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  presetFix(fx.key);
-                  if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
-                    (window as any).gtag("event", "begin_checkout", {
-                      item_type: "fix",
-                      fix_key: fx.key,
-                      language: lang,
-                    });
-                  }
-                }}
-              >
-                {lang === "de" ? "Fix jetzt bezahlen" : "Pay now"}
-              </a>
+              <div style={{ display: "grid", gap: 10 }}>
+                <a
+                  className="cta ctaSmall"
+                  href={STRIPE_FIX_LINKS[fx.key]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    presetFix(fx.key);
+                    if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+                      (window as any).gtag("event", "begin_checkout", {
+                        item_type: "fix",
+                        fix_key: fx.key,
+                        language: lang,
+                      });
+                    }
+                  }}
+                >
+                  {lang === "de" ? "Fix jetzt bezahlen" : "Pay now"}
+                </a>
+
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+                  {lang === "de"
+                    ? "Nach Zahlung: du bekommst eine kurze E-Mail mit den nächsten Schritten."
+                    : "After payment: you’ll get a short email with the next steps."}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -648,253 +762,254 @@ bookSub: isDE
         <p className="muted">{t.bookSub}</p>
 
         <div className="contactBox" style={{ marginTop: 16 }}>
-        
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="form"
+            noValidate
+            encType="multipart/form-data"
+          >
+            <input type="text" name="_gotcha" className="hp" tabIndex={-1} autoComplete="off" />
 
-<form
-  ref={formRef}
-  onSubmit={handleSubmit}
-  className="form"
-  noValidate
-  encType="multipart/form-data"
->
-  <input type="text" name="_gotcha" className="hp" tabIndex={-1} autoComplete="off" />
+            <label className="field">
+              <span className="fieldLabel">{t.form.website}</span>
+              <input
+                name="website"
+                type="url"
+                placeholder={lang === "de" ? "z. B. https://deine-website.de" : "e.g. https://your-site.com"}
+                required
+                className="input"
+                autoComplete="url"
+                aria-invalid={!!errors.website}
+                aria-describedby={errors.website ? "err-website" : undefined}
+                onChange={() => errors.website && setErrors((p) => ({ ...p, website: undefined }))}
+              />
+              {errors.website && <span id="err-website" className="fieldError">{errors.website}</span>}
+            </label>
 
-  <label className="field">
-    <span className="fieldLabel">{t.form.website}</span>
-    <input
-      name="website"
-      type="url"
-      placeholder={lang === "de" ? "z. B. https://deine-website.de" : "e.g. https://your-site.com"}
-      required
-      className="input"
-      autoComplete="url"
-      aria-invalid={!!errors.website}
-      aria-describedby={errors.website ? "err-website" : undefined}
-      onChange={() => errors.website && setErrors((p) => ({ ...p, website: undefined }))}
-    />
-    {errors.website && <span id="err-website" className="fieldError">{errors.website}</span>}
-  </label>
+            <label className="field">
+              <span className="fieldLabel">{t.form.fix}</span>
 
-  <label className="field">
-    <span className="fieldLabel">{t.form.fix}</span>
+              <div className="cSelect" ref={selectRef}>
+                <input type="hidden" name="fix" value={fix} />
 
-    <div className="cSelect" ref={selectRef}>
-      <input type="hidden" name="fix" value={fix} />
+                <button
+                  id={fixBtnId}
+                  type="button"
+                  className="cSelectBtn"
+                  aria-haspopup="listbox"
+                  aria-expanded={openFix}
+                  aria-controls={fixListId}
+                  aria-invalid={!!errors.fix}
+                  onClick={() => {
+                    setOpenFix((v) => !v);
+                    if (errors.fix) setErrors((p) => ({ ...p, fix: undefined }));
+                  }}
+                >
+                  <span className={fix ? "" : "cSelectPlaceholder"}>
+                    {fix || (lang === "de" ? "Bitte wählen…" : "Select…")}
+                  </span>
+                  <span className="cSelectChevron" aria-hidden="true">▾</span>
+                </button>
 
-      <button
-        id={fixBtnId}
-        type="button"
-        className="cSelectBtn"
-        aria-haspopup="listbox"
-        aria-expanded={openFix}
-        aria-controls={fixListId}
-        aria-invalid={!!errors.fix}
-        onClick={() => {
-          setOpenFix((v) => !v);
-          if (errors.fix) setErrors((p) => ({ ...p, fix: undefined }));
-        }}
-      >
-        <span className={fix ? "" : "cSelectPlaceholder"}>
-          {fix || (lang === "de" ? "Bitte wählen…" : "Select…")}
-        </span>
-        <span className="cSelectChevron" aria-hidden="true">▾</span>
-      </button>
+                {openFix && (
+                  <div id={fixListId} className="cSelectMenu" role="listbox">
+                    {fixOptions.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`cSelectOption ${fix === opt ? "isActive" : ""}`}
+                        role="option"
+                        aria-selected={fix === opt}
+                        onMouseDown={(ev) => {
+                          ev.preventDefault();
+                          setFix(opt);
+                          setOpenFix(false);
+                          setErrors((p) => ({ ...p, fix: undefined }));
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-      {openFix && (
-        <div id={fixListId} className="cSelectMenu" role="listbox">
-          {fixOptions.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              className={`cSelectOption ${fix === opt ? "isActive" : ""}`}
-              role="option"
-              aria-selected={fix === opt}
-              onMouseDown={(ev) => {
-                ev.preventDefault();
-                setFix(opt);
-                setOpenFix(false);
-                setErrors((p) => ({ ...p, fix: undefined }));
-              }}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      )}
+                {!fix && (
+                  <span className="fieldHint muted">
+                    {lang === "de" ? "Bitte wähle den passenden Fix." : "Please choose a fix."}
+                  </span>
+                )}
+                {errors.fix && <span className="fieldError">{errors.fix}</span>}
+              </div>
+            </label>
 
-      {!fix && (
-        <span className="fieldHint muted">
-          {lang === "de" ? "Bitte wähle den passenden Fix." : "Please choose a fix."}
-        </span>
-      )}
-      {errors.fix && <span className="fieldError">{errors.fix}</span>}
-    </div>
-  </label>
-
-  <label className="field">
-    <span className="fieldLabel">{t.form.desc}</span>
-    <textarea
-      name="beschreibung"
-      rows={4}
-      placeholder={
-        lang === "de"
-          ? "Was genau ist kaputt / was soll geändert werden? (optional)"
-          : "What’s broken / what should change? (optional)"
-      }
-      className="input"
-    />
-  </label>
-
-  {/* ✅ Upload (optional) */}
-  <label className="field">
-    <span className="fieldLabel">
-      {lang === "de" ? "Screenshot (optional)" : "Screenshot (optional)"}
-    </span>
-
-    <div className="uploadBox">
-      <div className="uploadHead">
-        <div className="uploadTitle">
-          <strong>{lang === "de" ? "UI-/Bug-Screenshot" : "UI / bug screenshot"}</strong>
-
-          <span className="uploadMeta">
-            {lang === "de"
-              ? "PNG / JPG / WebP · max. 8 MB · hilft uns, schneller zu fixen."
-              : "PNG / JPG / WebP · max. 8 MB · helps us fix it faster."}
-          </span>
-        </div>
-
-        <label className="uploadBtn">
-          {fileName
-            ? lang === "de"
-              ? "Anderes Bild wählen"
-              : "Choose another"
-            : lang === "de"
-              ? "Bild auswählen"
-              : "Choose file"}
-
-          <input
-            name="attachment"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="uploadInput"
-            onChange={(e) => {
-              const file = e.currentTarget.files?.[0];
-
-              if (!file) {
-                setFileName("");
-                return;
-              }
-
-              if (file.size > 8 * 1024 * 1024) {
-                alert(
+            <label className="field">
+              <span className="fieldLabel">{t.form.desc}</span>
+              <textarea
+                name="beschreibung"
+                rows={4}
+                placeholder={
                   lang === "de"
-                    ? "Datei ist zu groß (maximal 8 MB)."
-                    : "File is too large (max 8 MB)."
-                );
-                e.currentTarget.value = "";
-                setFileName("");
-                return;
-              }
+                    ? "Was genau ist kaputt / was soll geändert werden? (optional)"
+                    : "What’s broken / what should change? (optional)"
+                }
+                className="input"
+              />
+            </label>
 
-              setFileName(file.name);
-            }}
-          />
-        </label>
-      </div>
+            {/* Upload (optional) */}
+            <label className="field">
+              <span className="fieldLabel">
+                {lang === "de" ? "Screenshot (optional)" : "Screenshot (optional)"}
+              </span>
 
-      {fileName && (
-        <div className="filePillRow">
-          <span className="filePill">
-            {fileName}
+              <div className="uploadBox">
+                <div className="uploadHead">
+                  <div className="uploadTitle">
+                    <strong>{lang === "de" ? "UI-/Bug-Screenshot" : "UI / bug screenshot"}</strong>
+
+                    <span className="uploadMeta">
+                      {lang === "de"
+                        ? "PNG / JPG / WebP · max. 8 MB · hilft uns, schneller zu fixen."
+                        : "PNG / JPG / WebP · max. 8 MB · helps us fix it faster."}
+                    </span>
+                  </div>
+
+                  <label className="uploadBtn">
+                    {fileName
+                      ? lang === "de"
+                        ? "Anderes Bild wählen"
+                        : "Choose another"
+                      : lang === "de"
+                        ? "Bild auswählen"
+                        : "Choose file"}
+
+                    <input
+                      name="attachment"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="uploadInput"
+                      onChange={(e) => {
+                        const file = e.currentTarget.files?.[0];
+
+                        if (!file) {
+                          setFileName("");
+                          return;
+                        }
+
+                        if (file.size > 8 * 1024 * 1024) {
+                          alert(lang === "de" ? "Datei ist zu groß (maximal 8 MB)." : "File is too large (max 8 MB).");
+                          e.currentTarget.value = "";
+                          setFileName("");
+                          return;
+                        }
+
+                        setFileName(file.name);
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {fileName && (
+                  <div className="filePillRow">
+                    <span className="filePill">
+                      {fileName}
+                      <button
+                        type="button"
+                        className="fileRemove"
+                        aria-label={lang === "de" ? "Datei entfernen" : "Remove file"}
+                        onClick={() => {
+                          const input =
+                            formRef.current?.querySelector<HTMLInputElement>('input[name="attachment"]');
+                          if (input) input.value = "";
+                          setFileName("");
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  </div>
+                )}
+
+                {!fileName && (
+                  <span className="fieldHint muted">
+                    {lang === "de"
+                      ? "Hinweis: iPhone-Fotos ggf. als JPG exportieren."
+                      : "Note: iPhone photos may need to be exported as JPG."}
+                  </span>
+                )}
+              </div>
+            </label>
+
+            <label className="field">
+              <span className="fieldLabel">{t.form.email}</span>
+              <input
+                name="email"
+                type="email"
+                placeholder={lang === "de" ? "name@firma.de" : "name@company.com"}
+                required
+                className="input"
+                autoComplete="email"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "err-email" : undefined}
+                onChange={() => errors.email && setErrors((p) => ({ ...p, email: undefined }))}
+              />
+              {errors.email && <span id="err-email" className="fieldError">{errors.email}</span>}
+            </label>
+
             <button
-              type="button"
-              className="fileRemove"
-              aria-label={lang === "de" ? "Datei entfernen" : "Remove file"}
-              onClick={() => {
-                const input =
-                  formRef.current?.querySelector<HTMLInputElement>('input[name="attachment"]');
-                if (input) input.value = "";
-                setFileName("");
-              }}
+              type="submit"
+              className="cta"
+              disabled={!canSubmit}
+              aria-disabled={!canSubmit}
+              title={!fix ? (lang === "de" ? "Bitte Fix auswählen" : "Please choose a fix") : undefined}
             >
-              ×
+              {submitState === "sending" ? t.form.submitSending : t.form.submitIdle}
             </button>
-          </span>
-        </div>
-      )}
 
-      {!fileName && (
-        <span className="fieldHint muted">
-          {lang === "de"
-            ? "Hinweis: iPhone-Fotos ggf. als JPG exportieren."
-            : "Note: iPhone photos may need to be exported as JPG."}
-        </span>
-      )}
-    </div>
-  </label>
+            <p className="microNote microNoteCenter">
+              {lang === "de" ? "Antwort meist innerhalb von 24h (Mo–Fr)" : "Usually replies within 24h (Mon–Fri)."}
+            </p>
 
-  {/* ✅ Email Feld kommt VOR dem Button (logischer Flow) */}
-  <label className="field">
-    <span className="fieldLabel">{t.form.email}</span>
-    <input
-      name="email"
-      type="email"
-      placeholder={lang === "de" ? "name@firma.de" : "name@company.com"}
-      required
-      className="input"
-      autoComplete="email"
-      aria-invalid={!!errors.email}
-      aria-describedby={errors.email ? "err-email" : undefined}
-      onChange={() => errors.email && setErrors((p) => ({ ...p, email: undefined }))}
-    />
-    {errors.email && <span id="err-email" className="fieldError">{errors.email}</span>}
-  </label>
+            {/* ✅ Legal hint + links (Trust + DE Pflicht sichtbar) */}
+            <p className="microNote" style={{ marginTop: 6 }}>
+              {t.legalLine}{" "}
+              <a className="contactLink" href="/datenschutz">Datenschutz</a> ·{" "}
+              <a className="contactLink" href="/impressum">Impressum</a>
+            </p>
 
-  {/* ✅ NUR EIN Submit Button */}
-  <button
-    type="submit"
-    className="cta"
-    disabled={!canSubmit}
-    aria-disabled={!canSubmit}
-    title={!fix ? (lang === "de" ? "Bitte Fix auswählen" : "Please choose a fix") : undefined}
-  >
-    {submitState === "sending" ? t.form.submitSending : t.form.submitIdle}
-  </button>
+            {submitState === "success" && <div className="formMsg formMsgSuccess">{t.form.success}</div>}
+            {submitState === "error" && (
+              <div className="formMsg formMsgError">
+                {t.form.error} <a className="contactLink" href={mailto}>{EMAIL}</a>.
+              </div>
+            )}
 
-  {/* ✅ Microcopy direkt unter CTA */}
-  <p className="microNote microNoteCenter">
-    {lang === "de" ? "Antwort meist innerhalb von 24h (Mo–Fr)" : "Usually replies within 24h (Mon–Fri)."}
-  </p>
+            <p className="microNote">{t.form.micro}</p>
 
-  {submitState === "success" && <div className="formMsg formMsgSuccess">{t.form.success}</div>}
-  {submitState === "error" && (
-    <div className="formMsg formMsgError">
-      {t.form.error} <a className="contactLink" href={mailto}>{EMAIL}</a>.
-    </div>
-  )}
+            <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+              {lang === "de"
+                ? "Deine Daten nutze ich ausschließlich zur Bearbeitung deiner Anfrage."
+                : "Your data is only used to handle your request."}
+            </p>
 
-  <p className="microNote">{t.form.micro}</p>
-
-  <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-    {lang === "de"
-      ? "Deine Daten nutze ich ausschließlich zur Bearbeitung deiner Anfrage."
-      : "Your data is only used to handle your request."}
-  </p>
-
-  <p className="muted" style={{ marginTop: 10 }}>
-    {lang === "de" ? "Lieber direkt per E-Mail?" : "Prefer email?"}{" "}
-    <a className="contactLink" href={mailto}>{EMAIL}</a>
-  </p>
-</form>
-
+            <p className="muted" style={{ marginTop: 10 }}>
+              {lang === "de" ? "Lieber direkt per E-Mail?" : "Prefer email?"}{" "}
+              <a className="contactLink" href={mailto}>{EMAIL}</a>
+            </p>
+          </form>
         </div>
 
+        {/* ✅ Footer mit Pflichtlinks */}
         <footer className="footer muted">
-          {t.footer} · {t.domain}
+          {t.footer} · {t.domain} ·{" "}
+          <a className="contactLink" href="/impressum">Impressum</a>{" "}
+          ·{" "}
+          <a className="contactLink" href="/datenschutz">Datenschutz</a>
         </footer>
       </section>
 
-      {/* ✅ Sticky CTA (mobile) -> Fix Auswahl */}
+      {/* Sticky CTA (mobile) -> Fix Auswahl */}
       <div className="stickyCta" aria-hidden="false">
         <a className="stickyCtaBtn" href="#fixes">{t.hero.cta}</a>
       </div>
