@@ -1,24 +1,24 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
-export default function AnalyticsPageViews({ gaId }: { gaId: string }) {
+type Props = { gaId: string };
+
+export default function AnalyticsPageViews({ gaId }: Props) {
   const pathname = usePathname();
-  const sp = useSearchParams();
 
   useEffect(() => {
-    const url = pathname + (sp?.toString() ? `?${sp.toString()}` : "");
+    if (!gaId) return;
 
-    if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
-      (window as any).gtag("event", "page_view", {
-        page_location: window.location.href,
-        page_path: url,
-        page_title: document.title,
-        send_to: gaId,
-      });
-    }
-  }, [pathname, sp, gaId]);
+    // GA script noch nicht geladen? Dann einfach skippen.
+    const gtag = (window as any).gtag;
+    if (typeof gtag !== "function") return;
+
+    gtag("config", gaId, {
+      page_path: pathname,
+    });
+  }, [gaId, pathname]);
 
   return null;
 }
