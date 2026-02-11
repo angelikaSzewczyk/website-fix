@@ -10,11 +10,11 @@ const FORMSPREE_ACTION = "https://formspree.io/f/xgoznqno";
 /** ✅ LIVE Stripe Payment Links (Fix #1 → #5) */
 type FixKey = "form" | "speed" | "mobile" | "tracking" | "small";
 const STRIPE_FIX_LINKS = {
-  form: "https://buy.stripe.com/4gM6oz8oubcPd85gKCgIo00",
-  speed: "https://buy.stripe.com/00w28j6gmbcP8RP0LEgIo01",
-  mobile: "https://buy.stripe.com/00w3cn9sygx91pnamegIo02",
-  tracking: "https://buy.stripe.com/00wcMX7kqgx9fgdeCugIo03",
-  small: "https://buy.stripe.com/cNi00b0W20yb1pndyqgIo04",
+  form: "https://buy.stripe.com/14AcN5ckE2hYgkGfcxgMw00",
+  speed: "https://buy.stripe.com/dRm00jbgAe0Gd8u4xTgMw01",
+  mobile: "https://buy.stripe.com/8x25kD0BWbSy0lIaWhgMw02",
+  tracking: "https://buy.stripe.com/dRm8wP70k7Cid8u5BXgMw03",
+  small: "https://buy.stripe.com/eVqbJ184oe0G6K6d4pgMw04",
 } as const satisfies Record<FixKey, string>;
 
 // ✅ Fix-Auswahl (DE/EN)
