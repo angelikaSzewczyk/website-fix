@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
-const EMAIL = "hello.websitefix.team@web.de";
+const EMAIL = "support@website-fix.com";
 const FORMSPREE_ACTION = "https://formspree.io/f/xgoznqno";
 
 /** ✅ LIVE Stripe Payment Links (Fix #1 → #5) */
@@ -241,7 +241,7 @@ export default function Page() {
     return {
       brandLeft: "Website",
       brandRight: "Fix",
-      domain: "websitefix.io",
+      domain: "website-fix.com",
       nav: {
         fixes: "Fixes",
         bundles: "Bundles",
