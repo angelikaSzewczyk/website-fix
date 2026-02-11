@@ -11,6 +11,7 @@ html {
   scroll-behavior: smooth;
 }
 
+
 /* Sticky-nav offset: wenn du zu #kontakt springst, sitzt es nicht unter der Nav */
 section[id] {
   scroll-margin-top: 86px;
@@ -1470,4 +1471,433 @@ input[type="file"].input {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+.blogContent h2 {
+  margin-top: 28px;
+  font-size: 22px;
+}
+
+.blogContent p {
+  line-height: 1.65;
+  opacity: 0.9;
+}
+
+.blogContent ul {
+  margin-left: 18px;
+}
+
+.blogContent li {
+  margin: 8px 0;
+}
+/* ===== Blog Layout ===== */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: #fff;
+}
+
+.pageHead {
+  margin-bottom: 18px;
+}
+
+.h1 {
+  margin: 0 0 10px;
+  font-size: 40px;
+  line-height: 1.12;
+}
+
+.lead {
+  margin: 0;
+  opacity: 0.85;
+  line-height: 1.55;
+}
+
+.mutedSmall {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.blogGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.blogCard {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blogMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.blogTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.blogLink {
+  color: #fff;
+  text-decoration: none;
+}
+
+.blogLink:hover {
+  text-decoration: underline;
+}
+
+.blogDesc {
+  margin: 0;
+  opacity: 0.82;
+  line-height: 1.5;
+}
+
+.blogTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0.9;
+}
+
+.chipStrong {
+  border-color: rgba(141, 243, 211, 0.26);
+  background: rgba(141, 243, 211, 0.10);
+}
+
+.blogCardFooter {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.readMore {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ghostBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.textLink {
+  color: #fff;
+  text-decoration: underline;
+  font-weight: 650;
+}
+
+.pageFooter {
+  margin-top: 26px;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .blogGrid {
+    grid-template-columns: 1fr;
+  }
+  .h1 {
+    font-size: 34px;
+  }
+}
+/* =========================================================
+   ADD-ON CSS for page.tsx (Brand + Lang Seg + Blog preview)
+   Paste at the END of globals.css
+========================================================= */
+
+/* Brand: make "Fix" look like CTA gradient tone */
+.brandSpace {
+  opacity: 0.6;
+}
+
+.brandAccent {
+  color: rgba(141, 243, 211, 0.95); /* CTA-tint */
+  font-weight: 850;
+  letter-spacing: 0.2px;
+  font-size: 16px;
+}
+
+/* Optional: make brand a bit bigger on desktop */
+@media (min-width: 900px) {
+  .brand {
+    font-size: 16px;
+  }
+}
+
+/* ===== Language Segmented Control ===== */
+.langSeg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.langSegBtn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  transition: background 160ms ease, transform 80ms ease, opacity 160ms ease;
+}
+
+.langSegBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.langSegBtn:active {
+  transform: translateY(0);
+}
+
+.langSegBtn.isActive {
+  color: #0b0c10;
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+}
+
+/* keyboard focus */
+.langSegBtn:focus-visible {
+  outline: 2px solid rgba(141, 243, 211, 0.75);
+  outline-offset: 2px;
+}
+
+/* ===== Helpers ===== */
+.mutedSmall {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.microNoteCenter {
+  text-align: center;
+}
+
+/* Ghost-style button for Next <Link> */
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 160ms ease, transform 160ms ease, opacity 160ms ease;
+  white-space: nowrap;
+}
+
+.ghostBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.ghostBtn:active {
+  transform: translateY(0);
+}
+
+.ghostBtn:focus-visible {
+  outline: 2px solid rgba(141, 243, 211, 0.75);
+  outline-offset: 2px;
+}
+
+/* Smaller ghost button */
+.ghostBtnSmall {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 700;
+  font-size: 13px;
+  transition: background 160ms ease, transform 160ms ease, opacity 160ms ease;
+  white-space: nowrap;
+}
+
+.ghostBtnSmall:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.ghostBtnSmall:active {
+  transform: translateY(0);
+}
+
+/* ===== Blog section ===== */
+.blogHeadRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 700px) {
+  .blogHeadRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.blogGrid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .blogGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blogCard {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 240px;
+}
+
+.blogMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.blogTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.blogLink {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.blogLink:hover {
+  text-decoration: underline;
+}
+
+.blogExcerpt {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.blogCardFooter {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+
+
+
+/* Chips */
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.chipStrong {
+  border-color: rgba(141, 243, 211, 0.28);
+  background: rgba(141, 243, 211, 0.10);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ===== Make nav right area wrap nicer on small widths ===== */
+@media (max-width: 520px) {
+  .langSeg {
+    padding: 5px;
+    border-radius: 14px;
+  }
+  .langSegBtn {
+    padding: 10px 10px;
+  }
+}
+.blogCardFooter .readMore{
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+
+  font-weight: 550;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blogCardFooter .readMore:hover{
+  filter: drop-shadow(0 0 6px rgba(141,243,211,.25));
+  text-decoration: none;
 }
