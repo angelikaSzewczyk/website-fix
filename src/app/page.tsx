@@ -663,8 +663,8 @@ export default function Page() {
 
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
                   {lang === "de"
-                    ? "Nach Zahlung: du bekommst eine kurze E-Mail mit den nächsten Schritten."
-                    : "After payment: you’ll get a short email with the next steps."}
+                    ? "Nach der Zahlung bekommst du eine E-Mail von uns mit allen nächsten Schritten - einfach antworten & wir legen los."
+                    : "After payment, you will receive an email with the next steps. You can simply reply directly to it."}
                 </p>
               </div>
             </div>
