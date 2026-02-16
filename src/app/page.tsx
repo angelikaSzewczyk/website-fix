@@ -1,29 +1,43 @@
 // src/app/page.tsx
 "use client";
 
+import { track } from "@/lib/track";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+
 
 const EMAIL = "support@website-fix.com";
 const FORMSPREE_ACTION = "https://formspree.io/f/xgoznqno";
 
-/** ✅ LIVE Stripe Payment Links (Fix #1 → #5) */
-type FixKey = "form" | "speed" | "mobile" | "tracking" | "small";
-const STRIPE_FIX_LINKS = {
+/** ✅ LIVE Stripe Payment Links (Fix #1 → #5) + TODO Fix #6 */
+type FixKey = "form" | "speed" | "mobile" | "tracking" | "small" | "down";
+
+/**
+ * ✅ Stripe Links
+ * Fix #6 (down) trägst du später ein.
+ * Tipp (für Tracking): setze in Stripe Payment Links eine success_url wie:
+ * https://website-fix.com/?success=1&fix=down
+ */
+const STRIPE_FIX_LINKS: Record<Exclude<FixKey, "down">, string> &
+  Partial<Record<"down", string>> = {
   form: "https://buy.stripe.com/14AcN5ckE2hYgkGfcxgMw00",
   speed: "https://buy.stripe.com/dRm00jbgAe0Gd8u4xTgMw01",
   mobile: "https://buy.stripe.com/8x25kD0BWbSy0lIaWhgMw02",
   tracking: "https://buy.stripe.com/dRm8wP70k7Cid8u5BXgMw03",
   small: "https://buy.stripe.com/eVqbJ184oe0G6K6d4pgMw04",
-} as const satisfies Record<FixKey, string>;
 
-// ✅ Fix-Auswahl (DE/EN)
+  // ✅ TODO: Stripe Payment Link ergänzen:
+  // down: "https://buy.stripe.com/....",
+} as const;
+
+// ✅ Fix-Auswahl (DE/EN) — erweitert um Fix #6
 const FIX_OPTIONS_DE = [
   "Kontaktformular reparieren",
   "Website schneller machen",
   "Mobile Darstellung reparieren",
   "Tracking & Analytics einrichten",
   "Kleine Änderungen & Bugs (bis 60 Minuten)",
+  "Website down / Critical Error fixen",
 ] as const;
 
 const FIX_OPTIONS_EN = [
@@ -32,6 +46,7 @@ const FIX_OPTIONS_EN = [
   "Fix mobile layout",
   "Set up tracking & analytics",
   "Small changes & bugs (up to 60 minutes)",
+  "Fix website down / critical error",
 ] as const;
 
 type FixOptionDe = (typeof FIX_OPTIONS_DE)[number];
@@ -48,6 +63,7 @@ type FieldErrors = Partial<{
 
 type SectionId =
   | "fixes"
+  | "about"
   | "bundles"
   | "ablauf"
   | "beispiele"
@@ -62,6 +78,7 @@ type FixCard = {
   price: string;
   sub: string;
   list: string[];
+  note?: string;
 };
 
 type ApiPost = {
@@ -88,6 +105,11 @@ export default function Page() {
 
   // ✅ aktiver Nav-Link beim Scrollen
   const [activeSection, setActiveSection] = useState<SectionId>("fixes");
+
+  // ✅ Banner nach Stripe success_url
+  const [purchaseBanner, setPurchaseBanner] = useState<null | { fix?: string }>(
+    null
+  );
 
   const navRef = useRef<HTMLElement | null>(null);
   const selectRef = useRef<HTMLDivElement | null>(null);
@@ -142,12 +164,14 @@ export default function Page() {
     )}&body=${encodeURIComponent(body)}`;
   }, []);
 
+  // ✅ Mapping FixKey -> FixOption (DE/EN)
   const mapDe = {
     form: "Kontaktformular reparieren",
     speed: "Website schneller machen",
     mobile: "Mobile Darstellung reparieren",
     tracking: "Tracking & Analytics einrichten",
     small: "Kleine Änderungen & Bugs (bis 60 Minuten)",
+    down: "Website down / Critical Error fixen",
   } as const satisfies Record<FixKey, FixOptionDe>;
 
   const mapEn = {
@@ -156,6 +180,7 @@ export default function Page() {
     mobile: "Fix mobile layout",
     tracking: "Set up tracking & analytics",
     small: "Small changes & bugs (up to 60 minutes)",
+    down: "Fix website down / critical error",
   } as const satisfies Record<FixKey, FixOptionEn>;
 
   function presetFix(key: FixKey) {
@@ -164,15 +189,62 @@ export default function Page() {
     setOpenFix(false);
   }
 
+  /**
+   * ✅ Stripe success_url tracking (minimal & robust)
+   * Wenn du in Stripe Payment Links success_url auf:
+   *   https://website-fix.com/?success=1&fix=down
+   * setzt, dann:
+   * - zeigen wir oben ein Success-Banner
+   * - feuern einmalig ein Event (purchase_intent_confirmed)
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const success = url.searchParams.get("success");
+    const fixParam = url.searchParams.get("fix") ?? undefined;
+
+    if (success === "1") {
+      setPurchaseBanner({ fix: fixParam });
+
+      // fire event (once) - guard with sessionStorage
+      try {
+        const key = `wf_purchase_banner_${success}_${fixParam ?? "unknown"}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+
+          track("purchase_intent_confirmed", {
+            source: "stripe_success_url",
+            fix_key: fixParam,
+            language: lang,
+          });
+        }
+      } catch {
+        // ignore
+      }
+
+      // Clean URL (nice UX)
+      try {
+        url.searchParams.delete("success");
+        url.searchParams.delete("fix");
+        window.history.replaceState({}, "", url.toString());
+      } catch {
+        // ignore
+      }
+
+      // Optionally scroll to top
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const t = useMemo(() => {
     const isDE = lang === "de";
 
     const fixes: FixCard[] = [
       {
         key: "form",
-        title: isDE
-          ? "Fix #1 – Kontaktformular reparieren"
-          : "Fix #1 – Contact form repair",
+        title: isDE ? "Fix #1 – Kontaktformular reparieren" : "Fix #1 – Contact form repair",
         eta: "24h",
         price: isDE ? "129 €" : "€129",
         sub: isDE
@@ -184,9 +256,7 @@ export default function Page() {
       },
       {
         key: "speed",
-        title: isDE
-          ? "Fix #2 – Website schneller machen"
-          : "Fix #2 – Speed up website",
+        title: isDE ? "Fix #2 – Website schneller machen" : "Fix #2 – Speed up website",
         eta: "48h",
         price: isDE ? "179 €" : "€179",
         sub: isDE
@@ -198,9 +268,7 @@ export default function Page() {
       },
       {
         key: "mobile",
-        title: isDE
-          ? "Fix #3 – Mobile Darstellung reparieren"
-          : "Fix #3 – Fix mobile layout",
+        title: isDE ? "Fix #3 – Mobile Darstellung reparieren" : "Fix #3 – Fix mobile layout",
         eta: "48h",
         price: isDE ? "159 €" : "€159",
         sub: isDE
@@ -212,9 +280,7 @@ export default function Page() {
       },
       {
         key: "tracking",
-        title: isDE
-          ? "Fix #4 – Tracking & Analytics einrichten"
-          : "Fix #4 – Set up tracking & analytics",
+        title: isDE ? "Fix #4 – Tracking & Analytics einrichten" : "Fix #4 – Set up tracking & analytics",
         eta: "24–48h",
         price: isDE ? "129 €" : "€129",
         sub: isDE
@@ -235,8 +301,108 @@ export default function Page() {
         list: isDE
           ? ["Bis 60 Minuten Arbeitszeit", "1 klarer Änderungsblock", "Kurzer Abschluss-Check"]
           : ["Up to 60 minutes work", "1 clear change block", "Quick final check"],
+        note: isDE
+          ? "Beispiele: Button/CTA anpassen, Spacing fixen, Text ändern, Menü-Problem, kleiner CSS-Bug. (1 Thema, 1 Block — keine lange Liste)"
+          : "Examples: tweak CTA/button, fix spacing, edit text, menu issue, small CSS bug. (1 topic, 1 block — no long list)",
+      },
+      {
+        key: "down",
+        title: isDE ? "Fix #6 – Website down / Critical Error" : "Fix #6 – Website down / critical error",
+        eta: "24h",
+        price: isDE ? "199 €" : "€199",
+        sub: isDE
+          ? "Wenn deine Website plötzlich nicht mehr lädt (White Screen, 500/502/503, „Critical Error“) bringen wir sie schnell wieder online — ohne Relaunch, ohne Drama."
+          : "If your website suddenly won’t load (white screen, 500/502/503, “critical error”), we’ll get it back online fast — no redesign, no drama.",
+        list: isDE
+          ? [
+              "Fehleranalyse (Logs, Plugin/Theme, Update-Konflikte)",
+              "Wiederherstellung: Seite wieder online (Rollback/Fix)",
+              "Kurzbericht: Ursache + was du künftig vermeiden solltest",
+            ]
+          : [
+              "Root-cause check (logs, plugin/theme, update conflicts)",
+              "Recovery: bring the site back online (rollback/fix)",
+              "Short note: what caused it + how to prevent it",
+            ],
+        note: isDE
+          ? "Scope: Wir beheben typische WordPress/Builder/Custom-Konflikte. Reine Hosting-Ausfälle (Provider down) oder DNS-Propagation sind extern — wir helfen aber beim Einordnen und geben klare Next Steps."
+          : "Scope: We fix common WordPress/builder/custom conflicts. Pure hosting outages (provider down) or DNS propagation are external — we’ll still help you identify it and advise next steps.",
       },
     ];
+
+    const about = isDE
+      ? {
+          title: "Über WebsiteFix",
+          bullets: [
+            "Sitz/Support: Deutschland (EU)",
+            "Antwortzeit: meist innerhalb von 24h (Mo–Fr)",
+            "Fixpreise & klarer Scope – keine versteckten Kosten",
+          ],
+          text:
+            "WebsiteFix ist ein kleiner, fokussierter Fix-Service für typische Website-Probleme. Du wählst einen Fix zum Festpreis – wir prüfen kurz die Machbarkeit und legen los. Nicht umsetzbar? → 100% Erstattung.",
+        }
+      : {
+          title: "About WebsiteFix",
+          bullets: [
+            "Based/support: Germany (EU)",
+            "Response time: usually within 24h (Mon–Fri)",
+            "Fixed prices & clear scope – no hidden costs",
+          ],
+          text:
+            "WebsiteFix is a small, focused service for common website issues. Pick a fix at a fixed price — we quickly verify feasibility and start. Not feasible? → 100% refund.",
+        };
+
+    const faq = isDE
+      ? [
+          {
+            q: "Welche Systeme unterstützt ihr?",
+            a: "WordPress, Baukästen, Custom-Websites. Nach Zahlung prüfen wir kurz, ob der Fix in deinem Setup sauber umsetzbar ist.",
+          },
+          {
+            q: "Welche Zugänge braucht ihr?",
+            a: "Für viele Fixes reicht ein Admin-Zugang (z. B. WordPress). Bei Speed/Down-Fixes kann zusätzlich Hosting/FTP/Server-Zugriff nötig sein. Du bekommst nach Zahlung eine kurze Mail mit genau den Infos, die wir brauchen.",
+          },
+          {
+            q: "Wie schnell startet ihr?",
+            a: "Meist am selben oder nächsten Werktag. Du bekommst nach Zahlung sofort eine E-Mail – einfach antworten (Zugänge/Details) und wir starten.",
+          },
+          {
+            q: "Was ist NICHT enthalten?",
+            a: "Kein Redesign/Relaunch, keine umfangreichen neuen Features. Jeder Fix hat einen klaren Scope. Wenn es größer wird, sagen wir es transparent – du kannst dann entscheiden.",
+          },
+          {
+            q: "Geht das auch ohne Zugang?",
+            a: "Manchmal ja (z. B. Tracking via Tag Manager, einfache Frontend-Themen). Für die meisten Fixes brauchen wir aber mindestens Admin-Zugriff, damit wir sauber testen und final fixen können.",
+          },
+          { q: "Wie läuft die Bezahlung?", a: "Du klickst auf einen Fix und bezahlst online. Danach kurzer Machbarkeits-Check, dann Start." },
+          { q: "Was, wenn es nicht umsetzbar ist?", a: "Dann erstatten wir 100% und sagen dir kurz warum." },
+          { q: "Gibt es ein Abo?", a: "Nein. Optional später: monatliche Betreuung." },
+        ]
+      : [
+          {
+            q: "Which systems do you support?",
+            a: "WordPress, builders, custom sites. After payment we quickly verify feasibility for your setup.",
+          },
+          {
+            q: "What access do you need?",
+            a: "Often an admin login is enough (e.g., WordPress). For speed/down fixes we may also need hosting/FTP/server access. After payment you’ll get a short email listing exactly what we need.",
+          },
+          {
+            q: "How fast do you start?",
+            a: "Usually the same or next business day. Right after payment you’ll get an email — reply with details/access and we start.",
+          },
+          {
+            q: "What’s NOT included?",
+            a: "No redesign/relaunch, no large new features. Each fix has a clear scope. If it’s bigger, we’ll tell you transparently — you decide next.",
+          },
+          {
+            q: "Can it work without access?",
+            a: "Sometimes yes (e.g., Tag Manager tracking or simple frontend items). For most fixes we need at least admin access to test and deliver properly.",
+          },
+          { q: "How does payment work?", a: "Click a fix and pay online. Then a quick feasibility check and we start." },
+          { q: "What if it’s not feasible?", a: "We refund 100% and tell you briefly why." },
+          { q: "Is there a subscription?", a: "No. Optional monthly care later." },
+        ];
 
     return {
       brandLeft: "Website",
@@ -244,6 +410,7 @@ export default function Page() {
       domain: "website-fix.com",
       nav: {
         fixes: "Fixes",
+        about: isDE ? "Über uns" : "About",
         bundles: "Bundles",
         how: isDE ? "Ablauf" : "How it works",
         examples: isDE ? "Beispiele" : "Examples",
@@ -252,23 +419,32 @@ export default function Page() {
         book: isDE ? "Anfrage" : "Request",
       },
       hero: {
-        badge: isDE
-          ? "Fixpreise · 24–72h · Systemunabhängig"
-          : "Fixed prices · 24–72h · Platform-agnostic",
+        badge: isDE ? "Fixpreise · 24–72h · Systemunabhängig" : "Fixed prices · 24–72h · Platform-agnostic",
         h1: isDE ? "Website kaputt? Wir fixen das." : "Website broken? We fix it.",
         sub: isDE
           ? "Wähle einen Fix, bezahle zum Fixpreis – wir prüfen kurz die Machbarkeit und starten sofort."
           : "Pick a fix, pay the fixed price — we verify feasibility quickly and start right away.",
         bullets: isDE
-          ? ["Kontaktformular sendet nicht", "Website lädt zu langsam", "Mobile Ansicht verschoben", "Tracking fehlt"]
-          : ["Form not sending", "Site loads too slow", "Mobile layout broken", "No tracking"],
+          ? ["Kontaktformular sendet nicht", "Website lädt zu langsam", "Mobile Ansicht verschoben", "Tracking fehlt", "Website down / Error"]
+          : ["Form not sending", "Site loads too slow", "Mobile layout broken", "No tracking", "Website down / error"],
         cta: isDE ? "Fix auswählen" : "Choose a fix",
         ghost: isDE ? "Lieber per E-Mail" : "Prefer email",
         trust: isDE
           ? "Kein Abo · Fixpreis · Machbarkeits-Check inklusive · Nicht umsetzbar = 100% Erstattung"
           : "No subscription · Fixed price · Feasibility check included · Not feasible = 100% refund",
       },
-      fixesTitle: isDE ? "Die 5 Fixes" : "The 5 fixes",
+      purchaseBanner: isDE
+        ? {
+            title: "✅ Zahlung erfolgreich",
+            text:
+              "Danke! Du bekommst gleich eine E-Mail mit den nächsten Schritten. Bitte antworte kurz mit den benötigten Zugängen/Infos – dann starten wir sofort.",
+          }
+        : {
+            title: "✅ Payment successful",
+            text:
+              "Thanks! You’ll receive an email with the next steps shortly. Please reply with the required access/details — then we start right away.",
+          },
+      fixesTitle: isDE ? "Die Fixes" : "The fixes",
       fixesIntro: isDE
         ? "Klicke auf den passenden Fix. Du landest direkt bei der sicheren Zahlung."
         : "Click the fix you need. You’ll go straight to secure checkout.",
@@ -279,6 +455,7 @@ export default function Page() {
       scopeText: isDE
         ? "Du zahlst online zum Fixpreis. Danach prüfen wir kurz Scope & Machbarkeit. Wenn der Fix so nicht umsetzbar ist: 100% Erstattung."
         : "You pay the fixed price online. Then we quickly verify scope & feasibility. If it’s not feasible: 100% refund.",
+      about,
       bundlesTitle: isDE ? "Beliebte Bundles" : "Popular bundles",
       bundlesSub: isDE
         ? "Bundles bleiben bewusst auf Anfrage (kurzer Check), damit Scope & Kombination wirklich passen."
@@ -332,27 +509,15 @@ export default function Page() {
         ? [
             { q: "„Wir haben Besucher, aber kaum Anfragen.“", t: "Formular geprüft → Fix #1 + kleine CTA-Korrektur.", m: "Lokaler Dienstleister · DE" },
             { q: "„Mobil ist alles verschoben.“", t: "Spacing/Buttons korrigiert → Fix #3.", m: "Handwerk · DE" },
-            { q: "„Wir wissen nicht, was Marketing bringt.“", t: "Analytics eingerichtet → Fix #4.", m: "KMU · DE" },
+            { q: "„Plötzlich nur noch Error 500.“", t: "Rollback + Konfliktfix → Fix #6.", m: "KMU · DE" },
           ]
         : [
             { q: "“We get traffic but hardly any leads.”", t: "Fixed form → Fix #1 + small CTA improvement.", m: "Local business · EU" },
             { q: "“Mobile layout is broken.”", t: "Fixed spacing/buttons → Fix #3.", m: "Small business · EU" },
-            { q: "“We don’t know what marketing does.”", t: "Set up analytics → Fix #4.", m: "SMB · EU" },
+            { q: "“Suddenly a 500 error.”", t: "Rollback + conflict fix → Fix #6.", m: "SMB · EU" },
           ],
       faqTitle: "FAQ",
-      faq: isDE
-        ? [
-            { q: "Welche Systeme unterstützt ihr?", a: "WordPress, Baukästen, Custom-Websites. Nach Zahlung prüfen wir kurz, ob der Fix in deinem Setup sauber umsetzbar ist." },
-            { q: "Wie läuft die Bezahlung?", a: "Du klickst auf einen Fix und bezahlst online. Danach kurzer Machbarkeits-Check, dann Start." },
-            { q: "Was, wenn es nicht umsetzbar ist?", a: "Dann erstatten wir 100% und sagen dir kurz warum." },
-            { q: "Gibt es ein Abo?", a: "Nein. Optional später: monatliche Betreuung." },
-          ]
-        : [
-            { q: "Which systems do you support?", a: "WordPress, builders, custom sites. After payment we quickly verify feasibility for your setup." },
-            { q: "How does payment work?", a: "Click a fix and pay online. Then a quick feasibility check and we start." },
-            { q: "What if it’s not feasible?", a: "We refund 100% and tell you briefly why." },
-            { q: "Is there a subscription?", a: "No. Optional monthly care later." },
-          ],
+      faq,
       blogTitle: "Blog",
       blogSub: isDE
         ? "Kurze Fix-Guides: typische Website-Probleme schneller lösen — und mehr Anfragen bekommen."
@@ -394,7 +559,8 @@ export default function Page() {
     function onDocMouseDown(e: MouseEvent) {
       if (!openFix) return;
       const target = e.target as Node;
-      if (selectRef.current && !selectRef.current.contains(target)) setOpenFix(false);
+      if (selectRef.current && !selectRef.current.contains(target))
+        setOpenFix(false);
     }
     document.addEventListener("mousedown", onDocMouseDown);
     return () => document.removeEventListener("mousedown", onDocMouseDown);
@@ -418,11 +584,20 @@ export default function Page() {
   }, [submitState]);
 
   /**
-   * ✅ Active section highlighting (robust, fixes "FAQ stays active")
+   * ✅ Active section highlighting (robust)
    * Strategy: choose section whose top is closest to the nav bottom.
    */
   useEffect(() => {
-    const ids: SectionId[] = ["fixes", "bundles", "ablauf", "beispiele", "faq", "blog", "book"];
+    const ids: SectionId[] = [
+      "fixes",
+      "about",
+      "bundles",
+      "ablauf",
+      "beispiele",
+      "faq",
+      "blog",
+      "book",
+    ];
 
     const getNavOffset = () => {
       const navH = navRef.current?.getBoundingClientRect().height ?? 0;
@@ -446,7 +621,8 @@ export default function Page() {
 
           const r = el.getBoundingClientRect();
           const dist = Math.abs(r.top - anchorY);
-          const onScreen = r.bottom > anchorY + 40 && r.top < window.innerHeight - 80;
+          const onScreen =
+            r.bottom > anchorY + 40 && r.top < window.innerHeight - 80;
 
           const score = onScreen ? dist : dist + 9999;
           if (!best || score < best.score) best = { id, score };
@@ -473,7 +649,11 @@ export default function Page() {
 
     const next: FieldErrors = {};
 
-    if (!website) next.website = lang === "de" ? "Bitte gib deine Website-URL an." : "Please enter your website URL.";
+    if (!website)
+      next.website =
+        lang === "de"
+          ? "Bitte gib deine Website-URL an."
+          : "Please enter your website URL.";
     else {
       try {
         new URL(website);
@@ -485,12 +665,19 @@ export default function Page() {
       }
     }
 
-    if (!fix) next.fix = lang === "de" ? "Bitte wähle einen Fix aus." : "Please choose a fix.";
+    if (!fix)
+      next.fix = lang === "de" ? "Bitte wähle einen Fix aus." : "Please choose a fix.";
 
-    if (!email) next.email = lang === "de" ? "Bitte gib deine E-Mail an." : "Please enter your email.";
+    if (!email)
+      next.email =
+        lang === "de" ? "Bitte gib deine E-Mail an." : "Please enter your email.";
     else {
       const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      if (!ok) next.email = lang === "de" ? "Bitte gib eine gültige E-Mail-Adresse an." : "Please enter a valid email.";
+      if (!ok)
+        next.email =
+          lang === "de"
+            ? "Bitte gib eine gültige E-Mail-Adresse an."
+            : "Please enter a valid email.";
     }
 
     return next;
@@ -504,19 +691,28 @@ export default function Page() {
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
-      if (nextErrors.website) formRef.current.querySelector<HTMLInputElement>('input[name="website"]')?.focus();
+      if (nextErrors.website)
+        formRef.current
+          .querySelector<HTMLInputElement>('input[name="website"]')
+          ?.focus();
       else if (nextErrors.fix) {
         setOpenFix(true);
         (document.getElementById(fixBtnId) as HTMLButtonElement | null)?.focus();
-      } else if (nextErrors.email) formRef.current.querySelector<HTMLInputElement>('input[name="email"]')?.focus();
+      } else if (nextErrors.email)
+        formRef.current
+          .querySelector<HTMLInputElement>('input[name="email"]')
+          ?.focus();
       return;
     }
 
     setSubmitState("sending");
 
+    // ✅ Important: snapshot selected fix before we reset state
+    const selectedFix = fix;
+
     try {
       const formData = new FormData(formRef.current);
-      formData.set("fix", String(fix));
+      formData.set("fix", String(selectedFix));
       formData.set("lang", lang);
       formData.set("_subject", `WebsiteFix Anfrage (${lang.toUpperCase()})`);
 
@@ -538,22 +734,32 @@ export default function Page() {
       setFileName("");
       setSubmitState("success");
 
-      if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
-        (window as any).gtag("event", "fix_request_submitted", {
-          fix_type: fix,
-          language: lang,
-        });
-      }
+      // ✅ Conversion event (consent-safe via track())
+      track("fix_request_submitted", {
+        fix_type: selectedFix,
+        language: lang,
+      });
     } catch {
       setSubmitState("error");
     }
   }
 
   const canSubmit = !!fix && submitState !== "sending";
-  const navLinkClass = (id: SectionId) => `navLink ${activeSection === id ? "isActive" : ""}`;
+  const navLinkClass = (id: SectionId) =>
+    `navLink ${activeSection === id ? "isActive" : ""}`;
 
   return (
     <main>
+      {/* Purchase success banner (from Stripe success_url) */}
+      {purchaseBanner ? (
+        <div className="card cardNote" style={{ margin: "14px auto 0", maxWidth: 1100 }}>
+          <h3 style={{ marginTop: 0 }}>{t.purchaseBanner.title}</h3>
+          <p className="muted" style={{ marginBottom: 0 }}>
+            {t.purchaseBanner.text}
+          </p>
+        </div>
+      ) : null}
+
       {/* NAVBAR */}
       <header className="nav" ref={navRef}>
         <div className="brand">
@@ -564,6 +770,7 @@ export default function Page() {
 
         <nav className="navLinks" aria-label="Hauptnavigation">
           <a className={navLinkClass("fixes")} href="#fixes">{t.nav.fixes}</a>
+          <a className={navLinkClass("about")} href="#about">{t.nav.about}</a>
           <a className={navLinkClass("bundles")} href="#bundles">{t.nav.bundles}</a>
           <a className={navLinkClass("ablauf")} href="#ablauf">{t.nav.how}</a>
           <a className={navLinkClass("beispiele")} href="#beispiele">{t.nav.examples}</a>
@@ -639,18 +846,32 @@ export default function Page() {
                 <ul className="list">
                   {fx.list.map((li) => <li key={li}>{li}</li>)}
                 </ul>
+
+                {fx.note ? (
+                  <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>{fx.note}</p>
+                ) : null}
               </div>
 
               <div style={{ display: "grid", gap: 10 }}>
                 <a
                   className="cta ctaSmall"
-                  href={STRIPE_FIX_LINKS[fx.key]}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={STRIPE_FIX_LINKS[fx.key] ?? "#book"}
+                  target={STRIPE_FIX_LINKS[fx.key] ? "_blank" : undefined}
+                  rel={STRIPE_FIX_LINKS[fx.key] ? "noopener noreferrer" : undefined}
                   onClick={() => {
+                    // ✅ Track click (consent-safe)
+                    track("fix_click", { fix_key: fx.key, language: lang });
+
                     presetFix(fx.key);
-                    if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
-                      (window as any).gtag("event", "begin_checkout", {
+
+                    if (STRIPE_FIX_LINKS[fx.key]) {
+                      track("begin_checkout", {
+                        item_type: "fix",
+                        fix_key: fx.key,
+                        language: lang,
+                      });
+                    } else {
+                      track("begin_request", {
                         item_type: "fix",
                         fix_key: fx.key,
                         language: lang,
@@ -658,13 +879,27 @@ export default function Page() {
                     }
                   }}
                 >
-                  {lang === "de" ? "Fix jetzt bezahlen" : "Pay now"}
+                  {fx.key === "down"
+                    ? lang === "de"
+                      ? "Notfall-Fix starten"
+                      : "Start emergency fix"
+                    : lang === "de"
+                      ? "Fix jetzt bezahlen"
+                      : "Pay now"}
                 </a>
 
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  {lang === "de"
-                    ? "Nach der Zahlung bekommst du eine E-Mail von uns mit allen nächsten Schritten - einfach antworten & wir legen los."
-                    : "After payment, you will receive an email with the next steps. You can simply reply directly to it."}
+                  {STRIPE_FIX_LINKS[fx.key]
+                    ? lang === "de"
+                      ? "Nach der Zahlung bekommst du eine E-Mail von uns mit allen nächsten Schritten - einfach antworten & wir legen los."
+                      : "After payment, you will receive an email with the next steps. You can simply reply directly to it."
+                    : lang === "de"
+                      ? "Fix #6: Stripe-Link kommt gleich — bis dahin kurz anfragen → wir starten sofort."
+                      : "Fix #6: Stripe link coming — for now request it and we’ll start right away."}
+                </p>
+
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+                  {lang === "de" ? "Nicht umsetzbar? → 100% Erstattung." : "Not feasible? → 100% refund."}
                 </p>
               </div>
             </div>
@@ -674,6 +909,22 @@ export default function Page() {
         <div className="card cardNote">
           <h3>{t.scopeTitle}</h3>
           <p className="muted">{t.scopeText}</p>
+        </div>
+      </section>
+
+      {/* ABOUT / TRUST */}
+      <section className="section" id="about">
+        <h2>{t.about.title}</h2>
+        <div className="card cardInfo" style={{ marginTop: 16 }}>
+          <p className="muted" style={{ marginTop: 0 }}>{t.about.text}</p>
+          <ul className="list" style={{ marginTop: 12 }}>
+            {t.about.bullets.map((b: string) => <li key={b}>{b}</li>)}
+          </ul>
+          <p className="muted" style={{ marginBottom: 0, marginTop: 12, fontSize: 13 }}>
+            {lang === "de"
+              ? "Transparenz-Hinweis: Betreiber-/Firmenangaben findest du im Impressum."
+              : "Transparency note: operator/company details are available in the Imprint."}
+          </p>
         </div>
       </section>
 
@@ -740,7 +991,7 @@ export default function Page() {
         <h2>{t.faqTitle}</h2>
 
         <div className="card cardInfo" style={{ marginTop: 16 }}>
-          {t.faq.map((item) => (
+          {t.faq.map((item: { q: string; a: string }) => (
             <div key={item.q} style={{ marginBottom: 16 }}>
               <h3>{item.q}</h3>
               <p className="muted">{item.a}</p>
@@ -777,15 +1028,8 @@ export default function Page() {
               return (
                 <article key={p.slug} className="blogCard">
                   <div className="blogMetaRow">
-                    {fm.category ? (
-                      <span className="chip chipStrong">{fm.category}</span>
-                    ) : (
-                      <span />
-                    )}
-
-                    <time className="mutedSmall" dateTime={fm.date}>
-                      {fm.date}
-                    </time>
+                    {fm.category ? <span className="chip chipStrong">{fm.category}</span> : <span />}
+                    <time className="mutedSmall" dateTime={fm.date}>{fm.date}</time>
                   </div>
 
                   <h3 className="blogTitle">
@@ -794,9 +1038,7 @@ export default function Page() {
                     </Link>
                   </h3>
 
-                  {fm.description ? (
-                    <p className="blogExcerpt">{fm.description}</p>
-                  ) : null}
+                  {fm.description ? <p className="blogExcerpt">{fm.description}</p> : null}
 
                   {!!fm.tags?.length && (
                     <div className="chipRow">
@@ -925,15 +1167,12 @@ export default function Page() {
 
             {/* Upload (optional) */}
             <label className="field">
-              <span className="fieldLabel">
-                {lang === "de" ? "Screenshot (optional)" : "Screenshot (optional)"}
-              </span>
+              <span className="fieldLabel">{lang === "de" ? "Screenshot (optional)" : "Screenshot (optional)"}</span>
 
               <div className="uploadBox">
                 <div className="uploadHead">
                   <div className="uploadTitle">
                     <strong>{lang === "de" ? "UI-/Bug-Screenshot" : "UI / bug screenshot"}</strong>
-
                     <span className="uploadMeta">
                       {lang === "de"
                         ? "PNG / JPG / WebP · max. 8 MB · hilft uns, schneller zu fixen."
@@ -943,12 +1182,8 @@ export default function Page() {
 
                   <label className="uploadBtn">
                     {fileName
-                      ? lang === "de"
-                        ? "Anderes Bild wählen"
-                        : "Choose another"
-                      : lang === "de"
-                        ? "Bild auswählen"
-                        : "Choose file"}
+                      ? (lang === "de" ? "Anderes Bild wählen" : "Choose another")
+                      : (lang === "de" ? "Bild auswählen" : "Choose file")}
 
                     <input
                       name="attachment"
@@ -985,8 +1220,7 @@ export default function Page() {
                         className="fileRemove"
                         aria-label={lang === "de" ? "Datei entfernen" : "Remove file"}
                         onClick={() => {
-                          const input =
-                            formRef.current?.querySelector<HTMLInputElement>('input[name="attachment"]');
+                          const input = formRef.current?.querySelector<HTMLInputElement>('input[name="attachment"]');
                           if (input) input.value = "";
                           setFileName("");
                         }}
@@ -1037,7 +1271,6 @@ export default function Page() {
               {lang === "de" ? "Antwort meist innerhalb von 24h (Mo–Fr)" : "Usually replies within 24h (Mon–Fri)."}
             </p>
 
-            {/* Legal hint + links */}
             <p className="microNote" style={{ marginTop: 6 }}>
               {t.legalLine}{" "}
               <a className="contactLink" href="/datenschutz">Datenschutz</a> ·{" "}
@@ -1047,7 +1280,8 @@ export default function Page() {
             {submitState === "success" && <div className="formMsg formMsgSuccess">{t.form.success}</div>}
             {submitState === "error" && (
               <div className="formMsg formMsgError">
-                {t.form.error} <a className="contactLink" href={mailto}>{EMAIL}</a>.
+                {t.form.error}{" "}
+                <a className="contactLink" href={mailto}>{EMAIL}</a>.
               </div>
             )}
 
@@ -1066,11 +1300,9 @@ export default function Page() {
           </form>
         </div>
 
-        {/* Footer mit Pflichtlinks */}
         <footer className="footer muted">
           {t.footer} · {t.domain} ·{" "}
-          <a className="contactLink" href="/impressum">Impressum</a>{" "}
-          ·{" "}
+          <a className="contactLink" href="/impressum">Impressum</a> ·{" "}
           <a className="contactLink" href="/datenschutz">Datenschutz</a>
         </footer>
       </section>

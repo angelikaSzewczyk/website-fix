@@ -1901,3 +1901,271 @@ input[type="file"].input {
   filter: drop-shadow(0 0 6px rgba(141,243,211,.25));
   text-decoration: none;
 }
+/* =========================================================
+   NAVBAR FIX (for nav INSIDE <main>)
+   Paste at VERY END of globals.css
+========================================================= */
+
+/* Header is inside main already -> DO NOT add max-width/margins/big radius */
+.nav{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+  padding: 12px 0;                 /* important: no extra left/right inset */
+
+  background: rgba(11,12,16,.78);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+
+  /* kill any previous “boxed” look */
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0;
+  margin: 0;
+  width: auto;
+  max-width: none;
+}
+
+/* prevent odd pseudo overlays from previous blocks */
+.nav::after{ display:none !important; }
+
+/* Brand */
+.brand{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 850;
+  font-size: 16px;
+  letter-spacing: .2px;
+  color: #fff;
+  white-space: nowrap;
+}
+.brandSpace{ opacity:.6; }
+
+.brandAccent{
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Nav links: consistent “pill” rhythm */
+.navLinks{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navLinks a{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1;
+
+  color: rgba(255,255,255,.72);
+  text-decoration: none;
+
+  border: 1px solid transparent;
+  background: transparent;
+
+  transition: background .16s ease, color .16s ease, border-color .16s ease;
+}
+
+.navLinks a:hover{
+  color: #fff;
+  background: rgba(255,255,255,.05);
+}
+
+/* active state (your code uses navLink + isActive) */
+.navLinks a.navLink.isActive{
+  color: #fff;
+  background: rgba(141,243,211,.10);
+  border-color: rgba(141,243,211,.22);
+}
+
+/* Right cluster (lang + CTA) */
+.nav > div:last-child{
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* Language segmented control: same height as CTA */
+.langSeg{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 4px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.langSegBtn{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  padding: 8px 12px;
+  border-radius: 12px;
+
+  font-weight: 850;
+  font-size: 13px;
+  letter-spacing: .2px;
+
+  color: rgba(255,255,255,.75);
+  transition: background .16s ease, color .16s ease, transform .08s ease;
+}
+
+.langSegBtn:hover{
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.92);
+}
+
+.langSegBtn.isActive{
+  color: #0b0c10;
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  box-shadow: 0 0 0 4px rgba(141,243,211,.08);
+}
+
+/* CTA button */
+.navCta{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 14px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(141,243,211,.35);
+  background: rgba(141,243,211,.10);
+
+  color: #fff;
+  font-weight: 750;
+  font-size: 14px;
+  line-height: 1;
+
+  text-decoration: none;
+  transition: background .16s ease, transform .16s ease, opacity .16s ease;
+}
+
+.navCta:hover{
+  background: rgba(141,243,211,.14);
+  transform: translateY(-1px);
+}
+
+.navCta:active{ transform: translateY(0); }
+
+/* mobile */
+@media (max-width: 700px){
+  .navLinks{ display:none; }
+}
+/* =========================================================
+   COMPACT LANG SWITCH (same height as .navCta, narrower)
+========================================================= */
+
+.langSeg{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 2px;                 /* ⬅️ entscheidend */
+  border-radius: 14px;
+
+  border: 1px solid rgba(141,243,211,.35);
+  background: rgba(141,243,211,.10);
+}
+
+/* Buttons inside */
+.langSegBtn{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  padding: 8px 10px;            /* ⬅️ gleiche Höhe wie navCta */
+  border-radius: 12px;
+
+  font-weight: 800;
+  font-size: 13px;              /* ⬅️ minimal kleiner */
+  line-height: 1;
+
+  color: rgba(255,255,255,.78);
+  transition: background .16s ease, transform .12s ease, color .16s ease;
+}
+
+.langSegBtn:hover{
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.9);
+}
+
+.langSegBtn.isActive{
+  color: #0b0c10;
+  background: linear-gradient(90deg, #8df3d3, #7aa6ff);
+  box-shadow: none;             /* ⬅️ ruhiger */
+}
+/* ===== Consent Banner (minimal & premium) ===== */
+.consentWrap{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 80;
+  padding: 12px;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(8px);
+}
+
+.consentCard{
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 16px;
+  padding: 14px 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(11, 12, 16, 0.85);
+  box-shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+
+.consentActions{
+  display: inline-flex;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.consentBtn{
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 750;
+}
+
+@media (max-width: 640px){
+  .consentCard{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .consentActions{
+    width: 100%;
+  }
+  .consentActions .consentBtn{
+    width: 100%;
+  }
+}
