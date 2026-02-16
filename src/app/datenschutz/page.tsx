@@ -14,10 +14,10 @@ export default function DatenschutzPage() {
 
       <h2>1. Verantwortliche Stelle</h2>
       <p>
-        <strong>[Dein Vor- und Nachname]</strong><br />
+        <strong>Angelika Szewczyk</strong><br />
         Einzelunternehmen<br />
-        [Straße Hausnummer]<br />
-        [PLZ Ort]<br />
+        Am Hühnerberg 5<br />
+        51381 Leverkusen<br />
         Deutschland<br />
         E-Mail: support@website-fix.com
       </p>

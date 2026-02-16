@@ -8,10 +8,10 @@ export default function ImpressumPage() {
       <h1 style={{ marginTop: 0 }}>Impressum</h1>
 
       <p>
-        <strong>[Dein Vor- und Nachname]</strong><br />
+        <strong>Angelika Szewczyk</strong><br />
         Einzelunternehmen<br />
-        [Straße Hausnummer]<br />
-        [PLZ Ort]<br />
+        Am Hühnerberg 5<br />
+        51381 Leverkusen<br />
         Deutschland
       </p>
 
@@ -22,18 +22,12 @@ export default function ImpressumPage() {
 
       <h2>Umsatzsteuer</h2>
       <p>
-        [ ] Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:
-        <br />
-        <strong>[DE…]</strong>
-        <br /><br />
-        <em>oder</em>
-        <br /><br />
         Gemäß § 19 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer ausgewiesen.
       </p>
 
       <h2>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
       <p>
-        [Dein Vor- und Nachname]<br />
+        Angelika Szewczyk<br />
         [Adresse wie oben]
       </p>
 

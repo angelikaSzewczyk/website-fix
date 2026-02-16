@@ -25,6 +25,7 @@ const STRIPE_FIX_LINKS: Record<Exclude<FixKey, "down">, string> &
   mobile: "https://buy.stripe.com/8x25kD0BWbSy0lIaWhgMw02",
   tracking: "https://buy.stripe.com/dRm8wP70k7Cid8u5BXgMw03",
   small: "https://buy.stripe.com/eVqbJ184oe0G6K6d4pgMw04",
+  down: "https://buy.stripe.com/28EfZh3O88GmgkGfcxgMw05"
 
   // ✅ TODO: Stripe Payment Link ergänzen:
   // down: "https://buy.stripe.com/....",
