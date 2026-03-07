@@ -2169,3 +2169,89 @@ input[type="file"].input {
     width: 100%;
   }
 }
+/* ===== Blog Post Detail ===== */
+.blogPostPage {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: #ffffff;
+}
+
+.blogPostTitle {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 40px;
+  line-height: 1.12;
+}
+
+.blogPostDesc {
+  margin: 0 0 24px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* CTA unter Blogartikeln */
+.blogPostCta {
+  margin-top: 40px;
+  padding: 24px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.blogPostCtaTitle {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.blogPostCtaText {
+  margin: 0 0 16px;
+  max-width: 720px;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.6;
+}
+
+.blogPostCtaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .blogPostTitle {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .blogPostPage {
+    padding: 28px 16px;
+  }
+
+  .blogPostTitle {
+    font-size: 30px;
+  }
+
+  .blogPostCta {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .blogPostCtaTitle {
+    font-size: 20px;
+  }
+
+  .blogPostCtaActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .blogPostCtaActions .cta,
+  .blogPostCtaActions .ghostBtn {
+    width: 100%;
+  }
+}

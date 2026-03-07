@@ -5,6 +5,91 @@ import matter from "gray-matter";
 import { remark } from "remark";
 import html from "remark-html";
 
+type BlogFrontmatter = {
+  title?: string;
+  description?: string;
+  tags?: string[];
+};
+
+function getCtaVariant(data: BlogFrontmatter) {
+  const title = (data.title || "").toLowerCase();
+  const tags = (data.tags || []).map((t) => t.toLowerCase()).join(" ");
+  const text = `${title} ${tags}`;
+
+  // klare Standard-Fixes
+  if (text.includes("kontaktformular") || text.includes("formular")) {
+    return {
+      headline: "Dieses Problem lässt sich oft schnell beheben",
+      copy:
+        "Wenn dein Kontaktformular nicht funktioniert oder Anfragen nicht ankommen, passt das oft zu einem unserer Standard-Fixes.",
+      primaryHref: "/#fixes",
+      primaryLabel: "Fix auswählen →",
+      secondaryHref: "/#book",
+      secondaryLabel: "Problem anfragen",
+    };
+  }
+
+  if (
+    text.includes("langsam") ||
+    text.includes("ladezeit") ||
+    text.includes("pagespeed") ||
+    text.includes("performance")
+  ) {
+    return {
+      headline: "Dieses Problem lässt sich oft schnell beheben",
+      copy:
+        "Wenn deine Website langsam lädt, Besucher abspringen oder Pagespeed schlecht ist, passt das oft zu einem unserer Standard-Fixes.",
+      primaryHref: "/#fixes",
+      primaryLabel: "Fix auswählen →",
+      secondaryHref: "/#book",
+      secondaryLabel: "Problem anfragen",
+    };
+  }
+
+  if (
+    text.includes("mobile") ||
+    text.includes("responsive") ||
+    text.includes("handy")
+  ) {
+    return {
+      headline: "Dieses Problem lässt sich oft schnell beheben",
+      copy:
+        "Wenn deine Website auf dem Handy kaputt aussieht oder mobil schlecht bedienbar ist, passt das oft zu einem unserer Standard-Fixes.",
+      primaryHref: "/#fixes",
+      primaryLabel: "Fix auswählen →",
+      secondaryHref: "/#book",
+      secondaryLabel: "Problem anfragen",
+    };
+  }
+
+  if (
+    text.includes("analytics") ||
+    text.includes("tracking") ||
+    text.includes("ga4")
+  ) {
+    return {
+      headline: "Dieses Problem lässt sich oft schnell beheben",
+      copy:
+        "Wenn Tracking oder Analytics nicht sauber eingerichtet sind, lässt sich das oft als klarer Fix umsetzen.",
+      primaryHref: "/#fixes",
+      primaryLabel: "Fix auswählen →",
+      secondaryHref: "/#book",
+      secondaryLabel: "Problem anfragen",
+    };
+  }
+
+  // komplexere / individuelle Fälle
+  return {
+    headline: "Technischer oder individueller Fall?",
+    copy:
+      "Nicht jedes Problem passt auf einen festen Standard-Fix. Wenn deine Website Fehler zeigt, offline ist oder der Fall technischer ist, beschreibe ihn kurz über das Anfrageformular.",
+    primaryHref: "/#book",
+    primaryLabel: "Problem anfragen →",
+    secondaryHref: "/#fixes",
+    secondaryLabel: "Fixes ansehen",
+  };
+}
+
 export default async function BlogPostPage({
   params,
 }: {
@@ -25,55 +110,36 @@ export default async function BlogPostPage({
   const processed = await remark().use(html).process(content);
   const contentHtml = processed.toString();
 
-  return (
-    <main
-      style={{
-        maxWidth: 960,
-        margin: "0 auto",
-        padding: "40px 20px",
-        color: "#fff",
-      }}
-    >
-      <article>
-        <h1 style={{ marginTop: 0 }}>{data.title}</h1>
+  const cta = getCtaVariant(data as BlogFrontmatter);
 
-        <p style={{ opacity: 0.75, marginBottom: 24 }}>
-          {data.description}
-        </p>
+  return (
+    <main className="blogPostPage">
+      <article>
+        <h1 className="blogPostTitle">{data.title}</h1>
+
+        {data.description ? (
+          <p className="blogPostDesc">{data.description}</p>
+        ) : null}
 
         <div
           className="blogContent"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
 
-        {/* CTA */}
-        <div
-          style={{
-            marginTop: 40,
-            padding: 20,
-            borderRadius: 16,
-            background: "rgba(141,243,211,.10)",
-            border: "1px solid rgba(141,243,211,.35)",
-          }}
-        >
-          <strong>Brauchst du Hilfe bei genau diesem Problem?</strong>
-          <p style={{ margin: "8px 0 14px", opacity: 0.85 }}>
-            Wir prüfen deine Website kurz und beheben den Fehler zum Fixpreis.
-          </p>
-          <a
-            href="/#fixes"
-            style={{
-              display: "inline-block",
-              padding: "12px 18px",
-              borderRadius: 12,
-              background: "linear-gradient(90deg,#8df3d3,#7aa6ff)",
-              color: "#0b0c10",
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            Fix auswählen →
-          </a>
+        <div className="blogPostCta">
+          <strong className="blogPostCtaTitle">{cta.headline}</strong>
+
+          <p className="blogPostCtaText">{cta.copy}</p>
+
+          <div className="blogPostCtaActions">
+            <a href={cta.primaryHref} className="cta">
+              {cta.primaryLabel}
+            </a>
+
+            <a href={cta.secondaryHref} className="ghostBtn">
+              {cta.secondaryLabel}
+            </a>
+          </div>
         </div>
       </article>
     </main>
