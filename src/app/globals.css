@@ -2255,3 +2255,102 @@ input[type="file"].input {
     width: 100%;
   }
 }
+/* ===== WebsiteFix Vorteile / Positionierung ===== */
+.advSectionLead {
+  max-width: 780px;
+}
+
+.advGrid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.advCard {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.advCard:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.advCardTitle {
+  margin: 0 0 8px;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+.advCardText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.advBox {
+  margin-top: 22px;
+  padding: 22px;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(141, 243, 211, 0.08),
+    rgba(122, 166, 255, 0.06)
+  );
+  border: 1px solid rgba(141, 243, 211, 0.18);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.advBoxTitle {
+  margin: 0 0 8px;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.advBoxText {
+  margin: 0 0 16px;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.6;
+}
+
+.advActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .advGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .advBox {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .advBoxTitle {
+    font-size: 20px;
+  }
+
+  .advActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .advActions .cta,
+  .advActions .ghostBtnSmall {
+    width: 100%;
+  }
+}
