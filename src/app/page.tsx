@@ -94,6 +94,7 @@ export default function Page() {
   const [purchaseBanner, setPurchaseBanner] = useState<null | { fix?: string }>(
     null
   );
+  
 
   const navRef = useRef<HTMLElement | null>(null);
   const selectRef = useRef<HTMLDivElement | null>(null);

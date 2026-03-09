@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import AnalyticsConsentLoader from "./components/analytics-consent-loader";
 import ConsentBanner from "./components/consent-banner";
 
-const SITE_URL = "https://websitefix.io";
+const SITE_URL = "https://website-fix.com";
 
 export const metadata: Metadata = {
   title: {
