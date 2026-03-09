@@ -1,4 +1,3 @@
-// src/lib/blog.ts
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -34,7 +33,6 @@ function normalizeTags(v: unknown): string[] | undefined {
   }
 
   if (typeof v === "string") {
-    // allows "a, b, c" OR "a|b|c"
     const arr = v
       .split(/[,|]/g)
       .map((s) => s.trim())
@@ -43,6 +41,37 @@ function normalizeTags(v: unknown): string[] | undefined {
   }
 
   return undefined;
+}
+
+function scoreRelatedness(current: BlogPost, candidate: BlogPost): number {
+  let score = 0;
+
+  const currentCategory = current.frontmatter.category?.toLowerCase().trim();
+  const candidateCategory = candidate.frontmatter.category?.toLowerCase().trim();
+
+  if (currentCategory && candidateCategory && currentCategory === candidateCategory) {
+    score += 4;
+  }
+
+  const currentTags = new Set(
+    (current.frontmatter.tags ?? []).map((tag) => tag.toLowerCase().trim())
+  );
+  const candidateTags = (candidate.frontmatter.tags ?? []).map((tag) =>
+    tag.toLowerCase().trim()
+  );
+
+  for (const tag of candidateTags) {
+    if (currentTags.has(tag)) score += 2;
+  }
+
+  const currentWords = new Set(current.slug.toLowerCase().split("-"));
+  const candidateWords = candidate.slug.toLowerCase().split("-");
+
+  for (const word of candidateWords) {
+    if (currentWords.has(word)) score += 1;
+  }
+
+  return score;
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -85,10 +114,30 @@ export function getAllPosts(): BlogPost[] {
   return posts.sort((a, b) => {
     const ta = Date.parse(a.frontmatter.date);
     const tb = Date.parse(b.frontmatter.date);
-    // invalid dates go last
+
     if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
     if (Number.isNaN(ta)) return 1;
     if (Number.isNaN(tb)) return -1;
+
     return tb - ta;
   });
+}
+
+export function getRelatedPosts(currentSlug: string, limit = 4): BlogPost[] {
+  const posts = getAllPosts();
+  const currentPost = posts.find((post) => post.slug === currentSlug);
+
+  if (!currentPost) {
+    return posts.filter((post) => post.slug !== currentSlug).slice(0, limit);
+  }
+
+  return posts
+    .filter((post) => post.slug !== currentSlug)
+    .map((post) => ({
+      post,
+      score: scoreRelatedness(currentPost, post),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((item) => item.post);
 }

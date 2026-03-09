@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import matter from "gray-matter";
 import { remark } from "remark";
 import html from "remark-html";
+import RelatedPosts from "@/app/components/related-posts";
+import BlogHeader from "@/app/components/blog-header";
+
 
 type BlogFrontmatter = {
   title?: string;
@@ -11,12 +14,52 @@ type BlogFrontmatter = {
   tags?: string[];
 };
 
+type TocItem = {
+  id: string;
+  text: string;
+};
+
+function slugifyHeading(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-");
+}
+
+function extractTocAndInjectIds(contentHtml: string): {
+  htmlWithIds: string;
+  toc: TocItem[];
+} {
+  const toc: TocItem[] = [];
+
+  const htmlWithIds = contentHtml.replace(
+    /<h2>(.*?)<\/h2>/g,
+    (_match, innerText: string) => {
+      const plainText = innerText.replace(/<[^>]+>/g, "").trim();
+      const id = slugifyHeading(plainText);
+
+      toc.push({
+        id,
+        text: plainText,
+      });
+
+      return `<h2 id="${id}">${innerText}</h2>`;
+    }
+  );
+
+  return { htmlWithIds, toc };
+}
+
 function getCtaVariant(data: BlogFrontmatter) {
   const title = (data.title || "").toLowerCase();
   const tags = (data.tags || []).map((t) => t.toLowerCase()).join(" ");
   const text = `${title} ${tags}`;
 
-  // klare Standard-Fixes
   if (text.includes("kontaktformular") || text.includes("formular")) {
     return {
       headline: "Dieses Problem lässt sich oft schnell beheben",
@@ -78,7 +121,6 @@ function getCtaVariant(data: BlogFrontmatter) {
     };
   }
 
-  // komplexere / individuelle Fälle
   return {
     headline: "Technischer oder individueller Fall?",
     copy:
@@ -110,21 +152,34 @@ export default async function BlogPostPage({
   const processed = await remark().use(html).process(content);
   const contentHtml = processed.toString();
 
+  const { htmlWithIds, toc } = extractTocAndInjectIds(contentHtml);
   const cta = getCtaVariant(data as BlogFrontmatter);
 
   return (
-    <main className="blogPostPage">
+      <><BlogHeader active="blog" lang="de" ctaLabel="Fix auswählen" /><main className="blogPostPage">
       <article>
-        <h1 className="blogPostTitle">{data.title}</h1>
+        <h1 className="blogPostTitle">{String(data.title || "")}</h1>
 
         {data.description ? (
-          <p className="blogPostDesc">{data.description}</p>
+          <p className="blogPostDesc">{String(data.description)}</p>
+        ) : null}
+
+        {toc.length >= 2 ? (
+          <nav className="blogToc" aria-label="Inhaltsverzeichnis">
+            <strong className="blogTocTitle">Inhalt</strong>
+            <div className="blogTocList">
+              {toc.map((item) => (
+                <a key={item.id} href={`#${item.id}`} className="blogTocLink">
+                  {item.text}
+                </a>
+              ))}
+            </div>
+          </nav>
         ) : null}
 
         <div
           className="blogContent"
-          dangerouslySetInnerHTML={{ __html: contentHtml }}
-        />
+          dangerouslySetInnerHTML={{ __html: htmlWithIds }} />
 
         <div className="blogPostCta">
           <strong className="blogPostCtaTitle">{cta.headline}</strong>
@@ -141,7 +196,9 @@ export default async function BlogPostPage({
             </a>
           </div>
         </div>
+
+        <RelatedPosts slug={params.slug} lang="de" />
       </article>
-    </main>
+    </main></>
   );
 }

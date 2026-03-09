@@ -3,6 +3,7 @@ import { getAllPosts } from "@/lib/blog";
 
 
 import type { Metadata } from "next";
+import BlogHeader from "../components/blog-header";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -13,7 +14,7 @@ export default function BlogIndexPage() {
   const posts = getAllPosts();
 
   return (
-    <main className="page">
+     <><BlogHeader active="blog" lang="de" ctaLabel="Fix auswählen" /><main className="page">
       <div className="pageHead">
         <h1 className="h1">Blog</h1>
         <p className="lead">
@@ -68,6 +69,6 @@ export default function BlogIndexPage() {
           ← Zur Startseite
         </Link>
       </div>
-    </main>
+    </main></>
   );
 }

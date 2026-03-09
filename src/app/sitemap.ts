@@ -1,41 +1,42 @@
 import { MetadataRoute } from "next";
+import fs from "fs";
+import path from "path";
+
+const SITE_URL = "https://website-fix.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://www.website-fix.com";
+
+  const blogDir = path.join(process.cwd(), "content/blog");
+
+  const blogFiles = fs
+    .readdirSync(blogDir)
+    .filter((file) => file.endsWith(".md"));
+
+  const blogUrls = blogFiles.map((file) => {
+    const slug = file.replace(".md", "");
+
+    return {
+      url: `${SITE_URL}/blog/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    };
+  });
 
   return [
-    // Hauptseiten
     {
-      url: `${baseUrl}/`,
+      url: `${SITE_URL}/`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${baseUrl}/fixes`,
+      url: `${SITE_URL}/blog`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
 
-    // Blogartikel (manuell – wir automatisieren das später)
-    {
-      url: `${baseUrl}/blog/kontaktformular-funktioniert-nicht`,
-      lastModified: new Date("2026-02-10"),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/blog/website-zu-langsam`,
-      lastModified: new Date("2026-02-10"),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
+    ...blogUrls,
   ];
 }

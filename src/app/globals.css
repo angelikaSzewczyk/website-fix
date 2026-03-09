@@ -1493,8 +1493,14 @@ input[type="file"].input {
 .page {
   max-width: 960px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 40px 20px 80px;
   color: #fff;
+}
+.blogHeaderNav {
+  max-width: 960px;
+  margin: 0 auto 18px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .pageHead {
@@ -2576,4 +2582,184 @@ input[type="file"].input {
     padding:11px 12px;
     font-size:15px;
   }
+}
+.relatedSection {
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.relatedTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.relatedCard {
+  position: relative;
+  display: block;
+  padding: 20px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  text-decoration: none;
+  color: #fff;
+  line-height: 1.45;
+
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease;
+}
+
+.relatedCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(141,243,211,0.35);
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.relatedCardTitle {
+  display: block;
+  position: relative;
+  padding-left: 22px;
+}
+
+.relatedArrow {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  color: #8df3d3;
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform .18s ease;
+}
+
+.relatedCard:hover .relatedArrow {
+  transform: translateX(4px);
+}
+
+.relatedCard span {
+  display: block;
+}
+
+/* mobile */
+@media (max-width: 700px) {
+  .relatedGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.blogInlineLink {
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-color: rgba(141, 243, 211, 0.6);
+  text-underline-offset: 3px;
+  font-weight: 650;
+  transition: color 160ms ease, text-decoration-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.blogInlineLink:hover {
+  color: #8df3d3;
+  text-decoration-color: rgba(141, 243, 211, 0.95);
+}
+.blogToc {
+  margin: 0 0 28px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.blogTocTitle {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.blogTocList {
+  display: grid;
+  gap: 8px;
+}
+
+.blogTocLink {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  line-height: 1.45;
+  transition: color 0.16s ease, transform 0.16s ease;
+}
+
+.blogTocLink:hover {
+  color: #8df3d3;
+  transform: translateX(2px);
+}
+
+.blogContent h2[id] {
+  scroll-margin-top: 100px;
+}
+/* ===== Fix visited / link colors ===== */
+.cta,
+.cta:visited,
+.stickyCtaBtn,
+.stickyCtaBtn:visited {
+  color: #0b0c10;
+  text-decoration: none;
+}
+
+.navCta,
+.navCta:visited {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.ghostBtn,
+.ghostBtn:visited,
+.ghostBtnSmall,
+.ghostBtnSmall:visited,
+.relatedCard,
+.relatedCard:visited,
+.blogLink,
+.blogLink:visited,
+.readMore,
+.readMore:visited {
+  text-decoration: none;
+}
+
+.brandLink,
+.brandLink:visited {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ===== Blog header specific ===== */
+.blogHeaderNav {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20 20px;
+}
+.blogPostPage {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  color: #ffffff;
+}
+
+.blogPostPage article {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.page,
+.blogPostPage,
+.blogHeaderNav {
+  max-width: 920px;
 }
