@@ -19,7 +19,6 @@ const STRIPE_FIX_LINKS: Record<FixKey, string> = {
   down: "https://buy.stripe.com/28EfZh3O88GmgkGfcxgMw05",
 };
 
-// ✅ Fix-Auswahl (DE/EN) — erweitert um Fix #6
 const FIX_OPTIONS_DE = [
   "Kontaktformular reparieren",
   "Website schneller machen",
@@ -85,6 +84,7 @@ export default function Page() {
   const [lang, setLang] = useState<Lang>("de");
 
   const [openFix, setOpenFix] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [fix, setFix] = useState<FixOptionDe | FixOptionEn | "">("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -94,7 +94,6 @@ export default function Page() {
   const [purchaseBanner, setPurchaseBanner] = useState<null | { fix?: string }>(
     null
   );
-  
 
   const navRef = useRef<HTMLElement | null>(null);
   const selectRef = useRef<HTMLDivElement | null>(null);
@@ -170,6 +169,10 @@ export default function Page() {
     if (lang === "de") setFix(mapDe[key]);
     else setFix(mapEn[key]);
     setOpenFix(false);
+  }
+
+  function closeMobileNav() {
+    setMobileNavOpen(false);
   }
 
   useEffect(() => {
@@ -712,7 +715,10 @@ export default function Page() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpenFix(false);
+      if (e.key === "Escape") {
+        setOpenFix(false);
+        setMobileNavOpen(false);
+      }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -778,6 +784,33 @@ export default function Page() {
       window.removeEventListener("resize", onScroll);
       if (raf) window.cancelAnimationFrame(raf);
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const previousOverflow = document.body.style.overflow;
+
+    if (mobileNavOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = previousOverflow || "";
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow || "";
+    };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth > 700) {
+        setMobileNavOpen(false);
+      }
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   function validate(form: HTMLFormElement): FieldErrors {
@@ -939,7 +972,7 @@ export default function Page() {
           </a>
         </nav>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div className="navActions">
           <div className="langSeg" role="group" aria-label="Language">
             <button
               type="button"
@@ -959,11 +992,100 @@ export default function Page() {
             </button>
           </div>
 
-          <a className="navCta" href="#fixes">
+          <a className="navCta navCtaDesktop" href="#fixes">
+            {t.hero.cta}
+          </a>
+
+          <button
+            type="button"
+            className={`mobileMenuBtn ${mobileNavOpen ? "isOpen" : ""}`}
+            aria-label={mobileNavOpen ? "Menü schließen" : "Menü öffnen"}
+            aria-expanded={mobileNavOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileNavOpen((v) => !v)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
+      </header>
+
+      {/* MOBILE NAV */}
+      <div
+        className={`mobileNavOverlay ${mobileNavOpen ? "isOpen" : ""}`}
+        onClick={closeMobileNav}
+        aria-hidden={!mobileNavOpen}
+      />
+
+      <nav
+        id="mobile-navigation"
+        className={`mobileNavDrawer ${mobileNavOpen ? "isOpen" : ""}`}
+        aria-label="Mobile Navigation"
+      >
+        <div className="mobileNavInner">
+          <a
+            className={navLinkClass("fixes")}
+            href="#fixes"
+            onClick={closeMobileNav}
+          >
+            {t.nav.fixes}
+          </a>
+          <a
+            className={navLinkClass("about")}
+            href="#about"
+            onClick={closeMobileNav}
+          >
+            {t.nav.about}
+          </a>
+          <a
+            className={navLinkClass("bundles")}
+            href="#bundles"
+            onClick={closeMobileNav}
+          >
+            {t.nav.bundles}
+          </a>
+          <a
+            className={navLinkClass("ablauf")}
+            href="#ablauf"
+            onClick={closeMobileNav}
+          >
+            {t.nav.how}
+          </a>
+          <a
+            className={navLinkClass("beispiele")}
+            href="#beispiele"
+            onClick={closeMobileNav}
+          >
+            {t.nav.examples}
+          </a>
+          <a
+            className={navLinkClass("faq")}
+            href="#faq"
+            onClick={closeMobileNav}
+          >
+            {t.nav.faq}
+          </a>
+          <a
+            className={navLinkClass("blog")}
+            href="#blog"
+            onClick={closeMobileNav}
+          >
+            {t.nav.blog}
+          </a>
+          <a
+            className={navLinkClass("book")}
+            href="#book"
+            onClick={closeMobileNav}
+          >
+            {t.nav.book}
+          </a>
+
+          <a className="cta mobileNavPrimary" href="#fixes" onClick={closeMobileNav}>
             {t.hero.cta}
           </a>
         </div>
-      </header>
+      </nav>
 
       {/* HERO */}
       <section className="hero" id="top">
@@ -1114,20 +1236,20 @@ export default function Page() {
         <h2>{t.advantages.title}</h2>
         <p className="muted advSectionLead">{t.advantages.sub}</p>
 
-<div className="advGrid">
-  {t.advantages.items.map((item: { title: string; text: string }) => (
-    <div key={item.title} className="advCard">
-      <h3 className="advCardTitle">{item.title}</h3>
-      <p className="advCardText">{item.text}</p>
-    </div>
-  ))}
-</div>
+        <div className="advGrid">
+          {t.advantages.items.map((item: { title: string; text: string }) => (
+            <div key={item.title} className="advCard">
+              <h3 className="advCardTitle">{item.title}</h3>
+              <p className="advCardText">{item.text}</p>
+            </div>
+          ))}
+        </div>
 
-<div className="advBox">
-  <h3 className="advBoxTitle">{t.advantages.boxTitle}</h3>
-  <p className="advBoxText">{t.advantages.boxText}</p>
+        <div className="advBox">
+          <h3 className="advBoxTitle">{t.advantages.boxTitle}</h3>
+          <p className="advBoxText">{t.advantages.boxText}</p>
 
-  <div className="advActions">
+          <div className="advActions">
             <a
               className="cta ctaSmall"
               href="#fixes"
@@ -1453,7 +1575,9 @@ export default function Page() {
 
             <label className="field">
               <span className="fieldLabel">
-                {lang === "de" ? "Screenshot (optional)" : "Screenshot (optional)"}
+                {lang === "de"
+                  ? "Screenshot (optional)"
+                  : "Screenshot (optional)"}
               </span>
 
               <div className="uploadBox">
