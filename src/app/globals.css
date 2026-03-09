@@ -2763,3 +2763,31 @@ input[type="file"].input {
 .blogHeaderNav {
   max-width: 920px;
 }
+/* Mobile: gleicher Innenabstand wie Content */
+@media (max-width: 700px) {
+  .blogHeaderNav {
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-bottom: 14px;
+  }
+
+  .blogHeaderNav .nav {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .blogHeaderNav .brand {
+    font-size: 15px;
+  }
+
+  .blogHeaderNav .mobileMenuBtn {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .blogHeaderNav {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
