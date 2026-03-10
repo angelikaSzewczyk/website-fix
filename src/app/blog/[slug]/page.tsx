@@ -13,6 +13,7 @@ type BlogFrontmatter = {
   title?: string;
   description?: string;
   tags?: string[];
+  date?: string;
 };
 
 type TocItem = {
@@ -38,12 +39,11 @@ const getPostData = cache(async (slug: string) => {
   };
 });
 
-// --- SEO METADATEN (Für Google Search Console & Social Media) ---
+// --- SEO METADATEN ---
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const post = await getPostData(params.slug);
   if (!post) return { title: "Beitrag nicht gefunden" };
 
-  // Wir erstellen eine URL, die auf unsere neue API zeigt und den Titel als Parameter übergibt
   const ogUrl = new URL('https://website-fix.com/api/og');
   ogUrl.searchParams.set('title', post.data.title || '');
 
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       type: "article",
       images: [
         {
-          url: ogUrl.toString(), // Hier wird das dynamische Bild geladen!
+          url: ogUrl.toString(),
           width: 1200,
           height: 630,
           alt: post.data.title,
@@ -74,6 +74,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     },
   };
 }
+
 // --- HILFSFUNKTIONEN ---
 function slugifyHeading(text: string) {
   return text
@@ -92,19 +93,15 @@ function extractTocAndInjectIds(contentHtml: string): {
   toc: TocItem[];
 } {
   const toc: TocItem[] = [];
-
   const htmlWithIds = contentHtml.replace(
     /<h2>(.*?)<\/h2>/g,
     (_match, innerText: string) => {
       const plainText = innerText.replace(/<[^>]+>/g, "").trim();
       const id = slugifyHeading(plainText);
-
       toc.push({ id, text: plainText });
-
       return `<h2 id="${id}">${innerText}</h2>`;
     }
   );
-
   return { htmlWithIds, toc };
 }
 
@@ -121,72 +118,73 @@ function getCtaVariant(data: BlogFrontmatter) {
   };
 
   if (text.includes("kontaktformular") || text.includes("formular")) {
-    return {
-      ...defaultFixCta,
-      headline: "Dieses Problem lässt sich oft schnell beheben",
-      copy: "Wenn dein Kontaktformular nicht funktioniert oder Anfragen nicht ankommen, passt das oft zu einem unserer Standard-Fixes.",
-    };
+    return { ...defaultFixCta, headline: "Kontaktformular defekt?", copy: "Wir fixen PHP-Mailer, SMTP oder JavaScript-Fehler in Kürze." };
   }
-
-  if (text.includes("langsam") || text.includes("ladezeit") || text.includes("pagespeed") || text.includes("performance")) {
-    return {
-      ...defaultFixCta,
-      headline: "Ladezeit optimieren",
-      copy: "Wenn deine Website langsam lädt oder der Pagespeed schlecht ist, passt das oft zu einem unserer Standard-Fixes.",
-    };
+  if (text.includes("langsam") || text.includes("ladezeit") || text.includes("pagespeed")) {
+    return { ...defaultFixCta, headline: "Ladezeit optimieren", copy: "Wir machen deine Website wieder schnell – messbar in Google Pagespeed." };
   }
-
-  if (text.includes("mobile") || text.includes("responsive") || text.includes("handy")) {
-    return {
-      ...defaultFixCta,
-      headline: "Mobile Ansicht fixen",
-      copy: "Wenn deine Website auf dem Handy kaputt aussieht, passt das oft zu einem unserer Standard-Fixes.",
-    };
-  }
-
-  if (text.includes("analytics") || text.includes("tracking") || text.includes("ga4")) {
-    return {
-      ...defaultFixCta,
-      headline: "Tracking korrigieren",
-      copy: "Wenn Tracking oder Analytics nicht sauber eingerichtet sind, lässt sich das oft als klarer Fix umsetzen.",
-    };
-  }
-
+  
   return {
-    headline: "Technischer oder individueller Fall?",
-    copy: "Nicht jedes Problem passt auf einen Standard-Fix. Beschreibe deinen Fall kurz über das Anfrageformular.",
+    headline: "Technischer Check nötig?",
+    copy: "Nicht jedes Problem lässt sich selbst lösen. Unsere Experten prüfen deinen Fall individuell.",
     primaryHref: "/#book",
-    primaryLabel: "Problem anfragen →",
+    primaryLabel: "Anfrage senden →",
     secondaryHref: "/#fixes",
-    secondaryLabel: "Fixes ansehen",
+    secondaryLabel: "Fix-Pakete",
   };
 }
 
-// --- HAUPT-KOMPONENTE (Server Component) ---
+// --- HAUPT-KOMPONENTE ---
 export default async function BlogPostPage({
   params,
 }: {
   params: { slug: string };
 }) {
   const post = await getPostData(params.slug);
-
   if (!post) notFound();
 
   const { htmlWithIds, toc } = extractTocAndInjectIds(post.contentHtml);
   const cta = getCtaVariant(post.data);
 
+  // --- SCHEMA MARKUP (JSON-LD) ---
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": post.data.title,
+    "description": post.data.description,
+    "image": `https://website-fix.com/api/og?title=${encodeURIComponent(post.data.title || '')}`,
+    "step": toc.map((item, index) => ({
+      "@type": "HowToStep",
+      "position": index + 1,
+      "name": item.text,
+      "url": `https://website-fix.com/blog/${params.slug}#${item.id}`
+    })),
+    "publisher": {
+      "@type": "Organization",
+      "name": "WebsiteFix",
+      "logo": { "@type": "ImageObject", "url": "https://website-fix.com/favicon.svg" }
+    }
+  };
+
   return (
     <>
+      {/* Schema Markup für Google */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <BlogHeader active="blog" lang="de" ctaLabel="Fix auswählen" />
+      
       <main className="blogPostPage">
         <article>
           <h1 className="blogPostTitle">{String(post.data.title || "")}</h1>
 
-          {post.data.description ? (
+          {post.data.description && (
             <p className="blogPostDesc">{String(post.data.description)}</p>
-          ) : null}
+          )}
 
-          {toc.length >= 2 ? (
+          {toc.length >= 2 && (
             <nav className="blogToc" aria-label="Inhaltsverzeichnis">
               <strong className="blogTocTitle">Inhalt</strong>
               <div className="blogTocList">
@@ -197,7 +195,7 @@ export default async function BlogPostPage({
                 ))}
               </div>
             </nav>
-          ) : null}
+          )}
 
           <div
             className="blogContent"

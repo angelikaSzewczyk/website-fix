@@ -1,23 +1,24 @@
 import { MetadataRoute } from "next";
 import fs from "fs";
 import path from "path";
+import matter from "gray-matter"; // Du nutzt gray-matter ja bereits
 
 const SITE_URL = "https://website-fix.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-
   const blogDir = path.join(process.cwd(), "content/blog");
-
-  const blogFiles = fs
-    .readdirSync(blogDir)
-    .filter((file) => file.endsWith(".md"));
+  const blogFiles = fs.readdirSync(blogDir).filter((file) => file.endsWith(".md"));
 
   const blogUrls = blogFiles.map((file) => {
     const slug = file.replace(".md", "");
+    const filePath = path.join(blogDir, file);
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const { data } = matter(fileContent);
 
     return {
       url: `${SITE_URL}/blog/${slug}`,
-      lastModified: new Date(),
+      // Nutze das Datum aus dem Markdown, falls vorhanden, sonst das aktuelle Datum
+      lastModified: data.date ? new Date(data.date) : new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     };
@@ -36,7 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
-
     ...blogUrls,
   ];
 }
