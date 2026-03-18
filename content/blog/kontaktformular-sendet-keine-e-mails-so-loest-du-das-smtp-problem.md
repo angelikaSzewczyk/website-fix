@@ -25,4 +25,6 @@ Nichts ist teurer als ein **defektes Kontaktformular**. Es verbrennt Marketing-B
 ## 3) ReCaptcha Konflikte
 **Lösung:** Manchmal blockiert ein falsch konfiguriertes Google ReCaptcha den "Senden"-Button komplett.
 
-👉 **Fix #3 – Kontaktformular reparieren** [Fix auswählen](/#fixes)
+
+👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
+[Fix auswählen](/#fixes)

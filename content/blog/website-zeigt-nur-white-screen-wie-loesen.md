@@ -35,7 +35,9 @@ Der **White Screen of Death (WSOD)** ist einer der häufigsten WordPress-Fehler.
 ## Wann du Hilfe brauchst
 Wenn du Angst hast, beim Editieren von Systemdateien noch mehr kaputt zu machen oder der Fehler nach 10 Minuten nicht weg ist.
 
-👉 **Fix #1 – WordPress Fehler beheben** [Fix auswählen](/#fixes)
+
+👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
+[Fix auswählen](/#fixes)
 
 ## FAQ
 ### Verliere ich meine Daten durch den Fehler?
