@@ -1,7 +1,7 @@
 ---
 title: "Google findet meine Website nicht? 5 Gründe für fehlende Indexierung"
 description: "Deine Website ist online, erscheint aber nicht bei Google? Hier erfährst du, wie du deine Sichtbarkeit prüfst und Index-Sperren aufhebst."
-date: "2026-03-21"
+date: "2026-03-18"
 category: "SEO"
 tags: ["google index", "seo", "sitemap", "website nicht gefunden", "google search console"]
 status: "published"
@@ -27,4 +27,6 @@ Wenn Google deine Seite ignoriert, existierst du online praktisch nicht. Oft sin
 **Problem:** Google versucht die Seite zu besuchen, bekommt aber einen Fehler (z.B. 404 oder 500).
 **Fix:** Fehlerhafte URLs korrigieren oder per Redirect umleiten.
 
-👉 **Fix #5 – SEO & Indexierung prüfen** [Fix auswählen](/#fixes)
+
+👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
+[Fix auswählen](/#fixes)
