@@ -22,13 +22,27 @@ const getPostData = cache(async (slug: string) => {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const post = await getPostData(params.slug);
   if (!post) return { title: "Beitrag nicht gefunden" };
+
+  const title = post.data.title;
+  const description = post.data.description;
   const ogUrl = new URL('https://website-fix.com/api/og');
-  ogUrl.searchParams.set('title', post.data.title || '');
+  ogUrl.searchParams.set('title', title || '');
+
   return {
-    title: post.data.title,
-    description: post.data.description,
+    title: title, // Dank 'template' im Layout wird daraus "Titel | WebsiteFix"
+    description: description,
     alternates: { canonical: `/blog/${params.slug}` },
-    openGraph: { title: post.data.title, description: post.data.description, images: [{ url: ogUrl.toString() }] },
+    openGraph: {
+      title: title,
+      description: description,
+      url: `https://website-fix.com/blog/${params.slug}`,
+      images: [{ url: ogUrl.toString() }],
+    },
+    twitter: {
+      title: title,
+      description: description,
+      images: [ogUrl.toString()],
+    },
   };
 }
 

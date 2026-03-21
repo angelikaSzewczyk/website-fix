@@ -8,10 +8,12 @@ import ConsentBanner from "./components/consent-banner";
 
 const SITE_URL = "https://website-fix.com";
 
+// app/layout.tsx
+
 export const metadata: Metadata = {
   title: {
     default: "WebsiteFix — Fixpreise in 24–72h",
-    template: "%s · WebsiteFix",
+    template: "%s | WebsiteFix", // Das sorgt dafür, dass Blog-Titel "Titel | WebsiteFix" heißen
   },
   description:
     "Website kaputt? Wir fixen das. Fixpreise · 24–72h · systemunabhängig. Sicher bezahlen — nicht umsetzbar = 100% Erstattung.",
@@ -21,23 +23,18 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE_URL,
     siteName: "WebsiteFix",
-    title: "WebsiteFix — Fixpreise in 24–72h",
-    description:
-      "Wähle einen Fix, bezahle sicher online. Machbarkeits-Check inklusive — nicht umsetzbar = 100% Erstattung.",
+    // ENTFERNE hier feste Titel/Beschreibungen, damit die Unterseiten ihre eigenen nutzen können
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "WebsiteFix" }],
     locale: "de_DE",
   },
   twitter: {
     card: "summary_large_image",
-    title: "WebsiteFix — Fixpreise in 24–72h",
-    description:
-      "Wähle einen Fix, bezahle sicher online. Nicht umsetzbar = 100% Erstattung.",
     images: ["/og.png"],
+    // Auch hier: Titel/Beschreibung weglassen oder dynamisch halten
   },
   robots: { index: true, follow: true },
-  icons: { icon: "/favicon.svg", },
+  icons: { icon: "/favicon.svg" },
 };
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de" suppressHydrationWarning>
