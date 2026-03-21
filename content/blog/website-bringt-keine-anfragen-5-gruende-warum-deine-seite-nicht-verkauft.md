@@ -1,39 +1,56 @@
 ---
-title: "Website bringt keine Anfragen? 5 Gründe, warum deine Seite nicht verkauft"
-description: "Deine Website hat Besucher, aber niemand meldet sich? Erfahre, warum deine Seite keine Leads generiert und wie du das änderst."
-date: "2026-03-11"
+title: "Website bringt keine Anfragen? 5 Gründe, warum du Kunden verlierst"
+description: "Besucher sind da, aber das Telefon bleibt stumm? Erfahre, warum deine Seite keine Leads generiert und wie du sie zur Anfragemaschine machst."
+date: "2026-03-21"
 category: "Marketing"
-tags: ["conversion", "anfragen", "website optimierung", "leads"]
+tags: ["conversion optimierung", "mehr anfragen", "lead generierung", "website check"]
 status: "published"
 ---
 
-Du hast eine schöne Website, die Technik läuft – aber das Telefon bleibt stumm?
+# Website bringt keine Anfragen? Warum dein digitales Aushängeschild nicht verkauft.
 
-Wenn eine Website keine Anfragen bringt, liegt das selten am Design, sondern meist an der **Benutzerführung** oder dem **Vertrauen**.
+Du hast Zeit und Geld in deine Website investiert, die Technik läuft – aber die „Danke-Seite“ deines Kontaktformulars verstaubt? 
 
-## Warum Besucher nicht zu Kunden werden
+Wenn eine Website keine Anfragen bringt, liegt das selten am Design. Meistens sind es kleine **„Vertrauens-Vampire“** oder eine unklare Benutzerführung, die deine Besucher kurz vor dem Abschluss vertreiben.
 
-### 1) Fehlende Call-to-Actions (CTA)
-Wissen deine Besucher, was sie tun sollen? Wenn kein klarer Button ("Jetzt Termin vereinbaren" oder "Angebot anfordern") sichtbar ist, gehen die Leute wieder.
+---
 
-### 2) Zu lange Ladezeiten
-Wenn deine Seite länger als 3 Sekunden lädt, springen über 50% der Nutzer ab, bevor sie dein Angebot überhaupt sehen.
+## Die 5 häufigsten Gründe für leere Postfächer
 
-### 3) Die Seite wirkt nicht vertrauenswürdig
-Veraltete Copyright-Angaben, fehlendes SSL oder kaputte Bilder signalisieren: Hier kümmert sich niemand.
+### 1. Der gescheiterte 5-Sekunden-Test
+Versteht ein Besucher innerhalb von 5 Sekunden, was du anbietest, welches Problem du löst und was er als Nächstes tun muss? Wenn er erst scrollen oder suchen muss, ist er weg.
 
-### 4) Unklares Angebot
-Versteht ein Besucher innerhalb von 5 Sekunden, was du anbietest? Wenn nicht, hast du ihn verloren.
+### 2. Die „Angst“ vor dem Kontaktformular
+Fragt dein Formular zu viele Daten ab? Ein Verhör schreckt ab. 
+* **Tipp:** Reduziere die Felder auf das Minimum (E-Mail & Vorname). Alles andere klärst du im Telefonat.
 
-## Kleine Korrekturen mit großer Wirkung
+### 3. Mangelnde soziale Beweise (Trust)
+Wer bist du? Warum sollte ich dir vertrauen? Ohne Kundenstimmen, Logos von Partnern oder echte Gesichter wirkt eine Website steril und anonym.
 
-Oft sind es technische Details oder kleine Textelemente, die den Unterschied zwischen "Besucher" und "Kunde" machen.
+### 4. Technische Barrieren (Mobile & Speed)
+Über 60% deiner Kunden kommen per Handy. Wenn das Menü dort hakt oder die Seite 5 Sekunden lädt, bucht der Kunde woanders.
 
-**Checkliste für mehr Anfragen:**
-- Kontaktformular auf Funktion prüfen (kommen E-Mails wirklich an?)
-- Ladezeit optimieren
-- Klare Handlungsaufforderungen platzieren
+### 5. Der fehlende „Call to Action“ (CTA)
+Besucher brauchen Führung. Ein dezenter „Kontakt“-Link im Menü reicht nicht. Du brauchst klare, auffällige Buttons wie **„Jetzt Termin sichern“** oder **„Kostenloses Angebot anfordern“**.
+
+---
+
+## Mach den Website-Check!
+Oft sind es minimale Korrekturen an der Struktur oder den Texten, die deine Conversion-Rate verdoppeln können.
+
+**Checkliste für sofort mehr Leads:**
+- [ ] Funktioniert das Kontaktformular technisch? (Testmail schicken!)
+- [ ] Ist deine Telefonnummer auf dem Smartphone anklickbar?
+- [ ] Hast du eine klare Handlungsaufforderung pro Seite?
+
+---
+
+## Lass uns den Fehler finden
+Du bist Experte für dein Business, wir für deine Website. Wir analysieren deine Seite und sagen dir exakt, warum die Leute abspringen, ohne zu kaufen.
+
+**Nutze unseren Quick-Check und mach deine Website zur Anfragemaschine.**
 
 
-👉 **WebsiteFix – schnelle Hilfe für Websiteprobleme jeder Art**  
-[Fix auswählen](/#fixes)
+
+### FAQ: „Soll ich die Website komplett neu bauen?“
+Meistens nicht! Oft reicht ein **„Conversion-Tuning“** der bestehenden Inhalte, um den Knoten zu lösen.
