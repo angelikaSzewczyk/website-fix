@@ -27,45 +27,56 @@ const copy = {
       cta: "Zur Warteliste",
     },
     hero: {
-      badge: "KI-gestützte Website-Diagnose — kommt bald",
-      h1a: "Deine Website hat ein Problem.",
-      h1b: "Die KI findet es in Sekunden.",
-      sub: "WordPress kritischer Fehler, weiße Seite, keine Anfragen mehr — website-fix.com analysiert deine Website automatisch und liefert einen konkreten Reparaturplan. Kein Techniker, kein Warten.",
+      badge: "KI-Diagnose für deine Website — kommt bald",
+      h1a: "Website kaputt oder bringt keine Kunden?",
+      h1b: "Die KI sagt dir warum — und wie du es fixst.",
+      sub: "Ein Scan. Zwei Antworten: Was technisch kaputt ist — und warum deine Website keine Anfragen bringt. Konkret, verständlich, ohne Vorkenntnisse umsetzbar.",
       cta: "Frühen Zugang sichern",
-      trust: "Kostenlos · Keine Kreditkarte · Warteliste",
+      trust: "Kostenlos in der Beta · Keine Kreditkarte · Warteliste",
     },
     problems: {
-      h2: "Kennst du das?",
+      h2: "Zwei Probleme, ein Tool.",
       items: [
         {
           icon: "⚠️",
-          title: "WordPress kritischer Fehler",
-          desc: 'Du öffnest deine Website und siehst nur: "Es gab einen kritischen Fehler auf Ihrer Website." Kunden sehen dasselbe.',
-        },
-        {
-          icon: "🔌",
-          title: "Website nicht erreichbar",
-          desc: "Deine Webseite ist down. Du weißt nicht warum, nicht wie lange schon — und verlierst gerade Kunden.",
+          title: "Technische Fehler",
+          desc: 'WordPress kritischer Fehler, weiße Seite, Website down, Formular das nicht sendet — du merkst es oft als Letzter.',
         },
         {
           icon: "📭",
-          title: "Website bringt keine Anfragen",
-          desc: "Deine Seite läuft technisch — aber das Telefon klingelt nicht. Kein Formular, kein Lead, kein Kunde.",
+          title: "Keine Anfragen",
+          desc: "Die Website läuft — aber das Telefon klingelt nicht. Kein Lead, kein Kunde. Du weißt nicht woran es liegt.",
+        },
+        {
+          icon: "🔍",
+          title: "Kein Plan wo anfangen",
+          desc: "Google, Agentur, Plugin, Design? Zu viele Baustellen, zu wenig Zeit. Du brauchst Prioritäten, keine To-do-Listen.",
         },
       ],
     },
     solution: {
-      h2: "Die Lösung: Automatische KI-Diagnose",
-      sub: "Kein teurer Entwickler, kein Support-Ticket. Du gibst deine Website-URL ein — die KI analysiert Fehler, Speed, Formulare und Sichtbarkeit und liefert dir einen priorisierten Reparaturplan.",
+      h2: "Ein Scan — vollständiger Report",
+      sub: "URL eingeben, fertig. Die KI prüft alles gleichzeitig und erklärt dir auf Deutsch was zu tun ist — ohne Fachjargon.",
       steps: [
-        { num: "1", title: "URL eingeben", desc: "Du gibst deine Website-Adresse ein. Fertig." },
-        { num: "2", title: "KI analysiert", desc: "Fehler, Ladezeit, Formulare, SEO-Probleme — alles in unter 60 Sekunden." },
-        { num: "3", title: "Reparaturplan erhalten", desc: "Konkrete Schritte, priorisiert nach Auswirkung. Umsetzbar ohne Vorkenntnisse." },
+        { num: "1", title: "URL eingeben", desc: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang nötig." },
+        { num: "2", title: "KI scannt alles", desc: "Fehler, Speed, SEO, kaputte Links, Formulare, Conversion-Schwächen — unter 60 Sekunden." },
+        { num: "3", title: "Reparaturplan erhalten", desc: "Priorisierte Liste: 🔴 Kritisch → 🟡 Wichtig → 🟢 Okay. Mit konkreten Schritten zum selbst umsetzen." },
+      ],
+    },
+    checks: {
+      h2: "Was geprüft wird",
+      items: [
+        { icon: "🔴", label: "WordPress Fehler", desc: "Critical Error, White Screen, 500er" },
+        { icon: "⚡", label: "Ladegeschwindigkeit", desc: "Core Web Vitals, Ladezeit, PageSpeed" },
+        { icon: "🔍", label: "SEO Grundlagen", desc: "Title, Meta, Headings, Sitemap, robots.txt" },
+        { icon: "🔗", label: "Kaputte Links", desc: "Alle internen Links auf 404 geprüft" },
+        { icon: "📋", label: "Formular-Check", desc: "Vorhanden, erreichbar, funktionsfähig" },
+        { icon: "💡", label: "Conversion-Analyse", desc: "CTA, Vertrauen, Lesbarkeit, Mobile UX" },
       ],
     },
     waitlist: {
       h2: "Frühen Zugang sichern",
-      sub: "Trag dich ein und erhalte als Erste*r Zugang — kostenlos in der Beta.",
+      sub: "Trag dich ein — kostenlos in der Beta. Wartelisten-Mitglieder erhalten dauerhaften Rabatt.",
       placeholder: "deine@email.de",
       urlPlaceholder: "https://deine-website.de (optional)",
       btn: "Jetzt eintragen",
@@ -79,11 +90,15 @@ const copy = {
       items: [
         {
           q: "Was kostet das?",
-          a: "Die Beta ist kostenlos. Wartelisten-Mitglieder erhalten dauerhaften Rabatt auf alle späteren Pläne.",
+          a: "Die Beta ist kostenlos. Danach: Free (3 Scans/Monat), Pro ab 29€/Monat, Agentur ab 99€/Monat. Wartelisten-Mitglieder bekommen dauerhaften Rabatt.",
         },
         {
           q: "Für welche Websites funktioniert das?",
-          a: "Zunächst für WordPress-Websites. Andere Systeme (Shopify, Wix, Custom) folgen nach der Beta.",
+          a: "Zunächst für WordPress-Websites. Shopify, Wix und Custom-Websites folgen nach der Beta.",
+        },
+        {
+          q: "Muss ich etwas installieren oder Zugang geben?",
+          a: "Nein. Nur die URL eingeben — kein Plugin, kein WordPress-Login, kein FTP.",
         },
         {
           q: "Was passiert mit meiner URL?",
@@ -103,45 +118,56 @@ const copy = {
       cta: "Join Waitlist",
     },
     hero: {
-      badge: "AI-powered website diagnosis — coming soon",
-      h1a: "Your website has a problem.",
-      h1b: "AI finds it in seconds.",
-      sub: "WordPress critical error, white screen, no leads — website-fix.com automatically scans your site and delivers a concrete repair plan. No developer, no waiting.",
+      badge: "AI website diagnosis — coming soon",
+      h1a: "Website broken or not getting customers?",
+      h1b: "AI tells you why — and how to fix it.",
+      sub: "One scan. Two answers: what's technically broken — and why your site isn't converting. Clear, actionable, no technical knowledge needed.",
       cta: "Get early access",
-      trust: "Free · No credit card · Waitlist",
+      trust: "Free in beta · No credit card · Waitlist",
     },
     problems: {
-      h2: "Sound familiar?",
+      h2: "Two problems, one tool.",
       items: [
         {
           icon: "⚠️",
-          title: "WordPress critical error",
-          desc: 'You open your site and see: "There has been a critical error on your website." Your customers see the same.',
-        },
-        {
-          icon: "🔌",
-          title: "Website down / not reachable",
-          desc: "Your site is down. You don't know why, or for how long — and you're losing customers right now.",
+          title: "Technical errors",
+          desc: "WordPress critical error, white screen, site down, form not sending — you're usually the last to know.",
         },
         {
           icon: "📭",
-          title: "Website brings no leads",
-          desc: "Your site runs fine technically — but the phone never rings. No form submission, no inquiry, no customer.",
+          title: "No inquiries",
+          desc: "The site runs fine — but the phone never rings. No lead, no customer. You don't know what's wrong.",
+        },
+        {
+          icon: "🔍",
+          title: "No idea where to start",
+          desc: "Google, agency, plugin, design? Too many issues, too little time. You need priorities, not to-do lists.",
         },
       ],
     },
     solution: {
-      h2: "The fix: Automated AI diagnosis",
-      sub: "No expensive developer, no support ticket. Enter your URL — AI scans for errors, speed issues, broken forms and visibility problems and delivers a prioritized repair plan.",
+      h2: "One scan — complete report",
+      sub: "Enter URL, done. AI checks everything at once and explains what to do — in plain language, no jargon.",
       steps: [
-        { num: "1", title: "Enter URL", desc: "Just type in your website address. That's it." },
-        { num: "2", title: "AI scans", desc: "Errors, load time, forms, SEO issues — all in under 60 seconds." },
-        { num: "3", title: "Get repair plan", desc: "Concrete steps, prioritized by impact. Actionable without technical knowledge." },
+        { num: "1", title: "Enter URL", desc: "Just type your website address. No plugin or access needed." },
+        { num: "2", title: "AI scans everything", desc: "Errors, speed, SEO, broken links, forms, conversion issues — under 60 seconds." },
+        { num: "3", title: "Get repair plan", desc: "Prioritized list: 🔴 Critical → 🟡 Important → 🟢 Good. With concrete steps to fix yourself." },
+      ],
+    },
+    checks: {
+      h2: "What gets checked",
+      items: [
+        { icon: "🔴", label: "WordPress errors", desc: "Critical Error, White Screen, 500s" },
+        { icon: "⚡", label: "Load speed", desc: "Core Web Vitals, load time, PageSpeed" },
+        { icon: "🔍", label: "SEO basics", desc: "Title, meta, headings, sitemap, robots.txt" },
+        { icon: "🔗", label: "Broken links", desc: "All internal links checked for 404s" },
+        { icon: "📋", label: "Form check", desc: "Present, reachable, functional" },
+        { icon: "💡", label: "Conversion analysis", desc: "CTA, trust signals, readability, mobile UX" },
       ],
     },
     waitlist: {
       h2: "Secure early access",
-      sub: "Sign up and be the first to get access — free during beta.",
+      sub: "Sign up — free during beta. Waitlist members get a permanent discount.",
       placeholder: "your@email.com",
       urlPlaceholder: "https://your-website.com (optional)",
       btn: "Join waitlist",
@@ -155,11 +181,15 @@ const copy = {
       items: [
         {
           q: "What does it cost?",
-          a: "Beta is free. Waitlist members get a permanent discount on all future plans.",
+          a: "Beta is free. After: Free (3 scans/month), Pro from €29/month, Agency from €99/month. Waitlist members get a permanent discount.",
         },
         {
           q: "Which websites does it work for?",
-          a: "WordPress first. Other platforms (Shopify, Wix, custom) follow after beta.",
+          a: "WordPress first. Shopify, Wix and custom sites follow after beta.",
+        },
+        {
+          q: "Do I need to install anything or give access?",
+          a: "No. Just enter the URL — no plugin, no WordPress login, no FTP.",
         },
         {
           q: "What happens to my URL?",
@@ -280,6 +310,20 @@ export default function Page() {
                   <div className="stepTitle">{step.title}</div>
                   <div className="muted" style={{ fontSize: 14 }}>{step.desc}</div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== CHECKS ===== */}
+        <section className="section" id="checks">
+          <h2>{t.checks.h2}</h2>
+          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", marginTop: 22 }}>
+            {t.checks.items.map((item) => (
+              <div key={item.label} className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ fontSize: 22 }}>{item.icon}</div>
+                <div style={{ fontWeight: 650, fontSize: 15 }}>{item.label}</div>
+                <div className="muted" style={{ fontSize: 13 }}>{item.desc}</div>
               </div>
             ))}
           </div>
