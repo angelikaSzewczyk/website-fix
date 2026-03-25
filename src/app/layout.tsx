@@ -12,11 +12,11 @@ const SITE_URL = "https://website-fix.com";
 
 export const metadata: Metadata = {
   title: {
-    default: "WebsiteFix — Fixpreise in 24–72h",
-    template: "%s | WebsiteFix", // Das sorgt dafür, dass Blog-Titel "Titel | WebsiteFix" heißen
+    default: "WebsiteFix — KI-Diagnose für deine Website",
+    template: "%s | WebsiteFix",
   },
   description:
-    "Website kaputt? Wir fixen das. Fixpreise · 24–72h · systemunabhängig. Sicher bezahlen — nicht umsetzbar = 100% Erstattung.",
+    "WordPress kritischer Fehler, Website down, keine Anfragen? WebsiteFix analysiert deine Website automatisch per KI und liefert einen konkreten Reparaturplan — in Sekunden.",
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
