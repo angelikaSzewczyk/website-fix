@@ -49,26 +49,14 @@ export default function BlogHeader({
   }, []);
 
   const t = {
-    fixes: lang === "en" ? "Fixes" : "Fixes",
-    about: lang === "en" ? "About" : "Über uns",
-    bundles: "Bundles",
-    how: lang === "en" ? "How it works" : "Ablauf",
-    examples: lang === "en" ? "Examples" : "Beispiele",
     faq: "FAQ",
     blog: "Blog",
-    book: lang === "en" ? "Request" : "Anfrage",
-    cta: ctaLabel || (lang === "en" ? "Choose a fix" : "Fix auswählen"),
+    cta: ctaLabel || (lang === "en" ? "Join waitlist" : "Zur Warteliste"),
   };
 
   const navItems = [
-    { key: "fixes", label: t.fixes, href: "/#fixes" },
-    { key: "about", label: t.about, href: "/#about" },
-    { key: "bundles", label: t.bundles, href: "/#bundles" },
-    { key: "how", label: t.how, href: "/#ablauf" },
-    { key: "examples", label: t.examples, href: "/#beispiele" },
     { key: "faq", label: t.faq, href: "/#faq" },
     { key: "blog", label: t.blog, href: "/blog" },
-    { key: "book", label: t.book, href: "/#book" },
   ];
 
   return (
@@ -97,7 +85,7 @@ export default function BlogHeader({
         </nav>
 
         <div className="navActions">
-          <Link className="navCta navCtaDesktop" href="/#fixes">
+          <Link className="navCta navCtaDesktop" href="/#waitlist">
             {t.cta}
           </Link>
 
@@ -143,7 +131,7 @@ export default function BlogHeader({
 
           <Link
             className="cta mobileNavPrimary"
-            href="/#fixes"
+            href="/#waitlist"
             onClick={() => setMobileNavOpen(false)}
           >
             {t.cta}

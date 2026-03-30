@@ -70,7 +70,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <>
-      <BlogHeader active="blog" lang="de" ctaLabel="Fix auswählen" />
+      <BlogHeader active="blog" lang="de" ctaLabel="Zur Warteliste" />
       <main className="blogPostPage">
         <article>
           <h1 className="blogPostTitle">{post.data.title}</h1>

@@ -14,7 +14,7 @@ export default function BlogIndexPage() {
   const posts = getAllPosts();
 
   return (
-     <><BlogHeader active="blog" lang="de" ctaLabel="Fix auswählen" /><main className="page">
+     <><BlogHeader active="blog" lang="de" ctaLabel="Zur Warteliste" /><main className="page">
       <div className="pageHead">
         <h1 className="h1">Blog</h1>
         <p className="lead">
@@ -55,8 +55,8 @@ export default function BlogIndexPage() {
                   Weiterlesen →
                 </Link>
 
-                <Link className="ghostBtn" href="/#fixes">
-                  Fix auswählen
+                <Link className="ghostBtn" href="/#waitlist">
+                  Zur Warteliste
                 </Link>
               </div>
             </article>
