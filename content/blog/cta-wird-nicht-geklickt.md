@@ -48,7 +48,7 @@ Wenn du denkst:
 „Die Website sieht gut aus – aber bringt keine Anfragen“
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 ### Ist das wirklich messbar?

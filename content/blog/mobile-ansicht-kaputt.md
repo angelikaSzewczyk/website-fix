@@ -55,7 +55,7 @@ Diese sind mobil fast immer problematisch.
 Wenn Besucher mobil abspringen oder sich beschweren:
 
 👉 **Fix #3 – Mobile Darstellung reparieren**  
-[Zum Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 **Ist „responsive“ automatisch gut mobil?**  

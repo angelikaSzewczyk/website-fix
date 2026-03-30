@@ -70,7 +70,7 @@ Wenn deine Website:
 - Google schlechte Performance bewertet
 
 👉 **Fix #2 – Website Speed optimieren**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 

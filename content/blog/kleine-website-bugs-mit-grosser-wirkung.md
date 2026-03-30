@@ -65,7 +65,7 @@ Wenn du denkst:
 „Eigentlich passt alles – aber es fühlt sich nicht rund an“
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 ### Lohnt sich das wirklich?

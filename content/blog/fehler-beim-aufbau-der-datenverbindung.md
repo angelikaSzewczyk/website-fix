@@ -62,7 +62,7 @@ Wenn deine Website:
 - komplett offline ist
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 

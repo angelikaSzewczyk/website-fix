@@ -79,7 +79,7 @@ Wenn deine Website:
 - oder viele Funktionen enthält
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ---
 

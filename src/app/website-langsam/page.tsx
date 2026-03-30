@@ -31,7 +31,7 @@ export default function WebsiteLangsamPage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/#kontakt"
+                href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
                 Website jetzt prüfen lassen
@@ -217,7 +217,7 @@ export default function WebsiteLangsamPage() {
 
             <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
               <Link
-                href="/#kontakt"
+                href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
                 Jetzt Performance-Fix anfragen

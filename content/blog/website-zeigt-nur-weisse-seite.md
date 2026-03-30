@@ -86,7 +86,7 @@ Wenn deine Website:
 - nach Änderungen nicht mehr funktioniert
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 

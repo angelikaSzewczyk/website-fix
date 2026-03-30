@@ -61,7 +61,7 @@ Wenn deine Website:
 - nach Domainänderungen Probleme macht
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 

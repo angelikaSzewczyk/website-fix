@@ -41,4 +41,4 @@ Wenn deine Website plötzlich weg ist, liegt das meist an einem dieser vier Grü
 Wenn die Website länger als eine Stunde offline ist, verlierst du bares Geld und Vertrauen.
 
 👉 **WebsiteFix – schnelle Hilfe für Websiteprobleme jeder Art**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)

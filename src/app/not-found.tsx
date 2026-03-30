@@ -72,7 +72,7 @@ export default function NotFound() {
           marginTop: 34,
         }}
       >
-        <Link href="/#fixes" className="cta">
+        <Link href="/#waitlist" className="cta">
           Fix auswählen
         </Link>
 

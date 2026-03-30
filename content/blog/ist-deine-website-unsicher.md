@@ -89,7 +89,7 @@ Wenn deine Website:
 - oder du dir unsicher bist
 
 👉 **Fix #4 – Website Problem analysieren & beheben**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ---
 

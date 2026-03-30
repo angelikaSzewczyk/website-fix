@@ -61,7 +61,7 @@ Wenn deine Website:
 - nicht mehr zuverlässig arbeitet
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 

@@ -36,4 +36,4 @@ Wenn du deine Website sofort wieder im gewohnten Design sehen willst, ohne selbs
 
 
 👉 **WebsiteFix – schnelle Hilfe für Websiteprobleme jeder Art**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)

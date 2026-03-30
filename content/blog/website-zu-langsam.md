@@ -59,7 +59,7 @@ Chat-Widgets, Heatmaps & Tracker sind oft langsam.
 Wenn du **ohne Relaunch** bessere Ladezeiten willst:
 
 👉 **Fix #2 – Website schneller machen**  
-[Zum Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 **Wie schnell sollte eine Website laden?**  

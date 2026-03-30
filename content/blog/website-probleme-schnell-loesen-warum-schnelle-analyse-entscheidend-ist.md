@@ -81,7 +81,7 @@ Wenn deine Website:
 - wichtige Funktionen verloren hat
 
 👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ---
 

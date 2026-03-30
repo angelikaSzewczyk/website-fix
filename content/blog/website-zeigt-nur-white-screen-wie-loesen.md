@@ -37,7 +37,7 @@ Wenn du Angst hast, beim Editieren von Systemdateien noch mehr kaputt zu machen 
 
 
 👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 ### Verliere ich meine Daten durch den Fehler?

@@ -15,7 +15,7 @@ Jede Minute Downtime kostet Vertrauen und Rankings. Bevor du in Panik gerätst, 
 
 > **Deine Seite muss sofort wieder online gehen?**
 > Wir isolieren den Server- oder DNS-Fehler und fixen ihn für dich. 
-> 👉 **[Jetzt Website-Notfall-Fix buchen](/#fixes)**
+> 👉 **[Frühen Zugang sichern →](/#waitlist)**
 
 ---
 
@@ -55,4 +55,4 @@ Wenn Google deine Website mehrmals „down“ vorfindet, wirst du in den Sucherg
 Wir bringen deine Website innerhalb von 24 Stunden wieder stabil ans Netz.
 
 👉 **Fix #6 – Website down / Server-Fehler**
-**[Meinen Server-Fehler jetzt beheben lassen](/#fixes)**
+**[Frühen Zugang sichern →](/#waitlist)**

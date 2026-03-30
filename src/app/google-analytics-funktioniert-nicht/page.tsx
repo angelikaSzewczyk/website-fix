@@ -90,7 +90,7 @@ export default function GoogleAnalyticsFunktioniertNichtPage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/#kontakt"
+                href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#b9f5df] to-[#8ea2ff] px-6 py-3.5 text-base font-semibold text-[#081019] shadow-[0_10px_30px_rgba(142,162,255,0.18)] transition hover:opacity-95"
               >
                 Tracking-Fix anfragen
@@ -248,7 +248,7 @@ export default function GoogleAnalyticsFunktioniertNichtPage() {
 
             <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
               <Link
-                href="/#kontakt"
+                href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#b9f5df] to-[#8ea2ff] px-6 py-3.5 text-base font-semibold text-[#081019] shadow-[0_10px_30px_rgba(142,162,255,0.18)] transition hover:opacity-95"
               >
                 Jetzt Tracking fixen lassen

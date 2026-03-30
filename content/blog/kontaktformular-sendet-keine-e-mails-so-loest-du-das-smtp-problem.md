@@ -27,4 +27,4 @@ Nichts ist teurer als ein **defektes Kontaktformular**. Es verbrennt Marketing-B
 
 
 👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)

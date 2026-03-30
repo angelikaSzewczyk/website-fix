@@ -58,7 +58,7 @@ Wenn deine Website:
 - nach einem Update Probleme macht
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 ### Wie schnell kann so etwas behoben werden?

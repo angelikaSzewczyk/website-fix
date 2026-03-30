@@ -71,7 +71,7 @@ Wenn deine WordPress Website:
 - oder Funktionen nicht mehr funktionieren
 
 👉 **WebsiteFix – schnelle Hilfe bei WordPress Problemen**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ---
 

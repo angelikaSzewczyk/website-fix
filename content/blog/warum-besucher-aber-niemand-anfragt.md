@@ -83,7 +83,7 @@ Wenn deine Website:
 - aber keine Anfragen bringt
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 

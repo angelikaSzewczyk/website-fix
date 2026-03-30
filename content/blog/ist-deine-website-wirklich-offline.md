@@ -84,7 +84,7 @@ Wenn deine Website:
 - oder die Seite regelmäßig offline geht
 
 👉 **Fix #4 – Website Problem analysieren & beheben**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ---
 

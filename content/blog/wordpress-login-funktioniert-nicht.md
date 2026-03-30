@@ -61,7 +61,7 @@ Wenn:
 - wp-admin nicht erreichbar ist
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Fix auswählen](/#fixes)
+[Zur Warteliste →](/#waitlist)
 
 ## FAQ
 
