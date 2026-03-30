@@ -253,7 +253,9 @@ export default function Page() {
           <span style={{ fontWeight: 750, fontSize: 18, letterSpacing: "-0.3px" }}>
             {t.nav.logo}
           </span>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <a href="/blog" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>Blog</a>
+            <a href="#faq" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>FAQ</a>
             <button
               onClick={() => setLang(lang === "de" ? "en" : "de")}
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 13, cursor: "pointer" }}
