@@ -11,8 +11,8 @@ status: "published"
 
 Der Schock ist groß: Statt deiner Website siehst du nur einen weißen Bildschirm oder den Satz: **„Es gab einen kritischen Fehler auf deiner Website.“** **Keine Panik: Deine Daten sind in der Regel noch da.** Meistens ist nur ein fehlerhaftes Update oder ein Plugin-Konflikt schuld.
 
-> **Du hast keine Zeit für Fehlersuche?** > Wir übernehmen das für dich und bringen deine Seite innerhalb kürzester Zeit wieder online.
-> 👉 **[Jetzt WordPress-Notfall-Fix buchen](/#fixes)**
+> **Du hast keine Zeit für Fehlersuche?** WebsiteFix analysiert deine Website automatisch per KI und sagt dir genau, wo das Problem liegt — ohne Entwickler-Wissen.
+> 👉 **[Frühen Zugang zur KI-Diagnose sichern](/#waitlist)**
 
 ---
 
@@ -60,7 +60,8 @@ Jede Minute, in der deine Website down ist, verlierst du Besucher, Kunden und Go
 ## Profi-Hilfe in 24 Stunden
 Wir sind darauf spezialisiert, WordPress-Fehler schnell und sauber zu isolieren. Kein Rätselraten, sondern eine saubere Website.
 
-👉 **Fix #6 – Website down / Critical Error** **[Meinen WordPress-Fehler jetzt beheben lassen](/#fixes)**
+👉 **[WebsiteFix — KI-Diagnose für deine Website](/#waitlist)**
+Frühen Zugang sichern und als Erste erfahren, wenn das Tool live geht.
 
 ---
 

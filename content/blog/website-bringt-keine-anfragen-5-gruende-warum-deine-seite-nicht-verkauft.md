@@ -48,7 +48,10 @@ Oft sind es minimale Korrekturen an der Struktur oder den Texten, die deine Conv
 ## Lass uns den Fehler finden
 Du bist Experte für dein Business, wir für deine Website. Wir analysieren deine Seite und sagen dir exakt, warum die Leute abspringen, ohne zu kaufen.
 
-**Nutze unseren Quick-Check und mach deine Website zur Anfragemaschine.**
+**WebsiteFix analysiert genau das automatisch** — technische Fehler UND Conversion-Probleme. In Sekunden, ohne Entwickler-Wissen.
+
+👉 **[Frühen Zugang sichern →](/#waitlist)**
+Kostenlos in der Beta. Keine Kreditkarte.
 
 
 

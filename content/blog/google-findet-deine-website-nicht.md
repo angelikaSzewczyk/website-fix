@@ -75,9 +75,8 @@ Google indexiert dann ggf. eine andere Version oder gar keine.
 ## Wann lohnt sich ein Fix?
 Wenn du willst, dass Google deine Seite **sauber erfasst** und du wieder sichtbar wirst:
 
-👉 **Fix #4 – Tracking & Analytics einrichten**  
-(inkl. Basis-Daten & saubere Messbarkeit für SEO/Conversion)  
-[Zum Fix auswählen](/#fixes)
+👉 **[WebsiteFix — KI-Diagnose für deine Website](/#waitlist)**
+Frühen Zugang sichern — das Tool analysiert automatisch, warum Google dich nicht findet.
 
 ## FAQ
 **Wie lange dauert es, bis Google indexiert?**  

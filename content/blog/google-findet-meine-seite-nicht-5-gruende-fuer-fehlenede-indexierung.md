@@ -1,32 +1,110 @@
 ---
-title: "Google findet meine Website nicht? 5 Gründe für fehlende Indexierung"
-description: "Deine Website ist online, erscheint aber nicht bei Google? Hier erfährst du, wie du deine Sichtbarkeit prüfst und Index-Sperren aufhebst."
-date: "2026-03-18"
+title: "Warum findet Google meine Homepage nicht? 6 Ursachen + einfache Lösung"
+description: "Deine Website ist online, aber Google zeigt sie nicht an? Hier sind die 6 häufigsten Ursachen – einfach erklärt, ohne Technik-Kenntnisse lösbar."
+date: "2026-03-30"
 category: "SEO"
-tags: ["google index", "seo", "sitemap", "website nicht gefunden", "google search console"]
+tags: ["google", "indexierung", "website nicht gefunden", "seo anfänger", "search console"]
 status: "published"
 ---
 
-„Ich habe meine Seite gelauncht, aber bei Google taucht sie nicht auf.“
+# Warum findet Google meine Homepage nicht?
 
-Wenn Google deine Seite ignoriert, existierst du online praktisch nicht. Oft sind es nur kleine technische Schalter, die den Google-Bot aussperren.
+Deine Website ist seit Wochen oder Monaten online — aber wenn du bei Google nach dir suchst, taucht sie einfach nicht auf. Kein Eintrag, keine Sichtbarkeit, keine Besucher.
 
-## 1) Die 'Noindex' Sperre
-**Problem:** In den Einstellungen ist versehentlich ein Haken bei "Suchmaschinen davon abhalten, diese Seite zu indexieren" gesetzt.
-**Fix:** Haken entfernen und Speichern.
+Das fühlt sich frustrierend an. Aber die gute Nachricht: In den meisten Fällen ist es **ein einziger technischer Schalter**, der falsch steht.
 
-## 2) Fehlende Sitemap
-**Problem:** Google weiß gar nicht, wie viele Seiten du hast.
-**Fix:** Eine `sitemap.xml` erstellen und in der Search Console einreichen.
+Hier sind die 6 häufigsten Ursachen — und was du dagegen tun kannst, auch ohne Technik-Kenntnisse.
 
-## 3) Robots.txt blockiert Zugriff
-**Problem:** Eine Textdatei auf deinem Server verbietet Google das Crawlen.
-**Fix:** Prüfe deine `robots.txt` auf `Disallow: /`.
+---
 
-## 4) Crawling-Fehler
-**Problem:** Google versucht die Seite zu besuchen, bekommt aber einen Fehler (z.B. 404 oder 500).
-**Fix:** Fehlerhafte URLs korrigieren oder per Redirect umleiten.
+## 1. Die Suchmaschinen-Sperre ist aktiviert (der häufigste Fehler)
 
+Viele WordPress-Websites werden während der Entwicklung so eingestellt, dass Google sie **absichtlich ignoriert** — damit keine halbfertige Seite in den Suchergebnissen auftaucht.
 
-👉 **WebsiteFix – schnelle Analyse und gezielte Fixes**  
-[Fix auswählen](/#fixes)
+Das Problem: Diese Einstellung wird danach häufig vergessen.
+
+**So prüfst du das:**
+1. Gehe in WordPress zu **Einstellungen → Lesen**
+2. Ganz unten: Schau ob der Haken bei „Suchmaschinen davon abhalten, diese Seite zu indexieren" gesetzt ist
+3. Wenn ja: Haken entfernen, speichern — fertig.
+
+Das ist in etwa 30% der Fälle der einzige Grund.
+
+---
+
+## 2. Google kennt deine Seite noch nicht (zu neu)
+
+Google durchsucht das Internet nicht sekündlich. Neue Websites werden oft erst **nach 2–8 Wochen** gefunden — manchmal länger.
+
+**Was du tun kannst:**
+- Erstelle ein kostenloses Konto in der [Google Search Console](https://search.google.com/search-console)
+- Reiche dort deine URL manuell ein ("URL-Prüfung → Live testen → Indexierung beantragen")
+- Das verkürzt die Wartezeit deutlich
+
+---
+
+## 3. Die Sitemap fehlt oder ist nicht eingereicht
+
+Eine Sitemap ist wie ein Inhaltsverzeichnis für Google — sie zeigt, welche Seiten es auf deiner Website gibt.
+
+**So prüfst du das:**
+- Ruf `deinedomain.de/sitemap.xml` auf
+- Wenn du eine Fehlermeldung siehst: Die Sitemap fehlt
+- Mit WordPress + Yoast SEO oder Rank Math wird sie automatisch erstellt
+- Danach in der Search Console einreichen: **Sitemaps → URL eintragen → Senden**
+
+---
+
+## 4. Deine Website lädt zu langsam oder hat Fehler
+
+Google bewertet auch die **Qualität** deiner Website. Eine Seite die sehr langsam lädt, auf dem Handy kaputt aussieht oder Fehler wirft — die rankt Google absichtlich schlechter oder indexiert sie gar nicht.
+
+**Schnellcheck:**
+- Ruf `pagespeed.web.dev` auf und gib deine URL ein
+- Werte unter 50 (mobil) sind ein Problem
+
+---
+
+## 5. Deine Domain hat keinen guten Ruf (bei alten Domains)
+
+Falls du eine gebrauchte Domain gekauft hast, kann Google sie als "spam" eingestuft haben. Das ist selten, aber real.
+
+**So prüfst du das:**
+- Such bei Google nach: `site:deinedomain.de`
+- Wenn gar keine Ergebnisse kommen obwohl die Seite schon länger läuft — könnte das der Grund sein
+- In dem Fall: Google Search Console → **Sicherheit und manuelle Maßnahmen** prüfen
+
+---
+
+## 6. Der Inhalt ist zu dünn (Google hält die Seite für wertlos)
+
+Eine Website mit nur einem Satz auf der Startseite oder ohne echten Text bekommt von Google keine Chance. Google bevorzugt Seiten, die **wirklich hilfreich** sind.
+
+**Was hilft:**
+- Mindestens 200–300 Wörter echter Text auf der Startseite
+- Klar erklären: Was bietest du an? Wem hilfst du? Wo bist du?
+- Keine leeren „Willkommen auf meiner Website"-Texte
+
+---
+
+## Was tun, wenn du nicht weißt wo das Problem liegt?
+
+Die meisten Website-Besitzer — Fotografen, Bäckereien, Freelancer — haben keine Zeit, sich durch Google-Dokumentationen zu klicken. Das ist verständlich.
+
+Genau dafür entsteht **WebsiteFix**: Ein KI-Tool, das deine Website automatisch analysiert und dir in einfachen Worten sagt, warum Google dich nicht findet — und was du konkret tun sollst.
+
+👉 **[Frühen Zugang sichern →](/#waitlist)**
+Kostenlos in der Beta. Keine Kreditkarte.
+
+---
+
+## Häufige Fragen
+
+**Wie lange dauert es, bis Google meine Website indexiert?**
+Bei neuen Seiten: 1–8 Wochen. Mit manueller Indexierungsanfrage in der Search Console oft deutlich schneller.
+
+**Ich sehe meine Website bei Google, aber sie steht ganz hinten — ist das dasselbe Problem?**
+Nein. Indexiert aber schlecht gerankt ist ein anderes Thema: Dann geht es um Inhalte, Keywords und Vertrauen bei Google. Erst indexiert sein ist Schritt 1.
+
+**Muss ich SEO-Profi sein um das zu lösen?**
+Für die meisten der oben genannten Punkte nicht. Es sind Einstellungen, keine Programmierung.
