@@ -107,7 +107,6 @@ const copy = {
       ],
     },
     footer: {
-      text: "© 2025 website-fix.com",
       imprint: "Impressum",
       privacy: "Datenschutz",
     },
@@ -198,7 +197,6 @@ const copy = {
       ],
     },
     footer: {
-      text: "© 2025 website-fix.com",
       imprint: "Imprint",
       privacy: "Privacy",
     },
@@ -408,7 +406,7 @@ export default function Page() {
       {/* ===== FOOTER ===== */}
       <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "32px 20px", textAlign: "center" }}>
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          {t.footer.text}
+          {`© ${new Date().getFullYear()} website-fix.com`}
           {" · "}
           <a href="/impressum" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>{t.footer.imprint}</a>
           {" · "}
