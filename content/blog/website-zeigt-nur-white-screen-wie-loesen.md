@@ -4,7 +4,7 @@ description: "Wenn deine Website plötzlich weiß bleibt, liegt oft ein PHP-Fehl
 date: "2026-03-19"
 category: "Technik"
 tags: ["wordpress fehler", "weiße seite", "wsod", "php error", "website kaputt"]
-status: "published"
+status: "draft"
 ---
 
 „Ich wollte mich einloggen, aber die Seite ist komplett weiß.“

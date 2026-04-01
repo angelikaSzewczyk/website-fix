@@ -4,7 +4,7 @@ description: "Deine Website ist komplett weiß und ohne Fehlermeldung? Wir zeige
 date: "2026-03-12"
 category: "Technik"
 tags: ["wordpress", "white screen", "weisse seite", "php fehler"]
-status: "published"
+status: "draft"
 ---
 
 Du öffnest deine Website und siehst: Nichts. Nur eine komplett weiße Fläche.
