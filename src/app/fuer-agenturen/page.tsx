@@ -95,6 +95,10 @@ const copy = {
           a: "Ja. Reports erscheinen unter Ihrem Logo — fertig für den Kunden, ohne WebsiteFix-Branding.",
         },
         {
+          q: "Muss ich etwas installieren oder Zugangsdaten hinterlegen?",
+          a: "Für den Scan nur die URLs eingeben — kein Plugin, kein FTP. Für das Agentur-Dashboard brauchst du einen WebsiteFix-Account. Für die automatische KI-Reparatur werden WordPress-Zugangsdaten einmalig pro Kunden-Website hinterlegt — sicher verschlüsselt, jederzeit widerrufbar.",
+        },
+        {
           q: "Funktioniert das nur für WordPress?",
           a: "Zunächst für WordPress. Shopify, Wix und Custom-Sites folgen direkt nach der Beta.",
         },

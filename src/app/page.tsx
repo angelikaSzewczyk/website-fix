@@ -111,7 +111,7 @@ const copy = {
         },
         {
           q: "Muss ich etwas installieren oder Zugang geben?",
-          a: "Nein. Nur die URL eingeben — kein Plugin, kein WordPress-Login, kein FTP.",
+          a: "Für den Scan nur die URL eingeben — kein Plugin, kein FTP. Für das Dashboard brauchst du einen kostenlosen WebsiteFix-Account. Für die automatische KI-Reparatur gibst du einmalig deine WordPress-Zugangsdaten ein — sicher verschlüsselt, jederzeit widerrufbar.",
         },
         {
           q: "Was passiert mit meiner URL?",
@@ -214,7 +214,7 @@ const copy = {
         },
         {
           q: "Do I need to install anything or give access?",
-          a: "No. Just enter the URL — no plugin, no WordPress login, no FTP.",
+          a: "For the scan, just enter your URL — no plugin, no FTP. For the dashboard you need a free WebsiteFix account. For automatic AI repair, you enter your WordPress credentials once — encrypted securely, revocable at any time.",
         },
         {
           q: "What happens to my URL?",
