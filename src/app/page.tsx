@@ -90,6 +90,13 @@ const copy = {
     waitlist: {
       h2: "Beta startet April 2026 — jetzt eintragen",
       sub: "Frühzugang ist kostenlos. Wartelisten-Mitglieder bekommen dauerhaften Rabatt — für immer.",
+      betaLabel: "Was die Beta enthält:",
+      betaItems: [
+        { done: true, text: "Vollständiger Website-Scan" },
+        { done: true, text: "Diagnose in Alltagssprache" },
+        { done: true, text: "Priorisierter Reparaturplan" },
+        { done: false, text: "KI-Reparatur — kommt in Phase 2" },
+      ],
       placeholder: "deine@email.de",
       urlPlaceholder: "https://deine-website.de (optional)",
       btn: "Jetzt eintragen",
@@ -193,6 +200,13 @@ const copy = {
     waitlist: {
       h2: "Beta launches April 2026 — sign up now",
       sub: "Early access is free. Waitlist members get a permanent discount — forever.",
+      betaLabel: "What beta includes:",
+      betaItems: [
+        { done: true, text: "Full website scan" },
+        { done: true, text: "Diagnosis in plain language" },
+        { done: true, text: "Prioritized repair plan" },
+        { done: false, text: "AI repair — coming in phase 2" },
+      ],
       placeholder: "your@email.com",
       urlPlaceholder: "https://your-website.com (optional)",
       btn: "Join waitlist",
@@ -398,6 +412,16 @@ export default function Page() {
         <section className="section" id="waitlist">
           <h2>{t.waitlist.h2}</h2>
           <p className="muted" style={{ marginBottom: 24 }}>{t.waitlist.sub}</p>
+
+          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t.waitlist.betaLabel}</p>
+            {t.waitlist.betaItems.map((item) => (
+              <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <span style={{ fontSize: 15, width: 20 }}>{item.done ? "✅" : "🔜"}</span>
+                <span style={{ fontSize: 14, color: item.done ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.4)" }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
 
           {submitState === "success" ? (
             <div className="card" style={{ maxWidth: 480, padding: "24px 20px", borderColor: "rgba(141,243,211,0.3)", background: "rgba(141,243,211,0.08)" }}>
