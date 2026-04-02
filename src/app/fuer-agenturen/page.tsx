@@ -270,9 +270,9 @@ export default function AgencyPage() {
         borderBottom: "1px solid rgba(255,255,255,0.07)",
       }}>
         <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 750, fontSize: 18, letterSpacing: "-0.3px" }}>
-            {t.nav.logo}
-          </span>
+          <div className="brand">
+            Website<span className="brandSpace"> </span><span className="brandAccent">Fix</span>
+          </div>
           <div className="navLinks">
             <a href="/" className="navLink">{t.nav.forUsers}</a>
             <a href="/blog" className="navLink">Blog</a>
