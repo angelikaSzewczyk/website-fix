@@ -28,11 +28,15 @@ const copy = {
     },
     hero: {
       badge: "Nicht für Entwickler. Für alle anderen. — kommt bald",
-      h1a: "Website kaputt oder bringt keine Kunden?",
-      h1b: "Die KI sagt dir warum — und wie du es fixst.",
-      sub: "Du googelst, verstehst nichts, gibst auf. WebsiteFix zeigt dir in unter 60 Sekunden was kaputt ist — und wie du es selbst fixst. Kein Entwickler nötig.",
+      h1a: "Website kaputt?",
+      h1b: "KI findet den Fehler — und repariert ihn für dich.",
+      sub: "Du googelst, verstehst nichts, gibst auf. WebsiteFix scannt deine Website in unter 60 Sekunden — und repariert Fehler automatisch. Kein Entwickler nötig.",
       cta: "Frühen Zugang sichern",
-      trust: "Kostenlos in der Beta · Keine Kreditkarte · Warteliste",
+      trust: "Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026",
+    },
+    example: {
+      label: "Zum Beispiel",
+      text: "WordPress Critical Error seit heute Nacht → URL eingeben → KI erkennt Plugin-Konflikt → automatisch behoben. Fertig.",
     },
     problems: {
       h2: "Zwei Probleme, ein Tool.",
@@ -55,12 +59,12 @@ const copy = {
       ],
     },
     solution: {
-      h2: "Ein Scan — vollständiger Report",
-      sub: "URL eingeben, fertig. Die KI prüft alles gleichzeitig und erklärt dir auf Deutsch was zu tun ist — ohne Fachjargon.",
+      h2: "Scan, Diagnose, Fix — fertig.",
+      sub: "URL eingeben, fertig. Die KI prüft alles gleichzeitig, erklärt was kaputt ist — und repariert es direkt. Kein Fachjargon, kein Entwickler, kein Plugin.",
       steps: [
         { num: "1", title: "URL eingeben", desc: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang nötig." },
         { num: "2", title: "KI scannt alles", desc: "Fehler, Speed, SEO, kaputte Links, Formulare, Conversion-Schwächen — unter 60 Sekunden." },
-        { num: "3", title: "Reparaturplan erhalten", desc: "Priorisierte Liste: 🔴 Kritisch → 🟡 Wichtig → 🟢 Okay. Mit konkreten Schritten zum selbst umsetzen." },
+        { num: "3", title: "KI repariert automatisch", desc: "🔴 Kritisch → 🟡 Wichtig → 🟢 Okay. Die KI verbindet sich mit deiner Website und behebt Fehler direkt — du musst nichts selbst tun." },
       ],
     },
     checks: {
@@ -75,8 +79,8 @@ const copy = {
       ],
     },
     waitlist: {
-      h2: "Frühen Zugang sichern",
-      sub: "Trag dich ein — kostenlos in der Beta. Wartelisten-Mitglieder erhalten dauerhaften Rabatt.",
+      h2: "Beta startet April 2026 — jetzt eintragen",
+      sub: "Frühzugang ist kostenlos. Wartelisten-Mitglieder bekommen dauerhaften Rabatt — für immer.",
       placeholder: "deine@email.de",
       urlPlaceholder: "https://deine-website.de (optional)",
       btn: "Jetzt eintragen",
@@ -118,11 +122,15 @@ const copy = {
     },
     hero: {
       badge: "Not for developers. For everyone else. — coming soon",
-      h1a: "Website broken or not getting customers?",
-      h1b: "AI tells you why — and how to fix it.",
-      sub: "You Google it, understand nothing, give up. WebsiteFix shows you in under 60 seconds what's broken — and how to fix it yourself. No developer needed.",
+      h1a: "Website broken?",
+      h1b: "AI finds the problem — and fixes it for you.",
+      sub: "You Google it, understand nothing, give up. WebsiteFix scans your website in under 60 seconds — and fixes errors automatically. No developer needed.",
       cta: "Get early access",
-      trust: "Free in beta · No credit card · Waitlist",
+      trust: "Free in beta · No credit card · Beta launches April 2026",
+    },
+    example: {
+      label: "For example",
+      text: "WordPress Critical Error since last night → enter URL → AI detects plugin conflict → automatically fixed. Done.",
     },
     problems: {
       h2: "Two problems, one tool.",
@@ -145,12 +153,12 @@ const copy = {
       ],
     },
     solution: {
-      h2: "One scan — complete report",
-      sub: "Enter URL, done. AI checks everything at once and explains what to do — in plain language, no jargon.",
+      h2: "Scan, diagnose, fix — done.",
+      sub: "Enter URL, done. AI checks everything at once, explains what's broken — and fixes it directly. No jargon, no developer, no plugin.",
       steps: [
         { num: "1", title: "Enter URL", desc: "Just type your website address. No plugin or access needed." },
         { num: "2", title: "AI scans everything", desc: "Errors, speed, SEO, broken links, forms, conversion issues — under 60 seconds." },
-        { num: "3", title: "Get repair plan", desc: "Prioritized list: 🔴 Critical → 🟡 Important → 🟢 Good. With concrete steps to fix yourself." },
+        { num: "3", title: "AI fixes automatically", desc: "🔴 Critical → 🟡 Important → 🟢 Good. AI connects to your site and fixes errors directly — you don't have to do anything." },
       ],
     },
     checks: {
@@ -165,8 +173,8 @@ const copy = {
       ],
     },
     waitlist: {
-      h2: "Secure early access",
-      sub: "Sign up — free during beta. Waitlist members get a permanent discount.",
+      h2: "Beta launches April 2026 — sign up now",
+      sub: "Early access is free. Waitlist members get a permanent discount — forever.",
       placeholder: "your@email.com",
       urlPlaceholder: "https://your-website.com (optional)",
       btn: "Join waitlist",
@@ -283,6 +291,22 @@ export default function Page() {
           </div>
           <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>{t.hero.trust}</p>
         </section>
+
+        {/* ===== EXAMPLE ===== */}
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px 32px" }}>
+          <div style={{
+            background: "rgba(141,243,211,0.06)",
+            border: "1px solid rgba(141,243,211,0.2)",
+            borderRadius: 12,
+            padding: "14px 20px",
+            display: "flex",
+            gap: 12,
+            alignItems: "baseline",
+          }}>
+            <span style={{ fontSize: 13, color: "#8df3d3", fontWeight: 650, whiteSpace: "nowrap" }}>{t.example.label}:</span>
+            <span style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{t.example.text}</span>
+          </div>
+        </div>
 
         {/* ===== PAIN POINTS ===== */}
         <section className="section" id="problems">
