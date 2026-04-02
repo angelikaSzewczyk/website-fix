@@ -248,6 +248,7 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [url, setUrl] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const t = copy[lang];
 
@@ -291,18 +292,47 @@ export default function Page() {
           <span style={{ fontWeight: 750, fontSize: 18, letterSpacing: "-0.3px" }}>
             {t.nav.logo}
           </span>
-          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <a href="/fuer-agenturen" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
-            <a href="/blog" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>Blog</a>
-            <a href="#faq" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>FAQ</a>
+          <div className="navLinks">
+            <a href="/fuer-agenturen" className="navLink">{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
+            <a href="/blog" className="navLink">Blog</a>
+            <a href="#faq" className="navLink">FAQ</a>
+          </div>
+          <div className="navActions">
             <button
               onClick={() => setLang(lang === "de" ? "en" : "de")}
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 13, cursor: "pointer" }}
             >
               {lang === "de" ? "EN" : "DE"}
             </button>
-            <a href="#waitlist" className="cta ctaSmall">{t.nav.cta}</a>
+            <a href="#waitlist" className="cta ctaSmall navCtaDesktop">{t.nav.cta}</a>
+            <button
+              type="button"
+              className={`mobileMenuBtn ${mobileNavOpen ? "isOpen" : ""}`}
+              aria-label={mobileNavOpen ? "Menü schließen" : "Menü öffnen"}
+              aria-expanded={mobileNavOpen}
+              onClick={() => setMobileNavOpen(v => !v)}
+            >
+              <span /><span /><span />
+            </button>
           </div>
+        </div>
+      </nav>
+
+      <div
+        className={`mobileNavOverlay ${mobileNavOpen ? "isOpen" : ""}`}
+        onClick={() => setMobileNavOpen(false)}
+        aria-hidden={!mobileNavOpen}
+      />
+
+      <nav
+        className={`mobileNavDrawer ${mobileNavOpen ? "isOpen" : ""}`}
+        aria-label="Mobile Navigation"
+      >
+        <div className="mobileNavInner">
+          <a href="/fuer-agenturen" className="navLink" onClick={() => setMobileNavOpen(false)}>{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
+          <a href="/blog" className="navLink" onClick={() => setMobileNavOpen(false)}>Blog</a>
+          <a href="#faq" className="navLink" onClick={() => setMobileNavOpen(false)}>FAQ</a>
+          <a href="#waitlist" className="cta mobileNavPrimary" onClick={() => setMobileNavOpen(false)}>{t.nav.cta}</a>
         </div>
       </nav>
 
