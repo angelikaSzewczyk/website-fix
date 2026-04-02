@@ -70,6 +70,14 @@ const copy = {
     waitlist: {
       h2: "Beta startet April 2026 — jetzt eintragen",
       sub: "Agenturen auf der Waitlist bekommen dauerhaften Rabatt und als Erste Zugang zum Agentur-Dashboard.",
+      betaLabel: "Was die Beta enthält:",
+      betaItems: [
+        { done: true, text: "Scan aller Kunden-Websites" },
+        { done: true, text: "Diagnose in Alltagssprache" },
+        { done: true, text: "Priorisierter Reparaturplan pro Website" },
+        { done: false, text: "Agentur-Dashboard & White-Label — kommt in Phase 2" },
+        { done: false, text: "KI-Reparatur — kommt in Phase 2" },
+      ],
       emailPlaceholder: "ihre@agentur.de",
       agencyPlaceholder: "Name Ihrer Agentur",
       urlPlaceholder: "https://ihre-agentur.de (optional)",
@@ -170,6 +178,14 @@ const copy = {
     waitlist: {
       h2: "Beta launches April 2026 — sign up now",
       sub: "Agencies on the waitlist get a permanent discount and first access to the agency dashboard.",
+      betaLabel: "What beta includes:",
+      betaItems: [
+        { done: true, text: "Scan of all client websites" },
+        { done: true, text: "Diagnosis in plain language" },
+        { done: true, text: "Prioritized repair plan per website" },
+        { done: false, text: "Agency dashboard & white-label — coming in phase 2" },
+        { done: false, text: "AI repair — coming in phase 2" },
+      ],
       emailPlaceholder: "your@agency.com",
       agencyPlaceholder: "Your agency name",
       urlPlaceholder: "https://your-agency.com (optional)",
@@ -355,6 +371,16 @@ export default function AgencyPage() {
         <section className="section" id="waitlist">
           <h2>{t.waitlist.h2}</h2>
           <p className="muted" style={{ marginBottom: 24 }}>{t.waitlist.sub}</p>
+
+          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t.waitlist.betaLabel}</p>
+            {t.waitlist.betaItems.map((item) => (
+              <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <span style={{ fontSize: 15, width: 20 }}>{item.done ? "✅" : "🔜"}</span>
+                <span style={{ fontSize: 14, color: item.done ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.4)" }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
 
           {submitState === "success" ? (
             <div className="card" style={{ maxWidth: 480, padding: "24px 20px", borderColor: "rgba(141,243,211,0.3)", background: "rgba(141,243,211,0.08)" }}>
