@@ -278,6 +278,7 @@ export default function Page() {
             {t.nav.logo}
           </span>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <a href="/fuer-agenturen" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
             <a href="/blog" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>Blog</a>
             <a href="#faq" style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, textDecoration: "none" }}>FAQ</a>
             <button
