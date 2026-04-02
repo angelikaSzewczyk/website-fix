@@ -271,7 +271,7 @@ export default function AgencyPage() {
       }}>
         <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div className="brand">
-            Website<span className="brandSpace"> </span><span className="brandAccent">Fix</span>
+            Website<span className="brandAccent">Fix</span>
           </div>
           <div className="navLinks">
             <a href="/" className="navLink">{t.nav.forUsers}</a>
