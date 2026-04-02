@@ -78,6 +78,15 @@ const copy = {
         { icon: "💡", label: "Conversion-Analyse", desc: "CTA, Vertrauen, Lesbarkeit, Mobile UX" },
       ],
     },
+    monitoring: {
+      h2: "Nie wieder selbst merken wenn etwas kaputt geht.",
+      sub: "WebsiteFix überwacht deine Website rund um die Uhr — und schlägt Alarm bevor deine Kunden es merken.",
+      items: [
+        { icon: "👁️", title: "24/7 Überwachung", desc: "Deine Website wird laufend geprüft — nicht nur einmal." },
+        { icon: "🔔", title: "Sofort-Alert", desc: "Per E-Mail wenn etwas schiefgeht — du bist immer der Erste." },
+        { icon: "🔧", title: "Automatisch behoben", desc: "Nicht nur Alarm — die KI repariert gleich mit." },
+      ],
+    },
     waitlist: {
       h2: "Beta startet April 2026 — jetzt eintragen",
       sub: "Frühzugang ist kostenlos. Wartelisten-Mitglieder bekommen dauerhaften Rabatt — für immer.",
@@ -170,6 +179,15 @@ const copy = {
         { icon: "🔗", label: "Broken links", desc: "All internal links checked for 404s" },
         { icon: "📋", label: "Form check", desc: "Present, reachable, functional" },
         { icon: "💡", label: "Conversion analysis", desc: "CTA, trust signals, readability, mobile UX" },
+      ],
+    },
+    monitoring: {
+      h2: "Never be the last to know when something breaks.",
+      sub: "WebsiteFix monitors your website around the clock — and alerts you before your customers notice.",
+      items: [
+        { icon: "👁️", title: "24/7 monitoring", desc: "Your website is checked continuously — not just once." },
+        { icon: "🔔", title: "Instant alert", desc: "Email notification the moment something goes wrong — you're always first." },
+        { icon: "🔧", title: "Automatically fixed", desc: "Not just an alert — AI repairs it right away." },
       ],
     },
     waitlist: {
@@ -347,6 +365,28 @@ export default function Page() {
               <div key={item.label} className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{ fontSize: 22 }}>{item.icon}</div>
                 <div style={{ fontWeight: 650, fontSize: 15 }}>{item.label}</div>
+                <div className="muted" style={{ fontSize: 13 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== MONITORING ===== */}
+        <section className="section" id="monitoring" style={{
+          background: "rgba(141,243,211,0.04)",
+          border: "1px solid rgba(141,243,211,0.12)",
+          borderRadius: 16,
+          maxWidth: 960,
+          margin: "0 auto 0",
+          padding: "48px 32px",
+        }}>
+          <h2 style={{ marginBottom: 12 }}>{t.monitoring.h2}</h2>
+          <p className="muted" style={{ maxWidth: 520, marginBottom: 28 }}>{t.monitoring.sub}</p>
+          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+            {t.monitoring.items.map((item) => (
+              <div key={item.title} className="card" style={{ display: "flex", flexDirection: "column", gap: 8, background: "rgba(141,243,211,0.05)", borderColor: "rgba(141,243,211,0.15)" }}>
+                <div style={{ fontSize: 24 }}>{item.icon}</div>
+                <div style={{ fontWeight: 650, fontSize: 15 }}>{item.title}</div>
                 <div className="muted" style={{ fontSize: 13 }}>{item.desc}</div>
               </div>
             ))}
