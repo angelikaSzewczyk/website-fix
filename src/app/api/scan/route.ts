@@ -3,22 +3,72 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Rate Limiting: max 5 Scans pro IP pro Stunde
-const rateLimit = new Map<string, { count: number; resetAt: number }>();
+// Rate Limiting: max 3 Scans pro IP pro Stunde, min. 15 Sekunden Abstand
+const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
 
-function checkRateLimit(ip: string): boolean {
+// Globale Bremse: max 30 Scans pro Minute über alle IPs (pro Instanz)
+const globalLimit = { count: 0, resetAt: 0 };
+
+function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
   const now = Date.now();
+
+  // Globale Bremse prüfen
+  if (now > globalLimit.resetAt) {
+    globalLimit.count = 0;
+    globalLimit.resetAt = now + 60 * 1000;
+  }
+  if (globalLimit.count >= 30) {
+    return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
+  }
+  globalLimit.count++;
+
+  // IP-basiertes Limit
   const entry = rateLimit.get(ip);
 
   if (!entry || now > entry.resetAt) {
-    rateLimit.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return true;
+    rateLimit.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000, lastScan: now });
+    return { allowed: true };
   }
 
-  if (entry.count >= 5) return false;
+  // Mindestabstand: 15 Sekunden zwischen Scans
+  if (now - entry.lastScan < 15 * 1000) {
+    return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
+  }
+
+  if (entry.count >= 3) {
+    return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde und versuche es erneut." };
+  }
 
   entry.count++;
-  return true;
+  entry.lastScan = now;
+  return { allowed: true };
+}
+
+// SSRF-Schutz: private/interne IPs blockieren
+function isUrlAllowed(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    const hostname = url.hostname.toLowerCase();
+
+    // Nur HTTP/HTTPS erlauben
+    if (!["http:", "https:"].includes(url.protocol)) return false;
+
+    // Private/interne Adressen blockieren
+    const blocked = [
+      /^localhost$/,
+      /^127\./,
+      /^10\./,
+      /^192\.168\./,
+      /^172\.(1[6-9]|2\d|3[01])\./,
+      /^::1$/,
+      /^0\.0\.0\.0$/,
+      /^169\.254\./,   // link-local
+      /\.local$/,
+    ];
+    return !blocked.some((pattern) => pattern.test(hostname));
+  } catch {
+    return false;
+  }
 }
 
 // Hilfsfunktion: Website abrufen mit Timeout
@@ -65,18 +115,35 @@ export async function POST(req: NextRequest) {
   try {
     // IP ermitteln und Rate Limit prüfen
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-    if (!checkRateLimit(ip)) {
+    const limitResult = checkRateLimit(ip);
+    if (!limitResult.allowed) {
       return NextResponse.json(
-        { success: false, error: "Zu viele Scans. Bitte warte eine Stunde und versuche es erneut." },
+        { success: false, error: limitResult.reason },
         { status: 429 }
       );
     }
 
-    const { url } = await req.json();
+    const body = await req.json();
+    const { url } = body;
+
+    if (!url || typeof url !== "string" || url.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Bitte gib eine gültige URL ein." },
+        { status: 400 }
+      );
+    }
 
     // URL normalisieren
     let targetUrl = url.trim();
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
+
+    // SSRF-Schutz
+    if (!isUrlAllowed(targetUrl)) {
+      return NextResponse.json(
+        { success: false, error: "Diese URL kann nicht gescannt werden." },
+        { status: 400 }
+      );
+    }
 
     const scanData: Record<string, unknown> = { url: targetUrl };
 
