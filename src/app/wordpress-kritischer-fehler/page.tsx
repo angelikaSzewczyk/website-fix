@@ -8,234 +8,187 @@ export const metadata: Metadata = {
   alternates: { canonical: "/wordpress-kritischer-fehler" },
 };
 
+const CAUSES = [
+  "Plugin-Konflikt nach Update",
+  "WordPress-Core-Update fehlgeschlagen",
+  "Theme inkompatibel mit neuer WordPress-Version",
+  "PHP-Speicherlimit überschritten",
+  "Beschädigte Plugin- oder Theme-Dateien",
+  "Datenbankfehler oder fehlende Tabellen",
+];
+
+const STEPS = [
+  {
+    num: "1",
+    title: "URL eingeben",
+    desc: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang, keine technischen Kenntnisse nötig.",
+  },
+  {
+    num: "2",
+    title: "KI scannt alles",
+    desc: "WebsiteFix prüft Fehler-Logs, Plugins, Theme und WordPress-Konfiguration — in unter 60 Sekunden.",
+  },
+  {
+    num: "3",
+    title: "Klare Diagnose auf Deutsch",
+    desc: "Du siehst genau was den kritischen Fehler verursacht hat — priorisiert, verständlich, ohne Fachjargon.",
+  },
+];
+
 export default function WordpressKritischerFehlerPage() {
   return (
-    <main className="min-h-screen bg-[#0b0c10] text-white">
-      <section className="border-b border-white/10">
-        <div className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
-          <div className="max-w-3xl">
-            <div className="mb-5 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-white/70">
-              KI-Diagnose • URL eingeben • kein Entwickler nötig
-            </div>
+    <>
+      {/* NAV */}
+      <nav style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: "rgba(11,12,16,0.92)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+      }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: "-0.01em" }}>
+            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
+          </Link>
+          <Link href="/#waitlist" className="cta ctaSmall">
+            Frühen Zugang sichern
+          </Link>
+        </div>
+      </nav>
 
-            <h1 className="text-4xl font-semibold leading-tight tracking-[-0.02em] md:text-5xl lg:text-6xl">
-              WordPress kritischer Fehler?
-              <br />
+      <main>
+        {/* HERO */}
+        <section className="hero">
+          <div className="badge">KI-Diagnose · URL eingeben · kein Entwickler nötig</div>
+          <h1 style={{ fontSize: "clamp(30px, 5vw, 50px)", lineHeight: 1.1, margin: "0 0 20px" }}>
+            WordPress kritischer Fehler?<br />
+            <span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               KI findet die Ursache sofort.
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72 md:text-xl">
-              „Es gab einen kritischen Fehler auf deiner Website" — deine Inhalte
-              sind fast immer noch da, aber der Fehler muss gefunden werden.
-              WebsiteFix scannt deine WordPress-Website automatisch und zeigt dir
-              in unter 60 Sekunden was kaputt ist — in verständlichem Deutsch.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/#waitlist"
-                className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
-              >
-                Frühen Zugang sichern
-              </Link>
-
-              <a
-                href="#ursachen"
-                className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-6 py-3.5 text-base font-medium text-white transition hover:bg-white/10"
-              >
-                Typische Ursachen ansehen
-              </a>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-6 text-sm text-white/60">
-              <div>Kostenlos in der Beta</div>
-              <div>•</div>
-              <div>Keine Kreditkarte</div>
-              <div>•</div>
-              <div>Beta startet April 2026</div>
-            </div>
+            </span>
+          </h1>
+          <p className="heroText" style={{ maxWidth: 580 }}>
+            „Es gab einen kritischen Fehler auf deiner Website" — deine Inhalte sind fast immer noch da.
+            WebsiteFix scannt deine WordPress-Website automatisch und zeigt dir in unter 60 Sekunden was kaputt ist — in verständlichem Deutsch.
+          </p>
+          <div className="heroActions">
+            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
+              Frühen Zugang sichern
+            </Link>
+            <a href="#ursachen" className="ghost" style={{ fontSize: 15 }}>
+              Typische Ursachen ansehen
+            </a>
           </div>
+          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
+            Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026
+          </p>
+        </section>
+
+        {/* EXAMPLE BAR */}
+        <div style={{
+          background: "rgba(141,243,211,0.06)",
+          border: "1px solid rgba(141,243,211,0.2)",
+          borderRadius: 12,
+          padding: "14px 20px",
+          display: "flex",
+          gap: 12,
+          alignItems: "baseline",
+          marginBottom: 32,
+        }}>
+          <span style={{ fontSize: 13, color: "#8df3d3", fontWeight: 650, whiteSpace: "nowrap" }}>Zum Beispiel:</span>
+          <span style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>
+            WordPress Critical Error seit heute Nacht → URL eingeben → KI erkennt Plugin-Konflikt → du siehst genau was zu tun ist. Kein Entwickler nötig.
+          </span>
         </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-20">
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              title: "Website komplett down",
-              text: "Besucher sehen nur eine Fehlermeldung oder weiße Seite — kein Zugang, kein Backend, kein Inhalt sichtbar.",
-            },
-            {
-              title: "Anfragen gehen verloren",
-              text: "Solange deine WordPress-Website down ist, verlierst du aktiv Kunden — besonders kritisch bei laufenden Kampagnen.",
-            },
-            {
-              title: "Google bemerkt den Ausfall",
-              text: "Mehrere Tage Downtime können das Ranking beeinflussen. Schnelle Diagnose schützt deine Sichtbarkeit.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-[24px] border border-white/10 bg-white/5 p-6"
-            >
-              <h2 className="text-xl font-semibold">{item.title}</h2>
-              <p className="mt-4 text-base leading-7 text-white/70">{item.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section
-        id="ursachen"
-        className="border-y border-white/10 bg-white/[0.03]"
-      >
-        <div className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-              Typische Ursachen
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Was verursacht einen kritischen Fehler in WordPress?
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-white/70">
-              In den meisten Fällen ist ein Plugin oder Theme der Auslöser —
-              oft nach einem automatischen Update. WebsiteFix erkennt das automatisch
-              und erklärt dir ohne Fachjargon was passiert ist.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {/* PAIN POINTS */}
+        <section className="section">
+          <h2>Warum ein kritischer Fehler so gefährlich ist.</h2>
+          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
             {[
-              "Plugin-Konflikt nach Update",
-              "WordPress-Core-Update fehlgeschlagen",
-              "Theme inkompatibel mit neuer WordPress-Version",
-              "PHP-Speicherlimit überschritten",
-              "Beschädigte Plugin- oder Theme-Dateien",
-              "Datenbankfehler oder fehlende Tabellen",
+              { icon: "🔴", title: "Website komplett down", desc: "Besucher sehen nur eine Fehlermeldung — kein Zugang, kein Backend, kein Inhalt sichtbar." },
+              { icon: "📭", title: "Anfragen gehen verloren", desc: "Solange deine WordPress-Website down ist, verlierst du aktiv Kunden — besonders kritisch bei laufenden Kampagnen." },
+              { icon: "📉", title: "Google bemerkt den Ausfall", desc: "Mehrere Tage Downtime können dein Ranking beeinflussen. Schnelle Diagnose schützt deine Sichtbarkeit." },
             ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[22px] border border-white/10 bg-[#111317] p-5"
-              >
-                <p className="text-base font-medium text-white/88">{item}</p>
+              <div key={item.title} className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontSize: 26 }}>{item.icon}</div>
+                <h3 style={{ margin: 0, fontSize: 17 }}>{item.title}</h3>
+                <p className="cardSub" style={{ margin: 0 }}>{item.desc}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
-        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-              So funktioniert WebsiteFix
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              URL eingeben — KI analysiert alles automatisch.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-white/70">
-              Kein Plugin installieren, kein FTP-Zugang, kein Entwickler. Du
-              gibst deine URL ein und die KI scannt deine WordPress-Website
-              vollständig — inklusive Fehler-Logs, Plugins und Theme.
-            </p>
+        {/* CAUSES */}
+        <section className="section" id="ursachen">
+          <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Typische Ursachen</p>
+          <h2>Was verursacht einen kritischen Fehler in WordPress?</h2>
+          <p className="muted" style={{ maxWidth: 560, marginBottom: 24 }}>
+            In den meisten Fällen ist ein Plugin oder Theme der Auslöser — oft nach einem automatischen Update.
+            WebsiteFix erkennt das automatisch und erklärt dir ohne Fachjargon was passiert ist.
+          </p>
+          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+            {CAUSES.map((item) => (
+              <div key={item} className="card" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: "#8df3d3", fontSize: 18, flexShrink: 0 }}>✓</span>
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.88)" }}>{item}</p>
+              </div>
+            ))}
           </div>
+        </section>
 
-          <div className="grid gap-5">
-            {[
-              {
-                step: "01",
-                title: "URL eingeben",
-                text: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang, keine technischen Kenntnisse nötig.",
-              },
-              {
-                step: "02",
-                title: "KI scannt alles",
-                text: "WebsiteFix prüft Fehler-Logs, Plugins, Theme und WordPress-Konfiguration — in unter 60 Sekunden.",
-              },
-              {
-                step: "03",
-                title: "Klare Diagnose auf Deutsch",
-                text: "Du siehst genau was den kritischen Fehler verursacht hat — priorisiert, verständlich, ohne Fachjargon.",
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="rounded-[24px] border border-white/10 bg-white/5 p-6"
-              >
-                <div className="text-sm font-semibold text-white/40">
-                  {item.step}
+        {/* HOW IT WORKS */}
+        <section className="section">
+          <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.15em" }}>So funktioniert WebsiteFix</p>
+          <h2>Scan, Diagnose, Fix — fertig.</h2>
+          <p className="muted" style={{ maxWidth: 560, marginBottom: 28 }}>
+            URL eingeben, fertig. Die KI prüft alles gleichzeitig und erklärt was kaputt ist — kein Fachjargon, kein Entwickler, kein Plugin.
+          </p>
+          <div className="steps">
+            {STEPS.map((step) => (
+              <div key={step.num} className="step">
+                <div className="stepNum">{step.num}</div>
+                <div>
+                  <div className="stepTitle">{step.title}</div>
+                  <div className="muted" style={{ fontSize: 14 }}>{step.desc}</div>
                 </div>
-                <h3 className="mt-3 text-xl font-semibold">{item.title}</h3>
-                <p className="mt-4 text-base leading-7 text-white/70">{item.text}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="border-y border-white/10 bg-white/[0.03]">
-        <div className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-              Für wen das relevant ist
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Für alle, die eine WordPress-Website betreiben — ohne Entwickler im Team.
-            </h2>
+        {/* CTA SECTION */}
+        <section className="section" style={{
+          background: "rgba(141,243,211,0.04)",
+          border: "1px solid rgba(141,243,211,0.12)",
+          borderRadius: 16,
+          padding: "48px 32px",
+          marginTop: 0,
+        }}>
+          <h2 style={{ marginBottom: 12 }}>Nie wieder stundenlang googeln wenn WordPress einen kritischen Fehler wirft.</h2>
+          <p className="muted" style={{ maxWidth: 520, marginBottom: 28 }}>
+            Trag dich jetzt ein — der Frühzugang ist kostenlos, und Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
+          </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
+              Frühen Zugang sichern
+            </Link>
+            <Link href="/blog/wordpress-critical-error" className="ghost" style={{ fontSize: 15 }}>
+              Selbst lösen — Anleitung lesen
+            </Link>
           </div>
+          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026</p>
+        </section>
+      </main>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              "Selbstständige & Freelancer",
-              "Kleine Unternehmen",
-              "Online-Shops auf WooCommerce",
-              "Blogger & Content-Creator",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[22px] border border-white/10 bg-[#111317] p-5"
-              >
-                <p className="text-base font-medium text-white/88">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
-        <div className="rounded-[28px] border border-white/10 bg-white/5 p-8 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-                Beta startet April 2026
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-                Nie wieder stundenlang googeln wenn WordPress einen kritischen Fehler wirft.
-              </h2>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-white/70">
-                Trag dich jetzt ein — der Frühzugang ist kostenlos, und
-                Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
-              <Link
-                href="/#waitlist"
-                className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
-              >
-                Frühen Zugang sichern
-              </Link>
-
-              <Link
-                href="/blog/wordpress-critical-error"
-                className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-6 py-3.5 text-base font-medium text-white transition hover:bg-white/10"
-              >
-                Selbst lösen — Anleitung lesen
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "32px 20px", textAlign: "center" }}>
+        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+          {`© ${new Date().getFullYear()} website-fix.com · `}
+          <Link href="/" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>Startseite</Link>
+          {" · "}
+          <Link href="/blog" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>Blog</Link>
+        </p>
+      </footer>
+    </>
   );
 }
