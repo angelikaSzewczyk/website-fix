@@ -3,6 +3,24 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// Rate Limiting: max 5 Scans pro IP pro Stunde
+const rateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimit.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimit.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    return true;
+  }
+
+  if (entry.count >= 5) return false;
+
+  entry.count++;
+  return true;
+}
+
 // Hilfsfunktion: Website abrufen mit Timeout
 async function fetchWithTimeout(url: string, timeoutMs = 10000) {
   const controller = new AbortController();
@@ -45,6 +63,15 @@ function extractMeta(html: string, name: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // IP ermitteln und Rate Limit prüfen
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { success: false, error: "Zu viele Scans. Bitte warte eine Stunde und versuche es erneut." },
+        { status: 429 }
+      );
+    }
+
     const { url } = await req.json();
 
     // URL normalisieren
