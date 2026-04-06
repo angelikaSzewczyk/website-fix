@@ -7,6 +7,11 @@ const nextConfig = {
         destination: '/blog/website-zu-langsam',
         permanent: true,
       },
+      {
+        source: '/fixes',
+        destination: '/',
+        permanent: true,
+      },
     ]
   },
 };
