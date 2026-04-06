@@ -106,7 +106,7 @@ export default function WebsiteWirdNichtGefundenPage() {
           <h2>Zwei verschiedene Probleme — eine Diagnose.</h2>
           <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
             {[
-              { icon: "🚫", title: "Besucher sehen eine Fehlermeldung", desc: "„Diese Seite ist nicht erreichbar" — Besucher kommen gar nicht erst auf deine Website und springen sofort ab." },
+              { icon: "🚫", title: "Besucher sehen eine Fehlermeldung", desc: "Diese Seite ist nicht erreichbar — Besucher kommen gar nicht erst auf deine Website und springen sofort ab." },
               { icon: "🔍", title: "Google findet deine Seite nicht", desc: "Deine Website ist online, aber in den Suchergebnissen taucht sie nicht auf. Kein Traffic, keine Anfragen." },
               { icon: "⚡", title: "Oft ein einziger technischer Fehler", desc: "Eine falsche Einstellung, ein DNS-Problem oder eine abgelaufene Domain — die KI findet es in Sekunden." },
             ].map((item) => (
