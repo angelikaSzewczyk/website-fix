@@ -108,7 +108,12 @@ export async function POST(req: NextRequest) {
     await page.waitForTimeout(2000);
 
     // ── 2. AXE-CORE IM ECHTEN BROWSER AUSFÜHREN ──────────────────
-    await page.addScriptTag({ path: require.resolve("axe-core") });
+    // require.resolve() liefert im Next.js-Bundle eine Webpack-Modul-ID (Zahl),
+    // daher explizit über process.cwd() auflösen.
+    const { readFileSync } = await import("fs");
+    const { join } = await import("path");
+    const axeContent = readFileSync(join(process.cwd(), "node_modules/axe-core/axe.min.js"), "utf8");
+    await page.addScriptTag({ content: axeContent });
 
     const axeResults = await page.evaluate(() => {
       return new Promise<{ violations: AxeViolation[] }>((resolve, reject) => {
