@@ -4,16 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 
 type WaitlistState = "idle" | "loading" | "done" | "error";
-
 type ScanState = "idle" | "scanning" | "done" | "error";
+type ActiveTab = "website" | "wcag";
 
 export default function ScanPage() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("website");
+
+  // Website-Check State
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ScanState>("idle");
   const [diagnose, setDiagnose] = useState("");
   const [error, setError] = useState("");
   const [waitlistEmail, setWaitlistEmail] = useState("");
   const [waitlistState, setWaitlistState] = useState<WaitlistState>("idle");
+
+  // WCAG-Scan State
+  const [wcagUrl, setWcagUrl] = useState("");
+  const [wcagState, setWcagState] = useState<ScanState>("idle");
+  const [wcagDiagnose, setWcagDiagnose] = useState("");
+  const [wcagViolationCount, setWcagViolationCount] = useState(0);
+  const [wcagError, setWcagError] = useState("");
 
   async function handleWaitlist(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +72,34 @@ export default function ScanPage() {
     }
   }
 
+  async function handleWcagScan(e: React.FormEvent) {
+    e.preventDefault();
+    if (!wcagUrl || wcagState === "scanning") return;
+    setWcagState("scanning");
+    setWcagDiagnose("");
+    setWcagError("");
+    setWcagViolationCount(0);
+    try {
+      const res = await fetch("/api/wcag-scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: wcagUrl }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWcagDiagnose(data.diagnose);
+        setWcagViolationCount(data.violationCount);
+        setWcagState("done");
+      } else {
+        setWcagError(data.error || "Etwas ist schiefgelaufen.");
+        setWcagState("error");
+      }
+    } catch {
+      setWcagError("Verbindungsfehler. Bitte versuche es erneut.");
+      setWcagState("error");
+    }
+  }
+
   // Markdown-ähnliche Diagnose einfach rendern
   function renderDiagnose(text: string) {
     return text.split("\n").map((line, i) => {
@@ -106,6 +144,35 @@ export default function ScanPage() {
       </nav>
 
       <main>
+        {/* TABS */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 8, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: 4, maxWidth: 420 }}>
+          {([
+            { key: "website", label: "🔍 Website-Check" },
+            { key: "wcag", label: "♿ Barrierefreiheit" },
+          ] as { key: ActiveTab; label: string }[]).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                flex: 1,
+                padding: "9px 16px",
+                borderRadius: 9,
+                border: "none",
+                cursor: "pointer",
+                fontSize: 14,
+                fontWeight: activeTab === tab.key ? 650 : 400,
+                background: activeTab === tab.key ? "rgba(141,243,211,0.12)" : "transparent",
+                color: activeTab === tab.key ? "#8df3d3" : "rgba(255,255,255,0.5)",
+                transition: "all 0.15s",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ===== TAB: WEBSITE-CHECK ===== */}
+        {activeTab === "website" && <>
         {/* HERO */}
         <section className="hero">
           <div className="badge">Beta · Kostenlos · KI-Diagnose in unter 60 Sekunden</div>
@@ -273,6 +340,137 @@ export default function ScanPage() {
             </div>
           </section>
         )}
+        </> /* Ende Website-Check Tab */}
+
+        {/* ===== TAB: BARRIEREFREIHEIT (WCAG) ===== */}
+        {activeTab === "wcag" && <>
+        <section className="hero">
+          <div className="badge" style={{ background: "rgba(141,243,211,0.1)", color: "#8df3d3" }}>
+            BFSG seit Juni 2025 Pflicht · axe-core · WCAG 2.1 AA
+          </div>
+          <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", lineHeight: 1.1, margin: "0 0 16px" }}>
+            Barrierefreiheit prüfen —{" "}
+            <span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              KI erklärt jeden Fehler.
+            </span>
+          </h1>
+          <p className="muted" style={{ fontSize: 17, marginBottom: 32, maxWidth: 520 }}>
+            Automatischer WCAG 2.1 Scan — URL eingeben, fertig. KI erklärt jeden Verstoß auf Deutsch und zeigt den Code-Fix.
+          </p>
+
+          <form onSubmit={handleWcagScan} style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 600 }}>
+            <input
+              type="text"
+              value={wcagUrl}
+              onChange={(e) => setWcagUrl(e.target.value)}
+              placeholder="https://deine-website.de"
+              disabled={wcagState === "scanning"}
+              style={{
+                flex: 1, minWidth: 260,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                borderRadius: 12, padding: "14px 18px",
+                color: "#fff", fontSize: 16, outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              className="cta"
+              disabled={wcagState === "scanning" || !wcagUrl}
+              style={{ fontSize: 15, padding: "14px 28px", whiteSpace: "nowrap" }}
+            >
+              {wcagState === "scanning" ? "Scannt..." : "Jetzt prüfen"}
+            </button>
+          </form>
+        </section>
+
+        {/* Scanning Animation */}
+        {wcagState === "scanning" && (
+          <div className="card" style={{ marginTop: 8, padding: "28px 24px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                "HTML von der Website abrufen...",
+                "axe-core WCAG 2.1 Scan starten (50+ Kriterien)...",
+                "Alt-Texte, Labels, Kontrast, Tastatur-Navigation prüfen...",
+                "Verstöße nach Priorität sortieren...",
+                "KI generiert Erklärungen + Code-Fixes auf Deutsch...",
+              ].map((step, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", color: "rgba(255,255,255,0.6)", fontSize: 14 }}>
+                  <span style={{ color: "#8df3d3" }}>⟳</span>
+                  {step}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {wcagState === "error" && (
+          <div className="card" style={{ marginTop: 8, borderColor: "rgba(255,107,107,0.3)", background: "rgba(255,107,107,0.08)" }}>
+            <p style={{ margin: 0, color: "#ff6b6b" }}>{wcagError}</p>
+          </div>
+        )}
+
+        {/* Ergebnisse */}
+        {wcagState === "done" && wcagDiagnose && (
+          <div style={{ marginTop: 8 }}>
+            <div className="card" style={{ padding: "28px 28px" }}>
+              <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 20 }}>{wcagViolationCount === 0 ? "✅" : "⚠️"}</span>
+                <span style={{ fontWeight: 700, fontSize: 16 }}>
+                  {wcagViolationCount === 0
+                    ? "Keine WCAG-Verstöße gefunden"
+                    : `${wcagViolationCount} WCAG-Verstoß${wcagViolationCount !== 1 ? "e" : ""} gefunden`}
+                </span>
+                <span className="muted" style={{ fontSize: 13 }}>— {wcagUrl}</span>
+              </div>
+              <div>{renderDiagnose(wcagDiagnose)}</div>
+            </div>
+
+            <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={() => { setWcagState("idle"); setWcagUrl(""); setWcagDiagnose(""); }}
+                className="ghost"
+                style={{ fontSize: 13, padding: "10px 18px" }}
+              >
+                Neue Website prüfen →
+              </button>
+              <a href="/#waitlist" className="cta" style={{ fontSize: 13, padding: "10px 18px" }}>
+                Zur Warteliste — dauerhafter Rabatt
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Info wenn idle */}
+        {wcagState === "idle" && (
+          <section className="section">
+            <h2>Was geprüft wird</h2>
+            <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", marginTop: 22 }}>
+              {[
+                { icon: "🖼️", label: "Alt-Texte", desc: "Bilder ohne Beschreibung für Screenreader" },
+                { icon: "🏷️", label: "Formular-Labels", desc: "Eingabefelder korrekt beschriftet?" },
+                { icon: "🌍", label: "HTML lang-Attribut", desc: "Sprache für Screenreader definiert?" },
+                { icon: "⌨️", label: "Tastatur-Navigation", desc: "Alle Links und Buttons erreichbar?" },
+                { icon: "📝", label: "Heading-Struktur", desc: "Überschriften logisch strukturiert?" },
+                { icon: "🔘", label: "Button-Namen", desc: "Alle Buttons haben aussagekräftige Labels?" },
+              ].map((item) => (
+                <div key={item.label} className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 22 }}>{item.icon}</div>
+                  <div style={{ fontWeight: 650, fontSize: 15 }}>{item.label}</div>
+                  <div className="muted" style={{ fontSize: 13 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+            <p className="muted" style={{ fontSize: 13, marginTop: 20 }}>
+              ♿ Basiert auf <strong style={{ color: "rgba(255,255,255,0.7)" }}>axe-core</strong> — dem Standard-Tool für WCAG 2.1 AA.
+              Seit Juni 2025 ist Barrierefreiheit für gewerbliche Websites in Deutschland gesetzlich vorgeschrieben (BFSG).
+              <a href="/blog/bfsg-2025-was-webagenturen-wissen-muessen" style={{ color: "#8df3d3", marginLeft: 6 }}>Mehr erfahren →</a>
+            </p>
+          </section>
+        )}
+        </> /* Ende WCAG Tab */}
+
       </main>
 
       <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "32px 20px", textAlign: "center" }}>
