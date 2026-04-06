@@ -108,10 +108,12 @@ export async function POST(req: NextRequest) {
     await page.waitForTimeout(2000);
 
     // ── 2. AXE-CORE IM ECHTEN BROWSER AUSFÜHREN ──────────────────
-    // axe.source ist die serialisierte axe-core Quelle als String —
-    // von webpack korrekt gebündelt, kein Dateisystem-Zugriff nötig.
-    const axe = (await import("axe-core")).default;
-    await page.addScriptTag({ content: axe.source });
+    // CDN-URL ist zuverlässiger als bundled source — setzt window.axe korrekt.
+    await page.addScriptTag({
+      url: "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js",
+    });
+    // Warten bis axe auf window verfügbar ist
+    await page.waitForFunction(() => typeof (window as unknown as { axe?: unknown }).axe !== "undefined", { timeout: 10000 });
 
     const axeResults = await page.evaluate(() => {
       return new Promise<{ violations: AxeViolation[] }>((resolve, reject) => {
