@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Rate Limiting: max 3 Scans pro IP pro Stunde, min. 15 Sekunden Abstand
 const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
 
-// Globale Bremse: max 30 Scans pro Minute über alle IPs (pro Instanz)
+// Globale Bremse: max 15 Scans pro Minute über alle IPs (pro Instanz)
 const globalLimit = { count: 0, resetAt: 0 };
 
 function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
@@ -17,7 +18,7 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
     globalLimit.count = 0;
     globalLimit.resetAt = now + 60 * 1000;
   }
-  if (globalLimit.count >= 30) {
+  if (globalLimit.count >= 15) {
     return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
   }
   globalLimit.count++;
@@ -42,33 +43,6 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
   entry.count++;
   entry.lastScan = now;
   return { allowed: true };
-}
-
-// SSRF-Schutz: private/interne IPs blockieren
-function isUrlAllowed(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-    const hostname = url.hostname.toLowerCase();
-
-    // Nur HTTP/HTTPS erlauben
-    if (!["http:", "https:"].includes(url.protocol)) return false;
-
-    // Private/interne Adressen blockieren
-    const blocked = [
-      /^localhost$/,
-      /^127\./,
-      /^10\./,
-      /^192\.168\./,
-      /^172\.(1[6-9]|2\d|3[01])\./,
-      /^::1$/,
-      /^0\.0\.0\.0$/,
-      /^169\.254\./,   // link-local
-      /\.local$/,
-    ];
-    return !blocked.some((pattern) => pattern.test(hostname));
-  } catch {
-    return false;
-  }
 }
 
 // Hilfsfunktion: Website abrufen mit Timeout
@@ -113,6 +87,12 @@ function extractMeta(html: string, name: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Origin + User-Agent prüfen
+    const guard = guardRequest(req);
+    if (guard.blocked) {
+      return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
+    }
+
     // IP ermitteln und Rate Limit prüfen
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
     const limitResult = checkRateLimit(ip);

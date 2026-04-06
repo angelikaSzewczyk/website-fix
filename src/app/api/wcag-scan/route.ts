@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 
 export const maxDuration = 60;
 
@@ -10,8 +11,9 @@ const CHROMIUM_URL =
   process.env.CHROMIUM_PACK_URL ??
   "https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar";
 
-// Rate limiting
+// Rate limiting — WCAG-Scan ist teurer als normaler Scan → strengere Limits
 const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
+// Globale Bremse: max 3 WCAG-Scans pro Minute (Playwright + Claude = teuer)
 const globalLimit = { count: 0, resetAt: 0 };
 
 function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
@@ -20,7 +22,7 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
     globalLimit.count = 0;
     globalLimit.resetAt = now + 60 * 1000;
   }
-  if (globalLimit.count >= 10) {
+  if (globalLimit.count >= 3) {
     return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
   }
   globalLimit.count++;
@@ -30,8 +32,8 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
     rateLimit.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000, lastScan: now });
     return { allowed: true };
   }
-  if (now - entry.lastScan < 15 * 1000) {
-    return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
+  if (now - entry.lastScan < 30 * 1000) {
+    return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (30 Sekunden)." };
   }
   if (entry.count >= 3) {
     return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde." };
@@ -39,21 +41,6 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
   entry.count++;
   entry.lastScan = now;
   return { allowed: true };
-}
-
-function isUrlAllowed(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-    const hostname = url.hostname.toLowerCase();
-    if (!["http:", "https:"].includes(url.protocol)) return false;
-    const blocked = [
-      /^localhost$/, /^127\./, /^10\./, /^192\.168\./,
-      /^172\.(1[6-9]|2\d|3[01])\./, /^::1$/, /^0\.0\.0\.0$/, /^169\.254\./, /\.local$/,
-    ];
-    return !blocked.some((p) => p.test(hostname));
-  } catch {
-    return false;
-  }
 }
 
 const PRIORITY: Record<string, string> = {
@@ -74,6 +61,12 @@ export async function POST(req: NextRequest) {
   let browser = null;
 
   try {
+    // Origin + User-Agent prüfen
+    const guard = guardRequest(req);
+    if (guard.blocked) {
+      return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
+    }
+
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
     const limitResult = checkRateLimit(ip);
     if (!limitResult.allowed) {
