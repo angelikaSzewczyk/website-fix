@@ -24,15 +24,16 @@ const copy = {
   de: {
     nav: {
       logo: "WebsiteFix",
-      cta: "Zur Warteliste",
+      cta: "Kostenlos scannen",
     },
     hero: {
-      badge: "Nicht für Entwickler. Für alle anderen. — kommt bald",
+      badge: "Nicht für Entwickler. Für alle anderen. — jetzt in der Beta",
       h1a: "Website kaputt?",
       h1b: "KI findet den Fehler — und repariert ihn für dich.",
-      sub: "Du googelst, verstehst nichts, gibst auf. WebsiteFix scannt deine Website in unter 60 Sekunden — und repariert Fehler automatisch. Kein Entwickler nötig.",
-      cta: "Frühen Zugang sichern",
-      trust: "Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026",
+      sub: "Du googelst, verstehst nichts, gibst auf. WebsiteFix scannt deine Website in unter 60 Sekunden — und zeigt dir genau was kaputt ist. Kein Entwickler nötig.",
+      cta: "Website jetzt kostenlos scannen",
+      ctaSecondary: "Zur Warteliste",
+      trust: "Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden",
     },
     example: {
       label: "Zum Beispiel",
@@ -134,15 +135,16 @@ const copy = {
   en: {
     nav: {
       logo: "WebsiteFix",
-      cta: "Join Waitlist",
+      cta: "Scan for free",
     },
     hero: {
-      badge: "Not for developers. For everyone else. — coming soon",
+      badge: "Not for developers. For everyone else. — now in beta",
       h1a: "Website broken?",
       h1b: "AI finds the problem — and fixes it for you.",
-      sub: "You Google it, understand nothing, give up. WebsiteFix scans your website in under 60 seconds — and fixes errors automatically. No developer needed.",
-      cta: "Get early access",
-      trust: "Free in beta · No credit card · Beta launches April 2026",
+      sub: "You Google it, understand nothing, give up. WebsiteFix scans your website in under 60 seconds — and shows you exactly what's broken. No developer needed.",
+      cta: "Scan your website for free",
+      ctaSecondary: "Join waitlist",
+      trust: "Free · No sign-up · Results in under 60 seconds",
     },
     example: {
       label: "For example",
@@ -304,7 +306,7 @@ export default function Page() {
             >
               {lang === "de" ? "EN" : "DE"}
             </button>
-            <a href="#waitlist" className="cta ctaSmall navCtaDesktop">{t.nav.cta}</a>
+            <a href="/scan" className="cta ctaSmall navCtaDesktop">{t.nav.cta}</a>
             <button
               type="button"
               className={`mobileMenuBtn ${mobileNavOpen ? "isOpen" : ""}`}
@@ -332,7 +334,7 @@ export default function Page() {
           <a href="/fuer-agenturen" className="navLink" onClick={() => setMobileNavOpen(false)}>{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
           <a href="/blog" className="navLink" onClick={() => setMobileNavOpen(false)}>Blog</a>
           <a href="#faq" className="navLink" onClick={() => setMobileNavOpen(false)}>FAQ</a>
-          <a href="#waitlist" className="cta mobileNavPrimary" onClick={() => setMobileNavOpen(false)}>{t.nav.cta}</a>
+          <a href="/scan" className="cta mobileNavPrimary" onClick={() => setMobileNavOpen(false)}>{t.nav.cta}</a>
         </div>
       </nav>
 
@@ -348,8 +350,11 @@ export default function Page() {
           </h1>
           <p className="heroText" style={{ maxWidth: 580 }}>{t.hero.sub}</p>
           <div className="heroActions">
-            <a href="#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
+            <a href="/scan" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
               {t.hero.cta}
+            </a>
+            <a href="#waitlist" className="ghost" style={{ fontSize: 15 }}>
+              {t.hero.ctaSecondary}
             </a>
           </div>
           <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>{t.hero.trust}</p>
