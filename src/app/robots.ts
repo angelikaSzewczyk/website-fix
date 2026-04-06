@@ -8,7 +8,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/api/',      // Schützt deine OG-Bild-Generierung vor Spam
-          '/_next/',     // Verhindert das Crawlen von Next.js Internals
           '/admin/',    // Falls du später ein Dashboard baust
         ],
       },
