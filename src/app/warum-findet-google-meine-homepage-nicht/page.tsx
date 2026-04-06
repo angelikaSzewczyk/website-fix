@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Warum findet Google meine Homepage nicht? Ursachen & Lösung | WebsiteFix",
+  title: "Warum findet Google meine Homepage nicht? KI analysiert es | WebsiteFix",
   description:
-    "Deine Website ist online, aber Google zeigt sie nicht an? Wir analysieren die Ursache — von der Indexierungssperre bis zur fehlenden Sitemap — und beheben das Problem.",
+    "Deine Website ist online, aber Google zeigt sie nicht an? WebsiteFix analysiert automatisch warum — Indexierungssperre, fehlende Sitemap, technische Fehler. Diagnose in 60 Sekunden.",
   alternates: { canonical: "/warum-findet-google-meine-homepage-nicht" },
 };
 
@@ -15,7 +15,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
         <div className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-white/70">
-              SEO & Indexierung • Analyse & Fix • kein Technik-Wissen nötig
+              KI-Diagnose • URL eingeben • kein Technik-Wissen nötig
             </div>
 
             <h1 className="text-4xl font-semibold leading-tight tracking-[-0.02em] md:text-5xl lg:text-6xl">
@@ -26,8 +26,9 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72 md:text-xl">
               Deine Website ist seit Wochen online — aber bei Google taucht sie
-              nicht auf. Das ist meist kein großes Problem, aber ein konkreter
-              technischer Fehler. Wir finden ihn und beheben ihn.
+              nicht auf. WebsiteFix scannt deine Seite automatisch und erklärt
+              dir in unter 60 Sekunden genau warum Google dich nicht findet —
+              und was du dagegen tun kannst.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -35,7 +36,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
                 href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Website jetzt analysieren lassen
+                Frühen Zugang sichern
               </Link>
 
               <a
@@ -47,11 +48,11 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-6 text-sm text-white/60">
-              <div>Indexierungssperre</div>
+              <div>Kostenlos in der Beta</div>
               <div>•</div>
-              <div>fehlende Sitemap</div>
+              <div>Keine Kreditkarte</div>
               <div>•</div>
-              <div>technische Fehler</div>
+              <div>Beta startet April 2026</div>
             </div>
           </div>
         </div>
@@ -62,15 +63,15 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
           {[
             {
               title: "Kein organischer Traffic",
-              text: "Wenn Google deine Homepage nicht findet, bekommst du keine Besucher aus der Suche — egal wie gut deine Seite aussieht.",
+              text: "Wenn Google deine Homepage nicht findet, kommen keine Besucher aus der Suche — egal wie gut deine Seite aussieht.",
             },
             {
               title: "Kein Eintrag bei Google",
-              text: "Du suchst nach deinem Firmennamen und siehst dich nicht? Das bedeutet Google hat deine Seite noch nicht indexiert.",
+              text: "Du suchst nach deinem Firmennamen und siehst dich nicht? Google hat deine Seite noch nicht indexiert.",
             },
             {
-              title: "Oft ein einfacher Fix",
-              text: "In vielen Fällen ist eine einzige Einstellung das Problem — z. B. eine aktivierte Suchmaschinen-Sperre in WordPress.",
+              title: "Oft ein einziger Fehler",
+              text: "In vielen Fällen ist eine einzige Einstellung das Problem. Die KI findet es in Sekunden.",
             },
           ].map((item) => (
             <div
@@ -97,8 +98,8 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
               Warum zeigt Google deine Homepage nicht an?
             </h2>
             <p className="mt-5 text-lg leading-8 text-white/70">
-              Meistens ist es eine von wenigen bekannten Ursachen — und keine
-              davon erfordert Programmierkenntnisse zum Beheben.
+              Meistens ist es eine von wenigen bekannten Ursachen — und
+              WebsiteFix erkennt automatisch welche davon bei dir zutrifft.
             </p>
           </div>
 
@@ -108,7 +109,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
               "Website zu neu — Google noch nicht crawlt",
               "Sitemap fehlt oder nicht bei Google eingereicht",
               "Zu wenig Inhalt — Google hält Seite für wertlos",
-              "Technische Fehler (500, 404) blocken den Crawler",
+              "Technische Fehler (500, 404) blockieren den Crawler",
               "Domain hat schlechten Ruf (z. B. Spam-History)",
             ].map((item) => (
               <div
@@ -126,14 +127,15 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
         <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-              Unsere Lösung
+              So funktioniert WebsiteFix
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Wir analysieren warum Google dich nicht findet — und machen es sichtbar.
+              URL eingeben — KI erklärt automatisch warum Google dich nicht findet.
             </h2>
             <p className="mt-5 text-lg leading-8 text-white/70">
-              Statt stundenlanger Recherche in Google-Dokumentationen prüfen
-              wir deine Website systematisch und beheben die Ursache direkt.
+              Kein Durchklicken durch Google-Dokumentationen, kein Fachjargon,
+              kein Entwickler. Du gibst deine URL ein und bekommst eine klare
+              Diagnose — was das Problem ist und was als nächstes zu tun ist.
             </p>
           </div>
 
@@ -141,18 +143,18 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
             {[
               {
                 step: "01",
-                title: "Indexierungsstatus prüfen",
-                text: "Wir prüfen ob Google deine Seite kennt, crawlt und indexiert — mit konkreten Daten aus der Search Console.",
+                title: "URL eingeben",
+                text: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang, keine technischen Kenntnisse nötig.",
               },
               {
                 step: "02",
-                title: "Ursache identifizieren",
-                text: "Wir finden heraus ob es eine Einstellung, ein technisches Problem oder fehlender Inhalt ist, der Google blockiert.",
+                title: "KI prüft Indexierungsstatus",
+                text: "WebsiteFix analysiert ob Google deine Seite kennt, was sie blockiert und welche technischen Probleme vorhanden sind.",
               },
               {
                 step: "03",
-                title: "Sichtbarkeit herstellen",
-                text: "Wir beheben das konkrete Problem und reichen deine Seite bei Google zur Indexierung ein — damit du gefunden wirst.",
+                title: "Klare Diagnose auf Deutsch",
+                text: "Du siehst genau warum Google dich nicht findet — priorisiert, verständlich, mit konkreten nächsten Schritten.",
               },
             ].map((item) => (
               <div
@@ -177,7 +179,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
               Für wen das relevant ist
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Besonders wichtig für alle, die neue Kunden über Google gewinnen wollen.
+              Für alle, die über Google gefunden werden wollen — ohne SEO-Kenntnisse.
             </h2>
           </div>
 
@@ -204,14 +206,14 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-                Jetzt handeln
+                Beta startet April 2026
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-                Solange Google deine Homepage nicht findet, entgeht dir wertvoller Traffic täglich.
+                Nie wieder stundenlang suchen warum Google deine Homepage nicht anzeigt.
               </h2>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-white/70">
-                Lass analysieren warum du nicht sichtbar bist — und das Problem
-                schnell beheben, damit du in den Suchergebnissen erscheinst.
+                Trag dich jetzt ein — der Frühzugang ist kostenlos, und
+                Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
               </p>
             </div>
 
@@ -220,7 +222,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
                 href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Jetzt Sichtbarkeit prüfen lassen
+                Frühen Zugang sichern
               </Link>
 
               <Link

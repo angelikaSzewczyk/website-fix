@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Website wird nicht gefunden? Ursache & Lösung | WebsiteFix",
+  title: "Website wird nicht gefunden? KI analysiert die Ursache | WebsiteFix",
   description:
-    "Deine Website wird nicht gefunden — von Google oder Besuchern? Wir analysieren die Ursache: DNS, Hosting, Indexierung oder technischer Fehler. Fix in 24–72h.",
+    "Deine Website wird nicht gefunden — von Google oder Besuchern? WebsiteFix scannt automatisch: DNS, Hosting, Indexierung, technische Fehler. Diagnose in unter 60 Sekunden.",
   alternates: { canonical: "/website-wird-nicht-gefunden" },
 };
 
@@ -15,19 +15,20 @@ export default function WebsiteWirdNichtGefundenPage() {
         <div className="mx-auto max-w-6xl px-6 py-16 md:px-10 lg:px-12 lg:py-24">
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-white/70">
-              Website Problem lösen • 24–72h • systemunabhängig
+              KI-Diagnose • URL eingeben • kein Entwickler nötig
             </div>
 
             <h1 className="text-4xl font-semibold leading-tight tracking-[-0.02em] md:text-5xl lg:text-6xl">
               Website wird nicht gefunden?
               <br />
-              Wir finden den Grund.
+              KI findet den Grund sofort.
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72 md:text-xl">
               Ob Besucher eine Fehlermeldung sehen oder Google deine Seite
-              ignoriert — beides hat eine konkrete technische Ursache. Wir
-              analysieren das Problem und beheben es zuverlässig.
+              ignoriert — beides hat eine konkrete Ursache. WebsiteFix scannt
+              deine Website automatisch und erklärt dir in unter 60 Sekunden
+              warum sie nicht gefunden wird.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -35,7 +36,7 @@ export default function WebsiteWirdNichtGefundenPage() {
                 href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Website jetzt prüfen lassen
+                Frühen Zugang sichern
               </Link>
 
               <a
@@ -47,13 +48,11 @@ export default function WebsiteWirdNichtGefundenPage() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-6 text-sm text-white/60">
-              <div>DNS-Fehler</div>
+              <div>Kostenlos in der Beta</div>
               <div>•</div>
-              <div>Hosting-Problem</div>
+              <div>Keine Kreditkarte</div>
               <div>•</div>
-              <div>Google-Indexierung</div>
-              <div>•</div>
-              <div>Fix in 24–72h</div>
+              <div>Beta startet April 2026</div>
             </div>
           </div>
         </div>
@@ -64,15 +63,15 @@ export default function WebsiteWirdNichtGefundenPage() {
           {[
             {
               title: "Besucher sehen eine Fehlermeldung",
-              text: "\"Diese Seite ist nicht erreichbar\" oder \"Server nicht gefunden\" — Besucher kommen gar nicht erst auf deine Seite.",
+              text: "„Diese Seite ist nicht erreichbar" — Besucher kommen gar nicht erst auf deine Website und springen sofort ab.",
             },
             {
               title: "Google findet deine Seite nicht",
-              text: "Deine Website ist online, aber in den Suchergebnissen taucht sie nicht auf — kein Traffic, keine Anfragen.",
+              text: "Deine Website ist online, aber in den Suchergebnissen taucht sie nicht auf. Kein Traffic, keine Anfragen.",
             },
             {
-              title: "Nur du siehst das Problem",
-              text: "Manchmal funktioniert die Seite für dich, aber Besucher bekommen Fehler — ein klassisches DNS- oder Cache-Problem.",
+              title: "Oft ein einziger technischer Fehler",
+              text: "Eine falsche Einstellung, ein DNS-Problem oder eine abgelaufene Domain — die KI findet es in Sekunden.",
             },
           ].map((item) => (
             <div
@@ -99,9 +98,9 @@ export default function WebsiteWirdNichtGefundenPage() {
               Warum wird eine Website nicht gefunden?
             </h2>
             <p className="mt-5 text-lg leading-8 text-white/70">
-              Die Ursachen sind technisch unterschiedlich — je nachdem ob
-              Besucher die Seite nicht erreichen oder Google sie nicht anzeigt.
-              Wir unterscheiden das und lösen das richtige Problem.
+              Die Ursachen sind unterschiedlich — je nachdem ob Besucher die
+              Seite nicht erreichen oder Google sie nicht anzeigt. WebsiteFix
+              erkennt beides automatisch.
             </p>
           </div>
 
@@ -110,9 +109,9 @@ export default function WebsiteWirdNichtGefundenPage() {
               "DNS nicht korrekt eingerichtet",
               "Domain abgelaufen oder nicht verlängert",
               "Hosting-Paket pausiert oder gesperrt",
-              "Google-Indexierung deaktiviert (WordPress-Einstellung)",
-              "Sitemap fehlt oder nicht eingereicht",
-              "Technische Fehler auf der Website (500, 404)",
+              "Google-Indexierung in WordPress deaktiviert",
+              "Sitemap fehlt oder nicht bei Google eingereicht",
+              "Technische Fehler (500, 404) blockieren den Crawler",
             ].map((item) => (
               <div
                 key={item}
@@ -129,15 +128,15 @@ export default function WebsiteWirdNichtGefundenPage() {
         <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-              Unsere Lösung
+              So funktioniert WebsiteFix
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Wir prüfen systematisch warum deine Website nicht gefunden wird.
+              URL eingeben — KI analysiert automatisch warum deine Website nicht gefunden wird.
             </h2>
             <p className="mt-5 text-lg leading-8 text-white/70">
-              Statt Raten gehen wir die Ursachen strukturiert durch: DNS,
-              Hosting, technische Fehler und Google-Indexierung — bis wir das
-              Problem gefunden und behoben haben.
+              Kein Googeln, kein Fachjargon, kein Entwickler. Du gibst deine
+              URL ein und bekommst eine klare Diagnose — was das Problem ist
+              und was als nächstes zu tun ist.
             </p>
           </div>
 
@@ -145,18 +144,18 @@ export default function WebsiteWirdNichtGefundenPage() {
             {[
               {
                 step: "01",
-                title: "Erreichbarkeit prüfen",
-                text: "Wir testen ob deine Website technisch erreichbar ist — von verschiedenen Standorten und Geräten aus.",
+                title: "URL eingeben",
+                text: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang, keine technischen Kenntnisse nötig.",
               },
               {
                 step: "02",
-                title: "Ursache eingrenzen",
-                text: "DNS, Domain, Hosting oder technischer Fehler — wir identifizieren wo genau das Problem liegt.",
+                title: "KI scannt alles gleichzeitig",
+                text: "Erreichbarkeit, DNS, Hosting-Status, Google-Indexierung, technische Fehler — in unter 60 Sekunden.",
               },
               {
                 step: "03",
-                title: "Problem beheben",
-                text: "Wir setzen die Lösung um: ob DNS-Korrektur, Hosting-Kontakt, WordPress-Einstellung oder technischer Fix.",
+                title: "Klare Diagnose auf Deutsch",
+                text: "Du siehst genau warum deine Website nicht gefunden wird — priorisiert und verständlich erklärt.",
               },
             ].map((item) => (
               <div
@@ -181,16 +180,16 @@ export default function WebsiteWirdNichtGefundenPage() {
               Für wen das relevant ist
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Kritisch für alle, deren Kunden sie über die Website finden sollen.
+              Für alle, die neue Kunden über ihre Website gewinnen wollen — ohne IT-Kenntnisse.
             </h2>
           </div>
 
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {[
-              "Unternehmenswebsites",
+              "Lokale Unternehmen",
               "Dienstleister & Handwerk",
-              "Online-Shops",
               "Freiberufler & Coaches",
+              "Kleine Online-Shops",
             ].map((item) => (
               <div
                 key={item}
@@ -208,14 +207,14 @@ export default function WebsiteWirdNichtGefundenPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/45">
-                Jetzt handeln
+                Beta startet April 2026
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-                Wenn deine Website nicht gefunden wird, verlierst du aktiv potenzielle Kunden.
+                Nie wieder stundenlang suchen wenn deine Website nicht gefunden wird.
               </h2>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-white/70">
-                Lass die Ursache analysieren und schnell beheben — bevor dir
-                weiterer Traffic und weitere Anfragen entgehen.
+                Trag dich jetzt ein — der Frühzugang ist kostenlos, und
+                Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
               </p>
             </div>
 
@@ -224,7 +223,7 @@ export default function WebsiteWirdNichtGefundenPage() {
                 href="/#waitlist"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Jetzt Website-Problem lösen
+                Frühen Zugang sichern
               </Link>
 
               <Link
