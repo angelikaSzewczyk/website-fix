@@ -65,6 +65,7 @@ const copy = {
         { icon: "📅", label: "Automatische Monatsberichte", desc: "Für jeden Kunden automatisch generiert — kein manueller Aufwand." },
         { icon: "🔧", label: "KI-Reparatur", desc: "Fehler direkt behoben — kein Ticket, kein Aufwand, kein Entwickler." },
         { icon: "📈", label: "Score-Verlauf", desc: "Zeig dem Kunden wie du seinen Website-Score Monat für Monat verbesserst." },
+        { icon: "♿", label: "WCAG / BFSG-Scan", desc: "Barrierefreiheits-Scan für alle Websites — WordPress, Shopify, Wix, Custom. Seit Juni 2025 gesetzlich Pflicht." },
       ],
     },
     waitlist: {
@@ -73,6 +74,7 @@ const copy = {
       betaLabel: "Was die Beta enthält:",
       betaItems: [
         { done: true, text: "Scan aller Kunden-Websites" },
+        { done: true, text: "WCAG 2.1 Barrierefreiheits-Scan (alle CMS)" },
         { done: true, text: "Diagnose in Alltagssprache" },
         { done: true, text: "Priorisierter Reparaturplan pro Website" },
         { done: false, text: "Agentur-Dashboard & White-Label — kommt in Phase 2" },
@@ -108,7 +110,7 @@ const copy = {
         },
         {
           q: "Funktioniert das nur für WordPress?",
-          a: "Zunächst für WordPress. Shopify, Wix und Custom-Sites folgen direkt nach der Beta.",
+          a: "Der Website-Check ist für WordPress optimiert. Der Barrierefreiheits-Scan (WCAG 2.1) funktioniert heute schon für alle Websites — WordPress, Shopify, Wix, Custom. Kein CMS-Lock-in.",
         },
       ],
     },
@@ -173,6 +175,7 @@ const copy = {
         { icon: "📅", label: "Automatic monthly reports", desc: "Generated automatically for each client — no manual effort." },
         { icon: "🔧", label: "AI repair", desc: "Errors fixed directly — no ticket, no effort, no developer." },
         { icon: "📈", label: "Score history", desc: "Show clients how you've improved their website score month by month." },
+        { icon: "♿", label: "WCAG / BFSG scan", desc: "Accessibility scan for all websites — WordPress, Shopify, Wix, custom. Legally required in Germany since June 2025." },
       ],
     },
     waitlist: {
@@ -181,6 +184,7 @@ const copy = {
       betaLabel: "What beta includes:",
       betaItems: [
         { done: true, text: "Scan of all client websites" },
+        { done: true, text: "WCAG 2.1 accessibility scan (all CMS)" },
         { done: true, text: "Diagnosis in plain language" },
         { done: true, text: "Prioritized repair plan per website" },
         { done: false, text: "Agency dashboard & white-label — coming in phase 2" },
@@ -212,7 +216,7 @@ const copy = {
         },
         {
           q: "Does it only work for WordPress?",
-          a: "WordPress first. Shopify, Wix and custom sites follow right after beta.",
+          a: "The website check is optimized for WordPress. The accessibility scan (WCAG 2.1) already works for all websites — WordPress, Shopify, Wix, custom. No CMS lock-in.",
         },
       ],
     },

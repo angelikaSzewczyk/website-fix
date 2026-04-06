@@ -154,7 +154,7 @@ const copy = {
         },
         {
           q: "Für welche Websites funktioniert das?",
-          a: "Zunächst für WordPress-Websites. Shopify, Wix und Custom-Websites folgen nach der Beta.",
+          a: "Der Website-Check ist für WordPress optimiert (tiefe Fehleranalyse, Plugin-Erkennung). Der Barrierefreiheits-Scan (WCAG 2.1) funktioniert für alle Websites — WordPress, Shopify, Wix, Custom.",
         },
         {
           q: "Muss ich etwas installieren oder Zugang geben?",
@@ -304,7 +304,7 @@ const copy = {
         },
         {
           q: "Which websites does it work for?",
-          a: "WordPress first. Shopify, Wix and custom sites follow after beta.",
+          a: "The website check is optimized for WordPress (deep error analysis, plugin detection). The accessibility scan (WCAG 2.1) works for all websites — WordPress, Shopify, Wix, custom.",
         },
         {
           q: "Do I need to install anything or give access?",
