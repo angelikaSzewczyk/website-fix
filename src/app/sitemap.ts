@@ -24,6 +24,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
+  const landingPages = [
+    "/wordpress-kritischer-fehler",
+    "/website-wird-nicht-gefunden",
+    "/warum-findet-google-meine-homepage-nicht",
+    "/website-langsam",
+    "/kontaktformular-funktioniert-nicht",
+    "/google-analytics-funktioniert-nicht",
+    "/fuer-agenturen",
+  ].map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.85,
+  }));
+
   return [
     {
       url: `${SITE_URL}/`,
@@ -37,6 +52,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    ...landingPages,
     ...blogUrls,
   ];
 }
