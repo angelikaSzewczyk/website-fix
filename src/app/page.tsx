@@ -106,6 +106,45 @@ const copy = {
       error: "Etwas ist schiefgelaufen. Bitte versuch es nochmal oder schreib uns.",
       privacy: "Kein Spam. Nur eine E-Mail wenn die Beta startet.",
     },
+    pricing: {
+      h2: "Einfache Preise. Kein Abo-Chaos.",
+      earlyBird: "Frühbucher-Rabatt: 30% für Waitlist-Mitglieder — für immer.",
+      plans: [
+        {
+          name: "Free",
+          price: "0 €",
+          period: "",
+          desc: "Zum Ausprobieren",
+          features: ["3 Scans / Monat", "Basis-Diagnose", "Priorisierte Fehlerliste"],
+          cta: "Kostenlos starten",
+          ctaHref: "/scan",
+          highlight: false,
+          badge: "",
+        },
+        {
+          name: "Pro",
+          price: "29 €",
+          period: "/ Monat",
+          desc: "Für Selbstständige & KMUs",
+          features: ["Unlimitierte Scans", "KI-Code-Fixes", "24/7 Monitoring + Alerts", "Automatische Reparatur", "E-Mail Support"],
+          cta: "Frühbucher-Platz sichern",
+          ctaHref: "#waitlist",
+          highlight: true,
+          badge: "Beliebteste Wahl",
+        },
+        {
+          name: "Agentur",
+          price: "99 €",
+          period: "/ Monat",
+          desc: "Für Webagenturen",
+          features: ["Alles aus Pro", "Bis zu 10 Domains", "Team-Zugang (3 Seats)", "White-Label Reports", "Prioritäts-Support"],
+          cta: "Kontakt aufnehmen",
+          ctaHref: "mailto:hallo@website-fix.com",
+          highlight: false,
+          badge: "",
+        },
+      ],
+    },
     faq: {
       h2: "Häufige Fragen",
       items: [
@@ -216,6 +255,45 @@ const copy = {
       success: "You're in! We'll reach out as soon as the beta launches.",
       error: "Something went wrong. Please try again or contact us.",
       privacy: "No spam. One email when beta starts.",
+    },
+    pricing: {
+      h2: "Simple pricing. No subscription chaos.",
+      earlyBird: "Early bird discount: 30% off for waitlist members — forever.",
+      plans: [
+        {
+          name: "Free",
+          price: "€0",
+          period: "",
+          desc: "Try it out",
+          features: ["3 scans / month", "Basic diagnosis", "Prioritized error list"],
+          cta: "Start for free",
+          ctaHref: "/scan",
+          highlight: false,
+          badge: "",
+        },
+        {
+          name: "Pro",
+          price: "€29",
+          period: "/ month",
+          desc: "For freelancers & SMBs",
+          features: ["Unlimited scans", "AI code fixes", "24/7 monitoring + alerts", "Automatic repair", "Email support"],
+          cta: "Reserve early bird spot",
+          ctaHref: "#waitlist",
+          highlight: true,
+          badge: "Most popular",
+        },
+        {
+          name: "Agency",
+          price: "€99",
+          period: "/ month",
+          desc: "For web agencies",
+          features: ["Everything in Pro", "Up to 10 domains", "Team access (3 seats)", "White-label reports", "Priority support"],
+          cta: "Get in touch",
+          ctaHref: "mailto:hallo@website-fix.com",
+          highlight: false,
+          badge: "",
+        },
+      ],
     },
     faq: {
       h2: "FAQ",
@@ -441,6 +519,40 @@ export default function Page() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* ===== PRICING ===== */}
+        <section className="section" id="pricing">
+          <h2>{t.pricing.h2}</h2>
+          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginTop: 24 }}>
+            {t.pricing.plans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`card cardPricing${plan.highlight ? " cardPricingHighlight" : ""}`}
+              >
+                {plan.badge && <span className="pricingBadge">{plan.badge}</span>}
+                <div>
+                  <span className="pricingPrice">{plan.price}</span>
+                  <span className="pricingPeriod">{plan.period}</span>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 650, fontSize: 17, marginBottom: 2 }}>{plan.name}</div>
+                  <p className="pricingDesc">{plan.desc}</p>
+                </div>
+                <ul className="pricingFeatures">
+                  {plan.features.map((f) => <li key={f}>{f}</li>)}
+                </ul>
+                <a
+                  href={plan.ctaHref}
+                  className={plan.highlight ? "cta" : "ghost"}
+                  style={{ fontSize: 14, padding: "11px 20px", marginTop: "auto" }}
+                >
+                  {plan.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+          <p className="pricingEarlyBird">{t.pricing.earlyBird}</p>
         </section>
 
         {/* ===== WAITLIST ===== */}

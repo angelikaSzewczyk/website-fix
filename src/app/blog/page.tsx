@@ -69,6 +69,31 @@ export default function BlogIndexPage() {
           ← Zur Startseite
         </Link>
       </div>
-    </main></>
+    </main>
+
+    <section style={{
+      background: "linear-gradient(135deg, rgba(141,243,211,0.08) 0%, rgba(122,166,255,0.08) 100%)",
+      borderTop: "1px solid rgba(141,243,211,0.15)",
+      padding: "64px 20px",
+      textAlign: "center",
+    }}>
+      <div style={{ maxWidth: 560, margin: "0 auto" }}>
+        <h2 style={{ fontSize: "clamp(22px, 4vw, 30px)", margin: "0 0 12px" }}>
+          Bereit deine Website zu prüfen?
+        </h2>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginBottom: 28, lineHeight: 1.6 }}>
+          WebsiteFix scannt jede Website automatisch auf Fehler, Speed-Probleme und SEO-Lücken — in unter 60 Sekunden.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/scan" className="cta" style={{ fontSize: 15, padding: "13px 28px" }}>
+            Jetzt kostenlos scannen
+          </a>
+          <a href="/#waitlist" className="ghost" style={{ fontSize: 14 }}>
+            Zur Warteliste
+          </a>
+        </div>
+      </div>
+    </section>
+    </>
   );
 }
