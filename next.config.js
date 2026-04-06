@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : [config.externals]).filter(Boolean),
+        "playwright-core",
+        "@sparticuz/chromium-min",
+      ];
+    }
+    return config;
+  },
   async redirects() {
     return [
       {

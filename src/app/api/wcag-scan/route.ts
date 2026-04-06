@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { JSDOM } from "jsdom";
-import path from "path";
-import { readFileSync } from "fs";
+
+export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Rate limiting — gleiche Logik wie /api/scan
+// Chromium download URL — aus Env-Var oder GitHub Releases
+const CHROMIUM_URL =
+  process.env.CHROMIUM_PACK_URL ??
+  "https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar";
+
+// Rate limiting
 const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
 const globalLimit = { count: 0, resetAt: 0 };
 
@@ -16,7 +20,7 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
     globalLimit.count = 0;
     globalLimit.resetAt = now + 60 * 1000;
   }
-  if (globalLimit.count >= 20) {
+  if (globalLimit.count >= 10) {
     return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
   }
   globalLimit.count++;
@@ -30,7 +34,7 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
     return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
   }
   if (entry.count >= 3) {
-    return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde und versuche es erneut." };
+    return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde." };
   }
   entry.count++;
   entry.lastScan = now;
@@ -52,35 +56,6 @@ function isUrlAllowed(urlString: string): boolean {
   }
 }
 
-async function fetchWithTimeout(url: string, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { "User-Agent": "WebsiteFix-Scanner/1.0" },
-    });
-    clearTimeout(timeout);
-    return res;
-  } catch {
-    clearTimeout(timeout);
-    return null;
-  }
-}
-
-interface AxeViolation {
-  id: string;
-  impact: "critical" | "serious" | "moderate" | "minor";
-  help: string;
-  description: string;
-  helpUrl: string;
-  nodes: Array<{ html: string; failureSummary: string }>;
-}
-
-interface AxeResults {
-  violations: AxeViolation[];
-}
-
 const PRIORITY: Record<string, string> = {
   critical: "🔴 KRITISCH",
   serious: "🔴 KRITISCH",
@@ -88,7 +63,16 @@ const PRIORITY: Record<string, string> = {
   minor: "🔵 INFO",
 };
 
+interface AxeViolation {
+  id: string;
+  impact: string;
+  help: string;
+  nodes: Array<{ html: string; failureSummary: string }>;
+}
+
 export async function POST(req: NextRequest) {
+  let browser = null;
+
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
     const limitResult = checkRateLimit(ip);
@@ -96,65 +80,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
     }
 
-    const body = await req.json();
-    const { url } = body;
-
+    const { url } = await req.json();
     if (!url || typeof url !== "string" || url.trim().length === 0) {
       return NextResponse.json({ success: false, error: "Bitte gib eine gültige URL ein." }, { status: 400 });
     }
 
     let targetUrl = url.trim();
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
-
     if (!isUrlAllowed(targetUrl)) {
       return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
     }
 
-    // ── 1. HTML ABRUFEN ───────────────────────────────────────────
-    const res = await fetchWithTimeout(targetUrl);
-    if (!res) {
-      return NextResponse.json({ success: false, error: "Website nicht erreichbar (Timeout)." }, { status: 400 });
-    }
-    if (!res.ok) {
-      return NextResponse.json({ success: false, error: `Website antwortet mit Fehler ${res.status}.` }, { status: 400 });
-    }
-    const html = await res.text();
+    // ── 1. PLAYWRIGHT + CHROMIUM STARTEN ─────────────────────────
+    // Dynamischer Import damit Next.js die Module nicht beim Build verarbeitet
+    const chromium = (await import("@sparticuz/chromium-min")).default;
+    const { chromium: playwrightChromium } = await import("playwright-core");
 
-    // ── 2. AXE-CORE MIT JSDOM AUSFÜHREN ───────────────────────────
-    const dom = new JSDOM(html, {
-      url: targetUrl,
-      pretendToBeVisual: true,
-      resources: "usable",
+    browser = await playwrightChromium.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(CHROMIUM_URL),
+      headless: true,
     });
-    const { window } = dom;
 
-    const axeSource = readFileSync(
-      path.join(process.cwd(), "node_modules/axe-core/axe.min.js"),
-      "utf8"
+    const page = await browser.newPage();
+
+    // Unnötige Ressourcen blockieren (schneller)
+    await page.route("**/*.{png,jpg,jpeg,gif,webp,svg,woff,woff2,ttf,eot}", (route) =>
+      route.abort()
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).eval(axeSource);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const axeResults: AxeResults = await new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).axe.run(
-        window.document,
-        {
-          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] },
-        },
-        (err: Error, results: AxeResults) => {
-          if (err) reject(err);
-          else resolve(results);
-        }
-      );
+    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 25000 });
+
+    // Kurz warten damit JS-gerenderte Inhalte erscheinen
+    await page.waitForTimeout(2000);
+
+    // ── 2. AXE-CORE IM ECHTEN BROWSER AUSFÜHREN ──────────────────
+    await page.addScriptTag({ path: require.resolve("axe-core") });
+
+    const axeResults = await page.evaluate(() => {
+      return new Promise<{ violations: AxeViolation[] }>((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).axe.run(
+          document,
+          { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] } },
+          (err: Error, results: { violations: AxeViolation[] }) => {
+            if (err) reject(err);
+            else resolve(results);
+          }
+        );
+      });
     });
 
-    dom.window.close();
+    await browser.close();
+    browser = null;
 
-    // Top 8 Verstöße, nach Impact sortiert
+    // ── 3. VERSTÖSSE AUFBEREITEN ──────────────────────────────────
     const impactOrder = ["critical", "serious", "moderate", "minor"];
-    const violations = axeResults.violations
+    const violations: AxeViolation[] = (axeResults.violations as AxeViolation[])
       .sort((a, b) => impactOrder.indexOf(a.impact) - impactOrder.indexOf(b.impact))
       .slice(0, 8);
 
@@ -164,28 +146,30 @@ export async function POST(req: NextRequest) {
         url: targetUrl,
         violationCount: 0,
         violations: [],
-        diagnose: "## Ergebnis\n\nKeine automatisch erkennbaren WCAG-Verstöße gefunden. Die Website besteht die geprüften Barrierefreiheits-Kriterien.\n\n🟢 Hinweis: Ein automatischer Scan prüft ~40% aller WCAG-Kriterien. Farb­kontraste und Tastatur-Navigation sollten manuell geprüft werden.",
+        diagnose:
+          "## Ergebnis\n\nKeine WCAG-Verstöße gefunden. Die Website besteht die geprüften Barrierefreiheits-Kriterien.\n\n🟢 Hinweis: Automatische Scans erkennen ~40% aller WCAG-Kriterien. Komplexe Nutzerinteraktionen sollten zusätzlich manuell geprüft werden.",
       });
     }
 
-    // ── 3. CLAUDE: ERKLÄRUNGEN + CODE-FIXES ──────────────────────
+    // ── 4. CLAUDE: ERKLÄRUNGEN + CODE-FIXES ──────────────────────
     const violationList = violations
-      .map((v, i) =>
-        `${i + 1}. ID: ${v.id} | Impact: ${v.impact}
+      .map(
+        (v, i) =>
+          `${i + 1}. ID: ${v.id} | Impact: ${v.impact}
    Problem: ${v.help}
    Element: ${(v.nodes[0]?.html ?? "").slice(0, 250)}
    Details: ${(v.nodes[0]?.failureSummary ?? "").slice(0, 200)}`
       )
       .join("\n\n");
 
-    const prompt = `Du bist ein Barrierefreiheits-Experte. Eine Website wurde automatisch auf WCAG 2.1 geprüft.
+    const prompt = `Du bist ein Barrierefreiheits-Experte. Eine Website wurde mit axe-core im echten Browser auf WCAG 2.1 geprüft.
 
 URL: ${targetUrl}
 Gefundene Verstöße: ${violations.length}
 
 ${violationList}
 
-Erstelle eine strukturierte Diagnose auf Deutsch. Format:
+Erstelle eine strukturierte Diagnose auf Deutsch:
 
 ## Zusammenfassung
 1–2 Sätze: wie barrierefrei ist die Website, was sind die größten Probleme?
@@ -193,16 +177,16 @@ Erstelle eine strukturierte Diagnose auf Deutsch. Format:
 ## Verstöße
 
 Für jeden Verstoß (in der gegebenen Reihenfolge):
-**${PRIORITY["critical"]} / 🟡 WICHTIG / 🔵 INFO** Kurzer Titel
-Erklärung: 1–2 Sätze in einfachem Deutsch ohne Fachbegriffe. Was bedeutet das für Nutzer?
-Fix: Konkreter Code-Fix oder kurze Anleitung (max. 3 Zeilen).
+**[🔴 KRITISCH / 🟡 WICHTIG / 🔵 INFO]** Kurzer Titel
+Erklärung: 1–2 Sätze in einfachem Deutsch ohne Fachjargon. Was bedeutet das konkret für Nutzer?
+Fix: Konkreter Code-Fix oder kurze Anleitung (max. 3 Zeilen Code).
 
-## Wichtigste nächste Schritte
+## Nächste Schritte
 1. ...
 2. ...
 3. ...
 
-Hinweis am Ende: "Automatische Scans erkennen ~40% aller WCAG-Kriterien. Farbkontrast und Tastatur-Navigation bitte zusätzlich manuell prüfen."
+Hinweis: "Automatische Scans erkennen ~40% aller WCAG-Kriterien. Komplexe Nutzerinteraktionen bitte manuell prüfen."
 
 Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
 
@@ -228,6 +212,9 @@ Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
       diagnose,
     });
   } catch (err) {
+    if (browser) {
+      try { await browser.close(); } catch { /* ignore */ }
+    }
     console.error("WCAG-Scan-Fehler:", err);
     return NextResponse.json(
       { success: false, error: "Scan fehlgeschlagen. Bitte versuche es erneut." },
