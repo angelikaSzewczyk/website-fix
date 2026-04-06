@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 
+type WaitlistState = "idle" | "loading" | "done" | "error";
+
 type ScanState = "idle" | "scanning" | "done" | "error";
 
 export default function ScanPage() {
@@ -10,6 +12,25 @@ export default function ScanPage() {
   const [state, setState] = useState<ScanState>("idle");
   const [diagnose, setDiagnose] = useState("");
   const [error, setError] = useState("");
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistState, setWaitlistState] = useState<WaitlistState>("idle");
+
+  async function handleWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (!waitlistEmail || waitlistState === "loading") return;
+    setWaitlistState("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: waitlistEmail }),
+      });
+      const data = await res.json();
+      setWaitlistState(data.success ? "done" : "error");
+    } catch {
+      setWaitlistState("error");
+    }
+  }
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
@@ -175,23 +196,57 @@ export default function ScanPage() {
                 Hat dir das geholfen?
               </p>
               <h3 style={{ margin: "0 0 10px", fontSize: 20 }}>
-                WebsiteFix kommt bald mit automatischer Reparatur — trag dich ein.
+                Willst du dass wir das für dich reparieren?
               </h3>
               <p className="muted" style={{ margin: "0 0 20px", fontSize: 14 }}>
-                Kostenlos in der Beta. Kein Spam, eine E-Mail wenn es losgeht.
+                Trag dich ein — wir melden uns wenn die automatische Reparatur startet. Kostenlos in der Beta.
               </p>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link href="/#waitlist" className="cta" style={{ fontSize: 15, padding: "13px 26px" }}>
-                  Zur Warteliste eintragen
-                </Link>
-                <button
-                  onClick={() => { setState("idle"); setUrl(""); }}
-                  className="ghost"
-                  style={{ fontSize: 14 }}
-                >
-                  Neue Website scannen
-                </button>
-              </div>
+
+              {waitlistState === "done" ? (
+                <p style={{ color: "#8df3d3", fontWeight: 600, margin: 0 }}>
+                  ✓ Du bist auf der Liste! Wir melden uns.
+                </p>
+              ) : (
+                <form onSubmit={handleWaitlist} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <input
+                    type="email"
+                    value={waitlistEmail}
+                    onChange={(e) => setWaitlistEmail(e.target.value)}
+                    placeholder="deine@email.de"
+                    required
+                    disabled={waitlistState === "loading"}
+                    style={{
+                      flex: 1, minWidth: 220,
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      borderRadius: 12, padding: "13px 16px",
+                      color: "#fff", fontSize: 15, outline: "none",
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    className="cta"
+                    disabled={waitlistState === "loading" || !waitlistEmail}
+                    style={{ fontSize: 15, padding: "13px 24px", whiteSpace: "nowrap" }}
+                  >
+                    {waitlistState === "loading" ? "..." : "Auf die Liste"}
+                  </button>
+                </form>
+              )}
+
+              {waitlistState === "error" && (
+                <p style={{ color: "#ff6b6b", fontSize: 13, margin: "8px 0 0" }}>
+                  Etwas ist schiefgelaufen. Bitte versuche es erneut.
+                </p>
+              )}
+
+              <button
+                onClick={() => { setState("idle"); setUrl(""); }}
+                className="ghost"
+                style={{ fontSize: 13, marginTop: 16, padding: "8px 0", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+              >
+                Neue Website scannen →
+              </button>
             </div>
           </div>
         )}
