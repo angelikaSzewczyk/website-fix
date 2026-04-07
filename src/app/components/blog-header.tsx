@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 type BlogHeaderProps = {
   lang?: "de" | "en";
@@ -9,135 +6,36 @@ type BlogHeaderProps = {
   ctaLabel?: string;
 };
 
-export default function BlogHeader({
-  lang = "de",
-  active = "blog",
-  ctaLabel,
-}: BlogHeaderProps) {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-
-    if (mobileNavOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = prev || "";
-    }
-
-    return () => {
-      document.body.style.overflow = prev || "";
-    };
-  }, [mobileNavOpen]);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setMobileNavOpen(false);
-    }
-
-    function onResize() {
-      if (window.innerWidth > 700) setMobileNavOpen(false);
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
-
-  const t = {
-    faq: "FAQ",
-    blog: "Blog",
-    cta: ctaLabel || (lang === "en" ? "Scan for free" : "Jetzt scannen →"),
-  };
-
-  const navItems = [
-    { key: "faq", label: t.faq, href: "/#faq" },
-    { key: "blog", label: t.blog, href: "/blog" },
-  ];
+export default function BlogHeader({ lang = "de", ctaLabel }: BlogHeaderProps) {
+  const cta = ctaLabel || (lang === "en" ? "Scan for free" : "Jetzt scannen");
 
   return (
-    <>
-      <header className="nav blogHeaderNav">
-        <div className="brand">
-          <Link href="/" className="brandLink">
-            Website
-            <span className="brandSpace"> </span>
-            <span className="brandAccent">Fix</span>
+    <nav style={{
+      position: "sticky", top: 0, zIndex: 50,
+      background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+    }}>
+      <div style={{
+        maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
+          Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
+        </Link>
+
+        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+          <Link href="/blog" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
+            Blog
+          </Link>
+          <Link href="/scan" style={{
+            padding: "8px 16px", borderRadius: 8,
+            background: "#fff", color: "#0b0c10",
+            fontSize: 13, fontWeight: 600, textDecoration: "none",
+          }}>
+            {cta}
           </Link>
         </div>
-
-        <nav className="navLinks" aria-label="Blog Navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={`navLink ${
-                active === "blog" && item.key === "blog" ? "isActive" : ""
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="navActions">
-          <Link className="navCta navCtaDesktop" href="/scan">
-            {t.cta}
-          </Link>
-
-          <button
-            type="button"
-            className={`mobileMenuBtn ${mobileNavOpen ? "isOpen" : ""}`}
-            aria-label={mobileNavOpen ? "Menü schließen" : "Menü öffnen"}
-            aria-expanded={mobileNavOpen}
-            aria-controls="blog-mobile-navigation"
-            onClick={() => setMobileNavOpen((v) => !v)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
-      </header>
-
-      <div
-        className={`mobileNavOverlay ${mobileNavOpen ? "isOpen" : ""}`}
-        onClick={() => setMobileNavOpen(false)}
-        aria-hidden={!mobileNavOpen}
-      />
-
-      <nav
-        id="blog-mobile-navigation"
-        className={`mobileNavDrawer ${mobileNavOpen ? "isOpen" : ""}`}
-        aria-label="Mobile Blog Navigation"
-      >
-        <div className="mobileNavInner">
-          {navItems.map((item) => (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={`navLink ${
-                active === "blog" && item.key === "blog" ? "isActive" : ""
-              }`}
-              onClick={() => setMobileNavOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          <Link
-            className="cta mobileNavPrimary"
-            href="/scan"
-            onClick={() => setMobileNavOpen(false)}
-          >
-            {t.cta}
-          </Link>
-        </div>
-      </nav>
-    </>
+      </div>
+    </nav>
   );
 }

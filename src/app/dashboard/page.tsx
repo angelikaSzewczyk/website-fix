@@ -68,8 +68,12 @@ export default async function DashboardPage() {
             {plan === "agentur" && (
               <>
                 <Link href="/dashboard/clients" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Kunden</Link>
+                <Link href="/dashboard/reports" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Berichte</Link>
                 <Link href="/dashboard/settings" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Einstellungen</Link>
               </>
+            )}
+            {plan === "pro" && (
+              <Link href="/dashboard/reports" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Berichte</Link>
             )}
             {session.user.image && (
               // eslint-disable-next-line @next/next/no-img-element
