@@ -92,7 +92,7 @@ export default function AgencyPage() {
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
           <div style={{ display: "flex", gap: 10 }}>
-            <Link href="/scan" style={{
+            <Link href="/scan" className="hide-sm" style={{
               fontSize: 13, padding: "7px 16px", borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
               textDecoration: "none",

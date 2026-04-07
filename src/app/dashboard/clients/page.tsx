@@ -62,7 +62,7 @@ export default async function ClientsPage() {
           <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17 }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
-          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+          <div className="hide-sm" style={{ display: "flex", gap: 20, alignItems: "center" }}>
             <Link href="/dashboard" style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Dashboard</Link>
             <Link href="/dashboard/settings" style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Einstellungen</Link>
           </div>

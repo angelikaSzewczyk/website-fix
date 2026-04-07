@@ -85,13 +85,13 @@ export default function Page() {
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            <div style={{ display: "flex", gap: 24 }}>
+            <div className="hide-sm" style={{ display: "flex", gap: 24 }}>
               <Link href="/fuer-agenturen" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Für Agenturen</Link>
               <Link href="/blog" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Blog</Link>
               <Link href="#pricing" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Preise</Link>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <Link href="/login" style={{
+              <Link href="/login" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 16px", borderRadius: 8,
                 border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
                 textDecoration: "none",
@@ -177,7 +177,7 @@ export default function Page() {
 
         {/* AGENCY SECTION */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
+          <div className="grid-1-sm gap-sm-32" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
 
             <div>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(122,166,255,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Für Agenturen</p>
@@ -303,7 +303,7 @@ export default function Page() {
         {/* CTA BANNER */}
         <section style={{ maxWidth: 1100, margin: "0 auto 80px", padding: "0 24px" }}>
           <div style={{
-            padding: "56px 48px", borderRadius: 16,
+            padding: "clamp(28px, 5vw, 56px) clamp(20px, 4vw, 48px)", borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.07)",
             background: "rgba(255,255,255,0.02)",
             display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 24,

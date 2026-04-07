@@ -51,7 +51,7 @@ export default async function ReportsPage() {
           <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em", flexShrink: 0 }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
-          <div style={{ display: "flex", gap: 4, flex: 1 }}>
+          <div className="hide-sm" style={{ display: "flex", gap: 4, flex: 1 }}>
             {[
               { href: "/dashboard", label: "Dashboard" },
               { href: "/dashboard/clients", label: "Kunden" },
@@ -97,13 +97,14 @@ export default async function ReportsPage() {
             </p>
           </div>
         ) : (
-          <div style={{
+          <div className="scroll-x-sm" style={{
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: 12, overflow: "hidden",
           }}>
             <div style={{
               display: "grid",
               gridTemplateColumns: "1fr 100px 80px 80px 80px 120px",
+              minWidth: 580,
               padding: "10px 20px",
               background: "rgba(255,255,255,0.03)",
               borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -124,6 +125,7 @@ export default async function ReportsPage() {
                 <div key={r.id} style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 100px 80px 80px 80px 120px",
+                  minWidth: 580,
                   padding: "16px 20px",
                   borderBottom: i < reports.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                   alignItems: "center",

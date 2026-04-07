@@ -3080,3 +3080,19 @@ footer a, nav a.footerLink {
 @media screen {
   .print-only { display: none !important; }
 }
+
+/* ===== MOBILE UTILITIES (< 640px) ===== */
+@media (max-width: 640px) {
+  .hide-sm   { display: none !important; }
+  .show-sm   { display: block !important; }
+  .col-sm    { flex-direction: column !important; }
+  .grid-1-sm { grid-template-columns: 1fr !important; }
+  .scroll-x-sm { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .px-sm-16  { padding-left: 16px !important; padding-right: 16px !important; }
+  .pt-sm-40  { padding-top: 40px !important; }
+  .pb-sm-40  { padding-bottom: 40px !important; }
+  .gap-sm-32 { gap: 32px !important; }
+  .gap-sm-16 { gap: 16px !important; }
+  .w-full-sm { width: 100% !important; min-width: 0 !important; }
+  .text-sm-center { text-align: center !important; }
+}
