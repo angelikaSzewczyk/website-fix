@@ -4,6 +4,7 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import BillingPortalButton from "../components/billing-portal-button";
+import WebsitesSection from "../components/websites-section";
 
 export const metadata: Metadata = {
   title: "Dashboard — WebsiteFix",
@@ -152,6 +153,9 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* WEBSITES */}
+        {plan !== "free" && <WebsitesSection />}
 
         {/* QUICK ACTIONS */}
         <div style={{ marginBottom: 52 }}>

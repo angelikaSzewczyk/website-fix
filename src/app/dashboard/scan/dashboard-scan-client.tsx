@@ -3,6 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 
+function ScheduleButton({ url, type }: { url: string; type: string }) {
+  const [saved, setSaved] = useState(false);
+  async function handleSchedule() {
+    await fetch("/api/scheduled-scans", {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, type, frequency: "weekly", notify_email: true }),
+    });
+    setSaved(true);
+  }
+  if (saved) return <span style={{ fontSize: 13, color: "#8df3d3", padding: "6px 0" }}>✓ Wöchentlicher Scan aktiviert</span>;
+  return (
+    <button onClick={handleSchedule} style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, cursor: "pointer", padding: "6px 14px" }}>
+      🔁 Wöchentlich automatisch scannen
+    </button>
+  );
+}
+
 type ScanState = "idle" | "scanning" | "done" | "error";
 type TabType = "website" | "wcag" | "performance";
 
@@ -212,10 +230,11 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                 <span style={{ fontWeight: 700, fontSize: 16 }}>Scan abgeschlossen</span>
                 <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>— {url}</span>
               </div>
-              <button onClick={() => { setState("idle"); setDiagnose(""); setWcagViolations([]); setUrl(""); }}
+              <button onClick={() => { setState("idle"); setDiagnose(""); setWcagViolations([]); setUrl(""); setPerfData(null); }}
                 style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, cursor: "pointer", padding: "6px 14px" }}>
                 Neuer Scan
               </button>
+              <ScheduleButton url={url} type={tab} />
             </div>
 
             {/* WCAG violations list */}

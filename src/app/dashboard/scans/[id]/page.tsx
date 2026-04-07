@@ -47,6 +47,15 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
   ` as Scan[];
 
   if (!rows[0]) notFound();
+
+  // Vorheriger Scan für Vergleich
+  const prevRows = await sql`
+    SELECT issue_count, created_at FROM scans
+    WHERE url = ${rows[0].url} AND type = ${rows[0].type}
+      AND id != ${params.id} AND user_id = ${session.user.id}
+    ORDER BY created_at DESC LIMIT 1
+  ` as { issue_count: number | null; created_at: string }[];
+
   const scan = rows[0];
   const typeInfo = TYPE_LABELS[scan.type] ?? TYPE_LABELS.website;
 
@@ -88,17 +97,31 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px", letterSpacing: "-0.01em", wordBreak: "break-all" }}>
             {scan.url}
           </h1>
-          {scan.issue_count !== null && (
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-              background: `${scoreColor(scan.issue_count)}15`,
-              border: `1px solid ${scoreColor(scan.issue_count)}30`,
-              color: scoreColor(scan.issue_count),
-            }}>
-              {scan.issue_count === 0 ? "✓ Keine Probleme gefunden" : `${scan.issue_count} Problem${scan.issue_count !== 1 ? "e" : ""} gefunden`}
-            </div>
-          )}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            {scan.issue_count !== null && (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                background: `${scoreColor(scan.issue_count)}15`,
+                border: `1px solid ${scoreColor(scan.issue_count)}30`,
+                color: scoreColor(scan.issue_count),
+              }}>
+                {scan.issue_count === 0 ? "✓ Keine Probleme gefunden" : `${scan.issue_count} Problem${scan.issue_count !== 1 ? "e" : ""} gefunden`}
+              </div>
+            )}
+            {prevRows[0] && scan.issue_count !== null && prevRows[0].issue_count !== null && (
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", gap: 6 }}>
+                vs. letzter Scan:
+                {scan.issue_count < prevRows[0].issue_count ? (
+                  <span style={{ color: "#8df3d3", fontWeight: 600 }}>↓ {prevRows[0].issue_count - scan.issue_count} weniger Probleme</span>
+                ) : scan.issue_count > prevRows[0].issue_count ? (
+                  <span style={{ color: "#ff6b6b", fontWeight: 600 }}>↑ {scan.issue_count - prevRows[0].issue_count} mehr Probleme</span>
+                ) : (
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>= unverändert</span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* DIAGNOSE */}
