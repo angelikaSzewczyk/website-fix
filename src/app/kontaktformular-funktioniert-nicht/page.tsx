@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Kontaktformular funktioniert nicht? Schnell fixen lassen | Website-Fix",
+  title: "Kontaktformular funktioniert nicht? Ursache sofort prüfen — kostenlos",
   description:
-    "Dein Kontaktformular sendet keine Anfragen mehr? Wir finden die Ursache und beheben Formular-, E-Mail- oder SMTP-Probleme schnell und zuverlässig.",
+    "Kontaktformular sendet keine Anfragen? URL eingeben — KI prüft sofort ob Formular, SMTP oder Plugin-Fehler schuld sind. Kostenlos, ohne Anmeldung, Ergebnis in 60 Sekunden.",
 };
 
 export default function KontaktformularFunktioniertNichtPage() {
@@ -32,10 +32,10 @@ export default function KontaktformularFunktioniertNichtPage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/#waitlist"
+                href="/scan"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Problem jetzt prüfen lassen
+                Jetzt kostenlos scannen →
               </Link>
 
               <a
@@ -217,10 +217,10 @@ export default function KontaktformularFunktioniertNichtPage() {
 
             <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
               <Link
-                href="/#waitlist"
+                href="/scan"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Jetzt Fix anfragen
+                Jetzt kostenlos scannen →
               </Link>
 
               <Link

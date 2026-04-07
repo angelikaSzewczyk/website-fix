@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Website langsam? Ladezeit verbessern lassen | Website-Fix",
+  title: "Website langsam? Ladezeit kostenlos prüfen — KI findet die Ursache",
   description:
-    "Deine Website lädt zu langsam? Wir finden die Ursache und optimieren Ladezeit, Bilder, Code und Performance schnell und zuverlässig.",
+    "Deine Website lädt zu langsam? URL eingeben — KI analysiert sofort ob zu große Bilder, Plugins, Hosting oder Code-Ballast schuld sind. Kostenlos, ohne Anmeldung.",
 };
 
 export default function WebsiteLangsamPage() {
@@ -31,10 +31,10 @@ export default function WebsiteLangsamPage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/#waitlist"
+                href="/scan"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Website jetzt prüfen lassen
+                Jetzt kostenlos scannen →
               </Link>
 
               <a
@@ -217,10 +217,10 @@ export default function WebsiteLangsamPage() {
 
             <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
               <Link
-                href="/#waitlist"
+                href="/scan"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-[#0b0c10] transition hover:opacity-90"
               >
-                Jetzt Performance-Fix anfragen
+                Jetzt kostenlos scannen →
               </Link>
 
               <Link

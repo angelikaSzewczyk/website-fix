@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import InlineScan from "../components/inline-scan";
 
 export const metadata: Metadata = {
-  title: "Website wird nicht gefunden? KI analysiert die Ursache | WebsiteFix",
+  title: "Website wird nicht gefunden? Ursache sofort prüfen — kostenlos",
   description:
-    "Deine Website wird nicht gefunden — von Google oder Besuchern? WebsiteFix scannt automatisch: DNS, Hosting, Indexierung, technische Fehler. Diagnose in unter 60 Sekunden.",
+    "Website nicht erreichbar oder nicht bei Google? URL eingeben — KI erkennt sofort ob DNS, Hosting, Indexierungssperre oder technische Fehler das Problem sind. Kostenlos, ohne Anmeldung.",
   alternates: { canonical: "/website-wird-nicht-gefunden" },
 };
 
@@ -69,19 +70,9 @@ export default function WebsiteWirdNichtGefundenPage() {
           </h1>
           <p className="heroText" style={{ maxWidth: 580 }}>
             Ob Besucher eine Fehlermeldung sehen oder Google deine Seite ignoriert — beides hat eine konkrete Ursache.
-            WebsiteFix scannt deine Website automatisch und erklärt dir in unter 60 Sekunden warum sie nicht gefunden wird.
+            URL eingeben, fertig. Die KI erklärt dir in unter 60 Sekunden warum deine Website nicht gefunden wird.
           </p>
-          <div className="heroActions">
-            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              Frühen Zugang sichern
-            </Link>
-            <a href="#ursachen" className="ghost" style={{ fontSize: 15 }}>
-              Typische Ursachen ansehen
-            </a>
-          </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
-            Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026
-          </p>
+          <InlineScan placeholder="https://deine-website.de" />
         </section>
 
         {/* EXAMPLE BAR */}
@@ -167,17 +158,16 @@ export default function WebsiteWirdNichtGefundenPage() {
         }}>
           <h2 style={{ marginBottom: 12 }}>Nie wieder stundenlang suchen wenn deine Website nicht gefunden wird.</h2>
           <p className="muted" style={{ maxWidth: 520, marginBottom: 28 }}>
-            Trag dich jetzt ein — der Frühzugang ist kostenlos, und Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
+            URL eingeben — die KI scannt sofort und erklärt dir genau was das Problem ist.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              Frühen Zugang sichern
+            <Link href="/scan" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
+              Jetzt kostenlos scannen →
             </Link>
             <Link href="/" className="ghost" style={{ fontSize: 15 }}>
               Zur Startseite
             </Link>
           </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026</p>
         </section>
       </main>
 

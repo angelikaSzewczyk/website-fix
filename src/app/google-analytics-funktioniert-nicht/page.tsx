@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Google Analytics funktioniert nicht? GA4 Tracking fixen | Website-Fix",
+  title: "Google Analytics funktioniert nicht? GA4 Problem kostenlos prüfen",
   description:
-    "Google Analytics oder GA4 funktioniert nicht? Wir prüfen Tracking, Tag-Einbindung, Events und Datenfluss und beheben das Problem schnell und zuverlässig.",
+    "GA4 zeigt keine Daten oder Events funktionieren nicht? URL eingeben — KI prüft sofort ob Tracking-Code, Consent-Banner oder GTM das Problem verursachen. Kostenlos, ohne Anmeldung.",
 };
 
 const painPoints = [
@@ -90,10 +90,10 @@ export default function GoogleAnalyticsFunktioniertNichtPage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/#waitlist"
+                href="/scan"
                 className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#b9f5df] to-[#8ea2ff] px-6 py-3.5 text-base font-semibold text-[#081019] shadow-[0_10px_30px_rgba(142,162,255,0.18)] transition hover:opacity-95"
               >
-                Tracking-Fix anfragen
+                Jetzt kostenlos scannen →
               </Link>
 
               <a
@@ -248,10 +248,10 @@ export default function GoogleAnalyticsFunktioniertNichtPage() {
 
             <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
               <Link
-                href="/#waitlist"
+                href="/scan"
                 className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#b9f5df] to-[#8ea2ff] px-6 py-3.5 text-base font-semibold text-[#081019] shadow-[0_10px_30px_rgba(142,162,255,0.18)] transition hover:opacity-95"
               >
-                Jetzt Tracking fixen lassen
+                Jetzt kostenlos scannen →
               </Link>
 
               <Link
