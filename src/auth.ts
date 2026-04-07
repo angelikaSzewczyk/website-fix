@@ -7,6 +7,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PostgresAdapter(pool),
+  session: { strategy: "database" },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -19,7 +20,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     session({ session, user }) {
       session.user.id = user.id;
-      (session.user as { plan?: string }).plan = (user as { plan?: string }).plan ?? "free";
+      (session.user as { plan?: string }).plan =
+        (user as { plan?: string }).plan ?? "free";
       return session;
     },
   },
