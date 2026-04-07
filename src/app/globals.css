@@ -211,7 +211,7 @@ main {
 
 .pricingDesc {
   font-size: 13px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.7);
   margin: 0;
 }
 
@@ -3055,3 +3055,10 @@ input[type="file"].input {
 }
 /* Visually hidden — for accessible labels */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0;}
+
+/* WCAG: Footer/nav links must be distinguishable without color alone */
+footer a, nav a.footerLink {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: rgba(255,255,255,0.75) !important;
+}

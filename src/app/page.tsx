@@ -648,9 +648,9 @@ export default function Page() {
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
           {`© ${new Date().getFullYear()} website-fix.com`}
           {" · "}
-          <a href="/impressum" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>{t.footer.imprint}</a>
+          <a href="/impressum" style={{ color: "rgba(255,255,255,0.75)", textDecoration: "underline", textUnderlineOffset: "3px" }}>{t.footer.imprint}</a>
           {" · "}
-          <a href="/datenschutz" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>{t.footer.privacy}</a>
+          <a href="/datenschutz" style={{ color: "rgba(255,255,255,0.75)", textDecoration: "underline", textUnderlineOffset: "3px" }}>{t.footer.privacy}</a>
         </p>
       </footer>
     </>
