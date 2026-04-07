@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
 
     const res = await fetch(apiUrl, { next: { revalidate: 0 } });
     if (!res.ok) {
+      if (res.status === 429) {
+        return NextResponse.json({ success: false, error: "Google PageSpeed API Rate-Limit erreicht. Bitte warte 1–2 Minuten und versuche es erneut." }, { status: 429 });
+      }
       throw new Error(`PageSpeed API Fehler: ${res.status}`);
     }
     const data = await res.json();
