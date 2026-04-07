@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         if (issueCount > 0) {
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.emails.send({
-            from: "WebsiteFix <hallo@website-fix.com>",
+            from: "WebsiteFix <support@website-fix.com>",
             to: job.email as string,
             subject: `⚠️ ${issueCount} Problem${issueCount !== 1 ? "e" : ""} auf ${targetUrl}`,
             html: `

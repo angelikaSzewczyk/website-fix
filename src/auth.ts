@@ -34,7 +34,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const { Resend } = await import("resend");
             const resend = new Resend(process.env.RESEND_API_KEY);
             await resend.emails.send({
-              from: "WebsiteFix <hallo@website-fix.com>",
+              from: "WebsiteFix <support@website-fix.com>",
               to: user.email,
               subject: "Willkommen bei WebsiteFix 👋",
               html: `
