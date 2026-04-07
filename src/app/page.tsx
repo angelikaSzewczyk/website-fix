@@ -1,657 +1,344 @@
-"use client";
+import Link from "next/link";
+import type { Metadata } from "next";
 
-/*
- * ARCHIVED STRIPE LINKS — manual fix service (paused)
- * form:     https://buy.stripe.com/14AcN5ckE2hYgkGfcxgMw00
- * speed:    https://buy.stripe.com/dRm00jbgAe0Gd8u4xTgMw01
- * mobile:   https://buy.stripe.com/8x25kD0BWbSy0lIaWhgMw02
- * tracking: https://buy.stripe.com/dRm8wP70k7Cid8u5BXgMw03
- * small:    https://buy.stripe.com/eVqbJ184oe0G6K6d4pgMw04
- * down:     https://buy.stripe.com/28EfZh3O88GmgkGfcxgMw05
- */
-
-import { track } from "@/lib/track";
-import { useState } from "react";
-
-type Lang = "de" | "en";
-type SubmitState = "idle" | "sending" | "success" | "error";
-
-// ⚠️ Erstelle ein neues Formspree-Formular für die Waitlist unter formspree.io
-// und ersetze diese ID. Die bestehende ID (xgoznqno) ist für den Fix-Service.
-const WAITLIST_FORM = "https://formspree.io/f/mwvwkkgj";
-
-const copy = {
-  de: {
-    nav: {
-      logo: "WebsiteFix",
-      cta: "Kostenlos scannen",
-    },
-    hero: {
-      badge: "Nicht für Entwickler. Für alle anderen. — jetzt in der Beta",
-      h1a: "Website kaputt?",
-      h1b: "KI findet den Fehler — und repariert ihn für dich.",
-      sub: "Du googelst, verstehst nichts, gibst auf. WebsiteFix scannt deine Website in unter 60 Sekunden — und zeigt dir genau was kaputt ist. Kein Entwickler nötig.",
-      cta: "Website jetzt kostenlos scannen",
-      ctaSecondary: "Für Agenturen →",
-      trust: "Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden",
-    },
-    example: {
-      label: "Zum Beispiel",
-      text: "WordPress Critical Error seit heute Nacht → URL eingeben → KI erkennt Plugin-Konflikt → automatisch behoben. Fertig.",
-    },
-    problems: {
-      h2: "Zwei Probleme, ein Tool.",
-      items: [
-        {
-          icon: "⚠️",
-          title: "Technische Fehler",
-          desc: 'WordPress kritischer Fehler, weiße Seite, Website down, Formular das nicht sendet — du merkst es oft als Letzter.',
-        },
-        {
-          icon: "📭",
-          title: "Keine Anfragen",
-          desc: "Die Website läuft — aber das Telefon klingelt nicht. Kein Lead, kein Kunde. Du weißt nicht woran es liegt.",
-        },
-        {
-          icon: "🙋",
-          title: "Du bist kein Entwickler",
-          desc: "Und das solltest du auch nicht sein müssen. WebsiteFix erklärt dir auf Deutsch was los ist — und was als nächstes zu tun ist.",
-        },
-      ],
-    },
-    solution: {
-      h2: "Scan, Diagnose, Fix — fertig.",
-      sub: "URL eingeben, fertig. Die KI prüft alles gleichzeitig, erklärt was kaputt ist — und repariert es direkt. Kein Fachjargon, kein Entwickler, kein Plugin.",
-      steps: [
-        { num: "1", title: "URL eingeben", desc: "Einfach deine Website-Adresse eingeben. Kein Plugin, kein Zugang nötig." },
-        { num: "2", title: "KI scannt alles", desc: "Fehler, Speed, SEO, kaputte Links, Formulare, Conversion-Schwächen — unter 60 Sekunden." },
-        { num: "3", title: "KI repariert automatisch", desc: "🔴 Kritisch → 🟡 Wichtig → 🟢 Okay. Die KI verbindet sich mit deiner Website und behebt Fehler direkt — du musst nichts selbst tun." },
-      ],
-    },
-    checks: {
-      h2: "Was geprüft wird",
-      items: [
-        { icon: "🔴", label: "WordPress Fehler", desc: "Critical Error, White Screen, 500er" },
-        { icon: "⚡", label: "Ladegeschwindigkeit", desc: "Core Web Vitals, Ladezeit, PageSpeed" },
-        { icon: "🔍", label: "SEO Grundlagen", desc: "Title, Meta, Headings, Sitemap, robots.txt" },
-        { icon: "🔗", label: "Kaputte Links", desc: "Alle internen Links auf 404 geprüft" },
-        { icon: "📋", label: "Formular-Check", desc: "Vorhanden, erreichbar, funktionsfähig" },
-        { icon: "💡", label: "Conversion-Analyse", desc: "CTA, Vertrauen, Lesbarkeit, Mobile UX" },
-      ],
-    },
-    monitoring: {
-      h2: "Nie wieder selbst merken wenn etwas kaputt geht.",
-      sub: "WebsiteFix überwacht deine Website rund um die Uhr — und schlägt Alarm bevor deine Kunden es merken.",
-      items: [
-        { icon: "👁️", title: "24/7 Überwachung", desc: "Deine Website wird laufend geprüft — nicht nur einmal." },
-        { icon: "🔔", title: "Sofort-Alert", desc: "Per E-Mail wenn etwas schiefgeht — du bist immer der Erste." },
-        { icon: "🔧", title: "Automatisch behoben", desc: "Nicht nur Alarm — die KI repariert gleich mit." },
-      ],
-    },
-    waitlist: {
-      h2: "Kostenlos scannen — Ergebnis in 60 Sekunden.",
-      sub: "URL eingeben, fertig. Keine Anmeldung, kein Plugin, kein Technik-Wissen nötig.",
-      betaLabel: "Was geprüft wird:",
-      betaItems: [
-        { done: true, text: "Vollständiger Website-Scan" },
-        { done: true, text: "WCAG 2.1 Barrierefreiheits-Scan" },
-        { done: true, text: "Diagnose auf Deutsch mit Code-Fixes" },
-        { done: true, text: "SEO Grundlagen-Check" },
-      ],
-      placeholder: "deine@email.de",
-      urlPlaceholder: "https://deine-website.de (optional)",
-      btn: "Jetzt eintragen",
-      sending: "Wird eingetragen …",
-      success: "Du bist dabei! Wir melden uns in Kürze.",
-      error: "Etwas ist schiefgelaufen. Bitte versuch es nochmal oder schreib uns.",
-      privacy: "Kein Spam. Nur relevante Updates.",
-    },
-    pricing: {
-      h2: "Einfache Preise. Kein Abo-Chaos.",
-      earlyBird: "Frühbucher-Rabatt: 30% — jetzt sichern.",
-      plans: [
-        {
-          name: "Free",
-          price: "0 €",
-          period: "",
-          desc: "Zum Ausprobieren",
-          features: ["3 Scans / Monat", "Basis-Diagnose", "Priorisierte Fehlerliste"],
-          cta: "Kostenlos starten",
-          ctaHref: "/scan",
-          highlight: false,
-          badge: "",
-        },
-        {
-          name: "Pro",
-          price: "29 €",
-          period: "/ Monat",
-          desc: "Für Selbstständige & KMUs",
-          features: ["Unlimitierte Scans", "KI-Code-Fixes", "24/7 Monitoring + Alerts", "Automatische Reparatur", "E-Mail Support"],
-          cta: "Jetzt starten →",
-          ctaHref: "/fuer-agenturen",
-          highlight: true,
-          badge: "Beliebteste Wahl",
-        },
-        {
-          name: "Agentur",
-          price: "99 €",
-          period: "/ Monat",
-          desc: "Für Webagenturen",
-          features: ["Alles aus Pro", "Bis zu 10 Domains", "Team-Zugang (3 Seats)", "White-Label Reports", "Prioritäts-Support"],
-          cta: "Agentur-Plan ansehen →",
-          ctaHref: "/fuer-agenturen",
-          highlight: false,
-          badge: "",
-        },
-      ],
-    },
-    faq: {
-      h2: "Häufige Fragen",
-      items: [
-        {
-          q: "Was kostet das?",
-          a: "Free: 3 Scans/Monat kostenlos. Pro: 29€/Monat mit unlimitierten Scans und Code-Fixes. Agentur: 99€/Monat mit White-Label Reports und bis zu 30 Domains.",
-        },
-        {
-          q: "Für welche Websites funktioniert das?",
-          a: "Der Website-Check ist für WordPress optimiert (tiefe Fehleranalyse, Plugin-Erkennung). Der Barrierefreiheits-Scan (WCAG 2.1) funktioniert für alle Websites — WordPress, Shopify, Wix, Custom.",
-        },
-        {
-          q: "Muss ich etwas installieren oder Zugang geben?",
-          a: "Für den Scan nur die URL eingeben — kein Plugin, kein FTP. Für das Dashboard brauchst du einen kostenlosen WebsiteFix-Account. Für die automatische KI-Reparatur gibst du einmalig deine WordPress-Zugangsdaten ein — sicher verschlüsselt, jederzeit widerrufbar.",
-        },
-        {
-          q: "Was passiert mit meiner URL?",
-          a: "Wir speichern sie nur um dir personalisierten Zugang zu ermöglichen. Kein Verkauf, kein Tracking.",
-        },
-      ],
-    },
-    footer: {
-      imprint: "Impressum",
-      privacy: "Datenschutz",
-    },
-  },
-  en: {
-    nav: {
-      logo: "WebsiteFix",
-      cta: "Scan for free",
-    },
-    hero: {
-      badge: "Not for developers. For everyone else. — now in beta",
-      h1a: "Website broken?",
-      h1b: "AI finds the problem — and fixes it for you.",
-      sub: "You Google it, understand nothing, give up. WebsiteFix scans your website in under 60 seconds — and shows you exactly what's broken. No developer needed.",
-      cta: "Scan your website for free",
-      ctaSecondary: "For agencies →",
-      trust: "Free · No sign-up · Results in under 60 seconds",
-    },
-    example: {
-      label: "For example",
-      text: "WordPress Critical Error since last night → enter URL → AI detects plugin conflict → automatically fixed. Done.",
-    },
-    problems: {
-      h2: "Two problems, one tool.",
-      items: [
-        {
-          icon: "⚠️",
-          title: "Technical errors",
-          desc: "WordPress critical error, white screen, site down, form not sending — you're usually the last to know.",
-        },
-        {
-          icon: "📭",
-          title: "No inquiries",
-          desc: "The site runs fine — but the phone never rings. No lead, no customer. You don't know what's wrong.",
-        },
-        {
-          icon: "🙋",
-          title: "You're not a developer",
-          desc: "And you shouldn't have to be. WebsiteFix tells you in plain language what's wrong — and what to do next.",
-        },
-      ],
-    },
-    solution: {
-      h2: "Scan, diagnose, fix — done.",
-      sub: "Enter URL, done. AI checks everything at once, explains what's broken — and fixes it directly. No jargon, no developer, no plugin.",
-      steps: [
-        { num: "1", title: "Enter URL", desc: "Just type your website address. No plugin or access needed." },
-        { num: "2", title: "AI scans everything", desc: "Errors, speed, SEO, broken links, forms, conversion issues — under 60 seconds." },
-        { num: "3", title: "AI fixes automatically", desc: "🔴 Critical → 🟡 Important → 🟢 Good. AI connects to your site and fixes errors directly — you don't have to do anything." },
-      ],
-    },
-    checks: {
-      h2: "What gets checked",
-      items: [
-        { icon: "🔴", label: "WordPress errors", desc: "Critical Error, White Screen, 500s" },
-        { icon: "⚡", label: "Load speed", desc: "Core Web Vitals, load time, PageSpeed" },
-        { icon: "🔍", label: "SEO basics", desc: "Title, meta, headings, sitemap, robots.txt" },
-        { icon: "🔗", label: "Broken links", desc: "All internal links checked for 404s" },
-        { icon: "📋", label: "Form check", desc: "Present, reachable, functional" },
-        { icon: "💡", label: "Conversion analysis", desc: "CTA, trust signals, readability, mobile UX" },
-      ],
-    },
-    monitoring: {
-      h2: "Never be the last to know when something breaks.",
-      sub: "WebsiteFix monitors your website around the clock — and alerts you before your customers notice.",
-      items: [
-        { icon: "👁️", title: "24/7 monitoring", desc: "Your website is checked continuously — not just once." },
-        { icon: "🔔", title: "Instant alert", desc: "Email notification the moment something goes wrong — you're always first." },
-        { icon: "🔧", title: "Automatically fixed", desc: "Not just an alert — AI repairs it right away." },
-      ],
-    },
-    waitlist: {
-      h2: "Scan for free — results in 60 seconds.",
-      sub: "Early access is free. Waitlist members get a permanent discount — forever.",
-      betaLabel: "What beta includes:",
-      betaItems: [
-        { done: true, text: "Full website scan" },
-        { done: true, text: "Diagnosis in plain language" },
-        { done: true, text: "Prioritized repair plan" },
-        { done: false, text: "AI repair — coming in phase 2" },
-      ],
-      placeholder: "your@email.com",
-      urlPlaceholder: "https://your-website.com (optional)",
-      btn: "Sign up",
-      sending: "Signing up…",
-      success: "You're in! We'll be in touch shortly.",
-      error: "Something went wrong. Please try again or contact us.",
-      privacy: "No spam. Relevant updates only.",
-    },
-    pricing: {
-      h2: "Simple pricing. No subscription chaos.",
-      earlyBird: "Early bird discount: 30% off — grab it now.",
-      plans: [
-        {
-          name: "Free",
-          price: "€0",
-          period: "",
-          desc: "Try it out",
-          features: ["3 scans / month", "Basic diagnosis", "Prioritized error list"],
-          cta: "Start for free",
-          ctaHref: "/scan",
-          highlight: false,
-          badge: "",
-        },
-        {
-          name: "Pro",
-          price: "€29",
-          period: "/ month",
-          desc: "For freelancers & SMBs",
-          features: ["Unlimited scans", "AI code fixes", "24/7 monitoring + alerts", "Automatic repair", "Email support"],
-          cta: "Reserve early bird spot",
-          ctaHref: "#waitlist",
-          highlight: true,
-          badge: "Most popular",
-        },
-        {
-          name: "Agency",
-          price: "€99",
-          period: "/ month",
-          desc: "For web agencies",
-          features: ["Everything in Pro", "Up to 10 domains", "Team access (3 seats)", "White-label reports", "Priority support"],
-          cta: "Get in touch",
-          ctaHref: "mailto:hallo@website-fix.com",
-          highlight: false,
-          badge: "",
-        },
-      ],
-    },
-    faq: {
-      h2: "FAQ",
-      items: [
-        {
-          q: "What does it cost?",
-          a: "Beta is free. After: Free (3 scans/month), Pro from €29/month, Agency from €99/month. Waitlist members get a permanent discount.",
-        },
-        {
-          q: "Which websites does it work for?",
-          a: "The website check is optimized for WordPress (deep error analysis, plugin detection). The accessibility scan (WCAG 2.1) works for all websites — WordPress, Shopify, Wix, custom.",
-        },
-        {
-          q: "Do I need to install anything or give access?",
-          a: "For the scan, just enter your URL — no plugin, no FTP. For the dashboard you need a free WebsiteFix account. For automatic AI repair, you enter your WordPress credentials once — encrypted securely, revocable at any time.",
-        },
-        {
-          q: "What happens to my URL?",
-          a: "We store it only to give you personalized access. No selling, no tracking.",
-        },
-      ],
-    },
-    footer: {
-      imprint: "Imprint",
-      privacy: "Privacy",
-    },
-  },
+export const metadata: Metadata = {
+  title: "WebsiteFix — Website-Diagnose & Monitoring für Agenturen",
+  description: "WCAG, SEO und Performance-Scan für jede Website. Automatisches Monitoring und White-Label Reports für Web-Agenturen.",
 };
 
+const CHECKS = [
+  { label: "WCAG 2.1 Barrierefreiheit", desc: "Alle Accessibility-Fehler auf Deutsch erklärt" },
+  { label: "SEO Grundlagen", desc: "Title, Meta, Headings, Sitemap, robots.txt" },
+  { label: "Performance", desc: "Core Web Vitals, Ladezeit, PageSpeed Score" },
+  { label: "SSL & Sicherheit", desc: "Zertifikat-Status, Security Headers, HTTPS" },
+  { label: "Technische Fehler", desc: "HTTP-Status, Weiterleitungen, Erreichbarkeit" },
+  { label: "Plattform-Erkennung", desc: "WordPress, Shopify, Wix, Custom — automatisch" },
+];
+
+const AGENCY_FEATURES = [
+  { num: "01", title: "Monitoring", desc: "Alle Kunden-Websites werden täglich automatisch geprüft. SSL, Uptime, Security — ohne manuellen Aufwand." },
+  { num: "02", title: "Sofort-Alert", desc: "Du erfährst von Problemen bevor der Kunde anruft. Per E-Mail, sofort, mit klarer Diagnose." },
+  { num: "03", title: "Automatischer Monatsbericht", desc: "Gebrandeter PDF-Report wird automatisch an jeden Kunden gesendet. Du musst nichts tun." },
+  { num: "04", title: "White-Label", desc: "Reports erscheinen mit deinem Logo und Namen. Kein WebsiteFix-Branding." },
+];
+
+const PLANS = [
+  {
+    name: "Free",
+    price: "0",
+    desc: "Zum Ausprobieren",
+    features: ["3 Scans pro Monat", "WCAG + SEO + Performance", "KI-Diagnose auf Deutsch"],
+    cta: "Kostenlos scannen",
+    href: "/scan",
+    highlight: false,
+  },
+  {
+    name: "Pro",
+    price: "29",
+    desc: "Für Selbstständige & Freelancer",
+    features: ["Unlimitierte Scans", "Alle Scan-Typen", "KI-Diagnose + Code-Fixes", "Scan-Historie & Vergleich", "PDF-Export"],
+    cta: "Jetzt starten",
+    href: "/login",
+    highlight: true,
+  },
+  {
+    name: "Agentur",
+    price: "99",
+    desc: "Für Web-Agenturen",
+    features: ["Alles aus Pro", "Bis zu 30 Kunden-Domains", "White-Label Reports", "Team-Zugang (3 Seats)", "Automatische Monatsberichte", "Prioritäts-Support"],
+    cta: "Agentur-Plan starten",
+    href: "/fuer-agenturen",
+    highlight: false,
+  },
+];
+
+const FAQ = [
+  {
+    q: "Für welche Websites funktioniert das?",
+    a: "Für jede öffentlich erreichbare Website — WordPress, Shopify, Wix, Squarespace, TYPO3, Custom-Entwicklungen. Kein Plugin, kein Hosting-Zugang nötig.",
+  },
+  {
+    q: "Was ist der Unterschied zwischen Pro und Agentur?",
+    a: "Pro ist für einzelne Websites. Der Agentur-Plan bietet White-Label Reports, automatische Monatsberichte, Team-Zugang und eine Kunden-Übersicht für bis zu 30 Domains.",
+  },
+  {
+    q: "Muss ich etwas installieren?",
+    a: "Nein. Einfach URL eingeben. Kein Plugin, kein FTP-Zugang, kein Code.",
+  },
+  {
+    q: "Was ist BFSG und bin ich betroffen?",
+    a: "Das Barrierefreiheitsstärkungsgesetz gilt seit Juni 2025 für bestimmte B2C-Dienstleistungen (u.a. Online-Shops, Banking, Telekommunikation). Unser WCAG-Scan prüft die relevanten Kriterien.",
+  },
+];
+
 export default function Page() {
-  const [lang, setLang] = useState<Lang>("de");
-  const [email, setEmail] = useState("");
-  const [url, setUrl] = useState("");
-  const [submitState, setSubmitState] = useState<SubmitState>("idle");
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  const t = copy[lang];
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email || submitState !== "idle") return;
-
-    setSubmitState("sending");
-    track("waitlist_submit", { language: lang });
-
-    try {
-      const res = await fetch(WAITLIST_FORM, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ email, website: url, _subject: "Neue Waitlist-Anmeldung" }),
-      });
-
-      if (res.ok) {
-        setSubmitState("success");
-        track("waitlist_success", { language: lang });
-      } else {
-        setSubmitState("error");
-      }
-    } catch {
-      setSubmitState("error");
-    }
-  }
-
   return (
     <>
-      {/* ===== NAV ===== */}
+      {/* NAV */}
       <nav style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "rgba(11,12,16,0.92)",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div className="brand">
-            <span>Website<span className="brandAccent">Fix</span></span>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
+            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
+          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+            <div style={{ display: "flex", gap: 24 }}>
+              <Link href="/fuer-agenturen" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Für Agenturen</Link>
+              <Link href="/blog" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Blog</Link>
+              <Link href="#pricing" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Preise</Link>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <Link href="/login" style={{
+                fontSize: 13, padding: "7px 16px", borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
+                textDecoration: "none",
+              }}>
+                Anmelden
+              </Link>
+              <Link href="/scan" style={{
+                fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
+                background: "#fff", color: "#0b0c10", textDecoration: "none",
+              }}>
+                Kostenlos scannen
+              </Link>
+            </div>
           </div>
-          <div className="navLinks">
-            <a href="/fuer-agenturen" className="navLink">{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
-            <a href="/blog" className="navLink">Blog</a>
-            <a href="#faq" className="navLink">FAQ</a>
-          </div>
-          <div className="navActions">
-            <button
-              onClick={() => setLang(lang === "de" ? "en" : "de")}
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 13, cursor: "pointer" }}
-            >
-              {lang === "de" ? "EN" : "DE"}
-            </button>
-            <a href="/scan" className="cta ctaSmall navCtaDesktop">{t.nav.cta}</a>
-            <button
-              type="button"
-              className={`mobileMenuBtn ${mobileNavOpen ? "isOpen" : ""}`}
-              aria-label={mobileNavOpen ? "Menü schließen" : "Menü öffnen"}
-              aria-expanded={mobileNavOpen}
-              onClick={() => setMobileNavOpen(v => !v)}
-            >
-              <span /><span /><span />
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div
-        className={`mobileNavOverlay ${mobileNavOpen ? "isOpen" : ""}`}
-        onClick={() => setMobileNavOpen(false)}
-        aria-hidden={!mobileNavOpen}
-      />
-
-      <nav
-        className={`mobileNavDrawer ${mobileNavOpen ? "isOpen" : ""}`}
-        aria-label="Mobile Navigation"
-      >
-        <div className="mobileNavInner">
-          <a href="/fuer-agenturen" className="navLink" onClick={() => setMobileNavOpen(false)}>{lang === "de" ? "Für Agenturen" : "For agencies"}</a>
-          <a href="/blog" className="navLink" onClick={() => setMobileNavOpen(false)}>Blog</a>
-          <a href="#faq" className="navLink" onClick={() => setMobileNavOpen(false)}>FAQ</a>
-          <a href="/scan" className="cta mobileNavPrimary" onClick={() => setMobileNavOpen(false)}>{t.nav.cta}</a>
         </div>
       </nav>
 
       <main>
-        {/* ===== HERO ===== */}
-        <section className="hero">
-          <div className="badge">{t.hero.badge}</div>
-          <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 1.1, margin: "0 0 20px" }}>
-            {t.hero.h1a}<br />
-            <span style={{ background: "linear-gradient(90deg, #8df3d3, #7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              {t.hero.h1b}
-            </span>
-          </h1>
-          <p className="heroText" style={{ maxWidth: 580 }}>{t.hero.sub}</p>
-          <div className="heroActions">
-            <a href="/scan" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              {t.hero.cta}
-            </a>
-            <a href="#waitlist" className="ghost" style={{ fontSize: 15 }}>
-              {t.hero.ctaSecondary}
-            </a>
-          </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>{t.hero.trust}</p>
-        </section>
 
-        {/* ===== EXAMPLE ===== */}
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px 32px" }}>
+        {/* HERO */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 24px 80px", textAlign: "center" }}>
           <div style={{
-            background: "rgba(141,243,211,0.06)",
+            display: "inline-block", marginBottom: 24,
+            padding: "5px 14px", borderRadius: 20,
             border: "1px solid rgba(141,243,211,0.2)",
-            borderRadius: 12,
-            padding: "14px 20px",
-            display: "flex",
-            gap: 12,
-            alignItems: "baseline",
+            fontSize: 12, color: "#8df3d3", fontWeight: 600, letterSpacing: "0.04em",
           }}>
-            <span style={{ fontSize: 13, color: "#8df3d3", fontWeight: 650, whiteSpace: "nowrap" }}>{t.example.label}:</span>
-            <span style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{t.example.text}</span>
+            WCAG · SEO · Performance · Monitoring
           </div>
-        </div>
 
-        {/* ===== PAIN POINTS ===== */}
-        <section className="section" id="problems">
-          <h2>{t.problems.h2}</h2>
-          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
-            {t.problems.items.map((item) => (
-              <div key={item.title} className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ fontSize: 28 }}>{item.icon}</div>
-                <h3 style={{ margin: 0, fontSize: 17 }}>{item.title}</h3>
-                <p className="cardSub" style={{ margin: 0 }}>{item.desc}</p>
+          <h1 style={{ fontSize: "clamp(36px, 5vw, 64px)", fontWeight: 700, lineHeight: 1.08, margin: "0 0 24px", letterSpacing: "-0.03em", maxWidth: 800, marginLeft: "auto", marginRight: "auto" }}>
+            Website-Diagnose.<br />
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>Automatisch. Auf Deutsch.</span>
+          </h1>
+
+          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 40px", fontWeight: 400 }}>
+            WebsiteFix scannt jede Website auf WCAG, SEO und Performance — erklärt jeden Fehler auf Deutsch und liefert den Code-Fix.
+          </p>
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/scan" style={{
+              padding: "13px 28px", borderRadius: 10, fontWeight: 700, fontSize: 15,
+              background: "#fff", color: "#0b0c10", textDecoration: "none",
+            }}>
+              Website jetzt scannen
+            </Link>
+            <Link href="/fuer-agenturen" style={{
+              padding: "13px 28px", borderRadius: 10, fontSize: 15,
+              border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)",
+              textDecoration: "none",
+            }}>
+              Für Agenturen
+            </Link>
+          </div>
+
+          <p style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+            Kostenlos · Keine Installation · Ergebnis in unter 60 Sekunden
+          </p>
+        </section>
+
+        {/* DIVIDER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+        {/* CHECKS */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Was geprüft wird</p>
+          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, margin: "0 0 48px", letterSpacing: "-0.02em" }}>
+            Ein Scan. Sechs Prüfbereiche.
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden" }}>
+            {CHECKS.map((check, i) => (
+              <div key={i} style={{ padding: "28px 28px", background: "#0b0c10" }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8df3d3", marginBottom: 16 }} />
+                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: "#fff" }}>{check.label}</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{check.desc}</div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ===== SOLUTION ===== */}
-        <section className="section" id="solution">
-          <h2>{t.solution.h2}</h2>
-          <p className="muted" style={{ maxWidth: 560, marginBottom: 28 }}>{t.solution.sub}</p>
-          <div className="steps">
-            {t.solution.steps.map((step) => (
-              <div key={step.num} className="step">
-                <div className="stepNum">{step.num}</div>
-                <div>
-                  <div className="stepTitle">{step.title}</div>
-                  <div className="muted" style={{ fontSize: 14 }}>{step.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* DIVIDER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
-        {/* ===== CHECKS ===== */}
-        <section className="section" id="checks">
-          <h2>{t.checks.h2}</h2>
-          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", marginTop: 22 }}>
-            {t.checks.items.map((item) => (
-              <div key={item.label} className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ fontSize: 22 }}>{item.icon}</div>
-                <div style={{ fontWeight: 650, fontSize: 15 }}>{item.label}</div>
-                <div className="muted" style={{ fontSize: 13 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* AGENCY SECTION */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
 
-        {/* ===== MONITORING ===== */}
-        <section className="section" id="monitoring" style={{
-          background: "rgba(141,243,211,0.04)",
-          border: "1px solid rgba(141,243,211,0.12)",
-          borderRadius: 16,
-          maxWidth: 960,
-          margin: "0 auto 0",
-          padding: "48px 32px",
-        }}>
-          <h2 style={{ marginBottom: 12 }}>{t.monitoring.h2}</h2>
-          <p className="muted" style={{ maxWidth: 520, marginBottom: 28 }}>{t.monitoring.sub}</p>
-          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-            {t.monitoring.items.map((item) => (
-              <div key={item.title} className="card" style={{ display: "flex", flexDirection: "column", gap: 8, background: "rgba(141,243,211,0.05)", borderColor: "rgba(141,243,211,0.15)" }}>
-                <div style={{ fontSize: 24 }}>{item.icon}</div>
-                <div style={{ fontWeight: 650, fontSize: 15 }}>{item.title}</div>
-                <div className="muted" style={{ fontSize: 13 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== PRICING ===== */}
-        <section className="section" id="pricing">
-          <h2>{t.pricing.h2}</h2>
-          <div className="cards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginTop: 24 }}>
-            {t.pricing.plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`card cardPricing${plan.highlight ? " cardPricingHighlight" : ""}`}
-              >
-                {plan.badge && <span className="pricingBadge">{plan.badge}</span>}
-                <div>
-                  <span className="pricingPrice">{plan.price}</span>
-                  <span className="pricingPeriod">{plan.period}</span>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 650, fontSize: 17, marginBottom: 2 }}>{plan.name}</div>
-                  <p className="pricingDesc">{plan.desc}</p>
-                </div>
-                <ul className="pricingFeatures">
-                  {plan.features.map((f) => <li key={f}>{f}</li>)}
-                </ul>
-                <a
-                  href={plan.ctaHref}
-                  className={plan.highlight ? "cta" : "ghost"}
-                  style={{ fontSize: 14, padding: "11px 20px", marginTop: "auto" }}
-                >
-                  {plan.cta}
-                </a>
-              </div>
-            ))}
-          </div>
-          <p className="pricingEarlyBird">{t.pricing.earlyBird}</p>
-        </section>
-
-        {/* ===== WAITLIST ===== */}
-        <section className="section" id="waitlist">
-          <h2>{t.waitlist.h2}</h2>
-          <p className="muted" style={{ marginBottom: 24 }}>{t.waitlist.sub}</p>
-
-          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-            <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t.waitlist.betaLabel}</p>
-            {t.waitlist.betaItems.map((item) => (
-              <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ fontSize: 15, width: 20 }}>{item.done ? "✅" : "🔜"}</span>
-                <span style={{ fontSize: 14, color: item.done ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.4)" }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
-
-          {submitState === "success" ? (
-            <div className="card" style={{ maxWidth: 480, padding: "24px 20px", borderColor: "rgba(141,243,211,0.3)", background: "rgba(141,243,211,0.08)" }}>
-              <p style={{ margin: 0, fontWeight: 600 }}>{t.waitlist.success}</p>
+            <div>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(122,166,255,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Für Agenturen</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 40px)", fontWeight: 700, margin: "0 0 20px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                30 Kunden-Websites.<br />Null manuelle Reports.
+              </h2>
+              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.8, marginBottom: 32 }}>
+                WebsiteFix überwacht alle Kunden-Websites automatisch, schlägt Alarm bevor der Kunde anruft — und sendet jeden Monat einen gebranderten Report direkt an den Kunden.
+              </p>
+              <Link href="/fuer-agenturen" style={{
+                display: "inline-block", padding: "12px 24px", borderRadius: 9, fontSize: 14, fontWeight: 600,
+                border: "1px solid rgba(122,166,255,0.3)", color: "#7aa6ff", textDecoration: "none",
+                background: "rgba(122,166,255,0.06)",
+              }}>
+                Agentur-Plan ansehen
+              </Link>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} style={{ maxWidth: 480, display: "flex", flexDirection: "column", gap: 12 }}>
-              <label htmlFor="waitlist-email" className="sr-only">E-Mail-Adresse</label>
-              <input
-                id="waitlist-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t.waitlist.placeholder}
-                style={{
-                  background: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  borderRadius: 10,
-                  padding: "13px 16px",
-                  color: "#fff",
-                  fontSize: 15,
-                  outline: "none",
-                  width: "100%",
-                }}
-              />
-              <label htmlFor="waitlist-url" className="sr-only">Website-URL (optional)</label>
-              <input
-                id="waitlist-url"
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder={t.waitlist.urlPlaceholder}
-                style={{
-                  background: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  borderRadius: 10,
-                  padding: "13px 16px",
-                  color: "#fff",
-                  fontSize: 15,
-                  outline: "none",
-                  width: "100%",
-                }}
-              />
-              <button
-                type="submit"
-                className="cta"
-                disabled={submitState === "sending"}
-                style={{ fontSize: 15, padding: "14px 28px", alignSelf: "flex-start" }}
-              >
-                {submitState === "sending" ? t.waitlist.sending : t.waitlist.btn}
-              </button>
-              {submitState === "error" && (
-                <p style={{ color: "#ff6b6b", fontSize: 13, margin: 0 }}>{t.waitlist.error}</p>
-              )}
-              <p className="muted" style={{ fontSize: 12, margin: 0 }}>{t.waitlist.privacy}</p>
-            </form>
-          )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 0, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
+              {AGENCY_FEATURES.map((f, i) => (
+                <div key={i} style={{
+                  padding: "24px 28px",
+                  borderBottom: i < AGENCY_FEATURES.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  display: "flex", gap: 20, alignItems: "flex-start",
+                }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em", paddingTop: 3, flexShrink: 0 }}>{f.num}</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4, color: "#fff" }}>{f.title}</div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
-        {/* ===== FAQ ===== */}
-        <section className="section" id="faq">
-          <h2>{t.faq.h2}</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
-            {t.faq.items.map((item) => (
-              <div key={item.q} className="card">
-                <p style={{ margin: "0 0 6px", fontWeight: 650 }}>{item.q}</p>
-                <p className="muted" style={{ margin: 0, fontSize: 14 }}>{item.a}</p>
+        {/* DIVIDER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+        {/* PRICING */}
+        <section id="pricing" style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, margin: "0 0 48px", letterSpacing: "-0.02em" }}>
+            Einfach. Transparent.
+          </h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+            {PLANS.map(plan => (
+              <div key={plan.name} style={{
+                padding: "28px 28px",
+                border: plan.highlight ? "1px solid rgba(141,243,211,0.3)" : "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 12,
+                display: "flex", flexDirection: "column", gap: 20,
+                background: plan.highlight ? "rgba(141,243,211,0.03)" : "transparent",
+                position: "relative",
+              }}>
+                {plan.highlight && (
+                  <div style={{
+                    position: "absolute", top: -1, right: 24,
+                    padding: "3px 10px", borderRadius: "0 0 8px 8px",
+                    background: "#8df3d3", color: "#0b0c10",
+                    fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
+                  }}>
+                    BELIEBT
+                  </div>
+                )}
+
+                <div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{plan.name}</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                    <span style={{ fontSize: 40, fontWeight: 700, letterSpacing: "-0.03em" }}>{plan.price}€</span>
+                    {plan.price !== "0" && <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>/Monat</span>}
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>{plan.desc}</div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {plan.features.map(f => (
+                    <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
+                      <span style={{ color: "#8df3d3", flexShrink: 0, marginTop: 1 }}>✓</span>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+
+                <Link href={plan.href} style={{
+                  display: "block", textAlign: "center",
+                  padding: "11px 20px", borderRadius: 9, fontSize: 14, fontWeight: 600,
+                  textDecoration: "none", marginTop: "auto",
+                  background: plan.highlight ? "#fff" : "transparent",
+                  color: plan.highlight ? "#0b0c10" : "rgba(255,255,255,0.6)",
+                  border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.12)",
+                }}>
+                  {plan.cta}
+                </Link>
               </div>
             ))}
           </div>
         </section>
+
+        {/* DIVIDER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+        {/* FAQ */}
+        <section id="faq" style={{ maxWidth: 720, margin: "0 auto", padding: "72px 24px" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
+          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, margin: "0 0 40px", letterSpacing: "-0.02em" }}>
+            Häufige Fragen
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {FAQ.map((item, i) => (
+              <div key={i} style={{
+                padding: "24px 0",
+                borderBottom: i < FAQ.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              }}>
+                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 10, color: "#fff" }}>{item.q}</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{item.a}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA BANNER */}
+        <section style={{ maxWidth: 1100, margin: "0 auto 80px", padding: "0 24px" }}>
+          <div style={{
+            padding: "56px 48px", borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.02)",
+            display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 24,
+          }}>
+            <div>
+              <h2 style={{ margin: "0 0 8px", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>
+                Jetzt kostenlos testen.
+              </h2>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
+                Keine Kreditkarte. Keine Installation. Ergebnis in unter 60 Sekunden.
+              </p>
+            </div>
+            <Link href="/scan" style={{
+              padding: "13px 28px", borderRadius: 10, fontWeight: 700, fontSize: 15,
+              background: "#fff", color: "#0b0c10", textDecoration: "none", whiteSpace: "nowrap",
+            }}>
+              Website scannen
+            </Link>
+          </div>
+        </section>
+
       </main>
 
-      {/* ===== FOOTER ===== */}
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "32px 20px", textAlign: "center" }}>
-        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          {`© ${new Date().getFullYear()} website-fix.com`}
-          {" · "}
-          <a href="/impressum" style={{ color: "rgba(255,255,255,0.75)", textDecoration: "underline", textUnderlineOffset: "3px" }}>{t.footer.imprint}</a>
-          {" · "}
-          <a href="/datenschutz" style={{ color: "rgba(255,255,255,0.75)", textDecoration: "underline", textUnderlineOffset: "3px" }}>{t.footer.privacy}</a>
-        </p>
+      {/* FOOTER */}
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "32px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+            {`© ${new Date().getFullYear()} website-fix.com`}
+          </span>
+          <div style={{ display: "flex", gap: 24 }}>
+            <Link href="/impressum" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Impressum</Link>
+            <Link href="/datenschutz" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Datenschutz</Link>
+            <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Blog</Link>
+          </div>
+        </div>
       </footer>
     </>
   );
