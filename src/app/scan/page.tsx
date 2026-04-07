@@ -448,7 +448,7 @@ export default function ScanPage() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { icon: "🖼️", title: "Alt-Text Qualität", desc: "Macht der Alt-Text im Kontext wirklich Sinn? „Bild1.jpg" zählt nicht." },
+                  { icon: "🖼️", title: "Alt-Text Qualität", desc: "Macht der Alt-Text im Kontext wirklich Sinn? 'Bild1.jpg' zählt nicht." },
                   { icon: "⌨️", title: "Tab-Reihenfolge", desc: "Ist die Tastatur-Navigation logisch und intuitiv — nicht nur technisch vorhanden?" },
                   { icon: "🎙️", title: "Screenreader-Bedienbarkeit", desc: "Formulare, Dialoge und Dropdowns mit echtem Screenreader testen (NVDA, VoiceOver)." },
                   { icon: "🎬", title: "Video-Untertitel", desc: "Sind Videos mit korrekten, sinnvollen Untertiteln versehen?" },
