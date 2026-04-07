@@ -34,6 +34,12 @@ function renderDiagnose(text: string) {
   });
 }
 
+type AgencySettings = {
+  agency_name: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+};
+
 export default async function ScanDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -45,6 +51,15 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
     WHERE id = ${params.id}
     LIMIT 1
   ` as Scan[];
+
+  const plan = (session.user as { plan?: string }).plan;
+  let agencySettings: AgencySettings | null = null;
+  if (plan === "agentur") {
+    const agRows = await sql`
+      SELECT agency_name, logo_url, primary_color FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1
+    `;
+    if (agRows[0]) agencySettings = agRows[0] as AgencySettings;
+  }
 
   if (!rows[0]) notFound();
 
@@ -78,6 +93,27 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
           </Link>
         </div>
       </nav>
+
+      {/* WHITE-LABEL PRINT HEADER — nur sichtbar beim Drucken */}
+      {agencySettings?.agency_name && (
+        <div className="print-only" style={{
+          display: "none",
+          padding: "24px 40px 16px",
+          borderBottom: "2px solid #e5e7eb",
+          marginBottom: 24,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {agencySettings.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={agencySettings.logo_url} alt="" style={{ height: 40, objectFit: "contain" }} />
+            )}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 18, color: "#111" }}>{agencySettings.agency_name}</div>
+              <div style={{ fontSize: 12, color: "#666" }}>Website-Analyse Report</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "48px 20px 80px" }}>
 

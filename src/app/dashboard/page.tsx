@@ -105,6 +105,26 @@ export default async function DashboardPage() {
                 <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
                   Unbegrenzte Scans · Vollständige Reports
                 </span>
+                {plan === "agentur" && (
+                  <>
+                    <Link href="/dashboard/clients" style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "6px 14px", borderRadius: 20, textDecoration: "none",
+                      background: "rgba(122,166,255,0.1)", border: "1px solid rgba(122,166,255,0.25)",
+                      fontSize: 13, fontWeight: 600, color: "#7aa6ff",
+                    }}>
+                      👥 Kunden-Websites
+                    </Link>
+                    <Link href="/dashboard/settings" style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "6px 14px", borderRadius: 20, textDecoration: "none",
+                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                      fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)",
+                    }}>
+                      ⚙️ Einstellungen
+                    </Link>
+                  </>
+                )}
                 <BillingPortalButton />
               </>
             )}

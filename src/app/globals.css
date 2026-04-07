@@ -3066,6 +3066,7 @@ footer a, nav a.footerLink {
 /* ===== PRINT / PDF EXPORT ===== */
 @media print {
   .no-print { display: none !important; }
+  .print-only { display: block !important; }
   nav { display: none !important; }
   body { background: #fff !important; color: #111 !important; }
   main { padding: 20px !important; max-width: 100% !important; }
@@ -3074,4 +3075,8 @@ footer a, nav a.footerLink {
   a { color: #0066cc !important; }
   [style*="background"] { background: transparent !important; }
   [style*="border"] { border-color: #ddd !important; }
+}
+
+@media screen {
+  .print-only { display: none !important; }
 }
