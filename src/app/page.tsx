@@ -576,7 +576,9 @@ export default function Page() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ maxWidth: 480, display: "flex", flexDirection: "column", gap: 12 }}>
+              <label htmlFor="waitlist-email" className="sr-only">E-Mail-Adresse</label>
               <input
+                id="waitlist-email"
                 type="email"
                 required
                 value={email}
@@ -593,7 +595,9 @@ export default function Page() {
                   width: "100%",
                 }}
               />
+              <label htmlFor="waitlist-url" className="sr-only">Website-URL (optional)</label>
               <input
+                id="waitlist-url"
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}

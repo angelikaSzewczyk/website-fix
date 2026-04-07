@@ -188,7 +188,9 @@ export default function ScanPage() {
 
           {/* INPUT FORM */}
           <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 600 }}>
+            <label htmlFor="scan-url" className="sr-only">Website-URL eingeben</label>
             <input
+              id="scan-url"
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -275,7 +277,9 @@ export default function ScanPage() {
                 </p>
               ) : (
                 <form onSubmit={handleWaitlist} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <label htmlFor="waitlist-email-scan" className="sr-only">E-Mail-Adresse</label>
                   <input
+                    id="waitlist-email-scan"
                     type="email"
                     value={waitlistEmail}
                     onChange={(e) => setWaitlistEmail(e.target.value)}
@@ -346,7 +350,7 @@ export default function ScanPage() {
         {activeTab === "wcag" && <>
         <section className="hero">
           <div className="badge" style={{ background: "rgba(141,243,211,0.1)", color: "#8df3d3" }}>
-            BFSG seit Juni 2025 Pflicht · axe-core · WCAG 2.1 AA
+            WCAG 2.1 AA · axe-core · BFSG-relevant
           </div>
           <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", lineHeight: 1.1, margin: "0 0 16px" }}>
             Barrierefreiheit prüfen —{" "}
@@ -359,7 +363,9 @@ export default function ScanPage() {
           </p>
 
           <form onSubmit={handleWcagScan} style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 600 }}>
+            <label htmlFor="wcag-url" className="sr-only">Website-URL für WCAG-Scan eingeben</label>
             <input
+              id="wcag-url"
               type="text"
               value={wcagUrl}
               onChange={(e) => setWcagUrl(e.target.value)}
@@ -513,7 +519,7 @@ export default function ScanPage() {
             </div>
             <p className="muted" style={{ fontSize: 13, marginTop: 20 }}>
               ♿ Basiert auf <strong style={{ color: "rgba(255,255,255,0.7)" }}>axe-core</strong> — dem Standard-Tool für WCAG 2.1 AA.
-              Seit Juni 2025 ist Barrierefreiheit für gewerbliche Websites in Deutschland gesetzlich vorgeschrieben (BFSG).
+              Seit dem 28. Juni 2025 gilt das BFSG in Deutschland. Viele Unternehmen sind verpflichtet, ihre digitalen Angebote barrierefrei zu gestalten — Kleinstunternehmen sind ausgenommen.
               <a href="/blog/bfsg-2025-was-webagenturen-wissen-muessen" style={{ color: "#8df3d3", marginLeft: 6 }}>Mehr erfahren →</a>
             </p>
           </section>

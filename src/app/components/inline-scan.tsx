@@ -62,7 +62,9 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
   return (
     <div>
       <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 600 }}>
+        <label htmlFor="inline-scan-url" className="sr-only">Website-URL eingeben</label>
         <input
+          id="inline-scan-url"
           type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}

@@ -42,8 +42,8 @@ const PROBLEMS = [
   },
   {
     icon: "⚖️",
-    title: "BFSG seit Juni 2025 Pflicht",
-    desc: "Gewerbliche Websites müssen barrierefrei sein. Die meisten Kunden wissen es nicht — und fragen ihre Agentur.",
+    title: "BFSG seit 28. Juni 2025 in Kraft",
+    desc: "Viele Unternehmen müssen jetzt barrierefrei sein. Die meisten Kunden wissen es nicht — und fragen ihre Agentur.",
   },
 ];
 
