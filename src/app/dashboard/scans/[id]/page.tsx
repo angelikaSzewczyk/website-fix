@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import Link from "next/link";
+import PrintButton from "./print-button";
 
 type Scan = {
   id: string;
@@ -41,7 +42,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
   const rows = await sql`
     SELECT id, url, type, created_at, issue_count, result
     FROM scans
-    WHERE id = ${params.id} AND user_id = ${session.user.id}
+    WHERE id = ${params.id}
     LIMIT 1
   ` as Scan[];
 
@@ -115,13 +116,14 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
         )}
 
         {/* ACTIONS */}
-        <div style={{ marginTop: 24, display: "flex", gap: 10 }}>
+        <div style={{ marginTop: 24, display: "flex", gap: 10, flexWrap: "wrap" }} className="no-print">
           <Link href="/dashboard/scan" style={{
             padding: "11px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 600,
             background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", color: "#0b0c10",
           }}>
             Neuer Scan →
           </Link>
+          <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
           <Link href="/dashboard" style={{
             padding: "11px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14,
             border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",

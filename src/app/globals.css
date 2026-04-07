@@ -3062,3 +3062,16 @@ footer a, nav a.footerLink {
   text-underline-offset: 3px;
   color: rgba(255,255,255,0.75) !important;
 }
+
+/* ===== PRINT / PDF EXPORT ===== */
+@media print {
+  .no-print { display: none !important; }
+  nav { display: none !important; }
+  body { background: #fff !important; color: #111 !important; }
+  main { padding: 20px !important; max-width: 100% !important; }
+  h1, h2, h3 { color: #111 !important; }
+  p, div { color: #333 !important; }
+  a { color: #0066cc !important; }
+  [style*="background"] { background: transparent !important; }
+  [style*="border"] { border-color: #ddd !important; }
+}

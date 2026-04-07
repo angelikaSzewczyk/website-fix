@@ -20,13 +20,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      // Bei erstem Login: Plan aus DB laden und in JWT speichern
       if (user?.id) {
         token.userId = user.id;
         try {
           const sql = neon(process.env.DATABASE_URL!);
-          const rows = await sql`SELECT plan FROM users WHERE id = ${user.id}`;
+          const rows = await sql`SELECT plan, created_at FROM users WHERE id = ${user.id}`;
           token.plan = (rows[0]?.plan as string) ?? "free";
+
+          // Welcome-Mail nur beim ersten Login (Account gerade erstellt)
+          const createdAt = rows[0]?.created_at as string | undefined;
+          const isNew = createdAt && (Date.now() - new Date(createdAt).getTime()) < 60_000;
+          if (isNew && user.email && process.env.RESEND_API_KEY) {
+            const { Resend } = await import("resend");
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            await resend.emails.send({
+              from: "WebsiteFix <hallo@website-fix.com>",
+              to: user.email,
+              subject: "Willkommen bei WebsiteFix 👋",
+              html: `
+                <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 20px;color:#111">
+                  <h1 style="font-size:24px;margin-bottom:8px">Willkommen, ${user.name?.split(" ")[0] ?? ""}!</h1>
+                  <p style="color:#555;line-height:1.6">Dein WebsiteFix-Account ist bereit. Du kannst jetzt Websites scannen — kostenlos, ohne Plugin, ohne Entwickler.</p>
+                  <a href="${process.env.NEXTAUTH_URL}/dashboard/scan" style="display:inline-block;margin:24px 0;padding:14px 28px;background:linear-gradient(90deg,#8df3d3,#7aa6ff);color:#0b0c10;text-decoration:none;border-radius:10px;font-weight:700">
+                    Ersten Scan starten →
+                  </a>
+                  <p style="color:#999;font-size:13px">Bei Fragen: support@website-fix.com</p>
+                </div>
+              `,
+            }).catch(() => {/* E-Mail-Fehler nicht blockieren */});
+          }
         } catch {
           token.plan = "free";
         }

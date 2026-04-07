@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
+import BillingPortalButton from "../components/billing-portal-button";
 
 export const metadata: Metadata = {
   title: "Dashboard — WebsiteFix",
@@ -99,12 +100,58 @@ export default async function DashboardPage() {
             )}
 
             {plan !== "free" && (
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
-                Unbegrenzte Scans · Vollständige Reports
-              </span>
+              <>
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
+                  Unbegrenzte Scans · Vollständige Reports
+                </span>
+                <BillingPortalButton />
+              </>
             )}
           </div>
         </div>
+
+        {/* ONBOARDING — nur wenn noch keine Scans */}
+        {scans.length === 0 && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(141,243,211,0.06), rgba(122,166,255,0.06))",
+            border: "1px solid rgba(141,243,211,0.15)",
+            borderRadius: 16, padding: "28px 32px", marginBottom: 40,
+            display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap",
+          }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <p style={{ margin: "0 0 6px", fontSize: 13, color: "#8df3d3", fontWeight: 650 }}>Willkommen bei WebsiteFix 👋</p>
+              <h2 style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 700 }}>Starte deinen ersten Scan</h2>
+              <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+                Gib eine beliebige Website-URL ein — die KI analysiert SEO, Barrierefreiheit und Performance in unter 60 Sekunden.
+              </p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link href="/dashboard/scan" style={{
+                  padding: "10px 20px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 700,
+                  background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", color: "#0b0c10",
+                }}>
+                  Ersten Scan starten →
+                </Link>
+                <Link href="/dashboard/scan?tab=wcag" style={{
+                  padding: "10px 20px", borderRadius: 10, textDecoration: "none", fontSize: 14,
+                  border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)",
+                }}>
+                  WCAG-Scan testen
+                </Link>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 200 }}>
+              {[
+                { icon: "🔍", text: "Website-Check: SEO & Technik" },
+                { icon: "♿", text: "Barrierefreiheit: WCAG 2.1 AA" },
+                { icon: "⚡", text: "Performance: Core Web Vitals" },
+              ].map((item) => (
+                <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                  <span>{item.icon}</span> {item.text}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* QUICK ACTIONS */}
         <div style={{ marginBottom: 52 }}>

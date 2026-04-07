@@ -42,6 +42,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   const [diagnose, setDiagnose] = useState("");
   const [wcagViolations, setWcagViolations] = useState<{ priority: string; help: string; nodeHtml: string }[]>([]);
   const [perfData, setPerfData] = useState<PerfData | null>(null);
+  const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [error, setError] = useState("");
 
   async function handleScan(e: React.FormEvent) {
@@ -58,7 +59,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, strategy: device }),
         credentials: "include",
       });
       const data = await res.json();
@@ -134,6 +135,22 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
             </button>
           ))}
         </div>
+
+        {/* DEVICE TOGGLE — nur bei Performance */}
+        {tab === "performance" && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+            {(["mobile", "desktop"] as const).map((d) => (
+              <button key={d} type="button" onClick={() => setDevice(d)} style={{
+                padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13,
+                fontWeight: device === d ? 650 : 400,
+                background: device === d ? "rgba(255,217,61,0.12)" : "rgba(255,255,255,0.04)",
+                color: device === d ? "#ffd93d" : "rgba(255,255,255,0.4)",
+              }}>
+                {d === "mobile" ? "📱 Mobile" : "🖥️ Desktop"}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* SCAN FORM */}
         <form onSubmit={handleScan} style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>

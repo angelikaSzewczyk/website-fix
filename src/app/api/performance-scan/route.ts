@@ -17,10 +17,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
   }
 
-  const { url } = await req.json();
+  const { url, strategy = "mobile" } = await req.json();
   if (!url || typeof url !== "string") {
     return NextResponse.json({ success: false, error: "Bitte gib eine gültige URL ein." }, { status: 400 });
   }
+  const device = strategy === "desktop" ? "desktop" : "mobile";
 
   let targetUrl = url.trim();
   if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   try {
     // PageSpeed Insights API
     const apiKey = process.env.PAGESPEED_API_KEY ?? "";
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=mobile&category=performance&category=accessibility&category=seo&category=best-practices${apiKey ? `&key=${apiKey}` : ""}`;
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${device}&category=performance&category=accessibility&category=seo&category=best-practices${apiKey ? `&key=${apiKey}` : ""}`;
 
     const res = await fetch(apiUrl, { next: { revalidate: 0 } });
     if (!res.ok) {
