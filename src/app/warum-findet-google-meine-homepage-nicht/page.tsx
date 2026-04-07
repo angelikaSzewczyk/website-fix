@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import InlineScan from "../components/inline-scan";
 
 export const metadata: Metadata = {
-  title: "Warum findet Google meine Homepage nicht? KI analysiert es | WebsiteFix",
+  title: "Warum findet Google meine Homepage nicht? Jetzt kostenlos prüfen",
   description:
-    "Deine Website ist online, aber Google zeigt sie nicht an? WebsiteFix analysiert automatisch warum — Indexierungssperre, fehlende Sitemap, technische Fehler. Diagnose in 60 Sekunden.",
+    "Website online aber Google zeigt sie nicht an? URL eingeben — KI findet sofort ob Indexierungssperre, fehlende Sitemap oder technische Fehler schuld sind. Kostenlos, ohne Anmeldung.",
   alternates: { canonical: "/warum-findet-google-meine-homepage-nicht" },
 };
 
@@ -69,19 +70,9 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
           </h1>
           <p className="heroText" style={{ maxWidth: 580 }}>
             Deine Website ist seit Wochen online — aber bei Google taucht sie nicht auf.
-            WebsiteFix scannt deine Seite automatisch und erklärt dir in unter 60 Sekunden genau warum Google dich nicht findet.
+            URL eingeben, fertig. Die KI erklärt dir in unter 60 Sekunden genau warum Google dich nicht findet.
           </p>
-          <div className="heroActions">
-            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              Frühen Zugang sichern
-            </Link>
-            <a href="#ursachen" className="ghost" style={{ fontSize: 15 }}>
-              Häufige Ursachen ansehen
-            </a>
-          </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
-            Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026
-          </p>
+          <InlineScan placeholder="https://deine-website.de" />
         </section>
 
         {/* EXAMPLE BAR */}
@@ -166,17 +157,16 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
         }}>
           <h2 style={{ marginBottom: 12 }}>Nie wieder stundenlang suchen warum Google deine Homepage nicht anzeigt.</h2>
           <p className="muted" style={{ maxWidth: 520, marginBottom: 28 }}>
-            Trag dich jetzt ein — der Frühzugang ist kostenlos, und Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
+            URL eingeben — die KI scannt sofort und erklärt dir genau was Google blockiert.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              Frühen Zugang sichern
+            <Link href="/scan" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
+              Jetzt kostenlos scannen →
             </Link>
             <Link href="/blog/google-findet-meine-seite-nicht-5-gruende-fuer-fehlenede-indexierung" className="ghost" style={{ fontSize: 15 }}>
               Selbst prüfen — Anleitung lesen
             </Link>
           </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026</p>
         </section>
       </main>
 

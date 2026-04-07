@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import InlineScan from "../components/inline-scan";
 
 export const metadata: Metadata = {
-  title: "WordPress kritischer Fehler? KI findet die Ursache automatisch | WebsiteFix",
+  title: "WordPress kritischer Fehler beheben — KI findet Ursache sofort",
   description:
-    "\"Es gab einen kritischen Fehler auf deiner Website\" — WebsiteFix analysiert deine WordPress-Website automatisch per KI und zeigt dir genau was kaputt ist. Kein Entwickler nötig.",
+    "\"Es gab einen kritischen Fehler auf deiner Website\"? URL eingeben — KI erkennt sofort ob Plugin-Konflikt, Theme-Fehler oder Update-Problem schuld ist. Kostenlos, ohne Anmeldung.",
   alternates: { canonical: "/wordpress-kritischer-fehler" },
 };
 
@@ -69,19 +70,9 @@ export default function WordpressKritischerFehlerPage() {
           </h1>
           <p className="heroText" style={{ maxWidth: 580 }}>
             „Es gab einen kritischen Fehler auf deiner Website" — deine Inhalte sind fast immer noch da.
-            WebsiteFix scannt deine WordPress-Website automatisch und zeigt dir in unter 60 Sekunden was kaputt ist — in verständlichem Deutsch.
+            URL eingeben, fertig. Die KI zeigt dir in unter 60 Sekunden genau was kaputt ist — in verständlichem Deutsch, kein Entwickler nötig.
           </p>
-          <div className="heroActions">
-            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              Frühen Zugang sichern
-            </Link>
-            <a href="#ursachen" className="ghost" style={{ fontSize: 15 }}>
-              Typische Ursachen ansehen
-            </a>
-          </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
-            Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026
-          </p>
+          <InlineScan placeholder="https://deine-wordpress-website.de" />
         </section>
 
         {/* EXAMPLE BAR */}
@@ -167,17 +158,16 @@ export default function WordpressKritischerFehlerPage() {
         }}>
           <h2 style={{ marginBottom: 12 }}>Nie wieder stundenlang googeln wenn WordPress einen kritischen Fehler wirft.</h2>
           <p className="muted" style={{ maxWidth: 520, marginBottom: 28 }}>
-            Trag dich jetzt ein — der Frühzugang ist kostenlos, und Wartelisten-Mitglieder bekommen dauerhaften Rabatt.
+            URL eingeben — die KI scannt sofort und erklärt dir genau was den Fehler verursacht hat.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/#waitlist" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
-              Frühen Zugang sichern
+            <Link href="/scan" className="cta" style={{ fontSize: 16, padding: "15px 32px" }}>
+              Jetzt kostenlos scannen →
             </Link>
             <Link href="/blog/wordpress-critical-error" className="ghost" style={{ fontSize: 15 }}>
               Selbst lösen — Anleitung lesen
             </Link>
           </div>
-          <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>Kostenlos in der Beta · Keine Kreditkarte · Beta startet April 2026</p>
         </section>
       </main>
 
