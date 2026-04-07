@@ -72,12 +72,12 @@ export default function NotFound() {
           marginTop: 34,
         }}
       >
-        <Link href="/#waitlist" className="cta">
-          Fix auswählen
+        <Link href="/scan" className="cta">
+          Website jetzt scannen
         </Link>
 
-        <Link href="/#kontakt" className="ghost">
-          Anfrage senden
+        <Link href="/" className="ghost">
+          Zur Startseite
         </Link>
       </div>
 

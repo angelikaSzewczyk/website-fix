@@ -32,7 +32,7 @@ const copy = {
       h1b: "KI findet den Fehler — und repariert ihn für dich.",
       sub: "Du googelst, verstehst nichts, gibst auf. WebsiteFix scannt deine Website in unter 60 Sekunden — und zeigt dir genau was kaputt ist. Kein Entwickler nötig.",
       cta: "Website jetzt kostenlos scannen",
-      ctaSecondary: "Zur Warteliste",
+      ctaSecondary: "Für Agenturen →",
       trust: "Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden",
     },
     example: {
@@ -89,14 +89,14 @@ const copy = {
       ],
     },
     waitlist: {
-      h2: "Beta startet April 2026 — jetzt eintragen",
-      sub: "Frühzugang ist kostenlos. Wartelisten-Mitglieder bekommen dauerhaften Rabatt — für immer.",
-      betaLabel: "Was die Beta enthält:",
+      h2: "Kostenlos scannen — Ergebnis in 60 Sekunden.",
+      sub: "URL eingeben, fertig. Keine Anmeldung, kein Plugin, kein Technik-Wissen nötig.",
+      betaLabel: "Was geprüft wird:",
       betaItems: [
         { done: true, text: "Vollständiger Website-Scan" },
-        { done: true, text: "Diagnose in Alltagssprache" },
-        { done: true, text: "Priorisierter Reparaturplan" },
-        { done: false, text: "KI-Reparatur — kommt in Phase 2" },
+        { done: true, text: "WCAG 2.1 Barrierefreiheits-Scan" },
+        { done: true, text: "Diagnose auf Deutsch mit Code-Fixes" },
+        { done: true, text: "SEO Grundlagen-Check" },
       ],
       placeholder: "deine@email.de",
       urlPlaceholder: "https://deine-website.de (optional)",
@@ -127,8 +127,8 @@ const copy = {
           period: "/ Monat",
           desc: "Für Selbstständige & KMUs",
           features: ["Unlimitierte Scans", "KI-Code-Fixes", "24/7 Monitoring + Alerts", "Automatische Reparatur", "E-Mail Support"],
-          cta: "Frühbucher-Platz sichern",
-          ctaHref: "#waitlist",
+          cta: "Jetzt starten →",
+          ctaHref: "/fuer-agenturen",
           highlight: true,
           badge: "Beliebteste Wahl",
         },
@@ -138,8 +138,8 @@ const copy = {
           period: "/ Monat",
           desc: "Für Webagenturen",
           features: ["Alles aus Pro", "Bis zu 10 Domains", "Team-Zugang (3 Seats)", "White-Label Reports", "Prioritäts-Support"],
-          cta: "Kontakt aufnehmen",
-          ctaHref: "mailto:hallo@website-fix.com",
+          cta: "Agentur-Plan ansehen →",
+          ctaHref: "/fuer-agenturen",
           highlight: false,
           badge: "",
         },
@@ -150,7 +150,7 @@ const copy = {
       items: [
         {
           q: "Was kostet das?",
-          a: "Die Beta ist kostenlos. Danach: Free (3 Scans/Monat), Pro ab 29€/Monat, Agentur ab 99€/Monat. Wartelisten-Mitglieder bekommen dauerhaften Rabatt.",
+          a: "Free: 3 Scans/Monat kostenlos. Pro: 29€/Monat mit unlimitierten Scans und Code-Fixes. Agentur: 99€/Monat mit White-Label Reports und bis zu 30 Domains.",
         },
         {
           q: "Für welche Websites funktioniert das?",
@@ -182,7 +182,7 @@ const copy = {
       h1b: "AI finds the problem — and fixes it for you.",
       sub: "You Google it, understand nothing, give up. WebsiteFix scans your website in under 60 seconds — and shows you exactly what's broken. No developer needed.",
       cta: "Scan your website for free",
-      ctaSecondary: "Join waitlist",
+      ctaSecondary: "For agencies →",
       trust: "Free · No sign-up · Results in under 60 seconds",
     },
     example: {
@@ -239,7 +239,7 @@ const copy = {
       ],
     },
     waitlist: {
-      h2: "Beta launches April 2026 — sign up now",
+      h2: "Scan for free — results in 60 seconds.",
       sub: "Early access is free. Waitlist members get a permanent discount — forever.",
       betaLabel: "What beta includes:",
       betaItems: [

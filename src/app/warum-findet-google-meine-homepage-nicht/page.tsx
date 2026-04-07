@@ -52,8 +52,8 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
           <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: "-0.01em" }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
-          <Link href="/#waitlist" className="cta ctaSmall">
-            Frühen Zugang sichern
+          <Link href="/scan" className="cta ctaSmall">
+            Jetzt scannen →
           </Link>
         </div>
       </nav>

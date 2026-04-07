@@ -139,7 +139,7 @@ export default function ScanPage() {
           <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17 }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
-          <Link href="/#waitlist" className="cta ctaSmall">Zur Warteliste</Link>
+          <Link href="/fuer-agenturen" className="cta ctaSmall">Für Agenturen</Link>
         </div>
       </nav>
 
@@ -484,8 +484,8 @@ export default function ScanPage() {
               >
                 Neue Website prüfen →
               </button>
-              <a href="/#waitlist" className="cta" style={{ fontSize: 13, padding: "10px 18px" }}>
-                Zur Warteliste — dauerhafter Rabatt
+              <a href="/fuer-agenturen" className="cta" style={{ fontSize: 13, padding: "10px 18px" }}>
+                Für Agenturen →
               </a>
             </div>
           </div>

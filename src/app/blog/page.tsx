@@ -14,7 +14,7 @@ export default function BlogIndexPage() {
   const posts = getAllPosts();
 
   return (
-     <><BlogHeader active="blog" lang="de" ctaLabel="Zur Warteliste" /><main className="page">
+     <><BlogHeader active="blog" lang="de" /><main className="page">
       <div className="pageHead">
         <h1 className="h1">Blog</h1>
         <p className="lead">
@@ -55,8 +55,8 @@ export default function BlogIndexPage() {
                   Weiterlesen →
                 </Link>
 
-                <Link className="ghostBtn" href="/#waitlist">
-                  Zur Warteliste
+                <Link className="ghostBtn" href="/scan">
+                  Jetzt scannen
                 </Link>
               </div>
             </article>
@@ -88,8 +88,8 @@ export default function BlogIndexPage() {
           <a href="/scan" className="cta" style={{ fontSize: 15, padding: "13px 28px" }}>
             Jetzt kostenlos scannen
           </a>
-          <a href="/#waitlist" className="ghost" style={{ fontSize: 14 }}>
-            Zur Warteliste
+          <a href="/fuer-agenturen" className="ghost" style={{ fontSize: 14 }}>
+            Für Agenturen →
           </a>
         </div>
       </div>
