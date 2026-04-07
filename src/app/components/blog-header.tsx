@@ -51,7 +51,7 @@ export default function BlogHeader({
   const t = {
     faq: "FAQ",
     blog: "Blog",
-    cta: ctaLabel || (lang === "en" ? "Join waitlist" : "Zur Warteliste"),
+    cta: ctaLabel || (lang === "en" ? "Scan for free" : "Jetzt scannen →"),
   };
 
   const navItems = [
@@ -85,7 +85,7 @@ export default function BlogHeader({
         </nav>
 
         <div className="navActions">
-          <Link className="navCta navCtaDesktop" href="/#waitlist">
+          <Link className="navCta navCtaDesktop" href="/scan">
             {t.cta}
           </Link>
 
@@ -131,7 +131,7 @@ export default function BlogHeader({
 
           <Link
             className="cta mobileNavPrimary"
-            href="/#waitlist"
+            href="/scan"
             onClick={() => setMobileNavOpen(false)}
           >
             {t.cta}
