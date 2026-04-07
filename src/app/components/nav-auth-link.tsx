@@ -7,7 +7,7 @@ export default function NavAuthLink() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/session")
+    fetch("/api/auth/session", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => setLoggedIn(!!data?.user))
       .catch(() => setLoggedIn(false));
