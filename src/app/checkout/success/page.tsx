@@ -11,53 +11,59 @@ export default function CheckoutSuccessPage() {
     <>
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.92)",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center" }}>
+          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
         </div>
       </nav>
 
-      <main style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
-        <div style={{ maxWidth: 520, textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 24 }}>✅</div>
-          <h1 style={{ fontSize: 32, fontWeight: 700, margin: "0 0 16px" }}>
-            Zahlung erfolgreich!
+      <main style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 480, textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(141,243,211,0.12)", border: "1px solid rgba(141,243,211,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 20 }}>
+            ✓
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
+            Zahlung erfolgreich
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 17, lineHeight: 1.7, margin: "0 0 32px" }}>
-            Willkommen bei WebsiteFix. Du bekommst gleich eine Bestätigungs-E-Mail.
-            Wir melden uns innerhalb von 24 Stunden mit dem Zugang zu deinem Dashboard.
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 15, lineHeight: 1.7, margin: "0 0 36px" }}>
+            Willkommen bei WebsiteFix. Du bekommst eine Bestätigungs-E-Mail. Dein Dashboard ist sofort verfügbar.
           </p>
 
           <div style={{
-            background: "rgba(141,243,211,0.06)",
-            border: "1px solid rgba(141,243,211,0.2)",
-            borderRadius: 14, padding: "20px 24px",
-            marginBottom: 32, textAlign: "left",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 12, padding: "20px 24px",
+            marginBottom: 28, textAlign: "left",
           }}>
-            <p style={{ margin: "0 0 12px", fontWeight: 650, fontSize: 15 }}>Nächste Schritte:</p>
+            <p style={{ margin: "0 0 14px", fontWeight: 600, fontSize: 14, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Nächste Schritte</p>
             {[
               "Bestätigungs-E-Mail prüfen",
-              "Wir melden uns innerhalb von 24h",
-              "Erste Kunden-Website scannen",
+              "Dashboard öffnen",
+              "Erste Website scannen",
             ].map((step, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-                <span style={{ color: "#8df3d3", fontWeight: 700 }}>{i + 1}.</span>
-                <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 14 }}>{step}</span>
+              <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: i < 2 ? 10 : 0 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#8df3d3", width: 16 }}>0{i + 1}</span>
+                <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 14 }}>{step}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/scan" className="cta" style={{ fontSize: 15, padding: "13px 24px" }}>
-              Jetzt scannen →
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/dashboard" style={{
+              padding: "12px 24px", borderRadius: 9, fontWeight: 700, fontSize: 14,
+              background: "#fff", color: "#0b0c10", textDecoration: "none",
+            }}>
+              Dashboard öffnen
             </Link>
-            <Link href="/" className="ghost" style={{ fontSize: 14, padding: "13px 20px" }}>
-              Zur Startseite
+            <Link href="/" style={{
+              padding: "12px 20px", borderRadius: 9, fontSize: 14,
+              border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)",
+              textDecoration: "none",
+            }}>
+              Startseite
             </Link>
           </div>
         </div>
