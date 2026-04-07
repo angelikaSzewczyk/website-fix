@@ -17,18 +17,19 @@ type Scan = {
   issue_count: number | null;
 };
 
-const PLAN_LABELS: Record<string, { label: string; color: string }> = {
-  free:    { label: "Free",    color: "rgba(255,255,255,0.3)" },
-  pro:     { label: "Pro",     color: "#8df3d3" },
-  agentur: { label: "Agentur", color: "#7aa6ff" },
-};
+const PLAN_CONFIG = {
+  free:    { label: "Free",    color: "rgba(255,255,255,0.35)", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)" },
+  pro:     { label: "Pro",     color: "#8df3d3", bg: "rgba(141,243,211,0.08)", border: "rgba(141,243,211,0.2)" },
+  agentur: { label: "Agentur", color: "#7aa6ff", bg: "rgba(122,166,255,0.08)", border: "rgba(122,166,255,0.2)" },
+} as const;
 
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const sql = neon(process.env.DATABASE_URL!);
-  const plan = (session.user as { plan?: string }).plan ?? "free";
+  const plan = ((session.user as { plan?: string }).plan ?? "free") as keyof typeof PLAN_CONFIG;
+  const planCfg = PLAN_CONFIG[plan] ?? PLAN_CONFIG.free;
 
   const scans = await sql`
     SELECT id, url, type, created_at, issue_count
@@ -38,23 +39,28 @@ export default async function DashboardPage() {
     LIMIT 20
   ` as Scan[];
 
-  const planInfo = PLAN_LABELS[plan] ?? PLAN_LABELS.free;
+  const firstName = session.user.name?.split(" ")[0] ?? "Dashboard";
 
   return (
     <>
+      {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(11,12,16,0.92)", backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
       }}>
         <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17 }}>
+          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: "-0.01em" }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{session.user.email}</span>
+            {session.user.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={session.user.image} alt="" width={28} height={28} style={{ borderRadius: "50%", opacity: 0.9 }} />
+            )}
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>{session.user.email}</span>
             <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
-              <button type="submit" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer" }}>
+              <button type="submit" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                 Abmelden
               </button>
             </form>
@@ -62,29 +68,38 @@ export default async function DashboardPage() {
         </div>
       </nav>
 
-      <main style={{ maxWidth: 960, margin: "0 auto", padding: "48px 20px" }}>
+      <main style={{ maxWidth: 960, margin: "0 auto", padding: "52px 20px 80px" }}>
+
         {/* HEADER */}
-        <div style={{ marginBottom: 40 }}>
-          <p style={{ margin: "0 0 6px", fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Willkommen zurück</p>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 16px" }}>
-            {session.user.name?.split(" ")[0] ?? "Dashboard"}
-          </h1>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ marginBottom: 48 }}>
+          <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>Willkommen zurück</p>
+          <h1 style={{ fontSize: 32, fontWeight: 700, margin: "0 0 20px", letterSpacing: "-0.02em" }}>{firstName}</h1>
+
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "5px 12px", borderRadius: 20,
-              background: "rgba(255,255,255,0.06)", border: `1px solid ${planInfo.color}33`,
-              fontSize: 13, fontWeight: 600, color: planInfo.color,
+              padding: "6px 14px", borderRadius: 20,
+              background: planCfg.bg, border: `1px solid ${planCfg.border}`,
+              fontSize: 13, fontWeight: 600, color: planCfg.color,
             }}>
-              ● {planInfo.label}
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: planCfg.color, display: "inline-block" }} />
+              {planCfg.label}
             </span>
+
             {plan === "free" && (
-              <Link href="/fuer-agenturen" className="cta" style={{ fontSize: 13, padding: "5px 14px" }}>
-                Upgrade →
+              <Link href="/fuer-agenturen" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "6px 14px", borderRadius: 20, textDecoration: "none",
+                background: "linear-gradient(90deg, rgba(141,243,211,0.15), rgba(122,166,255,0.15))",
+                border: "1px solid rgba(141,243,211,0.25)",
+                fontSize: 13, fontWeight: 600, color: "#8df3d3",
+              }}>
+                Upgrade auf Pro →
               </Link>
             )}
+
             {plan !== "free" && (
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
                 Unbegrenzte Scans · Vollständige Reports
               </span>
             )}
@@ -92,58 +107,105 @@ export default async function DashboardPage() {
         </div>
 
         {/* QUICK ACTIONS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 48 }}>
-          <Link href="/scan" style={{ textDecoration: "none" }}>
-            <div className="card" style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 24 }}>🔍</div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>Neuer Website-Check</div>
-              <div className="cardSub" style={{ fontSize: 13 }}>SEO, Erreichbarkeit, technische Fehler</div>
-            </div>
-          </Link>
-          <Link href="/scan?tab=wcag" style={{ textDecoration: "none" }}>
-            <div className="card" style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 24 }}>♿</div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>WCAG-Scan</div>
-              <div className="cardSub" style={{ fontSize: 13 }}>Barrierefreiheit · BFSG-relevant</div>
-            </div>
-          </Link>
-          {plan === "agentur" && (
-            <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8, opacity: 0.6 }}>
-              <div style={{ fontSize: 24 }}>🏷️</div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>White-Label Report</div>
-              <div className="cardSub" style={{ fontSize: 13 }}>Kommt in Phase 2</div>
-            </div>
-          )}
+        <div style={{ marginBottom: 52 }}>
+          <p style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Neuer Scan</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+            {[
+              {
+                href: "/scan",
+                icon: "🔍",
+                title: "Website-Check",
+                desc: "SEO, Erreichbarkeit, technische Fehler",
+                color: "#7aa6ff",
+              },
+              {
+                href: "/scan?tab=wcag",
+                icon: "♿",
+                title: "WCAG-Scan",
+                desc: "Barrierefreiheit · BFSG-relevant",
+                color: "#8df3d3",
+              },
+            ].map((item) => (
+              <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>
+                <div style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 16, padding: "24px 22px",
+                  cursor: "pointer", transition: "border-color 0.15s",
+                  display: "flex", flexDirection: "column", gap: 10,
+                }}>
+                  <div style={{ fontSize: 28 }}>{item.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: "#fff" }}>{item.title}</div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{item.desc}</div>
+                  <div style={{ fontSize: 13, color: item.color, marginTop: 4, fontWeight: 600 }}>
+                    Scan starten →
+                  </div>
+                </div>
+              </Link>
+            ))}
+
+            {plan === "agentur" && (
+              <div style={{
+                background: "rgba(255,255,255,0.02)",
+                border: "1px dashed rgba(255,255,255,0.08)",
+                borderRadius: 16, padding: "24px 22px",
+                display: "flex", flexDirection: "column", gap: 10,
+              }}>
+                <div style={{ fontSize: 28, opacity: 0.5 }}>🏷️</div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: "rgba(255,255,255,0.4)" }}>White-Label Report</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>Kommt in Phase 2</div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* SCAN HISTORY */}
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Letzte Scans</h2>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Letzte Scans</p>
+            {scans.length > 0 && (
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>{scans.length} gespeichert</span>
+            )}
+          </div>
 
           {scans.length === 0 ? (
-            <div className="card" style={{ textAlign: "center", padding: "40px 20px" }}>
-              <p className="muted" style={{ margin: "0 0 16px" }}>Noch keine Scans. Starte deinen ersten Scan!</p>
-              <Link href="/scan" className="cta" style={{ fontSize: 14, padding: "11px 24px" }}>
-                Jetzt scannen →
+            <div style={{
+              background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)",
+              borderRadius: 16, padding: "48px 20px", textAlign: "center",
+            }}>
+              <p style={{ margin: "0 0 20px", color: "rgba(255,255,255,0.35)", fontSize: 15 }}>
+                Noch keine Scans gespeichert.
+              </p>
+              <Link href="/scan" style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "12px 24px", borderRadius: 12, textDecoration: "none",
+                background: "linear-gradient(90deg,#8df3d3,#7aa6ff)",
+                color: "#0b0c10", fontWeight: 700, fontSize: 14,
+              }}>
+                Ersten Scan starten →
               </Link>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {scans.map((scan) => (
-                <div key={scan.id} className="card" style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px" }}>
-                  <div style={{ fontSize: 20 }}>{scan.type === "wcag" ? "♿" : "🔍"}</div>
+                <div key={scan.id} style={{
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 12, padding: "14px 20px",
+                  display: "flex", alignItems: "center", gap: 16,
+                }}>
+                  <div style={{ fontSize: 18, flexShrink: 0 }}>{scan.type === "wcag" ? "♿" : "🔍"}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {scan.url}
                     </div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
-                      {scan.type === "wcag" ? "WCAG-Scan" : "Website-Check"} · {new Date(scan.created_at).toLocaleDateString("de-DE")}
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
+                      {scan.type === "wcag" ? "WCAG-Scan" : "Website-Check"} · {new Date(scan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </div>
                   </div>
                   {scan.issue_count !== null && (
                     <div style={{
-                      padding: "3px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600,
-                      background: scan.issue_count === 0 ? "rgba(141,243,211,0.1)" : "rgba(255,107,107,0.1)",
+                      padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
+                      background: scan.issue_count === 0 ? "rgba(141,243,211,0.08)" : "rgba(255,107,107,0.08)",
                       color: scan.issue_count === 0 ? "#8df3d3" : "#ff6b6b",
                       border: `1px solid ${scan.issue_count === 0 ? "rgba(141,243,211,0.2)" : "rgba(255,107,107,0.2)"}`,
                     }}>
@@ -157,10 +219,10 @@ export default async function DashboardPage() {
         </div>
       </main>
 
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "32px 20px", textAlign: "center" }}>
-        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "28px 20px", textAlign: "center" }}>
+        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
           {`© ${new Date().getFullYear()} website-fix.com · `}
-          <Link href="/" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>Startseite</Link>
+          <Link href="/" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Startseite</Link>
         </p>
       </footer>
     </>
