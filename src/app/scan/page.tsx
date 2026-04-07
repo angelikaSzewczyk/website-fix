@@ -427,6 +427,55 @@ export default function ScanPage() {
               <div>{renderDiagnose(wcagDiagnose)}</div>
             </div>
 
+            {/* MANUELLE PRÜFPUNKTE */}
+            <div style={{
+              marginTop: 16,
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              borderRadius: 16, padding: "24px 28px",
+            }}>
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 650, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                  Transparenz
+                </p>
+                <h3 style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700 }}>
+                  Was dieser Scan nicht prüfen kann
+                </h3>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+                  Automatische Tools finden ~30–40% aller WCAG-Probleme. Diese Punkte brauchen einen manuellen Check:
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { icon: "🖼️", title: "Alt-Text Qualität", desc: "Macht der Alt-Text im Kontext wirklich Sinn? „Bild1.jpg" zählt nicht." },
+                  { icon: "⌨️", title: "Tab-Reihenfolge", desc: "Ist die Tastatur-Navigation logisch und intuitiv — nicht nur technisch vorhanden?" },
+                  { icon: "🎙️", title: "Screenreader-Bedienbarkeit", desc: "Formulare, Dialoge und Dropdowns mit echtem Screenreader testen (NVDA, VoiceOver)." },
+                  { icon: "🎬", title: "Video-Untertitel", desc: "Sind Videos mit korrekten, sinnvollen Untertiteln versehen?" },
+                  { icon: "📖", title: "Sprache & Verständlichkeit", desc: "Ist der Inhalt auch für Menschen mit kognitiven Einschränkungen verständlich?" },
+                  { icon: "✨", title: "Fokus-Sichtbarkeit", desc: "Ist der Fokus-Ring bei allen Elementen klar sichtbar — nicht nur vorhanden?" },
+                  { icon: "🌀", title: "Animationen & Bewegung", desc: "Gibt es störende Animationen ohne `prefers-reduced-motion` Support?" },
+                ].map((item) => (
+                  <div key={item.title} style={{
+                    display: "flex", gap: 12, alignItems: "flex-start",
+                    padding: "10px 14px",
+                    background: "rgba(255,255,255,0.03)",
+                    borderRadius: 10,
+                  }}>
+                    <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 650, marginBottom: 2 }}>{item.title}</div>
+                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{ margin: "16px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                Für eine vollständige BFSG-Konformität empfiehlt sich ein manueller Audit ergänzend zum automatischen Scan.
+              </p>
+            </div>
+
             <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button
                 onClick={() => { setWcagState("idle"); setWcagUrl(""); setWcagDiagnose(""); }}
