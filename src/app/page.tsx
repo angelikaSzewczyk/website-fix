@@ -102,13 +102,13 @@ const copy = {
       urlPlaceholder: "https://deine-website.de (optional)",
       btn: "Jetzt eintragen",
       sending: "Wird eingetragen …",
-      success: "Du bist dabei! Wir melden uns sobald die Beta startet.",
+      success: "Du bist dabei! Wir melden uns in Kürze.",
       error: "Etwas ist schiefgelaufen. Bitte versuch es nochmal oder schreib uns.",
-      privacy: "Kein Spam. Nur eine E-Mail wenn die Beta startet.",
+      privacy: "Kein Spam. Nur relevante Updates.",
     },
     pricing: {
       h2: "Einfache Preise. Kein Abo-Chaos.",
-      earlyBird: "Frühbucher-Rabatt: 30% für Waitlist-Mitglieder — für immer.",
+      earlyBird: "Frühbucher-Rabatt: 30% — jetzt sichern.",
       plans: [
         {
           name: "Free",
@@ -250,15 +250,15 @@ const copy = {
       ],
       placeholder: "your@email.com",
       urlPlaceholder: "https://your-website.com (optional)",
-      btn: "Join waitlist",
+      btn: "Sign up",
       sending: "Signing up…",
-      success: "You're in! We'll reach out as soon as the beta launches.",
+      success: "You're in! We'll be in touch shortly.",
       error: "Something went wrong. Please try again or contact us.",
-      privacy: "No spam. One email when beta starts.",
+      privacy: "No spam. Relevant updates only.",
     },
     pricing: {
       h2: "Simple pricing. No subscription chaos.",
-      earlyBird: "Early bird discount: 30% off for waitlist members — forever.",
+      earlyBird: "Early bird discount: 30% off — grab it now.",
       plans: [
         {
           name: "Free",
