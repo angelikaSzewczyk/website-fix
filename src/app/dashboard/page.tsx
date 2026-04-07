@@ -187,33 +187,42 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {scans.map((scan) => (
-                <div key={scan.id} style={{
-                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: 12, padding: "14px 20px",
-                  display: "flex", alignItems: "center", gap: 16,
-                }}>
-                  <div style={{ fontSize: 18, flexShrink: 0 }}>{scan.type === "wcag" ? "♿" : "🔍"}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {scan.url}
+              {scans.map((scan) => {
+                const typeIcon = scan.type === "wcag" ? "♿" : scan.type === "performance" ? "⚡" : "🔍";
+                const typeLabel = scan.type === "wcag" ? "Barrierefreiheit" : scan.type === "performance" ? "Performance" : "Website-Check";
+                return (
+                <Link key={scan.id} href={`/dashboard/scans/${scan.id}`} style={{ textDecoration: "none" }}>
+                  <div style={{
+                    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+                    borderRadius: 12, padding: "14px 20px",
+                    display: "flex", alignItems: "center", gap: 16,
+                    cursor: "pointer", transition: "border-color 0.15s",
+                  }}>
+                    <div style={{ fontSize: 18, flexShrink: 0 }}>{typeIcon}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {scan.url}
+                      </div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
+                        {typeLabel} · {new Date(scan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
-                      {scan.type === "wcag" ? "WCAG-Scan" : "Website-Check"} · {new Date(scan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {scan.issue_count !== null && (
+                        <div style={{
+                          padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
+                          background: scan.issue_count === 0 ? "rgba(141,243,211,0.08)" : "rgba(255,107,107,0.08)",
+                          color: scan.issue_count === 0 ? "#8df3d3" : "#ff6b6b",
+                          border: `1px solid ${scan.issue_count === 0 ? "rgba(141,243,211,0.2)" : "rgba(255,107,107,0.2)"}`,
+                        }}>
+                          {scan.issue_count === 0 ? "✓ Keine Fehler" : `${scan.issue_count} Probleme`}
+                        </div>
+                      )}
+                      <span style={{ fontSize: 16, color: "rgba(255,255,255,0.2)" }}>→</span>
                     </div>
                   </div>
-                  {scan.issue_count !== null && (
-                    <div style={{
-                      padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
-                      background: scan.issue_count === 0 ? "rgba(141,243,211,0.08)" : "rgba(255,107,107,0.08)",
-                      color: scan.issue_count === 0 ? "#8df3d3" : "#ff6b6b",
-                      border: `1px solid ${scan.issue_count === 0 ? "rgba(141,243,211,0.2)" : "rgba(255,107,107,0.2)"}`,
-                    }}>
-                      {scan.issue_count === 0 ? "✓ Keine Fehler" : `${scan.issue_count} Probleme`}
-                    </div>
-                  )}
-                </div>
-              ))}
+                </Link>
+              )})}
             </div>
           )}
         </div>

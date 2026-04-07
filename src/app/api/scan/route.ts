@@ -262,8 +262,8 @@ Schreib freundlich, klar und ohne Fachjargon. Erkläre als würdest du mit jeman
           !scanData.sitemapVorhanden,
         ].filter(Boolean).length;
         await sql`
-          INSERT INTO scans (user_id, url, type, issue_count)
-          VALUES (${session.user.id}, ${scanData.url}, 'website', ${booleanIssues})
+          INSERT INTO scans (user_id, url, type, issue_count, result)
+          VALUES (${session.user.id}, ${scanData.url}, 'website', ${booleanIssues}, ${diagnose})
         `;
       }
     } catch { /* Scan-Speicherung ist optional — kein Fehler wenn nicht eingeloggt */ }

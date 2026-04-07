@@ -4,7 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 
 type ScanState = "idle" | "scanning" | "done" | "error";
-type TabType = "website" | "wcag";
+type TabType = "website" | "wcag" | "performance";
+
+type PerfData = {
+  scores: { performance: number; accessibility: number; seo: number; bestPractices: number };
+  vitals: { lcp: string; cls: string; tbt: string; fcp: string; si: string };
+  opportunities: { title: string; displayValue?: string; score: number | null }[];
+};
 
 function renderDiagnose(text: string) {
   return text.split("\n").map((line, i) => {
@@ -35,6 +41,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   const [state, setState] = useState<ScanState>("idle");
   const [diagnose, setDiagnose] = useState("");
   const [wcagViolations, setWcagViolations] = useState<{ priority: string; help: string; nodeHtml: string }[]>([]);
+  const [perfData, setPerfData] = useState<PerfData | null>(null);
   const [error, setError] = useState("");
 
   async function handleScan(e: React.FormEvent) {
@@ -44,9 +51,10 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
     setDiagnose("");
     setError("");
     setWcagViolations([]);
+    setPerfData(null);
 
     try {
-      const endpoint = tab === "wcag" ? "/api/wcag-scan" : "/api/scan";
+      const endpoint = tab === "wcag" ? "/api/wcag-scan" : tab === "performance" ? "/api/performance-scan" : "/api/scan";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,6 +65,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       if (data.success) {
         setDiagnose(data.diagnose ?? "");
         if (tab === "wcag") setWcagViolations(data.violations ?? []);
+        if (tab === "performance") setPerfData({ scores: data.scores, vitals: data.vitals, opportunities: data.opportunities });
         setState("done");
       } else {
         setError(data.error ?? "Fehler beim Scannen.");
@@ -108,10 +117,11 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
         </div>
 
         {/* TABS */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 32, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 4, maxWidth: 380 }}>
+        <div style={{ display: "flex", gap: 4, marginBottom: 32, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 4, maxWidth: 520 }}>
           {([
             { key: "website" as TabType, label: "🔍 Website-Check" },
             { key: "wcag" as TabType, label: "♿ Barrierefreiheit" },
+            { key: "performance" as TabType, label: "⚡ Performance" },
           ]).map((t) => (
             <button key={t.key} onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); }}
               style={{
@@ -157,6 +167,8 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {(tab === "wcag"
                 ? ["Browser startet...", "Seite laden und JavaScript ausführen...", "axe-core WCAG 2.1 Analyse...", "KI erstellt Diagnose..."]
+                : tab === "performance"
+                ? ["Google PageSpeed Insights wird abgefragt...", "Core Web Vitals analysieren...", "KI erstellt Diagnose..."]
                 : ["Website abrufen...", "HTML analysieren: Title, Meta, H1, robots.txt...", "KI erstellt Diagnose..."]
               ).map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
@@ -206,6 +218,46 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Performance Scores */}
+            {tab === "performance" && perfData && (
+              <div style={{ marginBottom: 24 }}>
+                {/* Score Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 20 }}>
+                  {[
+                    { label: "Performance", value: perfData.scores.performance },
+                    { label: "SEO", value: perfData.scores.seo },
+                    { label: "Accessibility", value: perfData.scores.accessibility },
+                    { label: "Best Practices", value: perfData.scores.bestPractices },
+                  ].map((s) => {
+                    const color = s.value >= 90 ? "#8df3d3" : s.value >= 50 ? "#ffd93d" : "#ff6b6b";
+                    return (
+                      <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
+                        <div style={{ fontSize: 28, fontWeight: 800, color }}>{s.value}</div>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>{s.label}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Core Web Vitals */}
+                <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
+                  <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 650, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Core Web Vitals</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
+                    {[
+                      { label: "LCP", value: perfData.vitals.lcp },
+                      { label: "CLS", value: perfData.vitals.cls },
+                      { label: "TBT", value: perfData.vitals.tbt },
+                      { label: "FCP", value: perfData.vitals.fcp },
+                    ].map((v) => (
+                      <div key={v.label}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{v.value}</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{v.label}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

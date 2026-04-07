@@ -204,8 +204,8 @@ Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
       if (session?.user?.id) {
         const sql = neon(process.env.DATABASE_URL!);
         await sql`
-          INSERT INTO scans (user_id, url, type, issue_count)
-          VALUES (${session.user.id}, ${targetUrl}, 'wcag', ${violations.length})
+          INSERT INTO scans (user_id, url, type, issue_count, result)
+          VALUES (${session.user.id}, ${targetUrl}, 'wcag', ${violations.length}, ${diagnose})
         `;
       }
     } catch { /* optional */ }
