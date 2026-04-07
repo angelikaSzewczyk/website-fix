@@ -186,8 +186,21 @@ export async function POST(req: NextRequest) {
     if (robotsRes && robotsRes.ok) {
       const robotsTxt = await robotsRes.text();
       scanData.robotsTxt = robotsTxt.slice(0, 500);
-      scanData.robotsBlockiertAlles =
-        robotsTxt.includes("Disallow: /") && !robotsTxt.includes("Disallow: /wp-admin");
+      // Prüfen ob User-agent: * gefolgt von Disallow: / vorkommt (nicht nur GPTBot etc.)
+      const robotsLines = robotsTxt.split("\n").map((l: string) => l.trim());
+      let currentAgent = "";
+      let blockedForAll = false;
+      for (const line of robotsLines) {
+        if (line.toLowerCase().startsWith("user-agent:")) {
+          currentAgent = line.split(":")[1].trim();
+        } else if (line.toLowerCase().startsWith("disallow:")) {
+          const path = line.split(":")[1]?.trim();
+          if (currentAgent === "*" && (path === "/" || path === "/*")) {
+            blockedForAll = true;
+          }
+        }
+      }
+      scanData.robotsBlockiertAlles = blockedForAll;
     } else {
       scanData.robotsTxt = "(nicht gefunden)";
       scanData.robotsBlockiertAlles = false;

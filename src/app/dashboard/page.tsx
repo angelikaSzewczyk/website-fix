@@ -112,14 +112,14 @@ export default async function DashboardPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
             {[
               {
-                href: "/scan",
+                href: "/dashboard/scan",
                 icon: "🔍",
                 title: "Website-Check",
                 desc: "SEO, Erreichbarkeit, technische Fehler",
                 color: "#7aa6ff",
               },
               {
-                href: "/scan?tab=wcag",
+                href: "/dashboard/scan?tab=wcag",
                 icon: "♿",
                 title: "WCAG-Scan",
                 desc: "Barrierefreiheit · BFSG-relevant",
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
               <p style={{ margin: "0 0 20px", color: "rgba(255,255,255,0.35)", fontSize: 15 }}>
                 Noch keine Scans gespeichert.
               </p>
-              <Link href="/scan" style={{
+              <Link href="/dashboard/scan" style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 24px", borderRadius: 12, textDecoration: "none",
                 background: "linear-gradient(90deg,#8df3d3,#7aa6ff)",
