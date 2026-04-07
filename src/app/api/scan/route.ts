@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
+import { auth } from "@/auth";
+import { neon } from "@neondatabase/serverless";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -224,6 +226,20 @@ Schreib freundlich, klar und ohne Fachjargon. Erkläre als würdest du mit jeman
 
     const diagnose =
       message.content[0].type === "text" ? message.content[0].text : "";
+
+    // Scan für eingeloggte User speichern
+    try {
+      const session = await auth();
+      if (session?.user?.id) {
+        const sql = neon(process.env.DATABASE_URL!);
+        await sql`
+          INSERT INTO scans (user_id, url, type, issue_count)
+          VALUES (${session.user.id}, ${scanData.url}, 'website', ${
+            Object.values(scanData).filter((v) => v === false || v === true ? !v : false).length
+          })
+        `;
+      }
+    } catch { /* Scan-Speicherung ist optional — kein Fehler wenn nicht eingeloggt */ }
 
     return NextResponse.json({ success: true, scanData, diagnose });
 
