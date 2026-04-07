@@ -95,14 +95,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
     }
 
-    // IP ermitteln und Rate Limit prüfen
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-    const limitResult = checkRateLimit(ip);
-    if (!limitResult.allowed) {
-      return NextResponse.json(
-        { success: false, error: limitResult.reason },
-        { status: 429 }
-      );
+    // Pro/Agentur-User überspringen Rate Limit
+    const session = await auth();
+    const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
+    const isPaid = userPlan === "pro" || userPlan === "agentur";
+
+    if (!isPaid) {
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+      const limitResult = checkRateLimit(ip);
+      if (!limitResult.allowed) {
+        return NextResponse.json(
+          { success: false, error: limitResult.reason },
+          { status: 429 }
+        );
+      }
     }
 
     const body = await req.json();
@@ -232,11 +238,19 @@ Schreib freundlich, klar und ohne Fachjargon. Erkläre als würdest du mit jeman
       const session = await auth();
       if (session?.user?.id) {
         const sql = neon(process.env.DATABASE_URL!);
+        // Probleme zählen: false-Werte bei Boolean-Checks = Problem
+        const booleanIssues = [
+          !scanData.httpsAktiv,
+          !scanData.erreichbar,
+          !scanData.titleVorhanden,
+          !scanData.metaDescriptionVorhanden,
+          !scanData.h1Vorhanden,
+          scanData.robotsBlockiertAlles,
+          !scanData.sitemapVorhanden,
+        ].filter(Boolean).length;
         await sql`
           INSERT INTO scans (user_id, url, type, issue_count)
-          VALUES (${session.user.id}, ${scanData.url}, 'website', ${
-            Object.values(scanData).filter((v) => v === false || v === true ? !v : false).length
-          })
+          VALUES (${session.user.id}, ${scanData.url}, 'website', ${booleanIssues})
         `;
       }
     } catch { /* Scan-Speicherung ist optional — kein Fehler wenn nicht eingeloggt */ }

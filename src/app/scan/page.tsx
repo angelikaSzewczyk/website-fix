@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import NavAuthLink from "../components/nav-auth-link";
 
 type WaitlistState = "idle" | "loading" | "done" | "error";
 type ScanState = "idle" | "scanning" | "done" | "error";
@@ -139,7 +140,7 @@ export default function ScanPage() {
           <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17 }}>
             Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
           </Link>
-          <Link href="/fuer-agenturen" className="cta ctaSmall">Für Agenturen</Link>
+          <NavAuthLink />
         </div>
       </nav>
 

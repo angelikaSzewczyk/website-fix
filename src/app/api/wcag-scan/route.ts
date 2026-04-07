@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
+import { auth } from "@/auth";
+import { neon } from "@neondatabase/serverless";
 
 export const maxDuration = 60;
 
@@ -195,6 +197,18 @@ Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
     });
 
     const diagnose = message.content[0].type === "text" ? message.content[0].text : "";
+
+    // Scan für eingeloggte User speichern
+    try {
+      const session = await auth();
+      if (session?.user?.id) {
+        const sql = neon(process.env.DATABASE_URL!);
+        await sql`
+          INSERT INTO scans (user_id, url, type, issue_count)
+          VALUES (${session.user.id}, ${targetUrl}, 'wcag', ${violations.length})
+        `;
+      }
+    } catch { /* optional */ }
 
     return NextResponse.json({
       success: true,
