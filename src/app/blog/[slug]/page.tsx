@@ -65,7 +65,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     <>
       <BlogHeader active="blog" lang="de" />
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "56px 24px 80px" }}>
+      <main style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 96px" }}>
         <article>
           <h1 style={{
             fontSize: "clamp(24px, 5vw, 38px)", fontWeight: 700,

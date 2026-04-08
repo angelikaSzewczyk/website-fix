@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import FaqAccordion from "../components/faq-accordion";
 
 export const metadata: Metadata = {
   title: "WebsiteFix für Agenturen — Automatisches Reporting & Monitoring",
@@ -489,17 +490,7 @@ export default function AgencyPage() {
           <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, margin: "0 0 40px", letterSpacing: "-0.02em" }}>
             Häufige Fragen
           </h2>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {FAQ.map((item, i) => (
-              <div key={i} style={{
-                padding: "24px 0",
-                borderBottom: i < FAQ.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
-              }}>
-                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 10, color: "#fff" }}>{item.q}</div>
-                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{item.a}</div>
-              </div>
-            ))}
-          </div>
+          <FaqAccordion items={FAQ} />
         </section>
 
         {/* CTA BANNER */}
