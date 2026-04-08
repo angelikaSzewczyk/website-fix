@@ -172,39 +172,42 @@ export default async function ReportPreviewPage() {
         {/* ══ HEADER BAND ══ */}
         <div style={{
           background: "linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)",
-          padding: "32px 40px",
-          display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24,
+          padding: "28px 40px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
         }}>
-          {/* Left: client info */}
-          <div>
-            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-              Website-Report · {r.period}
-            </p>
-            <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-              {r.client}
-            </h2>
-            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-              {r.website}
-            </p>
-          </div>
-
-          {/* Right: Agency logo placeholder */}
-          <div style={{
-            minWidth: 120, padding: "10px 18px", borderRadius: 10,
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-            textAlign: "center",
-          }}>
+          {/* Left: Agency logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{
-              width: 36, height: 36, borderRadius: 9, margin: "0 auto 8px",
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
               background: "linear-gradient(135deg, #007BFF, #0057b8)",
               display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 10px rgba(0,123,255,0.4)",
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </div>
-            <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "#fff" }}>{r.preparedBy}</p>
-            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>Erstellt von</p>
+            <div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>{r.preparedBy}</p>
+              <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Erstellt von</p>
+            </div>
+          </div>
+
+          {/* Center: client */}
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              Erstellt für
+            </p>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#fff" }}>{r.client}</p>
+            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{r.website}</p>
+          </div>
+
+          {/* Right: Report title */}
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              Monatsbericht
+            </p>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{r.period}</p>
           </div>
         </div>
 

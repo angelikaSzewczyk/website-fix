@@ -7,10 +7,12 @@ import {
   LayoutDashboard,
   Zap,
   Users,
+  Users2,
   FileText,
   Settings,
   ShieldCheck,
   Activity,
+  Plug,
 } from "lucide-react";
 
 type NavItem = {
@@ -19,15 +21,18 @@ type NavItem = {
   icon: ReactNode;
   plans?: string[];
   exact?: boolean;
+  soon?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard",          label: "Übersicht",       icon: <LayoutDashboard size={16} />, exact: true },
-  { href: "/dashboard/scan",     label: "Scan starten",    icon: <Zap size={16} /> },
-  { href: "/dashboard/clients",  label: "Kunden",          icon: <Users size={16} />, plans: ["agentur"] },
-  { href: "/dashboard/activity", label: "Activity Log",    icon: <Activity size={16} />, plans: ["agentur"] },
-  { href: "/dashboard/reports",  label: "Berichte",        icon: <FileText size={16} />, plans: ["pro", "agentur"] },
-  { href: "/dashboard/settings", label: "Einstellungen",   icon: <Settings size={16} />, plans: ["agentur"] },
+  { href: "/dashboard",               label: "Übersicht",      icon: <LayoutDashboard size={16} />, exact: true },
+  { href: "/dashboard/scan",          label: "Scan starten",   icon: <Zap size={16} /> },
+  { href: "/dashboard/clients",       label: "Kunden",         icon: <Users size={16} />, plans: ["agentur"] },
+  { href: "/dashboard/activity",      label: "Activity Log",   icon: <Activity size={16} />, plans: ["agentur"] },
+  { href: "/dashboard/reports",       label: "Berichte",       icon: <FileText size={16} />, plans: ["pro", "agentur"] },
+  { href: "/dashboard/integrations",  label: "Integrationen",  icon: <Plug size={16} />, plans: ["pro", "agentur"] },
+  { href: "/dashboard/team",          label: "Mein Team",      icon: <Users2 size={16} />, plans: ["agentur"], soon: true },
+  { href: "/dashboard/settings",      label: "Einstellungen",  icon: <Settings size={16} />, plans: ["agentur"] },
 ];
 
 const PLAN_CONFIG = {
@@ -80,26 +85,35 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
       <nav style={{ flex: 1, paddingTop: 16, display: "flex", flexDirection: "column", gap: 2 }}>
         {visibleItems.map((item) => {
           const active = isActive(item);
+          const Tag = item.soon ? "span" : Link;
           return (
-            <Link
+            <Tag
               key={item.href}
-              href={item.href}
+              {...(!item.soon ? { href: item.href } : {})}
               style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "9px 12px", borderRadius: 8, textDecoration: "none",
                 fontSize: 13, fontWeight: active ? 600 : 400,
-                color: active ? "#fff" : "rgba(255,255,255,0.45)",
+                color: active ? "#fff" : item.soon ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.45)",
                 background: active ? "rgba(0,123,255,0.15)" : "transparent",
                 borderLeft: active ? "2px solid #007BFF" : "2px solid transparent",
                 paddingLeft: active ? "10px" : "12px",
                 transition: "background 0.1s, color 0.1s, border-color 0.1s",
+                cursor: item.soon ? "default" : "pointer",
               }}
             >
-              <span style={{ opacity: active ? 1 : 0.5, color: active ? "#007BFF" : "inherit", display: "flex" }}>
+              <span style={{ opacity: active ? 1 : item.soon ? 0.3 : 0.5, color: active ? "#007BFF" : "inherit", display: "flex" }}>
                 {item.icon}
               </span>
-              {item.label}
-            </Link>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {item.soon && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4,
+                  background: "rgba(217,119,6,0.15)", color: "#D97706",
+                  letterSpacing: "0.06em",
+                }}>BALD</span>
+              )}
+            </Tag>
           );
         })}
       </nav>
