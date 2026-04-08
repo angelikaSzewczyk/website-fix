@@ -21,7 +21,7 @@ export async function seedReportData(): Promise<SeedResult> {
   const plan = (session.user as { plan?: string }).plan;
   if (plan !== "agentur") return { ok: false, error: "Nur für den Agentur-Plan." };
 
-  const userId = session.user.id as number;
+  const userId = Number(session.user.id);
   const sql    = neon(process.env.DATABASE_URL!);
 
   const SITE_URL  = "https://mueller-soehne-sanitaer.de";
@@ -167,7 +167,7 @@ export async function deleteSeedData(): Promise<{ ok: boolean }> {
   const session = await auth();
   if (!session?.user) return { ok: false };
 
-  const userId = session.user.id as number;
+  const userId = Number(session.user.id);
   const sql    = neon(process.env.DATABASE_URL!);
   const SITE_URL = "https://mueller-soehne-sanitaer.de";
 
