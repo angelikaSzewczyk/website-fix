@@ -80,15 +80,19 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
         />
         <button
           type="submit"
-          className="cta"
           disabled={state === "scanning" || !url}
-          style={{ fontSize: 15, padding: "14px 28px", whiteSpace: "nowrap" }}
+          style={{
+            fontSize: 15, padding: "14px 28px", whiteSpace: "nowrap",
+            background: "#fff", color: "#0b0c10", border: "none", borderRadius: 12,
+            fontWeight: 700, cursor: state === "scanning" || !url ? "default" : "pointer",
+            opacity: state === "scanning" || !url ? 0.45 : 1,
+          }}
         >
           {state === "scanning" ? "Scannt..." : "Jetzt kostenlos scannen"}
         </button>
       </form>
 
-      <p style={{ margin: "10px 0 0", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
+      <p style={{ margin: "10px 0 0", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
         Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
       </p>
 
@@ -119,14 +123,14 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
         <div style={{ marginTop: 20 }}>
           <div style={{ padding: "24px 24px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14 }}>
             <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 8 }}>
-              <span>✅</span>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#8df3d3", display: "inline-block", flexShrink: 0 }} />
               <span style={{ fontWeight: 700, fontSize: 15 }}>Scan abgeschlossen</span>
               <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>— {url}</span>
             </div>
             <div>{renderDiagnose(diagnose)}</div>
           </div>
           <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <a href="/scan" className="cta" style={{ fontSize: 13, padding: "10px 18px" }}>
+            <a href="/scan" style={{ fontSize: 13, padding: "10px 18px", background: "#fff", color: "#0b0c10", borderRadius: 9, fontWeight: 700, textDecoration: "none" }}>
               Vollständigen Scan öffnen →
             </a>
             <button
