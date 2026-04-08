@@ -79,21 +79,6 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
 
   return (
     <>
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.92)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
-      }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
-          </Link>
-          <Link href="/dashboard" style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
-            ← Dashboard
-          </Link>
-        </div>
-      </nav>
-
       {/* WHITE-LABEL PRINT HEADER — nur sichtbar beim Drucken */}
       {agencySettings?.agency_name && (
         <div className="print-only" style={{

@@ -3096,3 +3096,10 @@ footer a, nav a.footerLink {
   .w-full-sm { width: 100% !important; min-width: 0 !important; }
   .text-sm-center { text-align: center !important; }
 }
+
+/* ===== DASHBOARD SIDEBAR LAYOUT ===== */
+@media (max-width: 768px) {
+  .dashboard-sidebar  { display: none !important; }
+  .dashboard-content  { margin-left: 0 !important; padding-top: 52px; }
+  .dashboard-mobile-bar { display: flex !important; }
+}

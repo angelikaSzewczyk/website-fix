@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import BillingPortalButton from "../components/billing-portal-button";
@@ -54,41 +54,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      {/* NAV */}
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            {plan === "agentur" && (
-              <div className="hide-sm" style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <Link href="/dashboard/clients" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Kunden</Link>
-                <Link href="/dashboard/reports" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Berichte</Link>
-                <Link href="/dashboard/settings" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Einstellungen</Link>
-              </div>
-            )}
-            {plan === "pro" && (
-              <Link href="/dashboard/reports" className="hide-sm" style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Berichte</Link>
-            )}
-            {session.user.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={session.user.image} alt="" width={26} height={26} style={{ borderRadius: "50%", opacity: 0.8 }} />
-            )}
-            <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
-              <button type="submit" style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                Abmelden
-              </button>
-            </form>
-          </div>
-        </div>
-      </nav>
-
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 80px" }}>
+      <main style={{ maxWidth: 1060, margin: "0 auto", padding: "40px 24px 80px" }}>
 
         {/* HEADER */}
         <div style={{ marginBottom: 48, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
@@ -228,11 +194,6 @@ export default async function DashboardPage() {
         </div>
       </main>
 
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "24px", textAlign: "center" }}>
-        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-          {`© ${new Date().getFullYear()} website-fix.com`}
-        </p>
-      </footer>
     </>
   );
 }

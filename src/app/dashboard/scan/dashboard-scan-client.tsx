@@ -106,33 +106,8 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   }
 
   return (
-    <>
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link href="/dashboard" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>
-              Dashboard
-            </Link>
-            <span style={{
-              padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
-              background: plan === "agentur" ? "rgba(122,166,255,0.08)" : "rgba(141,243,211,0.08)",
-              color: plan === "agentur" ? "#7aa6ff" : "#8df3d3",
-              border: `1px solid ${plan === "agentur" ? "rgba(122,166,255,0.2)" : "rgba(141,243,211,0.2)"}`,
-            }}>
-              {plan === "agentur" ? "Agentur" : plan === "pro" ? "Pro" : "Free"}
-            </span>
-          </div>
-        </div>
-      </nav>
-
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 80px" }}>
+    <div>
+      <main style={{ maxWidth: 1060, margin: "0 auto", padding: "40px 24px 80px" }}>
 
         <div style={{ marginBottom: 36 }}>
           <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
@@ -314,6 +289,6 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
           </div>
         )}
       </main>
-    </>
+    </div>
   );
 }

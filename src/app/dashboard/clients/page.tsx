@@ -96,35 +96,7 @@ export default async function ClientsPage() {
 
   return (
     <>
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
-          </Link>
-          <div className="hide-sm" style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {[
-              { href: "/dashboard", label: "Dashboard" },
-              { href: "/dashboard/clients", label: "Kunden" },
-              { href: "/dashboard/reports", label: "Berichte" },
-              { href: "/dashboard/settings", label: "Einstellungen" },
-            ].map(({ href, label }) => (
-              <Link key={href} href={href} style={{
-                fontSize: 13, padding: "6px 12px", borderRadius: 6, textDecoration: "none",
-                color: href === "/dashboard/clients" ? "#fff" : "rgba(255,255,255,0.45)",
-                background: href === "/dashboard/clients" ? "rgba(255,255,255,0.07)" : "transparent",
-              }}>
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <main style={{ maxWidth: 1060, margin: "0 auto", padding: "40px 24px 80px" }}>
 
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>Kunden-Websites</h1>
