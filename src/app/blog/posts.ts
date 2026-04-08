@@ -31,7 +31,7 @@ export const POSTS: Post[] = [
       {
         type: "callout",
         title: "Die tickende Zeitbombe im Wartungsvertrag",
-        text: "Ab dem 28. Juni 2025 tritt das Barrierefreiheitsstärkungsgesetz (BFSG) in Kraft. Was viele Agenturen unterschätzen: Es ist nicht mehr nur eine „nette Empfehlung" für staatliche Seiten. Es trifft fast alle Unternehmen, die Produkte oder Dienstleistungen online anbieten.",
+        text: `Ab dem 28. Juni 2025 tritt das Barrierefreiheitsstärkungsgesetz (BFSG) in Kraft. Was viele Agenturen unterschätzen: Es ist nicht mehr nur eine „nette Empfehlung" für staatliche Seiten. Es trifft fast alle Unternehmen, die Produkte oder Dienstleistungen online anbieten.`,
         color: "#ff6b6b",
       },
       {
@@ -45,8 +45,8 @@ export const POSTS: Post[] = [
       {
         type: "ul",
         items: [
-          "Haftungsfallen: Kunden werden fragen: „Warum hast du mich nicht gewarnt?"",
-          "Reputationsschaden: Abmahnungen wegen fehlender Barrierefreiheit sind das neue „DSGVO-Gate".",
+          `Haftungsfallen: Kunden werden fragen: „Warum hast du mich nicht gewarnt?"`,
+          `Reputationsschaden: Abmahnungen wegen fehlender Barrierefreiheit sind das neue „DSGVO-Gate".`,
           "Zeitfresser: Manuelle Prüfungen jeder einzelnen Unterseite sind unbezahlbar und fressen deine Marge.",
         ],
       },
@@ -71,7 +71,7 @@ export const POSTS: Post[] = [
         items: [
           "Automatisierte WCAG-Scans: Unser System prüft kontinuierlich auf Barrieren (Kontrast, Struktur, Screenreader-Kompatibilität).",
           "KI-Fix-Vorschläge: Wenn ein Fehler gefunden wird, liefert WebsiteFix direkt den passenden Code-Schnipsel oder den Lösungsweg für dein Team.",
-          "Der White-Label Beweis: Jeden Monat erhält dein Kunde einen vollautomatischen Bericht in deinem Agentur-Branding. Dort sieht er schwarz auf weiß: „Wir haben diesen Monat 12 Barrieren entfernt und Ihre Rechtssicherheit garantiert."",
+          `Der White-Label Beweis: Jeden Monat erhält dein Kunde einen vollautomatischen Bericht in deinem Agentur-Branding. Dort sieht er schwarz auf weiß: „Wir haben diesen Monat 12 Barrieren entfernt und Ihre Rechtssicherheit garantiert."`,
         ],
       },
       {

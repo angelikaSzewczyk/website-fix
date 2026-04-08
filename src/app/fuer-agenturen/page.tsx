@@ -11,19 +11,19 @@ const PROBLEMS = [
     icon: "📋",
     title: "Manuelle Reports fressen dein Wochenende",
     desc: "20 Kunden, 20 individuelle Reports. Recherche, Screenshots, Formatierung, versenden. Jede Stunde die du dafür ausgibst, kannst du nicht verkaufen — und kein Kunde dankt es dir explizit.",
-    quote: "„Samstag, 14 Uhr. Ich sitze wieder an Reports statt mit meiner Familie."",
+    quote: `„Samstag, 14 Uhr. Ich sitze wieder an Reports statt mit meiner Familie."`,
   },
   {
     icon: "📞",
     title: "Fehler bemerkst du, wenn der Kunde anruft",
     desc: "SSL abgelaufen. Website offline. Google-Index verschwunden. Du erfährst es nicht als Erster — der Kunde schon. Das kostet Vertrauen, das du in Monaten aufgebaut hast.",
-    quote: "„Warum habt ihr das nicht gesehen? Ihr betreut ja unsere Website."",
+    quote: `„Warum habt ihr das nicht gesehen? Ihr betreut ja unsere Website."`,
   },
   {
     icon: "⚖️",
     title: "WCAG-Haftung: du haftest, nicht der Kunde",
     desc: "Das Barrierefreiheitsstärkungsgesetz (BFSG) gilt seit Juni 2025. Wer die Website wartet, trägt Mitverantwortung. Ein manuelles WCAG-Audit kostet 4–8h pro Website — unmöglich skalierbar.",
-    quote: "„Wir brauchen eine WCAG-konforme Website. Kannst du das garantieren?"",
+    quote: `„Wir brauchen eine WCAG-konforme Website. Kannst du das garantieren?"`,
   },
 ];
 
@@ -90,8 +90,20 @@ export default function AgencyPage() {
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: "linear-gradient(135deg, #007BFF, #0057b8)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0, boxShadow: "0 2px 8px rgba(0,123,255,0.35)",
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.02em" }}>
+              Website<span style={{ color: "#007BFF" }}>Fix</span>
+            </span>
           </Link>
           <div style={{ display: "flex", gap: 10 }}>
             <Link href="/scan" className="hide-sm" style={{
