@@ -3126,6 +3126,19 @@ footer a, nav a.footerLink {
   a { color: #0066cc !important; }
   [style*="background"] { background: transparent !important; }
   [style*="border"] { border-color: #ddd !important; }
+
+  /* Report preview: preserve colors & layout when printing */
+  #report-document,
+  #report-document * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  #report-document { box-shadow: none !important; border-radius: 0 !important; }
+  #report-document [style*="background"] { background: revert !important; }
+  #report-document [style*="border"] { border-color: revert !important; }
+  #report-document p, #report-document div,
+  #report-document h1, #report-document h2, #report-document h3 { color: revert !important; }
 }
 
 @media screen {
