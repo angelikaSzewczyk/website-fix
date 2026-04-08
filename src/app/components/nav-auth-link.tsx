@@ -7,7 +7,6 @@ export default function NavAuthLink() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // NextAuth v5 setzt authjs.session-token als Cookie
     const hasSession = document.cookie
       .split(";")
       .some((c) => c.trim().startsWith("authjs.session-token=") || c.trim().startsWith("__Secure-authjs.session-token="));
@@ -15,7 +14,6 @@ export default function NavAuthLink() {
     if (hasSession) {
       setLoggedIn(true);
     } else {
-      // Fallback: API check
       fetch("/api/auth/session", { credentials: "include" })
         .then((r) => r.json())
         .then((data) => setLoggedIn(!!data?.user))
@@ -23,18 +21,10 @@ export default function NavAuthLink() {
     }
   }, []);
 
-  if (loggedIn === null) {
-    return (
-      <Link href="/fuer-agenturen" className="cta ctaSmall">
-        Für Agenturen
-      </Link>
-    );
-  }
-
   if (loggedIn) {
     return (
       <Link href="/dashboard" style={{
-        fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.8)",
+        fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)",
         textDecoration: "none", padding: "7px 16px",
         border: "1px solid rgba(255,255,255,0.15)",
         borderRadius: 8, background: "rgba(255,255,255,0.05)",
@@ -44,8 +34,13 @@ export default function NavAuthLink() {
     );
   }
 
+  // Not logged in (or loading) → show consistent nav CTA
   return (
-    <Link href="/fuer-agenturen" className="cta ctaSmall">
+    <Link href="/fuer-agenturen" style={{
+      fontSize: 13, fontWeight: 600, color: "#0b0c10",
+      textDecoration: "none", padding: "7px 16px",
+      borderRadius: 8, background: "#fff",
+    }}>
       Für Agenturen
     </Link>
   );
