@@ -137,7 +137,62 @@ export default async function ReportPreviewPage() {
   const r = REPORT;
 
   return (
-    <div style={{ background: "#F0F4F8", minHeight: "100vh", padding: "32px 24px 64px" }}>
+    <>
+    <style>{`
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      @media print {
+        /* Exact color reproduction for everything inside the document */
+        *, *::before, *::after {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        /* Hide UI chrome */
+        .no-print { display: none !important; }
+        nav, aside, header[role="banner"] { display: none !important; }
+
+        /* Outer wrapper: white, no padding */
+        .rp-outer {
+          background: #ffffff !important;
+          padding: 0 !important;
+          min-height: unset !important;
+        }
+
+        /* Document: A4-width, remove screen-only decoration */
+        #report-document {
+          width: 210mm !important;
+          max-width: 210mm !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          border: 1px solid #E2E8F0 !important;
+          overflow: visible !important;
+        }
+
+        /* Remove all box-shadows inside document, replace with thin border where needed */
+        #report-document [style*="box-shadow"] {
+          box-shadow: none !important;
+        }
+
+        /* Sections: never split across pages */
+        .rp-section {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        /* Cards inside sections */
+        .rp-card {
+          box-shadow: none !important;
+          border: 1px solid #E2E8F0 !important;
+          border-radius: 10px !important;
+        }
+      }
+    `}</style>
+    <div className="rp-outer" style={{ background: "#F0F4F8", minHeight: "100vh", padding: "32px 24px 64px" }}>
 
       {/* Toolbar */}
       <div className="no-print" style={{
@@ -212,8 +267,8 @@ export default async function ReportPreviewPage() {
         </div>
 
         {/* ══ EXECUTIVE SUMMARY ══ */}
-        <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.divider}` }}>
-          <div style={{
+        <div className="rp-section" style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.divider}` }}>
+          <div className="rp-card" style={{
             background: C.greenBg,
             border: `1px solid ${C.greenBorder}`,
             borderRadius: 14,
@@ -246,7 +301,7 @@ export default async function ReportPreviewPage() {
         </div>
 
         {/* ══ HIGHLIGHTS ══ */}
-        <div style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
+        <div className="rp-section" style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
           <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.12em" }}>
             Erfolge diesen Monat
           </p>
@@ -270,7 +325,7 @@ export default async function ReportPreviewPage() {
         </div>
 
         {/* ══ HEALTH SCORE CHART ══ */}
-        <div style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
+        <div className="rp-section" style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 16, flexWrap: "wrap" }}>
             <div>
               <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.12em" }}>
@@ -306,13 +361,13 @@ export default async function ReportPreviewPage() {
             </div>
           </div>
 
-          <div style={{ background: C.divider, borderRadius: 12, padding: "20px 16px 12px" }}>
+          <div className="rp-card" style={{ background: C.divider, borderRadius: 12, padding: "20px 16px 12px" }}>
             <HealthChart data={r.healthHistory} />
           </div>
         </div>
 
         {/* ══ BFSG 2025 ══ */}
-        <div style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
+        <div className="rp-section" style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
             <div style={{
               width: 40, height: 40, borderRadius: 11, flexShrink: 0,
@@ -358,7 +413,7 @@ export default async function ReportPreviewPage() {
           </div>
 
           {/* Legal note */}
-          <div style={{
+          <div className="rp-card" style={{
             marginTop: 16, padding: "12px 16px", borderRadius: 9,
             background: C.blueBg, border: `1px solid ${C.blueBorder}`,
           }}>
@@ -371,7 +426,7 @@ export default async function ReportPreviewPage() {
         </div>
 
         {/* ══ ACTIVITY SUMMARY ══ */}
-        <div style={{ padding: "24px 40px", borderBottom: `1px solid ${C.divider}` }}>
+        <div className="rp-section" style={{ padding: "24px 40px", borderBottom: `1px solid ${C.divider}` }}>
           <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.12em" }}>
             Aktivitäten im {r.period}
           </p>
@@ -419,5 +474,6 @@ export default async function ReportPreviewPage() {
 
       </div>
     </div>
+    </>
   );
 }
