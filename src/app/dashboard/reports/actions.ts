@@ -78,7 +78,7 @@ async function getReportData(
         AND agency_id  = ${userId}
         AND created_at BETWEEN ${monthStart} AND ${monthEnd}
       ORDER BY created_at DESC
-    ` as Promise<{ event_type: string; metadata: Record<string, string>; created_at: string }[]>,
+    ` as unknown as Promise<{ event_type: string; metadata: Record<string, string>; created_at: string }[]>,
 
     sql`
       SELECT
@@ -89,7 +89,7 @@ async function getReportData(
       WHERE website_id = ${websiteId}::uuid
         AND user_id    = ${userId}
         AND checked_at BETWEEN ${monthStart} AND ${monthEnd}
-    ` as Promise<{ uptime: number; avg_response_ms: number | null; total_checks: number }[]>,
+    ` as unknown as Promise<{ uptime: number; avg_response_ms: number | null; total_checks: number }[]>,
 
     sql`
       SELECT
@@ -100,7 +100,7 @@ async function getReportData(
       WHERE url      = ${site.url}
         AND user_id  = ${userId}
         AND created_at BETWEEN ${monthStart} AND ${monthEnd}
-    ` as Promise<{ total: number; wcag: number; perf: number }[]>,
+    ` as unknown as Promise<{ total: number; wcag: number; perf: number }[]>,
   ]);
 
   const checks = checkRow[0];
