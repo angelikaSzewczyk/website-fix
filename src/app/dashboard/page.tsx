@@ -430,16 +430,13 @@ export default async function DashboardPage() {
 
               return (
                 <Link key={scan.id} href={`/dashboard/scans/${scan.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{
+                  <div className="dash-row-hover" style={{
                     padding: "14px 20px",
                     borderBottom: i < scans.length - 1 ? `1px solid ${C.divider}` : "none",
                     display: "grid", gridTemplateColumns: "1fr auto auto",
                     gap: 16, alignItems: "center",
                     background: "transparent",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F8FAFC"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                  >
+                  }}>
                     {/* URL + type */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                       <StatusDot count={scan.issue_count} />
