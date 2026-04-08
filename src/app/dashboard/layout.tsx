@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { neon } from "@neondatabase/serverless";
 import type { ReactNode } from "react";
 import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
@@ -12,8 +13,27 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const userName = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
 
+  // Load agency primary color for CSS variable injection (agentur plan only)
+  let agencyPrimary = "#8df3d3";
+  if (plan === "agentur") {
+    try {
+      const sql = neon(process.env.DATABASE_URL!);
+      const [row] = await sql`
+        SELECT primary_color FROM agency_settings
+        WHERE user_id = ${session.user.id} LIMIT 1
+      ` as { primary_color: string | null }[];
+      if (row?.primary_color) agencyPrimary = row.primary_color;
+    } catch { /* non-critical */ }
+  }
+
+  // Sanitize: only allow valid hex colors to prevent CSS injection
+  const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(agencyPrimary) ? agencyPrimary : "#8df3d3";
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#0b0c10" }}>
+
+      {/* CSS custom properties — available throughout the dashboard */}
+      <style>{`:root { --agency-primary: ${safeColor}; --agency-primary-bg: ${safeColor}18; --agency-primary-border: ${safeColor}35; }`}</style>
 
       {/* SIDEBAR — desktop */}
       <aside className="dashboard-sidebar" style={{
