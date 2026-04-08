@@ -11,7 +11,7 @@ const WEBSITE_CHECKS = [
   { label: "WordPress-Fehler", desc: "Critical Error, White Screen, 500er" },
   { label: "SEO Grundlagen", desc: "Title, Meta, H1, Canonical, Indexierung" },
   { label: "robots.txt & Sitemap", desc: "Vorhanden und korrekt konfiguriert?" },
-  { label: "HTTPS", desc: "Verschlüsselte Verbindung aktiv?" },
+  { label: "HTTPS & SSL", desc: "Verschlüsselung aktiv und gültig?" },
   { label: "Formular-Check", desc: "Kontaktformular vorhanden?" },
   { label: "Erreichbarkeit", desc: "Lädt die Seite überhaupt?" },
 ];
@@ -35,6 +35,9 @@ const MANUAL_CHECKS = [
   { title: "Animationen", desc: "Animationen mit prefers-reduced-motion Support?" },
 ];
 
+const WEBSITE_STEPS = ["Website abrufen...", "HTML analysieren...", "SEO & Technik prüfen...", "KI erstellt Diagnose..."];
+const WCAG_STEPS = ["HTML abrufen...", "WCAG 2.1 Scan starten (50+ Kriterien)...", "Alt-Texte, Labels, Kontrast prüfen...", "KI erstellt Diagnose..."];
+
 function renderDiagnose(text: string) {
   return text.split("\n").map((line, i) => {
     if (line.startsWith("## ")) return <h3 key={i} style={{ fontSize: 16, margin: "20px 0 8px", fontWeight: 700, color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 8 }}>{line.replace("## ", "")}</h3>;
@@ -48,9 +51,64 @@ function renderDiagnose(text: string) {
   });
 }
 
+function ChecksGrid({ checks }: { checks: { label: string; desc: string }[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+      {checks.map((item, i) => (
+        <div key={i} style={{
+          padding: "18px 20px",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.02)",
+        }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8df3d3", marginBottom: 10 }} />
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: "#fff" }}>{item.label}</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{item.desc}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScanningState({ steps }: { steps: string[] }) {
+  return (
+    <div style={{ padding: "24px 28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 24 }}>
+      {steps.map((s, i) => (
+        <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: i < steps.length - 1 ? 10 : 0 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#8df3d3", flexShrink: 0 }} />
+          {s}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LoginCta() {
+  return (
+    <div style={{
+      padding: "24px 28px",
+      border: "1px solid rgba(141,243,211,0.15)",
+      borderRadius: 12,
+      background: "rgba(141,243,211,0.02)",
+    }}>
+      <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        Mehr Scans & Historie
+      </p>
+      <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
+        Mit einem kostenlosen Account speicherst du alle Scans und kannst Websites regelmäßig überwachen.
+      </p>
+      <Link href="/login" style={{
+        display: "inline-block", padding: "10px 20px", borderRadius: 9, textDecoration: "none",
+        background: "#fff", color: "#0b0c10", fontWeight: 700, fontSize: 14,
+      }}>
+        Kostenlos registrieren
+      </Link>
+    </div>
+  );
+}
+
 export default function ScanPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("website");
-
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ScanState>("idle");
   const [diagnose, setDiagnose] = useState("");
@@ -86,11 +144,16 @@ export default function ScanPage() {
     } catch { setWcagError("Verbindungsfehler."); setWcagState("error"); }
   }
 
-  const inputStyle = {
-    flex: 1, minWidth: 260,
-    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 10, padding: "12px 16px", color: "#fff" as const, fontSize: 15, outline: "none",
+  const inputStyle: React.CSSProperties = {
+    flex: 1, minWidth: 240,
+    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 10, padding: "13px 18px", color: "#fff", fontSize: 15, outline: "none",
   };
+
+  const TABS: { key: ActiveTab; label: string; badge?: string }[] = [
+    { key: "website", label: "Website-Check" },
+    { key: "wcag", label: "Barrierefreiheit", badge: "WCAG 2.1" },
+  ];
 
   return (
     <>
@@ -107,32 +170,47 @@ export default function ScanPage() {
         </div>
       </nav>
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "52px 24px 80px" }}>
+      <main style={{ maxWidth: 860, margin: "0 auto", padding: "56px 24px 80px" }}>
 
         {/* HERO */}
-        <div style={{ marginBottom: 48 }}>
-          <h1 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, margin: "0 0 12px", letterSpacing: "-0.03em" }}>
-            Website scannen
+        <div style={{ marginBottom: 40, textAlign: "center" }}>
+          <div style={{
+            display: "inline-block", marginBottom: 20,
+            padding: "4px 14px", borderRadius: 20,
+            border: "1px solid rgba(141,243,211,0.2)",
+            fontSize: 12, color: "#8df3d3", fontWeight: 600, letterSpacing: "0.04em",
+          }}>
+            WCAG · SEO · Performance · Kostenlos
+          </div>
+          <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 700, margin: "0 0 14px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+            Website kostenlos scannen
           </h1>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", margin: 0 }}>
-            URL eingeben — KI erklärt was kaputt ist. Kostenlos, ohne Anmeldung.
+          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.45)", margin: "0 auto", maxWidth: 480, lineHeight: 1.7 }}>
+            KI erklärt jeden Fehler auf Deutsch und liefert den konkreten Fix. Ohne Anmeldung.
           </p>
         </div>
 
         {/* TABS */}
-        <div style={{ display: "flex", gap: 0, marginBottom: 32, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          {([
-            { key: "website" as ActiveTab, label: "Website-Check" },
-            { key: "wcag" as ActiveTab, label: "Barrierefreiheit (WCAG)" },
-          ]).map(tab => (
+        <div style={{ display: "flex", gap: 6, marginBottom: 24, justifyContent: "center" }}>
+          {TABS.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-              padding: "10px 20px", background: "none", border: "none", cursor: "pointer",
-              fontSize: 14, fontWeight: activeTab === tab.key ? 600 : 400,
-              color: activeTab === tab.key ? "#fff" : "rgba(255,255,255,0.35)",
-              borderBottom: activeTab === tab.key ? "2px solid #fff" : "2px solid transparent",
-              marginBottom: -1,
+              padding: "9px 20px", border: "none", cursor: "pointer", borderRadius: 8,
+              fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 8,
+              background: activeTab === tab.key ? "rgba(255,255,255,0.1)" : "transparent",
+              color: activeTab === tab.key ? "#fff" : "rgba(255,255,255,0.4)",
+              outline: activeTab === tab.key ? "1px solid rgba(255,255,255,0.12)" : "none",
+              transition: "all 0.15s",
             }}>
               {tab.label}
+              {tab.badge && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                  background: activeTab === tab.key ? "rgba(141,243,211,0.15)" : "rgba(255,255,255,0.06)",
+                  color: activeTab === tab.key ? "#8df3d3" : "rgba(255,255,255,0.3)",
+                }}>
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -140,30 +218,29 @@ export default function ScanPage() {
         {/* WEBSITE-CHECK */}
         {activeTab === "website" && (
           <>
-            <form onSubmit={handleScan} style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>
+            <form onSubmit={handleScan} style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
               <label htmlFor="scan-url" className="sr-only">Website-URL eingeben</label>
-              <input id="scan-url" type="text" value={url} onChange={e => setUrl(e.target.value)}
-                placeholder="https://deine-website.de" disabled={state === "scanning"} style={inputStyle} />
+              <input
+                id="scan-url" type="text" value={url}
+                onChange={e => setUrl(e.target.value)}
+                placeholder="https://deine-website.de"
+                disabled={state === "scanning"} style={inputStyle}
+              />
               <button type="submit" disabled={state === "scanning" || !url} style={{
-                padding: "12px 24px", borderRadius: 10, border: "none",
+                padding: "13px 28px", borderRadius: 10, border: "none",
                 background: !url || state === "scanning" ? "rgba(255,255,255,0.08)" : "#fff",
                 color: !url || state === "scanning" ? "rgba(255,255,255,0.3)" : "#0b0c10",
                 fontWeight: 700, fontSize: 14, cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
+                whiteSpace: "nowrap",
               }}>
                 {state === "scanning" ? "Scannt..." : "Jetzt scannen"}
               </button>
             </form>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 36, textAlign: "center" }}>
+              Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
+            </p>
 
-            {state === "scanning" && (
-              <div style={{ padding: "24px 28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 24 }}>
-                {["Website abrufen...", "HTML analysieren...", "SEO & Technik prüfen...", "KI erstellt Diagnose..."].map((s, i) => (
-                  <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: i < 3 ? 10 : 0 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#8df3d3", flexShrink: 0 }} />
-                    {s}
-                  </div>
-                ))}
-              </div>
-            )}
+            {state === "scanning" && <ScanningState steps={WEBSITE_STEPS} />}
 
             {state === "error" && (
               <div style={{ padding: "14px 18px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 10, marginBottom: 24 }}>
@@ -185,38 +262,19 @@ export default function ScanPage() {
                     Neuer Scan
                   </button>
                 </div>
-
                 <div style={{ padding: "28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 16 }}>
                   {renderDiagnose(diagnose)}
                 </div>
-
-                <div style={{ padding: "24px 28px", border: "1px solid rgba(141,243,211,0.15)", borderRadius: 12, background: "rgba(141,243,211,0.02)" }}>
-                  <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.1em" }}>Mehr Scans & Historie</p>
-                  <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
-                    Mit einem kostenlosen Account speicherst du alle Scans und kannst Websites regelmäßig überwachen.
-                  </p>
-                  <Link href="/login" style={{
-                    display: "inline-block", padding: "10px 20px", borderRadius: 9, textDecoration: "none",
-                    background: "#fff", color: "#0b0c10", fontWeight: 700, fontSize: 14,
-                  }}>
-                    Kostenlos registrieren
-                  </Link>
-                </div>
+                <LoginCta />
               </div>
             )}
 
             {state === "idle" && (
-              <div style={{ marginTop: 40 }}>
-                <p style={{ margin: "0 0 20px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Was geprüft wird</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden" }}>
-                  {WEBSITE_CHECKS.map((item, i) => (
-                    <div key={i} style={{ padding: "20px 24px", background: "#0b0c10" }}>
-                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#8df3d3", marginBottom: 12 }} />
-                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{item.label}</div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{item.desc}</div>
-                    </div>
-                  ))}
-                </div>
+              <div>
+                <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                  Was geprüft wird
+                </p>
+                <ChecksGrid checks={WEBSITE_CHECKS} />
               </div>
             )}
           </>
@@ -225,34 +283,35 @@ export default function ScanPage() {
         {/* WCAG */}
         {activeTab === "wcag" && (
           <>
-            <div style={{ marginBottom: 20, padding: "5px 12px", display: "inline-block", borderRadius: 16, border: "1px solid rgba(141,243,211,0.2)", fontSize: 12, color: "#8df3d3", fontWeight: 600 }}>
-              WCAG 2.1 AA · axe-core · BFSG-relevant
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ padding: "4px 12px", display: "inline-block", borderRadius: 16, border: "1px solid rgba(141,243,211,0.2)", fontSize: 12, color: "#8df3d3", fontWeight: 600 }}>
+                WCAG 2.1 AA · axe-core · BFSG-relevant
+              </span>
             </div>
 
-            <form onSubmit={handleWcagScan} style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>
+            <form onSubmit={handleWcagScan} style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
               <label htmlFor="wcag-url" className="sr-only">Website-URL für WCAG-Scan</label>
-              <input id="wcag-url" type="text" value={wcagUrl} onChange={e => setWcagUrl(e.target.value)}
-                placeholder="https://deine-website.de" disabled={wcagState === "scanning"} style={inputStyle} />
+              <input
+                id="wcag-url" type="text" value={wcagUrl}
+                onChange={e => setWcagUrl(e.target.value)}
+                placeholder="https://deine-website.de"
+                disabled={wcagState === "scanning"} style={inputStyle}
+              />
               <button type="submit" disabled={wcagState === "scanning" || !wcagUrl} style={{
-                padding: "12px 24px", borderRadius: 10, border: "none",
+                padding: "13px 28px", borderRadius: 10, border: "none",
                 background: !wcagUrl || wcagState === "scanning" ? "rgba(255,255,255,0.08)" : "#fff",
                 color: !wcagUrl || wcagState === "scanning" ? "rgba(255,255,255,0.3)" : "#0b0c10",
                 fontWeight: 700, fontSize: 14, cursor: !wcagUrl || wcagState === "scanning" ? "not-allowed" : "pointer",
+                whiteSpace: "nowrap",
               }}>
                 {wcagState === "scanning" ? "Scannt..." : "Jetzt prüfen"}
               </button>
             </form>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 36, textAlign: "center" }}>
+              Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
+            </p>
 
-            {wcagState === "scanning" && (
-              <div style={{ padding: "24px 28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 24 }}>
-                {["HTML abrufen...", "WCAG 2.1 Scan starten (50+ Kriterien)...", "Alt-Texte, Labels, Kontrast prüfen...", "KI erstellt Diagnose..."].map((s, i) => (
-                  <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: i < 3 ? 10 : 0 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#8df3d3", flexShrink: 0 }} />
-                    {s}
-                  </div>
-                ))}
-              </div>
-            )}
+            {wcagState === "scanning" && <ScanningState steps={WCAG_STEPS} />}
 
             {wcagState === "error" && (
               <div style={{ padding: "14px 18px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 10, marginBottom: 24 }}>
@@ -282,11 +341,10 @@ export default function ScanPage() {
                   {renderDiagnose(wcagDiagnose)}
                 </div>
 
-                {/* Manuelle Checks */}
                 <div style={{ padding: "24px 28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 16 }}>
-                  <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Transparenz</p>
+                  <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Transparenz</p>
                   <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700 }}>Was dieser Scan nicht prüfen kann</h3>
-                  <p style={{ margin: "0 0 20px", fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
                     Automatische Tools finden ~30–40% aller WCAG-Probleme. Diese Punkte brauchen einen manuellen Check:
                   </p>
                   <div style={{ display: "flex", flexDirection: "column" }}>
@@ -294,7 +352,7 @@ export default function ScanPage() {
                       <div key={i} style={{
                         padding: "12px 0",
                         borderBottom: i < MANUAL_CHECKS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                        display: "flex", gap: 16,
+                        display: "flex", gap: 16, alignItems: "flex-start",
                       }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", paddingTop: 2, flexShrink: 0, width: 20 }}>0{i + 1}</span>
                         <div>
@@ -309,28 +367,17 @@ export default function ScanPage() {
                   </p>
                 </div>
 
-                <Link href="/login" style={{
-                  display: "inline-block", padding: "10px 20px", borderRadius: 9, textDecoration: "none",
-                  background: "#fff", color: "#0b0c10", fontWeight: 700, fontSize: 14,
-                }}>
-                  Scan-Historie im Dashboard speichern
-                </Link>
+                <LoginCta />
               </div>
             )}
 
             {wcagState === "idle" && (
-              <div style={{ marginTop: 8 }}>
-                <p style={{ margin: "0 0 20px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Was geprüft wird</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
-                  {WCAG_CHECKS.map((item, i) => (
-                    <div key={i} style={{ padding: "20px 24px", background: "#0b0c10" }}>
-                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#8df3d3", marginBottom: 12 }} />
-                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{item.label}</div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{item.desc}</div>
-                    </div>
-                  ))}
-                </div>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+              <div>
+                <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                  Was geprüft wird
+                </p>
+                <ChecksGrid checks={WCAG_CHECKS} />
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.6, marginTop: 16 }}>
                   Basiert auf axe-core — dem Standard-Tool für WCAG 2.1 AA. Seit dem 28. Juni 2025 gilt das BFSG in Deutschland.{" "}
                   <Link href="/blog/bfsg-2025-was-webagenturen-wissen-muessen" style={{ color: "#8df3d3" }}>Mehr erfahren</Link>
                 </p>

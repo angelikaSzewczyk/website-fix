@@ -37,19 +37,17 @@ export default function BlogIndexPage() {
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-          gap: 1,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 12,
-          overflow: "hidden",
+          gap: 16,
         }}>
           {posts.map((p) => {
             const fm = p.frontmatter;
             const catColor = CATEGORY_COLORS[fm.category ?? ""] ?? "#8df3d3";
             return (
               <article key={p.slug} style={{
-                background: "#0b0c10",
-                padding: "28px 28px 24px",
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 12,
+                padding: "24px",
                 display: "flex",
                 flexDirection: "column",
                 gap: 12,
