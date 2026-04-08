@@ -30,6 +30,7 @@ const C = {
   greenBg:     "#F0FDF4",
   greenDot:    "#22C55E",
   amber:       "#D97706",
+  amberBg:     "#FFFBEB",
   amberDot:    "#F59E0B",
   red:         "#DC2626",
   redBg:       "#FEF2F2",
