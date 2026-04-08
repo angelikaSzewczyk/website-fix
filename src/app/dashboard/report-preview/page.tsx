@@ -184,11 +184,26 @@ export default async function ReportPreviewPage() {
           page-break-inside: avoid !important;
         }
 
+        /* BFSG always starts on a fresh page */
+        .rp-page-break-before {
+          break-before: page !important;
+          page-break-before: always !important;
+        }
+
         /* Cards inside sections */
         .rp-card {
           box-shadow: none !important;
           border: 1px solid #E2E8F0 !important;
           border-radius: 10px !important;
+        }
+
+        /* Compact print spacing — reduce section padding */
+        #report-document .rp-section {
+          padding-top: 18px !important;
+          padding-bottom: 18px !important;
+        }
+        #report-document .rp-page-break-before {
+          padding-top: 24px !important;
         }
       }
     `}</style>
@@ -367,7 +382,7 @@ export default async function ReportPreviewPage() {
         </div>
 
         {/* ══ BFSG 2025 ══ */}
-        <div className="rp-section" style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
+        <div className="rp-section rp-page-break-before" style={{ padding: "28px 40px", borderBottom: `1px solid ${C.divider}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
             <div style={{
               width: 40, height: 40, borderRadius: 11, flexShrink: 0,
