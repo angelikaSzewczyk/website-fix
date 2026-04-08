@@ -3,41 +3,238 @@ import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import Link from "next/link";
 import PrintButton from "./print-button";
+import { CopyCodeButton, JiraExportButton, ResolvedButton } from "./issue-actions";
+
+// ─── Light-mode tokens ────────────────────────────────────────────────────────
+const C = {
+  bg:          "#F8FAFC",
+  card:        "#FFFFFF",
+  border:      "#E2E8F0",
+  divider:     "#F1F5F9",
+  shadow:      "0 1px 4px rgba(0,0,0,0.07)",
+  shadowMd:    "0 2px 8px rgba(0,0,0,0.09)",
+  text:        "#0F172A",
+  textSub:     "#475569",
+  textMuted:   "#94A3B8",
+  blue:        "#2563EB",
+  blueBg:      "#EFF6FF",
+  blueBorder:  "#BFDBFE",
+  green:       "#16A34A",
+  greenBg:     "#F0FDF4",
+  greenDot:    "#22C55E",
+  amber:       "#D97706",
+  amberBg:     "#FFFBEB",
+  amberBorder: "#FDE68A",
+  red:         "#DC2626",
+  redBg:       "#FEF2F2",
+  redBorder:   "#FCA5A5",
+  redDot:      "#EF4444",
+};
 
 type Scan = {
-  id: string;
-  url: string;
-  type: string;
-  created_at: string;
-  issue_count: number | null;
-  result: string | null;
+  id: string; url: string; type: string;
+  created_at: string; issue_count: number | null; result: string | null;
 };
-
-const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  website:     { label: "Website-Check",    icon: "🔍", color: "#7aa6ff" },
-  wcag:        { label: "Barrierefreiheit", icon: "♿", color: "#8df3d3" },
-  performance: { label: "Performance",      icon: "⚡", color: "#ffd93d" },
-};
-
-function renderDiagnose(text: string) {
-  return text.split("\n").map((line, i) => {
-    if (line.startsWith("## ")) {
-      return <h3 key={i} style={{ fontSize: 17, margin: "24px 0 10px", fontWeight: 700, color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.07)", paddingBottom: 8 }}>{line.replace("## ", "")}</h3>;
-    }
-    if (line.startsWith("**🔴")) return <div key={i} style={{ margin: "12px 0 4px", fontWeight: 700, color: "#ff6b6b", fontSize: 15 }}>{line.replace(/\*\*/g, "")}</div>;
-    if (line.startsWith("**🟡")) return <div key={i} style={{ margin: "12px 0 4px", fontWeight: 700, color: "#ffd93d", fontSize: 15 }}>{line.replace(/\*\*/g, "")}</div>;
-    if (line.startsWith("**🟢")) return <div key={i} style={{ margin: "12px 0 4px", fontWeight: 700, color: "#8df3d3", fontSize: 15 }}>{line.replace(/\*\*/g, "")}</div>;
-    if (line.match(/^\d+\./)) return <div key={i} style={{ margin: "6px 0", paddingLeft: 20, color: "rgba(255,255,255,0.85)", fontSize: 14, lineHeight: 1.6 }}>{line}</div>;
-    if (line.startsWith("# ")) return null;
-    if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
-    return <p key={i} style={{ margin: "4px 0", color: "rgba(255,255,255,0.65)", fontSize: 14, lineHeight: 1.7 }}>{line}</p>;
-  });
-}
 
 type AgencySettings = {
-  agency_name: string | null;
-  logo_url: string | null;
-  primary_color: string | null;
+  agency_name: string | null; logo_url: string | null; primary_color: string | null;
+};
+
+type IssueBlock = {
+  severity: "red" | "yellow" | "green";
+  emoji: string;
+  title: string;
+  body: string[];
+  steps: string[];
+};
+
+function parseIssues(text: string): IssueBlock[] {
+  const issues: IssueBlock[] = [];
+  let current: IssueBlock | null = null;
+
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("# ") || line.startsWith("## ")) {
+      continue;
+    }
+    if (line.startsWith("**🔴") || line.startsWith("**🔴")) {
+      if (current) issues.push(current);
+      current = { severity: "red", emoji: "🔴", title: line.replace(/\*\*/g, "").replace(/^🔴\s*/, "").trim(), body: [], steps: [] };
+    } else if (line.startsWith("**🟡")) {
+      if (current) issues.push(current);
+      current = { severity: "yellow", emoji: "🟡", title: line.replace(/\*\*/g, "").replace(/^🟡\s*/, "").trim(), body: [], steps: [] };
+    } else if (line.startsWith("**🟢")) {
+      if (current) issues.push(current);
+      current = { severity: "green", emoji: "🟢", title: line.replace(/\*\*/g, "").replace(/^🟢\s*/, "").trim(), body: [], steps: [] };
+    } else if (current) {
+      if (line.match(/^\d+\./)) {
+        current.steps.push(line);
+      } else {
+        current.body.push(line);
+      }
+    }
+  }
+  if (current) issues.push(current);
+  return issues;
+}
+
+function HealthRing({ score }: { score: number }) {
+  const r = 52;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - score / 100);
+  const color = score >= 80 ? C.green : score >= 50 ? C.amber : C.red;
+  const bg = score >= 80 ? C.greenBg : score >= 50 ? C.amberBg : C.redBg;
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      padding: "20px 32px", background: bg,
+      border: `1px solid ${score >= 80 ? "#A7F3D0" : score >= 50 ? C.amberBorder : C.redBorder}`,
+      borderRadius: 16, minWidth: 160,
+    }}>
+      <div style={{ position: "relative", width: 120, height: 120 }}>
+        <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: "rotate(-90deg)" }}>
+          {/* Track */}
+          <circle cx="60" cy="60" r={r} fill="none" stroke={`${color}20`} strokeWidth="10" />
+          {/* Progress */}
+          <circle
+            cx="60" cy="60" r={r} fill="none"
+            stroke={color} strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={offset}
+            style={{ transition: "stroke-dashoffset 0.6s ease" }}
+          />
+        </svg>
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color, letterSpacing: "-0.03em", lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Score</span>
+        </div>
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub, marginTop: 8 }}>
+        {score >= 80 ? "Sehr gut" : score >= 60 ? "Gut" : score >= 40 ? "Verbesserungsbedarf" : "Kritisch"}
+      </span>
+    </div>
+  );
+}
+
+function IssueCard({ issue }: { issue: IssueBlock }) {
+  const isRed = issue.severity === "red";
+  const isYellow = issue.severity === "yellow";
+  const isGreen = issue.severity === "green";
+
+  const borderColor = isRed ? C.redBorder : isYellow ? C.amberBorder : "#A7F3D0";
+  const badgeColor  = isRed ? C.red    : isYellow ? C.amber    : C.green;
+  const badgeBg     = isRed ? C.redBg  : isYellow ? C.amberBg  : C.greenBg;
+  const stripeColor = isRed ? C.red    : isYellow ? C.amber    : C.green;
+  const priorityLabel = isRed ? "Kritisch" : isYellow ? "Warnung" : "OK";
+
+  const codeContent = issue.steps.join("\n");
+  const descText = issue.body.join(" ");
+
+  return (
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 14,
+      boxShadow: C.shadow,
+      overflow: "hidden",
+    }}>
+      {/* Colored left stripe */}
+      <div style={{ height: 4, background: `linear-gradient(90deg, ${stripeColor}, ${stripeColor}66)` }} />
+
+      <div style={{ padding: "20px 24px" }}>
+        {/* Card header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{
+              fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
+              background: badgeBg, color: badgeColor, border: `1px solid ${borderColor}`,
+              letterSpacing: "0.04em",
+            }}>
+              {issue.emoji} {priorityLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* Issue title */}
+        <h3 style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>
+          {issue.title}
+        </h3>
+
+        {/* Description */}
+        {descText && (
+          <p style={{ margin: "0 0 16px", fontSize: 14, color: C.textSub, lineHeight: 1.75 }}>
+            {descText}
+          </p>
+        )}
+
+        {/* AI fix block */}
+        {codeContent && (
+          <div style={{
+            background: C.blueBg,
+            border: `1px solid ${C.blueBorder}`,
+            borderRadius: 12,
+            padding: "14px 16px",
+            marginBottom: 16,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  KI-Diagnose & Lösung
+                </span>
+              </div>
+              <CopyCodeButton code={codeContent} />
+            </div>
+            {/* Dark code block */}
+            <div style={{
+              background: "#0F172A",
+              borderRadius: 8,
+              padding: "14px 16px",
+              overflow: "auto",
+            }}>
+              <pre style={{ margin: 0, fontSize: 12, lineHeight: 1.7, color: "#e2e8f0", fontFamily: "'Fira Code', 'Cascadia Code', 'Courier New', monospace", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                {codeContent}
+              </pre>
+            </div>
+          </div>
+        )}
+
+        {/* Action footer */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <JiraExportButton title={issue.title} description={descText} />
+          <ResolvedButton />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Fallback: render non-issue lines as a readable text block */
+function FallbackDiagnose({ text }: { text: string }) {
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 28px", boxShadow: C.shadow }}>
+      {text.split("\n").map((line, i) => {
+        if (line.startsWith("## ")) return <h3 key={i} style={{ fontSize: 16, margin: "20px 0 8px", fontWeight: 700, color: C.text, borderBottom: `1px solid ${C.divider}`, paddingBottom: 8 }}>{line.replace("## ", "")}</h3>;
+        if (line.startsWith("# ")) return null;
+        if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
+        if (line.match(/^\d+\./)) return <div key={i} style={{ margin: "6px 0", paddingLeft: 18, color: C.textSub, fontSize: 14, lineHeight: 1.7 }}>{line}</div>;
+        return <p key={i} style={{ margin: "4px 0", color: C.textSub, fontSize: 14, lineHeight: 1.75 }}>{line}</p>;
+      })}
+    </div>
+  );
+}
+
+const TYPE_LABELS: Record<string, { label: string; color: string }> = {
+  website:     { label: "Website-Check",    color: C.blue },
+  wcag:        { label: "Barrierefreiheit", color: "#059669" },
+  performance: { label: "Performance",      color: C.amber },
 };
 
 export default async function ScanDetailPage({ params }: { params: { id: string } }) {
@@ -47,46 +244,42 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`
     SELECT id, url, type, created_at, issue_count, result
-    FROM scans
-    WHERE id = ${params.id}
-    LIMIT 1
+    FROM scans WHERE id = ${params.id} LIMIT 1
   ` as Scan[];
 
   const plan = (session.user as { plan?: string }).plan;
   let agencySettings: AgencySettings | null = null;
   if (plan === "agentur") {
-    const agRows = await sql`
-      SELECT agency_name, logo_url, primary_color FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1
-    `;
-    if (agRows[0]) agencySettings = agRows[0] as AgencySettings;
+    const ag = await sql`SELECT agency_name, logo_url, primary_color FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1`;
+    if (ag[0]) agencySettings = ag[0] as AgencySettings;
   }
 
   if (!rows[0]) notFound();
 
-  // Vorheriger Scan für Vergleich
   const prevRows = await sql`
-    SELECT issue_count, created_at FROM scans
+    SELECT issue_count FROM scans
     WHERE url = ${rows[0].url} AND type = ${rows[0].type}
       AND id != ${params.id} AND user_id = ${session.user.id}
     ORDER BY created_at DESC LIMIT 1
-  ` as { issue_count: number | null; created_at: string }[];
+  ` as { issue_count: number | null }[];
 
   const scan = rows[0];
   const typeInfo = TYPE_LABELS[scan.type] ?? TYPE_LABELS.website;
+  const issues = scan.result ? parseIssues(scan.result) : [];
+  const hasIssueCards = issues.length > 0;
 
-  const scoreColor = (n: number | null) =>
-    n === null ? "rgba(255,255,255,0.4)" : n === 0 ? "#8df3d3" : n <= 2 ? "#ffd93d" : "#ff6b6b";
+  // Health score
+  const healthScore = scan.issue_count === null
+    ? null
+    : Math.max(0, Math.round(100 - (scan.issue_count * 8)));
+
+  const prev = prevRows[0];
 
   return (
     <>
-      {/* WHITE-LABEL PRINT HEADER — nur sichtbar beim Drucken */}
+      {/* WHITE-LABEL PRINT HEADER */}
       {agencySettings?.agency_name && (
-        <div className="print-only" style={{
-          display: "none",
-          padding: "24px 40px 16px",
-          borderBottom: "2px solid #e5e7eb",
-          marginBottom: 24,
-        }}>
+        <div className="print-only" style={{ display: "none", padding: "24px 40px 16px", borderBottom: "2px solid #e5e7eb", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {agencySettings.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -100,77 +293,115 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
         </div>
       )}
 
-      <main style={{ maxWidth: 960, margin: "0 auto", padding: "48px 20px 80px" }}>
+      <main style={{ maxWidth: 920, margin: "0 auto", padding: "40px 24px 80px" }}>
 
-        {/* HEADER */}
-        <div style={{ marginBottom: 36 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{
-              padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 600,
-              background: `${typeInfo.color}15`, border: `1px solid ${typeInfo.color}30`, color: typeInfo.color,
-            }}>
-              {typeInfo.icon} {typeInfo.label}
-            </span>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-              {new Date(scan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px", letterSpacing: "-0.01em", wordBreak: "break-all" }}>
-            {scan.url}
-          </h1>
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            {scan.issue_count !== null && (
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-                background: `${scoreColor(scan.issue_count)}15`,
-                border: `1px solid ${scoreColor(scan.issue_count)}30`,
-                color: scoreColor(scan.issue_count),
+        {/* BACK */}
+        <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: C.textMuted, textDecoration: "none", marginBottom: 24 }}>
+          ← Dashboard
+        </Link>
+
+        {/* PAGE HEADER */}
+        <div style={{ display: "flex", gap: 24, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap" }}>
+          {/* Left: title + meta */}
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+              <span style={{
+                padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 700,
+                background: `${typeInfo.color}12`, border: `1px solid ${typeInfo.color}30`, color: typeInfo.color,
+                letterSpacing: "0.04em",
               }}>
-                {scan.issue_count === 0 ? "✓ Keine Probleme gefunden" : `${scan.issue_count} Problem${scan.issue_count !== 1 ? "e" : ""} gefunden`}
-              </div>
-            )}
-            {prevRows[0] && scan.issue_count !== null && prevRows[0].issue_count !== null && (
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", gap: 6 }}>
-                vs. letzter Scan:
-                {scan.issue_count < prevRows[0].issue_count ? (
-                  <span style={{ color: "#8df3d3", fontWeight: 600 }}>↓ {prevRows[0].issue_count - scan.issue_count} weniger Probleme</span>
-                ) : scan.issue_count > prevRows[0].issue_count ? (
-                  <span style={{ color: "#ff6b6b", fontWeight: 600 }}>↑ {scan.issue_count - prevRows[0].issue_count} mehr Probleme</span>
-                ) : (
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>= unverändert</span>
-                )}
-              </div>
-            )}
+                {typeInfo.label}
+              </span>
+              <span style={{ fontSize: 12, color: C.textMuted }}>
+                {new Date(scan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+
+            <h1 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 14px", color: C.text, letterSpacing: "-0.01em", wordBreak: "break-all" }}>
+              {scan.url}
+            </h1>
+
+            {/* Issue count summary */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              {scan.issue_count !== null && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                  background: scan.issue_count === 0 ? C.greenBg : scan.issue_count <= 3 ? C.amberBg : C.redBg,
+                  border: `1px solid ${scan.issue_count === 0 ? "#A7F3D0" : scan.issue_count <= 3 ? C.amberBorder : C.redBorder}`,
+                  color: scan.issue_count === 0 ? C.green : scan.issue_count <= 3 ? C.amber : C.red,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
+                  {scan.issue_count === 0 ? "Keine Probleme" : `${scan.issue_count} Problem${scan.issue_count !== 1 ? "e" : ""} gefunden`}
+                </span>
+              )}
+              {prev && scan.issue_count !== null && prev.issue_count !== null && (
+                <span style={{ fontSize: 13, color: C.textMuted }}>
+                  {scan.issue_count < prev.issue_count
+                    ? <span style={{ color: C.green, fontWeight: 600 }}>↓ {prev.issue_count - scan.issue_count} weniger als letzter Scan</span>
+                    : scan.issue_count > prev.issue_count
+                      ? <span style={{ color: C.red, fontWeight: 600 }}>↑ {scan.issue_count - prev.issue_count} mehr als letzter Scan</span>
+                      : <span>= unverändert</span>
+                  }
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Right: Health Score ring */}
+          {healthScore !== null && <HealthRing score={healthScore} />}
         </div>
 
-        {/* DIAGNOSE */}
+        {/* ISSUE CARDS or fallback text */}
         {scan.result ? (
-          <div style={{
-            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 16, padding: "32px 32px",
-          }}>
-            {renderDiagnose(scan.result)}
-          </div>
+          hasIssueCards ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Summary row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  {issues.length} Befund{issues.length !== 1 ? "e" : ""}
+                </span>
+                <div style={{ flex: 1, height: 1, background: C.border }} />
+                <div style={{ display: "flex", gap: 8 }}>
+                  {["red", "yellow", "green"].map(sev => {
+                    const n = issues.filter(i => i.severity === sev).length;
+                    if (!n) return null;
+                    const color = sev === "red" ? C.red : sev === "yellow" ? C.amber : C.green;
+                    const bg = sev === "red" ? C.redBg : sev === "yellow" ? C.amberBg : C.greenBg;
+                    const emoji = sev === "red" ? "🔴" : sev === "yellow" ? "🟡" : "🟢";
+                    return (
+                      <span key={sev} style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 10, background: bg, color }}>
+                        {emoji} {n}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {issues.map((issue, i) => <IssueCard key={i} issue={issue} />)}
+            </div>
+          ) : (
+            <FallbackDiagnose text={scan.result} />
+          )
         ) : (
-          <div style={{ padding: "48px 20px", textAlign: "center", color: "rgba(255,255,255,0.3)" }}>
+          <div style={{ padding: "48px 20px", textAlign: "center", background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14, color: C.textMuted }}>
             Keine Diagnose gespeichert — bitte starte einen neuen Scan.
           </div>
         )}
 
         {/* ACTIONS */}
-        <div style={{ marginTop: 24, display: "flex", gap: 10, flexWrap: "wrap" }} className="no-print">
+        <div style={{ marginTop: 28, display: "flex", gap: 10, flexWrap: "wrap" }} className="no-print">
           <Link href="/dashboard/scan" style={{
-            padding: "11px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 600,
-            background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", color: "#0b0c10",
+            padding: "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 700,
+            background: C.blue, color: "#fff",
+            boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
           }}>
             Neuer Scan →
           </Link>
           <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
           <Link href="/dashboard" style={{
-            padding: "11px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14,
-            border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
+            padding: "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14,
+            border: `1px solid ${C.border}`, color: C.textSub, background: C.card,
           }}>
             Dashboard
           </Link>
