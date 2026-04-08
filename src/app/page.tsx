@@ -11,78 +11,104 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     num: "01",
-    label: "Überwachen",
-    title: "Monitoring & WCAG",
-    desc: "Alle Kunden-Websites werden täglich automatisch auf Uptime, SSL, Performance und WCAG-Verstöße geprüft. Du erfährst von Problemen, bevor der Kunde anruft.",
+    label: "Connect & Sync",
+    title: "Alles in Sekunden verknüpft",
+    desc: "Verknüpfe deine Kunden-Websites und deine Workflow-Tools (Jira, Trello, Asana) in Sekunden. Kein Plugin, kein Hosting-Zugang — einfach URL eintragen und los.",
     color: "#7aa6ff",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
       </svg>
     ),
-    pills: ["Uptime-Check", "SSL-Monitoring", "WCAG 2.1 AA", "Sofort-Alert"],
+    pills: ["1-Klick Setup", "Jira · Trello · Asana", "Kein Plugin nötig"],
   },
   {
     num: "02",
-    label: "Lösen",
-    title: "KI-Assistent & Jira",
-    desc: "Für jeden gefundenen Fehler generiert die KI sofort einen konkreten Code-Fix. Komplexe Issues werden als Jira-Ticket delegiert — direkt aus dem Dashboard.",
+    label: "Automatischer Deep-Scan",
+    title: "KI übernimmt den Wachdienst",
+    desc: "Die KI scannt täglich oder wöchentlich auf BFSG-Konformität, Technik-Fehler und Performance. Fehler landen automatisch als Ticket — direkt wo dein Team arbeitet.",
     color: "#8df3d3",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
       </svg>
     ),
-    pills: ["KI-Code-Fix", "Jira-Integration", "Slack-Alerts", "Audit-Trail"],
+    pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich"],
   },
   {
     num: "03",
-    label: "Beweisen",
-    title: "White-Label Reports",
-    desc: "Am Monatsende wird automatisch ein professioneller Report mit deinem Logo, deiner Farbe und KI-generierter Management-Zusammenfassung an jeden Kunden versendet.",
+    label: "White-Label Reporting",
+    title: "Kassierende Reports in deinem Design",
+    desc: "Kassiere monatlich für deine Wartung mit professionellen Reports in DEINEM Agentur-Design. Automatisch generiert, automatisch versendet — mit deinem Logo und deiner Farbe.",
     color: "#c084fc",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
       </svg>
     ),
-    pills: ["Agentur-Branding", "KI-Zusammenfassung", "PDF-Export", "Auto-Versand"],
+    pills: ["Dein Logo & Farben", "KI-Zusammenfassung", "Auto-Versand"],
   },
 ];
 
-const BENTO = [
+const BENEFITS = [
   {
-    title: "24/7 Monitoring",
-    desc: "SSL, Uptime, Security Headers — für alle Kunden-Websites gleichzeitig. Täglich automatisch, ohne manuellen Aufwand.",
-    color: "#7aa6ff",
-    pill: "Automatisch",
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
-    wide: true,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+    ),
+    iconBg: "#F0FDF4",
+    iconBorder: "#A7F3D0",
+    iconColor: "#16A34A",
+    label: "Mehr Umsatz",
+    title: "BFSG als neues Service-Paket",
+    desc: "Verkaufe BFSG-Compliance als eigenständiges Wartungspaket und fakturiere monatlich — ohne zusätzlichen Aufwand.",
   },
   {
-    title: "Sofort-Alert",
-    desc: "Du weißt von Problemen, bevor der Kunde anruft. Klare Diagnose, sofort per E-Mail.",
-    color: "#ffd93d",
-    pill: "Proaktiv",
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-    wide: true,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    ),
+    iconBg: "#EFF6FF",
+    iconBorder: "#BFDBFE",
+    iconColor: "#2563EB",
+    label: "Weniger Haftung",
+    title: "BFSG 2025 automatisch im Griff",
+    desc: "Wir überwachen die gesetzlichen Anforderungen (BFSG 2025) für dich — und dokumentieren alles lückenlos für den Ernstfall.",
   },
   {
-    title: "Auto-Monatsbericht",
-    desc: "PDF mit deinem Logo wird am 1. jeden Monats automatisch an jeden Kunden gesendet.",
-    color: "#8df3d3",
-    pill: "White-Label",
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
-    wide: false,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    ),
+    iconBg: "#FFFBEB",
+    iconBorder: "#FDE68A",
+    iconColor: "#D97706",
+    label: "Integrierter Workflow",
+    title: "Kein Tool-Hopping mehr",
+    desc: "Kein Tool-Hopping. Fehler landen direkt da, wo dein Team arbeitet — als Jira-Ticket, Trello-Karte oder Asana-Task.",
   },
   {
-    title: "KI-Code-Fix",
-    desc: "Jeder Fehler kommt mit einem konkreten, sofort einsetzbaren Code-Fix auf Deutsch.",
-    color: "#c084fc",
-    pill: "KI-gestützt",
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-    wide: false,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+    iconBg: "#F5F3FF",
+    iconBorder: "#DDD6FE",
+    iconColor: "#7C3AED",
+    label: "Kunden-Bindung",
+    title: "Reports die Kunden begeistern",
+    desc: "Monatliche Reports zeigen deinen Kunden schwarz auf weiß, was du für sie tust — und warum sie ohne dich nicht auskommen.",
   },
 ];
 
@@ -520,66 +546,175 @@ export default function Page() {
           </div>
         </section>
 
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-        {/* AGENCY BENTO */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(122,166,255,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Für Agenturen</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: 0, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-                30 Websites.<br />Null manuelle Reports.
+        {/* ── AGENTUR-VORTEILE ── */}
+        <section style={{ background: "#ffffff", padding: "80px 24px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum Agenturen uns wählen</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+                Vier Gründe, die dein Business verändern.
               </h2>
+              <p style={{ margin: 0, fontSize: 15, color: "#64748B", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+                Mehr Marge, weniger Risiko, glücklichere Kunden. Das ist kein Versprechen — das ist das System.
+              </p>
             </div>
-            <Link href="/fuer-agenturen" style={{
-              padding: "10px 20px", borderRadius: 9, fontSize: 13, fontWeight: 600,
-              border: "1px solid rgba(122,166,255,0.25)", color: "#7aa6ff",
-              textDecoration: "none", background: "rgba(122,166,255,0.06)", whiteSpace: "nowrap",
-            }}>
-              Mehr erfahren →
-            </Link>
-          </div>
 
-          {/* Bento grid: 2 wide top, 2 narrow bottom */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {BENTO.map((item, i) => (
-              <div key={i} style={{
-                padding: item.wide ? "28px 28px" : "22px 24px",
-                border: `1px solid ${item.color}18`,
-                borderRadius: 14,
-                background: `${item.color}07`,
-                position: "relative", overflow: "hidden",
-              }}>
-                {/* watermark */}
-                <div style={{
-                  position: "absolute", right: 16, bottom: 10,
-                  fontSize: 52, fontWeight: 900, color: `${item.color}06`,
-                  lineHeight: 1, pointerEvents: "none", userSelect: "none",
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              {BENEFITS.map(b => (
+                <div key={b.label} style={{
+                  background: "#FAFBFC",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: 16,
+                  padding: "28px 24px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                  display: "flex", flexDirection: "column", gap: 14,
                 }}>
-                  {String(i + 1).padStart(2, "0")}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <div style={{
-                    width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                    background: `${item.color}15`, border: `1px solid ${item.color}28`,
+                    width: 48, height: 48, borderRadius: 13, flexShrink: 0,
+                    background: b.iconBg, border: `1px solid ${b.iconBorder}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    color: item.color,
                   }}>
-                    {item.icon}
+                    {b.icon}
                   </div>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10,
-                    background: `${item.color}12`, color: item.color, border: `1px solid ${item.color}22`,
-                    letterSpacing: "0.06em",
-                  }}>
-                    {item.pill}
-                  </span>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: b.iconColor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
+                      {b.label}
+                    </div>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                      {b.title}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>{b.desc}</p>
+                  </div>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "#fff", marginBottom: 6 }}>{item.title}</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.65, maxWidth: 340 }}>{item.desc}</div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── INTEGRATIONS ── */}
+        <section style={{ background: "#F8FAFC", padding: "72px 24px", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              Integrationen
+            </p>
+            <h2 style={{ margin: "0 0 12px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#0F172A", letterSpacing: "-0.025em" }}>
+              Nahtlose Integration in deinen bestehenden Stack.
+            </h2>
+            <p style={{ margin: "0 0 48px", fontSize: 15, color: "#64748B", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              WebsiteFix verbindet sich mit den Tools, die dein Team bereits nutzt. Kein Umlernen, kein Chaos.
+            </p>
+
+            {/* Integration logos */}
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 48 }}>
+              {/* Slack */}
+              <div style={{
+                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
+                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                minWidth: 120,
+              }}>
+                <svg width="36" height="36" viewBox="0 0 54 54" fill="none">
+                  <path d="M19.7 33.3c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4h4v4z" fill="#E01E5A"/>
+                  <path d="M21.7 33.3c0-2.2 1.8-4 4-4s4 1.8 4 4v10c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10z" fill="#E01E5A"/>
+                  <path d="M25.7 19.7c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4v4h-4z" fill="#36C5F0"/>
+                  <path d="M25.7 21.7c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10c-2.2 0-4-1.8-4-4s1.8-4 4-4h10z" fill="#36C5F0"/>
+                  <path d="M39.3 25.7c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4h-4v-4z" fill="#2EB67D"/>
+                  <path d="M37.3 25.7c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10c0-2.2 1.8-4 4-4s4 1.8 4 4v10z" fill="#2EB67D"/>
+                  <path d="M33.3 39.3c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4v-4h4z" fill="#ECB22E"/>
+                  <path d="M33.3 37.3c-2.2 0-4-1.8-4-4s1.8-4 4-4h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10z" fill="#ECB22E"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Slack</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Sofort-Alerts</span>
               </div>
-            ))}
+
+              {/* Jira */}
+              <div style={{
+                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
+                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                minWidth: 120,
+              }}>
+                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+                  <defs>
+                    <linearGradient id="jira-g1" x1="17.8" y1="15.4" x2="10.9" y2="22.3" gradientUnits="userSpaceOnUse">
+                      <stop offset=".18" stopColor="#0052cc"/>
+                      <stop offset="1" stopColor="#2684ff"/>
+                    </linearGradient>
+                    <linearGradient id="jira-g2" x1="14.2" y1="16.6" x2="21.1" y2="9.7" gradientUnits="userSpaceOnUse">
+                      <stop offset=".18" stopColor="#0052cc"/>
+                      <stop offset="1" stopColor="#2684ff"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M15.9 2.1L2.1 15.9a1.4 1.4 0 000 2l6.1 6.1 7.7-7.7L22.7 10l-6.8-7.9z" fill="url(#jira-g1)"/>
+                  <path d="M16.1 29.9L29.9 16.1a1.4 1.4 0 000-2l-6.1-6.1-7.7 7.7-6.8 6.4 6.8 7.8z" fill="url(#jira-g2)"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Jira</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Auto-Tickets</span>
+              </div>
+
+              {/* Trello */}
+              <div style={{
+                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
+                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                minWidth: 120,
+              }}>
+                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+                  <rect width="32" height="32" rx="6" fill="#0079BF"/>
+                  <rect x="5" y="5" width="9" height="19" rx="2" fill="white"/>
+                  <rect x="18" y="5" width="9" height="13" rx="2" fill="white"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Trello</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Board-Karten</span>
+              </div>
+
+              {/* Asana */}
+              <div style={{
+                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
+                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                minWidth: 120,
+              }}>
+                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="10" r="6" fill="#F06A6A"/>
+                  <circle cx="7" cy="22" r="6" fill="#F06A6A"/>
+                  <circle cx="25" cy="22" r="6" fill="#F06A6A"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Asana</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Task-Erstellung</span>
+              </div>
+
+              {/* Mehr kommt */}
+              <div style={{
+                background: "#F8FAFC", border: "1px dashed #CBD5E1", borderRadius: 14,
+                padding: "20px 28px",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                minWidth: 120,
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 9,
+                  background: "#F1F5F9", border: "1px solid #E2E8F0",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, color: "#94A3B8",
+                }}>+</div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#94A3B8" }}>Mehr folgt</span>
+                <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>GitHub · Linear</span>
+              </div>
+            </div>
+
+            {/* Connection arrows hint */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "10px 20px", borderRadius: 999,
+                background: "#fff", border: "1px solid #E2E8F0",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                fontSize: 13, color: "#475569", fontWeight: 600,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.15)", flexShrink: 0 }} />
+                Scan fertig → Jira-Ticket erstellt → Slack-Alert gesendet
+              </div>
+            </div>
           </div>
         </section>
 
