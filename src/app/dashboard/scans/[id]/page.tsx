@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import Link from "next/link";
 import PrintButton from "./print-button";
-import { CopyCodeButton, JiraExportButton, ResolvedButton } from "./issue-actions";
+import IssueCardsClient, { type IssueBlock } from "./issue-cards-client";
 
 // ─── Light-mode tokens ────────────────────────────────────────────────────────
 const C = {
@@ -40,13 +40,6 @@ type AgencySettings = {
   agency_name: string | null; logo_url: string | null; primary_color: string | null;
 };
 
-type IssueBlock = {
-  severity: "red" | "yellow" | "green";
-  emoji: string;
-  title: string;
-  body: string[];
-  steps: string[];
-};
 
 function parseIssues(text: string): IssueBlock[] {
   const issues: IssueBlock[] = [];
@@ -117,101 +110,6 @@ function HealthRing({ score }: { score: number }) {
       <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub, marginTop: 8 }}>
         {score >= 80 ? "Sehr gut" : score >= 60 ? "Gut" : score >= 40 ? "Verbesserungsbedarf" : "Kritisch"}
       </span>
-    </div>
-  );
-}
-
-function IssueCard({ issue }: { issue: IssueBlock }) {
-  const isRed = issue.severity === "red";
-  const isYellow = issue.severity === "yellow";
-  const isGreen = issue.severity === "green";
-
-  const borderColor = isRed ? C.redBorder : isYellow ? C.amberBorder : "#A7F3D0";
-  const badgeColor  = isRed ? C.red    : isYellow ? C.amber    : C.green;
-  const badgeBg     = isRed ? C.redBg  : isYellow ? C.amberBg  : C.greenBg;
-  const stripeColor = isRed ? C.red    : isYellow ? C.amber    : C.green;
-  const priorityLabel = isRed ? "Kritisch" : isYellow ? "Warnung" : "OK";
-
-  const codeContent = issue.steps.join("\n");
-  const descText = issue.body.join(" ");
-
-  return (
-    <div style={{
-      background: C.card,
-      border: `1px solid ${C.border}`,
-      borderRadius: 14,
-      boxShadow: C.shadow,
-      overflow: "hidden",
-    }}>
-      {/* Colored left stripe */}
-      <div style={{ height: 4, background: `linear-gradient(90deg, ${stripeColor}, ${stripeColor}66)` }} />
-
-      <div style={{ padding: "20px 24px" }}>
-        {/* Card header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{
-              fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-              background: badgeBg, color: badgeColor, border: `1px solid ${borderColor}`,
-              letterSpacing: "0.04em",
-            }}>
-              {issue.emoji} {priorityLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Issue title */}
-        <h3 style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>
-          {issue.title}
-        </h3>
-
-        {/* Description */}
-        {descText && (
-          <p style={{ margin: "0 0 16px", fontSize: 14, color: C.textSub, lineHeight: 1.75 }}>
-            {descText}
-          </p>
-        )}
-
-        {/* AI fix block */}
-        {codeContent && (
-          <div style={{
-            background: C.blueBg,
-            border: `1px solid ${C.blueBorder}`,
-            borderRadius: 12,
-            padding: "14px 16px",
-            marginBottom: 16,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  KI-Diagnose & Lösung
-                </span>
-              </div>
-              <CopyCodeButton code={codeContent} />
-            </div>
-            {/* Dark code block */}
-            <div style={{
-              background: "#0F172A",
-              borderRadius: 8,
-              padding: "14px 16px",
-              overflow: "auto",
-            }}>
-              <pre style={{ margin: 0, fontSize: 12, lineHeight: 1.7, color: "#e2e8f0", fontFamily: "'Fira Code', 'Cascadia Code', 'Courier New', monospace", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                {codeContent}
-              </pre>
-            </div>
-          </div>
-        )}
-
-        {/* Action footer */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <JiraExportButton title={issue.title} description={descText} />
-          <ResolvedButton />
-        </div>
-      </div>
     </div>
   );
 }
@@ -355,31 +253,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
         {/* ISSUE CARDS or fallback text */}
         {scan.result ? (
           hasIssueCards ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Summary row */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  {issues.length} Befund{issues.length !== 1 ? "e" : ""}
-                </span>
-                <div style={{ flex: 1, height: 1, background: C.border }} />
-                <div style={{ display: "flex", gap: 8 }}>
-                  {["red", "yellow", "green"].map(sev => {
-                    const n = issues.filter(i => i.severity === sev).length;
-                    if (!n) return null;
-                    const color = sev === "red" ? C.red : sev === "yellow" ? C.amber : C.green;
-                    const bg = sev === "red" ? C.redBg : sev === "yellow" ? C.amberBg : C.greenBg;
-                    const emoji = sev === "red" ? "🔴" : sev === "yellow" ? "🟡" : "🟢";
-                    return (
-                      <span key={sev} style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 10, background: bg, color }}>
-                        {emoji} {n}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {issues.map((issue, i) => <IssueCard key={i} issue={issue} />)}
-            </div>
+            <IssueCardsClient issues={issues} />
           ) : (
             <FallbackDiagnose text={scan.result} />
           )

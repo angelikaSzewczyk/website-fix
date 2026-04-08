@@ -61,7 +61,7 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
     }}>
       {/* Logo */}
       <div style={{ padding: "20px 8px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+        <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 9,
             background: "linear-gradient(135deg, #007BFF, #0057b8)",
