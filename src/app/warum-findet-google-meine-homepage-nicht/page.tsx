@@ -56,7 +56,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
 
       <main>
         {/* HERO */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px 64px", textAlign: "center" }}>
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 56px", textAlign: "center" }}>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600,
             color: "#8df3d3", border: "1px solid rgba(141,243,211,0.3)", borderRadius: 100,
