@@ -30,14 +30,23 @@ export default function ReportActions({ currentMonth }: { currentMonth: string }
         onClick={sendReport}
         disabled={loading}
         style={{
-          padding: "10px 20px", borderRadius: 9, fontWeight: 700, fontSize: 13,
-          background: loading ? "rgba(255,255,255,0.1)" : "#fff",
-          color: loading ? "rgba(255,255,255,0.4)" : "#0b0c10",
+          padding: "10px 22px", borderRadius: 9, fontWeight: 700, fontSize: 13,
+          background: loading
+            ? "rgba(255,255,255,0.07)"
+            : "linear-gradient(90deg, #007BFF, #0057b8)",
+          color: loading ? "rgba(255,255,255,0.3)" : "#fff",
           border: "none", cursor: loading ? "not-allowed" : "pointer",
+          boxShadow: loading ? "none" : "0 2px 12px rgba(0,123,255,0.3)",
           transition: "opacity 0.15s", flexShrink: 0,
+          display: "flex", alignItems: "center", gap: 7,
         }}
       >
-        {loading ? "Wird gesendet..." : "Testbericht jetzt senden"}
+        {!loading && (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        )}
+        {loading ? "Wird gesendet…" : "Testbericht senden"}
       </button>
 
       {result?.ok && (

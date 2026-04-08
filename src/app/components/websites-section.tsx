@@ -88,12 +88,23 @@ export default function WebsitesSection() {
                 )}
               </div>
               {site.last_issue_count !== null && (
-                <div style={{ padding: "3px 10px", borderRadius: 16, fontSize: 12, fontWeight: 600, color: issueColor(site.last_issue_count), border: `1px solid ${issueColor(site.last_issue_count)}30`, background: `${issueColor(site.last_issue_count)}10`, whiteSpace: "nowrap" }}>
-                  {site.last_issue_count === 0 ? "✓ OK" : `${site.last_issue_count} Probleme`}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                    background: issueColor(site.last_issue_count),
+                    boxShadow: site.last_issue_count === 0 ? `0 0 5px ${issueColor(site.last_issue_count)}60` : "none",
+                  }} />
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+                    {site.last_issue_count === 0 ? "OK" : `${site.last_issue_count} Issues`}
+                  </span>
                 </div>
               )}
-              <Link href={`/dashboard/scan?url=${encodeURIComponent(site.url)}`} style={{ fontSize: 12, padding: "6px 12px", borderRadius: 8, textDecoration: "none", border: "1px solid rgba(141,243,211,0.2)", color: "#8df3d3", background: "rgba(141,243,211,0.05)", whiteSpace: "nowrap" }}>
-                Neu scannen
+              <Link href={`/dashboard/scan?url=${encodeURIComponent(site.url)}`} style={{
+                fontSize: 12, padding: "5px 11px", borderRadius: 7, textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.45)",
+                background: "none", whiteSpace: "nowrap",
+              }}>
+                Scannen →
               </Link>
               <button onClick={() => handleDelete(site.id)} style={{ fontSize: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", padding: "0 4px" }}>×</button>
             </div>

@@ -7,6 +7,7 @@ import ValueReportClient from "./value-report-client";
 type ReportRow = {
   id: number;
   month: string;
+  client_name: string | null;
   sent_at: string;
   website_count: number;
   ok_count: number;
@@ -36,7 +37,7 @@ export default async function ReportsPage() {
   const [reports, valueStats, websites] = await Promise.all([
 
     sql`
-      SELECT id, month, sent_at, website_count, ok_count, issue_count, avg_uptime_pct
+      SELECT id, month, client_name, sent_at, website_count, ok_count, issue_count, avg_uptime_pct
       FROM monthly_reports
       WHERE user_id = ${user.id}
       ORDER BY month DESC LIMIT 24
@@ -153,7 +154,7 @@ export default async function ReportsPage() {
         {reports.length === 0 ? (
           <div style={{
             border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12,
-            padding: "40px 32px", textAlign: "center",
+            padding: "40px 32px", textAlign: "center", background: "#13151a",
           }}>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, margin: "0 0 6px" }}>Noch kein Bericht vorhanden.</p>
             <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13, margin: 0 }}>
@@ -161,40 +162,70 @@ export default async function ReportsPage() {
             </p>
           </div>
         ) : (
-          <div className="scroll-x-sm" style={{ border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 100px 80px 80px 80px 120px",
-              minWidth: 580, padding: "10px 20px",
-              background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)",
-            }}>
-              {["Monat", "Websites", "OK", "Probleme", "Ø Uptime", "Versandt"].map(h => (
-                <span key={h} style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                  {h}
-                </span>
-              ))}
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {reports.map((r) => {
+              const date     = new Date(r.month);
+              const monthStr = date.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+              const sentStr  = new Date(r.sent_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+              const uptime   = r.avg_uptime_pct;
+              const uptimeColor = uptime >= 99 ? "#8df3d3" : uptime >= 95 ? "#ffd93d" : "#ff6b6b";
+              // First letter of client domain for avatar
+              const clientLabel = r.client_name ?? "?";
+              const avatarLetter = clientLabel.charAt(0).toUpperCase();
 
-            {reports.map((r, i) => {
-              const date      = new Date(r.month);
-              const monthStr  = date.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
-              const sentStr   = new Date(r.sent_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
               return (
                 <div key={r.id} style={{
-                  display: "grid", gridTemplateColumns: "1fr 100px 80px 80px 80px 120px",
-                  minWidth: 580, padding: "14px 20px",
-                  borderBottom: i < reports.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                  alignItems: "center",
+                  display: "flex", alignItems: "center", gap: 16,
+                  padding: "14px 20px", borderRadius: 11,
+                  background: "#13151a", border: "1px solid rgba(255,255,255,0.07)",
                 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{monthStr}</span>
-                  <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)" }}>{r.website_count}</span>
-                  <span style={{ fontSize: 14, color: "#22c55e", fontWeight: 600 }}>{r.ok_count}</span>
-                  <span style={{ fontSize: 14, color: r.issue_count > 0 ? "#ef4444" : "rgba(255,255,255,0.35)", fontWeight: r.issue_count > 0 ? 600 : 400 }}>
-                    {r.issue_count}
-                  </span>
-                  <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
-                    {r.avg_uptime_pct > 0 ? `${r.avg_uptime_pct}%` : "—"}
-                  </span>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{sentStr}</span>
+                  {/* Client avatar */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                    background: "rgba(0,123,255,0.1)", border: "1px solid rgba(0,123,255,0.2)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 14, fontWeight: 700, color: "#7aa6ff",
+                  }}>
+                    {avatarLetter}
+                  </div>
+
+                  {/* Primary info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {clientLabel}
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                      {monthStr}
+                    </div>
+                  </div>
+
+                  {/* Uptime indicator */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: "50%", background: uptimeColor,
+                      boxShadow: `0 0 6px ${uptimeColor}60`,
+                    }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: uptimeColor }}>
+                      {uptime > 0 ? `${uptime}%` : "—"}
+                    </span>
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Uptime</span>
+                  </div>
+
+                  {/* Issues pill */}
+                  <div style={{
+                    padding: "3px 10px", borderRadius: 16, flexShrink: 0,
+                    fontSize: 12, fontWeight: 600,
+                    color: r.issue_count > 0 ? "#ff6b6b" : "#8df3d3",
+                    background: r.issue_count > 0 ? "rgba(255,107,107,0.08)" : "rgba(141,243,211,0.06)",
+                    border: `1px solid ${r.issue_count > 0 ? "rgba(255,107,107,0.2)" : "rgba(141,243,211,0.15)"}`,
+                  }}>
+                    {r.issue_count > 0 ? `${r.issue_count} Issues` : "✓ Alles OK"}
+                  </div>
+
+                  {/* Sent date */}
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0, textAlign: "right", minWidth: 80 }}>
+                    {sentStr}
+                  </div>
                 </div>
               );
             })}

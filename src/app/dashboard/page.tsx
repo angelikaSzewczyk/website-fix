@@ -139,8 +139,8 @@ export default async function DashboardPage() {
         {/* HEADER */}
         <div style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Willkommen zurück</p>
-            <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 16px", letterSpacing: "-0.02em" }}>{firstName}</h1>
+            <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.25)", letterSpacing: "0.04em" }}>Willkommen zurück</p>
+            <h1 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 16px", letterSpacing: "-0.03em" }}>{firstName}</h1>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -342,25 +342,69 @@ export default async function DashboardPage() {
 
         {/* QUICK ACTIONS */}
         <div style={{ marginBottom: 48 }}>
-          <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Neuer Scan</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Neuer Scan</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
             {[
-              { href: "/dashboard/scan", label: "Website-Check", desc: "SEO, Technik, Erreichbarkeit", color: "#7aa6ff" },
-              { href: "/dashboard/scan?tab=wcag", label: "Barrierefreiheit", desc: "WCAG 2.1 AA · BFSG-relevant", color: "#8df3d3" },
-              { href: "/dashboard/scan?tab=performance", label: "Performance", desc: "Core Web Vitals, PageSpeed", color: "#ffd93d" },
+              {
+                href: "/dashboard/scan",
+                label: "Website-Check",
+                desc: "SEO, Technik, Erreichbarkeit",
+                color: "#7aa6ff",
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                ),
+              },
+              {
+                href: "/dashboard/scan?tab=wcag",
+                label: "Barrierefreiheit",
+                desc: "WCAG 2.1 AA · BFSG-relevant",
+                color: "#8df3d3",
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="2"/><path d="M12 10v6"/><path d="M9 13h6"/>
+                    <rect x="3" y="3" width="18" height="18" rx="4"/>
+                  </svg>
+                ),
+              },
+              {
+                href: "/dashboard/scan?tab=performance",
+                label: "Performance",
+                desc: "Core Web Vitals, PageSpeed",
+                color: "#ffd93d",
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                ),
+              },
             ].map(item => (
               <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>
                 <div style={{
-                  padding: "20px 22px",
+                  padding: "14px 16px",
                   border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: 12,
-                  background: "rgba(255,255,255,0.02)",
-                  transition: "border-color 0.15s",
+                  borderRadius: 11,
+                  background: "#13151a",
+                  display: "flex", alignItems: "center", gap: 12,
                 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, marginBottom: 14 }} />
-                  <div style={{ fontWeight: 600, fontSize: 15, color: "#fff", marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{item.desc}</div>
-                  <div style={{ fontSize: 13, color: item.color, marginTop: 12, fontWeight: 500 }}>Scan starten →</div>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                    background: `${item.color}12`,
+                    border: `1px solid ${item.color}22`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: item.color,
+                  }}>
+                    {item.icon}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: "#fff" }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{item.desc}</div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#4a90d9", flexShrink: 0 }}>
+                    Scannen&nbsp;→
+                  </span>
                 </div>
               </Link>
             ))}

@@ -87,9 +87,11 @@ export default function SeedReportPage() {
           onClick={handleDelete}
           disabled={isDeleting}
           style={{
-            padding: "11px 22px", borderRadius: 9, fontSize: 14,
-            background: "none", color: isDeleting ? "rgba(255,107,107,0.3)" : "#ff6b6b",
-            border: "1px solid rgba(255,107,107,0.25)", cursor: isDeleting ? "not-allowed" : "pointer",
+            padding: "11px 4px", fontSize: 13,
+            background: "none", border: "none",
+            color: isDeleting ? "rgba(255,255,255,0.2)" : "rgba(255,107,107,0.5)",
+            cursor: isDeleting ? "not-allowed" : "pointer",
+            textDecoration: "underline", textUnderlineOffset: 3,
           }}
         >
           {isDeleting ? "Löscht…" : "Seed-Daten löschen"}
