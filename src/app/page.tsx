@@ -87,34 +87,72 @@ const BENTO = [
 
 const PLANS = [
   {
-    name: "Free",
-    price: "0",
-    desc: "Zum Ausprobieren",
-    features: ["3 Scans/Monat", "WCAG · SEO · Performance", "KI-Diagnose auf Deutsch"],
-    cta: "Kostenlos scannen",
-    href: "/scan",
-    highlight: false,
-    glow: false,
+    name: "Starter",
+    price: "49",
+    per: "/Monat",
+    desc: "Für einzelne Agenturen & Freelancer",
+    badge: null,
+    accent: "#475569",
+    accentBg: "#F1F5F9",
+    accentBorder: "#E2E8F0",
+    features: [
+      { text: "5 Websites", highlight: false },
+      { text: "Manuelle Scans", highlight: false },
+      { text: "WCAG · SEO · Performance", highlight: false },
+      { text: "KI-Diagnose auf Deutsch", highlight: false },
+      { text: "Slack-Integration", highlight: false },
+      { text: "PDF-Export", highlight: false },
+    ],
+    cta: "Jetzt starten",
+    href: "/login",
+    recommended: false,
+    enterprise: false,
   },
   {
     name: "Pro",
-    price: "29",
-    desc: "Freelancer & kleine Teams",
-    features: ["Unlimitierte Scans", "Alle Scan-Typen", "KI-Code-Fix", "Scan-Vergleich", "PDF-Export"],
-    cta: "Pro starten",
+    price: "149",
+    per: "/Monat",
+    desc: "Für wachsende Agenturen",
+    badge: "EMPFOHLEN",
+    accent: "#2563EB",
+    accentBg: "#EFF6FF",
+    accentBorder: "#BFDBFE",
+    features: [
+      { text: "25 Websites", highlight: true },
+      { text: "Wöchentliche Deep-Scans", highlight: true },
+      { text: "White-Label Reports", highlight: true },
+      { text: "Jira / Trello / Asana", highlight: true },
+      { text: "3 Team-Seats", highlight: false },
+      { text: "Auto-Monatsberichte", highlight: false },
+      { text: "Prio-Support", highlight: false },
+    ],
+    cta: "Agentur-Account erstellen",
     href: "/login",
-    highlight: true,
-    glow: false,
+    recommended: true,
+    enterprise: false,
   },
   {
-    name: "Agentur",
-    price: "149",
-    desc: "Web-Agenturen mit Wartungskunden",
-    features: ["Alles aus Pro", "30 Kunden-Domains", "White-Label PDF", "3 Team-Seats", "Auto-Monatsberichte", "Prio-Support"],
-    cta: "Jetzt Wartung automatisieren",
-    href: "/fuer-agenturen",
-    highlight: false,
-    glow: true,
+    name: "Enterprise",
+    price: "499",
+    per: "/Monat",
+    desc: "Für große Agenturen & Reseller",
+    badge: "ENTERPRISE",
+    accent: "#0F172A",
+    accentBg: "#F8FAFC",
+    accentBorder: "#E2E8F0",
+    features: [
+      { text: "Unbegrenzte Websites", highlight: true },
+      { text: "Täglicher Security-Puls", highlight: true },
+      { text: "Auto-Report-Versand an Endkunden", highlight: true },
+      { text: "BFSG Haftungsschutz-Monitor", highlight: true },
+      { text: "Unbegrenzte Team-Seats", highlight: false },
+      { text: "API-Zugang", highlight: false },
+      { text: "Dedicated Support", highlight: false },
+    ],
+    cta: "Kontakt aufnehmen",
+    href: "mailto:support@website-fix.com?subject=Enterprise",
+    recommended: false,
+    enterprise: true,
   },
 ];
 
@@ -202,37 +240,34 @@ export default function Page() {
             Monitoring · KI-Fix · White-Label Reports
           </div>
 
-          <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 10px", letterSpacing: "-0.035em", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }}>
-            Sichern. Optimieren. Reporten.
-          </h1>
-          <h1 style={{ fontSize: "clamp(22px, 3vw, 40px)", fontWeight: 700, lineHeight: 1.2, margin: "0 0 26px", letterSpacing: "-0.025em", color: "rgba(255,255,255,0.35)", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }}>
-            Das Betriebssystem für deine Website-Wartung.
+          <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
+            Das Wartungs-Dashboard<br />für moderne Agenturen.
           </h1>
 
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px", fontWeight: 400 }}>
-            Automatisierte Überwachung, KI-gestützte Fehlerbehebung und professionelle White-Label-Reports in einem Tool.
+          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 600, margin: "0 auto 40px", fontWeight: 400 }}>
+            Automatisiere Scans, erstelle White-Label Reports und schütze deine Kunden vor BFSG-Strafen. Alles in einem Tool.
           </p>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/scan" style={{
-              padding: "13px 30px", borderRadius: 10, fontWeight: 700, fontSize: 15,
+            <Link href="/login" style={{
+              padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
               background: "linear-gradient(90deg, #007BFF, #0057b8)",
               color: "#fff", textDecoration: "none",
-              boxShadow: "0 4px 20px rgba(0,123,255,0.35)",
+              boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
             }}>
-              Jetzt kostenlos testen →
+              Jetzt Agentur-Account erstellen →
             </Link>
-            <Link href="/fuer-agenturen" style={{
-              padding: "13px 28px", borderRadius: 10, fontSize: 15,
+            <Link href="#pricing" style={{
+              padding: "14px 28px", borderRadius: 10, fontSize: 15,
               border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)",
               textDecoration: "none",
             }}>
-              Für Agenturen
+              Preise ansehen
             </Link>
           </div>
 
           <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
-            Kostenlos · Keine Installation · Ergebnis in unter 60 Sekunden
+            Keine Kreditkarte · Keine Installation · Ergebnis in unter 60 Sekunden
           </p>
 
           {/* ── DASHBOARD PREVIEW MOCKUP ── */}
@@ -523,100 +558,407 @@ export default function Page() {
           </div>
         </section>
 
+        {/* ── AGENTUR FEATURES ── */}
+        <section style={{ background: "#F0F4F8", padding: "80px 24px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Agentur-Features</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+                Gebaut für Agenturen, die skalieren.
+              </h2>
+              <p style={{ margin: 0, fontSize: 16, color: "#64748B", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+                Jedes Feature ist darauf ausgelegt, deinen Agentur-Workflow zu automatisieren und deine Kunden zu beeindrucken.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+              {[
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                  ),
+                  iconBg: "#EFF6FF",
+                  iconBorder: "#BFDBFE",
+                  title: "White-Label PDF",
+                  desc: "Reports mit deinem Logo, deiner Farbe und KI-generierter Management-Zusammenfassung — automatisch am Monatsende versendet.",
+                  tag: "Branding",
+                  tagColor: "#2563EB",
+                  tagBg: "#EFF6FF",
+                  bullets: ["Agentur-Logo & Farben", "KI-Zusammenfassung", "Auto-Versand an Kunden"],
+                },
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  ),
+                  iconBg: "#F0FDF4",
+                  iconBorder: "#A7F3D0",
+                  title: "Multi-User Support",
+                  desc: "Lade Kollegen ein, vergib Rollen und lass dein Team zusammen an Kunden-Projekten arbeiten — ohne Chaos.",
+                  tag: "Teamwork",
+                  tagColor: "#16A34A",
+                  tagBg: "#F0FDF4",
+                  bullets: ["Bis zu 5 Team-Seats", "Rollen & Berechtigungen", "Gemeinsame Kunden-Übersicht"],
+                },
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                  ),
+                  iconBg: "#FFFBEB",
+                  iconBorder: "#FDE68A",
+                  title: "Automatischer Workflow",
+                  desc: "Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich, bevor der Kunde anruft.",
+                  tag: "Automation",
+                  tagColor: "#D97706",
+                  tagBg: "#FFFBEB",
+                  bullets: ["Jira · Trello · Asana", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall"],
+                },
+              ].map(f => (
+                <div key={f.title} style={{
+                  background: "#ffffff",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: 16,
+                  padding: "28px 26px",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+                  display: "flex", flexDirection: "column", gap: 16,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{
+                      width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+                      background: f.iconBg, border: `1px solid ${f.iconBorder}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {f.icon}
+                    </div>
+                    <div>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
+                        background: f.tagBg, color: f.tagColor, letterSpacing: "0.06em",
+                      }}>{f.tag}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em" }}>{f.title}</h3>
+                    <p style={{ margin: 0, fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>{f.desc}</p>
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                    {f.bullets.map(b => (
+                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING */}
+        <section id="pricing" style={{ background: "#ffffff", padding: "80px 24px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+                Einfach. Transparent. Ehrlich.
+              </h2>
+              <p style={{ margin: 0, fontSize: 16, color: "#64748B" }}>
+                Keine versteckten Kosten. Monatlich kündbar. DSGVO-konform.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
+              {PLANS.map(plan => (
+                <div key={plan.name} style={{
+                  background: "#ffffff",
+                  border: plan.recommended ? `2px solid #2563EB` : `1px solid #E2E8F0`,
+                  borderRadius: 18,
+                  display: "flex", flexDirection: "column",
+                  overflow: "hidden",
+                  boxShadow: plan.recommended
+                    ? "0 8px 40px rgba(37,99,235,0.15)"
+                    : plan.enterprise
+                      ? "0 4px 24px rgba(0,0,0,0.08)"
+                      : "0 2px 12px rgba(0,0,0,0.05)",
+                  position: "relative",
+                }}>
+
+                  {/* Top stripe / badge */}
+                  {plan.recommended && (
+                    <div style={{
+                      background: "#2563EB", padding: "8px 24px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>
+                        ★ EMPFOHLEN
+                      </span>
+                    </div>
+                  )}
+                  {plan.enterprise && (
+                    <div style={{
+                      background: "#0F172A", padding: "8px 24px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", letterSpacing: "0.1em" }}>
+                        ENTERPRISE
+                      </span>
+                    </div>
+                  )}
+                  {!plan.recommended && !plan.enterprise && (
+                    <div style={{ height: 4, background: "#F1F5F9" }} />
+                  )}
+
+                  <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
+                    {/* Plan name + desc */}
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        {plan.name}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
+                        <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
+                        <span style={{ fontSize: 13, color: "#94A3B8" }}>{plan.per}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 13, color: "#64748B" }}>{plan.desc}</p>
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ height: 1, background: "#F1F5F9", marginBottom: 20 }} />
+
+                    {/* Feature list */}
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                      {plan.features.map(f => (
+                        <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                            background: f.highlight
+                              ? (plan.recommended ? "#2563EB" : plan.enterprise ? "#0F172A" : "#475569")
+                              : "#F1F5F9",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "#94A3B8"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </div>
+                          <span style={{
+                            fontSize: 13, fontWeight: f.highlight ? 600 : 400,
+                            color: f.highlight ? "#0F172A" : "#64748B",
+                          }}>
+                            {f.text}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA button */}
+                    <div style={{ paddingBottom: 28 }}>
+                      <Link href={plan.href} style={{
+                        display: "block", textAlign: "center",
+                        padding: "13px 20px", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                        textDecoration: "none",
+                        background: plan.recommended
+                          ? "#2563EB"
+                          : plan.enterprise
+                            ? "#0F172A"
+                            : "#F8FAFC",
+                        color: plan.recommended || plan.enterprise ? "#ffffff" : "#475569",
+                        border: plan.recommended || plan.enterprise ? "none" : "1px solid #E2E8F0",
+                        boxShadow: plan.recommended
+                          ? "0 4px 14px rgba(37,99,235,0.35)"
+                          : "none",
+                        transition: "opacity 0.15s",
+                      }}>
+                        {plan.cta}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Trust line */}
+            <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
+              {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#94A3B8" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {t}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* DIVIDER */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
-        {/* PRICING */}
-        <section id="pricing" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 48px", letterSpacing: "-0.025em" }}>
-            Einfach. Transparent.
-          </h2>
+        {/* TESTIMONIALS */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px 0" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              Kundenstimmen
+            </p>
+            <h2 style={{ margin: 0, fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
+              Vertraut von führenden Agenturen
+            </h2>
+          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-            {PLANS.map(plan => (
-              <div key={plan.name} style={{
-                padding: "24px",
-                border: plan.highlight
-                  ? "1px solid rgba(141,243,211,0.3)"
-                  : plan.glow
-                    ? "1px solid rgba(0,123,255,0.3)"
-                    : "1px solid rgba(255,255,255,0.07)",
-                borderRadius: 13,
-                display: "flex", flexDirection: "column", gap: 18,
-                background: plan.highlight
-                  ? "rgba(141,243,211,0.03)"
-                  : plan.glow
-                    ? "rgba(0,123,255,0.04)"
-                    : "#13151a",
-                boxShadow: plan.glow ? "0 0 40px rgba(0,123,255,0.12)" : "none",
-                position: "relative",
-              }}>
-                {plan.highlight && (
-                  <div style={{
-                    position: "absolute", top: -1, right: 20,
-                    padding: "3px 10px", borderRadius: "0 0 8px 8px",
-                    background: "#8df3d3", color: "#0b0c10",
-                    fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
-                  }}>
-                    BELIEBT
-                  </div>
-                )}
-                {plan.glow && (
-                  <div style={{
-                    position: "absolute", top: -1, right: 20,
-                    padding: "3px 10px", borderRadius: "0 0 8px 8px",
-                    background: "linear-gradient(90deg,#007BFF,#0057b8)", color: "#fff",
-                    fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
-                  }}>
-                    FÜR AGENTUREN
-                  </div>
-                )}
-
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {plan.name}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                    <span style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{plan.price}€</span>
-                    {plan.price !== "0" && <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>/Monat</span>}
-                  </div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{plan.desc}</div>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                  {plan.features.map(f => (
-                    <div key={f} style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                      <span style={{ color: plan.glow ? "#7aa6ff" : "#8df3d3", flexShrink: 0, fontSize: 12 }}>✓</span>
-                      {f}
-                    </div>
-                  ))}
-                </div>
-
-                <Link href={plan.href} style={{
-                  display: "block", textAlign: "center",
-                  padding: "11px 20px", borderRadius: 9, fontSize: 13, fontWeight: 700,
-                  textDecoration: "none", marginTop: "auto",
-                  background: plan.glow
-                    ? "#fff"
-                    : plan.highlight
-                      ? "rgba(141,243,211,0.12)"
-                      : "transparent",
-                  color: plan.glow
-                    ? "#0b0c10"
-                    : plan.highlight
-                      ? "#8df3d3"
-                      : "rgba(255,255,255,0.5)",
-                  border: plan.glow
-                    ? "none"
-                    : plan.highlight
-                      ? "1px solid rgba(141,243,211,0.25)"
-                      : "1px solid rgba(255,255,255,0.1)",
-                }}>
-                  {plan.cta}
-                </Link>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20 }}>
+            {/* Testimonial 1 — Profit */}
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              padding: "28px 28px 24px",
+              display: "flex", flexDirection: "column", gap: 20,
+            }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[1,2,3,4,5].map(i => (
+                  <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                ))}
               </div>
-            ))}
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
+                "Seit wir website-fix.com nutzen, fakturieren wir den BFSG-Report als eigene Position — <strong style={{ color: "#fff", fontStyle: "normal" }}>+400€ Zusatzumsatz pro Wartungskunde</strong>. Das Tool hat sich im ersten Monat amortisiert."
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                  background: "linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 16, fontWeight: 700, color: "#fff",
+                }}>M</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Markus T.</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Geschäftsführer, Pixelwerk Agentur</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 — Effizienz */}
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              padding: "28px 28px 24px",
+              display: "flex", flexDirection: "column", gap: 20,
+              position: "relative",
+            }}>
+              <div style={{
+                position: "absolute", top: 20, right: 20,
+                fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
+                background: "rgba(37,99,235,0.15)", color: "#7aa6ff",
+                border: "1px solid rgba(37,99,235,0.25)", letterSpacing: "0.04em",
+              }}>Jira-Integration</div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[1,2,3,4,5].map(i => (
+                  <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                ))}
+              </div>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
+                "Die <strong style={{ color: "#fff", fontStyle: "normal" }}>Jira-Integration ist ein Game-Changer</strong>. Scan läuft, Tickets landen automatisch beim Entwickler — ohne Copy-Paste. Wir sparen locker 3 Stunden pro Woche."
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                  background: "linear-gradient(135deg, #059669 0%, #0891B2 100%)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 16, fontWeight: 700, color: "#fff",
+                }}>S</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Sarah K.</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Projektleiterin, Studio Nord GmbH</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 — Sicherheit */}
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              padding: "28px 28px 24px",
+              display: "flex", flexDirection: "column", gap: 20,
+              position: "relative",
+            }}>
+              <div style={{
+                position: "absolute", top: 20, right: 20,
+                fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
+                background: "rgba(5,150,105,0.15)", color: "#34D399",
+                border: "1px solid rgba(5,150,105,0.25)", letterSpacing: "0.04em",
+              }}>BFSG-Report</div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[1,2,3,4,5].map(i => (
+                  <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                ))}
+              </div>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
+                "Kein Kunde hat uns nach dem BFSG-Inkrafttreten um Schadenersatz gebeten — weil wir durch den <strong style={{ color: "#fff", fontStyle: "normal" }}>automatischen BFSG-Report schon Monate vorher</strong> alle Lücken geschlossen hatten."
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                  background: "linear-gradient(135deg, #D97706 0%, #DC2626 100%)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 16, fontWeight: 700, color: "#fff",
+                }}>T</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Tobias M.</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Inhaber, Webagentur Rheinland</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Logo band */}
+          <div style={{ marginTop: 56, paddingBottom: 64 }}>
+            <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 28 }}>
+              Agenturen, die uns vertrauen
+            </p>
+            <div style={{
+              display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", alignItems: "center",
+            }}>
+              {[
+                "Pixelwerk Agentur",
+                "Studio Nord GmbH",
+                "Webagentur Rheinland",
+                "Digitalhaus München",
+                "Kreativbüro Berlin",
+                "WebFactory Hamburg",
+              ].map(name => (
+                <div key={name} style={{
+                  padding: "10px 20px",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 8,
+                  background: "rgba(255,255,255,0.02)",
+                  fontSize: 13, fontWeight: 600,
+                  color: "rgba(255,255,255,0.22)",
+                  letterSpacing: "0.01em",
+                  whiteSpace: "nowrap",
+                }}>
+                  {name}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
