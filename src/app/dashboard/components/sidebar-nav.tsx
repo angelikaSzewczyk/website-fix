@@ -10,6 +10,7 @@ import {
   FileText,
   Settings,
   Globe,
+  Activity,
 } from "lucide-react";
 
 type NavItem = {
@@ -24,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard",          label: "Übersicht",       icon: <LayoutDashboard size={16} />, exact: true },
   { href: "/dashboard/scan",     label: "Scan starten",    icon: <Zap size={16} /> },
   { href: "/dashboard/clients",  label: "Kunden",          icon: <Users size={16} />, plans: ["agentur"] },
+  { href: "/dashboard/activity", label: "Activity Log",    icon: <Activity size={16} />, plans: ["agentur"] },
   { href: "/dashboard/reports",  label: "Berichte",        icon: <FileText size={16} />, plans: ["pro", "agentur"] },
   { href: "/dashboard/settings", label: "Einstellungen",   icon: <Settings size={16} />, plans: ["agentur"] },
 ];

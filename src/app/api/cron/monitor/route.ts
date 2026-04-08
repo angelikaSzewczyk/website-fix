@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { checkWebsite, type CheckAlert } from "@/lib/monitor";
+import { sendSlackAlert, type AlertType } from "@/lib/slack";
 
 export const maxDuration = 60;
 
@@ -114,14 +115,37 @@ export async function GET(req: NextRequest) {
 
       // Alert senden wenn kritisch oder Warnung
       const criticalAlerts = result.alerts.filter(a => a.level === "critical" || a.level === "warning");
-      if (criticalAlerts.length > 0 && resend) {
-        const alertTo = site.alert_email ?? site.user_email;
-        await resend.emails.send({
-          from: "WebsiteFix <support@website-fix.com>",
-          to: alertTo,
-          subject: `${result.alerts.some(a => a.level === "critical") ? "Kritisch" : "Warnung"}: ${site.name ?? site.url}`,
-          html: alertEmailHtml(criticalAlerts, site.url, site.name),
-        }).catch(err => console.error("Alert-E-Mail Fehler:", err));
+      if (criticalAlerts.length > 0) {
+        const hasCritical = result.alerts.some(a => a.level === "critical");
+        const severity = hasCritical ? "critical" : "warning" as const;
+        const topAlert = criticalAlerts[0];
+
+        // E-Mail
+        if (resend) {
+          const alertTo = site.alert_email ?? site.user_email;
+          await resend.emails.send({
+            from: "WebsiteFix <support@website-fix.com>",
+            to: alertTo,
+            subject: `${hasCritical ? "Kritisch" : "Warnung"}: ${site.name ?? site.url}`,
+            html: alertEmailHtml(criticalAlerts, site.url, site.name),
+          }).catch(err => console.error("Alert-E-Mail Fehler:", err));
+        }
+
+        // Slack
+        const alertType: AlertType = !result.is_online ? "website_down"
+          : result.ssl_days_left !== null && result.ssl_days_left <= 14 ? "ssl_expiring"
+          : result.security_score !== null && result.security_score < 50 ? "security_issue"
+          : "security_issue";
+        await sendSlackAlert({
+          projectName: site.name ?? site.url,
+          projectUrl: site.url,
+          alertType,
+          severity,
+          description: criticalAlerts.map(a => a.message).join(" · "),
+          dashboardUrl: `${process.env.NEXTAUTH_URL}/dashboard/clients`,
+          userId: site.user_id,
+        }).catch(err => console.error("Slack-Alert Fehler:", err));
+
         alerted++;
       }
 

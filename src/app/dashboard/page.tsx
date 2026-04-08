@@ -19,6 +19,17 @@ type Scan = {
   issue_count: number | null;
 };
 
+type CriticalSite = {
+  id: string;
+  url: string;
+  name: string | null;
+  last_check_status: string;
+  last_check_at: string;
+  ssl_days_left: number | null;
+  security_score: number | null;
+  alerts: { level: string; message: string }[] | null;
+};
+
 const PLAN_CONFIG = {
   free:    { label: "Free",    color: "rgba(255,255,255,0.4)",  bg: "rgba(255,255,255,0.05)",  border: "rgba(255,255,255,0.1)" },
   pro:     { label: "Pro",     color: "#8df3d3", bg: "rgba(141,243,211,0.06)", border: "rgba(141,243,211,0.2)" },
@@ -49,15 +60,72 @@ export default async function DashboardPage() {
 
   const firstName = session.user.name?.split(" ")[0] ?? "Dashboard";
 
+  // Agentur-specific queries
+  let criticalSites: CriticalSite[] = [];
+  let marginLevers = { wcagScansMonth: 0, websitesMonitored: 0, alertsSent: 0, scansThisMonth: 0 };
+
+  if (plan === "agentur") {
+    criticalSites = await sql`
+      SELECT
+        sw.id::text,
+        sw.url,
+        sw.name,
+        sw.last_check_status,
+        sw.last_check_at,
+        wc.ssl_days_left,
+        wc.security_score,
+        wc.alerts
+      FROM saved_websites sw
+      LEFT JOIN LATERAL (
+        SELECT ssl_days_left, security_score, alerts
+        FROM website_checks
+        WHERE website_id = sw.id AND user_id = sw.user_id
+        ORDER BY checked_at DESC
+        LIMIT 1
+      ) wc ON true
+      WHERE sw.user_id = ${session.user.id}
+        AND sw.last_check_status IN ('critical', 'warning', 'offline')
+      ORDER BY
+        CASE sw.last_check_status WHEN 'offline' THEN 0 WHEN 'critical' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END,
+        sw.last_check_at DESC NULLS LAST
+      LIMIT 10
+    ` as CriticalSite[];
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const [levers] = await sql`
+      SELECT
+        (SELECT COUNT(*) FROM saved_websites WHERE user_id = ${session.user.id}) AS websites_monitored,
+        (SELECT COUNT(*) FROM scans WHERE user_id = ${session.user.id} AND created_at >= ${monthStart}) AS scans_this_month,
+        (SELECT COUNT(*) FROM scans WHERE user_id = ${session.user.id} AND type = 'wcag' AND created_at >= ${monthStart}) AS wcag_scans_month
+    ` as { websites_monitored: number; scans_this_month: number; wcag_scans_month: number }[];
+
+    if (levers) {
+      marginLevers = {
+        wcagScansMonth: Number(levers.wcag_scans_month),
+        websitesMonitored: Number(levers.websites_monitored),
+        alertsSent: criticalSites.length,
+        scansThisMonth: Number(levers.scans_this_month),
+      };
+    }
+  }
+
   const scoreColor = (n: number | null) =>
     n === null ? "rgba(255,255,255,0.3)" : n === 0 ? "#8df3d3" : n <= 2 ? "#ffd93d" : "#ff6b6b";
+
+  const statusColor = (s: string) =>
+    s === "offline" ? "#ff6b6b" : s === "critical" ? "#ff6b6b" : s === "warning" ? "#ffd93d" : "#8df3d3";
+
+  const statusLabel = (s: string) =>
+    s === "offline" ? "Offline" : s === "critical" ? "Kritisch" : s === "warning" ? "Warnung" : "OK";
 
   return (
     <>
       <main style={{ maxWidth: 1060, margin: "0 auto", padding: "40px 24px 80px" }}>
 
         {/* HEADER */}
-        <div style={{ marginBottom: 48, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+        <div style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
           <div>
             <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Willkommen zurück</p>
             <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 16px", letterSpacing: "-0.02em" }}>{firstName}</h1>
@@ -83,6 +151,142 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* AGENTUR COMMAND CENTER */}
+        {plan === "agentur" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))", gap: 14, marginBottom: 40 }}>
+
+            {/* CRITICAL EVENTS */}
+            <div style={{
+              border: criticalSites.length > 0 ? "1px solid rgba(255,107,107,0.2)" : "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 14,
+              background: criticalSites.length > 0 ? "rgba(255,107,107,0.03)" : "rgba(255,255,255,0.01)",
+              overflow: "hidden",
+            }}>
+              <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {criticalSites.length > 0 && (
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff6b6b", boxShadow: "0 0 8px #ff6b6b80" }} />
+                  )}
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>Kritische Ereignisse</span>
+                  {criticalSites.length > 0 && (
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 10,
+                      background: "rgba(255,107,107,0.15)", color: "#ff6b6b",
+                    }}>
+                      {criticalSites.length}
+                    </span>
+                  )}
+                </div>
+                <Link href="/dashboard/clients" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
+                  Alle →
+                </Link>
+              </div>
+
+              {criticalSites.length === 0 ? (
+                <div style={{ padding: "28px 20px", textAlign: "center" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(141,243,211,0.08)", border: "1px solid rgba(141,243,211,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", fontSize: 16 }}>✓</div>
+                  <p style={{ margin: 0, fontSize: 13, color: "#8df3d3", fontWeight: 600 }}>Alles OK</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Keine kritischen Ereignisse</p>
+                </div>
+              ) : (
+                <div>
+                  {criticalSites.map((site, i) => {
+                    const sc = statusColor(site.last_check_status);
+                    const alerts = site.alerts ?? [];
+                    const topMessage = alerts[0]?.message ?? site.last_check_status;
+                    return (
+                      <Link key={site.id} href="/dashboard/clients" style={{ textDecoration: "none" }}>
+                        <div style={{
+                          padding: "12px 20px",
+                          borderBottom: i < criticalSites.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                          display: "flex", alignItems: "center", gap: 12,
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc, flexShrink: 0, boxShadow: `0 0 5px ${sc}60` }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 500, fontSize: 13, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {site.name ?? site.url}
+                            </div>
+                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {topMessage}
+                            </div>
+                          </div>
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                            color: sc, border: `1px solid ${sc}30`, background: `${sc}0d`, flexShrink: 0,
+                          }}>
+                            {statusLabel(site.last_check_status)}
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* MARGIN LEVERS */}
+            <div style={{
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 14,
+              background: "rgba(255,255,255,0.01)",
+              overflow: "hidden",
+            }}>
+              <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontWeight: 700, fontSize: 14 }}>Marge-Hebel</span>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>Aktivitäten diesen Monat</p>
+              </div>
+
+              <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {[
+                  {
+                    value: marginLevers.scansThisMonth,
+                    label: "Scans diesen Monat",
+                    color: "#7aa6ff",
+                    hint: marginLevers.scansThisMonth >= 10 ? "Gutes Volumen" : "Mehr scannen = mehr Wert",
+                  },
+                  {
+                    value: marginLevers.wcagScansMonth,
+                    label: "WCAG-Audits",
+                    color: "#8df3d3",
+                    hint: marginLevers.wcagScansMonth > 0 ? "BFSG-ready" : "Pflicht ab 2025",
+                  },
+                  {
+                    value: marginLevers.websitesMonitored,
+                    label: "Websites überwacht",
+                    color: "#ffd93d",
+                    hint: marginLevers.websitesMonitored > 0 ? "24/7 aktiv" : "Website hinzufügen",
+                  },
+                  {
+                    value: marginLevers.alertsSent,
+                    label: "Offene Warnungen",
+                    color: marginLevers.alertsSent > 0 ? "#ff6b6b" : "#8df3d3",
+                    hint: marginLevers.alertsSent === 0 ? "Kein Handlungsbedarf" : "Aufmerksamkeit nötig",
+                  },
+                ].map(item => (
+                  <div key={item.label} style={{
+                    padding: "14px 16px", borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(255,255,255,0.02)",
+                  }}>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: item.color, letterSpacing: "-0.02em" }}>{item.value}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{item.label}</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>{item.hint}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                <Link href="/dashboard/scan" style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  fontSize: 13, fontWeight: 600, color: "#7aa6ff", textDecoration: "none",
+                }}>
+                  Neuen Scan starten →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ONBOARDING */}
         {scans.length === 0 && (
@@ -193,7 +397,6 @@ export default async function DashboardPage() {
           )}
         </div>
       </main>
-
     </>
   );
 }
