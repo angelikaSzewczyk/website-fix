@@ -4,6 +4,8 @@ import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 
+export const maxDuration = 60;
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Rate Limiting: max 3 Scans pro IP pro Stunde, min. 15 Sekunden Abstand
@@ -15,7 +17,6 @@ const globalLimit = { count: 0, resetAt: 0 };
 function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
   const now = Date.now();
 
-  // Globale Bremse prüfen
   if (now > globalLimit.resetAt) {
     globalLimit.count = 0;
     globalLimit.resetAt = now + 60 * 1000;
@@ -25,30 +26,23 @@ function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
   }
   globalLimit.count++;
 
-  // IP-basiertes Limit
   const entry = rateLimit.get(ip);
-
   if (!entry || now > entry.resetAt) {
     rateLimit.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000, lastScan: now });
     return { allowed: true };
   }
-
-  // Mindestabstand: 15 Sekunden zwischen Scans
   if (now - entry.lastScan < 15 * 1000) {
     return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
   }
-
   if (entry.count >= 3) {
     return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde und versuche es erneut." };
   }
-
   entry.count++;
   entry.lastScan = now;
   return { allowed: true };
 }
 
-// Hilfsfunktion: Website abrufen mit Timeout
-async function fetchWithTimeout(url: string, timeoutMs = 10000) {
+async function fetchWithTimeout(url: string, timeoutMs = 8000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -64,7 +58,6 @@ async function fetchWithTimeout(url: string, timeoutMs = 10000) {
   }
 }
 
-// Hilfsfunktion: Text zwischen zwei Strings extrahieren
 function extractBetween(html: string, start: string, end: string): string {
   const s = html.toLowerCase().indexOf(start.toLowerCase());
   if (s === -1) return "";
@@ -73,7 +66,6 @@ function extractBetween(html: string, start: string, end: string): string {
   return html.slice(s + start.length, e).trim();
 }
 
-// Hilfsfunktion: Meta-Tag-Inhalt extrahieren
 function extractMeta(html: string, name: string): string {
   const regex = new RegExp(
     `<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([^"']+)["']`,
@@ -87,15 +79,67 @@ function extractMeta(html: string, name: string): string {
   return match ? match[1] : "";
 }
 
+// Interne Links aus HTML extrahieren
+function extractInternalLinks(html: string, baseUrl: string): string[] {
+  const urlObj = new URL(baseUrl);
+  const base = `${urlObj.protocol}//${urlObj.host}`;
+  const links = new Set<string>();
+  const skipExt = /\.(jpg|jpeg|png|gif|svg|webp|pdf|zip|mp4|mp3|css|js|ico|woff|woff2|ttf)(\?|$)/i;
+  const regex = /href=["']([^"']+)["']/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    const href = match[1].trim();
+    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) continue;
+    if (skipExt.test(href)) continue;
+    try {
+      const absolute = href.startsWith("http") ? href : `${base}${href.startsWith("/") ? "" : "/"}${href}`;
+      const u = new URL(absolute);
+      // Nur gleiche Domain, kein Fragment, keine Query-Params für saubere URLs
+      if (u.host === urlObj.host) {
+        const clean = `${u.protocol}//${u.host}${u.pathname}`.replace(/\/$/, "") || base;
+        links.add(clean);
+      }
+    } catch { /* ungültige URL überspringen */ }
+  }
+  return [...links];
+}
+
+// URLs aus sitemap.xml extrahieren
+function extractSitemapUrls(xml: string): string[] {
+  const matches = xml.match(/<loc>([^<]+)<\/loc>/g) ?? [];
+  return matches
+    .map((m) => m.replace(/<\/?loc>/g, "").trim())
+    .filter((u) => !u.endsWith(".xml")); // sitemap-index-Einträge überspringen
+}
+
+// Einzelne Unterseite scannen
+async function scanSubpage(url: string) {
+  const res = await fetchWithTimeout(url, 6000);
+  if (!res) return { url, erreichbar: false, status: 0 };
+  const html = await res.text();
+  return {
+    url,
+    erreichbar: res.ok,
+    status: res.status,
+    title: extractBetween(html, "<title>", "</title>").replace(/\s+/g, " ").trim() || "(kein Title)",
+    h1: extractBetween(html, "<h1", "</h1>").replace(/<[^>]+>/g, "").trim() || "(kein H1)",
+    metaDescription: extractMeta(html, "description") || "(keine Meta-Description)",
+    noindex: extractMeta(html, "robots").includes("noindex"),
+    canonical: (() => {
+      const m = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+      return m ? m[1] : "";
+    })(),
+    formularVorhanden: html.includes("<form"),
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // Origin + User-Agent prüfen
     const guard = guardRequest(req);
     if (guard.blocked) {
       return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
     }
 
-    // Pro/Agentur-User überspringen Rate Limit
     const session = await auth();
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
     const isPaid = userPlan === "pro" || userPlan === "agentur";
@@ -104,10 +148,7 @@ export async function POST(req: NextRequest) {
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
       const limitResult = checkRateLimit(ip);
       if (!limitResult.allowed) {
-        return NextResponse.json(
-          { success: false, error: limitResult.reason },
-          { status: 429 }
-        );
+        return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
       }
     }
 
@@ -115,28 +156,24 @@ export async function POST(req: NextRequest) {
     const { url } = body;
 
     if (!url || typeof url !== "string" || url.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Bitte gib eine gültige URL ein." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Bitte gib eine gültige URL ein." }, { status: 400 });
     }
 
-    // URL normalisieren
     let targetUrl = url.trim();
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
 
-    // SSRF-Schutz
     if (!isUrlAllowed(targetUrl)) {
-      return NextResponse.json(
-        { success: false, error: "Diese URL kann nicht gescannt werden." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
     }
+
+    // Maximale Unterseiten je nach Plan
+    const maxSubpages = isPaid ? 10 : 5;
 
     const scanData: Record<string, unknown> = { url: targetUrl };
 
     // ── 1. HAUPTSEITE ABRUFEN ──────────────────────────────────
     const mainRes = await fetchWithTimeout(targetUrl);
+    let mainHtml = "";
 
     if (!mainRes) {
       scanData.erreichbar = false;
@@ -146,38 +183,32 @@ export async function POST(req: NextRequest) {
       scanData.statusCode = mainRes.status;
       scanData.https = targetUrl.startsWith("https://");
 
-      const html = await mainRes.text();
-      scanData.htmlLaenge = html.length;
+      mainHtml = await mainRes.text();
+      scanData.htmlLaenge = mainHtml.length;
 
-      // WordPress-Fehler erkennen
       scanData.wordpressFehler =
-        html.includes("Es gab einen kritischen Fehler") ||
-        html.includes("There has been a critical error") ||
-        html.includes("critical error on your website");
+        mainHtml.includes("Es gab einen kritischen Fehler") ||
+        mainHtml.includes("There has been a critical error") ||
+        mainHtml.includes("critical error on your website");
 
-      scanData.weisseSeite = html.length < 500;
+      scanData.weisseSeite = mainHtml.length < 500;
 
-      // SEO-Grunddaten
-      scanData.title = extractBetween(html, "<title>", "</title>") || "(kein Title gefunden)";
-      scanData.metaDescription = extractMeta(html, "description") || "(keine Meta-Description)";
-      scanData.h1 = extractBetween(html, "<h1", "</h1>").replace(/<[^>]+>/g, "").trim() || "(kein H1)";
+      scanData.title = extractBetween(mainHtml, "<title>", "</title>") || "(kein Title gefunden)";
+      scanData.metaDescription = extractMeta(mainHtml, "description") || "(keine Meta-Description)";
+      scanData.h1 = extractBetween(mainHtml, "<h1", "</h1>").replace(/<[^>]+>/g, "").trim() || "(kein H1)";
 
-      // robots meta
-      const robotsMeta = extractMeta(html, "robots");
+      const robotsMeta = extractMeta(mainHtml, "robots");
       scanData.indexierungGesperrt = robotsMeta.includes("noindex");
 
-      // Canonical
-      const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+      const canonicalMatch = mainHtml.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
       scanData.canonical = canonicalMatch ? canonicalMatch[1] : "(kein Canonical)";
 
-      // WordPress erkannt
       scanData.istWordpress =
-        html.includes("/wp-content/") ||
-        html.includes("/wp-includes/") ||
-        html.includes("wp-json");
+        mainHtml.includes("/wp-content/") ||
+        mainHtml.includes("/wp-includes/") ||
+        mainHtml.includes("wp-json");
 
-      // Formular vorhanden
-      scanData.formularVorhanden = html.includes("<form");
+      scanData.formularVorhanden = mainHtml.includes("<form");
     }
 
     // ── 2. ROBOTS.TXT ──────────────────────────────────────────
@@ -186,7 +217,6 @@ export async function POST(req: NextRequest) {
     if (robotsRes && robotsRes.ok) {
       const robotsTxt = await robotsRes.text();
       scanData.robotsTxt = robotsTxt.slice(0, 500);
-      // Prüfen ob User-agent: * gefolgt von Disallow: / vorkommt (nicht nur GPTBot etc.)
       const robotsLines = robotsTxt.split("\n").map((l: string) => l.trim());
       let currentAgent = "";
       let blockedForAll = false;
@@ -206,29 +236,75 @@ export async function POST(req: NextRequest) {
       scanData.robotsBlockiertAlles = false;
     }
 
-    // ── 3. SITEMAP ─────────────────────────────────────────────
+    // ── 3. SITEMAP + UNTERSEITEN ENTDECKEN ─────────────────────
     const sitemapUrl = new URL("/sitemap.xml", targetUrl).href;
     const sitemapRes = await fetchWithTimeout(sitemapUrl, 5000);
     scanData.sitemapVorhanden = !!(sitemapRes && sitemapRes.ok);
 
-    // ── 4. CLAUDE DIAGNOSE ─────────────────────────────────────
+    let subpageUrls: string[] = [];
+
+    // Sitemap parsen
+    if (sitemapRes && sitemapRes.ok) {
+      const sitemapXml = await sitemapRes.text();
+      const sitemapUrls = extractSitemapUrls(sitemapXml)
+        .filter((u) => u !== targetUrl && u !== targetUrl + "/");
+      subpageUrls = [...subpageUrls, ...sitemapUrls];
+    }
+
+    // Interne Links aus Homepage extrahieren (ergänzend / Fallback)
+    if (mainHtml && subpageUrls.length < maxSubpages) {
+      const internalLinks = extractInternalLinks(mainHtml, targetUrl)
+        .filter((u) => u !== targetUrl && u !== targetUrl.replace(/\/$/, ""));
+      subpageUrls = [...new Set([...subpageUrls, ...internalLinks])];
+    }
+
+    // Auf maxSubpages begrenzen
+    subpageUrls = subpageUrls.slice(0, maxSubpages);
+
+    // ── 4. UNTERSEITEN PARALLEL SCANNEN ────────────────────────
+    let unterseiten: Awaited<ReturnType<typeof scanSubpage>>[] = [];
+    if (subpageUrls.length > 0) {
+      unterseiten = await Promise.all(subpageUrls.map((u) => scanSubpage(u)));
+    }
+    scanData.unterseiten = unterseiten;
+    scanData.gescannteSeiten = unterseiten.length + 1;
+
+    // Aggregierte Probleme
+    const nichtErreichbar = unterseiten.filter((p) => !p.erreichbar).length;
+    const ohneTitle = unterseiten.filter((p) => p.erreichbar && p.title === "(kein Title)").length;
+    const noindexSeiten = unterseiten.filter((p) => p.noindex).length;
+    scanData.unterseiten_nichtErreichbar = nichtErreichbar;
+    scanData.unterseiten_ohneTitle = ohneTitle;
+    scanData.unterseiten_noindex = noindexSeiten;
+
+    // ── 5. CLAUDE DIAGNOSE ─────────────────────────────────────
+    const unterseitenText = unterseiten.length > 0
+      ? `\n\nGESCANNTE UNTERSEITEN (${unterseiten.length} Seiten zusätzlich zur Startseite):\n` +
+        unterseiten.map((p) =>
+          `- ${p.url}: ${p.erreichbar ? `Status ${p.status}` : "NICHT ERREICHBAR"} | Title: "${p.title}" | H1: "${p.erreichbar && "h1" in p ? p.h1 : "—"}" | noindex: ${p.noindex ?? false}`
+        ).join("\n") +
+        `\n\nZusammenfassung Unterseiten: ${nichtErreichbar} nicht erreichbar, ${ohneTitle} ohne Title-Tag, ${noindexSeiten} mit noindex.`
+      : "\n\nKeine Unterseiten gefunden (keine Sitemap, keine internen Links erkennbar).";
+
     const prompt = `Du bist ein freundlicher Website-Experte der Menschen ohne Technik-Kenntnisse hilft.
 
 Du hast folgende Website gescannt: ${scanData.url}
+Insgesamt gescannte Seiten: ${scanData.gescannteSeiten} (Startseite + ${unterseiten.length} Unterseiten)
 
-SCAN-ERGEBNISSE:
-${JSON.stringify(scanData, null, 2)}
+SCAN-ERGEBNISSE STARTSEITE:
+${JSON.stringify({ ...scanData, unterseiten: undefined }, null, 2)}
+${unterseitenText}
 
 Erstelle eine klare Diagnose auf Deutsch in diesem Format:
 
 ## Zusammenfassung
-Ein oder zwei Sätze: was ist der allgemeine Zustand der Website?
+Ein oder zwei Sätze: was ist der allgemeine Zustand der Website? Erwähne wie viele Seiten gescannt wurden.
 
 ## Befunde
 
-Für jeden Befund:
+Für jeden Befund (Startseite UND Unterseiten, priorisiert nach Schwere):
 **[🔴 KRITISCH / 🟡 WICHTIG / 🟢 OK]** Titel des Problems
-Erklärung in einfachem Deutsch (max 2-3 Sätze, keine Fachbegriffe)
+Erklärung in einfachem Deutsch (max 2-3 Sätze, keine Fachbegriffe). Wenn Unterseiten betroffen sind, nenne konkret welche.
 
 ## Wichtigste nächste Schritte
 1. ...
@@ -239,7 +315,7 @@ Schreib freundlich, klar und ohne Fachjargon. Erkläre als würdest du mit jeman
 
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
+      max_tokens: 1500,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -251,7 +327,6 @@ Schreib freundlich, klar und ohne Fachjargon. Erkläre als würdest du mit jeman
       const session = await auth();
       if (session?.user?.id) {
         const sql = neon(process.env.DATABASE_URL!);
-        // Probleme zählen: false-Werte bei Boolean-Checks = Problem
         const booleanIssues = [
           !scanData.httpsAktiv,
           !scanData.erreichbar,
@@ -260,13 +335,16 @@ Schreib freundlich, klar und ohne Fachjargon. Erkläre als würdest du mit jeman
           !scanData.h1Vorhanden,
           scanData.robotsBlockiertAlles,
           !scanData.sitemapVorhanden,
+          nichtErreichbar > 0,
+          ohneTitle > 0,
+          noindexSeiten > 0,
         ].filter(Boolean).length;
         await sql`
           INSERT INTO scans (user_id, url, type, issue_count, result)
           VALUES (${session.user.id}, ${scanData.url}, 'website', ${booleanIssues}, ${diagnose})
         `;
       }
-    } catch { /* Scan-Speicherung ist optional — kein Fehler wenn nicht eingeloggt */ }
+    } catch { /* Scan-Speicherung ist optional */ }
 
     return NextResponse.json({ success: true, scanData, diagnose });
 
