@@ -1,38 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { auth } from "@/auth";
+
+const PLAN_PRICE_MAP: Record<string, string | undefined> = {
+  freelancer:    process.env.STRIPE_PRICE_FREELANCER,
+  agency_core:   process.env.STRIPE_PRICE_AGENCY_CORE,
+  agency_scale:  process.env.STRIPE_PRICE_AGENCY_SCALE,
+  // Enterprise goes via mailto — no checkout needed
+  // Legacy aliases
+  pro:     process.env.STRIPE_PRICE_FREELANCER,
+  agentur: process.env.STRIPE_PRICE_AGENCY_CORE,
+};
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
   try {
     const { plan } = await req.json();
-
-    const priceId = plan === "agentur"
-      ? process.env.STRIPE_PRICE_AGENTUR
-      : process.env.STRIPE_PRICE_PRO;
+    const priceId = PLAN_PRICE_MAP[plan as string];
 
     if (!priceId) {
-      return NextResponse.json(
-        { error: "Plan nicht gefunden." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Plan nicht gefunden." }, { status: 400 });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen`,
+      customer_email: session?.user?.email ?? undefined,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen#pricing`,
       locale: "de",
       allow_promotion_codes: true,
+      metadata: {
+        plan,
+        userId: session?.user?.id ?? "",
+      },
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: checkoutSession.url });
   } catch (err) {
     console.error("Stripe Fehler:", err);
-    return NextResponse.json(
-      { error: "Checkout konnte nicht erstellt werden." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Checkout konnte nicht erstellt werden." }, { status: 500 });
   }
 }

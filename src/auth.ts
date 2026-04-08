@@ -1,8 +1,10 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import PostgresAdapter from "@auth/pg-adapter";
 import { Pool } from "pg";
 import { neon } from "@neondatabase/serverless";
+import { compare } from "bcryptjs";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -13,6 +15,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    Credentials({
+      name: "credentials",
+      credentials: {
+        email: { label: "E-Mail", type: "email" },
+        password: { label: "Passwort", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const sql = neon(process.env.DATABASE_URL!);
+        const rows = await sql`
+          SELECT id, name, email, image, password_hash
+          FROM users WHERE email = ${String(credentials.email).toLowerCase()}
+        ` as { id: string; name: string | null; email: string; image: string | null; password_hash: string | null }[];
+        const user = rows[0];
+        if (!user?.password_hash) return null;
+        const valid = await compare(String(credentials.password), user.password_hash);
+        if (!valid) return null;
+        return { id: user.id, name: user.name, email: user.email, image: user.image };
+      },
     }),
   ],
   pages: {

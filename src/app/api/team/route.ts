@@ -2,12 +2,27 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
+// Seat limits per plan (additional members, excluding owner)
+const SEAT_LIMITS: Record<string, number> = {
+  agency_core:  2,  // 3 total
+  agency_scale: 9,  // 10 total (unbegrenzte laut Roadmap → pragmatic cap)
+  agentur:      2,  // legacy alias
+};
+
+function getPlanSeats(plan: string): number {
+  return SEAT_LIMITS[plan] ?? 0;
+}
+
+function isPaidAgencyPlan(plan: string): boolean {
+  return ["agency_core", "agency_scale", "agentur"].includes(plan);
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const plan = (session.user as { plan?: string }).plan;
-  if (plan !== "agentur") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const plan = (session.user as { plan?: string }).plan ?? "free";
+  if (!isPaidAgencyPlan(plan)) return NextResponse.json({ error: "Upgrade erforderlich." }, { status: 403 });
 
   const sql = neon(process.env.DATABASE_URL!);
   const members = await sql`
@@ -17,22 +32,24 @@ export async function GET() {
     ORDER BY invited_at DESC
   `;
 
-  return NextResponse.json(members);
+  return NextResponse.json({ members, maxSeats: getPlanSeats(plan) });
 }
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const plan = (session.user as { plan?: string }).plan;
-  if (plan !== "agentur") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const plan = (session.user as { plan?: string }).plan ?? "free";
+  if (!isPaidAgencyPlan(plan)) return NextResponse.json({ error: "Upgrade erforderlich." }, { status: 403 });
 
   const sql = neon(process.env.DATABASE_URL!);
+  const maxSeats = getPlanSeats(plan);
 
-  // Max 2 zusätzliche Mitglieder (= 3 Seats gesamt inkl. Owner)
   const count = await sql`SELECT COUNT(*) as c FROM team_members WHERE owner_id = ${session.user.id}`;
-  if (Number(count[0].c) >= 2) {
-    return NextResponse.json({ error: "Maximale Teamgröße (3 Seats) erreicht." }, { status: 400 });
+  if (Number(count[0].c) >= maxSeats) {
+    return NextResponse.json({
+      error: `Maximale Teamgröße (${maxSeats + 1} Seats) erreicht. Upgrade auf Agency Scale für mehr Seats.`,
+    }, { status: 400 });
   }
 
   const body = await req.json();

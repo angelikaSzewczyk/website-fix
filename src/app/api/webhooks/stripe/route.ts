@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { neon } from "@neondatabase/serverless";
 
+function priceIdToPlan(priceId: string | undefined): string {
+  if (!priceId) return "free";
+  if (priceId === process.env.STRIPE_PRICE_FREELANCER)   return "freelancer";
+  if (priceId === process.env.STRIPE_PRICE_AGENCY_CORE)  return "agency_core";
+  if (priceId === process.env.STRIPE_PRICE_AGENCY_SCALE) return "agency_scale";
+  // Legacy
+  if (priceId === process.env.STRIPE_PRICE_AGENTUR) return "agency_core";
+  if (priceId === process.env.STRIPE_PRICE_PRO)     return "freelancer";
+  return "free";
+}
+
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const sig = req.headers.get("stripe-signature")!;
@@ -21,23 +32,21 @@ export async function POST(req: NextRequest) {
     const email = session.customer_details?.email;
     if (!email) return NextResponse.json({ received: true });
 
-    // Expand line_items to get the price ID
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
       expand: ["line_items"],
     });
     const priceId = fullSession.line_items?.data?.[0]?.price?.id;
-
-    const plan =
-      priceId === process.env.STRIPE_PRICE_AGENTUR ? "agentur" :
-      priceId === process.env.STRIPE_PRICE_PRO ? "pro" : "pro"; // default to pro if unknown
+    const plan = priceIdToPlan(priceId);
 
     await sql`
       UPDATE users
-      SET plan = ${plan}, stripe_customer_id = ${session.customer as string}
+      SET plan = ${plan},
+          stripe_customer_id = ${session.customer as string},
+          stripe_subscription_id = ${session.subscription as string}
       WHERE email = ${email.toLowerCase()}
     `;
 
-    console.log(`Plan updated: ${email} → ${plan}`);
+    console.log(`Plan upgraded: ${email} → ${plan}`);
   }
 
   if (event.type === "customer.subscription.deleted") {
@@ -52,9 +61,7 @@ export async function POST(req: NextRequest) {
     const status = sub.status;
     if (status === "active") {
       const priceId = sub.items.data[0]?.price?.id;
-      const plan =
-        priceId === process.env.STRIPE_PRICE_AGENTUR ? "agentur" :
-        priceId === process.env.STRIPE_PRICE_PRO ? "pro" : "pro";
+      const plan = priceIdToPlan(priceId);
       await sql`UPDATE users SET plan = ${plan} WHERE stripe_customer_id = ${customerId}`;
     } else if (status === "canceled" || status === "unpaid") {
       await sql`UPDATE users SET plan = 'free' WHERE stripe_customer_id = ${customerId}`;
