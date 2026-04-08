@@ -12,6 +12,26 @@ type Website = {
   last_scan_type: string | null;
 };
 
+const C = {
+  card:      "#FFFFFF",
+  border:    "#E2E8F0",
+  divider:   "#F1F5F9",
+  shadow:    "0 1px 4px rgba(0,0,0,0.07)",
+  text:      "#0F172A",
+  textSub:   "#475569",
+  textMuted: "#94A3B8",
+  blue:      "#2563EB",
+  blueBg:    "#EFF6FF",
+  bg:        "#F8FAFC",
+  greenDot:  "#22C55E",
+  amberDot:  "#F59E0B",
+  redDot:    "#EF4444",
+  green:     "#16A34A",
+  greenBg:   "#F0FDF4",
+  red:       "#DC2626",
+  redBg:     "#FEF2F2",
+};
+
 export default function WebsitesSection() {
   const [websites, setWebsites] = useState<Website[]>([]);
   const [adding, setAdding] = useState(false);
@@ -42,17 +62,20 @@ export default function WebsitesSection() {
     setWebsites(w => w.filter(x => x.id !== id));
   }
 
-  const issueColor = (n: number | null) => n === null ? "rgba(255,255,255,0.3)" : n === 0 ? "#8df3d3" : n <= 2 ? "#ffd93d" : "#ff6b6b";
+  const dotColor = (n: number | null) => n === null ? C.textMuted : n === 0 ? C.greenDot : n <= 2 ? C.amberDot : C.redDot;
+  const statusText = (n: number | null) => n === null ? "—" : n === 0 ? "OK" : `${n} Issues`;
+  const statusColor = (n: number | null) => n === null ? C.textMuted : n === 0 ? C.green : n <= 2 ? "#D97706" : C.red;
 
   return (
-    <div style={{ marginBottom: 52 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 650, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
           Meine Websites
         </p>
         <button onClick={() => setAdding(a => !a)} style={{
-          fontSize: 12, padding: "5px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)",
-          background: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer",
+          fontSize: 12, padding: "5px 12px", borderRadius: 8,
+          border: `1px solid ${C.border}`, background: C.card,
+          color: C.blue, cursor: "pointer", fontWeight: 600,
         }}>
           + Website hinzufügen
         </button>
@@ -60,53 +83,92 @@ export default function WebsitesSection() {
 
       {adding && (
         <form onSubmit={handleAdd} style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Name (optional)" style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 13, width: 160 }} />
-          <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://kunden-website.de" required style={{ flex: 1, minWidth: 220, padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 13 }} />
-          <button type="submit" style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#8df3d3", color: "#0b0c10", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Speichern</button>
+          <input
+            value={newName} onChange={e => setNewName(e.target.value)}
+            placeholder="Name (optional)"
+            style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13, width: 160 }}
+          />
+          <input
+            value={newUrl} onChange={e => setNewUrl(e.target.value)}
+            placeholder="https://kunden-website.de" required
+            style={{ flex: 1, minWidth: 220, padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }}
+          />
+          <button type="submit" style={{
+            padding: "8px 18px", borderRadius: 8, border: "none",
+            background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer",
+          }}>
+            Speichern
+          </button>
         </form>
       )}
 
       {loading ? (
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", padding: "16px 0" }}>Lädt...</div>
+        <div style={{ fontSize: 13, color: C.textMuted, padding: "16px 0" }}>Lädt...</div>
       ) : websites.length === 0 ? (
-        <div style={{ padding: "24px 20px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)", borderRadius: 12, textAlign: "center" }}>
-          <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Noch keine Websites gespeichert. Füge deine ersten Kunden-Websites hinzu.</p>
+        <div style={{
+          padding: "24px 20px", background: C.card,
+          border: `1px dashed ${C.border}`, borderRadius: 12, textAlign: "center",
+        }}>
+          <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>
+            Noch keine Websites gespeichert. Füge deine ersten Kunden-Websites hinzu.
+          </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {websites.map(site => (
-            <div key={site.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 18px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, boxShadow: C.shadow, overflow: "hidden" }}>
+          {websites.map((site, i) => (
+            <div key={site.id} style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "13px 18px",
+              borderBottom: i < websites.length - 1 ? `1px solid ${C.divider}` : "none",
+            }}>
+              {/* Status dot */}
+              <span style={{
+                width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                background: dotColor(site.last_issue_count),
+              }} />
+              {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {site.name ?? site.url}
                 </div>
-                {site.name && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{site.url}</div>}
+                {site.name && (
+                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {site.url}
+                  </div>
+                )}
                 {site.last_scan_at && (
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>
                     Letzter Scan: {new Date(site.last_scan_at).toLocaleDateString("de-DE")}
                   </div>
                 )}
               </div>
+              {/* Issue count */}
               {site.last_issue_count !== null && (
-                <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-                  <span style={{
-                    width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
-                    background: issueColor(site.last_issue_count),
-                    boxShadow: site.last_issue_count === 0 ? `0 0 5px ${issueColor(site.last_issue_count)}60` : "none",
-                  }} />
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-                    {site.last_issue_count === 0 ? "OK" : `${site.last_issue_count} Issues`}
-                  </span>
-                </div>
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 20,
+                  color: statusColor(site.last_issue_count),
+                  background: site.last_issue_count === 0 ? C.greenBg : site.last_issue_count <= 2 ? "#FFFBEB" : C.redBg,
+                  border: `1px solid ${dotColor(site.last_issue_count)}44`,
+                  flexShrink: 0,
+                }}>
+                  {statusText(site.last_issue_count)}
+                </span>
               )}
+              {/* Scan link */}
               <Link href={`/dashboard/scan?url=${encodeURIComponent(site.url)}`} style={{
-                fontSize: 12, padding: "5px 11px", borderRadius: 7, textDecoration: "none",
-                border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.45)",
-                background: "none", whiteSpace: "nowrap",
+                fontSize: 12, padding: "5px 12px", borderRadius: 7, textDecoration: "none",
+                border: `1px solid ${C.border}`, color: C.blue,
+                background: C.blueBg, whiteSpace: "nowrap", fontWeight: 600,
               }}>
                 Scannen →
               </Link>
-              <button onClick={() => handleDelete(site.id)} style={{ fontSize: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", padding: "0 4px" }}>×</button>
+              {/* Delete */}
+              <button onClick={() => handleDelete(site.id)} style={{
+                fontSize: 16, background: "none", border: "none", cursor: "pointer",
+                color: C.textMuted, padding: "0 4px", lineHeight: 1,
+              }}>
+                ×
+              </button>
             </div>
           ))}
         </div>

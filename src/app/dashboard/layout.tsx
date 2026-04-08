@@ -30,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(agencyPrimary) ? agencyPrimary : "#8df3d3";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#0b0c10" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#F0F4F8" }}>
 
       {/* CSS custom properties — available throughout the dashboard */}
       <style>{`:root { --agency-primary: ${safeColor}; --agency-primary-bg: ${safeColor}18; --agency-primary-border: ${safeColor}35; }`}</style>
@@ -76,7 +76,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       </header>
 
       {/* CONTENT */}
-      <div className="dashboard-content" style={{ marginLeft: 220, flex: 1, minWidth: 0 }}>
+      <div className="dashboard-content" style={{ marginLeft: 220, flex: 1, minWidth: 0, background: "#F8FAFC", minHeight: "100vh" }}>
         {children}
       </div>
 
