@@ -147,7 +147,7 @@ export default function Page() {
             </Link>
           </div>
 
-          <p style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+          <p style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
             Kostenlos · Keine Installation · Ergebnis in unter 60 Sekunden
           </p>
         </section>
@@ -330,7 +330,7 @@ export default function Page() {
       {/* FOOTER */}
       <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "32px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
             {`© ${new Date().getFullYear()} website-fix.com`}
           </span>
           <div style={{ display: "flex", gap: 24 }}>
