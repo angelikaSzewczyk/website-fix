@@ -85,23 +85,19 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
       <nav style={{ flex: 1, paddingTop: 16, display: "flex", flexDirection: "column", gap: 2 }}>
         {visibleItems.map((item) => {
           const active = isActive(item);
-          const Tag = item.soon ? "span" : Link;
-          return (
-            <Tag
-              key={item.href}
-              {...(!item.soon ? { href: item.href } : {})}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 12px", borderRadius: 8, textDecoration: "none",
-                fontSize: 13, fontWeight: active ? 600 : 400,
-                color: active ? "#fff" : item.soon ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.45)",
-                background: active ? "rgba(0,123,255,0.15)" : "transparent",
-                borderLeft: active ? "2px solid #007BFF" : "2px solid transparent",
-                paddingLeft: active ? "10px" : "12px",
-                transition: "background 0.1s, color 0.1s, border-color 0.1s",
-                cursor: item.soon ? "default" : "pointer",
-              }}
-            >
+          const sharedStyle = {
+            display: "flex" as const, alignItems: "center" as const, gap: 10,
+            padding: "9px 12px", borderRadius: 8, textDecoration: "none",
+            fontSize: 13, fontWeight: active ? 600 : 400,
+            color: active ? "#fff" : item.soon ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.45)",
+            background: active ? "rgba(0,123,255,0.15)" : "transparent",
+            borderLeft: active ? "2px solid #007BFF" : "2px solid transparent",
+            paddingLeft: active ? "10px" : "12px",
+            transition: "background 0.1s, color 0.1s, border-color 0.1s",
+            cursor: item.soon ? "default" as const : "pointer" as const,
+          };
+          const children = (
+            <>
               <span style={{ opacity: active ? 1 : item.soon ? 0.3 : 0.5, color: active ? "#007BFF" : "inherit", display: "flex" }}>
                 {item.icon}
               </span>
@@ -113,7 +109,15 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
                   letterSpacing: "0.06em",
                 }}>BALD</span>
               )}
-            </Tag>
+            </>
+          );
+          if (item.soon) {
+            return <span key={item.href} style={sharedStyle}>{children}</span>;
+          }
+          return (
+            <Link key={item.href} href={item.href} style={sharedStyle}>
+              {children}
+            </Link>
           );
         })}
       </nav>
