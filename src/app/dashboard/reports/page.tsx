@@ -40,7 +40,7 @@ export default async function ReportsPage() {
       FROM monthly_reports
       WHERE user_id = ${user.id}
       ORDER BY month DESC LIMIT 24
-    ` as Promise<ReportRow[]>,
+    ` as unknown as Promise<ReportRow[]>,
 
     // Fixed: now queries activity_logs (not the dropped activity_log)
     user.plan === "agentur"
@@ -52,7 +52,7 @@ export default async function ReportsPage() {
             (SELECT COUNT(*)::int FROM activity_logs   WHERE agency_id = ${user.id} AND created_at >= ${monthStart} AND event_type = 'jira_ticket_created') AS jira_tickets,
             (SELECT COUNT(*)::int FROM activity_logs   WHERE agency_id = ${user.id} AND created_at >= ${monthStart}) AS critical_issues_resolved,
             (SELECT COUNT(*)::int FROM saved_websites  WHERE user_id  = ${user.id}) AS websites_monitored
-        ` as Promise<{ scans_total: number; wcag_scans: number; ai_suggestions: number; jira_tickets: number; critical_issues_resolved: number; websites_monitored: number }[]>
+        ` as unknown as Promise<{ scans_total: number; wcag_scans: number; ai_suggestions: number; jira_tickets: number; critical_issues_resolved: number; websites_monitored: number }[]>
       : Promise.resolve([]),
 
     // Websites for Value Report generator (agentur only)
@@ -61,7 +61,7 @@ export default async function ReportsPage() {
           SELECT id::text, name, url FROM saved_websites
           WHERE user_id = ${user.id}
           ORDER BY name ASC NULLS LAST, url ASC
-        ` as Promise<Website[]>
+        ` as unknown as Promise<Website[]>
       : Promise.resolve([]),
   ]);
 
