@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
+import CheckoutButton from "../components/checkout-button";
 
 export const metadata: Metadata = {
   title: "WebsiteFix für Agenturen — Automatische Wartungsverträge & BFSG",
@@ -95,24 +96,28 @@ const PLANS = [
 
 const FAQ = [
   {
+    q: "Kann ich mein eigenes Branding nutzen?",
+    a: "Ja, ab dem Agency Core Paket kannst du Logo, Farben und Domain anpassen (White-Labeling). Deine Kunden sehen ausschließlich dein Agentur-Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool.",
+  },
+  {
+    q: "Wie sicher sind die Daten meiner Kunden?",
+    a: "Wir hosten 100% DSGVO-konform in Deutschland. Alle Daten werden verschlüsselt übertragen und gespeichert. Du bleibst Eigentümer deiner Daten — wir verkaufen oder teilen sie nicht.",
+  },
+  {
+    q: "Wann wird Barrierefreiheit Pflicht?",
+    a: "Ab Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz (BFSG) für die meisten kommerziellen Websites. Agenturen, die Websites betreuen, tragen Mitverantwortung. WebsiteFix prüft automatisch alle WCAG 2.1 AA-Kriterien und erstellt einen lückenlosen Audit-Trail als Nachweis.",
+  },
+  {
     q: "Für welche Website-Plattformen funktioniert das?",
-    a: "Für jede öffentlich erreichbare Website — WordPress, WooCommerce, Shopify, Wix, Squarespace, Webflow, TYPO3, Joomla, Drupal und Custom-Entwicklungen. Kein Plugin nötig.",
+    a: "Für jede öffentlich erreichbare Website — WordPress, WooCommerce, Shopify, Wix, Squarespace, Webflow, TYPO3, Joomla, Drupal und Custom-Entwicklungen. Kein Plugin, kein Hosting-Zugang nötig.",
   },
   {
-    q: "Muss ich Hosting-Zugang oder WordPress-Login teilen?",
-    a: "Nein. Nur die URL reicht. WebsiteFix scannt extern — ohne Zugang zu Server, FTP oder CMS.",
-  },
-  {
-    q: "Was ist BFSG und bin ich als Agentur betroffen?",
-    a: "Das Barrierefreiheitsstärkungsgesetz gilt seit Juni 2025 für viele B2C-Online-Dienste. Agenturen, die Websites betreuen, tragen Mitverantwortung. Unser BFSG-Monitor prüft automatisch alle relevanten Kriterien und dokumentiert die Ergebnisse — damit du im Ernstfall Nachweise hast.",
-  },
-  {
-    q: "Sieht mein Kunde, dass WebsiteFix dahinter steckt?",
-    a: "Nein. Mit White-Label erscheint dein Logo, dein Name und deine Farbe. Nur ein kleiner Pflichthinweis im Report-Footer ist gesetzlich erforderlich.",
+    q: "Wie läuft die Jira / Trello / Asana Integration?",
+    a: "Du verbindest dein Projekt-Management-Tool einmalig in den Einstellungen. Sobald ein Scan Probleme findet, wird automatisch ein Ticket mit allen Details (Screenshot, Code-Fix, Priorität) erstellt — ohne manuellen Aufwand.",
   },
   {
     q: "Kann ich den Plan jederzeit kündigen?",
-    a: "Ja. Monatliche Kündigung, keine Mindestlaufzeit. Abrechnung über Stripe.",
+    a: "Ja. Monatliche Kündigung, keine Mindestlaufzeit. Abrechnung über Stripe. Nach der Kündigung hast du noch Zugang bis zum Ende des bezahlten Zeitraums.",
   },
 ];
 
@@ -191,14 +196,16 @@ export default function AgencyPage() {
           </p>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/login" style={{
-              padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
-              background: "linear-gradient(90deg, #007BFF, #0057b8)",
-              color: "#fff", textDecoration: "none",
-              boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
-            }}>
-              Jetzt Agency-Account erstellen →
-            </Link>
+            <CheckoutButton
+              plan="agency_core"
+              label="Jetzt Agency-Account erstellen →"
+              style={{
+                padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
+                background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                color: "#fff", border: "none",
+                boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
+              }}
+            />
             <Link href="#pricing" style={{
               padding: "14px 28px", borderRadius: 10, fontSize: 15,
               border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)",
@@ -356,16 +363,18 @@ export default function AgencyPage() {
                   </div>
                 ))}
 
-                <Link href="/login" style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "12px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
-                  background: "linear-gradient(90deg,#007BFF,#0057b8)",
-                  color: "#fff", textDecoration: "none", marginTop: 8,
-                  boxShadow: "0 3px 14px rgba(0,123,255,0.3)",
-                  width: "fit-content",
-                }}>
-                  White-Label jetzt einrichten →
-                </Link>
+                <CheckoutButton
+                  plan="agency_core"
+                  label="White-Label jetzt einrichten →"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    padding: "12px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
+                    background: "linear-gradient(90deg,#007BFF,#0057b8)",
+                    color: "#fff", border: "none", marginTop: 8,
+                    boxShadow: "0 3px 14px rgba(0,123,255,0.3)",
+                    width: "fit-content",
+                  }}
+                />
               </div>
 
               {/* Right: report preview */}
@@ -615,17 +624,20 @@ export default function AgencyPage() {
                     </div>
 
                     <div style={{ paddingBottom: 24 }}>
-                      <Link href={plan.href} style={{
-                        display: "block", textAlign: "center",
-                        padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700,
-                        textDecoration: "none",
-                        background: plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "#0F172A" : "#F8FAFC",
-                        color: plan.recommended || plan.scale || plan.enterprise ? "#ffffff" : "#475569",
-                        border: plan.recommended || plan.scale || plan.enterprise ? "none" : "1px solid #E2E8F0",
-                        boxShadow: plan.recommended ? "0 4px 14px rgba(37,99,235,0.35)" : "none",
-                      }}>
-                        {plan.cta}
-                      </Link>
+                      <CheckoutButton
+                        plan={plan.enterprise ? "enterprise" : plan.scale ? "agency_scale" : plan.recommended ? "agency_core" : "freelancer"}
+                        label={plan.cta}
+                        href={plan.enterprise ? plan.href : undefined}
+                        style={{
+                          display: "block", textAlign: "center", width: "100%",
+                          padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700,
+                          textDecoration: "none",
+                          background: plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "#0F172A" : "#F8FAFC",
+                          color: plan.recommended || plan.scale || plan.enterprise ? "#ffffff" : "#475569",
+                          border: plan.recommended || plan.scale || plan.enterprise ? "none" : "1px solid #E2E8F0",
+                          boxShadow: plan.recommended ? "0 4px 14px rgba(37,99,235,0.35)" : "none",
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -644,13 +656,16 @@ export default function AgencyPage() {
         </section>
 
         {/* FAQ */}
-        <section style={{ background: "#ffffff", borderTop: "1px solid #E2E8F0" }}>
+        <section style={{ background: "#F8FAFC", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
             <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
-            <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 40px", letterSpacing: "-0.02em", color: "#0F172A" }}>
+            <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: "#0F172A" }}>
               Häufige Fragen
             </h2>
-            <FaqAccordion items={FAQ} />
+            <p style={{ margin: "0 0 40px", fontSize: 15, color: "#64748B", lineHeight: 1.6 }}>
+              Alles, was Agentur-Inhaber vor dem Start wissen wollen.
+            </p>
+            <FaqAccordion items={FAQ} light={true} />
           </div>
         </section>
 
@@ -675,14 +690,16 @@ export default function AgencyPage() {
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
-              <Link href="/login" style={{
-                padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,
-                background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                color: "#fff", textDecoration: "none", whiteSpace: "nowrap",
-                boxShadow: "0 4px 24px rgba(0,123,255,0.4)",
-              }}>
-                Jetzt Agency-Account erstellen →
-              </Link>
+              <CheckoutButton
+                plan="agency_core"
+                label="Jetzt Agency-Account erstellen →"
+                style={{
+                  padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,
+                  background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                  color: "#fff", border: "none", whiteSpace: "nowrap",
+                  boxShadow: "0 4px 24px rgba(0,123,255,0.4)",
+                }}
+              />
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
                 Agency Core ab 149€/Monat · Jederzeit kündbar
               </span>
