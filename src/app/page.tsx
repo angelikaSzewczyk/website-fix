@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import FaqAccordion from "./components/faq-accordion";
+import RoiCalculator from "./components/roi-calculator";
 
 export const metadata: Metadata = {
   title: "WebsiteFix — Das Betriebssystem für deine Website-Wartung",
@@ -87,67 +88,91 @@ const BENTO = [
 
 const PLANS = [
   {
-    name: "Starter",
-    price: "49",
+    name: "Freelancer",
+    price: "29",
     per: "/Monat",
-    desc: "Für einzelne Agenturen & Freelancer",
+    desc: "Für Solo-Freelancer mit ersten Kunden",
     badge: null,
     accent: "#475569",
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "5 Websites", highlight: false },
+      { text: "Bis zu 3 Projekte", highlight: false },
       { text: "Manuelle Scans", highlight: false },
       { text: "WCAG · SEO · Performance", highlight: false },
       { text: "KI-Diagnose auf Deutsch", highlight: false },
-      { text: "Slack-Integration", highlight: false },
-      { text: "PDF-Export", highlight: false },
+      { text: "Einfache PDF-Berichte", highlight: false },
+      { text: "E-Mail-Support", highlight: false },
     ],
-    cta: "Jetzt starten",
+    cta: "Kostenlos starten",
     href: "/login",
     recommended: false,
     enterprise: false,
   },
   {
-    name: "Pro",
+    name: "Agency Core",
     price: "149",
     per: "/Monat",
-    desc: "Für wachsende Agenturen",
-    badge: "EMPFOHLEN",
+    desc: "Für wachsende Agenturen mit Wartungskunden",
+    badge: "BESTSELLER",
     accent: "#2563EB",
     accentBg: "#EFF6FF",
     accentBorder: "#BFDBFE",
     features: [
-      { text: "25 Websites", highlight: true },
+      { text: "Bis zu 20 Projekte", highlight: true },
       { text: "Wöchentliche Deep-Scans", highlight: true },
-      { text: "White-Label Reports", highlight: true },
+      { text: "White-Label (Dein Logo)", highlight: true },
       { text: "Jira / Trello / Asana", highlight: true },
-      { text: "3 Team-Seats", highlight: false },
       { text: "Auto-Monatsberichte", highlight: false },
+      { text: "3 Team-Seats", highlight: false },
       { text: "Prio-Support", highlight: false },
     ],
-    cta: "Agentur-Account erstellen",
+    cta: "Agency-Account erstellen",
     href: "/login",
     recommended: true,
     enterprise: false,
   },
   {
-    name: "Enterprise",
-    price: "499",
+    name: "Agency Scale",
+    price: "299",
     per: "/Monat",
+    desc: "Für Agenturen, die skalieren wollen",
+    badge: "SCALE",
+    accent: "#7C3AED",
+    accentBg: "#F5F3FF",
+    accentBorder: "#DDD6FE",
+    features: [
+      { text: "Bis zu 50 Projekte", highlight: true },
+      { text: "Vollautomatische Scans", highlight: true },
+      { text: "Reports direkt an Endkunden", highlight: true },
+      { text: "BFSG Haftungsschutz-Monitor", highlight: true },
+      { text: "Unbegrenzte Team-Seats", highlight: false },
+      { text: "Priorisierter Support", highlight: false },
+      { text: "Custom Branding", highlight: false },
+    ],
+    cta: "Scale-Account erstellen",
+    href: "/login",
+    recommended: false,
+    enterprise: false,
+    scale: true,
+  },
+  {
+    name: "Enterprise",
+    price: "Individuell",
+    per: "",
     desc: "Für große Agenturen & Reseller",
     badge: "ENTERPRISE",
     accent: "#0F172A",
     accentBg: "#F8FAFC",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "Unbegrenzte Websites", highlight: true },
+      { text: "Unbegrenzte Projekte", highlight: true },
       { text: "Täglicher Security-Puls", highlight: true },
-      { text: "Auto-Report-Versand an Endkunden", highlight: true },
-      { text: "BFSG Haftungsschutz-Monitor", highlight: true },
-      { text: "Unbegrenzte Team-Seats", highlight: false },
-      { text: "API-Zugang", highlight: false },
-      { text: "Dedicated Support", highlight: false },
+      { text: "API-Zugriff & Webhooks", highlight: true },
+      { text: "Custom Branding & Domain", highlight: true },
+      { text: "SLA & Dedicated Support", highlight: false },
+      { text: "SSO / SAML", highlight: false },
+      { text: "On-Premise Option", highlight: false },
     ],
     cta: "Kontakt aufnehmen",
     href: "mailto:support@website-fix.com?subject=Enterprise",
@@ -241,11 +266,11 @@ export default function Page() {
           </div>
 
           <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            Das Wartungs-Dashboard<br />für moderne Agenturen.
+            Verdiene mehr mit automatisierten<br />Wartungsverträgen.
           </h1>
 
-          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 600, margin: "0 auto 40px", fontWeight: 400 }}>
-            Automatisiere Scans, erstelle White-Label Reports und schütze deine Kunden vor BFSG-Strafen. Alles in einem Tool.
+          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
+            WebsiteFix ist das White-Label Dashboard für Agenturen. Scanne Kunden-Websites vollautomatisch, erstelle Profi-Reports und integriere alles in Jira, Trello oder Asana.
           </p>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -667,6 +692,9 @@ export default function Page() {
           </div>
         </section>
 
+        {/* ROI CALCULATOR */}
+        <RoiCalculator />
+
         {/* PRICING */}
         <section id="pricing" style={{ background: "#ffffff", padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -704,7 +732,17 @@ export default function Page() {
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>
-                        ★ EMPFOHLEN
+                        ★ BESTSELLER
+                      </span>
+                    </div>
+                  )}
+                  {"scale" in plan && plan.scale && (
+                    <div style={{
+                      background: "#7C3AED", padding: "8px 24px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>
+                        SCALE
                       </span>
                     </div>
                   )}
@@ -718,7 +756,7 @@ export default function Page() {
                       </span>
                     </div>
                   )}
-                  {!plan.recommended && !plan.enterprise && (
+                  {!plan.recommended && !("scale" in plan && plan.scale) && !plan.enterprise && (
                     <div style={{ height: 4, background: "#F1F5F9" }} />
                   )}
 
@@ -729,8 +767,14 @@ export default function Page() {
                         {plan.name}
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
-                        <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
-                        <span style={{ fontSize: 13, color: "#94A3B8" }}>{plan.per}</span>
+                        {plan.enterprise ? (
+                          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#0F172A" }}>Auf Anfrage</span>
+                        ) : (
+                          <>
+                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
+                            <span style={{ fontSize: 13, color: "#94A3B8" }}>{plan.per}</span>
+                          </>
+                        )}
                       </div>
                       <p style={{ margin: 0, fontSize: 13, color: "#64748B" }}>{plan.desc}</p>
                     </div>
