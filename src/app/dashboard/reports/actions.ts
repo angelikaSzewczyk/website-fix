@@ -51,12 +51,12 @@ export type ReportData = ValueReportData & {
 // ─── Helper: aggregate raw data ───────────────────────────────────────────────
 
 async function getReportData(
-  sql: ReturnType<typeof neon>,
   userId: number,
   websiteId: string,
   monthStr: string,
 ): Promise<Omit<ValueReportData, "executiveSummary" | "agencyName" | "logoUrl" | "primaryColor">> {
 
+  const sql = neon(process.env.DATABASE_URL!);
   const [year, mon] = monthStr.split("-").map(Number);
   const monthStart  = new Date(year, mon - 1, 1).toISOString();
   const monthEnd    = new Date(year, mon, 0, 23, 59, 59).toISOString();
@@ -209,7 +209,7 @@ export async function generateMonthlyValueReport(
 
   let rawData: Omit<ValueReportData, "executiveSummary" | "agencyName" | "logoUrl" | "primaryColor">;
   try {
-    rawData = await getReportData(sql, session.user.id as number, websiteId, monthStr);
+    rawData = await getReportData(Number(session.user.id), websiteId, monthStr);
   } catch (err) {
     return { error: (err as Error).message };
   }
