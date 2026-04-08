@@ -62,7 +62,7 @@ export default async function DashboardPage() {
 
   // Agentur-specific queries
   let criticalSites: CriticalSite[] = [];
-  let marginLevers = { wcagScansMonth: 0, websitesMonitored: 0, alertsSent: 0, scansThisMonth: 0 };
+  let marginLevers = { wcagScansMonth: 0, websitesMonitored: 0, alertsSent: 0, scansThisMonth: 0, slackActionsMonth: 0 };
 
   if (plan === "agentur") {
     criticalSites = await sql`
@@ -96,17 +96,19 @@ export default async function DashboardPage() {
 
     const [levers] = await sql`
       SELECT
-        (SELECT COUNT(*) FROM saved_websites WHERE user_id = ${session.user.id}) AS websites_monitored,
-        (SELECT COUNT(*) FROM scans WHERE user_id = ${session.user.id} AND created_at >= ${monthStart}) AS scans_this_month,
-        (SELECT COUNT(*) FROM scans WHERE user_id = ${session.user.id} AND type = 'wcag' AND created_at >= ${monthStart}) AS wcag_scans_month
-    ` as { websites_monitored: number; scans_this_month: number; wcag_scans_month: number }[];
+        (SELECT COUNT(*) FROM saved_websites  WHERE user_id = ${session.user.id}) AS websites_monitored,
+        (SELECT COUNT(*) FROM scans           WHERE user_id = ${session.user.id} AND created_at >= ${monthStart}) AS scans_this_month,
+        (SELECT COUNT(*) FROM scans           WHERE user_id = ${session.user.id} AND created_at >= ${monthStart} AND type = 'wcag') AS wcag_scans_month,
+        (SELECT COUNT(*) FROM activity_logs   WHERE agency_id = ${session.user.id} AND created_at >= ${monthStart}) AS slack_actions_month
+    ` as { websites_monitored: number; scans_this_month: number; wcag_scans_month: number; slack_actions_month: number }[];
 
     if (levers) {
       marginLevers = {
-        wcagScansMonth: Number(levers.wcag_scans_month),
+        wcagScansMonth:    Number(levers.wcag_scans_month),
         websitesMonitored: Number(levers.websites_monitored),
-        alertsSent: criticalSites.length,
-        scansThisMonth: Number(levers.scans_this_month),
+        alertsSent:        criticalSites.length,
+        scansThisMonth:    Number(levers.scans_this_month),
+        slackActionsMonth: Number(levers.slack_actions_month),
       };
     }
   }
@@ -237,7 +239,7 @@ export default async function DashboardPage() {
                 <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>Aktivitäten diesen Monat</p>
               </div>
 
-              <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10 }}>
                 {[
                   {
                     value: marginLevers.scansThisMonth,
@@ -262,6 +264,12 @@ export default async function DashboardPage() {
                     label: "Offene Warnungen",
                     color: marginLevers.alertsSent > 0 ? "#ff6b6b" : "#8df3d3",
                     hint: marginLevers.alertsSent === 0 ? "Kein Handlungsbedarf" : "Aufmerksamkeit nötig",
+                  },
+                  {
+                    value: marginLevers.slackActionsMonth,
+                    label: "Gelöst via Slack",
+                    color: marginLevers.slackActionsMonth > 0 ? "#7aa6ff" : "rgba(255,255,255,0.3)",
+                    hint: marginLevers.slackActionsMonth > 0 ? "KI + Jira-Aktionen" : "Slack-Buttons nutzen",
                   },
                 ].map(item => (
                   <div key={item.label} style={{
