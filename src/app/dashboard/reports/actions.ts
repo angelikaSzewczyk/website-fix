@@ -303,5 +303,5 @@ export async function getSavedReports(): Promise<SavedReport[]> {
     WHERE user_id = ${session.user.id}
     ORDER BY month DESC, sent_at DESC
     LIMIT 36
-  ` as Promise<SavedReport[]>;
+  ` as unknown as Promise<SavedReport[]>;
 }
