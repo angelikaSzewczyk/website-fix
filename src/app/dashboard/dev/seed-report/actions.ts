@@ -18,9 +18,6 @@ export async function seedReportData(): Promise<SeedResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Nicht eingeloggt." };
 
-  const plan = (session.user as { plan?: string }).plan;
-  if (plan !== "agentur") return { ok: false, error: "Nur für den Agentur-Plan." };
-
   const userId = Number(session.user.id);
   const sql    = neon(process.env.DATABASE_URL!);
 
