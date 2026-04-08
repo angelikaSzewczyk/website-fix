@@ -107,7 +107,7 @@ export default function SettingsPage() {
           background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 16, padding: "28px 28px", marginBottom: 28,
         }}>
-          <h2 style={{ margin: "0 0 20px", fontSize: 18, fontWeight: 700 }}>🏷️ White-Label Branding</h2>
+          <h2 style={{ margin: "0 0 20px", fontSize: 18, fontWeight: 700 }}>White-Label Branding</h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div>
@@ -177,7 +177,7 @@ export default function SettingsPage() {
           borderRadius: 16, padding: "28px 28px",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>👥 Team-Zugang</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Team-Zugang</h2>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
               {members.length + 1} / 3 Seats genutzt
             </span>

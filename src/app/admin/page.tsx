@@ -14,7 +14,7 @@ const ADMIN_EMAIL = "angelika.szewczyk87@gmail.com";
 const PLAN_PRICE: Record<string, number> = {
   free: 0,
   pro: 29,
-  agentur: 99,
+  agentur: 149,
 };
 
 type UserRow = {
@@ -57,7 +57,7 @@ export default async function AdminPage() {
     pro: users.filter(u => u.plan === "pro").length,
     agentur: users.filter(u => u.plan === "agentur").length,
   };
-  const mrr = byPlan.pro * 29 + byPlan.agentur * 99;
+  const mrr = byPlan.pro * 29 + byPlan.agentur * 149;
   const totalScans = (scanStats[0]?.total as number) ?? 0;
   const totalWebsites = (websiteStats[0]?.total as number) ?? 0;
 
@@ -123,7 +123,7 @@ export default async function AdminPage() {
           {[
             { plan: "Free", count: byPlan.free, price: 0, color: "rgba(255,255,255,0.3)" },
             { plan: "Pro", count: byPlan.pro, price: 29, color: "#8df3d3" },
-            { plan: "Agentur", count: byPlan.agentur, price: 99, color: "#7aa6ff" },
+            { plan: "Agentur", count: byPlan.agentur, price: 149, color: "#7aa6ff" },
           ].map(p => (
             <div key={p.plan} style={{
               padding: "16px 20px",

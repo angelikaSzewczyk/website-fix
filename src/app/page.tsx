@@ -43,7 +43,7 @@ const PLANS = [
   },
   {
     name: "Agentur",
-    price: "99",
+    price: "149",
     desc: "Für Web-Agenturen",
     features: ["Alles aus Pro", "Bis zu 30 Kunden-Domains", "White-Label Reports", "Team-Zugang (3 Seats)", "Automatische Monatsberichte", "Prioritäts-Support"],
     cta: "Agentur-Plan starten",

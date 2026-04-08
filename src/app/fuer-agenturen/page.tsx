@@ -136,7 +136,7 @@ export default function AgencyPage() {
               padding: "13px 28px", borderRadius: 10, fontWeight: 700, fontSize: 15,
               background: "#fff", color: "#0b0c10", textDecoration: "none",
             }}>
-              Agentur-Plan starten — 99€/Monat
+              Agentur-Plan starten — 149€/Monat
             </Link>
             <Link href="/scan" style={{
               padding: "13px 28px", borderRadius: 10, fontSize: 15,
@@ -264,7 +264,7 @@ export default function AgencyPage() {
               </div>
               <div style={{ fontSize: 13, color: "#7aa6ff", marginBottom: 12 }}>Agentur</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
-                <span style={{ fontSize: 40, fontWeight: 700, letterSpacing: "-0.03em" }}>99€</span>
+                <span style={{ fontSize: 40, fontWeight: 700, letterSpacing: "-0.03em" }}>149€</span>
                 <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>Für Web-Agenturen</div>
