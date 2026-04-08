@@ -27,29 +27,47 @@ function ReportCard({ data }: { data: ValueReportData }) {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       {/* ── HEADER ── */}
-      <div style={{ background: color, padding: "22px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div style={{
+        background: `linear-gradient(135deg, ${color}, ${color}cc)`,
+        padding: "24px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* subtle geometric accent */}
+        <div style={{
+          position: "absolute", right: -30, top: -30,
+          width: 120, height: 120, borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)", pointerEvents: "none",
+        }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
           {data.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.logoUrl} alt="" style={{ height: 36, objectFit: "contain" }}
+            <img src={data.logoUrl} alt=""
+              style={{ height: 40, maxWidth: 120, objectFit: "contain", filter: "brightness(0) invert(1)" }}
               onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
           ) : (
             <div style={{
-              width: 36, height: 36, borderRadius: 8, background: "rgba(0,0,0,0.2)",
+              width: 40, height: 40, borderRadius: 10, background: "rgba(0,0,0,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, fontWeight: 700, color: "#fff",
+              fontSize: 18, fontWeight: 800, color: "#fff",
             }}>
-              {agencyName.charAt(0)}
+              {agencyName.charAt(0) || "A"}
             </div>
           )}
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: "#0b0c10" }}>{agencyName}</div>
-            <div style={{ fontSize: 12, color: "rgba(0,0,0,0.5)", marginTop: 2 }}>Website-Analyse Report</div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
+              {agencyName || "Ihre Agentur"}
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+              Monatlicher Website-Report
+            </div>
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#0b0c10" }}>{data.monthLabel}</div>
-          <div style={{ fontSize: 11, color: "rgba(0,0,0,0.5)", marginTop: 2 }}>Monatsbericht</div>
+        <div style={{ textAlign: "right", position: "relative" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{data.monthLabel}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 3 }}>
+            {data.websiteName}
+          </div>
         </div>
       </div>
 
@@ -151,10 +169,13 @@ function ReportCard({ data }: { data: ValueReportData }) {
         {/* ── FOOTER ── */}
         <div style={{
           paddingTop: 16, borderTop: "1px solid #f0f0f0",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
+          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap",
         }}>
-          <div style={{ fontSize: 11, color: "#bbb" }}>
-            Erstellt mit WebsiteFix · {new Date().toLocaleDateString("de-DE")}
+          <div style={{ fontSize: 11, color: "#bbb", lineHeight: 1.6 }}>
+            Bericht erstellt am {new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}
+            {data.websiteName && (
+              <> für <span style={{ color: "#888", fontWeight: 600 }}>{data.websiteName}</span></>
+            )}
           </div>
           {agencyName && (
             <div style={{
@@ -164,6 +185,22 @@ function ReportCard({ data }: { data: ValueReportData }) {
               {agencyName}
             </div>
           )}
+        </div>
+
+        {/* ── DISCLAIMER ── */}
+        <div style={{
+          marginTop: 16, padding: "12px 14px", borderRadius: 8,
+          background: "#f9f9f9", border: "1px solid #ebebeb",
+        }}>
+          <p style={{
+            margin: 0, fontSize: 10, color: "#bbb", lineHeight: 1.7,
+          }}>
+            <strong style={{ color: "#ccc", fontWeight: 600 }}>Hinweis:</strong>{" "}
+            Dieser Bericht wurde automatisiert durch website-fix.com erstellt. Die Analyse dient der proaktiven
+            Unterstützung bei der Wartung und stellt keine rechtsverbindliche Prüfung (z.&nbsp;B. durch einen
+            Datenschutzbeauftragten oder Rechtsanwalt) dar. Wir übernehmen keine Gewähr für die vollständige
+            Fehlerfreiheit bei der Erkennung von Drittanbieter-Sicherheitslücken oder spezifischen WCAG-Richtlinien.
+          </p>
         </div>
       </div>
     </div>
@@ -202,18 +239,38 @@ export default function ValueReportClient({ websites }: { websites: Website[] })
       {/* ── PRINT STYLES ── */}
       <style>{`
         @media print {
-          .no-print, .dashboard-sidebar, .dashboard-mobile-bar { display: none !important; }
-          .dashboard-content { margin-left: 0 !important; padding-top: 0 !important; }
-          body { background: #fff !important; }
+          /* hide all dashboard chrome */
+          .no-print,
+          .dashboard-sidebar,
+          .dashboard-mobile-bar,
+          header, nav, aside { display: none !important; }
+
+          /* reset layout so report fills the page */
+          .dashboard-content { margin-left: 0 !important; padding: 0 !important; }
+          body, html { background: #fff !important; color: #111 !important; }
+          main { padding: 0 !important; max-width: 100% !important; }
+
+          /* report card itself */
           #value-report-card {
             border: none !important;
             box-shadow: none !important;
             border-radius: 0 !important;
+            width: 100% !important;
             max-width: 100% !important;
+            page-break-inside: avoid;
           }
+
+          /* ensure activity rows don't break across pages */
+          #value-report-card > div > div { page-break-inside: avoid; }
+
           .report-print-wrapper { padding: 0 !important; }
-          @page { margin: 1.5cm; size: A4; }
+
+          @page { margin: 1.5cm; size: A4 portrait; }
         }
+
+        /* visible only in print (e.g. confidentiality notice) */
+        .print-only { display: none; }
+        @media print { .print-only { display: block !important; } }
       `}</style>
 
       {/* ── GENERATOR CONTROLS (hidden on print) ── */}
@@ -315,10 +372,15 @@ export default function ValueReportClient({ websites }: { websites: Website[] })
               <button
                 onClick={handlePrint}
                 style={{
-                  padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  background: "#fff", color: "#0b0c10", border: "none", cursor: "pointer",
+                  padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: "linear-gradient(90deg,#8df3d3,#7aa6ff)",
+                  color: "#0b0c10", border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6,
                 }}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
                 Als PDF speichern
               </button>
               <button

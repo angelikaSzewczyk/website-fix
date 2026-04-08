@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import BillingPortalButton from "../components/billing-portal-button";
 import WebsitesSection from "../components/websites-section";
+import QuickStartGuide from "./components/quick-start-guide";
 
 export const metadata: Metadata = {
   title: "Dashboard — WebsiteFix",
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
   // Agentur-specific queries
   let criticalSites: CriticalSite[] = [];
   let marginLevers = { wcagScansMonth: 0, websitesMonitored: 0, alertsSent: 0, scansThisMonth: 0, slackActionsMonth: 0 };
+  let brandingDone = false;
 
   if (plan === "agentur") {
     criticalSites = await sql`
@@ -111,6 +113,14 @@ export default async function DashboardPage() {
         slackActionsMonth: Number(levers.slack_actions_month),
       };
     }
+
+    // Onboarding: check if branding has been configured
+    const [brandingRow] = await sql`
+      SELECT logo_url, primary_color FROM agency_settings
+      WHERE user_id = ${session.user.id} LIMIT 1
+    ` as { logo_url: string | null; primary_color: string | null }[];
+
+    brandingDone = !!(brandingRow?.logo_url || brandingRow?.primary_color);
   }
 
   const scoreColor = (n: number | null) =>
@@ -153,6 +163,15 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* QUICK-START GUIDE — Agentur only */}
+        {plan === "agentur" && (
+          <QuickStartGuide
+            brandingDone={brandingDone}
+            slackDone={!!(process.env.SLACK_WEBHOOK_URL || process.env.SLACK_BOT_TOKEN)}
+            clientDone={marginLevers.websitesMonitored > 0}
+          />
+        )}
 
         {/* AGENTUR COMMAND CENTER */}
         {plan === "agentur" && (
