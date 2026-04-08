@@ -46,9 +46,10 @@ type Props = {
   userName: string;
   userImage?: string | null;
   signOutButton: ReactNode;
+  lastScanClean?: boolean | null;
 };
 
-export default function SidebarNav({ plan, userName, userImage, signOutButton }: Props) {
+export default function SidebarNav({ plan, userName, userImage, signOutButton, lastScanClean }: Props) {
   const pathname = usePathname();
   const planCfg = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG] ?? PLAN_CONFIG.free;
 
@@ -102,6 +103,20 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
                 {item.icon}
               </span>
               <span style={{ flex: 1 }}>{item.label}</span>
+              {item.href === "/dashboard/scan" && lastScanClean === true && (
+                <span style={{
+                  width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                  background: "#22C55E",
+                  boxShadow: "0 0 0 2px rgba(34,197,94,0.25)",
+                }} />
+              )}
+              {item.href === "/dashboard/scan" && lastScanClean === false && (
+                <span style={{
+                  width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                  background: "#EF4444",
+                  boxShadow: "0 0 0 2px rgba(239,68,68,0.25)",
+                }} />
+              )}
               {item.soon && (
                 <span style={{
                   fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4,

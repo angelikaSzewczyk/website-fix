@@ -389,6 +389,100 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* ── AUTO-PILOT STATUS ── */}
+      <div style={{
+        background: C.card, border: `1px solid ${C.border}`, borderRadius: 14,
+        boxShadow: C.shadow, marginBottom: 20, overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "12px 20px", borderBottom: `1px solid ${C.divider}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 7,
+              background: C.greenBg, border: `1px solid #A7F3D0`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Auto-Pilot</span>
+              <span style={{
+                marginLeft: 8, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
+                background: C.greenBg, color: C.green, border: `1px solid #A7F3D0`,
+                letterSpacing: "0.06em",
+              }}>● AKTIV</span>
+            </div>
+          </div>
+          <Link href="/dashboard/scan" style={{ fontSize: 12, color: C.blue, textDecoration: "none", fontWeight: 600 }}>
+            Zeitplan anpassen →
+          </Link>
+        </div>
+
+        {/* Schedule grid */}
+        <div style={{ padding: "14px 20px", display: "flex", gap: 16, flexWrap: "wrap" }}>
+          {[
+            {
+              label: "Security-Scan",
+              interval: "Täglich",
+              icon: (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              ),
+              color: C.blue,
+              bg: C.blueBg,
+              border: C.blueBorder,
+            },
+            {
+              label: "Deep-Scan",
+              interval: "Wöchentlich",
+              icon: (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              ),
+              color: C.green,
+              bg: C.greenBg,
+              border: "#A7F3D0",
+            },
+          ].map(s => (
+            <div key={s.label} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 16px", borderRadius: 10,
+              background: s.bg, border: `1px solid ${s.border}`,
+              flex: "1 1 180px",
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                background: "#fff", border: `1px solid ${s.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: s.color,
+              }}>
+                {s.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{s.label}</div>
+                <div style={{ fontSize: 11, color: s.color, fontWeight: 600 }}>{s.interval}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderRadius: 10, background: C.divider, flex: "1 1 120px" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.textSub }}>E-Mail-Alerts</div>
+              <div style={{ fontSize: 10, color: C.textMuted }}>bei kritischen Befunden</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── SCAN HISTORY ── */}
       <div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>

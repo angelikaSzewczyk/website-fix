@@ -119,24 +119,105 @@ function renderDiagnoseLight(text: string) {
   });
 }
 
-function ScheduleButton({ url, type }: { url: string; type: string }) {
-  const [saved, setSaved] = useState(false);
-  async function go() {
+function AutoPilotWidget({ url, type }: { url: string; type: string }) {
+  const [active, setActive] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [secInterval, setSecInterval] = useState<"täglich" | "wöchentlich">("täglich");
+  const [deepInterval, setDeepInterval] = useState<"wöchentlich" | "monatlich">("wöchentlich");
+
+  async function activate() {
     await fetch("/api/scheduled-scans", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, type, frequency: "weekly", notify_email: true }),
-    });
-    setSaved(true);
+    }).catch(() => null);
+    setActive(true);
   }
-  if (saved) return <span style={{ fontSize: 13, color: C.green, fontWeight: 600 }}>✓ Wöchentlich aktiviert</span>;
+
+  if (!active) {
+    return (
+      <button onClick={activate} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        fontSize: 13, color: C.textSub, background: C.card,
+        border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",
+      }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Auto-Pilot aktivieren
+      </button>
+    );
+  }
+
   return (
-    <button onClick={go} style={{
-      fontSize: 13, color: C.textSub, background: C.card,
-      border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",
+    <div style={{
+      background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
+      overflow: "hidden", minWidth: 220,
     }}>
-      Wöchentlich wiederholen
-    </button>
+      {/* Header */}
+      <div style={{
+        padding: "8px 12px", background: "#F0FDF4", borderBottom: `1px solid #A7F3D0`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: "50%", background: C.greenDot, flexShrink: 0,
+            boxShadow: `0 0 0 2px #bbf7d0`,
+          }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Auto-Pilot · Aktiv</span>
+        </div>
+        <button
+          onClick={() => setShowEdit(e => !e)}
+          style={{
+            fontSize: 11, color: C.blue, background: "none", border: "none",
+            cursor: "pointer", fontWeight: 600, padding: 0,
+          }}
+        >
+          {showEdit ? "Fertig" : "Zeitplan anpassen"}
+        </button>
+      </div>
+
+      {/* Schedule rows */}
+      <div style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
+        {!showEdit ? (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
+              <span style={{ color: C.textMuted }}>Security-Scan</span>
+              <span style={{ fontWeight: 600, color: C.text, textTransform: "capitalize" }}>{secInterval}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
+              <span style={{ color: C.textMuted }}>Deep-Scan</span>
+              <span style={{ fontWeight: 600, color: C.text, textTransform: "capitalize" }}>{deepInterval}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: C.textSub }}>
+              Security-Scan
+              <select
+                value={secInterval}
+                onChange={e => setSecInterval(e.target.value as typeof secInterval)}
+                style={{ fontSize: 11, border: `1px solid ${C.border}`, borderRadius: 5, padding: "2px 6px", color: C.text, background: C.card }}
+              >
+                <option value="täglich">Täglich</option>
+                <option value="wöchentlich">Wöchentlich</option>
+              </select>
+            </label>
+            <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: C.textSub }}>
+              Deep-Scan
+              <select
+                value={deepInterval}
+                onChange={e => setDeepInterval(e.target.value as typeof deepInterval)}
+                style={{ fontSize: 11, border: `1px solid ${C.border}`, borderRadius: 5, padding: "2px 6px", color: C.text, background: C.card }}
+              >
+                <option value="wöchentlich">Wöchentlich</option>
+                <option value="monatlich">Monatlich</option>
+              </select>
+            </label>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -321,7 +402,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                   Vollständige Analyse →
                 </a>
               )}
-              <ScheduleButton url={url} type={tab} />
+              <AutoPilotWidget url={url} type={tab} />
               <button onClick={resetState} style={{
                 fontSize: 13, color: C.textSub, background: C.card,
                 border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",

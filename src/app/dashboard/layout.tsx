@@ -29,6 +29,18 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // Sanitize: only allow valid hex colors to prevent CSS injection
   const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(agencyPrimary) ? agencyPrimary : "#8df3d3";
 
+  // Last scan status for sidebar green dot
+  let lastScanClean: boolean | null = null;
+  try {
+    const sql2 = neon(process.env.DATABASE_URL!);
+    const [lastScan] = await sql2`
+      SELECT issue_count FROM scans
+      WHERE user_id = ${session.user.id}
+      ORDER BY created_at DESC LIMIT 1
+    ` as { issue_count: number | null }[];
+    if (lastScan) lastScanClean = lastScan.issue_count === 0;
+  } catch { /* non-critical */ }
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#F0F4F8" }}>
 
@@ -49,6 +61,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           userName={userName}
           userImage={userImage}
           signOutButton={<SignOutForm />}
+          lastScanClean={lastScanClean}
         />
       </aside>
 
