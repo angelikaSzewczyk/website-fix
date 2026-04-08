@@ -39,7 +39,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <aside className="dashboard-sidebar" style={{
         width: 220, flexShrink: 0,
         position: "fixed", top: 0, left: 0, bottom: 0,
-        background: "#0d0e14",
+        background: "#0A192F",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         overflowY: "auto",
         zIndex: 40,
@@ -57,7 +57,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         display: "none", // shown via CSS on mobile
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 40,
         height: 52,
-        background: "rgba(13,14,20,0.97)", backdropFilter: "blur(12px)",
+        background: "rgba(10,25,47,0.97)", backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         alignItems: "center", justifyContent: "space-between",
         padding: "0 20px",
@@ -67,9 +67,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </span>
         <span style={{
           fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-          color: plan === "agentur" ? "#7aa6ff" : plan === "pro" ? "#8df3d3" : "rgba(255,255,255,0.45)",
-          background: plan === "agentur" ? "rgba(122,166,255,0.08)" : plan === "pro" ? "rgba(141,243,211,0.08)" : "rgba(255,255,255,0.05)",
-          border: `1px solid ${plan === "agentur" ? "rgba(122,166,255,0.2)" : plan === "pro" ? "rgba(141,243,211,0.2)" : "rgba(255,255,255,0.1)"}`,
+          color: plan === "agentur" ? "#007BFF" : plan === "pro" ? "#8df3d3" : "rgba(255,255,255,0.45)",
+          background: plan === "agentur" ? "rgba(0,123,255,0.1)" : plan === "pro" ? "rgba(141,243,211,0.08)" : "rgba(255,255,255,0.05)",
+          border: `1px solid ${plan === "agentur" ? "rgba(0,123,255,0.25)" : plan === "pro" ? "rgba(141,243,211,0.2)" : "rgba(255,255,255,0.1)"}`,
         }}>
           {plan === "agentur" ? "Agentur" : plan === "pro" ? "Pro" : "Free"}
         </span>

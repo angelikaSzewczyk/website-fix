@@ -9,7 +9,7 @@ import {
   Users,
   FileText,
   Settings,
-  Globe,
+  ShieldCheck,
   Activity,
 } from "lucide-react";
 
@@ -32,8 +32,8 @@ const NAV_ITEMS: NavItem[] = [
 
 const PLAN_CONFIG = {
   free:    { label: "Free",    color: "rgba(255,255,255,0.45)", bg: "rgba(255,255,255,0.06)",  border: "rgba(255,255,255,0.1)" },
-  pro:     { label: "Pro",     color: "#8df3d3", bg: "rgba(141,243,211,0.08)", border: "rgba(141,243,211,0.2)" },
-  agentur: { label: "Agentur", color: "#7aa6ff", bg: "rgba(122,166,255,0.08)", border: "rgba(122,166,255,0.2)" },
+  pro:     { label: "Pro",     color: "#8df3d3",  bg: "rgba(141,243,211,0.08)", border: "rgba(141,243,211,0.2)" },
+  agentur: { label: "Agentur", color: "#007BFF",  bg: "rgba(0,123,255,0.12)",   border: "rgba(0,123,255,0.3)" },
 } as const;
 
 type Props = {
@@ -61,16 +61,17 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
     }}>
       {/* Logo */}
       <div style={{ padding: "20px 8px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: "linear-gradient(135deg,#8df3d3,#7aa6ff)",
+            width: 32, height: 32, borderRadius: 9,
+            background: "linear-gradient(135deg, #007BFF, #0057b8)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            boxShadow: "0 2px 8px rgba(0,123,255,0.35)",
           }}>
-            <Globe size={14} color="#0b0c10" strokeWidth={2.5} />
+            <ShieldCheck size={17} color="#fff" strokeWidth={2} />
           </div>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "#fff", letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
+          <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.02em" }}>
+            Website<span style={{ color: "#007BFF" }}>Fix</span>
           </span>
         </Link>
       </div>
@@ -88,11 +89,13 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton }:
                 padding: "9px 12px", borderRadius: 8, textDecoration: "none",
                 fontSize: 13, fontWeight: active ? 600 : 400,
                 color: active ? "#fff" : "rgba(255,255,255,0.45)",
-                background: active ? "rgba(255,255,255,0.07)" : "transparent",
-                transition: "background 0.1s, color 0.1s",
+                background: active ? "rgba(0,123,255,0.15)" : "transparent",
+                borderLeft: active ? "2px solid #007BFF" : "2px solid transparent",
+                paddingLeft: active ? "10px" : "12px",
+                transition: "background 0.1s, color 0.1s, border-color 0.1s",
               }}
             >
-              <span style={{ opacity: active ? 1 : 0.6, display: "flex" }}>
+              <span style={{ opacity: active ? 1 : 0.5, color: active ? "#007BFF" : "inherit", display: "flex" }}>
                 {item.icon}
               </span>
               {item.label}
