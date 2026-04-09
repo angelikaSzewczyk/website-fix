@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 
 // ─── Light-mode tokens ────────────────────────────────────────────────────────
 const C = {
@@ -117,6 +118,79 @@ function renderDiagnoseLight(text: string) {
     if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
     return <p key={i} style={{ margin: "4px 0", color: C.textSub, fontSize: 14, lineHeight: 1.75 }}>{line}</p>;
   });
+}
+
+// ─── ScoreCard ────────────────────────────────────────────────────────────────
+// Renders the AI diagnosis with an inline "Neu scannen" (RefreshCw) button.
+// When `refreshing` is true, a translucent overlay shows the live-analysis message
+// while the old result stays visible underneath.
+function ScoreCard({
+  title,
+  diagnose,
+  refreshing,
+  onRefresh,
+}: {
+  title: string;
+  diagnose: string;
+  refreshing: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <div style={{
+      padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`,
+      borderRadius: 12, boxShadow: C.shadow, position: "relative", overflow: "hidden",
+    }}>
+      {/* Loading overlay — shown while force-refresh scan is running */}
+      {refreshing && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 10,
+          background: "rgba(248,250,252,0.92)",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
+          borderRadius: 12,
+        }}>
+          <RefreshCw
+            size={22}
+            color={C.blue}
+            style={{ animation: "wf-spin 1s linear infinite" }}
+          />
+          <div style={{ textAlign: "center" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: C.text }}>
+              Cache wird umgangen...
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: C.textSub }}>
+              Starte Live-Analyse.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Card header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          {title}
+        </p>
+        <button
+          onClick={onRefresh}
+          disabled={refreshing}
+          title="Neu scannen – Cache umgehen"
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "5px 10px", borderRadius: 7,
+            border: `1px solid ${C.border}`, background: C.card,
+            cursor: refreshing ? "default" : "pointer",
+            color: C.textSub, fontSize: 12, fontWeight: 500,
+            opacity: refreshing ? 0.4 : 1, transition: "opacity 0.15s",
+          }}
+        >
+          <RefreshCw size={12} style={refreshing ? { animation: "wf-spin 1s linear infinite" } : undefined} />
+          Neu scannen
+        </button>
+      </div>
+
+      {/* AI diagnosis rendered as markdown-light */}
+      {renderDiagnoseLight(diagnose)}
+    </div>
+  );
 }
 
 function AutoPilotWidget({ url, type }: { url: string; type: string }) {
@@ -282,6 +356,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   const [savedScanId, setSavedScanId] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [cachedAt, setCachedAt] = useState<string | null>(null);
+  const [isForceRefreshing, setIsForceRefreshing] = useState(false);
 
   // Full-site specific state
   const [fsProgress, setFsProgress] = useState<FullSiteProgress | null>(null);
@@ -387,6 +462,49 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       });
       es.close();
     };
+  }
+
+  // ── Force-refresh: re-runs scan in-place, keeps results visible ──────────────
+  // For fullsite (SSE-based) we fall back to the normal scanning flow.
+  async function handleForceRefresh() {
+    if (isForceRefreshing) return;
+    if (tab === "fullsite") { handleScan(null, true); return; }
+    if (state !== "done") return;
+
+    setIsForceRefreshing(true);
+    try {
+      const endpoint = tab === "wcag"
+        ? "/api/wcag-scan"
+        : tab === "performance"
+          ? "/api/performance-scan"
+          : "/api/scan";
+      const res = await fetch(endpoint, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, strategy: device, forceRefresh: true }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiagnose(data.diagnose ?? "");
+        setFromCache(false);
+        setCachedAt(null);
+        if (tab === "wcag") setWcagViolations(data.violations ?? []);
+        if (tab === "performance") setPerfData({
+          scores: data.scores,
+          vitals: data.vitals,
+          opportunities: data.opportunities,
+        });
+        if (data.scanId) setSavedScanId(data.scanId);
+      } else {
+        setError(data.error ?? "Fehler beim Neu-Scannen.");
+        setState("error");
+      }
+    } catch {
+      setError("Verbindungsfehler beim Neu-Scannen.");
+      setState("error");
+    } finally {
+      setIsForceRefreshing(false);
+    }
   }
 
   return (
@@ -648,12 +766,20 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
               )}
               {tab !== "fullsite" && <AutoPilotWidget url={url} type={tab} />}
               {/* Neu scannen — re-runs same URL with cache bypass */}
-              <button onClick={() => handleScan(null, true)} style={{
-                fontSize: 13, color: C.blue, background: C.blueBg,
-                border: `1px solid ${C.blueBorder}`, borderRadius: 8, cursor: "pointer",
-                padding: "7px 14px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5,
-              }}>
-                ↺ Neu scannen
+              <button
+                onClick={handleForceRefresh}
+                disabled={isForceRefreshing}
+                style={{
+                  fontSize: 13, color: C.blue, background: C.blueBg,
+                  border: `1px solid ${C.blueBorder}`, borderRadius: 8,
+                  cursor: isForceRefreshing ? "default" : "pointer",
+                  padding: "7px 14px", fontWeight: 600,
+                  display: "flex", alignItems: "center", gap: 5,
+                  opacity: isForceRefreshing ? 0.6 : 1,
+                }}
+              >
+                <RefreshCw size={13} style={isForceRefreshing ? { animation: "wf-spin 1s linear infinite" } : undefined} />
+                Neu scannen
               </button>
               <button onClick={resetState} style={{
                 fontSize: 13, color: C.textSub, background: C.card,
@@ -771,14 +897,14 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
             </div>
           )}
 
-          {/* AI DIAGNOSIS */}
+          {/* AI DIAGNOSIS — ScoreCard with inline RefreshCw */}
           {(diagnose || fsResult?.diagnose) && (
-            <div style={{ padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, boxShadow: C.shadow }}>
-              <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                {tab === "fullsite" ? "KI Site-Report" : "KI-Analyse"}
-              </p>
-              {renderDiagnoseLight(diagnose || fsResult?.diagnose || "")}
-            </div>
+            <ScoreCard
+              title={tab === "fullsite" ? "KI Site-Report" : "KI-Analyse"}
+              diagnose={diagnose || fsResult?.diagnose || ""}
+              refreshing={isForceRefreshing}
+              onRefresh={handleForceRefresh}
+            />
           )}
         </div>
       )}

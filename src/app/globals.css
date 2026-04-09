@@ -3142,6 +3142,9 @@ footer a, nav a.footerLink {
 .wf-pulse-dot {
   animation: wf-pulse 2s ease-out infinite;
 }
+@keyframes wf-spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ===== MOBILE UTILITIES (< 640px) ===== */
 @media (max-width: 640px) {
