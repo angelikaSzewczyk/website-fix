@@ -75,48 +75,46 @@ export default function LegalLayout({
           overflow: "hidden",
         }}>
 
-          {/* Blue header banner */}
+          {/* Anthracite header */}
           <div style={{
-            background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)",
-            padding: "28px 48px",
+            background: "#0F172A",
+            padding: "26px 44px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
+            borderBottom: "1px solid #1E293B",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: "rgba(255,255,255,0.15)",
+                width: 36, height: 36, borderRadius: 9,
+                background: "rgba(234,179,8,0.12)",
+                border: "1px solid rgba(234,179,8,0.25)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                  stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                   <line x1="16" y1="13" x2="8" y2="13"/>
                   <line x1="16" y1="17" x2="8" y2="17"/>
-                  <polyline points="10 9 9 9 8 9"/>
                 </svg>
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   WebsiteFix · Rechtliches
                 </p>
-                <h1 style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
+                <h1 style={{ margin: "3px 0 0", fontSize: 20, fontWeight: 800, color: "#EAB308", letterSpacing: "-0.02em" }}>
                   {title}
                 </h1>
               </div>
             </div>
-            <div style={{
-              fontSize: 12, color: "rgba(255,255,255,0.5)",
-              textAlign: "right", lineHeight: 1.6,
-            }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "right", lineHeight: 1.6 }}>
               <div>website-fix.com</div>
               <div>{new Date().getFullYear()}</div>
             </div>
           </div>
 
-          {/* Content area */}
-          <div style={{ padding: "48px 48px 56px", color: "#0F172A" }}>
+          {/* Content area — off-white */}
+          <div style={{ padding: "44px 48px 52px", background: "#F8FAFC", color: "#0F172A" }}>
             {children}
           </div>
 

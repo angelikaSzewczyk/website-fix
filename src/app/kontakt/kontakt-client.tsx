@@ -188,12 +188,12 @@ export default function KontaktClient() {
           </p>
         </div>
 
-        {/* Form card — slate-900 with shadow-2xl */}
+        {/* Form card — soft yellow glow */}
         <div style={{
           background: "#1E293B",
           border: "1px solid #334155",
           borderRadius: 24,
-          boxShadow: "0 25px 50px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4)",
+          boxShadow: "0 0 40px rgba(234,179,8,0.15), 0 0 80px rgba(234,179,8,0.06), 0 16px 40px rgba(0,0,0,0.4)",
           overflow: "hidden",
         }}>
           {sent ? <SuccessCard /> : (
@@ -225,20 +225,18 @@ export default function KontaktClient() {
                 </div>
               )}
 
-              {/* Always-yellow CTA */}
-              <div>
-                <button type="submit" disabled={loading} style={{
-                  padding: "14px 32px", borderRadius: 10, border: "none",
-                  background: loading ? "#92400E" : "#EAB308",
-                  color: "#0F172A", fontWeight: 700, fontSize: 15,
-                  cursor: loading ? "default" : "pointer",
-                  boxShadow: loading ? "none" : "0 4px 20px rgba(234,179,8,0.4)",
-                  transition: "background 0.15s, box-shadow 0.15s",
-                  letterSpacing: "-0.01em",
-                }}>
-                  {loading ? "Wird gesendet…" : "Nachricht senden →"}
-                </button>
-              </div>
+              {/* Always-yellow CTA — full width */}
+              <button type="submit" disabled={loading} style={{
+                width: "100%", padding: "15px", borderRadius: 10, border: "none",
+                background: loading ? "rgba(234,179,8,0.5)" : "#EAB308",
+                color: "#0F172A", fontWeight: 700, fontSize: 15,
+                cursor: loading ? "default" : "pointer",
+                boxShadow: loading ? "none" : "0 4px 20px rgba(234,179,8,0.4)",
+                transition: "background 0.15s, box-shadow 0.15s",
+                letterSpacing: "-0.01em",
+              }}>
+                {loading ? "Wird gesendet…" : "Nachricht senden →"}
+              </button>
 
             </form>
           )}

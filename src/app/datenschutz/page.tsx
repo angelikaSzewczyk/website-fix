@@ -25,17 +25,16 @@ function SH({ num, children }: { num: string; children: string }) {
   return (
     <h2 style={{
       display: "flex", alignItems: "center", gap: 12,
-      fontSize: 16, fontWeight: 700, color: "#0F172A",
+      fontSize: 15, fontWeight: 700, color: "#0F172A",
       margin: "40px 0 10px", letterSpacing: "-0.01em",
     }}>
       <span style={{
         flexShrink: 0,
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: 28, height: 28, borderRadius: 8,
-        background: "#FEF9C3",
-        color: "#92400E",
-        fontSize: 12, fontWeight: 800,
-        border: "1px solid #FDE68A",
+        width: 26, height: 26, borderRadius: "50%",
+        background: "#EAB308",
+        color: "#0F172A",
+        fontSize: 11, fontWeight: 800,
       }}>
         {num}
       </span>
