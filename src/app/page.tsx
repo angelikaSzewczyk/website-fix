@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import FaqAccordion from "./components/faq-accordion";
 import RoiCalculator from "./components/roi-calculator";
 import BrandLogo from "./components/BrandLogo";
+import NavAuthLink from "./components/nav-auth-link";
 
 export const metadata: Metadata = {
   title: "WebsiteFix — Das Betriebssystem für deine Website-Wartung",
@@ -244,7 +245,8 @@ export default function Page() {
               <Link href="/blog" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Blog</Link>
               <Link href="#pricing" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Preise</Link>
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <NavAuthLink />
               <Link href="/login" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 16px", borderRadius: 8,
                 border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",

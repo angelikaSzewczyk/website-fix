@@ -34,14 +34,14 @@ export default function NavAuthLink() {
     );
   }
 
-  // Not logged in (or loading) → show consistent nav CTA
+  // Not logged in (or loading) → link to pricing
   return (
-    <Link href="/fuer-agenturen" style={{
-      fontSize: 13, fontWeight: 600, color: "#0b0c10",
+    <Link href="/#pricing" style={{
+      fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.65)",
       textDecoration: "none", padding: "7px 16px",
-      borderRadius: 8, background: "#fff",
+      borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
     }}>
-      Für Agenturen
+      Preise
     </Link>
   );
 }

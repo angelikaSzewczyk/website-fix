@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BrandLogo from "./BrandLogo";
+import NavAuthLink from "./nav-auth-link";
 
 type BlogHeaderProps = {
   lang?: "de" | "en";
@@ -39,6 +40,7 @@ export default function BlogHeader({ lang = "de", active, ctaLabel }: BlogHeader
             </Link>
           </div>
           {/* Buttons */}
+          <NavAuthLink />
           <Link href="/login" style={{
             fontSize: 13, padding: "7px 16px", borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
@@ -48,7 +50,7 @@ export default function BlogHeader({ lang = "de", active, ctaLabel }: BlogHeader
           </Link>
           <Link href="/scan" style={{
             fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
-            background: "#fff", color: "#0b0c10", textDecoration: "none",
+            background: "#007BFF", color: "#fff", textDecoration: "none",
           }}>
             {cta}
           </Link>

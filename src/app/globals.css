@@ -3146,6 +3146,15 @@ footer a, nav a.footerLink {
   to { transform: rotate(360deg); }
 }
 
+/* ===== BRAND LOGO HOVER ===== */
+.wf-brand-logo .wf-icon-box {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.wf-brand-logo:hover .wf-icon-box {
+  border-color: rgba(59,130,246,0.75) !important;
+  box-shadow: 0 0 16px rgba(37,99,235,0.4), 0 0 5px rgba(245,158,11,0.25) !important;
+}
+
 /* ===== MOBILE UTILITIES (< 640px) ===== */
 @media (max-width: 640px) {
   .hide-sm   { display: none !important; }
