@@ -222,7 +222,24 @@ function AutoPilotWidget({ url, type }: { url: string; type: string }) {
 }
 
 type ScanState = "idle" | "scanning" | "done" | "error";
-type TabType = "website" | "wcag" | "performance";
+type TabType = "website" | "wcag" | "performance" | "fullsite";
+
+// ─── Full-Site progress state ─────────────────────────────────────────────────
+type FullSitePhase = "crawling" | "analyzing" | "ai" | "done" | "error";
+type FullSiteProgress = {
+  phase: FullSitePhase;
+  message: string;
+  found?: number;
+  remaining?: number;
+};
+
+// ─── Full-Site scan result ────────────────────────────────────────────────────
+type FullSiteResult = {
+  scanId: string | null;
+  issueCount: number;
+  totalPages: number;
+  diagnose: string;
+};
 
 type PerfData = {
   scores: { performance: number; accessibility: number; seo: number; bestPractices: number };
@@ -230,16 +247,18 @@ type PerfData = {
   opportunities: { title: string; displayValue?: string; score: number | null }[];
 };
 
-const TABS: { key: TabType; label: string }[] = [
-  { key: "website", label: "Website-Check" },
-  { key: "wcag",    label: "Barrierefreiheit" },
+const TABS: { key: TabType; label: string; badge?: string }[] = [
+  { key: "website",     label: "Website-Check" },
+  { key: "wcag",        label: "Barrierefreiheit" },
   { key: "performance", label: "Performance" },
+  { key: "fullsite",    label: "Full-Site Crawl", badge: "NEU" },
 ];
 
 const SCAN_STEPS: Record<TabType, string[]> = {
   wcag:        ["Browser startet...", "Seite wird geladen...", "WCAG 2.1 Analyse läuft...", "KI erstellt Diagnose..."],
   performance: ["PageSpeed Insights wird abgefragt...", "Core Web Vitals werden analysiert...", "KI erstellt Diagnose..."],
   website:     ["Website wird abgerufen...", "HTML wird analysiert...", "KI erstellt Diagnose..."],
+  fullsite:    ["Website wird gecrawlt...", "Unterseiten werden analysiert...", "KI erstellt Site-Report..."],
 };
 
 export default function DashboardScanClient({ userName, plan }: { userName: string; plan: string }) {
@@ -253,14 +272,27 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   const [error, setError] = useState("");
   const [savedScanId, setSavedScanId] = useState<string | null>(null);
 
+  // Full-site specific state
+  const [fsProgress, setFsProgress] = useState<FullSiteProgress | null>(null);
+  const [fsResult, setFsResult] = useState<FullSiteResult | null>(null);
+
+  const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
+
   function resetState() {
     setState("idle"); setDiagnose(""); setError("");
     setWcagViolations([]); setPerfData(null); setUrl(""); setSavedScanId(null);
+    setFsProgress(null); setFsResult(null);
   }
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
     if (!url || state === "scanning") return;
+
+    if (tab === "fullsite") {
+      handleFullSiteScan();
+      return;
+    }
+
     setState("scanning");
     setDiagnose(""); setError(""); setWcagViolations([]); setPerfData(null); setSavedScanId(null);
 
@@ -287,6 +319,62 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
     }
   }
 
+  function handleFullSiteScan() {
+    setState("scanning");
+    setFsProgress({ phase: "crawling", message: "Verbinde..." });
+    setFsResult(null);
+    setError("");
+
+    const encodedUrl = encodeURIComponent(url);
+    const es = new EventSource(`/api/full-scan?url=${encodedUrl}`);
+
+    es.addEventListener("phase", (ev) => {
+      const d = JSON.parse(ev.data);
+      setFsProgress({ phase: d.phase as FullSitePhase, message: d.message });
+    });
+
+    es.addEventListener("progress", (ev) => {
+      const d = JSON.parse(ev.data);
+      setFsProgress({
+        phase: d.phase as FullSitePhase,
+        message: d.message,
+        found: d.found,
+        remaining: d.remaining,
+      });
+    });
+
+    es.addEventListener("complete", (ev) => {
+      const d = JSON.parse(ev.data) as FullSiteResult;
+      setFsResult(d);
+      setFsProgress({ phase: "done", message: `${d.totalPages} Seiten analysiert` });
+      setState("done");
+      es.close();
+    });
+
+    es.addEventListener("error", (ev) => {
+      try {
+        const d = JSON.parse((ev as MessageEvent).data ?? "{}");
+        setError(d.message ?? "Scan fehlgeschlagen.");
+      } catch {
+        setError("Verbindungsfehler beim Crawl. Bitte erneut versuchen.");
+      }
+      setState("error");
+      es.close();
+    });
+
+    es.onerror = () => {
+      // Only fire if not already done
+      setState((prev) => {
+        if (prev === "scanning") {
+          setError("Verbindung unterbrochen. Bitte erneut versuchen.");
+          return "error";
+        }
+        return prev;
+      });
+      es.close();
+    };
+  }
+
   return (
     <main style={{ maxWidth: 1040, margin: "0 auto", padding: "36px 24px 80px" }}>
 
@@ -301,10 +389,10 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       </div>
 
       {/* TABS */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: `1px solid ${C.border}`, flexWrap: "wrap" }}>
         {TABS.map(t => (
           <button key={t.key}
-            onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); }}
+            onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); setFsProgress(null); setFsResult(null); }}
             style={{
               padding: "10px 18px", background: "none", border: "none", cursor: "pointer",
               fontSize: 13, fontWeight: tab === t.key ? 700 : 400,
@@ -312,8 +400,17 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
               borderBottom: tab === t.key ? `2px solid ${C.blue}` : "2px solid transparent",
               marginBottom: -1,
               transition: "color 0.1s",
+              display: "flex", alignItems: "center", gap: 6,
             }}>
             {t.label}
+            {t.badge && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4,
+                background: C.blueBg, color: C.blue, letterSpacing: "0.05em",
+              }}>
+                {t.badge}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -362,11 +459,124 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
         </button>
       </form>
 
-      {/* SCANNING STATE */}
-      {state === "scanning" && (
+      {/* FULL-SITE: upgrade prompt for free users */}
+      {tab === "fullsite" && !isAgencyPlan && (
+        <div style={{
+          padding: "24px 28px", background: C.blueBg, border: `1px solid ${C.blueBorder}`,
+          borderRadius: 14, marginBottom: 24,
+        }}>
+          <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: C.text }}>
+            Full-Site Crawl — ab Freelancer Plan
+          </p>
+          <p style={{ margin: "0 0 16px", fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>
+            Analysiere deine gesamte Website automatisch — alle Unterseiten, aggregierte Fehler, Seitentyp-Auswertung.
+            Verfügbar ab dem Freelancer-Plan (25 Seiten) bis Agency Scale (150 Seiten).
+          </p>
+          <a href="/fuer-agenturen#pricing" style={{
+            display: "inline-block", padding: "9px 20px", borderRadius: 8,
+            background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
+          }}>
+            Plan upgraden →
+          </a>
+        </div>
+      )}
+
+      {/* FULL-SITE: info banner for paid users */}
+      {tab === "fullsite" && isAgencyPlan && state === "idle" && (
+        <div style={{
+          padding: "14px 18px", background: C.blueBg, border: `1px solid ${C.blueBorder}`,
+          borderRadius: 10, marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10,
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>🕷</span>
+          <div>
+            <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 600, color: C.text }}>
+              Full-Site Crawl — crawlt alle Unterseiten automatisch
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
+              Gibt die Domain ein (z.B. <code style={{ background: C.divider, padding: "1px 4px", borderRadius: 3 }}>https://kundenwebsite.de</code>).
+              Der Crawler findet alle Seiten via Sitemap + interne Links und liefert einen aggregierten Report für die gesamte Website.
+              {plan === "freelancer" ? " Limit: 25 Seiten." : plan === "agency_core" || plan === "agentur" ? " Limit: 50 Seiten." : " Limit: 150 Seiten."}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* SCANNING STATE — Full-Site live progress */}
+      {state === "scanning" && tab === "fullsite" && fsProgress && (
+        <div style={{
+          padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 12, marginBottom: 24, boxShadow: C.shadow,
+        }}>
+          {/* Phase indicator */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+            {(["crawling", "analyzing", "ai"] as const).map((ph, i) => {
+              const phaseOrder = ["crawling", "analyzing", "ai"];
+              const currentIdx = phaseOrder.indexOf(fsProgress.phase);
+              const isDone = i < currentIdx;
+              const isActive = ph === fsProgress.phase;
+              return (
+                <div key={ph} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                    background: isDone ? C.green : isActive ? C.blue : C.border,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, color: isDone || isActive ? "#fff" : C.textMuted, fontWeight: 700,
+                  }}>
+                    {isDone ? "✓" : i + 1}
+                  </div>
+                  <span style={{
+                    fontSize: 12, fontWeight: isActive ? 700 : 400,
+                    color: isActive ? C.text : isDone ? C.green : C.textMuted,
+                  }}>
+                    {ph === "crawling" ? "Crawlen" : ph === "analyzing" ? "Analysieren" : "KI-Report"}
+                  </span>
+                  {i < 2 && <span style={{ color: C.border, fontSize: 14, marginLeft: 2 }}>›</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Live message */}
+          <div style={{
+            padding: "12px 16px", background: C.blueBg, borderRadius: 8,
+            border: `1px solid ${C.blueBorder}`, marginBottom: 12,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{
+                width: 7, height: 7, borderRadius: "50%", background: C.blue, flexShrink: 0,
+                animation: "pulse 1.5s infinite",
+              }} />
+              <span style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>{fsProgress.message}</span>
+            </div>
+          </div>
+
+          {/* Found count progress */}
+          {fsProgress.phase === "crawling" && typeof fsProgress.found === "number" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{
+                flex: 1, height: 4, background: C.border, borderRadius: 2, overflow: "hidden",
+              }}>
+                <div style={{
+                  height: "100%", background: C.blue, borderRadius: 2,
+                  width: `${Math.min(100, (fsProgress.found / (
+                    plan === "agency_scale" ? 150 : plan === "agency_core" || plan === "agentur" ? 50 : 25
+                  )) * 100)}%`,
+                  transition: "width 0.3s ease",
+                }} />
+              </div>
+              <span style={{ fontSize: 12, color: C.textMuted, whiteSpace: "nowrap", fontWeight: 600 }}>
+                {fsProgress.found} Seiten
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SCANNING STATE — regular scans */}
+      {state === "scanning" && tab !== "fullsite" && (
         <div style={{ padding: "20px 24px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 24, boxShadow: C.shadow }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {SCAN_STEPS[tab].map((step, i) => (
+            {SCAN_STEPS[tab as Exclude<TabType, "fullsite">].map((step, i) => (
               <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: C.textSub, fontSize: 13 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.blue, flexShrink: 0, opacity: 0.6 }} />
                 {step}
@@ -390,19 +600,29 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot }} />
-              <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>Scan abgeschlossen</span>
+              <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>
+                {tab === "fullsite" ? "Full-Site Crawl abgeschlossen" : "Scan abgeschlossen"}
+              </span>
               <span style={{ color: C.textMuted, fontSize: 13 }}>— {url}</span>
+              {tab === "fullsite" && fsResult && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 5,
+                  background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`,
+                }}>
+                  {fsResult.totalPages} Seiten · {fsResult.issueCount} Problemtypen
+                </span>
+              )}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              {savedScanId && (
-                <a href={`/dashboard/scans/${savedScanId}`} style={{
+              {(savedScanId || fsResult?.scanId) && (
+                <a href={`/dashboard/scans/${savedScanId ?? fsResult?.scanId}`} style={{
                   fontSize: 13, padding: "7px 14px", borderRadius: 8, textDecoration: "none",
                   background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`, fontWeight: 600,
                 }}>
                   Vollständige Analyse →
                 </a>
               )}
-              <AutoPilotWidget url={url} type={tab} />
+              {tab !== "fullsite" && <AutoPilotWidget url={url} type={tab} />}
               <button onClick={resetState} style={{
                 fontSize: 13, color: C.textSub, background: C.card,
                 border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",
@@ -411,6 +631,32 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
               </button>
             </div>
           </div>
+
+          {/* FULL-SITE result summary bar */}
+          {tab === "fullsite" && fsResult && (
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+              gap: 10, marginBottom: 20,
+            }}>
+              {[
+                { label: "Seiten analysiert", value: fsResult.totalPages, color: C.blue, bg: C.blueBg },
+                { label: "Problemtypen", value: fsResult.issueCount,
+                  color: fsResult.issueCount === 0 ? C.green : fsResult.issueCount <= 3 ? C.amber : C.red,
+                  bg: fsResult.issueCount === 0 ? C.greenBg : fsResult.issueCount <= 3 ? C.amberBg : "#FEF2F2",
+                },
+              ].map(s => (
+                <div key={s.label} style={{
+                  background: s.bg, borderRadius: 10, padding: "16px 20px", textAlign: "center",
+                  border: `1px solid ${C.border}`,
+                }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: s.color, letterSpacing: "-0.02em" }}>
+                    {s.value}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* WCAG violations — consulting cards */}
           {tab === "wcag" && wcagViolations.length > 0 && (
@@ -494,12 +740,12 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
           )}
 
           {/* AI DIAGNOSIS */}
-          {diagnose && (
+          {(diagnose || fsResult?.diagnose) && (
             <div style={{ padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, boxShadow: C.shadow }}>
               <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                KI-Analyse
+                {tab === "fullsite" ? "KI Site-Report" : "KI-Analyse"}
               </p>
-              {renderDiagnoseLight(diagnose)}
+              {renderDiagnoseLight(diagnose || fsResult?.diagnose || "")}
             </div>
           )}
         </div>
