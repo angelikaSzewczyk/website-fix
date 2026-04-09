@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isUrlAllowed } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
+import { callWithRetry } from "@/lib/ai-retry";
+import { getCachedDiagnose, saveDiagnoseAsync } from "@/lib/scan-cache";
 
 export const maxDuration = 300;
 
@@ -325,6 +327,9 @@ export async function GET(req: NextRequest) {
         // ── Phase 3: AI Analysis ───────────────────────────────────────────
         enqueue("phase", { phase: "ai", message: "KI erstellt Site-Report..." });
 
+        // Check 24h diagnose cache before calling Claude
+        const cachedDiagnose = await getCachedDiagnose(targetUrl);
+
         const typeOverview = [...byType.entries()]
           .map(([type, pages]) => {
             const noT = pages.filter((p) => !p.title).length;
@@ -432,28 +437,33 @@ Kurze Bewertung der ${byType.size} gefundenen Seitentypen — wo liegt der grö�
 
 Schreib professionell aber verständlich. Dieser Report wird von einer Agentur direkt an den Kunden weitergegeben.`;
 
-        const message = await client.messages.create({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 2200,
-          messages: [{ role: "user", content: prompt }],
-        });
-        const diagnose =
-          message.content[0].type === "text" ? message.content[0].text : "(Keine Diagnose)";
-
-        // ── Save to DB ────────────────────────────────────────────────────
-        let scanId: string | null = null;
-        try {
-          const sql = neon(process.env.DATABASE_URL!);
-          await sql`ALTER TABLE scans ADD COLUMN IF NOT EXISTS total_pages INTEGER`;
-          const rows = await sql`
-            INSERT INTO scans (user_id, url, type, issue_count, result, total_pages)
-            VALUES (${session.user!.id}, ${targetUrl}, 'fullsite', ${issueCount}, ${diagnose}, ${allPages.length})
-            RETURNING id
-          `;
-          scanId = (rows[0]?.id as string) ?? null;
-        } catch {
-          /* DB save optional */
+        // Use cache if available, otherwise call Claude with retry
+        let diagnose: string;
+        if (cachedDiagnose) {
+          diagnose = cachedDiagnose;
+        } else {
+          const message = await callWithRetry(() =>
+            client.messages.create({
+              model: "claude-haiku-4-5-20251001",
+              max_tokens: 2200,
+              messages: [{ role: "user", content: prompt }],
+            })
+          );
+          diagnose = message.content[0].type === "text" ? message.content[0].text : "(Keine Diagnose)";
+          // Persist diagnose to cache async — never blocks the stream
+          saveDiagnoseAsync(targetUrl, diagnose);
         }
+
+        // ── Save to DB (fire-and-forget) ──────────────────────────────────
+        let scanId: string | null = null;
+        const sql = neon(process.env.DATABASE_URL!);
+        // Generate a client-side UUID so we can return it immediately
+        scanId = crypto.randomUUID();
+        sql`ALTER TABLE scans ADD COLUMN IF NOT EXISTS total_pages INTEGER`.catch(() => null);
+        sql`
+          INSERT INTO scans (user_id, url, type, issue_count, result, total_pages)
+          VALUES (${session.user!.id}, ${targetUrl}, 'fullsite', ${issueCount}, ${diagnose}, ${allPages.length})
+        `.catch(() => null);
 
         enqueue("complete", {
           scanId,

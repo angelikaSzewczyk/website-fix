@@ -3,6 +3,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
+import { callWithRetry } from "@/lib/ai-retry";
+import { getCachedScan, saveScanAsync } from "@/lib/scan-cache";
+import { batchAsync } from "@/lib/batch-async";
 
 export const maxDuration = 60;
 
@@ -159,6 +162,12 @@ export async function POST(req: NextRequest) {
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
     if (!isUrlAllowed(targetUrl)) return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
 
+    // ── Cache check (24h) ───────────────────────────────────
+    const cached = await getCachedScan(targetUrl);
+    if (cached) {
+      return NextResponse.json({ success: true, fromCache: true, ...cached });
+    }
+
     const maxSubpages = isPaid ? 10 : 5;
     const maxBrokenLinkChecks = isPaid ? 30 : 15;
 
@@ -226,9 +235,11 @@ export async function POST(req: NextRequest) {
     }
     subpageUrls = subpageUrls.slice(0, maxSubpages);
 
-    // ── 4. UNTERSEITEN PARALLEL SCANNEN ────────────────────
+    // ── 4. UNTERSEITEN SCANNEN — in Batches von 5 ──────────
+    // Batching prevents hammering the target server and avoids hitting
+    // Vercel's connection limits when 30 agencies scan simultaneously.
     const unterseiten: PageResult[] = subpageUrls.length > 0
-      ? await Promise.all(subpageUrls.map((u) => scanSubpage(u, targetUrl)))
+      ? await batchAsync(subpageUrls, 5, (u) => scanSubpage(u, targetUrl), 200)
       : [];
 
     // ── 5. CHECK 1: DUPLICATE TITLES ───────────────────────
@@ -260,11 +271,15 @@ export async function POST(req: NextRequest) {
     unterseiten.forEach((p) => p.outgoingLinks.forEach((l) => allOutgoing.add(l)));
 
     const linksToCheck = [...allOutgoing].filter((l) => !scannedUrls.has(l)).slice(0, maxBrokenLinkChecks);
-    const brokenLinkResults = await Promise.all(
-      linksToCheck.map(async (linkUrl) => {
+    // Batch broken-link checks 10 at a time — avoids 30-connection bursts
+    const brokenLinkResults = await batchAsync(
+      linksToCheck,
+      10,
+      async (linkUrl) => {
         const res = await fetchWithTimeout(linkUrl, 4000);
         return { url: linkUrl, status: res?.status ?? 0, broken: !res?.ok };
-      })
+      },
+      100,
     );
     const brokenLinks = brokenLinkResults.filter((r) => r.broken);
 
@@ -344,36 +359,43 @@ Erklärung in einfachem Deutsch (max 2 Sätze). Nenne konkrete URLs wenn relevan
 
 Schreib freundlich, klar und ohne Fachjargon. Wenn alles gut ist, sag das deutlich.`;
 
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1500,
-      messages: [{ role: "user", content: prompt }],
-    });
+    // ── 10. CLAUDE DIAGNOSE — with exponential backoff ─────
+    const message = await callWithRetry(() =>
+      client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1500,
+        messages: [{ role: "user", content: prompt }],
+      })
+    );
     const diagnose = message.content[0].type === "text" ? message.content[0].text : "";
 
-    // Scan speichern
-    try {
-      if (session?.user?.id) {
-        const sql = neon(process.env.DATABASE_URL!);
-        const issueCount = [
-          !scanData.https,
-          !scanData.erreichbar,
-          !scanData.title,
-          !scanData.metaDescription,
-          !scanData.h1,
-          scanData.robotsBlockiertAlles,
-          !scanData.sitemapVorhanden,
-          unterseiten.some((p) => !p.erreichbar),
-          duplicateTitles.length > 0,
-          duplicateMetas.length > 0,
-          totalAltMissing > 0,
-          brokenLinks.length > 0,
-          orphanedPages.length > 0,
-        ].filter(Boolean).length;
-        await sql`INSERT INTO scans (user_id, url, type, issue_count, result)
-          VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose})`;
-      }
-    } catch { /* optional */ }
+    // ── Async DB write + cache — never blocks the response ─
+    const issueCount = [
+      !scanData.https,
+      !scanData.erreichbar,
+      !scanData.title,
+      !scanData.metaDescription,
+      !scanData.h1,
+      scanData.robotsBlockiertAlles,
+      !scanData.sitemapVorhanden,
+      unterseiten.some((p) => !p.erreichbar),
+      duplicateTitles.length > 0,
+      duplicateMetas.length > 0,
+      totalAltMissing > 0,
+      brokenLinks.length > 0,
+      orphanedPages.length > 0,
+    ].filter(Boolean).length;
+
+    // Fire-and-forget: DB write runs after response is sent
+    if (session?.user?.id) {
+      const sql = neon(process.env.DATABASE_URL!);
+      sql`INSERT INTO scans (user_id, url, type, issue_count, result)
+        VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose})
+      `.catch(() => null);
+    }
+
+    // Persist to 24h cache (async)
+    saveScanAsync(targetUrl, { scanData, diagnose });
 
     return NextResponse.json({ success: true, scanData, diagnose });
 
