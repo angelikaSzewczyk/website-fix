@@ -1,404 +1,606 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import NavAuthLink from "../components/nav-auth-link";
 
-type ScanState = "idle" | "scanning" | "done" | "error";
-type ActiveTab = "website" | "wcag";
+// ── Types ────────────────────────────────────────────────────────────────────
+type ScanPhase =
+  | "idle"
+  | "step1"   // Crawl startet
+  | "step2"   // Sitemap / Link-Discovery
+  | "step3"   // Technische Barrieren
+  | "step4"   // KI-Diagnose
+  | "done"
+  | "error";
 
-const WEBSITE_CHECKS = [
-  { label: "WordPress-Fehler", desc: "Critical Error, White Screen, 500er" },
-  { label: "SEO Grundlagen", desc: "Title, Meta, H1, Canonical, Indexierung" },
-  { label: "robots.txt & Sitemap", desc: "Vorhanden und korrekt konfiguriert?" },
-  { label: "HTTPS & SSL", desc: "Verschlüsselung aktiv und gültig?" },
-  { label: "Formular-Check", desc: "Kontaktformular vorhanden?" },
-  { label: "Erreichbarkeit", desc: "Lädt die Seite überhaupt?" },
+type ScanResult = {
+  diagnose: string;
+  pagesScanned: number;
+};
+
+// ── Progress steps data ───────────────────────────────────────────────────────
+const STEPS: { phase: ScanPhase; label: string; sub?: string }[] = [
+  { phase: "step1", label: "Crawl startet…",              sub: "Verbinde mit Zieldomain" },
+  { phase: "step2", label: "Sitemap analysiert",           sub: "Entdecke interne Links & Unterseiten…" },
+  { phase: "step3", label: "Analysiere technische Barrieren", sub: "Prüfe Unterseiten auf Fehler…" },
+  { phase: "step4", label: "KI erstellt vollständigen Report…", sub: "Aggregiere Befunde" },
 ];
 
-const WCAG_CHECKS = [
-  { label: "Alt-Texte", desc: "Bilder ohne Beschreibung für Screenreader" },
-  { label: "Formular-Labels", desc: "Eingabefelder korrekt beschriftet?" },
-  { label: "HTML lang-Attribut", desc: "Sprache für Screenreader definiert?" },
-  { label: "Tastatur-Navigation", desc: "Alle Links und Buttons erreichbar?" },
-  { label: "Heading-Struktur", desc: "Überschriften logisch strukturiert?" },
-  { label: "Button-Namen", desc: "Alle Buttons haben aussagekräftige Labels?" },
+const PHASE_ORDER: ScanPhase[] = ["idle","step1","step2","step3","step4","done","error"];
+
+// ── Benefit cards (footer) ────────────────────────────────────────────────────
+const BENEFITS = [
+  {
+    color: "#22c55e",
+    bg: "rgba(34,197,94,0.08)",
+    border: "rgba(34,197,94,0.2)",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+    ),
+    label: "Mehr Umsatz",
+    title: "BFSG als neues Service-Paket",
+    desc: "Verkaufe automatisierte Compliance-Audits als Wartungspaket und fakturiere monatlich — kein Mehraufwand.",
+  },
+  {
+    color: "#7aa6ff",
+    bg: "rgba(122,166,255,0.08)",
+    border: "rgba(122,166,255,0.2)",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    ),
+    label: "Weniger Haftung",
+    title: "BFSG 2025 automatisch im Griff",
+    desc: "Lückenloser Audit-Trail. Jede Prüfung dokumentiert. Jeder Nachweis griffbereit — für den Ernstfall.",
+  },
+  {
+    color: "#c084fc",
+    bg: "rgba(192,132,252,0.08)",
+    border: "rgba(192,132,252,0.2)",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+        <polyline points="16 7 22 7 22 13"/>
+      </svg>
+    ),
+    label: "Bessere Marge",
+    title: "Reports ohne Mehrarbeit",
+    desc: "Monatliche White-Label Reports mit deinem Logo — vollautomatisch erstellt und direkt an den Kunden versendet.",
+  },
 ];
 
-const MANUAL_CHECKS = [
-  { title: "Alt-Text Qualität", desc: "Macht der Alt-Text im Kontext wirklich Sinn?" },
-  { title: "Tab-Reihenfolge", desc: "Ist die Tastatur-Navigation logisch und intuitiv?" },
-  { title: "Screenreader-Bedienbarkeit", desc: "Formulare und Dialoge mit echtem Screenreader testen." },
-  { title: "Video-Untertitel", desc: "Sind Videos mit korrekten Untertiteln versehen?" },
-  { title: "Sprache & Verständlichkeit", desc: "Verständlich für Menschen mit kognitiven Einschränkungen?" },
-  { title: "Fokus-Sichtbarkeit", desc: "Ist der Fokus-Ring bei allen Elementen klar sichtbar?" },
-  { title: "Animationen", desc: "Animationen mit prefers-reduced-motion Support?" },
-];
-
-const WEBSITE_STEPS = ["Website abrufen...", "HTML analysieren...", "SEO & Technik prüfen...", "KI erstellt Diagnose..."];
-const WCAG_STEPS = ["HTML abrufen...", "WCAG 2.1 Scan starten (50+ Kriterien)...", "Alt-Texte, Labels, Kontrast prüfen...", "KI erstellt Diagnose..."];
-
+// ── Diagnose renderer ─────────────────────────────────────────────────────────
 function renderDiagnose(text: string) {
   return text.split("\n").map((line, i) => {
-    if (line.startsWith("## ")) return <h3 key={i} style={{ fontSize: 16, margin: "20px 0 8px", fontWeight: 700, color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 8 }}>{line.replace("## ", "")}</h3>;
-    if (line.startsWith("**🔴")) return <div key={i} style={{ margin: "10px 0 4px", fontWeight: 600, color: "#ff6b6b", fontSize: 14 }}>{line.replace(/\*\*/g, "")}</div>;
-    if (line.startsWith("**🟡")) return <div key={i} style={{ margin: "10px 0 4px", fontWeight: 600, color: "#ffd93d", fontSize: 14 }}>{line.replace(/\*\*/g, "")}</div>;
-    if (line.startsWith("**🟢")) return <div key={i} style={{ margin: "10px 0 4px", fontWeight: 600, color: "#8df3d3", fontSize: 14 }}>{line.replace(/\*\*/g, "")}</div>;
+    if (line.startsWith("## ")) return (
+      <h3 key={i} style={{ fontSize: 16, margin: "22px 0 8px", fontWeight: 700, color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 8 }}>
+        {line.replace("## ", "")}
+      </h3>
+    );
+    if (line.startsWith("**🔴")) return <div key={i} style={{ margin: "10px 0 3px", fontWeight: 600, color: "#ff6b6b", fontSize: 14 }}>{line.replace(/\*\*/g, "")}</div>;
+    if (line.startsWith("**🟡")) return <div key={i} style={{ margin: "10px 0 3px", fontWeight: 600, color: "#ffd93d", fontSize: 14 }}>{line.replace(/\*\*/g, "")}</div>;
+    if (line.startsWith("**🟢")) return <div key={i} style={{ margin: "10px 0 3px", fontWeight: 600, color: "#8df3d3", fontSize: 14 }}>{line.replace(/\*\*/g, "")}</div>;
     if (line.match(/^\d+\./)) return <div key={i} style={{ margin: "4px 0", paddingLeft: 16, color: "rgba(255,255,255,0.75)", fontSize: 14, lineHeight: 1.7 }}>{line}</div>;
-    if (line.startsWith("# ")) return null;
-    if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
+    if (line.startsWith("# ") || line.trim() === "") return <div key={i} style={{ height: line.trim() ? 0 : 5 }} />;
     return <p key={i} style={{ margin: "3px 0", color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.7 }}>{line}</p>;
   });
 }
 
-function ChecksGrid({ checks }: { checks: { label: string; desc: string }[] }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-      {checks.map((item, i) => (
-        <div key={i} style={{
-          padding: "18px 20px",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 10,
-          background: "rgba(255,255,255,0.02)",
-        }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8df3d3", marginBottom: 10 }} />
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: "#fff" }}>{item.label}</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>{item.desc}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ScanningState({ steps }: { steps: string[] }) {
-  return (
-    <div style={{ padding: "24px 28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 24 }}>
-      {steps.map((s, i) => (
-        <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: "rgba(255,255,255,0.7)", fontSize: 13, marginBottom: i < steps.length - 1 ? 10 : 0 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#8df3d3", flexShrink: 0 }} />
-          {s}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function LoginCta() {
-  return (
-    <div style={{
-      padding: "24px 28px",
-      border: "1px solid rgba(141,243,211,0.15)",
-      borderRadius: 12,
-      background: "rgba(141,243,211,0.02)",
-    }}>
-      <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-        Mehr Scans & Historie
-      </p>
-      <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.65)" }}>
-        Mit einem kostenlosen Account speicherst du alle Scans und kannst Websites regelmäßig überwachen.
-      </p>
-      <Link href="/login" style={{
-        display: "inline-block", padding: "10px 20px", borderRadius: 9, textDecoration: "none",
-        background: "#fff", color: "#0b0c10", fontWeight: 700, fontSize: 14,
-      }}>
-        Kostenlos registrieren
-      </Link>
-    </div>
-  );
-}
-
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function ScanPage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("website");
   const [url, setUrl] = useState("");
-  const [state, setState] = useState<ScanState>("idle");
-  const [diagnose, setDiagnose] = useState("");
-  const [error, setError] = useState("");
+  const [phase, setPhase] = useState<ScanPhase>("idle");
+  const [result, setResult] = useState<ScanResult | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [showOverlay, setShowOverlay] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const apiDone = useRef(false);
 
-  const [wcagUrl, setWcagUrl] = useState("");
-  const [wcagState, setWcagState] = useState<ScanState>("idle");
-  const [wcagDiagnose, setWcagDiagnose] = useState("");
-  const [wcagViolationCount, setWcagViolationCount] = useState(0);
-  const [wcagError, setWcagError] = useState("");
+  function clearTimers() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }
+
+  function advanceToPhase(target: ScanPhase, delay: number) {
+    timerRef.current = setTimeout(() => {
+      if (!apiDone.current) setPhase(target);
+    }, delay);
+  }
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!url || state === "scanning") return;
-    setState("scanning"); setDiagnose(""); setError("");
+    if (!url || phase !== "idle") return;
+
+    clearTimers();
+    apiDone.current = false;
+    setPhase("step1");
+    setResult(null);
+    setErrorMsg("");
+    setShowOverlay(false);
+
+    // Auto-advance steps while API runs
+    advanceToPhase("step2", 5000);
+    advanceToPhase("step3", 12000);
+    advanceToPhase("step4", 22000);
+
     try {
-      const res = await fetch("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
+      const res = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
       const data = await res.json();
-      if (data.success) { setDiagnose(data.diagnose); setState("done"); }
-      else { setError(data.error || "Etwas ist schiefgelaufen."); setState("error"); }
-    } catch { setError("Verbindungsfehler. Bitte versuche es erneut."); setState("error"); }
+      clearTimers();
+      apiDone.current = true;
+
+      if (data.success) {
+        const pagesScanned: number =
+          (data.scanData?.audit?.gescannteSeiten as number | undefined) ?? 1;
+        setResult({ diagnose: data.diagnose, pagesScanned });
+        setPhase("done");
+        // Show upgrade overlay after 1.2s (let user see progress complete first)
+        setTimeout(() => setShowOverlay(true), 1200);
+      } else {
+        setErrorMsg(data.error ?? "Etwas ist schiefgelaufen.");
+        setPhase("error");
+      }
+    } catch {
+      clearTimers();
+      apiDone.current = true;
+      setErrorMsg("Verbindungsfehler. Bitte versuche es erneut.");
+      setPhase("error");
+    }
   }
 
-  async function handleWcagScan(e: React.FormEvent) {
-    e.preventDefault();
-    if (!wcagUrl || wcagState === "scanning") return;
-    setWcagState("scanning"); setWcagDiagnose(""); setWcagError(""); setWcagViolationCount(0);
-    try {
-      const res = await fetch("/api/wcag-scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: wcagUrl }) });
-      const data = await res.json();
-      if (data.success) { setWcagDiagnose(data.diagnose); setWcagViolationCount(data.violationCount); setWcagState("done"); }
-      else { setWcagError(data.error || "Etwas ist schiefgelaufen."); setWcagState("error"); }
-    } catch { setWcagError("Verbindungsfehler."); setWcagState("error"); }
+  function reset() {
+    clearTimers();
+    apiDone.current = false;
+    setPhase("idle");
+    setUrl("");
+    setResult(null);
+    setErrorMsg("");
+    setShowOverlay(false);
   }
 
-  const inputStyle: React.CSSProperties = {
-    flex: 1, minWidth: 240,
-    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)",
-    borderRadius: 10, padding: "13px 18px", color: "#fff", fontSize: 15, outline: "none",
-  };
-
-  const TABS: { key: ActiveTab; label: string; badge?: string }[] = [
-    { key: "website", label: "Website-Check" },
-    { key: "wcag", label: "Barrierefreiheit", badge: "WCAG 2.1" },
-  ];
+  const isScanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
+  const currentStepIdx = isScanning ? PHASE_ORDER.indexOf(phase) - 1 : -1;
 
   return (
     <>
+      {/* ── NAV ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: "linear-gradient(135deg, #007BFF, #0057b8)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0, boxShadow: "0 2px 8px rgba(0,123,255,0.35)",
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.02em" }}>
+              Website<span style={{ color: "#007BFF" }}>Fix</span>
+            </span>
           </Link>
-          <NavAuthLink />
+          <div style={{ display: "flex", gap: 10 }}>
+            <Link href="/login" style={{
+              fontSize: 13, padding: "7px 16px", borderRadius: 8,
+              border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
+              textDecoration: "none",
+            }}>
+              Anmelden
+            </Link>
+            <Link href="/register" style={{
+              fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
+              background: "#fff", color: "#0b0c10", textDecoration: "none",
+            }}>
+              Account erstellen
+            </Link>
+          </div>
         </div>
       </nav>
 
-      <main style={{ maxWidth: 860, margin: "0 auto", padding: "56px 24px 80px" }}>
+      {/* ── HERO ── */}
+      <main>
+        <section style={{ maxWidth: 760, margin: "0 auto", padding: "72px 24px 56px", textAlign: "center" }}>
 
-        {/* HERO */}
-        <div style={{ marginBottom: 40, textAlign: "center" }}>
-          <div style={{
-            display: "inline-block", marginBottom: 20,
-            padding: "5px 16px", borderRadius: 20,
-            border: "1px solid rgba(141,243,211,0.3)",
-            background: "rgba(141,243,211,0.06)",
-            fontSize: 12, color: "#8df3d3", fontWeight: 700, letterSpacing: "0.06em",
-          }}>
-            WCAG · SEO · Performance · Kostenlos
-          </div>
-          <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 700, margin: "0 0 14px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            Website kostenlos scannen
-          </h1>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", margin: "0 auto", maxWidth: 480, lineHeight: 1.7 }}>
-            KI erklärt jeden Fehler auf Deutsch und liefert den konkreten Fix. Ohne Anmeldung.
-          </p>
-        </div>
-
-        {/* TABS */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 28, justifyContent: "center" }}>
-          {TABS.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-              padding: "10px 22px", border: "1px solid", cursor: "pointer", borderRadius: 9,
-              fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 8,
-              background: activeTab === tab.key ? "#fff" : "transparent",
-              color: activeTab === tab.key ? "#0b0c10" : "rgba(255,255,255,0.6)",
-              borderColor: activeTab === tab.key ? "#fff" : "rgba(255,255,255,0.15)",
-              transition: "all 0.15s",
-            }}>
-              {tab.label}
-              {tab.badge && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
-                  background: activeTab === tab.key ? "rgba(0,0,0,0.12)" : "rgba(141,243,211,0.12)",
-                  color: activeTab === tab.key ? "#0b0c10" : "#8df3d3",
-                }}>
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* WEBSITE-CHECK */}
-        {activeTab === "website" && (
-          <>
-            <form onSubmit={handleScan} style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-              <label htmlFor="scan-url" className="sr-only">Website-URL eingeben</label>
-              <input
-                id="scan-url" type="text" value={url}
-                onChange={e => setUrl(e.target.value)}
-                placeholder="https://deine-website.de"
-                disabled={state === "scanning"} style={inputStyle}
-              />
-              <button type="submit" disabled={state === "scanning" || !url} style={{
-                padding: "13px 28px", borderRadius: 10, border: "none",
-                background: "#fff",
-                color: "#0b0c10",
-                opacity: !url || state === "scanning" ? 0.45 : 1,
-                fontWeight: 700, fontSize: 14, cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
-                whiteSpace: "nowrap",
+          {/* Monitoring badges */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
+            {[
+              { label: "🟢 HTTPS-Monitor",     color: "#8df3d3" },
+              { label: "⚡ Core Web Vitals",   color: "#7aa6ff" },
+              { label: "🛡 BFSG-Compliance",   color: "#c084fc" },
+              { label: "🕷 Full-Site Crawl",   color: "#fbbf24" },
+            ].map(b => (
+              <div key={b.label} style={{
+                padding: "5px 13px", borderRadius: 20, fontSize: 11,
+                border: `1px solid ${b.color}30`,
+                background: `${b.color}0d`,
+                color: b.color, fontWeight: 600, letterSpacing: "0.03em",
+                display: "flex", alignItems: "center", gap: 5,
               }}>
-                {state === "scanning" ? "Scannt..." : "Jetzt scannen"}
-              </button>
+                <span style={{
+                  width: 5, height: 5, borderRadius: "50%",
+                  background: b.color, flexShrink: 0,
+                  boxShadow: `0 0 5px ${b.color}`,
+                }} />
+                {b.label.replace(/^[^\s]+\s/, "")}
+              </div>
+            ))}
+          </div>
+
+          <h1 style={{
+            fontSize: "clamp(30px, 5vw, 52px)", fontWeight: 800, lineHeight: 1.08,
+            margin: "0 0 16px", letterSpacing: "-0.035em",
+          }}>
+            Starte deinen ersten<br />
+            <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Deep-Scan.
+            </span>
+          </h1>
+
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 520, margin: "0 auto 40px" }}>
+            KI-gestützte Analyse von Barrierefreiheit, Technik und Performance –{" "}
+            <span style={{ color: "rgba(255,255,255,0.7)" }}>über alle Unterseiten hinweg.</span>
+          </p>
+
+          {/* ── INPUT FORM ── */}
+          {phase === "idle" && (
+            <form onSubmit={handleScan} style={{ position: "relative", maxWidth: 580, margin: "0 auto 14px" }}>
+              <div style={{
+                display: "flex",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 14,
+                overflow: "hidden",
+                boxShadow: "0 0 0 0 rgba(0,123,255,0)",
+                transition: "box-shadow 0.2s",
+              }}>
+                <label htmlFor="scan-url" className="sr-only">Website-URL</label>
+                <input
+                  id="scan-url"
+                  type="text" value={url}
+                  onChange={e => setUrl(e.target.value)}
+                  placeholder="https://kunden-website.de"
+                  style={{
+                    flex: 1, background: "transparent",
+                    border: "none", outline: "none",
+                    padding: "16px 20px", color: "#fff", fontSize: 16,
+                  }}
+                  autoFocus
+                />
+                <button type="submit" disabled={!url} style={{
+                  padding: "14px 28px", background: url ? "#007BFF" : "rgba(255,255,255,0.08)",
+                  border: "none", color: url ? "#fff" : "rgba(255,255,255,0.3)",
+                  fontWeight: 700, fontSize: 14, cursor: url ? "pointer" : "default",
+                  whiteSpace: "nowrap", transition: "background 0.15s",
+                  borderLeft: "1px solid rgba(255,255,255,0.08)",
+                }}>
+                  Jetzt scannen →
+                </button>
+              </div>
             </form>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 36, textAlign: "center" }}>
+          )}
+
+          {phase === "idle" && (
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: "0.02em" }}>
               Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
             </p>
+          )}
+        </section>
 
-            {state === "scanning" && <ScanningState steps={WEBSITE_STEPS} />}
-
-            {state === "error" && (
-              <div style={{ padding: "14px 18px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 10, marginBottom: 24 }}>
-                <p style={{ margin: 0, color: "#ff6b6b", fontSize: 14 }}>{error}</p>
+        {/* ── LIVE PROGRESS ── */}
+        {isScanning && (
+          <section style={{ maxWidth: 600, margin: "0 auto 48px", padding: "0 24px" }}>
+            <div style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              overflow: "hidden",
+            }}>
+              {/* Header */}
+              <div style={{
+                padding: "14px 22px",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                display: "flex", alignItems: "center", gap: 10,
+                background: "rgba(0,123,255,0.05)",
+              }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: "#007BFF", flexShrink: 0,
+                  boxShadow: "0 0 8px #007BFF",
+                  animation: "pulseDot 1.5s ease-in-out infinite",
+                }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+                  Crawler aktiv — {url}
+                </span>
               </div>
-            )}
 
-            {state === "done" && diagnose && (
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8df3d3" }} />
-                    <span style={{ fontWeight: 600, fontSize: 15 }}>Scan abgeschlossen — {url}</span>
-                  </div>
-                  <button onClick={() => { setState("idle"); setUrl(""); setDiagnose(""); }} style={{
-                    fontSize: 13, color: "rgba(255,255,255,0.65)", background: "none",
-                    border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", padding: "6px 14px",
-                  }}>
-                    Neuer Scan
-                  </button>
-                </div>
-                <div style={{ padding: "28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 16 }}>
-                  {renderDiagnose(diagnose)}
-                </div>
-                <LoginCta />
+              {/* Steps */}
+              <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 0 }}>
+                {STEPS.map((step, i) => {
+                  const isDone = i < currentStepIdx;
+                  const isActive = i === currentStepIdx;
+                  const isPending = i > currentStepIdx;
+                  return (
+                    <div key={step.phase} style={{
+                      display: "flex", gap: 14, alignItems: "flex-start",
+                      paddingBottom: i < STEPS.length - 1 ? 16 : 0,
+                      position: "relative",
+                    }}>
+                      {/* Connector line */}
+                      {i < STEPS.length - 1 && (
+                        <div style={{
+                          position: "absolute", left: 9, top: 22,
+                          width: 2, height: 16,
+                          background: isDone ? "rgba(141,243,211,0.4)" : "rgba(255,255,255,0.07)",
+                          transition: "background 0.5s",
+                        }} />
+                      )}
+                      {/* Dot */}
+                      <div style={{
+                        width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                        background: isDone
+                          ? "rgba(141,243,211,0.15)"
+                          : isActive
+                            ? "rgba(0,123,255,0.2)"
+                            : "rgba(255,255,255,0.04)",
+                        border: `1.5px solid ${isDone ? "#8df3d3" : isActive ? "#007BFF" : "rgba(255,255,255,0.1)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.4s",
+                      }}>
+                        {isDone ? (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        ) : isActive ? (
+                          <div style={{
+                            width: 6, height: 6, borderRadius: "50%",
+                            background: "#007BFF",
+                            animation: "pulseDot 1.2s ease-in-out infinite",
+                          }} />
+                        ) : null}
+                      </div>
+                      {/* Text */}
+                      <div>
+                        <div style={{
+                          fontSize: 14, fontWeight: isActive ? 600 : 400,
+                          color: isDone ? "#8df3d3" : isActive ? "#fff" : "rgba(255,255,255,0.25)",
+                          transition: "color 0.4s",
+                        }}>
+                          {step.label}
+                        </div>
+                        {isActive && step.sub && (
+                          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                            {step.sub}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
 
-            {state === "idle" && (
-              <div>
-                <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-                  Was geprüft wird
-                </p>
-                <ChecksGrid checks={WEBSITE_CHECKS} />
+              {/* Bottom bar */}
+              <div style={{
+                height: 2, background: "rgba(255,255,255,0.04)",
+                overflow: "hidden",
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${((currentStepIdx + 1) / STEPS.length) * 100}%`,
+                  background: "linear-gradient(90deg, #007BFF, #8df3d3)",
+                  transition: "width 0.6s ease",
+                }} />
               </div>
-            )}
-          </>
+            </div>
+          </section>
         )}
 
-        {/* WCAG */}
-        {activeTab === "wcag" && (
-          <>
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ padding: "4px 12px", display: "inline-block", borderRadius: 16, border: "1px solid rgba(141,243,211,0.2)", fontSize: 12, color: "#8df3d3", fontWeight: 600 }}>
-                WCAG 2.1 AA · axe-core · BFSG-relevant
-              </span>
+        {/* ── ERROR ── */}
+        {phase === "error" && (
+          <section style={{ maxWidth: 600, margin: "0 auto 48px", padding: "0 24px" }}>
+            <div style={{
+              padding: "18px 22px",
+              background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)",
+              borderRadius: 12,
+            }}>
+              <p style={{ margin: "0 0 12px", color: "#ff6b6b", fontSize: 14 }}>{errorMsg}</p>
+              <button onClick={reset} style={{
+                fontSize: 13, padding: "8px 16px", borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
+                background: "none", cursor: "pointer",
+              }}>
+                Erneut versuchen
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* ── RESULTS ── */}
+        {phase === "done" && result && (
+          <section style={{ maxWidth: 740, margin: "0 auto 64px", padding: "0 24px" }}>
+
+            {/* Result header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: "#8df3d3", boxShadow: "0 0 6px #8df3d3",
+                }} />
+                <span style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>
+                  Scan abgeschlossen
+                </span>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+                  {result.pagesScanned} Seite{result.pagesScanned !== 1 ? "n" : ""} analysiert · {url}
+                </span>
+              </div>
+              <button onClick={reset} style={{
+                fontSize: 13, color: "rgba(255,255,255,0.4)", background: "none",
+                border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+                cursor: "pointer", padding: "6px 14px",
+              }}>
+                Neue URL
+              </button>
             </div>
 
-            <form onSubmit={handleWcagScan} style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-              <label htmlFor="wcag-url" className="sr-only">Website-URL für WCAG-Scan</label>
-              <input
-                id="wcag-url" type="text" value={wcagUrl}
-                onChange={e => setWcagUrl(e.target.value)}
-                placeholder="https://deine-website.de"
-                disabled={wcagState === "scanning"} style={inputStyle}
-              />
-              <button type="submit" disabled={wcagState === "scanning" || !wcagUrl} style={{
-                padding: "13px 28px", borderRadius: 10, border: "none",
-                background: "#fff",
-                color: "#0b0c10",
-                opacity: !wcagUrl || wcagState === "scanning" ? 0.45 : 1,
-                fontWeight: 700, fontSize: 14, cursor: !wcagUrl || wcagState === "scanning" ? "not-allowed" : "pointer",
-                whiteSpace: "nowrap",
-              }}>
-                {wcagState === "scanning" ? "Scannt..." : "Jetzt prüfen"}
-              </button>
-            </form>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 36, textAlign: "center" }}>
-              Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
-            </p>
-
-            {wcagState === "scanning" && <ScanningState steps={WCAG_STEPS} />}
-
-            {wcagState === "error" && (
-              <div style={{ padding: "14px 18px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 10, marginBottom: 24 }}>
-                <p style={{ margin: 0, color: "#ff6b6b", fontSize: 14 }}>{wcagError}</p>
+            {/* Diagnose */}
+            <div style={{
+              position: "relative",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14, overflow: "hidden",
+              marginBottom: 16,
+            }}>
+              <div style={{ padding: "28px 32px" }}>
+                {renderDiagnose(result.diagnose)}
               </div>
-            )}
 
-            {wcagState === "done" && wcagDiagnose && (
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: wcagViolationCount === 0 ? "#8df3d3" : "#ff6b6b" }} />
-                    <span style={{ fontWeight: 600, fontSize: 15 }}>
-                      {wcagViolationCount === 0 ? "Keine WCAG-Verstöße gefunden" : `${wcagViolationCount} WCAG-Verstöße gefunden`}
-                    </span>
-                    <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>— {wcagUrl}</span>
-                  </div>
-                  <button onClick={() => { setWcagState("idle"); setWcagUrl(""); setWcagDiagnose(""); }} style={{
-                    fontSize: 13, color: "rgba(255,255,255,0.65)", background: "none",
-                    border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", padding: "6px 14px",
+              {/* Blur + Upgrade Overlay — appears after 1.2s */}
+              {showOverlay && (
+                <div style={{
+                  position: "absolute", bottom: 0, left: 0, right: 0,
+                  height: "45%",
+                  background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.92) 40%, rgba(11,12,16,0.98) 100%)",
+                  display: "flex", alignItems: "flex-end",
+                  padding: "0 32px 28px",
+                }}>
+                  <div style={{
+                    width: "100%",
+                    padding: "22px 26px", borderRadius: 14,
+                    background: "rgba(0,123,255,0.08)",
+                    border: "1px solid rgba(0,123,255,0.25)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                    textAlign: "center",
                   }}>
-                    Neue Website
-                  </button>
-                </div>
-
-                <div style={{ padding: "28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 16 }}>
-                  {renderDiagnose(wcagDiagnose)}
-                </div>
-
-                <div style={{ padding: "24px 28px", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, marginBottom: 16 }}>
-                  <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Transparenz</p>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700 }}>Was dieser Scan nicht prüfen kann</h3>
-                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
-                    Automatische Tools finden ~30–40% aller WCAG-Probleme. Diese Punkte brauchen einen manuellen Check:
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    {MANUAL_CHECKS.map((item, i) => (
-                      <div key={i} style={{
-                        padding: "12px 0",
-                        borderBottom: i < MANUAL_CHECKS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                        display: "flex", gap: 16, alignItems: "flex-start",
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                      🚀 Du hast ein großes Projekt
+                    </div>
+                    <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+                      Dieser Scan prüfte{" "}
+                      <strong style={{ color: "#fff" }}>{result.pagesScanned} Seiten</strong>.
+                      Erstelle einen kostenlosen Account, um{" "}
+                      <strong style={{ color: "#fff" }}>alle Unterseiten</strong> zu analysieren und den vollständigen Deep-Scan zu erhalten.
+                    </p>
+                    <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                      <Link href="/register" style={{
+                        padding: "11px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
+                        background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                        color: "#fff", textDecoration: "none",
+                        boxShadow: "0 4px 16px rgba(0,123,255,0.4)",
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.45)", paddingTop: 2, flexShrink: 0, width: 20 }}>0{i + 1}</span>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.title}</div>
-                          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{item.desc}</div>
-                        </div>
-                      </div>
-                    ))}
+                        Kostenlosen Agentur-Account erstellen →
+                      </Link>
+                      <button onClick={() => setShowOverlay(false)} style={{
+                        padding: "11px 18px", borderRadius: 9, fontSize: 13,
+                        border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)",
+                        background: "none", cursor: "pointer",
+                      }}>
+                        Report lesen
+                      </button>
+                    </div>
                   </div>
-                  <p style={{ margin: "16px 0 0", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                    Für vollständige BFSG-Konformität empfiehlt sich ein manueller Audit ergänzend zum automatischen Scan.
-                  </p>
                 </div>
+              )}
+            </div>
 
-                <LoginCta />
-              </div>
-            )}
-
-            {wcagState === "idle" && (
-              <div>
-                <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-                  Was geprüft wird
-                </p>
-                <ChecksGrid checks={WCAG_CHECKS} />
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginTop: 16 }}>
-                  Basiert auf axe-core — dem Standard-Tool für WCAG 2.1 AA. Seit dem 28. Juni 2025 gilt das BFSG in Deutschland.{" "}
-                  <Link href="/blog/bfsg-2025-was-webagenturen-wissen-muessen" style={{ color: "#8df3d3" }}>Mehr erfahren</Link>
-                </p>
-              </div>
-            )}
-          </>
+          </section>
         )}
+
+        {/* ── BENEFITS FOOTER ── */}
+        <section style={{
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          padding: "64px 24px 80px",
+        }}>
+          <div style={{ maxWidth: 960, margin: "0 auto" }}>
+            <p style={{ textAlign: "center", margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              Warum Agenturen WebsiteFix nutzen
+            </p>
+            <h2 style={{ textAlign: "center", margin: "0 0 48px", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
+              Mehr Umsatz. Weniger Haftung. Bessere Marge.
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+              {BENEFITS.map(b => (
+                <div key={b.label} style={{
+                  padding: "26px 24px",
+                  background: b.bg,
+                  border: `1px solid ${b.border}`,
+                  borderRadius: 16,
+                  display: "flex", flexDirection: "column", gap: 14,
+                }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                    background: `${b.color}15`,
+                    border: `1px solid ${b.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {b.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: b.color, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+                      {b.label}
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: "#fff", marginBottom: 6 }}>
+                      {b.title}
+                    </div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.65 }}>
+                      {b.desc}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: 40 }}>
+              <Link href="/fuer-agenturen" style={{
+                display: "inline-block",
+                padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                color: "#fff", textDecoration: "none",
+                boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
+              }}>
+                Jetzt Agentur-Account erstellen →
+              </Link>
+              <p style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+                Keine Kreditkarte · Monatlich kündbar
+              </p>
+            </div>
+          </div>
+        </section>
+
       </main>
 
+      {/* ── FOOTER ── */}
       <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{`© ${new Date().getFullYear()} website-fix.com`}</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+            {`© ${new Date().getFullYear()} website-fix.com`}
+          </span>
           <div style={{ display: "flex", gap: 20 }}>
-            <Link href="/" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>Startseite</Link>
-            <Link href="/impressum" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>Impressum</Link>
+            <Link href="/" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Startseite</Link>
+            <Link href="/fuer-agenturen" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Für Agenturen</Link>
+            <Link href="/impressum" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Impressum</Link>
+            <Link href="/datenschutz" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Datenschutz</Link>
           </div>
         </div>
       </footer>
+
+      {/* CSS animations */}
+      <style>{`
+        @keyframes pulseDot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.85); }
+        }
+      `}</style>
     </>
   );
 }
