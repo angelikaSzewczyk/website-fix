@@ -34,13 +34,9 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/icon", sizes: "32x32",  type: "image/png" },
-      { url: "/icon", sizes: "16x16",  type: "image/png" },
-    ],
+    icon:    [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: "/favicon.svg",
-    apple:    [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+    // apple-icon and PNG icon are auto-linked by app/icon.tsx + app/apple-icon.tsx
   },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
