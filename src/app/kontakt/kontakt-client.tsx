@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// ── Brand mark ────────────────────────────────────────────────────────────────
 function BrandMark() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none"
@@ -27,38 +26,37 @@ function Field({
 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
-    background: "rgba(30,41,59,0.8)",
-    border: `1px solid ${focused ? "#EAB308" : "rgba(234,179,8,0.15)"}`,
+    background: "rgba(51,65,85,0.5)",       // slate-700/50
+    border: `1.5px solid ${focused ? "#EAB308" : "#334155"}`,
     borderRadius: 10, padding: "13px 16px",
-    color: "#fff", fontSize: 14, outline: "none",
-    transition: "border-color 0.15s, box-shadow 0.15s",
+    color: "#F8FAFC", fontSize: 14, outline: "none",
     fontFamily: "inherit",
-    boxShadow: focused ? "0 0 0 3px rgba(234,179,8,0.12), inset 0 1px 2px rgba(0,0,0,0.3)" : "inset 0 1px 2px rgba(0,0,0,0.3)",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    boxShadow: focused ? "0 0 0 3px rgba(234,179,8,0.15)" : "none",
     resize: rows ? "vertical" : undefined,
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <label htmlFor={id} style={{
-        fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.55)",
+        fontSize: 12, fontWeight: 700,
+        color: "#94A3B8",
         letterSpacing: "0.07em", textTransform: "uppercase",
       }}>
         {label}{required && <span style={{ color: "#EAB308", marginLeft: 3 }}>*</span>}
       </label>
       {rows ? (
-        <textarea
-          id={id} rows={rows} placeholder={placeholder}
+        <textarea id={id} rows={rows} placeholder={placeholder}
           value={value} onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="wf-contact-input"
-          style={{ ...inputStyle, minHeight: 140 }}
+          className="wf-field"
+          style={{ ...inputStyle, minHeight: 130 }}
         />
       ) : (
-        <input
-          id={id} type={type} placeholder={placeholder}
+        <input id={id} type={type} placeholder={placeholder}
           value={value} onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="wf-contact-input"
+          className="wf-field"
           style={inputStyle}
         />
       )}
@@ -66,42 +64,35 @@ function Field({
   );
 }
 
-// ── Success state ─────────────────────────────────────────────────────────────
+// ── Success ───────────────────────────────────────────────────────────────────
 function SuccessCard() {
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
-      gap: 24, padding: "60px 40px", textAlign: "center",
+      gap: 22, padding: "60px 40px", textAlign: "center",
     }}>
       <div style={{
-        width: 80, height: 80, borderRadius: "50%",
-        background: "rgba(234,179,8,0.1)",
-        border: "2px solid rgba(234,179,8,0.4)",
+        width: 76, height: 76, borderRadius: "50%",
+        background: "rgba(234,179,8,0.1)", border: "2px solid rgba(234,179,8,0.35)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 0 32px rgba(234,179,8,0.2)",
+        boxShadow: "0 0 28px rgba(234,179,8,0.2)",
       }}>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <path d="M 8,18 L 15,25 L 28,11"
-            stroke="#EAB308" strokeWidth="2.8"
-            strokeLinecap="round" strokeLinejoin="round"/>
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <path d="M 8,17 L 14,23 L 26,11"
+            stroke="#EAB308" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
       <div>
-        <h2 style={{
-          margin: "0 0 12px", fontSize: 26, fontWeight: 800,
-          letterSpacing: "-0.025em",
-          background: "linear-gradient(135deg, #fff 40%, #EAB308)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-        }}>
+        <h2 style={{ margin: "0 0 10px", fontSize: 24, fontWeight: 800, color: "#F8FAFC", letterSpacing: "-0.025em" }}>
           Nachricht gesendet!
         </h2>
-        <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>
+        <p style={{ margin: 0, fontSize: 15, color: "#64748B", lineHeight: 1.75 }}>
           Danke! Wir melden uns in Kürze bei dir.
         </p>
       </div>
       <Link href="/" style={{
-        marginTop: 4, padding: "12px 28px", borderRadius: 10, border: "none",
-        background: "#EAB308", color: "#0a0a0a",
+        marginTop: 6, padding: "12px 28px", borderRadius: 10,
+        background: "#EAB308", color: "#0F172A",
         fontWeight: 700, fontSize: 14, textDecoration: "none",
         boxShadow: "0 4px 20px rgba(234,179,8,0.35)",
       }}>
@@ -121,17 +112,13 @@ export default function KontaktClient() {
   const [error, setError]     = useState("");
   const [sent, setSent]       = useState(false);
 
-  const allFilled = !!(name && email && subject && message);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!allFilled || loading) return;
-    setLoading(true);
-    setError("");
+    if (!name || !email || !subject || !message || loading) return;
+    setLoading(true); setError("");
     try {
       const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, subject, message }),
       });
       const data = await res.json();
@@ -146,19 +133,18 @@ export default function KontaktClient() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#0a0a0a", color: "#fff",
+      minHeight: "100vh", background: "#0F172A", color: "#fff",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
-      {/* placeholder color */}
       <style>{`
-        .wf-contact-input::placeholder { color: rgba(234,179,8,0.3); }
-        .wf-contact-input:focus { outline: none; }
+        .wf-field::placeholder { color: #475569; }
+        .wf-field:focus { outline: none; }
       `}</style>
 
       {/* ── Nav ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(10,10,10,0.95)",
+        background: "rgba(15,23,42,0.95)",
         backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
       }}>
@@ -175,8 +161,8 @@ export default function KontaktClient() {
           <Link href="/scan" style={{
             fontSize: 13, fontWeight: 700, textDecoration: "none",
             padding: "8px 18px", borderRadius: 9,
-            background: "#EAB308", color: "#0a0a0a",
-            boxShadow: "0 2px 12px rgba(234,179,8,0.35)",
+            background: "#EAB308", color: "#0F172A",
+            boxShadow: "0 2px 16px rgba(234,179,8,0.35)",
           }}>
             Jetzt scannen →
           </Link>
@@ -184,41 +170,39 @@ export default function KontaktClient() {
       </nav>
 
       {/* ── Content ── */}
-      <main style={{ maxWidth: "44rem", margin: "0 auto", padding: "80px 24px 120px" }}>
+      <main style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px 100px" }}>
 
-        {/* Header */}
-        <div style={{ marginBottom: 48, textAlign: "center" }}>
+        {/* Page title */}
+        <div style={{ marginBottom: 40, textAlign: "center" }}>
           <h1 style={{
-            fontSize: "clamp(36px, 6vw, 52px)", fontWeight: 800,
-            letterSpacing: "-0.035em", lineHeight: 1.1, margin: "0 0 18px",
-            background: "linear-gradient(135deg, #fff 30%, #EAB308 100%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 800,
+            letterSpacing: "-0.035em", lineHeight: 1.1, margin: "0 0 14px",
+            color: "#F8FAFC",
           }}>
             Kontakt
           </h1>
-          <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: "30rem", marginInline: "auto" }}>
+          <p style={{ margin: 0, fontSize: 15, color: "#64748B", lineHeight: 1.75 }}>
             Fragen, Feedback oder Partneranfragen? Schreib uns — wir melden uns
             in der Regel innerhalb von{" "}
             <span style={{ color: "#EAB308", fontWeight: 600 }}>24&nbsp;Stunden</span>.
           </p>
         </div>
 
-        {/* Glowing card */}
+        {/* Form card — slate-900 with shadow-2xl */}
         <div style={{
-          background: "rgba(17,24,39,0.9)",
-          border: "1px solid rgba(234,179,8,0.2)",
-          borderRadius: 20,
+          background: "#1E293B",
+          border: "1px solid #334155",
+          borderRadius: 24,
+          boxShadow: "0 25px 50px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4)",
           overflow: "hidden",
-          boxShadow: "0 0 40px rgba(234,179,8,0.12), 0 0 80px rgba(234,179,8,0.06), 0 20px 60px rgba(0,0,0,0.5)",
         }}>
           {sent ? <SuccessCard /> : (
             <form onSubmit={handleSubmit} style={{
               padding: "40px 36px",
-              display: "flex", flexDirection: "column", gap: 24,
+              display: "flex", flexDirection: "column", gap: 22,
             }}>
 
-              {/* Name + Email */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <Field id="name" label="Name" placeholder="Dein Name"
                   value={name} onChange={setName} required />
                 <Field id="email" label="E-Mail" type="email" placeholder="du@beispiel.de"
@@ -231,7 +215,6 @@ export default function KontaktClient() {
               <Field id="message" label="Nachricht" placeholder="Deine Nachricht..."
                 value={message} onChange={setMessage} required rows={6} />
 
-              {/* Error */}
               {error && (
                 <div style={{
                   padding: "12px 16px", borderRadius: 9,
@@ -242,23 +225,18 @@ export default function KontaktClient() {
                 </div>
               )}
 
-              {/* Submit — always yellow */}
+              {/* Always-yellow CTA */}
               <div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    padding: "14px 32px", borderRadius: 10, border: "none",
-                    background: loading ? "rgba(234,179,8,0.5)" : "#EAB308",
-                    color: "#0a0a0a",
-                    fontWeight: 700, fontSize: 15,
-                    cursor: loading ? "default" : "pointer",
-                    transition: "background 0.15s, box-shadow 0.15s",
-                    boxShadow: loading ? "none" : "0 4px 20px rgba(234,179,8,0.4)",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {loading ? "Wird gesendet..." : "Nachricht senden →"}
+                <button type="submit" disabled={loading} style={{
+                  padding: "14px 32px", borderRadius: 10, border: "none",
+                  background: loading ? "#92400E" : "#EAB308",
+                  color: "#0F172A", fontWeight: 700, fontSize: 15,
+                  cursor: loading ? "default" : "pointer",
+                  boxShadow: loading ? "none" : "0 4px 20px rgba(234,179,8,0.4)",
+                  transition: "background 0.15s, box-shadow 0.15s",
+                  letterSpacing: "-0.01em",
+                }}>
+                  {loading ? "Wird gesendet…" : "Nachricht senden →"}
                 </button>
               </div>
 
@@ -266,33 +244,31 @@ export default function KontaktClient() {
           )}
         </div>
 
-        {/* Email link — centered, yellow */}
+        {/* Direct email */}
         {!sent && (
-          <div style={{ marginTop: 32, textAlign: "center" }}>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Oder direkt: </span>
+          <p style={{ marginTop: 28, textAlign: "center", fontSize: 13, color: "#475569" }}>
+            Oder direkt:{" "}
             <a href="mailto:support@website-fix.com" style={{
-              fontSize: 13, fontWeight: 600,
-              color: "#EAB308", textDecoration: "none",
-              letterSpacing: "-0.01em",
+              color: "#EAB308", textDecoration: "none", fontWeight: 600,
             }}>
               support@website-fix.com
             </a>
-          </div>
+          </p>
         )}
 
       </main>
 
       {/* ── Footer ── */}
       <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.07)",
-        padding: "32px 24px", textAlign: "center",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        padding: "28px 24px", textAlign: "center",
       }}>
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 2 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.25)", lineHeight: 2 }}>
           {`© ${new Date().getFullYear()} website-fix.com`}
           <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-          <Link href="/impressum" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Impressum</Link>
+          <Link href="/impressum" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Impressum</Link>
           <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-          <Link href="/datenschutz" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Datenschutz</Link>
+          <Link href="/datenschutz" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Datenschutz</Link>
         </p>
       </footer>
     </div>
