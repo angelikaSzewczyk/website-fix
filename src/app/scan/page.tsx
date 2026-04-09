@@ -141,6 +141,30 @@ export default function ScanPage() {
 
       if (data.success) {
         setPhase("done");
+        // Store real scan data for the results page
+        try {
+          const audit = data.scanData?.audit ?? {};
+          sessionStorage.setItem("wf_scan_result", JSON.stringify({
+            url,
+            pages:               audit.gescannteSeiten ?? 1,
+            unterseiten:         (audit.unterseiten ?? []).map((p: { url: string; erreichbar: boolean; altMissing: number; noindex: boolean }) => ({
+              url: p.url, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex,
+            })),
+            diagnose:            data.diagnose ?? "",
+            https:               data.scanData?.https ?? true,
+            brokenLinksCount:    audit.brokenLinks?.length ?? 0,
+            altMissingCount:     audit.altTexte?.fehlend ?? 0,
+            duplicateTitlesCount: audit.duplicateTitles?.length ?? 0,
+            duplicateMetasCount: audit.duplicateMetas?.length ?? 0,
+            noIndex:             data.scanData?.indexierungGesperrt ?? false,
+            hasTitle:            !!data.scanData?.title,
+            hasMeta:             !!data.scanData?.metaDescription,
+            hasH1:               !!data.scanData?.h1,
+            hasSitemap:          data.scanData?.sitemapVorhanden ?? false,
+            robotsBlocked:       data.scanData?.robotsBlockiertAlles ?? false,
+            hasUnreachable:      (audit.unterseiten ?? []).some((p: { erreichbar: boolean }) => !p.erreichbar),
+          }));
+        } catch { /* sessionStorage not available */ }
         // Redirect to results page after a brief "done" flash
         setTimeout(() => {
           router.push(`/scan/results?url=${encodeURIComponent(url)}`);

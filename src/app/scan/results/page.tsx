@@ -2,15 +2,117 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
 
-// ── Demo data ────────────────────────────────────────────────────────────────
-const HEALTH_SCORE = 64;
-const PAGES_TOTAL = 42;
-const CRITICAL_ERRORS = 12;
+// ── Real scan data shape (stored by /scan/page.tsx via sessionStorage) ────────
+type StoredScan = {
+  url:                  string;
+  pages:                number;
+  unterseiten:          Array<{ url: string; erreichbar: boolean; altMissing: number; noindex: boolean }>;
+  diagnose:             string;
+  https:                boolean;
+  brokenLinksCount:     number;
+  altMissingCount:      number;
+  duplicateTitlesCount: number;
+  duplicateMetasCount:  number;
+  noIndex:              boolean;
+  hasTitle:             boolean;
+  hasMeta:              boolean;
+  hasH1:                boolean;
+  hasSitemap:           boolean;
+  robotsBlocked:        boolean;
+  hasUnreachable:       boolean;
+};
 
-const DEMO_PAGES = [
+// ── Score + derived metrics ───────────────────────────────────────────────────
+function computeScore(d: StoredScan): number {
+  let s = 100;
+  if (!d.https)                    s -= 20;
+  if (!d.hasTitle)                 s -= 8;
+  if (!d.hasMeta)                  s -= 6;
+  if (!d.hasH1)                    s -= 5;
+  if (d.robotsBlocked)             s -= 15;
+  if (!d.hasSitemap)               s -= 4;
+  if (d.brokenLinksCount > 0)      s -= 8;
+  if (d.duplicateTitlesCount > 1)  s -= 5;
+  if (d.altMissingCount > 5)       s -= 8;
+  else if (d.altMissingCount > 0)  s -= 4;
+  if (d.hasUnreachable)            s -= 8;
+  if (d.noIndex)                   s -= 12;
+  return Math.max(15, Math.round(s));
+}
+
+function computeCritical(d: StoredScan): number {
+  return d.altMissingCount
+    + (d.brokenLinksCount)
+    + (!d.hasH1 ? 1 : 0)
+    + (d.noIndex ? 1 : 0);
+}
+
+function liabilityLevel(score: number, crit: number): string {
+  if (score < 55 || crit > 8) return "HOCH";
+  if (score < 80 || crit > 2) return "MITTEL";
+  return "GERING";
+}
+
+function liabilityColor(level: string): string {
+  if (level === "HOCH")   return "#f59e0b";
+  if (level === "MITTEL") return "#fbbf24";
+  return "#22c55e";
+}
+
+// ── Diagnose parser ───────────────────────────────────────────────────────────
+type Finding = { label: string; issue: string; desc: string };
+
+function parseFindings(diagnose: string): Finding[] {
+  const findings: Finding[] = [];
+  const lines = diagnose.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const m = line.match(/^\*\*((?:🔴|🟡|🟢)[^*]+)\*\*\s+(.*)/);
+    if (m) {
+      const label = m[1].trim();
+      const issue = m[2].trim();
+      let desc = "";
+      for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+        const next = lines[j].trim();
+        if (next && !next.startsWith("**") && !next.startsWith("#")) {
+          desc = next.slice(0, 220);
+          break;
+        }
+      }
+      if (issue) findings.push({ label, issue, desc });
+    }
+  }
+  return findings;
+}
+
+// ── Build subpage list from real data ─────────────────────────────────────────
+function buildPages(d: StoredScan) {
+  const base = (() => { try { return new URL(d.url).host; } catch { return d.url; } })();
+  const homePath = (() => { try { return new URL(d.url).pathname || "/"; } catch { return "/"; } })();
+  const homeErrors = (!d.hasTitle ? 1 : 0) + (!d.hasMeta ? 1 : 0) + (!d.hasH1 ? 1 : 0)
+    + (d.altMissingCount > 0 ? Math.min(d.altMissingCount, 3) : 0);
+  const items = [
+    { path: homePath, errors: homeErrors },
+    ...d.unterseiten.map(p => {
+      let errors = p.altMissing;
+      if (!p.erreichbar) errors += 3;
+      if (p.noindex)     errors += 1;
+      const path = (() => { try { return new URL(p.url).pathname || "/"; } catch { return p.url; } })();
+      return { path, errors };
+    }),
+  ];
+  return { base, items };
+}
+
+// ── Demo constants ────────────────────────────────────────────────────────────
+const DEMO_DOMAIN  = "beispiel-agentur.de";
+const DEMO_SCORE   = 64;
+const DEMO_PAGES   = 42;
+const DEMO_CRIT    = 12;
+const DEMO_PAGES_LIST = [
   { path: "/",                    errors: 3 },
   { path: "/leistungen",          errors: 5 },
   { path: "/ueber-uns",           errors: 0 },
@@ -26,31 +128,20 @@ const DEMO_PAGES = [
   { path: "/referenzen",          errors: 1 },
   { path: "/preise",              errors: 0 },
 ];
-
-const VISIBLE_PAGES = 8; // rest are blurred
-
 const DEMO_FIX = {
   label: "🔴 Kritisch",
-  page: "/leistungen",
   issue: "Kontrastverhältnis zu niedrig",
-  desc: "Weißer Text (#FFFFFF) auf hellblauem Hintergrund (#4A9EFF) im Footer erreicht nur ein Kontrastverhältnis von 2.4:1. WCAG 2.1 AA fordert mindestens 4.5:1.",
-  before: `.footer-text {
-  color: #ffffff;
-  background: #4a9eff; /* Kontrast: 2.4:1 ❌ */
-}`,
-  after: `.footer-text {
-  color: #ffffff;
-  background: #1d4ed8; /* Kontrast: 5.8:1 ✅ */
-}`,
+  desc:  "Weißer Text (#FFFFFF) auf hellblauem Hintergrund (#4A9EFF) im Footer erreicht nur ein Kontrastverhältnis von 2.4:1. WCAG 2.1 AA fordert mindestens 4.5:1.",
+  before: `.footer-text {\n  color: #ffffff;\n  background: #4a9eff; /* Kontrast: 2.4:1 ❌ */\n}`,
+  after:  `.footer-text {\n  color: #ffffff;\n  background: #1d4ed8; /* Kontrast: 5.8:1 ✅ */\n}`,
 };
-
-const LOCKED_FIXES = [
+const DEMO_LOCKED = [
   { label: "🔴 Kritisch", issue: "Fehlendes alt-Attribut auf 18 Bildern" },
   { label: "🔴 Kritisch", issue: "Formularfelder ohne Label-Zuordnung" },
   { label: "🟡 Mittel",   issue: "Fehlende ARIA-Landmarks auf Unterseiten" },
   { label: "🟡 Mittel",   issue: "Fokus-Reihenfolge nicht logisch" },
   { label: "🟡 Mittel",   issue: "Skip-Navigation fehlt" },
-  { label: "⚪ Info",      issue: "Meta-Description auf 9 Seiten leer" },
+  { label: "⚪ Info",     issue: "Meta-Description auf 9 Seiten leer" },
 ];
 
 const COMPARE_ROWS = [
@@ -64,19 +155,17 @@ const COMPARE_ROWS = [
   { feature: "Team-Mitglieder",          free: "—",            pro: "Bis zu 5" },
 ];
 
-// ── Ring chart ───────────────────────────────────────────────────────────────
+const VISIBLE_PAGES = 8;
+
+// ── Ring chart ────────────────────────────────────────────────────────────────
 function HealthRing({ score }: { score: number }) {
-  const r = 52;
-  const circ = 2 * Math.PI * r;
-  const filled = (score / 100) * circ;
-  const color = score >= 80 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444";
+  const r = 52, circ = 2 * Math.PI * r;
+  const color = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
   return (
     <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: "rotate(-90deg)" }}>
       <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="12" />
-      <circle
-        cx="70" cy="70" r={r} fill="none"
-        stroke={color} strokeWidth="12"
-        strokeDasharray={`${filled} ${circ - filled}`}
+      <circle cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="12"
+        strokeDasharray={`${(score / 100) * circ} ${circ - (score / 100) * circ}`}
         strokeLinecap="round"
         style={{ filter: `drop-shadow(0 0 8px ${color}80)` }}
       />
@@ -84,16 +173,63 @@ function HealthRing({ score }: { score: number }) {
   );
 }
 
-// ── Main inner component ─────────────────────────────────────────────────────
+// ── Main inner component ──────────────────────────────────────────────────────
 function ResultsInner() {
   const params = useSearchParams();
-  const rawUrl = params.get("url") ?? "example.de";
-  const displayDomain = rawUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  const scoreColor = HEALTH_SCORE >= 80 ? "#22c55e" : HEALTH_SCORE >= 50 ? "#f59e0b" : "#ef4444";
+  const urlParam = params.get("url") ?? "";
+
+  const [scan, setScan]     = useState<StoredScan | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("wf_scan_result");
+      if (raw) {
+        const parsed: StoredScan = JSON.parse(raw);
+        // Accept if URLs roughly match (both normalised)
+        const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
+        if (norm(parsed.url) === norm(urlParam) || !urlParam) {
+          setScan(parsed);
+        }
+      }
+    } catch { /* SSR / blocked */ }
+    setLoaded(true);
+  }, [urlParam]);
+
+  if (!loaded) return (
+    <div style={{ background: "#0b0c10", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>Lade Ergebnisse…</div>
+    </div>
+  );
+
+  // ── Derive display values ────────────────────────────────────────────────
+  const isDemo       = !scan;
+  const displayDomain = isDemo ? DEMO_DOMAIN : (() => { try { return new URL(scan!.url).host; } catch { return scan!.url; } })();
+  const score        = isDemo ? DEMO_SCORE   : computeScore(scan!);
+  const pagesTotal   = isDemo ? DEMO_PAGES   : scan!.pages;
+  const critErrors   = isDemo ? DEMO_CRIT    : computeCritical(scan!);
+  const liability    = isDemo ? "HOCH"       : liabilityLevel(score, critErrors);
+  const liabColor    = liabilityColor(liability);
+  const scoreColor   = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
+  const scoreLabel   = score >= 80 ? "Gut" : score >= 55 ? "Verbesserungsbedarf" : "Kritisch";
+
+  // Pages list
+  const { base: pageBase, items: realPageItems } = isDemo
+    ? { base: DEMO_DOMAIN, items: DEMO_PAGES_LIST }
+    : buildPages(scan!);
+  const pageItems = isDemo ? DEMO_PAGES_LIST : realPageItems;
+
+  // Findings
+  const findings    = isDemo ? [] : parseFindings(scan!.diagnose);
+  const visibleFix  = isDemo ? DEMO_FIX : (findings[0] ? { ...findings[0], before: "", after: "" } : DEMO_FIX);
+  const lockedCount = isDemo ? DEMO_LOCKED.length : Math.max(0, findings.length - 1);
+  const lockedItems = isDemo
+    ? DEMO_LOCKED
+    : findings.slice(1).map(f => ({ label: f.label, issue: f.issue }));
 
   return (
     <>
-      {/* ── NAV ── */}
+      {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(11,12,16,0.97)", backdropFilter: "blur(12px)",
@@ -102,9 +238,11 @@ function ResultsInner() {
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <BrandLogo />
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {displayDomain}
-            </span>
+            {!isDemo && (
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {displayDomain}
+              </span>
+            )}
             <Link href="/register" style={{
               fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
               background: "#007BFF", color: "#fff", textDecoration: "none",
@@ -118,10 +256,24 @@ function ResultsInner() {
 
       <main style={{ background: "#0b0c10", minHeight: "100vh" }}>
 
-        {/* ── 1. HERO DASHBOARD ── */}
+        {/* ── SECTION 1: HERO DASHBOARD ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "56px 24px 0" }}>
 
-          {/* Label */}
+          {/* Demo-mode notice */}
+          {isDemo && (
+            <div style={{
+              marginBottom: 24, padding: "10px 16px", borderRadius: 10,
+              background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)",
+              display: "flex", alignItems: "center", gap: 10,
+            }}>
+              <span style={{ fontSize: 13 }}>💡</span>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+                Das sind Beispieldaten. <Link href="/scan" style={{ color: "#fbbf24", textDecoration: "none", fontWeight: 600 }}>Eigene URL scannen →</Link>
+              </span>
+            </div>
+          )}
+
+          {/* Scan complete label */}
           <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 7,
@@ -133,425 +285,283 @@ function ResultsInner() {
               Scan abgeschlossen
             </div>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-              {displayDomain} · {PAGES_TOTAL} Unterseiten analysiert
+              {displayDomain} · {pagesTotal} {pagesTotal === 1 ? "Seite" : "Unterseiten"} analysiert
             </span>
           </div>
 
           {/* Dashboard grid */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "auto 1fr 1fr 1fr",
-            gap: 16,
-          }}>
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: 16 }}>
 
-            {/* Health Ring card */}
+            {/* Health ring */}
             <div style={{
-              background: "rgba(255,255,255,0.025)",
-              border: `1px solid ${scoreColor}40`,
-              borderRadius: 20,
-              padding: "28px 32px",
+              background: "rgba(255,255,255,0.025)", border: `1px solid ${scoreColor}40`,
+              borderRadius: 20, padding: "28px 32px",
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              boxShadow: `0 0 40px ${scoreColor}12`,
-              minWidth: 180,
+              boxShadow: `0 0 40px ${scoreColor}12`, minWidth: 180,
             }}>
               <div style={{ position: "relative", width: 140, height: 140 }}>
-                <HealthRing score={HEALTH_SCORE} />
-                <div style={{
-                  position: "absolute", inset: 0,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                }}>
-                  <span style={{ fontSize: 32, fontWeight: 800, color: scoreColor, letterSpacing: "-0.04em", lineHeight: 1 }}>
-                    {HEALTH_SCORE}%
-                  </span>
+                <HealthRing score={score} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 32, fontWeight: 800, color: scoreColor, letterSpacing: "-0.04em", lineHeight: 1 }}>{score}%</span>
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>Score</span>
                 </div>
               </div>
               <div style={{ marginTop: 12, textAlign: "center" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Website-Gesundheit</div>
-                <div style={{ fontSize: 11, color: scoreColor, marginTop: 3, fontWeight: 600 }}>
-                  {HEALTH_SCORE >= 80 ? "Gut" : HEALTH_SCORE >= 50 ? "Verbesserungsbedarf" : "Kritisch"}
-                </div>
+                <div style={{ fontSize: 11, color: scoreColor, marginTop: 3, fontWeight: 600 }}>{scoreLabel}</div>
               </div>
             </div>
 
-            {/* Stat: Pages */}
+            {/* Pages */}
             <div style={{
-              background: "rgba(255,255,255,0.025)",
-              border: "1px solid rgba(122,166,255,0.2)",
+              background: "rgba(255,255,255,0.025)", border: "1px solid rgba(122,166,255,0.2)",
               borderRadius: 20, padding: "28px 28px",
               display: "flex", flexDirection: "column", justifyContent: "space-between",
               boxShadow: "0 0 30px rgba(122,166,255,0.06)",
             }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: "rgba(122,166,255,0.1)", border: "1px solid rgba(122,166,255,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(122,166,255,0.1)", border: "1px solid rgba(122,166,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </div>
               <div>
                 <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff", lineHeight: 1 }}>
-                  {PAGES_TOTAL}<span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{PAGES_TOTAL}</span>
+                  {pagesTotal}<span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{pagesTotal}</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Gescannte Seiten</div>
                 <div style={{ fontSize: 12, color: "#7aa6ff", marginTop: 4, fontWeight: 500 }}>Beweis: Wir waren überall</div>
               </div>
             </div>
 
-            {/* Stat: Critical BFSG Errors */}
+            {/* Critical errors */}
             <div style={{
               background: "rgba(255,255,255,0.025)",
-              border: "1px solid rgba(239,68,68,0.25)",
+              border: critErrors === 0 ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(239,68,68,0.25)",
               borderRadius: 20, padding: "28px 28px",
               display: "flex", flexDirection: "column", justifyContent: "space-between",
-              boxShadow: "0 0 30px rgba(239,68,68,0.06)",
+              boxShadow: critErrors === 0 ? "0 0 30px rgba(34,197,94,0.06)" : "0 0 30px rgba(239,68,68,0.06)",
             }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: critErrors === 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", border: critErrors === 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={critErrors === 0 ? "#22c55e" : "#ef4444"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
               <div>
-                <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#ef4444", lineHeight: 1 }}>
-                  {CRITICAL_ERRORS}
+                <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: critErrors === 0 ? "#22c55e" : "#ef4444", lineHeight: 1 }}>
+                  {critErrors}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Kritische BFSG-Fehler</div>
-                <div style={{ fontSize: 12, color: "#ef4444", marginTop: 4, fontWeight: 500 }}>Bußgeld-relevant ab 28.06.2025</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>
+                  {critErrors === 0 ? "Keine Fehler" : "Kritische BFSG-Fehler"}
+                </div>
+                <div style={{ fontSize: 12, color: critErrors === 0 ? "#22c55e" : "#ef4444", marginTop: 4, fontWeight: 500 }}>
+                  {critErrors === 0 ? "Sieht gut aus!" : "Bußgeld-relevant ab 28.06.2025"}
+                </div>
               </div>
             </div>
 
-            {/* Stat: Liability */}
+            {/* Liability */}
             <div style={{
-              background: "rgba(255,255,255,0.025)",
-              border: "1px solid rgba(245,158,11,0.25)",
+              background: "rgba(255,255,255,0.025)", border: `1px solid ${liabColor}40`,
               borderRadius: 20, padding: "28px 28px",
               display: "flex", flexDirection: "column", justifyContent: "space-between",
-              boxShadow: "0 0 30px rgba(245,158,11,0.06)",
+              boxShadow: `0 0 30px ${liabColor}10`,
             }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: `${liabColor}18`, border: `1px solid ${liabColor}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={liabColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
               <div>
-                <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#f59e0b", lineHeight: 1 }}>
-                  HOCH
-                </div>
+                <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: liabColor, lineHeight: 1 }}>{liability}</div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Potenzielle Haftung</div>
-                <div style={{ fontSize: 12, color: "#f59e0b", marginTop: 4, fontWeight: 500 }}>BFSG §3 Abs. 2 betroffen</div>
+                <div style={{ fontSize: 12, color: liabColor, marginTop: 4, fontWeight: 500 }}>BFSG §3 Abs. 2</div>
               </div>
             </div>
 
           </div>
         </section>
 
-        {/* ── 2. DEEP-SCAN MAP ── */}
+        {/* ── SECTION 2: DEEP-SCAN MAP ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "56px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <div>
-              <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                Deep-Scan Map
-              </p>
+              <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Deep-Scan Map</p>
               <h2 style={{ margin: 0, fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-                Alle gefundenen Unterseiten
+                {isDemo ? "Alle gefundenen Unterseiten" : `${pagesTotal} Unterseiten analysiert`}
               </h2>
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: "6px 14px", borderRadius: 8 }}>
-              {PAGES_TOTAL} Seiten · BFS-Crawler
+              {pagesTotal} Seiten · BFS-Crawler
             </div>
           </div>
 
-          <div style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 16,
-            overflow: "hidden",
-          }}>
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
             {/* Header row */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr auto auto",
-              padding: "10px 20px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
-              background: "rgba(255,255,255,0.02)",
-            }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Seite</span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", width: 100, textAlign: "center" }}>Status</span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", width: 80, textAlign: "right" }}>Fehler</span>
             </div>
 
             {/* Visible rows */}
-            {DEMO_PAGES.slice(0, VISIBLE_PAGES).map((p, i) => (
-              <div key={p.path} style={{
-                display: "grid", gridTemplateColumns: "1fr auto auto",
-                padding: "13px 20px",
-                borderBottom: i < VISIBLE_PAGES - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                alignItems: "center",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
-                    background: p.errors === 0 ? "#22c55e" : p.errors >= 4 ? "#ef4444" : "#f59e0b",
-                    boxShadow: `0 0 5px ${p.errors === 0 ? "#22c55e" : p.errors >= 4 ? "#ef4444" : "#f59e0b"}`,
-                  }} />
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>
-                    {displayDomain}{p.path}
-                  </span>
-                </div>
-                <div style={{ width: 100, textAlign: "center" }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                    background: p.errors === 0 ? "rgba(34,197,94,0.1)" : p.errors >= 4 ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)",
-                    color: p.errors === 0 ? "#22c55e" : p.errors >= 4 ? "#ef4444" : "#f59e0b",
-                    border: `1px solid ${p.errors === 0 ? "rgba(34,197,94,0.2)" : p.errors >= 4 ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}`,
-                  }}>
-                    {p.errors === 0 ? "✓ Sauber" : p.errors >= 4 ? "Kritisch" : "Warnung"}
-                  </span>
-                </div>
-                <div style={{ width: 80, textAlign: "right" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: p.errors === 0 ? "rgba(255,255,255,0.2)" : p.errors >= 4 ? "#ef4444" : "#f59e0b" }}>
-                    {p.errors === 0 ? "—" : `${p.errors} Fehler`}
-                  </span>
-                </div>
-              </div>
-            ))}
-
-            {/* Locked rows (blurred) */}
-            <div style={{ position: "relative" }}>
-              {DEMO_PAGES.slice(VISIBLE_PAGES).map((p, i) => (
-                <div key={p.path} style={{
-                  display: "grid", gridTemplateColumns: "1fr auto auto",
-                  padding: "13px 20px",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  alignItems: "center",
-                  filter: "blur(4px)",
-                  userSelect: "none",
-                }}>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>
-                    {displayDomain}{p.path}
-                  </span>
+            {pageItems.slice(0, VISIBLE_PAGES).map((p, i) => {
+              const dotColor = p.errors === 0 ? "#22c55e" : p.errors >= 4 ? "#ef4444" : "#f59e0b";
+              const statusLabel = p.errors === 0 ? "✓ Sauber" : p.errors >= 4 ? "Kritisch" : "Warnung";
+              return (
+                <div key={p.path} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: i < VISIBLE_PAGES - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: dotColor, boxShadow: `0 0 5px ${dotColor}` }} />
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>
+                      {pageBase}{p.path}
+                    </span>
+                  </div>
                   <div style={{ width: 100, textAlign: "center" }}>
-                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                      ████
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: p.errors === 0 ? "rgba(34,197,94,0.1)" : p.errors >= 4 ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)", color: dotColor, border: `1px solid ${dotColor}33` }}>
+                      {statusLabel}
                     </span>
                   </div>
                   <div style={{ width: 80, textAlign: "right" }}>
-                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.2)" }}>██</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: p.errors === 0 ? "rgba(255,255,255,0.2)" : dotColor }}>
+                      {p.errors === 0 ? "—" : `${p.errors} Fehler`}
+                    </span>
                   </div>
                 </div>
-              ))}
+              );
+            })}
 
-              {/* Gradient overlay + CTA */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.85) 40%, rgba(11,12,16,0.98) 100%)",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end",
-                padding: "0 0 24px",
-              }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>
-                    + {PAGES_TOTAL - VISIBLE_PAGES} weitere Seiten analysiert
+            {/* Locked rows (blurred) — only if more pages exist */}
+            {pageItems.length > VISIBLE_PAGES && (
+              <div style={{ position: "relative" }}>
+                {pageItems.slice(VISIBLE_PAGES).map((p, i) => (
+                  <div key={p.path + i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", filter: "blur(4px)", userSelect: "none" }}>
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>{pageBase}{p.path}</span>
+                    <div style={{ width: 100, textAlign: "center" }}><span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>████</span></div>
+                    <div style={{ width: 80, textAlign: "right" }}><span style={{ fontSize: 13, color: "rgba(255,255,255,0.2)" }}>██</span></div>
                   </div>
-                  <Link href="/register" style={{
-                    display: "inline-block", padding: "10px 24px", borderRadius: 10,
-                    background: "#007BFF", color: "#fff", fontWeight: 700, fontSize: 13,
-                    textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.4)",
-                  }}>
-                    Alle {PAGES_TOTAL} Seiten freischalten →
-                  </Link>
+                ))}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.85) 40%, rgba(11,12,16,0.98) 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 24px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>+ {pageItems.length - VISIBLE_PAGES} weitere Seiten analysiert</div>
+                    <Link href="/register" style={{ display: "inline-block", padding: "10px 24px", borderRadius: 10, background: "#007BFF", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.4)" }}>
+                      Alle {pagesTotal} Seiten freischalten →
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* If fewer pages than visible limit, add CTA below */}
+            {pageItems.length <= VISIBLE_PAGES && (
+              <div style={{ padding: "16px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                <Link href="/register" style={{ fontSize: 13, color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>
+                  Mit Agency Core alle Seiten dauerhaft überwachen →
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* ── 3. AI EXPERT FIX ── */}
+        {/* ── SECTION 3: AI EXPERT FIX ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "56px 24px 0" }}>
           <div style={{ marginBottom: 20 }}>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              AI-Expert-Fix
-            </p>
-            <h2 style={{ margin: 0, fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-              KI-generierte Code-Lösungen
-            </h2>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>AI-Expert-Fix</p>
+            <h2 style={{ margin: 0, fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>KI-generierte Code-Lösungen</h2>
           </div>
 
           {/* Visible fix */}
-          <div style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 16, overflow: "hidden", marginBottom: 12,
-          }}>
-            {/* Fix header */}
-            <div style={{
-              padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)",
-              display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-              background: "rgba(239,68,68,0.04)",
-            }}>
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                background: "rgba(239,68,68,0.12)", color: "#ef4444",
-                border: "1px solid rgba(239,68,68,0.2)",
-              }}>
-                {DEMO_FIX.label}
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "rgba(239,68,68,0.04)" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>
+                {visibleFix.label.includes("KRITISCH") || visibleFix.label.includes("🔴") ? "🔴 Kritisch" : "🟡 Wichtig"}
               </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{DEMO_FIX.issue}</span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: "auto", fontFamily: "monospace" }}>
-                {displayDomain}{DEMO_FIX.page}
-              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{visibleFix.issue}</span>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: "auto", fontFamily: "monospace" }}>{displayDomain}</span>
             </div>
 
-            {/* Description */}
-            <div style={{ padding: "20px 24px 0" }}>
-              <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>
-                {DEMO_FIX.desc}
-              </p>
-            </div>
+            {visibleFix.desc && (
+              <div style={{ padding: "20px 24px 0" }}>
+                <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>{visibleFix.desc}</p>
+              </div>
+            )}
 
-            {/* Code columns */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
-              {/* Before */}
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Vorher</span>
+            {/* Code columns (demo) or text fix (real) */}
+            {isDemo ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Vorher</span>
+                  </div>
+                  <pre style={{ margin: 0, padding: "18px 18px 22px", fontSize: 12.5, lineHeight: 1.75, color: "rgba(255,255,255,0.6)", fontFamily: "'Fira Code','Cascadia Code',monospace", background: "rgba(239,68,68,0.03)", overflowX: "auto" }}>
+                    {DEMO_FIX.before}
+                  </pre>
                 </div>
-                <pre style={{
-                  margin: 0, padding: "18px 18px 22px",
-                  fontSize: 12.5, lineHeight: 1.75,
-                  color: "rgba(255,255,255,0.6)",
-                  fontFamily: "'Fira Code', 'Cascadia Code', monospace",
-                  background: "rgba(239,68,68,0.03)",
-                  overflowX: "auto",
-                }}>
-                  {DEMO_FIX.before}
-                </pre>
-              </div>
-              {/* After */}
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>KI-Fix</span>
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>KI-Fix</span>
+                  </div>
+                  <pre style={{ margin: 0, padding: "18px 18px 22px", fontSize: 12.5, lineHeight: 1.75, color: "#8df3d3", fontFamily: "'Fira Code','Cascadia Code',monospace", background: "rgba(34,197,94,0.03)", overflowX: "auto" }}>
+                    {DEMO_FIX.after}
+                  </pre>
                 </div>
-                <pre style={{
-                  margin: 0, padding: "18px 18px 22px",
-                  fontSize: 12.5, lineHeight: 1.75,
-                  color: "#8df3d3",
-                  fontFamily: "'Fira Code', 'Cascadia Code', monospace",
-                  background: "rgba(34,197,94,0.03)",
-                  overflowX: "auto",
-                }}>
-                  {DEMO_FIX.after}
-                </pre>
               </div>
-            </div>
+            ) : (
+              <div style={{ padding: "0 24px 20px" }}>
+                <div style={{ padding: "14px 18px", background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>KI-Empfehlung</div>
+                  <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
+                    Registriere dich kostenlos für vollständige Code-Fixes mit exakten Zeilennummern und Copy-Paste-Lösungen.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Locked fixes */}
-          <div style={{ position: "relative" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {LOCKED_FIXES.map((fix, i) => (
-                <div key={i} style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: 12, padding: "16px 24px",
-                  display: "flex", alignItems: "center", gap: 14,
-                  filter: "blur(3.5px)",
-                  userSelect: "none",
-                }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                    background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)",
-                    border: "1px solid rgba(255,255,255,0.08)", flexShrink: 0,
-                  }}>
-                    {fix.label}
-                  </span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{fix.issue}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Gradient + CTA overlay */}
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.7) 30%, rgba(11,12,16,0.97) 75%)",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end",
-              padding: "0 0 8px",
-            }}>
-              <div style={{
-                textAlign: "center",
-                background: "rgba(11,12,16,0.9)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 16, padding: "28px 36px",
-                maxWidth: 520, width: "100%",
-                backdropFilter: "blur(8px)",
-              }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.025em" }}>
-                  {LOCKED_FIXES.length} weitere Fixes gesperrt
-                </div>
-                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: 20 }}>
-                  Melde dich kostenlos an, um alle KI-Fixes<br />für <strong style={{ color: "#fff" }}>{PAGES_TOTAL} Unterseiten</strong> zu sehen.
-                </div>
-                <Link href="/register" style={{
-                  display: "inline-block", padding: "12px 28px", borderRadius: 10,
-                  background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                  color: "#fff", fontWeight: 800, fontSize: 14,
-                  textDecoration: "none", boxShadow: "0 4px 20px rgba(0,123,255,0.45)",
-                }}>
-                  Kostenlos registrieren → alle Fixes sehen
-                </Link>
-                <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
-                  Keine Kreditkarte · Sofortzugang
+          {lockedCount > 0 && (
+            <div style={{ position: "relative" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {lockedItems.map((fix, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "16px 24px", display: "flex", alignItems: "center", gap: 14, filter: "blur(3.5px)", userSelect: "none" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>{fix.label}</span>
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{fix.issue}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.7) 30%, rgba(11,12,16,0.97) 75%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 8px" }}>
+                <div style={{ textAlign: "center", background: "rgba(11,12,16,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "28px 36px", maxWidth: 520, width: "100%", backdropFilter: "blur(8px)" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.025em" }}>{lockedCount} weitere Fixes gesperrt</div>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: 20 }}>
+                    Melde dich kostenlos an, um alle KI-Fixes<br />für <strong style={{ color: "#fff" }}>{pagesTotal} Unterseiten</strong> zu sehen.
+                  </div>
+                  <Link href="/register" style={{ display: "inline-block", padding: "12px 28px", borderRadius: 10, background: "linear-gradient(90deg, #007BFF, #0057b8)", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none", boxShadow: "0 4px 20px rgba(0,123,255,0.45)" }}>
+                    Kostenlos registrieren → alle Fixes sehen
+                  </Link>
+                  <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Keine Kreditkarte · Sofortzugang</div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* If scan is clean (0 findings) */}
+          {!isDemo && lockedCount === 0 && findings.length === 0 && (
+            <div style={{ padding: "28px 24px", background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 14, textAlign: "center" }}>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>🎉</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Keine kritischen Fehler gefunden!</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
+                Deine Website sieht gut aus. Mit Agency Core kannst du sie dauerhaft überwachen<br />und Kunden monatliche White-Label Reports schicken.
+              </div>
+            </div>
+          )}
         </section>
 
-        {/* ── 4. WHITE-LABEL VORSCHAU ── */}
+        {/* ── SECTION 4: WHITE-LABEL VORSCHAU ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px 0" }}>
-          <div style={{
-            background: "linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(124,58,237,0.06) 100%)",
-            border: "1px solid rgba(37,99,235,0.2)",
-            borderRadius: 20, padding: "clamp(28px, 4vw, 48px) clamp(24px, 4vw, 48px)",
-            display: "flex", gap: 48, alignItems: "center", flexWrap: "wrap",
-            position: "relative", overflow: "hidden",
-          }}>
-            {/* Glow */}
+          <div style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(124,58,237,0.06) 100%)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: 20, padding: "clamp(28px,4vw,48px)", display: "flex", gap: 48, alignItems: "center", flexWrap: "wrap", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: "-40%", right: "-5%", width: "40%", height: "180%", background: "radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-            {/* Mock PDF report */}
+            {/* Mock PDF */}
             <div style={{ flexShrink: 0, position: "relative" }}>
-              <div style={{
-                width: 200, borderRadius: 14,
-                background: "#fff",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)",
-                overflow: "hidden",
-                transform: "rotate(-2deg)",
-              }}>
-                {/* PDF header */}
+              <div style={{ width: 200, borderRadius: 14, background: "#fff", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", overflow: "hidden", transform: "rotate(-2deg)" }}>
                 <div style={{ background: "#1e40af", padding: "14px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 6,
-                      background: "rgba(255,255,255,0.15)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      border: "2px dashed rgba(255,255,255,0.4)",
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                      </svg>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px dashed rgba(255,255,255,0.4)" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </div>
                     <div>
                       <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>Dein Branding hier</div>
@@ -559,72 +569,35 @@ function ResultsInner() {
                     </div>
                   </div>
                 </div>
-                {/* PDF body */}
                 <div style={{ padding: "14px 14px 16px", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: "#1e293b", marginBottom: 8 }}>
-                    {displayDomain}
-                  </div>
-                  {/* Score bar */}
+                  <div style={{ fontSize: 9, fontWeight: 700, color: "#1e293b", marginBottom: 8 }}>{displayDomain}</div>
                   <div style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                      <span style={{ fontSize: 7, color: "#64748b" }}>Gesundheit</span>
-                      <span style={{ fontSize: 7, color: "#f59e0b", fontWeight: 700 }}>64%</span>
-                    </div>
-                    <div style={{ height: 4, background: "#e2e8f0", borderRadius: 2 }}>
-                      <div style={{ height: "100%", width: "64%", background: "#f59e0b", borderRadius: 2 }} />
-                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}><span style={{ fontSize: 7, color: "#64748b" }}>Gesundheit</span><span style={{ fontSize: 7, color: scoreColor, fontWeight: 700 }}>{score}%</span></div>
+                    <div style={{ height: 4, background: "#e2e8f0", borderRadius: 2 }}><div style={{ height: "100%", width: `${score}%`, background: scoreColor, borderRadius: 2 }} /></div>
                   </div>
-                  {/* Mini items */}
                   {["Barrierefreiheit", "Performance", "BFSG"].map((item, idx) => (
                     <div key={item} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
                       <div style={{ width: 5, height: 5, borderRadius: 1, background: ["#ef4444","#f59e0b","#ef4444"][idx], flexShrink: 0 }} />
                       <span style={{ fontSize: 7.5, color: "#475569", flex: 1 }}>{item}</span>
-                      <span style={{ fontSize: 7.5, color: "#94a3b8" }}>{"⚠ "}{[64,78,54][idx]}%</span>
                     </div>
                   ))}
-                  {/* Footer tag */}
                   <div style={{ marginTop: 10, padding: "5px 8px", background: "#eff6ff", borderRadius: 4, textAlign: "center" }}>
                     <span style={{ fontSize: 7, color: "#2563eb", fontWeight: 700 }}>Automatisch generiert · WebsiteFix</span>
                   </div>
                 </div>
               </div>
-
-              {/* Floating "Dein Logo" badge */}
-              <div style={{
-                position: "absolute", top: -10, right: -16,
-                background: "#0b0c10", border: "1px solid rgba(37,99,235,0.4)",
-                borderRadius: 8, padding: "5px 10px",
-                fontSize: 10, color: "#7aa6ff", fontWeight: 700,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-                transform: "rotate(2deg)",
-              }}>
+              <div style={{ position: "absolute", top: -10, right: -16, background: "#0b0c10", border: "1px solid rgba(37,99,235,0.4)", borderRadius: 8, padding: "5px 10px", fontSize: 10, color: "#7aa6ff", fontWeight: 700, boxShadow: "0 4px 16px rgba(0,0,0,0.4)", transform: "rotate(2deg)" }}>
                 ← Dein Logo hier
               </div>
             </div>
 
             {/* Text + CTA */}
             <div style={{ flex: 1, minWidth: 260, position: "relative" }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 14,
-                padding: "4px 12px", borderRadius: 20, fontSize: 11,
-                background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)",
-                color: "#c084fc", fontWeight: 700, letterSpacing: "0.06em",
-              }}>
-                White-Label Report
-              </div>
-              <h2 style={{ margin: "0 0 12px", fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.2 }}>
-                Professionelle Berichte<br />mit deinem Branding.
-              </h2>
-              <p style={{ margin: "0 0 24px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>
-                Am 1. jeden Monats erhält jeder deiner Kunden automatisch einen PDF-Report — mit deinem Logo, deiner Farbe und einer KI-Zusammenfassung. Kein WebsiteFix-Branding sichtbar.
-              </p>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 14, padding: "4px 12px", borderRadius: 20, fontSize: 11, background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)", color: "#c084fc", fontWeight: 700, letterSpacing: "0.06em" }}>White-Label Report</div>
+              <h2 style={{ margin: "0 0 12px", fontSize: "clamp(20px,2.5vw,28px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.2 }}>Professionelle Berichte<br />mit deinem Branding.</h2>
+              <p style={{ margin: "0 0 24px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.8 }}>Am 1. jeden Monats erhält jeder deiner Kunden automatisch einen PDF-Report — mit deinem Logo, deiner Farbe und einer KI-Zusammenfassung. Kein WebsiteFix-Branding sichtbar.</p>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-                <Link href="/register?plan=agency_core" style={{
-                  display: "inline-block", padding: "12px 24px", borderRadius: 10,
-                  background: "linear-gradient(90deg, #7C3AED, #6d28d9)",
-                  color: "#fff", fontWeight: 800, fontSize: 14,
-                  textDecoration: "none", boxShadow: "0 4px 20px rgba(124,58,237,0.4)",
-                }}>
+                <Link href="/register?plan=agency_core" style={{ display: "inline-block", padding: "12px 24px", borderRadius: 10, background: "linear-gradient(90deg, #7C3AED, #6d28d9)", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none", boxShadow: "0 4px 20px rgba(124,58,237,0.4)" }}>
                   PDF-Report mit meinem Logo →
                 </Link>
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>ab Agency Core</span>
@@ -633,114 +606,58 @@ function ResultsInner() {
           </div>
         </section>
 
-        {/* ── 5. VERGLEICHS-TABELLE ── */}
+        {/* ── SECTION 5: VERGLEICHS-TABELLE ── */}
         <section style={{ maxWidth: 900, margin: "0 auto", padding: "72px 24px 80px" }}>
           <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              Upsell
-            </p>
-            <h2 style={{ margin: 0, fontSize: "clamp(20px, 2.5vw, 30px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-              Was du jetzt siehst — und was du bekommst
-            </h2>
+            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Upsell</p>
+            <h2 style={{ margin: 0, fontSize: "clamp(20px,2.5vw,30px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>Was du jetzt siehst — und was du bekommst</h2>
           </div>
 
-          <div style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 16, overflow: "hidden",
-          }}>
-            {/* Column headers */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 160px 200px",
-              background: "rgba(255,255,255,0.03)",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
-            }}>
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 200px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ padding: "16px 24px" }} />
-              <div style={{
-                padding: "16px 20px", textAlign: "center",
-                borderLeft: "1px solid rgba(255,255,255,0.06)",
-              }}>
+              <div style={{ padding: "16px 20px", textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Free</div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>0€</div>
               </div>
-              <div style={{
-                padding: "16px 20px", textAlign: "center",
-                borderLeft: "1px solid rgba(37,99,235,0.2)",
-                background: "rgba(37,99,235,0.05)",
-              }}>
+              <div style={{ padding: "16px 20px", textAlign: "center", borderLeft: "1px solid rgba(37,99,235,0.2)", background: "rgba(37,99,235,0.05)" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.08em" }}>★ Agency Core</div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginTop: 2 }}>149€<span style={{ fontSize: 12, fontWeight: 400, color: "#94a3b8" }}>/Mo</span></div>
               </div>
             </div>
 
-            {/* Rows */}
             {COMPARE_ROWS.map((row, i) => (
-              <div key={row.feature} style={{
-                display: "grid", gridTemplateColumns: "1fr 160px 200px",
-                borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                alignItems: "center",
-              }}>
-                <div style={{ padding: "14px 24px", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
-                  {row.feature}
-                </div>
-                <div style={{
-                  padding: "14px 20px", textAlign: "center", fontSize: 13,
-                  color: row.free === "—" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.45)",
-                  fontWeight: row.free === "—" ? 400 : 600,
-                  borderLeft: "1px solid rgba(255,255,255,0.04)",
-                }}>
-                  {row.free}
-                </div>
-                <div style={{
-                  padding: "14px 20px", textAlign: "center", fontSize: 13,
-                  color: "#22c55e", fontWeight: 700,
-                  borderLeft: "1px solid rgba(37,99,235,0.15)",
-                  background: "rgba(37,99,235,0.03)",
-                }}>
-                  {row.pro}
-                </div>
+              <div key={row.feature} style={{ display: "grid", gridTemplateColumns: "1fr 160px 200px", borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", alignItems: "center" }}>
+                <div style={{ padding: "14px 24px", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{row.feature}</div>
+                <div style={{ padding: "14px 20px", textAlign: "center", fontSize: 13, color: row.free === "—" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.45)", fontWeight: row.free === "—" ? 400 : 600, borderLeft: "1px solid rgba(255,255,255,0.04)" }}>{row.free}</div>
+                <div style={{ padding: "14px 20px", textAlign: "center", fontSize: 13, color: "#22c55e", fontWeight: 700, borderLeft: "1px solid rgba(37,99,235,0.15)", background: "rgba(37,99,235,0.03)" }}>{row.pro}</div>
               </div>
             ))}
 
-            {/* CTA row */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 160px 200px",
-              background: "rgba(37,99,235,0.04)",
-              borderTop: "1px solid rgba(37,99,235,0.15)",
-            }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 200px", background: "rgba(37,99,235,0.04)", borderTop: "1px solid rgba(37,99,235,0.15)" }}>
               <div style={{ padding: "20px 24px" }} />
               <div style={{ padding: "20px 20px", textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.04)" }}>
-                <Link href="/scan" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "underline" }}>
-                  Aktuell
-                </Link>
+                <Link href="/scan" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "underline" }}>Aktuell</Link>
               </div>
               <div style={{ padding: "16px 20px", borderLeft: "1px solid rgba(37,99,235,0.15)" }}>
-                <Link href="/register?plan=agency_core" style={{
-                  display: "block", textAlign: "center", padding: "11px 0", borderRadius: 9,
-                  background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                  color: "#fff", fontWeight: 800, fontSize: 13,
-                  textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
-                }}>
+                <Link href="/register?plan=agency_core" style={{ display: "block", textAlign: "center", padding: "11px 0", borderRadius: 9, background: "linear-gradient(90deg, #007BFF, #0057b8)", color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.35)" }}>
                   Agency Core starten →
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Trust row */}
           <div style={{ marginTop: 20, display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
             {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform"].map(t => (
               <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 {t}
               </div>
             ))}
           </div>
         </section>
 
-        {/* "Powered by" footer — shown on public results page */}
+        {/* Powered by footer */}
         <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "20px 24px", textAlign: "center" }}>
           <BrandLogo variant="powered-by" />
         </footer>
@@ -750,7 +667,7 @@ function ResultsInner() {
   );
 }
 
-// ── Page export (Suspense wrapper for useSearchParams) ────────────────────────
+// ── Page export with Suspense (required for useSearchParams) ──────────────────
 export default function ScanResultsPage() {
   return (
     <Suspense fallback={

@@ -53,7 +53,7 @@ export default function FaqAccordion({
 
             <div style={{
               overflow: "hidden",
-              maxHeight: isOpen ? 400 : 0,
+              maxHeight: isOpen ? 600 : 0,
               transition: "max-height 0.3s ease",
             }}>
               <div style={{ paddingBottom: 20 }}>
