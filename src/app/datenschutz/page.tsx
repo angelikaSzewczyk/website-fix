@@ -6,47 +6,47 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// ── Shared style tokens ───────────────────────────────────────────────────────
+// ── Style tokens ──────────────────────────────────────────────────────────────
 const H1: React.CSSProperties = {
-  fontSize: "clamp(28px, 5vw, 42px)",
+  fontSize: "clamp(32px, 5vw, 46px)",
   fontWeight: 800,
-  letterSpacing: "-0.03em",
-  lineHeight: 1.15,
-  color: "#fff",
-  margin: "0 0 12px",
+  letterSpacing: "-0.035em",
+  lineHeight: 1.1,
+  margin: "0 0 16px",
+  background: "linear-gradient(135deg, #fff 30%, #EAB308 100%)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
 };
 
 const LEAD: React.CSSProperties = {
-  fontSize: 16,
-  color: "rgba(255,255,255,0.45)",
-  lineHeight: 1.7,
-  margin: "0 0 56px",
+  fontSize: 15,
+  color: "rgba(255,255,255,0.4)",
+  lineHeight: 1.8,
+  margin: "0 0 52px",
 };
 
 const P: React.CSSProperties = {
   fontSize: 15,
-  color: "rgba(255,255,255,0.6)",
-  lineHeight: 1.9,
+  color: "rgba(255,255,255,0.65)",
+  lineHeight: 1.8,
   margin: "0 0 10px",
 };
-
-const STRONG: React.CSSProperties = { color: "rgba(255,255,255,0.9)", fontWeight: 600 };
 
 const DIVIDER: React.CSSProperties = {
   border: "none",
   borderTop: "1px solid rgba(255,255,255,0.06)",
-  margin: "52px 0 0",
+  margin: "48px 0 0",
 };
 
-// ── Section heading with accented number prefix ───────────────────────────────
+// ── Section heading: yellow number + white label ──────────────────────────────
 function SH({ num, children }: { num: string; children: string }) {
   return (
     <h2 style={{
-      fontSize: 18, fontWeight: 700, color: "#fff",
-      margin: "52px 0 14px", letterSpacing: "-0.01em",
+      fontSize: 17, fontWeight: 700, color: "#fff",
+      margin: "52px 0 14px", letterSpacing: "-0.015em",
       display: "flex", alignItems: "baseline", gap: 10,
     }}>
-      <span style={{ color: "#F59E0B", fontWeight: 800, minWidth: "1.6em" }}>{num}</span>
+      <span style={{ color: "#EAB308", fontWeight: 800, minWidth: "1.6em", fontSize: 18 }}>{num}</span>
       {children}
     </h2>
   );
@@ -55,18 +55,19 @@ function SH({ num, children }: { num: string; children: string }) {
 // ── Legal basis pill ──────────────────────────────────────────────────────────
 function Basis({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ ...P, margin: "8px 0 10px" }}>
+    <p style={{ ...P, margin: "10px 0 12px" }}>
       <span style={{
         display: "inline-block",
-        padding: "2px 9px", borderRadius: 5, marginRight: 8,
+        padding: "2px 10px", borderRadius: 6, marginRight: 8,
         fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
-        background: "rgba(37,99,235,0.15)", color: "#60A5FA",
-        border: "1px solid rgba(37,99,235,0.25)",
+        background: "rgba(234,179,8,0.08)",
+        color: "#EAB308",
+        border: "1px solid rgba(234,179,8,0.2)",
         verticalAlign: "middle",
       }}>
         Rechtsgrundlage
       </span>
-      <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 14 }}>{children}</span>
+      <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>{children}</span>
     </p>
   );
 }
@@ -74,95 +75,102 @@ function Basis({ children }: { children: React.ReactNode }) {
 export default function DatenschutzPage() {
   return (
     <LegalLayout footerLink="/impressum" footerLabel="Impressum">
-      <main style={{ maxWidth: "48rem", margin: "0 auto", padding: "72px 24px 120px" }}>
 
-        {/* Page title */}
-        <h1 style={H1}>Datenschutzerklärung</h1>
-        <p style={LEAD}>
-          Diese Datenschutzerklärung informiert dich über die Art, den Umfang und Zweck der Verarbeitung
-          personenbezogener Daten auf dieser Website.
-        </p>
+      {/* Title */}
+      <h1 style={H1}>Datenschutzerklärung</h1>
+      <p style={LEAD}>
+        Diese Datenschutzerklärung informiert dich über die Art, den Umfang und Zweck der Verarbeitung
+        personenbezogener Daten auf dieser Website.
+      </p>
 
-        {/* 1 */}
-        <SH num="1." >Verantwortliche Stelle</SH>
-        <p style={P}>
-          <span style={STRONG}>Angelika Szewczyk</span><br />
-          Einzelunternehmen<br />
-          Am Hühnerberg 5<br />
-          51381 Leverkusen<br />
-          Deutschland<br />
-          E-Mail: support@website-fix.com
-        </p>
+      {/* 1 */}
+      <SH num="1.">Verantwortliche Stelle</SH>
+      <p style={P}>
+        <strong style={{ color: "#fff", fontWeight: 700 }}>Angelika Szewczyk</strong><br />
+        Einzelunternehmen<br />
+        Am Hühnerberg 5<br />
+        51381 Leverkusen<br />
+        Deutschland<br />
+        E-Mail:{" "}
+        <a href="mailto:support@website-fix.com" className="legal-email"
+          style={{ color: "#EAB308", textDecoration: "none", fontWeight: 500 }}>
+          support@website-fix.com
+        </a>
+      </p>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 2 */}
-        <SH num="2." >Hosting</SH>
-        <p style={P}>
-          Diese Website wird bei einem externen Dienstleister gehostet. Beim Besuch der Website werden
-          automatisch sogenannte Server-Logfiles erhoben (z. B. IP-Adresse, Datum und Uhrzeit des Zugriffs,
-          Browsertyp).
-        </p>
-        <Basis>Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb der Website).</Basis>
+      {/* 2 */}
+      <SH num="2.">Hosting</SH>
+      <p style={P}>
+        Diese Website wird bei einem externen Dienstleister gehostet. Beim Besuch der Website werden
+        automatisch sogenannte Server-Logfiles erhoben (z. B. IP-Adresse, Datum und Uhrzeit des Zugriffs,
+        Browsertyp).
+      </p>
+      <Basis>Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb der Website).</Basis>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 3 */}
-        <SH num="3." >Kontaktformular / Anfrage</SH>
-        <p style={P}>
-          Wenn du mich per Formular kontaktierst, werden deine Angaben (z. B. Website-URL, Beschreibung,
-          E-Mail-Adresse) zur Bearbeitung der Anfrage verarbeitet.
-        </p>
-        <Basis>Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen).</Basis>
+      {/* 3 */}
+      <SH num="3.">Kontaktformular / Anfrage</SH>
+      <p style={P}>
+        Wenn du mich per Formular kontaktierst, werden deine Angaben (z. B. Website-URL, Beschreibung,
+        E-Mail-Adresse) zur Bearbeitung der Anfrage verarbeitet.
+      </p>
+      <Basis>Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen).</Basis>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 4 */}
-        <SH num="4." >Zahlungsabwicklung</SH>
-        <p style={P}>
-          Für die Bezahlung angebotener Leistungen nutze ich einen externen Zahlungsdienstleister
-          (Stripe). Die Zahlungsabwicklung erfolgt ausschließlich über den Anbieter. Ich erhalte keine
-          vollständigen Zahlungsdaten.
-        </p>
-        <Basis>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</Basis>
+      {/* 4 */}
+      <SH num="4.">Zahlungsabwicklung</SH>
+      <p style={P}>
+        Für die Bezahlung angebotener Leistungen nutze ich einen externen Zahlungsdienstleister
+        (Stripe). Die Zahlungsabwicklung erfolgt ausschließlich über den Anbieter. Ich erhalte keine
+        vollständigen Zahlungsdaten.
+      </p>
+      <Basis>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</Basis>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 5 */}
-        <SH num="5." >Webanalyse (Google Analytics)</SH>
-        <p style={P}>
-          Diese Website nutzt Google Analytics 4 zur Analyse der Nutzung. Google Analytics wird nur
-          eingesetzt, sofern du zuvor deine Einwilligung erteilt hast.
-        </p>
-        <Basis>Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).</Basis>
+      {/* 5 */}
+      <SH num="5.">Webanalyse (Google Analytics)</SH>
+      <p style={P}>
+        Diese Website nutzt Google Analytics 4 zur Analyse der Nutzung. Google Analytics wird nur
+        eingesetzt, sofern du zuvor deine Einwilligung erteilt hast.
+      </p>
+      <Basis>Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).</Basis>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 6 */}
-        <SH num="6." >Speicherdauer</SH>
-        <p style={P}>
-          Personenbezogene Daten werden nur so lange gespeichert, wie dies zur Erfüllung der jeweiligen
-          Zwecke erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen.
-        </p>
+      {/* 6 */}
+      <SH num="6.">Speicherdauer</SH>
+      <p style={P}>
+        Personenbezogene Daten werden nur so lange gespeichert, wie dies zur Erfüllung der jeweiligen
+        Zwecke erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen.
+      </p>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 7 */}
-        <SH num="7." >Deine Rechte</SH>
-        <p style={P}>
-          Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
-          Datenübertragbarkeit sowie Widerspruch gegen die Verarbeitung deiner personenbezogenen Daten.
-        </p>
+      {/* 7 */}
+      <SH num="7.">Deine Rechte</SH>
+      <p style={P}>
+        Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+        Datenübertragbarkeit sowie Widerspruch gegen die Verarbeitung deiner personenbezogenen Daten.
+        Wende dich dazu an:{" "}
+        <a href="mailto:support@website-fix.com" className="legal-email"
+          style={{ color: "#EAB308", textDecoration: "none", fontWeight: 500 }}>
+          support@website-fix.com
+        </a>
+      </p>
 
-        <hr style={DIVIDER} />
+      <hr style={DIVIDER} />
 
-        {/* 8 */}
-        <SH num="8." >Beschwerderecht</SH>
-        <p style={P}>
-          Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren.
-        </p>
+      {/* 8 */}
+      <SH num="8.">Beschwerderecht</SH>
+      <p style={P}>
+        Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren.
+      </p>
 
-      </main>
     </LegalLayout>
   );
 }
