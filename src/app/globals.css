@@ -3127,6 +3127,23 @@ footer a, nav a.footerLink {
   /* Strip backgrounds only on pages that are NOT the report preview */
   body:not(:has(#report-document)) [style*="background"] { background: transparent !important; }
   body:not(:has(#report-document)) [style*="border"] { border-color: #ddd !important; }
+
+  /* ── DiagnoseReport PDF rules ── */
+  /* Hide everything except the report when printing from the dashboard */
+  body:has(#wf-print-root) * { visibility: hidden; }
+  body:has(#wf-print-root) #wf-print-root,
+  body:has(#wf-print-root) #wf-print-root * { visibility: visible; }
+  body:has(#wf-print-root) #wf-print-root {
+    position: absolute; inset: 0;
+    background: #fff !important;
+    padding: 32px !important;
+  }
+  /* Show the print-only logo/date header */
+  .wf-print-header { display: flex !important; }
+  /* Hide interactive elements inside the report */
+  .wf-no-print { display: none !important; }
+  /* Prevent issue cards from splitting across pages */
+  .wf-issue-card { break-inside: avoid; page-break-inside: avoid; }
 }
 
 @media screen {

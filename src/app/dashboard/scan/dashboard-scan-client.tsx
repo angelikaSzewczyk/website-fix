@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import DiagnoseReport from "./diagnose-report";
 
 // ─── Light-mode tokens ────────────────────────────────────────────────────────
 const C = {
@@ -129,11 +130,19 @@ function ScoreCard({
   diagnose,
   refreshing,
   onRefresh,
+  url,
+  totalPages,
+  issueCount,
+  scannedAt,
 }: {
   title: string;
   diagnose: string;
   refreshing: boolean;
   onRefresh: () => void;
+  url?: string;
+  totalPages?: number;
+  issueCount?: number;
+  scannedAt?: string | null;
 }) {
   return (
     <div style={{
@@ -187,8 +196,14 @@ function ScoreCard({
         </button>
       </div>
 
-      {/* AI diagnosis rendered as markdown-light */}
-      {renderDiagnoseLight(diagnose)}
+      {/* AI diagnosis rendered as structured report */}
+      <DiagnoseReport
+        diagnose={diagnose}
+        url={url}
+        totalPages={totalPages}
+        issueCount={issueCount}
+        scannedAt={scannedAt}
+      />
     </div>
   );
 }
@@ -908,6 +923,10 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
               diagnose={diagnose || fsResult?.diagnose || ""}
               refreshing={isForceRefreshing}
               onRefresh={handleForceRefresh}
+              url={url}
+              totalPages={fsResult?.totalPages}
+              issueCount={fsResult?.issueCount}
+              scannedAt={cachedAt}
             />
           )}
         </div>
