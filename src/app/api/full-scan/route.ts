@@ -4,7 +4,7 @@ import { isUrlAllowed, guardRequest, isRealWebsiteContent } from "@/lib/scan-gua
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
-import { getCachedDiagnose, saveDiagnoseAsync } from "@/lib/scan-cache";
+import { getCachedDiagnose, saveDiagnoseAsync, cacheTtlHours } from "@/lib/scan-cache";
 import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 300;
@@ -185,7 +185,8 @@ export async function GET(req: NextRequest) {
   const guard = guardRequest(req);
   if (guard.blocked) return new Response("Ungültige Anfrage.", { status: 403 });
 
-  const rawUrl = req.nextUrl.searchParams.get("url");
+  const rawUrl      = req.nextUrl.searchParams.get("url");
+  const forceRefresh = req.nextUrl.searchParams.get("forceRefresh") === "true";
   if (!rawUrl) return new Response("Missing url parameter", { status: 400 });
 
   // Max URL length check
@@ -351,8 +352,9 @@ export async function GET(req: NextRequest) {
         // ── Phase 3: AI Analysis ───────────────────────────────────────────
         enqueue("phase", { phase: "ai", message: "KI erstellt Site-Report..." });
 
-        // Check 24h diagnose cache before calling Claude
-        const cachedDiagnose = await getCachedDiagnose(targetUrl);
+        // Check diagnose cache (skipped when forceRefresh=true)
+        const ttl = cacheTtlHours(plan);
+        const cachedDiagnose = forceRefresh ? null : await getCachedDiagnose(targetUrl, ttl);
 
         // Token-optimised helpers: paths only, max 2 examples per issue
         const host0 = (() => { try { return new URL(targetUrl).host; } catch { return targetUrl; } })();

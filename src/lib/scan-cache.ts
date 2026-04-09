@@ -1,9 +1,13 @@
 /**
- * 24-hour DB-backed scan cache.
+ * DB-backed scan cache.
  *
- * Keeps the full /api/scan response in Postgres so the same URL scanned
- * within 24 h returns instantly without paying for an AI call or refetching
- * all subpages.  Works across all serverless instances.
+ * Default TTL: 24 hours (free/pro plans).
+ * Agency plans (agentur, agency_core, agency_scale) use 12 h so they see
+ * results of their optimisations faster.
+ *
+ * TTL is enforced via a JS-computed cutoff timestamp — NOT via SQL INTERVAL
+ * literals — because the neon tagged-template driver parameterises template
+ * expressions, which breaks `INTERVAL '${n} hours'` at runtime.
  */
 
 import { neon } from "@neondatabase/serverless";
@@ -13,34 +17,42 @@ export type CachedScanPayload = {
   diagnose: string;
 };
 
-const CACHE_TTL_HOURS = 24;
+/** Result type — adds cache timestamp so callers can show "cached N hours ago". */
+export type CachedScanResult = CachedScanPayload & { cachedAt: string };
 
-// ── Read ──────────────────────────────────────────────────────────────────────
+/** Plans that get the shorter (12 h) cache window. */
+const AGENCY_PLANS = new Set(["agentur", "agency_core", "agency_scale"]);
 
-export async function getCachedScan(url: string): Promise<CachedScanPayload | null> {
+/** Returns the appropriate TTL in hours for a given plan. */
+export function cacheTtlHours(plan: string): number {
+  return AGENCY_PLANS.has(plan) ? 12 : 24;
+}
+
+// ── Scan cache (POST /api/scan) ───────────────────────────────────────────────
+
+export async function getCachedScan(
+  url: string,
+  ttlHours = 24,
+): Promise<CachedScanResult | null> {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
-    // BUG FIX: INTERVAL must be a plain literal — neon tagged template would
-    // parameterise ${CACHE_TTL_HOURS} as $1, producing `INTERVAL '$1 hours'`
-    // which is invalid PostgreSQL and threw silently (caught → cache miss always).
-    const rows = await sql`
-      SELECT response_json
+    const sql    = neon(process.env.DATABASE_URL!);
+    const cutoff = new Date(Date.now() - ttlHours * 3_600_000).toISOString();
+    const rows   = await sql`
+      SELECT response_json, created_at
       FROM   scan_cache
       WHERE  url = ${url}
-        AND  created_at > NOW() - INTERVAL '24 hours'
+        AND  created_at > ${cutoff}
       LIMIT  1
     `;
     if (!rows.length) return null;
-    return rows[0].response_json as CachedScanPayload;
+    return {
+      ...(rows[0].response_json as CachedScanPayload),
+      cachedAt: rows[0].created_at as string,
+    };
   } catch {
     return null;
   }
 }
-
-// ── Write (awaitable) ────────────────────────────────────────────────────────
-// BUG FIX: fire-and-forget Promises are killed by Vercel's serverless runtime
-// the moment NextResponse is returned.  Both save functions are now awaitable
-// so callers can decide: await for reliability, or omit await for speed.
 
 export async function saveScan(url: string, payload: CachedScanPayload): Promise<void> {
   try {
@@ -52,7 +64,7 @@ export async function saveScan(url: string, payload: CachedScanPayload): Promise
       DO UPDATE SET response_json = EXCLUDED.response_json,
                     created_at   = NOW()
     `;
-  } catch { /* non-critical — never break the scan */ }
+  } catch { /* non-critical */ }
 }
 
 /** @deprecated kept for call-site compatibility; use saveScan() */
@@ -60,16 +72,20 @@ export function saveScanAsync(url: string, payload: CachedScanPayload): Promise<
   return saveScan(url, payload);
 }
 
-// ── Diagnose-only cache (for SSE full-scan) ───────────────────────────────────
+// ── Diagnose-only cache (GET /api/full-scan SSE) ──────────────────────────────
 
-export async function getCachedDiagnose(url: string): Promise<string | null> {
+export async function getCachedDiagnose(
+  url: string,
+  ttlHours = 24,
+): Promise<string | null> {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
-    const rows = await sql`
+    const sql    = neon(process.env.DATABASE_URL!);
+    const cutoff = new Date(Date.now() - ttlHours * 3_600_000).toISOString();
+    const rows   = await sql`
       SELECT response_json->>'diagnose' AS diagnose
       FROM   scan_cache
       WHERE  url = ${url}
-        AND  created_at > NOW() - INTERVAL '24 hours'
+        AND  created_at > ${cutoff}
       LIMIT  1
     `;
     if (!rows.length) return null;

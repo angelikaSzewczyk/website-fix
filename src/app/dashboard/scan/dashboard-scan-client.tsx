@@ -261,6 +261,15 @@ const SCAN_STEPS: Record<TabType, string[]> = {
   fullsite:    ["Website wird gecrawlt...", "Unterseiten werden analysiert...", "KI erstellt Site-Report..."],
 };
 
+function formatCacheAge(cachedAt: string): string {
+  const ms      = Date.now() - new Date(cachedAt).getTime();
+  const hours   = Math.floor(ms / 3_600_000);
+  const minutes = Math.floor((ms % 3_600_000) / 60_000);
+  if (hours >= 1) return `vor ${hours}h`;
+  if (minutes >= 1) return `vor ${minutes} min`;
+  return "gerade eben";
+}
+
 export default function DashboardScanClient({ userName, plan }: { userName: string; plan: string }) {
   const [tab, setTab] = useState<TabType>("website");
   const [url, setUrl] = useState("");
@@ -271,6 +280,8 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [error, setError] = useState("");
   const [savedScanId, setSavedScanId] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
+  const [cachedAt, setCachedAt] = useState<string | null>(null);
 
   // Full-site specific state
   const [fsProgress, setFsProgress] = useState<FullSiteProgress | null>(null);
@@ -281,30 +292,33 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   function resetState() {
     setState("idle"); setDiagnose(""); setError("");
     setWcagViolations([]); setPerfData(null); setUrl(""); setSavedScanId(null);
-    setFsProgress(null); setFsResult(null);
+    setFsProgress(null); setFsResult(null); setFromCache(false); setCachedAt(null);
   }
 
-  async function handleScan(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleScan(e: React.FormEvent | null, forceRefresh = false) {
+    if (e) e.preventDefault();
     if (!url || state === "scanning") return;
 
     if (tab === "fullsite") {
-      handleFullSiteScan();
+      handleFullSiteScan(forceRefresh);
       return;
     }
 
     setState("scanning");
-    setDiagnose(""); setError(""); setWcagViolations([]); setPerfData(null); setSavedScanId(null);
+    setDiagnose(""); setError(""); setWcagViolations([]); setPerfData(null);
+    setSavedScanId(null); setFromCache(false); setCachedAt(null);
 
     try {
       const endpoint = tab === "wcag" ? "/api/wcag-scan" : tab === "performance" ? "/api/performance-scan" : "/api/scan";
       const res = await fetch(endpoint, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, strategy: device }), credentials: "include",
+        body: JSON.stringify({ url, strategy: device, forceRefresh }), credentials: "include",
       });
       const data = await res.json();
       if (data.success) {
         setDiagnose(data.diagnose ?? "");
+        setFromCache(data.fromCache === true);
+        setCachedAt(data.cachedAt ?? null);
         if (tab === "wcag") setWcagViolations(data.violations ?? []);
         if (tab === "performance") setPerfData({ scores: data.scores, vitals: data.vitals, opportunities: data.opportunities });
         if (data.scanId) setSavedScanId(data.scanId);
@@ -319,14 +333,14 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
     }
   }
 
-  function handleFullSiteScan() {
+  function handleFullSiteScan(forceRefresh = false) {
     setState("scanning");
     setFsProgress({ phase: "crawling", message: "Verbinde..." });
     setFsResult(null);
-    setError("");
+    setError(""); setFromCache(false); setCachedAt(null);
 
     const encodedUrl = encodeURIComponent(url);
-    const es = new EventSource(`/api/full-scan?url=${encodedUrl}`);
+    const es = new EventSource(`/api/full-scan?url=${encodedUrl}${forceRefresh ? "&forceRefresh=true" : ""}`);
 
     es.addEventListener("phase", (ev) => {
       const d = JSON.parse(ev.data);
@@ -598,8 +612,8 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
         <div>
           {/* Result header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot, flexShrink: 0 }} />
               <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>
                 {tab === "fullsite" ? "Full-Site Crawl abgeschlossen" : "Scan abgeschlossen"}
               </span>
@@ -612,8 +626,18 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                   {fsResult.totalPages} Seiten · {fsResult.issueCount} Problemtypen
                 </span>
               )}
+              {/* Cache badge */}
+              {fromCache && (
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 5,
+                  background: C.amberBg, color: C.amber, border: `1px solid ${C.amberBorder}`,
+                  display: "flex", alignItems: "center", gap: 4,
+                }}>
+                  🕐 Gecacht{cachedAt ? ` · ${formatCacheAge(cachedAt)}` : ""}
+                </span>
+              )}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {(savedScanId || fsResult?.scanId) && (
                 <a href={`/dashboard/scans/${savedScanId ?? fsResult?.scanId}`} style={{
                   fontSize: 13, padding: "7px 14px", borderRadius: 8, textDecoration: "none",
@@ -623,11 +647,19 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                 </a>
               )}
               {tab !== "fullsite" && <AutoPilotWidget url={url} type={tab} />}
+              {/* Neu scannen — re-runs same URL with cache bypass */}
+              <button onClick={() => handleScan(null, true)} style={{
+                fontSize: 13, color: C.blue, background: C.blueBg,
+                border: `1px solid ${C.blueBorder}`, borderRadius: 8, cursor: "pointer",
+                padding: "7px 14px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5,
+              }}>
+                ↺ Neu scannen
+              </button>
               <button onClick={resetState} style={{
                 fontSize: 13, color: C.textSub, background: C.card,
                 border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",
               }}>
-                Neuer Scan
+                Andere URL
               </button>
             </div>
           </div>

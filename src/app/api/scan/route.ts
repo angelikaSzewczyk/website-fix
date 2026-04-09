@@ -4,7 +4,7 @@ import { guardRequest, isUrlAllowed, isRealWebsiteContent } from "@/lib/scan-gua
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
-import { getCachedScan, saveScanAsync } from "@/lib/scan-cache";
+import { getCachedScan, saveScanAsync, cacheTtlHours } from "@/lib/scan-cache";
 import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
 
@@ -154,7 +154,8 @@ export async function POST(req: NextRequest) {
       if (!limitResult.allowed) return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
     }
 
-    const { url } = await req.json();
+    const body = await req.json();
+    const { url, forceRefresh } = body as { url?: string; forceRefresh?: boolean };
     if (!url || typeof url !== "string" || !url.trim()) {
       return NextResponse.json({ success: false, error: "Bitte gib eine gültige URL ein." }, { status: 400 });
     }
@@ -163,10 +164,14 @@ export async function POST(req: NextRequest) {
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
     if (!isUrlAllowed(targetUrl)) return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
 
-    // ── Cache check (24h) ───────────────────────────────────
-    const cached = await getCachedScan(targetUrl);
-    if (cached) {
-      return NextResponse.json({ success: true, fromCache: true, ...cached });
+    // ── Cache check — skipped when forceRefresh=true ────────
+    if (!forceRefresh) {
+      const ttl    = cacheTtlHours(userPlan);
+      const cached = await getCachedScan(targetUrl, ttl);
+      if (cached) {
+        const { cachedAt, ...payload } = cached;
+        return NextResponse.json({ success: true, fromCache: true, cachedAt, ...payload });
+      }
     }
 
     const maxSubpages = isPaid ? 10 : 5;
