@@ -309,7 +309,7 @@ export default function LeadsClient({
               {[
                 { step: "1", text: "Besucher öffnet deine Website und sieht das Widget" },
                 { step: "2", text: "Er gibt seine URL + E-Mail ein und startet die Analyse" },
-                { step: "3", text: 'Du bekommst sofort eine E-Mail: \u201eNeuer Lead: X hat Y gescannt, Score: Z%\u201c' },
+                { step: "3", text: "Du bekommst sofort eine E-Mail: Neuer Lead: X hat Y gescannt, Score: Z%" },
                 { step: "4", text: "Der Besucher sieht eine Teaserseite mit deinem Branding und wartet auf deine Kontaktaufnahme" },
                 { step: "5", text: "Du rufst an, präsentierst den vollständigen Report — und gewinnst einen Kunden" },
               ].map(item => (
