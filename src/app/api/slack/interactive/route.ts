@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { neon } from "@neondatabase/serverless";
 import type { ButtonContext, AlertType } from "@/lib/slack";
+import { MODELS } from "@/lib/ai-models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -98,7 +99,7 @@ async function handleAiSuggest(ctx: ButtonContext, channelId: string, threadTs: 
   const typePrompt = AI_PROMPT_BY_TYPE[ctx.type];
 
   const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: MODELS.EXPERT,
     max_tokens: 900,
     messages: [{
       role: "user",

@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
+import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 60;
 
@@ -112,7 +113,7 @@ Was Google über die technische SEO denkt.
 Schreib einfach und verständlich, keine Fachbegriffe ohne Erklärung.`;
 
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: MODELS.SCAN,
       max_tokens: 1024,
       messages: [{ role: "user", content: prompt }],
     });

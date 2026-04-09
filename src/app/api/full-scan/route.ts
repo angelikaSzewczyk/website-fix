@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { isUrlAllowed } from "@/lib/scan-guard";
+import { isUrlAllowed, guardRequest } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
@@ -181,8 +181,15 @@ function sseEvent(event: string, data: object): Uint8Array {
 
 // ── Main GET handler (SSE) ───────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
+  // Origin + UA guard (mirrors /api/scan)
+  const guard = guardRequest(req);
+  if (guard.blocked) return new Response("Ungültige Anfrage.", { status: 403 });
+
   const rawUrl = req.nextUrl.searchParams.get("url");
   if (!rawUrl) return new Response("Missing url parameter", { status: 400 });
+
+  // Max URL length check
+  if (rawUrl.length > 2000) return new Response("URL zu lang.", { status: 400 });
 
   let targetUrl = rawUrl.trim();
   if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
@@ -400,8 +407,8 @@ Erstelle vollständigen Site-Audit auf Deutsch für Agentur-Kundenbericht:
             })
           );
           diagnose = message.content[0].type === "text" ? message.content[0].text : "(Keine Diagnose)";
-          // Persist diagnose to cache async — never blocks the stream
-          saveDiagnoseAsync(targetUrl, diagnose);
+          // Await the save — SSE stream keeps the function alive so this is safe
+          await saveDiagnoseAsync(targetUrl, diagnose);
         }
 
         // ── Save to DB (fire-and-forget) ──────────────────────────────────

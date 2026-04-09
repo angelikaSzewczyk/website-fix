@@ -59,6 +59,7 @@ const BLOCKED_HOSTS = [
 ];
 
 export function isUrlAllowed(urlString: string): boolean {
+  if (urlString.length > 2000) return false; // prevent resource-waste on absurd URLs
   try {
     const url = new URL(urlString);
     const hostname = url.hostname.toLowerCase();

@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
-    const isPaid = userPlan === "pro" || userPlan === "agentur";
+    const isPaid = ["pro", "freelancer", "agentur", "agency_core", "agency_scale"].includes(userPlan);
 
     if (!isPaid) {
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
@@ -369,8 +369,8 @@ Erstelle Diagnose auf Deutsch:
       `.catch(() => null);
     }
 
-    // Persist to 24h cache (async)
-    saveScanAsync(targetUrl, { scanData, diagnose });
+    // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
+    await saveScanAsync(targetUrl, { scanData, diagnose });
 
     return NextResponse.json({ success: true, scanData, diagnose });
 

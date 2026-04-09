@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
+import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 60;
 
@@ -191,7 +192,7 @@ Hinweis: "Automatische Scans erkennen ~40% aller WCAG-Kriterien. Komplexe Nutzer
 Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
 
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: MODELS.SCAN,
       max_tokens: 1800,
       messages: [{ role: "user", content: prompt }],
     });

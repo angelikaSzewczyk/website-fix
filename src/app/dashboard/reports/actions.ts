@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import Anthropic from "@anthropic-ai/sdk";
+import { MODELS } from "@/lib/ai-models";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ async function generateAISummary(
   try {
     const anthropic = new Anthropic();
     const msg = await anthropic.messages.create({
-      model:      "claude-sonnet-4-6",
+      model:      MODELS.EXPERT,
       max_tokens: 350,
       system: `Du bist Senior Account Manager einer Webagentur. \
 Schreibe für den Kunden eine Management-Zusammenfassung (3-4 Sätze). \
