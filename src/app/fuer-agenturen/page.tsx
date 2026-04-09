@@ -148,11 +148,12 @@ export default function AgencyPage() {
               }}>
                 Anmelden
               </Link>
-              <Link href="/login" style={{
-                fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
-                background: "#fff", color: "#0b0c10", textDecoration: "none",
+              <Link href="/register" style={{
+                fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
+                background: "#007BFF", color: "#fff", textDecoration: "none",
+                boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
               }}>
-                Kostenlos starten
+                Kostenlos starten →
               </Link>
             </div>
           </div>

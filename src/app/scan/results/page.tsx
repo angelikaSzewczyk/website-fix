@@ -232,7 +232,7 @@ function ResultsInner() {
       {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.97)", backdropFilter: "blur(12px)",
+        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -290,7 +290,7 @@ function ResultsInner() {
           </div>
 
           {/* Dashboard grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
 
             {/* Health ring */}
             <div style={{
@@ -454,6 +454,45 @@ function ResultsInner() {
             )}
           </div>
         </section>
+
+        {/* ── BFSG-READY BADGE ── */}
+        {!isDemo && critErrors === 0 && score >= 80 && (
+          <section style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 0" }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "16px 24px", borderRadius: 14,
+              background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.25)",
+              boxShadow: "0 0 24px rgba(34,197,94,0.08)",
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <polyline points="9 12 11 14 15 10"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e", marginBottom: 2 }}>
+                  BFSG-Ready ✓
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
+                  Diese Seite erfüllt die technischen Kriterien des Barrierefreiheitsstärkungsgesetzes.
+                </div>
+              </div>
+              <div style={{
+                marginLeft: "auto", flexShrink: 0,
+                fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20,
+                background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
+                color: "#22c55e", letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+                Konform
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── SECTION 3: AI EXPERT FIX ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "56px 24px 0" }}>

@@ -253,10 +253,11 @@ export default function Page() {
                 Anmelden
               </Link>
               <Link href="/scan" style={{
-                fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
-                background: "#fff", color: "#0b0c10", textDecoration: "none",
+                fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
+                background: "#007BFF", color: "#fff", textDecoration: "none",
+                boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
               }}>
-                Kostenlos scannen
+                Kostenlos scannen →
               </Link>
             </div>
           </div>
