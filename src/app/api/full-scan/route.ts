@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
 import { getCachedDiagnose, saveDiagnoseAsync } from "@/lib/scan-cache";
+import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 300;
 
@@ -330,31 +331,28 @@ export async function GET(req: NextRequest) {
         // Check 24h diagnose cache before calling Claude
         const cachedDiagnose = await getCachedDiagnose(targetUrl);
 
-        const typeOverview = [...byType.entries()]
-          .map(([type, pages]) => {
-            const noT = pages.filter((p) => !p.title).length;
-            const noH = pages.filter((p) => !p.h1).length;
-            const noM = pages.filter((p) => !p.metaDescription).length;
-            const noI = pages.filter((p) => p.noindex).length;
-            const broken = pages.filter((p) => !p.ok).length;
-            const lines = [
-              `${type} (${pages.length} Seiten)`,
-              noT > 0 ? `  - Kein Title: ${noT}/${pages.length}` : null,
-              noH > 0 ? `  - Kein H1: ${noH}/${pages.length}` : null,
-              noM > 0 ? `  - Keine Meta Description: ${noM}/${pages.length}` : null,
-              noI > 0 ? `  - Noindex gesetzt: ${noI}/${pages.length}` : null,
-              broken > 0 ? `  - Nicht erreichbar: ${broken}/${pages.length}` : null,
-              `  - Beispiel: ${pages[0].url}`,
-            ].filter(Boolean);
-            return lines.join("\n");
-          })
-          .join("\n\n");
+        // Token-optimised helpers: paths only, max 2 examples per issue
+        const host0 = (() => { try { return new URL(targetUrl).host; } catch { return targetUrl; } })();
+        const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u.replace(/^https?:\/\/[^/]+/, "") || "/"; } };
 
-        const formatUrls = (pages: PageData[], limit = 4) => {
-          const shown = pages.slice(0, limit).map((p) => `    • ${p.url}`);
-          const more = pages.length > limit ? `    ... und ${pages.length - limit} weitere` : null;
-          return [...shown, ...(more ? [more] : [])].join("\n");
-        };
+        const typeOverview = [...byType.entries()]
+          .slice(0, 8) // cap at 8 types to bound token growth
+          .map(([type, pages]) => {
+            const issues = [
+              pages.filter((p) => !p.title).length   > 0 ? `noTitle:${pages.filter(p=>!p.title).length}`   : null,
+              pages.filter((p) => !p.h1).length      > 0 ? `noH1:${pages.filter(p=>!p.h1).length}`         : null,
+              pages.filter((p) => !p.metaDescription).length > 0 ? `noMeta:${pages.filter(p=>!p.metaDescription).length}` : null,
+              pages.filter((p) => p.noindex).length  > 0 ? `noindex:${pages.filter(p=>p.noindex).length}`  : null,
+              pages.filter((p) => !p.ok).length      > 0 ? `down:${pages.filter(p=>!p.ok).length}`         : null,
+            ].filter(Boolean).join(" ");
+            return `${type}(${pages.length}): ${issues || "ok"} | ex:${toPath(pages[0].url)}`;
+          })
+          .join("\n");
+
+        // 2 paths max per issue list — full URLs waste tokens
+        const fmtPaths = (pages: PageData[], limit = 2) =>
+          pages.slice(0, limit).map(p => toPath(p.url)).join(", ") +
+          (pages.length > limit ? ` +${pages.length - limit}` : "");
 
         const issueCount = [
           dupTitles.length > 0,
@@ -367,75 +365,27 @@ export async function GET(req: NextRequest) {
           totalAltMissing > 0,
         ].filter(Boolean).length;
 
-        const prompt = `Du bist ein professioneller Website-Auditor der Agenturen hilft, Berichte für ihre Kunden zu erstellen.
+        // Token-optimised prompt — ~2000 input tokens instead of ~3500
+        const prompt = `Site-Audit: ${host0} | ${allPages.length} Seiten (${reachable.length} ok, ${brokenPages.length} defekt, ${timeoutPages.length} timeout)
 
-Website: ${targetUrl}
-Gesamt analysierte Seiten: ${allPages.length} (${reachable.length} erreichbar, ${brokenPages.length} defekt, ${timeoutPages.length} Timeout)
-Plan-Limit: ${maxPages} Seiten
-
-SEITENTYPEN-ANALYSE:
+SEITENTYPEN:
 ${typeOverview}
 
-AGGREGIERTE PROBLEME (site-weit):
+PROBLEME:
+dupTitles:${dupTitles.length}(${dupTitles.slice(0,2).map(([t,p])=>`"${t.slice(0,40)}"x${p.length}`).join(";")})
+dupMetas:${dupMetas.length}
+noTitle:${missingTitle.length}(${fmtPaths(missingTitle)})
+noH1:${missingH1.length}(${fmtPaths(missingH1)})
+noMeta:${missingMeta.length}(${fmtPaths(missingMeta)})
+noindex:${noindexPages.length}(${fmtPaths(noindexPages)})
+broken:${brokenPages.length}(${brokenPages.slice(0,3).map(p=>`${toPath(p.url)}→${p.status}`).join(",")})
+altMissing:${totalAltMissing}/${totalImages} Bilder auf ${pagesWithAltIssues} Seiten
 
-1. Doppelte Title-Tags (${dupTitles.length} Duplikat-Gruppen, betrifft ${dupTitles.reduce((s, [, p]) => s + p.length, 0)} Seiten):
-${
-  dupTitles.length > 0
-    ? dupTitles
-        .slice(0, 4)
-        .map(([title, pages]) => `   "${title.slice(0, 70)}" → ${pages.length} Seiten\n${formatUrls(pages, 2)}`)
-        .join("\n")
-    : "   Keine Duplikate"
-}
-
-2. Doppelte Meta Descriptions (${dupMetas.length} Duplikat-Gruppen):
-${
-  dupMetas.length > 0
-    ? dupMetas
-        .slice(0, 4)
-        .map(([meta, pages]) => `   "${meta.slice(0, 70)}" → ${pages.length} Seiten`)
-        .join("\n")
-    : "   Keine Duplikate"
-}
-
-3. Fehlende Title-Tags: ${missingTitle.length} Seiten
-${missingTitle.length > 0 ? formatUrls(missingTitle) : "   Alle Seiten haben einen Title — gut!"}
-
-4. Fehlende H1-Überschriften: ${missingH1.length} Seiten
-${missingH1.length > 0 ? formatUrls(missingH1) : "   Alle Seiten haben H1 — gut!"}
-
-5. Fehlende Meta Descriptions: ${missingMeta.length} Seiten
-${missingMeta.length > 0 ? formatUrls(missingMeta) : "   Alle Seiten haben Meta Description — gut!"}
-
-6. Ungewollte Noindex-Seiten: ${noindexPages.length} Seiten
-${noindexPages.length > 0 ? formatUrls(noindexPages) : "   Keine Noindex-Probleme"}
-
-7. Defekte Seiten (4xx/5xx): ${brokenPages.length}
-${brokenPages.length > 0 ? brokenPages.slice(0, 5).map((p) => `   ${p.url} → Status ${p.status}`).join("\n") : "   Keine defekten Seiten — gut!"}
-
-8. Fehlende Alt-Texte: ${totalAltMissing} Bilder ohne Alt-Text auf ${pagesWithAltIssues} Seiten (${totalImages} Bilder gesamt)
-
-Erstelle einen vollständigen Site-Audit-Report auf Deutsch:
-
-## Zusammenfassung
-3-4 Sätze: Gesamtzustand der Website (${allPages.length} Seiten analysiert). Was sind die wichtigsten Erkenntnisse und der dringendste Handlungsbedarf?
-
-## Kritische Probleme (site-weit)
-Für jedes Problem das auf mehreren Seiten auftritt (nach Schwere sortiert):
-**[🔴 KRITISCH / 🟡 WICHTIG / 🟢 GUT]** Titel des Problems
-Beschreibung: Erkläre das Problem kurz und verständlich.
-Ausmaß: Wie viele Seiten/Prozent betroffen?
-Auswirkung: SEO-Verlust / Haftungsrisiko / Nutzererfahrung
-
-## Seitentyp-Bewertung
-Kurze Bewertung der ${byType.size} gefundenen Seitentypen — wo liegt der größte Handlungsbedarf?
-
-## Top ${Math.min(5, issueCount + 1)} Handlungsempfehlungen (nach Priorität)
-1. [Konkrete Maßnahme — direkt umsetzbar]
-2. ...
-3. ...
-
-Schreib professionell aber verständlich. Dieser Report wird von einer Agentur direkt an den Kunden weitergegeben.`;
+Erstelle vollständigen Site-Audit auf Deutsch für Agentur-Kundenbericht:
+## Zusammenfassung (3-4 Sätze, Gesamtzustand, wichtigste Erkenntnisse)
+## Kritische Probleme (nach Schwere: **[🔴 KRITISCH/🟡 WICHTIG/🟢 GUT]** Titel — Beschreibung — Ausmaß — Auswirkung)
+## Seitentyp-Bewertung (${byType.size} Typen, wo größter Handlungsbedarf?)
+## Top ${Math.min(5, issueCount + 1)} Handlungsempfehlungen`;
 
         // Use cache if available, otherwise call Claude with retry
         let diagnose: string;
@@ -444,7 +394,7 @@ Schreib professionell aber verständlich. Dieser Report wird von einer Agentur d
         } else {
           const message = await callWithRetry(() =>
             client.messages.create({
-              model: "claude-haiku-4-5-20251001",
+              model: MODELS.SCAN,
               max_tokens: 2200,
               messages: [{ role: "user", content: prompt }],
             })
@@ -471,6 +421,56 @@ Schreib professionell aber verständlich. Dieser Report wird von einer Agentur d
           totalPages: allPages.length,
           diagnose,
         });
+
+        // ── Sonnet Expert-Fix (agency plans only) ─────────────────────────
+        // Runs AFTER the complete event so the UI can render immediately.
+        // Sends a second SSE event with before/after code fixes for top issues.
+        const isAgencyPlan = ["agentur", "agency_core", "agency_scale"].includes(plan);
+        if (isAgencyPlan && issueCount > 0 && !abortSignal?.aborted) {
+          try {
+            enqueue("phase", { phase: "expert", message: "KI-Experte erstellt Code-Fixes…" });
+
+            // Build a focused list of top issues for the expert prompt
+            const topIssues: string[] = [];
+            if (dupTitles.length > 0)   topIssues.push(`Doppelte Title-Tags auf ${dupTitles.reduce((s,[,p])=>s+p.length,0)} Seiten`);
+            if (missingH1.length > 0)   topIssues.push(`Fehlende H1-Überschriften auf ${missingH1.length} Seiten (${fmtPaths(missingH1)})`);
+            if (totalAltMissing > 0)    topIssues.push(`${totalAltMissing} Bilder ohne Alt-Text (BFSG-kritisch)`);
+            if (brokenPages.length > 0) topIssues.push(`${brokenPages.length} defekte Seiten: ${brokenPages.slice(0,3).map(p=>`${toPath(p.url)}→${p.status}`).join(", ")}`);
+            if (missingMeta.length > 0) topIssues.push(`Fehlende Meta Descriptions auf ${missingMeta.length} Seiten`);
+
+            const expertPrompt = `Du bist ein Senior Web-Entwickler. Erstelle für jedes der folgenden Probleme auf ${host0} einen konkreten Code-Fix mit Vorher/Nachher-Beispiel (HTML/CSS/JS, max 8 Zeilen je Block).
+
+Probleme (${topIssues.length}):
+${topIssues.slice(0, 3).map((issue, i) => `${i + 1}. ${issue}`).join("\n")}
+
+Format für jedes Problem:
+### [Problemtitel]
+**Warum:** Ein Satz Erklärung.
+**Vorher:**
+\`\`\`html
+[fehlerhafter Code]
+\`\`\`
+**Nachher:**
+\`\`\`html
+[korrigierter Code]
+\`\`\`
+
+Sei präzise. Kein Intro, kein Outro.`;
+
+            const expertMsg = await callWithRetry(() =>
+              client.messages.create({
+                model: MODELS.EXPERT,
+                max_tokens: 900,
+                messages: [{ role: "user", content: expertPrompt }],
+              })
+            );
+            const expertFixes = expertMsg.content[0].type === "text" ? expertMsg.content[0].text : "";
+            enqueue("expert_fixes", { fixes: expertFixes });
+          } catch {
+            /* expert fix is non-critical — never fail the whole scan */
+          }
+        }
+
         controller.close();
       } catch (err) {
         console.error("Full-scan error:", err);

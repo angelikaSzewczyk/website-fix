@@ -6,6 +6,7 @@ import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
 import { getCachedScan, saveScanAsync } from "@/lib/scan-cache";
 import { batchAsync } from "@/lib/batch-async";
+import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 60;
 
@@ -308,61 +309,35 @@ export async function POST(req: NextRequest) {
     scanData.audit = audit;
 
     // ── 10. CLAUDE DIAGNOSE ─────────────────────────────────
-    const prompt = `Du bist ein freundlicher Website-Experte der Menschen ohne Technik-Kenntnisse hilft.
+    // Token-optimised prompt: paths only (not full URLs), counts over lists,
+    // compact issue format. Target: ~900 input tokens instead of ~1800.
+    const host0 = (() => { try { return new URL(targetUrl).host; } catch { return targetUrl; } })();
+    const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
 
-Website: ${targetUrl}
-Gescannte Seiten: ${audit.gescannteSeiten} (Startseite + ${unterseiten.length} Unterseiten)
+    const prompt = `Website-Audit: ${host0} | ${audit.gescannteSeiten} Seiten gescannt
 
-STARTSEITE:
-- Title: "${scanData.title || "(fehlt)"}"
-- Meta Description: "${scanData.metaDescription || "(fehlt)"}"
-- H1: "${scanData.h1 || "(fehlt)"}"
-- HTTPS: ${scanData.https}
-- Noindex: ${scanData.indexierungGesperrt}
-- Sitemap vorhanden: ${scanData.sitemapVorhanden}
-- Robots.txt blockiert alles: ${scanData.robotsBlockiertAlles}
-- WordPress Fehler: ${scanData.wordpressFehler}
+STARTSEITE: title="${scanData.title || "fehlt"}" | meta="${scanData.metaDescription ? "ok" : "fehlt"}" | h1="${scanData.h1 ? "ok" : "fehlt"}" | https=${scanData.https} | noindex=${scanData.indexierungGesperrt} | sitemap=${scanData.sitemapVorhanden} | robots-block=${scanData.robotsBlockiertAlles}${scanData.wordpressFehler ? " | WP-FEHLER!" : ""}
 
-UNTERSEITEN (${unterseiten.length}):
-${unterseiten.map((p) => `  ${p.url}: ${p.erreichbar ? `OK (${p.status})` : "NICHT ERREICHBAR"} | Title: "${p.title || "fehlt"}" | noindex: ${p.noindex} | Alt-Texte fehlend: ${p.altMissing}`).join("\n") || "  (keine)"}
+UNTERSEITEN:
+${unterseiten.map((p) => `${toPath(p.url)}: ${p.erreichbar ? "ok" : "DOWN"} | title=${p.title ? "ok" : "fehlt"} | h1=${p.h1 ? "ok" : "fehlt"} | noindex=${p.noindex} | alt-missing=${p.altMissing}`).join("\n") || "(keine)"}
 
-AUDIT-ERGEBNISSE:
+PROBLEME:
+- Doppelte Titles: ${duplicateTitles.length} (${duplicateTitles.slice(0,2).map(d => `"${d.title.slice(0,40)}" x${d.seiten.length}`).join("; ") || "keine"})
+- Doppelte Metas: ${duplicateMetas.length}
+- Alt-Texte fehlend: ${totalAltMissing}/${totalImages} Bilder
+- Broken Links: ${brokenLinks.length} (${brokenLinks.slice(0,3).map(b => `${toPath(b.url)} ${b.status}`).join(", ") || "keine"})
+- Verwaiste Seiten: ${orphanedPages.length}
 
-1. Doppelte Title-Tags (${duplicateTitles.length} gefunden):
-${duplicateTitles.map((d) => `   "${d.title}" → ${d.seiten.join(", ")}`).join("\n") || "   Keine Duplikate — gut!"}
-
-2. Doppelte Meta Descriptions (${duplicateMetas.length} gefunden):
-${duplicateMetas.map((d) => `   "${d.meta}" → ${d.seiten.join(", ")}`).join("\n") || "   Keine Duplikate — gut!"}
-
-3. Fehlende Alt-Texte: ${totalAltMissing} von ${totalImages} Bildern ohne Alt-Text
-
-4. Broken Links (${brokenLinks.length} gefunden):
-${brokenLinks.map((b) => `   ${b.url} → Status ${b.status}`).join("\n") || "   Keine defekten Links — gut!"}
-
-5. Verwaiste Seiten ohne internen Link (${orphanedPages.length} gefunden):
-${orphanedPages.map((u) => `   ${u}`).join("\n") || "   Keine verwaisten Seiten — gut!"}
-
-Erstelle eine klare Diagnose auf Deutsch:
-
-## Zusammenfassung
-2-3 Sätze: Gesamtzustand der Website. Wie viele Seiten gescannt, was sind die wichtigsten Befunde?
-
-## Befunde
-Für jeden relevanten Befund (schwerwiegendste zuerst):
-**[🔴 KRITISCH / 🟡 WICHTIG / 🟢 OK]** Kurzer Titel
-Erklärung in einfachem Deutsch (max 2 Sätze). Nenne konkrete URLs wenn relevant.
-
-## Wichtigste nächste Schritte
-1. ...
-2. ...
-3. ...
-
-Schreib freundlich, klar und ohne Fachjargon. Wenn alles gut ist, sag das deutlich.`;
+Erstelle Diagnose auf Deutsch:
+## Zusammenfassung (2-3 Sätze)
+## Befunde (schwerwiegendste zuerst)
+**[🔴 KRITISCH / 🟡 WICHTIG / 🟢 OK]** Titel — Erklärung (max 2 Sätze, ohne Fachjargon)
+## Top 3 nächste Schritte`;
 
     // ── 10. CLAUDE DIAGNOSE — with exponential backoff ─────
     const message = await callWithRetry(() =>
       client.messages.create({
-        model: "claude-haiku-4-5-20251001",
+        model: MODELS.SCAN,
         max_tokens: 1500,
         messages: [{ role: "user", content: prompt }],
       })
