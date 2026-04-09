@@ -10,10 +10,10 @@ import {
   Users2,
   FileText,
   Settings,
-  ShieldCheck,
   Activity,
   Plug,
 } from "lucide-react";
+import BrandLogo from "../../components/BrandLogo";
 
 type NavItem = {
   href: string;
@@ -67,19 +67,7 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
     }}>
       {/* Logo */}
       <div style={{ padding: "20px 8px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 9,
-            background: "linear-gradient(135deg, #007BFF, #0057b8)",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            boxShadow: "0 2px 8px rgba(0,123,255,0.35)",
-          }}>
-            <ShieldCheck size={17} color="#fff" strokeWidth={2} />
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.02em" }}>
-            Website<span style={{ color: "#007BFF" }}>Fix</span>
-          </span>
-        </Link>
+        <BrandLogo href="/dashboard" />
       </div>
 
       {/* Navigation */}

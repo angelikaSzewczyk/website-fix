@@ -3,6 +3,7 @@
 
 import { getAnalyticsConsent, setAnalyticsConsent } from "@/lib/track";
 import { useEffect, useState } from "react";
+import BrandLogo from "./BrandLogo";
 
 export default function ConsentBanner() {
   const [state, setState] = useState<"granted" | "denied" | "unset">("unset");
@@ -47,16 +48,8 @@ export default function ConsentBanner() {
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-          background: "linear-gradient(135deg, #007BFF, #0057b8)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
+        <BrandLogo size="sm" />
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginLeft: 4 }}>
           Cookie-Einstellungen
         </span>
       </div>

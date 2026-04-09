@@ -2,6 +2,7 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import BrandLogo from "../components/BrandLogo";
 
 function ResetForm() {
   const params = useSearchParams();
@@ -30,13 +31,8 @@ function ResetForm() {
 
   return (
     <div style={{ maxWidth: 380, width: "100%", margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 36 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2563EB,#1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
-        <span style={{ fontWeight: 800, fontSize: 17, color: "#0F172A", letterSpacing: "-0.02em" }}>WebsiteFix</span>
+      <div style={{ marginBottom: 36 }}>
+        <BrandLogo size="lg" />
       </div>
 
       {done ? (

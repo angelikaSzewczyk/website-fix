@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import type { ReactNode } from "react";
 import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
+import BrandLogo from "../components/BrandLogo";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -75,9 +76,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         alignItems: "center", justifyContent: "space-between",
         padding: "0 20px",
       }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>
-          Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
-        </span>
+        <BrandLogo href="/dashboard" />
         <span style={{
           fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
           color: plan === "agentur" ? "#007BFF" : plan === "pro" ? "#8df3d3" : "rgba(255,255,255,0.45)",

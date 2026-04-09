@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
+import BrandLogo from "../components/BrandLogo";
 
 export const metadata: Metadata = {
   title: "WebsiteFix für Agenturen — Automatische Wartungsverträge & BFSG",
@@ -131,21 +132,7 @@ export default function AgencyPage() {
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 8,
-              background: "linear-gradient(135deg, #007BFF, #0057b8)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, boxShadow: "0 2px 8px rgba(0,123,255,0.35)",
-            }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-            </div>
-            <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.02em" }}>
-              Website<span style={{ color: "#007BFF" }}>Fix</span>
-            </span>
-          </Link>
+          <BrandLogo />
           <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
             <div className="hide-sm" style={{ display: "flex", gap: 24 }}>
               <Link href="/" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Home</Link>
@@ -441,7 +428,7 @@ export default function AgencyPage() {
         </section>
 
         {/* FEATURE DEEP-DIVE */}
-        <section style={{ background: "#080c12", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <section style={{ background: "#0b0c10", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
@@ -538,7 +525,7 @@ export default function AgencyPage() {
         </section>
 
         {/* DEEP-SCAN TECHNOLOGIE */}
-        <section style={{ background: "#080c12", padding: "0 24px 72px", borderTop: "none" }}>
+        <section style={{ background: "#0b0c10", padding: "0 24px 72px", borderTop: "none" }}>
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
             <div style={{
               padding: "32px 36px", borderRadius: 18,
@@ -577,19 +564,19 @@ export default function AgencyPage() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" style={{ background: "#0b0c10", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <section id="pricing" style={{ background: "#ffffff", padding: "80px 24px", borderTop: "1px solid #E2E8F0" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
                 Einfach. Transparent. Ehrlich.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)" }}>
+              <p style={{ margin: 0, fontSize: 15, color: "#64748B" }}>
                 Keine versteckten Kosten. Monatlich kündbar. DSGVO-konform.
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, alignItems: "stretch" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
               {PLANS.map(plan => (
                 <div key={plan.name} style={{
                   background: "#ffffff",
@@ -606,7 +593,7 @@ export default function AgencyPage() {
                   {/* Top stripe */}
                   {plan.recommended && (
                     <div style={{ background: "#2563EB", padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>★ BESTSELLER · WHITE-LABEL AB HIER</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>★ BESTSELLER</span>
                     </div>
                   )}
                   {plan.scale && (
@@ -623,15 +610,15 @@ export default function AgencyPage() {
                     <div style={{ height: 4, background: "#F1F5F9" }} />
                   )}
 
-                  <div style={{ padding: "28px 24px 0", flex: 1, display: "flex", flexDirection: "column" }}>
+                  <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{plan.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{plan.name}</div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
                         {plan.enterprise ? (
                           <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: "#0F172A" }}>Auf Anfrage</span>
                         ) : (
                           <>
-                            <span style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
+                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
                             <span style={{ fontSize: 13, color: "#94A3B8" }}>{plan.per}</span>
                           </>
                         )}
@@ -639,19 +626,19 @@ export default function AgencyPage() {
                       <p style={{ margin: 0, fontSize: 12, color: "#64748B" }}>{plan.desc}</p>
                     </div>
 
-                    <div style={{ height: 1, background: "#F1F5F9", marginBottom: 18 }} />
+                    <div style={{ height: 1, background: "#F1F5F9", marginBottom: 20 }} />
 
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
                       {plan.features.map(f => (
-                        <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <div style={{
-                            width: 17, height: 17, borderRadius: 4, flexShrink: 0,
+                            width: 18, height: 18, borderRadius: 5, flexShrink: 0,
                             background: f.highlight
                               ? (plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "#0F172A" : "#475569")
                               : "#F1F5F9",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "#94A3B8"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "#94A3B8"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </div>
@@ -669,7 +656,7 @@ export default function AgencyPage() {
                         href={plan.enterprise ? plan.href : undefined}
                         style={{
                           display: "block", textAlign: "center", width: "100%",
-                          padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700,
+                          padding: "13px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700,
                           textDecoration: "none",
                           background: plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "#0F172A" : "#F8FAFC",
                           color: plan.recommended || plan.scale || plan.enterprise ? "#ffffff" : "#475569",
@@ -683,9 +670,9 @@ export default function AgencyPage() {
               ))}
             </div>
 
-            <div style={{ marginTop: 28, textAlign: "center", display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
+            <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
               {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#94A3B8" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   {t}
                 </div>
@@ -697,7 +684,7 @@ export default function AgencyPage() {
         {/* FAQ */}
         <section style={{ background: "#0b0c10", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
             <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: "#fff" }}>
               Häufige Fragen
             </h2>

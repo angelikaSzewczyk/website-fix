@@ -33,7 +33,13 @@ export const metadata: Metadata = {
     // Auch hier: Titel/Beschreibung weglassen oder dynamisch halten
   },
   robots: { index: true, follow: true },
-  icons: { icon: "/favicon.svg" },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
