@@ -3115,35 +3115,55 @@ footer a, nav a.footerLink {
 }
 
 /* ===== PRINT / PDF EXPORT ===== */
+/* ── A4 page setup ── */
+@page {
+  size: A4;
+  margin: 14mm 12mm 18mm;
+}
+
+/* ── Page numbers (Chrome/Edge Paged Media) ── */
+@page {
+  @bottom-right {
+    content: "Seite " counter(page) " von " counter(pages);
+    font-size: 9pt;
+    color: #94A3B8;
+    font-family: system-ui, sans-serif;
+  }
+}
+
 @media print {
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  nav { display: none !important; }
+  nav, header { display: none !important; }
   body { background: #fff !important; color: #111 !important; }
-  main { padding: 20px !important; max-width: 100% !important; }
-  h1, h2, h3 { color: #111 !important; }
-  p, div { color: #333 !important; }
-  a { color: #0066cc !important; }
-  /* Strip backgrounds only on pages that are NOT the report preview */
-  body:not(:has(#report-document)) [style*="background"] { background: transparent !important; }
-  body:not(:has(#report-document)) [style*="border"] { border-color: #ddd !important; }
+  main { padding: 0 !important; max-width: 100% !important; }
 
-  /* ── DiagnoseReport PDF rules ── */
-  /* Hide everything except the report when printing from the dashboard */
+  /* ── Dashboard DiagnoseReport isolation ── */
   body:has(#wf-print-root) * { visibility: hidden; }
   body:has(#wf-print-root) #wf-print-root,
   body:has(#wf-print-root) #wf-print-root * { visibility: visible; }
   body:has(#wf-print-root) #wf-print-root {
-    position: absolute; inset: 0;
+    position: fixed; inset: 0;
     background: #fff !important;
-    padding: 32px !important;
+    padding: 24px 28px !important;
+    overflow: visible;
   }
+
+  /* ── Widget report page: print as dark-on-white ── */
+  body:has(.wf-widget-report) * { color: #111 !important; background: transparent !important; }
+  body:has(.wf-widget-report) .wf-widget-report { padding: 0 !important; }
+
   /* Show the print-only logo/date header */
   .wf-print-header { display: flex !important; }
-  /* Hide interactive elements inside the report */
+  /* Hide interactive elements */
   .wf-no-print { display: none !important; }
   /* Prevent issue cards from splitting across pages */
   .wf-issue-card { break-inside: avoid; page-break-inside: avoid; }
+  /* Widget glassmorphism cards — flatten for print */
+  [style*="backdropFilter"], [style*="backdrop-filter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 @media screen {

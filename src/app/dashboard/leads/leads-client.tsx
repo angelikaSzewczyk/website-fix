@@ -161,11 +161,11 @@ export default function LeadsClient({
             }}>
               {/* Table header */}
               <div style={{
-                display: "grid", gridTemplateColumns: "1fr 200px 80px 140px 120px",
+                display: "grid", gridTemplateColumns: "1fr 160px 80px 80px 140px 120px",
                 padding: "10px 20px", background: "#F8FAFC",
                 borderBottom: "1px solid #E2E8F0",
               }}>
-                {["Interessent & URL", "Datum", "Score", "Status", "Aktion"].map(h => (
+                {["Interessent & URL", "Datum", "Score", "PDF", "Status", "Aktion"].map(h => (
                   <span key={h} style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</span>
                 ))}
               </div>
@@ -176,7 +176,7 @@ export default function LeadsClient({
                 const domain = (() => { try { return new URL(lead.scanned_url).host; } catch { return lead.scanned_url; } })();
                 return (
                   <div key={lead.id} style={{
-                    display: "grid", gridTemplateColumns: "1fr 200px 80px 140px 120px",
+                    display: "grid", gridTemplateColumns: "1fr 160px 80px 80px 140px 120px",
                     padding: "14px 20px", alignItems: "center",
                     borderBottom: i < filtered.length - 1 ? "1px solid #F1F5F9" : "none",
                     transition: "background 0.1s",
@@ -197,6 +197,21 @@ export default function LeadsClient({
                     {/* Score */}
                     <div style={{ fontSize: 15, fontWeight: 700, color: sCol }}>
                       {lead.score !== null ? `${lead.score}%` : "—"}
+                    </div>
+
+                    {/* PDF downloaded */}
+                    <div>
+                      {lead.pdf_downloaded_at ? (
+                        <span title={`PDF geladen: ${fmt(lead.pdf_downloaded_at)}`} style={{
+                          fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 5,
+                          background: "rgba(34,197,94,0.08)", color: "#16A34A",
+                          border: "1px solid rgba(34,197,94,0.2)",
+                        }}>
+                          PDF ✓
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: "#CBD5E1" }}>—</span>
+                      )}
                     </div>
 
                     {/* Status badge */}

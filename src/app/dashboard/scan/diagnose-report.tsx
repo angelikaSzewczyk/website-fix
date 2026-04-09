@@ -152,9 +152,9 @@ function scoreColor(score: number) {
 
 function SeverityBadge({ severity }: { severity: Severity }) {
   const conf = {
-    critical: { label: "KRITISCH", bg: C.redBg,   color: C.red,   border: C.redBorder,   Icon: XCircle       },
-    warning:  { label: "WICHTIG",  bg: C.amberBg, color: C.amber, border: C.amberBorder, Icon: AlertTriangle  },
-    good:     { label: "GUT",      bg: C.greenBg, color: C.green, border: C.greenBorder, Icon: CheckCircle2   },
+    critical: { label: "Dringend handeln", bg: C.redBg,   color: C.red,   border: C.redBorder,   Icon: XCircle       },
+    warning:  { label: "Empfehlung",       bg: C.amberBg, color: C.amber, border: C.amberBorder, Icon: AlertTriangle  },
+    good:     { label: "Optimiert",        bg: C.greenBg, color: C.green, border: C.greenBorder, Icon: CheckCircle2   },
   }[severity];
   return (
     <span style={{

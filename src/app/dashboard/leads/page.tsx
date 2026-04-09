@@ -16,6 +16,7 @@ export type Lead = {
   score: number | null;
   status: string;
   created_at: string;
+  pdf_downloaded_at: string | null;
 };
 
 export default async function LeadsPage() {
@@ -28,7 +29,7 @@ export default async function LeadsPage() {
   const sql = neon(process.env.DATABASE_URL!);
 
   const leads = (await sql`
-    SELECT id::text, visitor_email, scanned_url, score, status, created_at
+    SELECT id::text, visitor_email, scanned_url, score, status, created_at, pdf_downloaded_at::text
     FROM widget_leads
     WHERE agency_user_id = ${session.user.id}
     ORDER BY created_at DESC

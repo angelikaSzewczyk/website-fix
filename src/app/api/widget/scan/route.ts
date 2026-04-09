@@ -66,11 +66,12 @@ export async function POST(req: NextRequest) {
       }
     } catch { /* scan failed — still save lead */ }
 
-    // Save lead
-    await sql`
+    // Save lead and get back the UUID
+    const [lead] = await sql`
       INSERT INTO widget_leads (agency_user_id, visitor_email, scanned_url, score, diagnose)
       VALUES (${agencyId}, ${email}, ${url}, ${score}, ${diagnose})
-    `;
+      RETURNING id::text
+    ` as { id: string }[];
 
     // Notify agency via email
     if (agency.email && process.env.RESEND_API_KEY) {
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       score,
+      leadId: lead?.id ?? null,
       agencyName,
       agencyColor,
       agencyLogo,
