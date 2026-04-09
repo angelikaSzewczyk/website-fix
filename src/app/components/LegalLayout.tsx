@@ -27,19 +27,19 @@ export default function LegalLayout({
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#0F172A",
+      background: "#0a0a0a",
       color: "#fff",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       <style>{`
-        .legal-a:hover { color: #EAB308 !important; }
         .legal-a { transition: color 0.15s; }
+        .legal-a:hover { color: #EAB308 !important; }
       `}</style>
 
       {/* ── Nav ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(15,23,42,0.95)",
+        background: "rgba(10,10,10,0.95)",
         backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
       }}>
@@ -65,32 +65,31 @@ export default function LegalLayout({
       </nav>
 
       {/* ── Content ── */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "52px 24px 100px" }}>
-
-        {/* Report card */}
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "52px 24px 96px" }}>
+        {/* Glass card */}
         <div style={{
-          background: "#fff",
+          background: "rgba(255,255,255,0.03)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 20,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)",
+          boxShadow: "0 0 50px rgba(234,179,8,0.05), 0 24px 64px rgba(0,0,0,0.5)",
           overflow: "hidden",
         }}>
 
-          {/* Anthracite header */}
+          {/* Gradient header */}
           <div style={{
-            background: "#0F172A",
-            padding: "26px 44px",
+            padding: "28px 40px",
+            background: "linear-gradient(90deg, rgba(234,179,8,0.18) 0%, rgba(234,179,8,0.04) 50%, transparent 100%)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            borderBottom: "1px solid #1E293B",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 9,
-                background: "rgba(234,179,8,0.12)",
-                border: "1px solid rgba(234,179,8,0.25)",
+                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
               }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                   stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
@@ -99,22 +98,22 @@ export default function LegalLayout({
                 </svg>
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   WebsiteFix · Rechtliches
                 </p>
-                <h1 style={{ margin: "3px 0 0", fontSize: 20, fontWeight: 800, color: "#EAB308", letterSpacing: "-0.02em" }}>
+                <h1 style={{ margin: "3px 0 0", fontSize: 21, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
                   {title}
                 </h1>
               </div>
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "right", lineHeight: 1.6 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "right", lineHeight: 1.7 }}>
               <div>website-fix.com</div>
               <div>{new Date().getFullYear()}</div>
             </div>
           </div>
 
-          {/* Content area — off-white */}
-          <div style={{ padding: "44px 48px 52px", background: "#F8FAFC", color: "#0F172A" }}>
+          {/* Body */}
+          <div style={{ padding: "40px 40px 52px" }}>
             {children}
           </div>
 
@@ -126,12 +125,12 @@ export default function LegalLayout({
         borderTop: "1px solid rgba(255,255,255,0.06)",
         padding: "28px 24px", textAlign: "center",
       }}>
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.25)", lineHeight: 2 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.22)", lineHeight: 2 }}>
           {`© ${new Date().getFullYear()} website-fix.com`}
           <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-          <Link href="/" className="legal-a" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Startseite</Link>
+          <Link href="/" className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>Startseite</Link>
           <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-          <Link href={footerLink} className="legal-a" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>
+          <Link href={footerLink} className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
             {footerLabel}
           </Link>
         </p>

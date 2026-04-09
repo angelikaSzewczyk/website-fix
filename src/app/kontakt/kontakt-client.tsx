@@ -26,13 +26,13 @@ function Field({
 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
-    background: "rgba(51,65,85,0.5)",       // slate-700/50
-    border: `1.5px solid ${focused ? "#EAB308" : "#334155"}`,
+    background: focused ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.04)",
+    border: `1px solid ${focused ? "#EAB308" : "rgba(255,255,255,0.1)"}`,
     borderRadius: 10, padding: "13px 16px",
     color: "#F8FAFC", fontSize: 14, outline: "none",
     fontFamily: "inherit",
-    transition: "border-color 0.15s, box-shadow 0.15s",
-    boxShadow: focused ? "0 0 0 3px rgba(234,179,8,0.15)" : "none",
+    transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
+    boxShadow: focused ? "0 0 0 3px rgba(234,179,8,0.12), 0 0 20px rgba(234,179,8,0.08)" : "none",
     resize: rows ? "vertical" : undefined,
   };
 
@@ -133,7 +133,7 @@ export default function KontaktClient() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#0F172A", color: "#fff",
+      minHeight: "100vh", background: "#0a0a0a", color: "#fff",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       <style>{`
@@ -144,7 +144,7 @@ export default function KontaktClient() {
       {/* ── Nav ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(15,23,42,0.95)",
+        background: "rgba(10,10,10,0.95)",
         backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
       }}>

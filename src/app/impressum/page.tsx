@@ -6,42 +6,31 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// ── Tokens (light card context) ───────────────────────────────────────────────
 const H2: React.CSSProperties = {
-  fontSize: 16,
-  fontWeight: 700,
-  color: "#0F172A",
-  margin: "40px 0 10px",
-  letterSpacing: "-0.01em",
+  fontSize: 15, fontWeight: 700, color: "#fff",
+  margin: "36px 0 10px", letterSpacing: "-0.01em",
 };
 
 const P: React.CSSProperties = {
-  fontSize: 15,
-  color: "#475569",
-  lineHeight: 1.8,
-  margin: "0 0 8px",
+  fontSize: 14, color: "rgba(203,213,225,0.85)",
+  lineHeight: 1.8, margin: "0 0 6px",
 };
 
 const DIVIDER: React.CSSProperties = {
-  border: "none",
-  borderTop: "1px solid #E2E8F0",
-  margin: "36px 0 0",
+  border: "none", borderTop: "1px solid rgba(255,255,255,0.06)",
+  margin: "32px 0 0",
 };
-
-const STRONG: React.CSSProperties = { color: "#0F172A", fontWeight: 700 };
 
 export default function ImpressumPage() {
   return (
     <LegalLayout title="Impressum" footerLink="/datenschutz" footerLabel="Datenschutz">
 
-      {/* Intro */}
-      <p style={{ ...P, color: "#64748B", marginBottom: 32 }}>
+      <p style={{ ...P, color: "rgba(255,255,255,0.35)", marginBottom: 28, fontSize: 13 }}>
         Pflichtangaben gemäß § 5 TMG
       </p>
 
-      {/* Angaben */}
       <p style={P}>
-        <span style={STRONG}>Angelika Szewczyk</span><br />
+        <strong style={{ color: "#fff", fontWeight: 700 }}>Angelika Szewczyk</strong><br />
         Einzelunternehmen<br />
         Am Hühnerberg 5<br />
         51381 Leverkusen<br />
@@ -49,25 +38,22 @@ export default function ImpressumPage() {
       </p>
 
       <hr style={DIVIDER} />
-
       <h2 style={H2}>Kontakt</h2>
       <p style={P}>
         E-Mail:{" "}
         <a href="mailto:support@website-fix.com"
-          style={{ color: "#2563EB", textDecoration: "none", fontWeight: 500 }}>
+          style={{ color: "#EAB308", textDecoration: "none", fontWeight: 500 }}>
           support@website-fix.com
         </a>
       </p>
 
       <hr style={DIVIDER} />
-
       <h2 style={H2}>Umsatzsteuer</h2>
       <p style={P}>
         Gemäß § 19 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer ausgewiesen.
       </p>
 
       <hr style={DIVIDER} />
-
       <h2 style={H2}>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
       <p style={P}>
         Angelika Szewczyk<br />
@@ -75,12 +61,11 @@ export default function ImpressumPage() {
       </p>
 
       <hr style={DIVIDER} />
-
       <h2 style={H2}>Streitschlichtung</h2>
       <p style={P}>
         Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{" "}
         <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer"
-          style={{ color: "#2563EB", textDecoration: "none" }}>
+          className="legal-a" style={{ color: "#EAB308", textDecoration: "none" }}>
           https://ec.europa.eu/consumers/odr
         </a>
       </p>
@@ -90,7 +75,6 @@ export default function ImpressumPage() {
       </p>
 
       <hr style={DIVIDER} />
-
       <h2 style={H2}>Haftung für Inhalte</h2>
       <p style={P}>
         Als Diensteanbieter bin ich gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den
@@ -99,7 +83,6 @@ export default function ImpressumPage() {
       </p>
 
       <hr style={DIVIDER} />
-
       <h2 style={H2}>Haftung für Links</h2>
       <p style={P}>
         Diese Website enthält ggf. Links zu externen Websites Dritter, auf deren Inhalte ich keinen
