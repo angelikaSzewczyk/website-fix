@@ -72,43 +72,72 @@ export function saveScanAsync(url: string, payload: CachedScanPayload): Promise<
   return saveScan(url, payload);
 }
 
-// ── Diagnose-only cache (GET /api/full-scan SSE) ──────────────────────────────
+// ── Full-site scan cache (GET /api/full-scan SSE) ────────────────────────────
+// Stores the complete crawl result so a cache hit skips the entire BFS crawl.
+// Uses a "fullsite:" key prefix to avoid colliding with regular scan entries.
 
-export async function getCachedDiagnose(
+const FS_PREFIX = "fullsite:";
+
+export type CachedFullScanPayload = {
+  totalPages: number;
+  issueCount: number;
+  diagnose:   string;
+  scanId:     string | null;
+};
+export type CachedFullScanResult = CachedFullScanPayload & { cachedAt: string };
+
+export async function getCachedFullScan(
   url: string,
   ttlHours = 24,
-): Promise<string | null> {
+): Promise<CachedFullScanResult | null> {
   try {
     const sql    = neon(process.env.DATABASE_URL!);
     const cutoff = new Date(Date.now() - ttlHours * 3_600_000).toISOString();
     const rows   = await sql`
-      SELECT response_json->>'diagnose' AS diagnose
+      SELECT response_json, created_at
       FROM   scan_cache
-      WHERE  url = ${url}
+      WHERE  url = ${FS_PREFIX + url}
         AND  created_at > ${cutoff}
       LIMIT  1
     `;
     if (!rows.length) return null;
-    return (rows[0].diagnose as string | null) ?? null;
+    return {
+      ...(rows[0].response_json as CachedFullScanPayload),
+      cachedAt: rows[0].created_at as string,
+    };
   } catch {
     return null;
   }
 }
 
-export async function saveDiagnose(url: string, diagnose: string): Promise<void> {
+export async function saveFullScan(url: string, payload: CachedFullScanPayload): Promise<void> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
     await sql`
       INSERT INTO scan_cache (url, response_json)
-      VALUES (${url}, ${JSON.stringify({ diagnose })}::jsonb)
+      VALUES (${FS_PREFIX + url}, ${JSON.stringify(payload)}::jsonb)
       ON CONFLICT (url)
-      DO UPDATE SET response_json = scan_cache.response_json || ${JSON.stringify({ diagnose })}::jsonb,
+      DO UPDATE SET response_json = EXCLUDED.response_json,
                     created_at   = NOW()
     `;
   } catch { /* non-critical */ }
 }
 
-/** @deprecated use saveDiagnose() */
+// ── Legacy diagnose-only helpers (kept for any external call-sites) ───────────
+
+/** @deprecated — use getCachedFullScan / saveFullScan for full-scan routes */
+export async function getCachedDiagnose(url: string, ttlHours = 24): Promise<string | null> {
+  const result = await getCachedFullScan(url, ttlHours);
+  return result?.diagnose ?? null;
+}
+
+/** @deprecated — use saveFullScan for full-scan routes */
+export async function saveDiagnose(url: string, diagnose: string): Promise<void> {
+  // no-op: full-scan now saves via saveFullScan; kept to avoid build errors
+  void url; void diagnose;
+}
+
+/** @deprecated */
 export function saveDiagnoseAsync(url: string, diagnose: string): Promise<void> {
   return saveDiagnose(url, diagnose);
 }

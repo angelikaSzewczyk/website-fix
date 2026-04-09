@@ -4,7 +4,7 @@ import { isUrlAllowed, guardRequest, isRealWebsiteContent } from "@/lib/scan-gua
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
-import { getCachedDiagnose, saveDiagnoseAsync, cacheTtlHours } from "@/lib/scan-cache";
+import { getCachedFullScan, saveFullScan, cacheTtlHours } from "@/lib/scan-cache";
 import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 300;
@@ -227,6 +227,18 @@ export async function GET(req: NextRequest) {
       }
 
       try {
+        // ── Full-result cache check (skip entire BFS + AI if hit) ─────────
+        if (!forceRefresh) {
+          const ttl    = cacheTtlHours(plan);
+          const cached = await getCachedFullScan(targetUrl, ttl);
+          if (cached) {
+            const { cachedAt, ...payload } = cached;
+            enqueue("complete", { ...payload, fromCache: true, cachedAt });
+            controller.close();
+            return;
+          }
+        }
+
         // ── Pre-Check: Ist die Seite überhaupt erreichbar? ────────────────
         enqueue("phase", { phase: "checking", message: "Prüfe Erreichbarkeit der Website..." });
         const preCheck = await fetchWithTimeout(targetUrl, 8000);
@@ -352,10 +364,6 @@ export async function GET(req: NextRequest) {
         // ── Phase 3: AI Analysis ───────────────────────────────────────────
         enqueue("phase", { phase: "ai", message: "KI erstellt Site-Report..." });
 
-        // Check diagnose cache (skipped when forceRefresh=true)
-        const ttl = cacheTtlHours(plan);
-        const cachedDiagnose = forceRefresh ? null : await getCachedDiagnose(targetUrl, ttl);
-
         // Token-optimised helpers: paths only, max 2 examples per issue
         const host0 = (() => { try { return new URL(targetUrl).host; } catch { return targetUrl; } })();
         const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u.replace(/^https?:\/\/[^/]+/, "") || "/"; } };
@@ -413,32 +421,27 @@ Erstelle vollständigen Site-Audit auf Deutsch für Agentur-Kundenbericht:
 ## Top ${Math.min(5, issueCount + 1)} Handlungsempfehlungen`;
 
         // Use cache if available, otherwise call Claude with retry
-        let diagnose: string;
-        if (cachedDiagnose) {
-          diagnose = cachedDiagnose;
-        } else {
-          const message = await callWithRetry(() =>
-            client.messages.create({
-              model: MODELS.SCAN,
-              max_tokens: 2200,
-              messages: [{ role: "user", content: prompt }],
-            })
-          );
-          diagnose = message.content[0].type === "text" ? message.content[0].text : "(Keine Diagnose)";
-          // Await the save — SSE stream keeps the function alive so this is safe
-          await saveDiagnoseAsync(targetUrl, diagnose);
-        }
+        const message = await callWithRetry(() =>
+          client.messages.create({
+            model: MODELS.SCAN,
+            max_tokens: 2200,
+            messages: [{ role: "user", content: prompt }],
+          })
+        );
+        const diagnose = message.content[0].type === "text" ? message.content[0].text : "(Keine Diagnose)";
 
         // ── Save to DB (fire-and-forget) ──────────────────────────────────
         let scanId: string | null = null;
         const sql = neon(process.env.DATABASE_URL!);
-        // Generate a client-side UUID so we can return it immediately
         scanId = crypto.randomUUID();
         sql`ALTER TABLE scans ADD COLUMN IF NOT EXISTS total_pages INTEGER`.catch(() => null);
         sql`
           INSERT INTO scans (user_id, url, type, issue_count, result, total_pages)
           VALUES (${session.user!.id}, ${targetUrl}, 'fullsite', ${issueCount}, ${diagnose}, ${allPages.length})
         `.catch(() => null);
+
+        // ── Persist full result to cache (skips entire BFS on next hit) ───
+        await saveFullScan(targetUrl, { totalPages: allPages.length, issueCount, diagnose, scanId });
 
         enqueue("complete", {
           scanId,

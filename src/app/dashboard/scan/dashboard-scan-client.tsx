@@ -309,10 +309,12 @@ type FullSiteProgress = {
 
 // ─── Full-Site scan result ────────────────────────────────────────────────────
 type FullSiteResult = {
-  scanId: string | null;
+  scanId:     string | null;
   issueCount: number;
   totalPages: number;
-  diagnose: string;
+  diagnose:   string;
+  fromCache?: boolean;
+  cachedAt?:  string;
 };
 
 type PerfData = {
@@ -436,6 +438,8 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       const d = JSON.parse(ev.data) as FullSiteResult;
       setFsResult(d);
       setFsProgress({ phase: "done", message: `${d.totalPages} Seiten analysiert` });
+      setFromCache(d.fromCache === true);
+      setCachedAt(d.cachedAt ?? null);
       setState("done");
       es.close();
     });
