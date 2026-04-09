@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
+import { guardRequest, isUrlAllowed, isRealWebsiteContent } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
@@ -176,31 +176,50 @@ export async function POST(req: NextRequest) {
 
     // ── 1. HAUPTSEITE ───────────────────────────────────────
     const mainRes = await fetchWithTimeout(targetUrl);
-    let mainHtml = "";
 
+    // Früh-Abbruch: Seite nicht erreichbar oder kein echter Inhalt
     if (!mainRes) {
-      scanData.erreichbar = false;
-      scanData.fehler = "Website nicht erreichbar (Timeout oder DNS-Fehler)";
-    } else {
-      scanData.erreichbar = true;
-      scanData.statusCode = mainRes.status;
-      scanData.https = targetUrl.startsWith("https://");
-      mainHtml = await mainRes.text();
-      scanData.htmlLaenge = mainHtml.length;
-      scanData.wordpressFehler = mainHtml.includes("Es gab einen kritischen Fehler") || mainHtml.includes("There has been a critical error");
-      scanData.weisseSeite = mainHtml.length < 500;
-      scanData.title = extractBetween(mainHtml, "<title>", "</title>") || "";
-      scanData.metaDescription = extractMeta(mainHtml, "description") || "";
-      scanData.h1 = extractBetween(mainHtml, "<h1", "</h1>").replace(/<[^>]+>/g, "").trim() || "";
-      scanData.indexierungGesperrt = extractMeta(mainHtml, "robots").includes("noindex");
-      const canonicalMatch = mainHtml.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
-      scanData.canonical = canonicalMatch ? canonicalMatch[1] : "";
-      scanData.istWordpress = mainHtml.includes("/wp-content/") || mainHtml.includes("/wp-includes/");
-      scanData.formularVorhanden = mainHtml.includes("<form");
-      const mainAlt = countMissingAlt(mainHtml);
-      scanData.startseite_altMissing = mainAlt.missing;
-      scanData.startseite_altTotal = mainAlt.total;
+      return NextResponse.json(
+        { success: false, error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { status: 400 },
+      );
     }
+
+    let mainHtml = "";
+    try {
+      mainHtml = await mainRes.text();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { status: 400 },
+      );
+    }
+
+    const host0 = (() => { try { return new URL(targetUrl).hostname; } catch { return targetUrl; } })();
+    if (!isRealWebsiteContent(mainRes, mainHtml, host0)) {
+      return NextResponse.json(
+        { success: false, error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { status: 400 },
+      );
+    }
+
+    scanData.erreichbar = true;
+    scanData.statusCode = mainRes.status;
+    scanData.https = targetUrl.startsWith("https://");
+    scanData.htmlLaenge = mainHtml.length;
+    scanData.wordpressFehler = mainHtml.includes("Es gab einen kritischen Fehler") || mainHtml.includes("There has been a critical error");
+    scanData.weisseSeite = mainHtml.length < 500;
+    scanData.title = extractBetween(mainHtml, "<title>", "</title>") || "";
+    scanData.metaDescription = extractMeta(mainHtml, "description") || "";
+    scanData.h1 = extractBetween(mainHtml, "<h1", "</h1>").replace(/<[^>]+>/g, "").trim() || "";
+    scanData.indexierungGesperrt = extractMeta(mainHtml, "robots").includes("noindex");
+    const canonicalMatch = mainHtml.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+    scanData.canonical = canonicalMatch ? canonicalMatch[1] : "";
+    scanData.istWordpress = mainHtml.includes("/wp-content/") || mainHtml.includes("/wp-includes/");
+    scanData.formularVorhanden = mainHtml.includes("<form");
+    const mainAlt = countMissingAlt(mainHtml);
+    scanData.startseite_altMissing = mainAlt.missing;
+    scanData.startseite_altTotal = mainAlt.total;
 
     // ── 2. ROBOTS.TXT ───────────────────────────────────────
     const robotsRes = await fetchWithTimeout(new URL("/robots.txt", targetUrl).href, 5000);
@@ -311,7 +330,6 @@ export async function POST(req: NextRequest) {
     // ── 10. CLAUDE DIAGNOSE ─────────────────────────────────
     // Token-optimised prompt: paths only (not full URLs), counts over lists,
     // compact issue format. Target: ~900 input tokens instead of ~1800.
-    const host0 = (() => { try { return new URL(targetUrl).host; } catch { return targetUrl; } })();
     const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
 
     const prompt = `Website-Audit: ${host0} | ${audit.gescannteSeiten} Seiten gescannt

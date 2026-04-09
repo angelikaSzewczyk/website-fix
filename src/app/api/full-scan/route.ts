@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { isUrlAllowed, guardRequest } from "@/lib/scan-guard";
+import { isUrlAllowed, guardRequest, isRealWebsiteContent } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
@@ -226,6 +226,22 @@ export async function GET(req: NextRequest) {
       }
 
       try {
+        // ── Pre-Check: Ist die Seite überhaupt erreichbar? ────────────────
+        enqueue("phase", { phase: "checking", message: "Prüfe Erreichbarkeit der Website..." });
+        const preCheck = await fetchWithTimeout(targetUrl, 8000);
+        if (!preCheck) {
+          enqueue("error", { message: "Website konnte nicht erreicht werden – bitte prüfe die URL." });
+          controller.close();
+          return;
+        }
+        let preHtml = "";
+        try { preHtml = await preCheck.text(); } catch { preHtml = ""; }
+        if (!isRealWebsiteContent(preCheck, preHtml, host)) {
+          enqueue("error", { message: "Website konnte nicht erreicht werden – bitte prüfe die URL." });
+          controller.close();
+          return;
+        }
+
         // ── Phase 1: BFS Crawl ─────────────────────────────────────────────
         enqueue("phase", { phase: "crawling", message: "Starte Crawl der gesamten Website..." });
 

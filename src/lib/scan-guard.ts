@@ -70,6 +70,61 @@ export function isUrlAllowed(urlString: string): boolean {
   }
 }
 
+// ── ECHTE-SEITE-PRÜFUNG ──────────────────────────────────────────────────────
+// Erkennt ISP-Fehlerseiten, Parking-Pages und leere Provider-Seiten die mit
+// HTTP 200 antworten obwohl die echte Website nicht existiert.
+const FAKE_PAGE_PATTERNS = [
+  /diese domain (ist|wird) (nicht|noch nicht) (erreichbar|konfiguriert)/i,
+  /domain not (found|configured|available)/i,
+  /site not found/i,
+  /this domain is for sale/i,
+  /domain parking/i,
+  /parked (domain|page|by)/i,
+  /account suspended/i,
+  /under construction/i,
+  /coming soon/i,
+  /default web page/i,
+  /welcome to nginx/i,
+  /apache2? default page/i,
+  /it works!/i,          // default Apache page
+  /fehler 404/i,
+  /page not found/i,
+  /404 not found/i,
+  /diese webseite (ist|wird) (gerade )?nicht (mehr )?verfügbar/i,
+  /diese seite existiert nicht/i,
+];
+
+/**
+ * Prüft ob eine HTTP-Antwort echten Website-Inhalt enthält.
+ * Gibt `false` zurück wenn:
+ *  - HTTP-Status ≥ 400
+ *  - HTML zu kurz für echten Inhalt (< 500 Zeichen)
+ *  - Bekannte ISP/Provider/Parking-Muster im HTML
+ *  - Weiterleitung auf andere Domain (Provider-Fehlerseite)
+ */
+export function isRealWebsiteContent(
+  res: Response,
+  html: string,
+  originalHost: string,
+): boolean {
+  // Harter HTTP-Fehler
+  if (res.status >= 400) return false;
+
+  // Zu wenig Inhalt
+  if (html.length < 500) return false;
+
+  // Weiterleitung auf fremde Domain (typisch für ISP-Fehlerseiten)
+  try {
+    const finalHost = new URL(res.url).hostname;
+    if (finalHost && finalHost !== originalHost) return false;
+  } catch { /* ignore */ }
+
+  // Bekannte Fehler-/Parking-Muster
+  if (FAKE_PAGE_PATTERNS.some((p) => p.test(html))) return false;
+
+  return true;
+}
+
 // ── KOMBINIERTER EINGANGS-CHECK ──────────────────────────────────────────────
 export function guardRequest(req: NextRequest): { blocked: boolean; reason?: string } {
   if (!isUserAgentAllowed(req)) {
