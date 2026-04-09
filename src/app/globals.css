@@ -3132,10 +3132,22 @@ footer a, nav a.footerLink {
 }
 
 @media print {
+  /* ── Force background colors and images to print ── */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  nav, header { display: none !important; }
-  body { background: #fff !important; color: #111 !important; }
+  nav, header, aside { display: none !important; }
+  body {
+    background: #fff !important;
+    color: #0D1321 !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+  }
   main { padding: 0 !important; max-width: 100% !important; }
 
   /* ── Dashboard DiagnoseReport isolation ── */
@@ -3145,21 +3157,32 @@ footer a, nav a.footerLink {
   body:has(#wf-print-root) #wf-print-root {
     position: fixed; inset: 0;
     background: #fff !important;
-    padding: 24px 28px !important;
+    padding: 20px 24px !important;
     overflow: visible;
+    font-size: 11pt !important;
   }
 
   /* ── Widget report page: print as dark-on-white ── */
-  body:has(.wf-widget-report) * { color: #111 !important; background: transparent !important; }
+  body:has(.wf-widget-report) * { color: #0D1321 !important; background: transparent !important; }
   body:has(.wf-widget-report) .wf-widget-report { padding: 0 !important; }
 
-  /* Show the print-only logo/date header */
+  /* ── Show print-only header, hide interactive elements ── */
   .wf-print-header { display: flex !important; }
-  /* Hide interactive elements */
   .wf-no-print { display: none !important; }
-  /* Prevent issue cards from splitting across pages */
-  .wf-issue-card { break-inside: avoid; page-break-inside: avoid; }
-  /* Widget glassmorphism cards — flatten for print */
+
+  /* ── Prevent cards from splitting across pages ── */
+  .wf-issue-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    orphans: 3;
+    widows: 3;
+  }
+  .wf-score-hero {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* ── Widget glassmorphism cards — flatten for print ── */
   [style*="backdropFilter"], [style*="backdrop-filter"] {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;

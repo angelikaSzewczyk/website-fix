@@ -1,118 +1,164 @@
 "use client";
 
 /**
- * DiagnoseReport
+ * DiagnoseReport — Premium redesign
  *
- * Transforms the plain-text AI diagnosis into a structured, card-based
- * dashboard view with severity badges, category icons, a summary bar,
- * and a print-to-PDF button.
- *
- * Works for both /api/scan (website check) and /api/full-scan output.
+ * - Large score ring hero section
+ * - IssueCards with 24px padding, 12px radius, structured sub-fields
+ *   (Beschreibung / Auswirkung / Empfehlung) with Lucide icons
+ * - Seitentyp-Bewertung: markdown table → status-badge grid
+ * - Clean white/dark-navy color scheme, WebsiteFix blue accents
+ * - Print-safe: page-break-inside:avoid, color-adjust:exact
  */
 
 import { useState } from "react";
 import {
   Download, Search, Zap, Eye, Shield, Link2, ImageIcon,
   Code2, AlertCircle, CheckCircle2, AlertTriangle, XCircle,
-  CalendarDays, Globe, FileText,
+  CalendarDays, Globe, FileText, Info, TrendingDown, Lightbulb,
 } from "lucide-react";
 
-// ── Light-mode tokens (matches dashboard-scan-client) ─────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
   bg:          "#F8FAFC",
   card:        "#FFFFFF",
-  border:      "#E2E8F0",
-  divider:     "#F1F5F9",
-  shadow:      "0 1px 4px rgba(0,0,0,0.07)",
-  shadowMd:    "0 2px 12px rgba(0,0,0,0.10)",
-  text:        "#0F172A",
-  textSub:     "#475569",
-  textMuted:   "#94A3B8",
+  border:      "#E5E7EB",
+  divider:     "#F3F4F6",
+  shadow:      "0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)",
+  shadowMd:    "0 2px 12px rgba(0,0,0,0.08)",
+  text:        "#0D1321",   // very dark navy
+  textSub:     "#374151",
+  textMuted:   "#6B7280",
   blue:        "#2563EB",
   blueBg:      "#EFF6FF",
   blueBorder:  "#BFDBFE",
-  green:       "#16A34A",
+  blueDark:    "#1D4ED8",
+  green:       "#15803D",
   greenBg:     "#F0FDF4",
-  greenBorder: "#A7F3D0",
-  amber:       "#D97706",
+  greenBorder: "#BBF7D0",
+  greenLight:  "#DCFCE7",
+  amber:       "#B45309",
   amberBg:     "#FFFBEB",
   amberBorder: "#FDE68A",
-  red:         "#DC2626",
+  amberLight:  "#FEF3C7",
+  red:         "#B91C1C",
   redBg:       "#FEF2F2",
-  redBorder:   "#FCA5A5",
+  redBorder:   "#FECACA",
+  redLight:    "#FFE4E6",
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
 type Severity = "critical" | "warning" | "good";
 
 interface ParsedIssue {
-  severity: Severity;
-  title:    string;
-  body:     string;
-  raw:      string;
+  severity:    Severity;
+  title:       string;
+  description: string;
+  impact:      string;
+  recommendation: string;
+  raw:         string;
 }
 
 interface ParsedSection {
   heading: string;
-  text:    string;         // raw non-issue lines joined
+  text:    string;
   issues:  ParsedIssue[];
   steps:   string[];
+  table:   TableRow[] | null;
 }
 
-// ── Parser ────────────────────────────────────────────────────────────────────
+interface TableRow {
+  label:  string;
+  status: string;
+  score:  string;
+  raw:    string;
+}
 
+// ── Body parser: splits body text into structured sub-fields ──────────────────
+function parseIssueBody(body: string): { description: string; impact: string; recommendation: string } {
+  const impactMatch  = body.match(/[Aa]uswirkung[:\s]+([\s\S]+?)(?=\n[A-Za-zÄÖÜäöü]|[Ee]mpfehlung|$)/);
+  const recMatch     = body.match(/[Ee]mpfehlung[:\s]+([\s\S]+?)(?=\n[A-Za-zÄÖÜäöü]|[Aa]uswirkung|$)/);
+
+  if (impactMatch || recMatch) {
+    const remaining = body
+      .replace(/[Aa]uswirkung[:\s]+([\s\S]+?)(?=\n[A-Za-zÄÖÜäöü]|[Ee]mpfehlung|$)/, "")
+      .replace(/[Ee]mpfehlung[:\s]+([\s\S]+?)(?=\n[A-Za-zÄÖÜäöü]|[Aa]uswirkung|$)/, "")
+      .trim();
+    return {
+      description:    remaining,
+      impact:         (impactMatch?.[1] ?? "").trim(),
+      recommendation: (recMatch?.[1] ?? "").trim(),
+    };
+  }
+  return { description: body, impact: "", recommendation: "" };
+}
+
+// ── Markdown table parser ─────────────────────────────────────────────────────
+function parseMarkdownTable(text: string): TableRow[] | null {
+  const rows = text.split("\n").filter(l => l.trim().startsWith("|"));
+  if (rows.length < 2) return null;
+  const dataRows = rows.filter(r => !/^[\s|:-]+$/.test(r));
+  if (dataRows.length < 2) return null;
+  const result: TableRow[] = [];
+  for (const row of dataRows.slice(1)) {
+    const cells = row.split("|").map(c => c.trim()).filter(Boolean);
+    if (cells.length < 2) continue;
+    result.push({
+      label:  cells[0] ?? "",
+      status: cells[1] ?? "",
+      score:  cells[2] ?? "",
+      raw:    row,
+    });
+  }
+  return result.length > 0 ? result : null;
+}
+
+// ── Report parser ─────────────────────────────────────────────────────────────
 function parseReport(text: string): ParsedSection[] {
   const sections: ParsedSection[] = [];
-  let cur: ParsedSection = { heading: "", text: "", issues: [], steps: [] };
+  let cur: ParsedSection = { heading: "", text: "", issues: [], steps: [], table: null };
 
   for (const raw of text.split("\n")) {
     const line = raw.trim();
 
-    // New section heading
     if (line.startsWith("## ") || line.startsWith("# ")) {
       if (cur.heading || cur.text || cur.issues.length || cur.steps.length) {
+        if (cur.text && !cur.table) cur.table = parseMarkdownTable(cur.text);
         sections.push(cur);
       }
-      cur = { heading: line.replace(/^#+\s*/, "").trim(), text: "", issues: [], steps: [] };
+      cur = { heading: line.replace(/^#+\s*/, "").trim(), text: "", issues: [], steps: [], table: null };
       continue;
     }
 
-    // Numbered step
     if (/^\d+\.\s/.test(line)) {
       cur.steps.push(line.replace(/^\d+\.\s*/, "").trim());
       continue;
     }
 
-    // Issue line: starts with **🔴 / **🟡 / **🟢
     const issueMatch = line.match(/^\*\*(🔴|🟡|🟢)([^*]*)\*\*\s*(.*)/);
     if (issueMatch) {
       const emoji    = issueMatch[1];
-      const label    = issueMatch[2].trim(); // e.g. "KRITISCH" or empty
-      const rest     = issueMatch[3].trim(); // everything after **…**
-      // Split on first " — " to separate title from body
+      const rest     = issueMatch[3].trim();
       const dashIdx  = rest.indexOf(" — ");
       const title    = dashIdx > -1 ? rest.slice(0, dashIdx).trim() : rest;
-      const body     = dashIdx > -1 ? rest.slice(dashIdx + 3).trim() : "";
-      const severity: Severity =
-        emoji === "🔴" ? "critical" : emoji === "🟡" ? "warning" : "good";
-      void label;
-      cur.issues.push({ severity, title, body, raw: line });
+      const bodyRaw  = dashIdx > -1 ? rest.slice(dashIdx + 3).trim() : "";
+      const severity: Severity = emoji === "🔴" ? "critical" : emoji === "🟡" ? "warning" : "good";
+      const { description, impact, recommendation } = parseIssueBody(bodyRaw);
+      cur.issues.push({ severity, title, description, impact, recommendation, raw: line });
       continue;
     }
 
-    // Regular text line
     if (line) cur.text += (cur.text ? "\n" : "") + line;
   }
 
   if (cur.heading || cur.text || cur.issues.length || cur.steps.length) {
+    if (cur.text && !cur.table) cur.table = parseMarkdownTable(cur.text);
     sections.push(cur);
   }
   return sections;
 }
 
 // ── Category detection ────────────────────────────────────────────────────────
-
 type Category = { label: string; Icon: React.FC<{ size?: number; color?: string }> };
 
 function detectCategory(text: string): Category {
@@ -134,8 +180,7 @@ function detectCategory(text: string): Category {
   return { label: "Allgemein", Icon: AlertCircle };
 }
 
-// ── Score calculation ─────────────────────────────────────────────────────────
-
+// ── Score helpers ─────────────────────────────────────────────────────────────
 function calcScore(issues: ParsedIssue[]): number {
   const critCount = issues.filter(i => i.severity === "critical").length;
   const warnCount = issues.filter(i => i.severity === "warning").length;
@@ -143,24 +188,85 @@ function calcScore(issues: ParsedIssue[]): number {
 }
 
 function scoreColor(score: number) {
-  if (score >= 80) return { color: C.green,  bg: C.greenBg,  border: C.greenBorder };
-  if (score >= 60) return { color: C.amber,  bg: C.amberBg,  border: C.amberBorder };
-  return             { color: C.red,    bg: C.redBg,    border: C.redBorder   };
+  if (score >= 80) return { color: C.green,  ring: "#15803D", bg: C.greenBg,  border: C.greenBorder, label: "Gut aufgestellt",        hint: "Deine Website erfüllt die meisten Standards." };
+  if (score >= 60) return { color: C.amber,  ring: "#B45309", bg: C.amberBg,  border: C.amberBorder, label: "Verbesserungspotenzial", hint: "Es gibt wichtige Punkte, die optimiert werden sollten." };
+  return             { color: C.red,    ring: "#B91C1C", bg: C.redBg,    border: C.redBorder,   label: "Dringender Handlungsbedarf", hint: "Kritische Probleme beeinträchtigen deine Website erheblich." };
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Score Ring SVG ────────────────────────────────────────────────────────────
+function ScoreRing({ score }: { score: number }) {
+  const sc     = scoreColor(score);
+  const r      = 52;
+  const circ   = 2 * Math.PI * r;
+  const dash   = (score / 100) * circ;
+  const gap    = circ - dash;
 
+  return (
+    <div className="wf-score-hero" style={{
+      display: "flex", alignItems: "center", gap: 28,
+      padding: "24px 28px",
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      boxShadow: C.shadowMd,
+      marginBottom: 32,
+    }}>
+      {/* Ring */}
+      <div style={{ position: "relative", flexShrink: 0, width: 120, height: 120 }}>
+        <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: "rotate(-90deg)" }}>
+          <circle cx="60" cy="60" r={r} fill="none" stroke={C.divider} strokeWidth="9" />
+          <circle
+            cx="60" cy="60" r={r} fill="none"
+            stroke={sc.ring} strokeWidth="9"
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${gap}`}
+            style={{ transition: "stroke-dasharray 0.6s ease" }}
+          />
+        </svg>
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <span style={{ fontSize: 30, fontWeight: 800, color: sc.color, lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 500, marginTop: 2 }}>/100</span>
+        </div>
+      </div>
+
+      {/* Text */}
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+            padding: "3px 10px", borderRadius: 20,
+            background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
+          }}>
+            {sc.label}
+          </span>
+        </div>
+        <p style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+          Website-Score
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.6, maxWidth: 280 }}>
+          {sc.hint}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Severity badge ────────────────────────────────────────────────────────────
 function SeverityBadge({ severity }: { severity: Severity }) {
   const conf = {
-    critical: { label: "Dringend handeln", bg: C.redBg,   color: C.red,   border: C.redBorder,   Icon: XCircle       },
-    warning:  { label: "Empfehlung",       bg: C.amberBg, color: C.amber, border: C.amberBorder, Icon: AlertTriangle  },
-    good:     { label: "Optimiert",        bg: C.greenBg, color: C.green, border: C.greenBorder, Icon: CheckCircle2   },
+    critical: { label: "Dringend handeln", bg: C.redBg,    color: C.red,   border: C.redBorder,   Icon: XCircle       },
+    warning:  { label: "Empfehlung",       bg: C.amberBg,  color: C.amber, border: C.amberBorder, Icon: AlertTriangle  },
+    good:     { label: "Optimiert",        bg: C.greenBg,  color: C.green, border: C.greenBorder, Icon: CheckCircle2   },
   }[severity];
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
-      padding: "3px 8px", borderRadius: 5,
+      padding: "3px 9px", borderRadius: 6,
       background: conf.bg, color: conf.color, border: `1px solid ${conf.border}`,
     }}>
       <conf.Icon size={10} />
@@ -169,48 +275,182 @@ function SeverityBadge({ severity }: { severity: Severity }) {
   );
 }
 
+// ── Issue Card ────────────────────────────────────────────────────────────────
 function IssueCard({ issue }: { issue: ParsedIssue }) {
   const accentColor = issue.severity === "critical" ? C.red
                     : issue.severity === "warning"  ? C.amber
                     : C.green;
-  const cat = detectCategory(issue.title + " " + issue.body);
+  const accentLight = issue.severity === "critical" ? C.redLight
+                    : issue.severity === "warning"  ? C.amberLight
+                    : C.greenLight;
+  const cat = detectCategory(issue.title + " " + issue.description + " " + issue.impact);
 
   return (
     <div className="wf-issue-card" style={{
       background: C.card,
       border: `1px solid ${C.border}`,
-      borderLeft: `3px solid ${accentColor}`,
-      borderRadius: "0 10px 10px 0",
-      padding: "14px 18px",
+      borderLeft: `4px solid ${accentColor}`,
+      borderRadius: "0 12px 12px 0",
+      padding: 24,
       boxShadow: C.shadow,
+      marginBottom: 16,
     }}>
-      {/* Header row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         <SeverityBadge severity={issue.severity} />
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 4,
-          fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 5,
+          fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 6,
           background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`,
         }}>
           <cat.Icon size={10} />
           {cat.label}
         </span>
       </div>
+
       {/* Title */}
-      <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.4 }}>
+      <p style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.35 }}>
         {issue.title}
       </p>
-      {/* Body */}
-      {issue.body && (
-        <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
-          {issue.body}
-        </p>
-      )}
+
+      {/* Sub-fields */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {issue.description && (
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{
+              flexShrink: 0, marginTop: 1,
+              width: 22, height: 22, borderRadius: 6,
+              background: C.divider,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Info size={12} color={C.textMuted} />
+            </span>
+            <div>
+              <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Beschreibung
+              </p>
+              <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
+                {issue.description}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {issue.impact && (
+          <div style={{
+            display: "flex", gap: 10, alignItems: "flex-start",
+            padding: "10px 12px", borderRadius: 8,
+            background: accentLight, border: `1px solid ${accentColor}22`,
+          }}>
+            <span style={{
+              flexShrink: 0, marginTop: 1,
+              width: 22, height: 22, borderRadius: 6,
+              background: `${accentColor}18`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <TrendingDown size={12} color={accentColor} />
+            </span>
+            <div>
+              <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Auswirkung
+              </p>
+              <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
+                {issue.impact}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {issue.recommendation && (
+          <div style={{
+            display: "flex", gap: 10, alignItems: "flex-start",
+            padding: "10px 12px", borderRadius: 8,
+            background: C.blueBg, border: `1px solid ${C.blueBorder}`,
+          }}>
+            <span style={{
+              flexShrink: 0, marginTop: 1,
+              width: 22, height: 22, borderRadius: 6,
+              background: `${C.blue}18`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Lightbulb size={12} color={C.blue} />
+            </span>
+            <div>
+              <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Empfehlung
+              </p>
+              <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
+                {issue.recommendation}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function SummaryBar({
+// ── Status badge for table rows ───────────────────────────────────────────────
+function StatusBadge({ text }: { text: string }) {
+  const isGood    = /gut|✅|ok|pass|100|9\d|8[5-9]/.test(text.toLowerCase());
+  const isBad     = /kritisch|❌|fehler|schlecht|[1-4]\d\b/.test(text.toLowerCase());
+  const isWarning = /warn|⚠️|verbesser|mittel|6\d|7\d/.test(text.toLowerCase());
+  const color  = isGood ? C.green : isBad ? C.red : isWarning ? C.amber : C.textSub;
+  const bg     = isGood ? C.greenBg : isBad ? C.redBg : isWarning ? C.amberBg : C.divider;
+  const border = isGood ? C.greenBorder : isBad ? C.redBorder : isWarning ? C.amberBorder : C.border;
+  return (
+    <span style={{
+      display: "inline-block",
+      padding: "3px 10px", borderRadius: 20,
+      fontSize: 12, fontWeight: 600,
+      color, background: bg, border: `1px solid ${border}`,
+    }}>
+      {text}
+    </span>
+  );
+}
+
+// ── Table section ─────────────────────────────────────────────────────────────
+function TableSection({ rows, heading }: { rows: TableRow[]; heading: string }) {
+  return (
+    <div style={{
+      background: C.card, border: `1px solid ${C.border}`,
+      borderRadius: 12, overflow: "hidden",
+      boxShadow: C.shadow, marginBottom: 32,
+    }}>
+      {heading && (
+        <div style={{
+          padding: "14px 20px",
+          borderBottom: `1px solid ${C.border}`,
+          background: C.divider,
+        }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            {heading}
+          </p>
+        </div>
+      )}
+      <div>
+        {rows.map((row, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 20px",
+            borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : "none",
+            background: i % 2 === 0 ? C.card : "#FAFAFA",
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{row.label}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {row.score && <span style={{ fontSize: 12, color: C.textMuted }}>{row.score}</span>}
+              <StatusBadge text={row.status} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Summary strip ─────────────────────────────────────────────────────────────
+function SummaryStrip({
   url, totalPages, issueCount, score, scannedAt,
 }: {
   url?: string; totalPages?: number; issueCount?: number;
@@ -223,36 +463,41 @@ function SummaryBar({
     : new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   const stats = [
-    host     ? { Icon: Globe,       label: host,           color: C.textSub  } : null,
-    scannedAt? { Icon: CalendarDays, label: dateStr,        color: C.textSub  } : null,
-    totalPages ? { Icon: FileText,   label: `${totalPages} Seiten`, color: C.textSub } : null,
+    host       ? { Icon: Globe,       label: host                          } : null,
+    scannedAt  ? { Icon: CalendarDays, label: dateStr                       } : null,
+    totalPages ? { Icon: FileText,    label: `${totalPages} Seiten`        } : null,
     issueCount != null ? {
       Icon: AlertCircle,
       label: `${issueCount} Problem${issueCount !== 1 ? "e" : ""}`,
-      color: issueCount === 0 ? C.green : issueCount <= 3 ? C.amber : C.red,
     } : null,
-  ].filter(Boolean) as { Icon: React.FC<{ size?: number; color?: string }>; label: string; color: string }[];
+  ].filter(Boolean) as { Icon: React.FC<{ size?: number; color?: string }>; label: string }[];
 
   return (
     <div style={{
       display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6,
-      padding: "10px 14px", background: C.divider, borderRadius: 8, marginBottom: 20,
+      padding: "10px 16px",
+      background: C.divider,
+      borderRadius: 10,
+      marginBottom: 24,
+      border: `1px solid ${C.border}`,
     }}>
       {stats.map((s, i) => (
         <span key={i} style={{
           display: "inline-flex", alignItems: "center", gap: 5,
-          fontSize: 12, fontWeight: 500, color: s.color,
+          fontSize: 12, fontWeight: 500, color: C.textSub,
           paddingRight: i < stats.length - 1 ? 10 : 0,
           borderRight: i < stats.length - 1 ? `1px solid ${C.border}` : "none",
           marginRight: i < stats.length - 1 ? 4 : 0,
         }}>
-          <s.Icon size={12} color={s.color} />
+          <s.Icon size={12} color={C.textMuted} />
           {s.label}
         </span>
       ))}
       {/* Score pill */}
-      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5,
-        fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 20,
+      <span style={{
+        marginLeft: "auto",
+        display: "inline-flex", alignItems: "center", gap: 5,
+        fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20,
         background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
       }}>
         Score {score}/100
@@ -262,13 +507,11 @@ function SummaryBar({
 }
 
 // ── PDF button ────────────────────────────────────────────────────────────────
-
 function PDFButton() {
   const [printing, setPrinting] = useState(false);
 
   function handlePrint() {
     setPrinting(true);
-    // Short delay so "printing…" renders before the print dialog opens
     setTimeout(() => {
       window.print();
       setPrinting(false);
@@ -281,22 +524,22 @@ function PDFButton() {
       disabled={printing}
       className="wf-no-print"
       style={{
-        display: "flex", alignItems: "center", gap: 5,
-        padding: "6px 12px", borderRadius: 7,
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "8px 16px", borderRadius: 8,
         border: `1px solid ${C.border}`, background: C.card,
         cursor: printing ? "default" : "pointer",
-        color: C.textSub, fontSize: 12, fontWeight: 500,
+        color: C.textSub, fontSize: 13, fontWeight: 600,
+        boxShadow: C.shadow,
         opacity: printing ? 0.5 : 1, transition: "opacity 0.15s",
       }}
     >
-      <Download size={12} />
+      <Download size={13} />
       {printing ? "Vorbereiten..." : "Als PDF exportieren"}
     </button>
   );
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
-
 export default function DiagnoseReport({
   diagnose,
   url,
@@ -304,11 +547,11 @@ export default function DiagnoseReport({
   issueCount: issueCountProp,
   scannedAt,
 }: {
-  diagnose:     string;
-  url?:         string;
-  totalPages?:  number;
-  issueCount?:  number;
-  scannedAt?:   string | null;
+  diagnose:    string;
+  url?:        string;
+  totalPages?: number;
+  issueCount?: number;
+  scannedAt?:  string | null;
 }) {
   const sections   = parseReport(diagnose);
   const allIssues  = sections.flatMap(s => s.issues);
@@ -318,59 +561,52 @@ export default function DiagnoseReport({
   const goodCount  = allIssues.filter(i => i.severity === "good").length;
   const issueCount = issueCountProp ?? (critCount + warnCount);
 
-  // Summary = first section without a heading OR the "Zusammenfassung" section
   const summarySection = sections.find(s =>
     !s.heading || /zusammenfassung|summary/i.test(s.heading)
   );
-
-  // Issue sections = sections that contain at least one 🔴/🟡/🟢 line
   const issueSections = sections.filter(s =>
     s.issues.length > 0 && !/zusammenfassung|summary/i.test(s.heading)
   );
-
-  // Step sections = sections with numbered steps
-  const stepSections = sections.filter(s =>
-    s.steps.length > 0
-  );
-
-  // Other prose sections (e.g. Seitentyp-Bewertung)
+  const stepSections = sections.filter(s => s.steps.length > 0);
   const proseSections = sections.filter(s =>
     s.heading &&
-    s.text &&
+    (s.text || s.table) &&
     s.issues.length === 0 &&
     s.steps.length === 0 &&
     !/zusammenfassung|summary/i.test(s.heading)
   );
 
   return (
-    <div id="wf-print-root">
-      {/* Print-only header — hidden on screen, shown in PDF */}
-      <div className="wf-print-header" style={{ display: "none", marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: "2px solid #E2E8F0" }}>
-          {/* Logo mark */}
+    <div id="wf-print-root" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      {/* Print-only header */}
+      <div className="wf-print-header" style={{ display: "none", marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 14, borderBottom: `2px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <svg width="30" height="30" viewBox="0 0 28 28" fill="none" style={{ background: "#0D1117", borderRadius: 7, padding: 3 }}>
               <path d="M 4,5 L 13,14 L 7,20" stroke="rgba(255,255,255,0.72)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M 7,20 L 13,25 L 24,6" stroke="#F59E0B" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span style={{ fontWeight: 300, fontSize: 16, color: "#0F172A" }}>
+            <span style={{ fontWeight: 300, fontSize: 16, color: C.text }}>
               Website<span style={{ color: "#F59E0B", fontWeight: 800 }}>Fix</span>
             </span>
           </div>
-          <div style={{ textAlign: "right", fontSize: 11, color: "#94A3B8" }}>
-            <div>Website-Analyse Report</div>
+          <div style={{ textAlign: "right", fontSize: 11, color: C.textMuted }}>
+            <div style={{ fontWeight: 600 }}>Website-Analyse Report</div>
             <div>{url ?? ""} · {new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}</div>
           </div>
         </div>
       </div>
 
-      {/* PDF export button row */}
-      <div className="wf-no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+      {/* Action row */}
+      <div className="wf-no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
         <PDFButton />
       </div>
 
-      {/* Summary bar */}
-      <SummaryBar
+      {/* Score ring hero */}
+      <ScoreRing score={score} />
+
+      {/* Summary strip */}
+      <SummaryStrip
         url={url}
         totalPages={totalPages}
         issueCount={issueCount}
@@ -378,13 +614,34 @@ export default function DiagnoseReport({
         scannedAt={scannedAt}
       />
 
+      {/* Issue count strip */}
+      {allIssues.length > 0 && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+          {critCount > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8, background: C.redBg, color: C.red, border: `1px solid ${C.redBorder}` }}>
+              <XCircle size={12} /> {critCount} Kritisch
+            </span>
+          )}
+          {warnCount > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8, background: C.amberBg, color: C.amber, border: `1px solid ${C.amberBorder}` }}>
+              <AlertTriangle size={12} /> {warnCount} Wichtig
+            </span>
+          )}
+          {goodCount > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8, background: C.greenBg, color: C.green, border: `1px solid ${C.greenBorder}` }}>
+              <CheckCircle2 size={12} /> {goodCount} Gut
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Zusammenfassung */}
       {summarySection?.text && (
         <div style={{
-          padding: "14px 18px", background: C.blueBg, borderRadius: 10,
-          border: `1px solid ${C.blueBorder}`, marginBottom: 20,
+          padding: "18px 22px", background: C.blueBg, borderRadius: 12,
+          border: `1px solid ${C.blueBorder}`, marginBottom: 32,
         }}>
-          <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Zusammenfassung
           </p>
           {summarySection.text.split("\n").map((line, i) => (
@@ -395,99 +652,85 @@ export default function DiagnoseReport({
         </div>
       )}
 
-      {/* Issue count strip */}
-      {allIssues.length > 0 && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-          {critCount > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 6, background: C.redBg, color: C.red, border: `1px solid ${C.redBorder}` }}>
-              <XCircle size={12} /> {critCount} Kritisch
-            </span>
-          )}
-          {warnCount > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 6, background: C.amberBg, color: C.amber, border: `1px solid ${C.amberBorder}` }}>
-              <AlertTriangle size={12} /> {warnCount} Wichtig
-            </span>
-          )}
-          {goodCount > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 6, background: C.greenBg, color: C.green, border: `1px solid ${C.greenBorder}` }}>
-              <CheckCircle2 size={12} /> {goodCount} Gut
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Issue cards */}
+      {/* Issue sections */}
       {issueSections.map((section, si) => (
-        <div key={si} style={{ marginBottom: 20 }}>
+        <div key={si} style={{ marginBottom: 32 }}>
           {section.heading && (
-            <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               {section.heading}
             </p>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {section.issues.map((issue, ii) => (
-              <IssueCard key={ii} issue={issue} />
-            ))}
-          </div>
-        </div>
-      ))}
-
-      {/* If no structured issue sections found, render issues from all sections */}
-      {issueSections.length === 0 && allIssues.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-          {allIssues.map((issue, ii) => <IssueCard key={ii} issue={issue} />)}
-        </div>
-      )}
-
-      {/* Prose sections (e.g. Seitentyp-Bewertung) */}
-      {proseSections.map((section, si) => (
-        <div key={si} style={{
-          padding: "14px 18px", background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 10, marginBottom: 14, boxShadow: C.shadow,
-        }}>
-          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            {section.heading}
-          </p>
-          {section.text.split("\n").map((line, i) => (
-            <p key={i} style={{ margin: "3px 0", fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
-              {line}
-            </p>
+          {section.issues.map((issue, ii) => (
+            <IssueCard key={ii} issue={issue} />
           ))}
         </div>
       ))}
 
-      {/* Handlungsempfehlungen / Steps */}
+      {/* Fallback: all issues when no section headings */}
+      {issueSections.length === 0 && allIssues.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          {allIssues.map((issue, ii) => <IssueCard key={ii} issue={issue} />)}
+        </div>
+      )}
+
+      {/* Prose / Table sections */}
+      {proseSections.map((section, si) => (
+        section.table ? (
+          <TableSection key={si} rows={section.table} heading={section.heading} />
+        ) : (
+          <div key={si} style={{
+            background: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 12, overflow: "hidden",
+            boxShadow: C.shadow, marginBottom: 32,
+          }}>
+            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, background: C.divider }}>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                {section.heading}
+              </p>
+            </div>
+            <div style={{ padding: "16px 20px" }}>
+              {section.text.split("\n").map((line, i) => (
+                <p key={i} style={{ margin: "3px 0", fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
+                  {line}
+                </p>
+              ))}
+            </div>
+          </div>
+        )
+      ))}
+
+      {/* Steps / Handlungsempfehlungen */}
       {stepSections.map((section, si) => (
-        <div key={si} style={{ marginBottom: 14 }}>
+        <div key={si} style={{ marginBottom: 32 }}>
           {section.heading && (
-            <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               {section.heading}
             </p>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {section.steps.map((step, i) => (
-              <div key={i} style={{
-                display: "flex", gap: 10, alignItems: "flex-start",
-                padding: "10px 14px", background: C.card,
-                border: `1px solid ${C.border}`, borderRadius: 8,
+              <div key={i} className="wf-issue-card" style={{
+                display: "flex", gap: 14, alignItems: "flex-start",
+                padding: 18, background: C.card,
+                border: `1px solid ${C.border}`, borderRadius: 12,
                 boxShadow: C.shadow,
               }}>
                 <span style={{
-                  flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
+                  flexShrink: 0, width: 26, height: 26, borderRadius: "50%",
                   background: C.blue, color: "#fff",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700,
+                  fontSize: 12, fontWeight: 700,
                 }}>
                   {i + 1}
                 </span>
-                <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>{step}</p>
+                <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>{step}</p>
               </div>
             ))}
           </div>
         </div>
       ))}
 
-      {/* Fallback: raw text for anything that didn't parse */}
+      {/* Fallback */}
       {sections.length === 0 && (
         <p style={{ color: C.textSub, fontSize: 13, lineHeight: 1.7 }}>{diagnose}</p>
       )}
