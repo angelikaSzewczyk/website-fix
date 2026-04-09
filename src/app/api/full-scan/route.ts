@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
 import { getCachedFullScan, saveFullScan, cacheTtlHours } from "@/lib/scan-cache";
+import { logScan } from "@/lib/scan-logger";
 import { MODELS } from "@/lib/ai-models";
 
 export const maxDuration = 300;
@@ -226,6 +227,7 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      const fsStart = Date.now();
       try {
         // ── Full-result cache check (skip entire BFS + AI if hit) ─────────
         if (!forceRefresh) {
@@ -233,6 +235,7 @@ export async function GET(req: NextRequest) {
           const cached = await getCachedFullScan(targetUrl, ttl);
           if (cached) {
             const { cachedAt, ...payload } = cached;
+            logScan({ userId: session.user!.id, url: targetUrl, scanType: "fullsite", status: "cached", fromCache: true });
             enqueue("complete", { ...payload, fromCache: true, cachedAt });
             controller.close();
             return;
@@ -443,6 +446,7 @@ Erstelle vollständigen Site-Audit auf Deutsch für Agentur-Kundenbericht:
         // ── Persist full result to cache (skips entire BFS on next hit) ───
         await saveFullScan(targetUrl, { totalPages: allPages.length, issueCount, diagnose, scanId });
 
+        logScan({ userId: session.user!.id, url: targetUrl, scanType: "fullsite", status: "success", durationMs: Date.now() - fsStart });
         enqueue("complete", {
           scanId,
           issueCount,

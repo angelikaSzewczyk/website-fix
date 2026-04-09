@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
 import { getCachedScan, saveScanAsync, cacheTtlHours } from "@/lib/scan-cache";
+import { logScan } from "@/lib/scan-logger";
 import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
 
@@ -164,12 +165,15 @@ export async function POST(req: NextRequest) {
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
     if (!isUrlAllowed(targetUrl)) return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
 
+    const scanStart = Date.now();
+
     // ── Cache check — skipped when forceRefresh=true ────────
     if (!forceRefresh) {
       const ttl    = cacheTtlHours(userPlan);
       const cached = await getCachedScan(targetUrl, ttl);
       if (cached) {
         const { cachedAt, ...payload } = cached;
+        logScan({ userId: session?.user?.id, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
         return NextResponse.json({ success: true, fromCache: true, cachedAt, ...payload });
       }
     }
@@ -395,6 +399,7 @@ Erstelle Diagnose auf Deutsch:
     // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
     await saveScanAsync(targetUrl, { scanData, diagnose });
 
+    logScan({ userId: session?.user?.id, url: targetUrl, scanType: "website", status: "success", durationMs: Date.now() - scanStart });
     return NextResponse.json({ success: true, scanData, diagnose });
 
   } catch (err) {

@@ -1,0 +1,856 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import Link from "next/link";
+import type { AdminUser, ScanLogRow } from "./page";
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const D = {
+  bg:       "#08090D",
+  surface:  "#0F111A",
+  border:   "rgba(255,255,255,0.07)",
+  text:     "#F0F2F8",
+  sub:      "rgba(255,255,255,0.45)",
+  muted:    "rgba(255,255,255,0.22)",
+  blue:     "#4F8EF7",
+  blueBg:   "rgba(79,142,247,0.1)",
+  green:    "#22C55E",
+  greenBg:  "rgba(34,197,94,0.1)",
+  amber:    "#F59E0B",
+  amberBg:  "rgba(245,158,11,0.1)",
+  red:      "#EF4444",
+  redBg:    "rgba(239,68,68,0.1)",
+  violet:   "#8B5CF6",
+  violetBg: "rgba(139,92,246,0.1)",
+};
+
+const PLAN_COLOR: Record<string, string> = {
+  free: D.muted, pro: D.green, freelancer: D.green,
+  agentur: D.blue, agency_core: D.violet, agency_scale: D.amber,
+};
+const PLAN_MRR: Record<string, number> = {
+  free: 0, pro: 19, freelancer: 19, agentur: 49, agency_core: 79, agency_scale: 149,
+};
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+function fmtDateTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) + " " +
+    d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+}
+function truncate(s: string, n: number) { return s.length > n ? s.slice(0, n) + "…" : s; }
+
+// ── KPI Card ──────────────────────────────────────────────────────────────────
+function KpiCard({ label, value, sub, accent, trend }: {
+  label: string; value: string | number; sub?: string; accent?: string; trend?: string;
+}) {
+  return (
+    <div style={{
+      padding: "20px 22px",
+      background: D.surface,
+      border: `1px solid ${D.border}`,
+      borderRadius: 12,
+    }}>
+      <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 600, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        {label}
+      </p>
+      <p style={{ margin: "0 0 4px", fontSize: 28, fontWeight: 700, color: accent ?? D.text, letterSpacing: "-0.02em" }}>
+        {value}
+      </p>
+      {sub && <p style={{ margin: 0, fontSize: 12, color: D.muted }}>{sub}</p>}
+      {trend && <p style={{ margin: "6px 0 0", fontSize: 11, color: D.green }}>{trend}</p>}
+    </div>
+  );
+}
+
+// ── SVG Line Chart (growth) ───────────────────────────────────────────────────
+function LineChart({ data }: { data: { date: string; cnt: number }[] }) {
+  if (data.length === 0) {
+    return (
+      <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: D.muted, fontSize: 13 }}>Noch keine Signup-Daten</p>
+      </div>
+    );
+  }
+
+  // Fill gaps with 0 for last 30 days
+  const today = new Date();
+  const filled: { date: string; cnt: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const found = data.find(r => r.date === key);
+    filled.push({ date: key, cnt: found?.cnt ?? 0 });
+  }
+
+  const maxCnt = Math.max(...filled.map(d => d.cnt), 1);
+  const W = 100, H = 50; // viewBox units
+  const pts = filled.map((d, i) => {
+    const x = (i / (filled.length - 1)) * W;
+    const y = H - (d.cnt / maxCnt) * (H * 0.85) - H * 0.05;
+    return `${x},${y}`;
+  }).join(" ");
+
+  const areaBottom = `${W},${H} 0,${H}`;
+  const area = `0,${H - (filled[0].cnt / maxCnt) * (H * 0.85) - H * 0.05} ${pts} ${areaBottom}`;
+
+  return (
+    <div style={{ width: "100%", height: 160, position: "relative" }}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        style={{ width: "100%", height: "100%" }}
+      >
+        <defs>
+          <linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={D.blue} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={D.blue} stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        <polygon points={area} fill="url(#lineGrad)" />
+        <polyline
+          points={pts}
+          fill="none"
+          stroke={D.blue}
+          strokeWidth="0.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Dots for non-zero days */}
+        {filled.map((d, i) => d.cnt > 0 ? (
+          <circle
+            key={i}
+            cx={(i / (filled.length - 1)) * W}
+            cy={H - (d.cnt / maxCnt) * (H * 0.85) - H * 0.05}
+            r="1"
+            fill={D.blue}
+          />
+        ) : null)}
+      </svg>
+      {/* Y-axis label */}
+      <div style={{ position: "absolute", top: 4, left: 4, fontSize: 9, color: D.muted }}>{maxCnt}</div>
+      {/* X-axis labels */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+        <span style={{ fontSize: 10, color: D.muted }}>{filled[0]?.date.slice(5)}</span>
+        <span style={{ fontSize: 10, color: D.muted }}>{filled[29]?.date.slice(5)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── SVG Donut Chart (cache) ───────────────────────────────────────────────────
+function DonutChart({ fresh, cached, label }: { fresh: number; cached: number; label: string }) {
+  const total = fresh + cached;
+  if (total === 0) return (
+    <div style={{ textAlign: "center", padding: 20 }}>
+      <p style={{ color: D.muted, fontSize: 13 }}>Keine Daten</p>
+    </div>
+  );
+
+  const R = 40, CX = 60, CY = 60, STROKE = 12;
+  const circ = 2 * Math.PI * R;
+  const cachedFrac = cached / total;
+  const freshFrac  = fresh  / total;
+  const cachedDash = cachedFrac * circ;
+  const freshDash  = freshFrac  * circ;
+  const cachedOffset = 0;
+  const freshOffset  = cachedDash;
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke={D.border} strokeWidth={STROKE} />
+        {/* Cached arc */}
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke={D.blue} strokeWidth={STROKE}
+          strokeDasharray={`${cachedDash} ${circ - cachedDash}`}
+          strokeDashoffset={-cachedOffset}
+          strokeLinecap="butt"
+          style={{ transform: "rotate(-90deg)", transformOrigin: `${CX}px ${CY}px` }}
+        />
+        {/* Fresh arc */}
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke={D.amber} strokeWidth={STROKE}
+          strokeDasharray={`${freshDash} ${circ - freshDash}`}
+          strokeDashoffset={-(freshOffset)}
+          strokeLinecap="butt"
+          style={{ transform: "rotate(-90deg)", transformOrigin: `${CX}px ${CY}px` }}
+        />
+        <text x={CX} y={CY - 5} textAnchor="middle" fontSize="12" fontWeight="700" fill={D.text}>{total}</text>
+        <text x={CX} y={CY + 10} textAnchor="middle" fontSize="9" fill={D.muted}>Scans total</text>
+      </svg>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: D.blue, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: D.text }}>{cached}</span>
+          </div>
+          <p style={{ margin: 0, fontSize: 11, color: D.muted }}>Cache-Hits · Gespart: ~{Math.round(cached * 0.003 * 100) / 100}€</p>
+        </div>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: D.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: D.text }}>{fresh}</span>
+          </div>
+          <p style={{ margin: 0, fontSize: 11, color: D.muted }}>Fresh Scans · KI-Kosten: ~{Math.round(fresh * 0.012 * 100) / 100}€</p>
+        </div>
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: D.green }}>
+          Cache spart {total > 0 ? Math.round((cached / total) * 100) : 0}% der KI-Kosten
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Plan breakdown bar ────────────────────────────────────────────────────────
+function PlanBar({ planCounts, totalUsers }: { planCounts: Record<string, number>; totalUsers: number }) {
+  const plans = [
+    { key: "agency_scale", label: "Scale",      color: D.amber },
+    { key: "agency_core",  label: "Core",       color: D.violet },
+    { key: "agentur",      label: "Agentur",    color: D.blue },
+    { key: "pro",          label: "Pro",        color: D.green },
+    { key: "freelancer",   label: "Freelancer", color: "#8df3d3" },
+    { key: "free",         label: "Free",       color: D.muted },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
+        {plans.map(p => {
+          const pct = totalUsers > 0 ? ((planCounts[p.key] ?? 0) / totalUsers) * 100 : 0;
+          if (pct === 0) return null;
+          return <div key={p.key} style={{ width: `${pct}%`, background: p.color }} />;
+        })}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px" }}>
+        {plans.map(p => {
+          const cnt = planCounts[p.key] ?? 0;
+          const mrr = cnt * (PLAN_MRR[p.key] ?? 0);
+          return (
+            <div key={p.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: D.sub }}>
+                {p.label}: <strong style={{ color: D.text }}>{cnt}</strong>
+                {mrr > 0 && <span style={{ color: D.muted }}> · {mrr}€/mo</span>}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+function StatusBadge({ status, fromCache }: { status: string; fromCache?: boolean }) {
+  const cfg =
+    status === "error"   ? { color: D.red,   bg: D.redBg,   label: "ERROR"  } :
+    fromCache            ? { color: D.blue,  bg: D.blueBg,  label: "CACHED" } :
+    status === "cached"  ? { color: D.blue,  bg: D.blueBg,  label: "CACHED" } :
+                           { color: D.green, bg: D.greenBg, label: "OK"     };
+  return (
+    <span style={{
+      fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+      color: cfg.color, background: cfg.bg,
+      letterSpacing: "0.07em",
+    }}>
+      {cfg.label}
+    </span>
+  );
+}
+
+// ── Main Admin Client ─────────────────────────────────────────────────────────
+type Props = {
+  kpi: { totalUsers: number; planCounts: Record<string, number>; mrr: number; scans: Record<string, number> };
+  growth: { date: string; cnt: number }[];
+  users: AdminUser[];
+  cache: { regular: number; fullsite: number };
+  widgetLeads: number;
+  scanLogs: ScanLogRow[];
+};
+
+export default function AdminClient({ kpi, growth, users, cache, widgetLeads, scanLogs: initialLogs }: Props) {
+  const [tab, setTab] = useState<"overview" | "users" | "incidents" | "infra">("overview");
+  const [userSearch, setUserSearch]       = useState("");
+  const [scanLogs, setScanLogs]           = useState(initialLogs);
+  const [creditsInput, setCreditsInput]   = useState<Record<string, string>>({});
+  const [creditsLoading, setCreditsLoading] = useState<string | null>(null);
+  const [creditsDone, setCreditsDone]     = useState<string | null>(null);
+  const [rescanUrl, setRescanUrl]         = useState<string | null>(null);
+  const [rescanResult, setRescanResult]   = useState<string | null>(null);
+  const [refreshing, setRefreshing]       = useState(false);
+
+  const filteredUsers = userSearch
+    ? users.filter(u =>
+        u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+        (u.name ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.plan.toLowerCase().includes(userSearch.toLowerCase()))
+    : users;
+
+  // ── Credits ──────────────────────────────────────────────────────────────
+  const addCredits = useCallback(async (userId: string) => {
+    const n = parseInt(creditsInput[userId] ?? "0", 10);
+    if (!n || isNaN(n)) return;
+    setCreditsLoading(userId);
+    try {
+      await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_credits", userId, credits: n }),
+      });
+      setCreditsDone(userId);
+      setTimeout(() => setCreditsDone(null), 2000);
+      setCreditsInput(prev => ({ ...prev, [userId]: "" }));
+    } finally {
+      setCreditsLoading(null);
+    }
+  }, [creditsInput]);
+
+  // ── Re-scan ───────────────────────────────────────────────────────────────
+  const rerun = useCallback(async (url: string) => {
+    setRescanUrl(url);
+    setRescanResult("Scan läuft…");
+    try {
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rescan", url }),
+      });
+      const d = await res.json();
+      setRescanResult(d.ok ? "✓ Scan erfolgreich — Cache aktualisiert." : `Fehler: ${d.error ?? "unbekannt"}`);
+      // Refresh scan log
+      const fresh = await fetch("/api/admin");
+      const data = await fresh.json();
+      if (data.scanLogs) setScanLogs(data.scanLogs);
+    } catch {
+      setRescanResult("Verbindungsfehler");
+    }
+  }, []);
+
+  // ── Data refresh ──────────────────────────────────────────────────────────
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.scanLogs) setScanLogs(data.scanLogs);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  const TABS = [
+    { key: "overview",  label: "📊 Übersicht" },
+    { key: "users",     label: `👥 Users (${kpi.totalUsers})` },
+    { key: "incidents", label: `🔥 Incidents (${scanLogs.filter(l => l.status === "error").length})` },
+    { key: "infra",     label: "⚙️ Infrastruktur" },
+  ] as const;
+
+  return (
+    <div style={{ minHeight: "100vh", background: D.bg, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+
+      {/* Top nav */}
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(8,9,13,0.95)", backdropFilter: "blur(12px)",
+        borderBottom: `1px solid ${D.border}`,
+      }}>
+        <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 24px", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link href="/" style={{ textDecoration: "none", color: D.text, fontWeight: 700, fontSize: 15 }}>
+              Website<span style={{ color: D.amber }}>Fix</span>
+            </Link>
+            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: D.red, fontWeight: 700, letterSpacing: "0.1em" }}>
+              ADMIN
+            </span>
+            {/* Tab bar */}
+            <div style={{ display: "flex", gap: 2, marginLeft: 16 }}>
+              {TABS.map(t => (
+                <button key={t.key} onClick={() => setTab(t.key)} style={{
+                  padding: "5px 14px", borderRadius: 7, border: "none", cursor: "pointer",
+                  fontSize: 12, fontWeight: 600,
+                  background: tab === t.key ? "rgba(255,255,255,0.08)" : "transparent",
+                  color: tab === t.key ? D.text : D.sub,
+                  transition: "all 0.15s",
+                }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              style={{
+                padding: "5px 14px", borderRadius: 7,
+                border: `1px solid ${D.border}`, background: "transparent",
+                color: D.sub, fontSize: 12, cursor: "pointer",
+                opacity: refreshing ? 0.5 : 1,
+              }}
+            >
+              {refreshing ? "↻ Lädt…" : "↻ Refresh"}
+            </button>
+            <Link href="/dashboard" style={{ fontSize: 12, color: D.muted, textDecoration: "none" }}>
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <main style={{ maxWidth: 1300, margin: "0 auto", padding: "32px 24px 80px" }}>
+
+        {/* ── OVERVIEW TAB ────────────────────────────────────────────────── */}
+        {tab === "overview" && (
+          <>
+            {/* KPI row */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
+              <KpiCard label="MRR" value={`${kpi.mrr}€`} sub={`ARR: ${kpi.mrr * 12}€`} accent={D.green} />
+              <KpiCard label="Nutzer gesamt" value={kpi.totalUsers} sub="registriert" />
+              <KpiCard label="Scans heute" value={kpi.scans?.today ?? 0} sub={`Woche: ${kpi.scans?.week ?? 0}`} accent={D.blue} />
+              <KpiCard label="Scans Monat" value={kpi.scans?.month ?? 0} sub={`Gesamt: ${kpi.scans?.total ?? 0}`} accent={D.violet} />
+              <KpiCard label="Widget-Leads" value={widgetLeads} sub="via Agentur-Widgets" accent={D.amber} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 16, alignItems: "start" }}>
+
+              {/* Growth chart */}
+              <div style={{
+                padding: "22px 24px", background: D.surface,
+                border: `1px solid ${D.border}`, borderRadius: 14,
+              }}>
+                <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  Signups — letzte 30 Tage
+                </p>
+                <p style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 700, color: D.text }}>
+                  {growth.reduce((a, d) => a + d.cnt, 0)} neue User
+                </p>
+                <LineChart data={growth} />
+              </div>
+
+              {/* Plan distribution */}
+              <div style={{
+                padding: "22px 24px", background: D.surface,
+                border: `1px solid ${D.border}`, borderRadius: 14,
+              }}>
+                <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  Plan-Verteilung
+                </p>
+                <PlanBar planCounts={kpi.planCounts} totalUsers={kpi.totalUsers} />
+
+                {/* Per-plan MRR */}
+                <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { key: "agency_scale", label: "Agency Scale",  color: D.amber },
+                    { key: "agency_core",  label: "Agency Core",   color: D.violet },
+                    { key: "agentur",      label: "Agentur",       color: D.blue },
+                    { key: "pro",          label: "Pro",           color: D.green },
+                    { key: "freelancer",   label: "Freelancer",    color: "#8df3d3" },
+                  ].map(p => {
+                    const cnt = kpi.planCounts[p.key] ?? 0;
+                    if (!cnt) return null;
+                    return (
+                      <div key={p.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: D.sub }}>{p.label}</span>
+                        <div style={{ display: "flex", gap: 12 }}>
+                          <span style={{ fontSize: 12, color: D.text, fontWeight: 600 }}>{cnt}×</span>
+                          <span style={{ fontSize: 12, color: p.color, fontWeight: 700 }}>
+                            {cnt * (PLAN_MRR[p.key] ?? 0)}€
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div style={{ height: 1, background: D.border, margin: "4px 0" }} />
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>MRR gesamt</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: D.green }}>{kpi.mrr}€</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── USERS TAB ────────────────────────────────────────────────────── */}
+        {tab === "users" && (
+          <>
+            {/* Search */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <input
+                type="text"
+                placeholder="Suche nach E-Mail, Name oder Plan…"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                style={{
+                  flex: 1, maxWidth: 400, padding: "9px 14px",
+                  background: D.surface, border: `1px solid ${D.border}`,
+                  borderRadius: 9, color: D.text, fontSize: 13, outline: "none",
+                }}
+              />
+              <span style={{ fontSize: 12, color: D.muted }}>
+                {filteredUsers.length} von {users.length} Usern
+              </span>
+            </div>
+
+            <div style={{
+              background: D.surface, border: `1px solid ${D.border}`,
+              borderRadius: 14, overflow: "hidden",
+            }}>
+              {/* Table header */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 120px 80px 60px 120px 130px",
+                padding: "10px 20px",
+                borderBottom: `1px solid ${D.border}`,
+              }}>
+                {["User / E-Mail", "Plan", "Scans", "Credits", "Angemeldet", "Aktionen"].map(h => (
+                  <span key={h} style={{ fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    {h}
+                  </span>
+                ))}
+              </div>
+
+              {filteredUsers.map((user, i) => {
+                const col = PLAN_COLOR[user.plan] ?? D.muted;
+                return (
+                  <div key={user.id} style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 120px 80px 60px 120px 130px",
+                    padding: "12px 20px",
+                    alignItems: "center",
+                    borderBottom: i < filteredUsers.length - 1 ? `1px solid ${D.border}` : "none",
+                  }}>
+                    {/* Email + name */}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.email}
+                      </div>
+                      {user.name && (
+                        <div style={{ fontSize: 11, color: D.muted }}>{user.name}</div>
+                      )}
+                    </div>
+
+                    {/* Plan badge */}
+                    <div>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
+                        color: col, background: `${col}18`,
+                        border: `1px solid ${col}35`,
+                      }}>
+                        {user.plan}
+                      </span>
+                    </div>
+
+                    {/* Scan count */}
+                    <div style={{ fontSize: 14, fontWeight: 700, color: user.scan_count > 0 ? D.text : D.muted }}>
+                      {user.scan_count}
+                    </div>
+
+                    {/* Bonus scans */}
+                    <div style={{ fontSize: 13, color: user.bonus_scans > 0 ? D.amber : D.muted }}>
+                      {user.bonus_scans > 0 ? `+${user.bonus_scans}` : "—"}
+                    </div>
+
+                    {/* Date */}
+                    <div style={{ fontSize: 12, color: D.muted }}>
+                      {fmtDate(user.created_at)}
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {/* Credits input + button */}
+                      <input
+                        type="number"
+                        min="1" max="999"
+                        placeholder="+N"
+                        value={creditsInput[user.id] ?? ""}
+                        onChange={e => setCreditsInput(prev => ({ ...prev, [user.id]: e.target.value }))}
+                        style={{
+                          width: 40, padding: "4px 6px",
+                          background: "rgba(255,255,255,0.04)",
+                          border: `1px solid ${D.border}`,
+                          borderRadius: 6, color: D.text, fontSize: 11,
+                          outline: "none",
+                        }}
+                      />
+                      <button
+                        onClick={() => addCredits(user.id)}
+                        disabled={creditsLoading === user.id || !creditsInput[user.id]}
+                        style={{
+                          padding: "4px 8px", borderRadius: 6,
+                          border: `1px solid ${D.border}`,
+                          background: creditsDone === user.id ? D.greenBg : "transparent",
+                          color: creditsDone === user.id ? D.green : D.sub,
+                          fontSize: 11, cursor: "pointer",
+                          opacity: (!creditsInput[user.id]) ? 0.4 : 1,
+                        }}
+                      >
+                        {creditsDone === user.id ? "✓" : creditsLoading === user.id ? "…" : "Add"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* ── INCIDENTS TAB ─────────────────────────────────────────────────── */}
+        {tab === "incidents" && (
+          <>
+            {/* Re-scan result toast */}
+            {rescanResult && (
+              <div style={{
+                padding: "12px 18px", marginBottom: 16, borderRadius: 10,
+                background: rescanResult.startsWith("✓") ? D.greenBg : D.redBg,
+                border: `1px solid ${rescanResult.startsWith("✓") ? D.green : D.red}40`,
+                color: rescanResult.startsWith("✓") ? D.green : D.red,
+                fontSize: 13, fontWeight: 600,
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span>{rescanResult}</span>
+                <button onClick={() => { setRescanResult(null); setRescanUrl(null); }} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: 16 }}>×</button>
+              </div>
+            )}
+
+            {/* Stats strip */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              {[
+                { label: "Gesamt",  value: scanLogs.length, color: D.text },
+                { label: "OK",      value: scanLogs.filter(l => l.status === "success").length, color: D.green },
+                { label: "Cached",  value: scanLogs.filter(l => l.status === "cached" || l.from_cache).length, color: D.blue },
+                { label: "Errors",  value: scanLogs.filter(l => l.status === "error").length, color: D.red },
+              ].map(s => (
+                <div key={s.label} style={{
+                  padding: "10px 16px", borderRadius: 9,
+                  background: D.surface, border: `1px solid ${D.border}`,
+                }}>
+                  <span style={{ fontSize: 11, color: D.muted }}>{s.label} </span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: s.color }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {scanLogs.length === 0 ? (
+              <div style={{
+                padding: "60px 24px", textAlign: "center",
+                border: `2px dashed ${D.border}`, borderRadius: 14,
+              }}>
+                <p style={{ color: D.muted, fontSize: 14 }}>
+                  Noch keine Scan-Logs — werden ab jetzt automatisch aufgezeichnet.
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                background: D.surface, border: `1px solid ${D.border}`,
+                borderRadius: 14, overflow: "hidden",
+              }}>
+                {/* Header */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "80px 1fr 100px 80px 80px 120px 90px",
+                  padding: "10px 20px", borderBottom: `1px solid ${D.border}`,
+                }}>
+                  {["Status", "URL", "Typ", "User", "Dauer", "Zeit", "Aktion"].map(h => (
+                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      {h}
+                    </span>
+                  ))}
+                </div>
+
+                {scanLogs.map((log, i) => (
+                  <div key={log.id} style={{
+                    display: "grid",
+                    gridTemplateColumns: "80px 1fr 100px 80px 80px 120px 90px",
+                    padding: "11px 20px",
+                    alignItems: "center",
+                    borderBottom: i < scanLogs.length - 1 ? `1px solid ${D.border}` : "none",
+                    background: log.status === "error" ? "rgba(239,68,68,0.03)" : "transparent",
+                  }}>
+                    <div><StatusBadge status={log.status} fromCache={log.from_cache} /></div>
+
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {truncate(log.url, 55)}
+                      </div>
+                      {log.error_msg && (
+                        <div style={{ fontSize: 11, color: D.red, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {log.error_msg}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <span style={{ fontSize: 10, color: D.muted, background: "rgba(255,255,255,0.05)", padding: "2px 7px", borderRadius: 4 }}>
+                        {log.scan_type}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: 11, color: D.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {log.user_email ? log.user_email.split("@")[0] : "anon"}
+                    </div>
+
+                    <div style={{ fontSize: 12, color: D.muted }}>
+                      {log.duration_ms ? `${(log.duration_ms / 1000).toFixed(1)}s` : "—"}
+                    </div>
+
+                    <div style={{ fontSize: 11, color: D.muted }}>
+                      {fmtDateTime(log.created_at)}
+                    </div>
+
+                    <div>
+                      <button
+                        onClick={() => rerun(log.url)}
+                        disabled={rescanUrl === log.url}
+                        style={{
+                          padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                          border: `1px solid ${D.blue}40`,
+                          background: rescanUrl === log.url ? D.blueBg : "transparent",
+                          color: D.blue, cursor: "pointer",
+                          opacity: rescanUrl === log.url ? 0.6 : 1,
+                        }}
+                      >
+                        {rescanUrl === log.url ? "…" : "Re-Run"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── INFRA TAB ────────────────────────────────────────────────────── */}
+        {tab === "infra" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+            {/* Cache performance */}
+            <div style={{
+              padding: "24px", background: D.surface,
+              border: `1px solid ${D.border}`, borderRadius: 14,
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Cache-Performance
+              </p>
+              <p style={{ margin: "0 0 24px", fontSize: 13, color: D.sub }}>
+                Eingesparste KI-Kosten durch Cache-Hits
+              </p>
+              <DonutChart
+                fresh={cache.regular ?? 0}
+                cached={cache.fullsite ?? 0}
+                label="Scan-Cache"
+              />
+
+              <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: D.sub }}>
+                  <span>Regular Cache-Einträge</span>
+                  <span style={{ color: D.text, fontWeight: 600 }}>{cache.regular ?? 0}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: D.sub }}>
+                  <span>Full-Site Cache-Einträge</span>
+                  <span style={{ color: D.text, fontWeight: 600 }}>{cache.fullsite ?? 0}</span>
+                </div>
+                <div style={{ height: 1, background: D.border }} />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: D.sub }}>
+                  <span>Gesch. ersparte KI-Kosten</span>
+                  <span style={{ color: D.green, fontWeight: 700 }}>
+                    ~{Math.round(((cache.regular ?? 0) + (cache.fullsite ?? 0)) * 0.003 * 100) / 100}€
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Widget Stats */}
+            <div style={{
+              padding: "24px", background: D.surface,
+              border: `1px solid ${D.border}`, borderRadius: 14,
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Widget-Statistiken
+              </p>
+              <p style={{ margin: "0 0 24px", fontSize: 13, color: D.sub }}>
+                Lead-Generierung über alle Agency-Widgets
+              </p>
+
+              <div style={{ fontSize: 52, fontWeight: 800, color: D.amber, letterSpacing: "-0.03em", marginBottom: 8 }}>
+                {widgetLeads}
+              </div>
+              <p style={{ margin: "0 0 20px", fontSize: 14, color: D.sub }}>
+                Leads gesamt via Agency-Widgets
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { label: "Durchschn. Leads/Agentur", value: kpi.planCounts.agentur || kpi.planCounts.agency_core || kpi.planCounts.agency_scale
+                    ? Math.round(widgetLeads / Math.max(1, (kpi.planCounts.agentur ?? 0) + (kpi.planCounts.agency_core ?? 0) + (kpi.planCounts.agency_scale ?? 0)))
+                    : 0 },
+                  { label: "Agency-User mit Widget", value: (kpi.planCounts.agentur ?? 0) + (kpi.planCounts.agency_core ?? 0) + (kpi.planCounts.agency_scale ?? 0) },
+                ].map(s => (
+                  <div key={s.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: D.sub }}>
+                    <span>{s.label}</span>
+                    <span style={{ color: D.text, fontWeight: 700 }}>{s.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scan type distribution */}
+            <div style={{
+              padding: "24px", background: D.surface,
+              border: `1px solid ${D.border}`, borderRadius: 14,
+            }}>
+              <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Scan-Typen (letzte 50)
+              </p>
+              {(() => {
+                const counts: Record<string, number> = {};
+                for (const log of scanLogs) {
+                  counts[log.scan_type] = (counts[log.scan_type] ?? 0) + 1;
+                }
+                return Object.entries(counts).map(([type, cnt]) => (
+                  <div key={type} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13 }}>
+                    <span style={{ color: D.sub }}>{type}</span>
+                    <span style={{ color: D.text, fontWeight: 600 }}>{cnt}</span>
+                  </div>
+                ));
+              })()}
+              {scanLogs.length === 0 && <p style={{ color: D.muted, fontSize: 13 }}>Noch keine Logs.</p>}
+            </div>
+
+            {/* Quick links */}
+            <div style={{
+              padding: "24px", background: D.surface,
+              border: `1px solid ${D.border}`, borderRadius: 14,
+            }}>
+              <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Quick Links
+              </p>
+              {[
+                { label: "Neon DB Console", href: "https://console.neon.tech" },
+                { label: "Vercel Deployments", href: "https://vercel.com/dashboard" },
+                { label: "Stripe Dashboard", href: "https://dashboard.stripe.com" },
+                { label: "Resend Logs", href: "https://resend.com/emails" },
+                { label: "Anthropic Console", href: "https://console.anthropic.com" },
+              ].map(link => (
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "10px 0",
+                  borderBottom: `1px solid ${D.border}`,
+                  textDecoration: "none", color: D.sub, fontSize: 13,
+                  transition: "color 0.1s",
+                }}>
+                  {link.label}
+                  <span style={{ color: D.muted, fontSize: 11 }}>↗</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
