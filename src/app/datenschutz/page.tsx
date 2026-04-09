@@ -1,43 +1,92 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import LegalLayout from "../components/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Datenschutz — WebsiteFix",
   robots: { index: false, follow: false },
 };
 
-export default function DatenschutzPage() {
-  const h2Style = { fontSize: 16, fontWeight: 700, margin: "32px 0 8px", letterSpacing: "-0.01em" };
-  const pStyle = { fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.8, margin: "0 0 8px" };
+// ── Shared style tokens ───────────────────────────────────────────────────────
+const H1: React.CSSProperties = {
+  fontSize: "clamp(28px, 5vw, 42px)",
+  fontWeight: 800,
+  letterSpacing: "-0.03em",
+  lineHeight: 1.15,
+  color: "#fff",
+  margin: "0 0 12px",
+};
 
+const LEAD: React.CSSProperties = {
+  fontSize: 16,
+  color: "rgba(255,255,255,0.45)",
+  lineHeight: 1.7,
+  margin: "0 0 56px",
+};
+
+const P: React.CSSProperties = {
+  fontSize: 15,
+  color: "rgba(255,255,255,0.6)",
+  lineHeight: 1.9,
+  margin: "0 0 10px",
+};
+
+const STRONG: React.CSSProperties = { color: "rgba(255,255,255,0.9)", fontWeight: 600 };
+
+const DIVIDER: React.CSSProperties = {
+  border: "none",
+  borderTop: "1px solid rgba(255,255,255,0.06)",
+  margin: "52px 0 0",
+};
+
+// ── Section heading with accented number prefix ───────────────────────────────
+function SH({ num, children }: { num: string; children: string }) {
   return (
-    <>
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(11,12,16,0.92)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+    <h2 style={{
+      fontSize: 18, fontWeight: 700, color: "#fff",
+      margin: "52px 0 14px", letterSpacing: "-0.01em",
+      display: "flex", alignItems: "baseline", gap: 10,
+    }}>
+      <span style={{ color: "#F59E0B", fontWeight: 800, minWidth: "1.6em" }}>{num}</span>
+      {children}
+    </h2>
+  );
+}
+
+// ── Legal basis pill ──────────────────────────────────────────────────────────
+function Basis({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ ...P, margin: "8px 0 10px" }}>
+      <span style={{
+        display: "inline-block",
+        padding: "2px 9px", borderRadius: 5, marginRight: 8,
+        fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+        background: "rgba(37,99,235,0.15)", color: "#60A5FA",
+        border: "1px solid rgba(37,99,235,0.25)",
+        verticalAlign: "middle",
       }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: "-0.01em" }}>
-            Website<span style={{ background: "linear-gradient(90deg,#8df3d3,#7aa6ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Fix</span>
-          </Link>
-          <Link href="/scan" style={{ fontSize: 13, fontWeight: 700, color: "#0b0c10", textDecoration: "none", padding: "7px 16px", borderRadius: 8, background: "#fff" }}>
-            Jetzt scannen →
-          </Link>
-        </div>
-      </nav>
+        Rechtsgrundlage
+      </span>
+      <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 14 }}>{children}</span>
+    </p>
+  );
+}
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "60px 24px 100px" }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, margin: "0 0 40px", letterSpacing: "-0.02em" }}>Datenschutzerklärung</h1>
+export default function DatenschutzPage() {
+  return (
+    <LegalLayout footerLink="/impressum" footerLabel="Impressum">
+      <main style={{ maxWidth: "48rem", margin: "0 auto", padding: "72px 24px 120px" }}>
 
-        <p style={pStyle}>
+        {/* Page title */}
+        <h1 style={H1}>Datenschutzerklärung</h1>
+        <p style={LEAD}>
           Diese Datenschutzerklärung informiert dich über die Art, den Umfang und Zweck der Verarbeitung
           personenbezogener Daten auf dieser Website.
         </p>
 
-        <h2 style={h2Style}>1. Verantwortliche Stelle</h2>
-        <p style={pStyle}>
-          <strong style={{ color: "#fff" }}>Angelika Szewczyk</strong><br />
+        {/* 1 */}
+        <SH num="1." >Verantwortliche Stelle</SH>
+        <p style={P}>
+          <span style={STRONG}>Angelika Szewczyk</span><br />
           Einzelunternehmen<br />
           Am Hühnerberg 5<br />
           51381 Leverkusen<br />
@@ -45,71 +94,75 @@ export default function DatenschutzPage() {
           E-Mail: support@website-fix.com
         </p>
 
-        <h2 style={h2Style}>2. Hosting</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 2 */}
+        <SH num="2." >Hosting</SH>
+        <p style={P}>
           Diese Website wird bei einem externen Dienstleister gehostet. Beim Besuch der Website werden
           automatisch sogenannte Server-Logfiles erhoben (z. B. IP-Adresse, Datum und Uhrzeit des Zugriffs,
           Browsertyp).
         </p>
-        <p style={pStyle}>
-          <strong style={{ color: "rgba(255,255,255,0.85)" }}>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem
-          sicheren und stabilen Betrieb der Website).
-        </p>
+        <Basis>Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb der Website).</Basis>
 
-        <h2 style={h2Style}>3. Kontaktformular / Anfrage</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 3 */}
+        <SH num="3." >Kontaktformular / Anfrage</SH>
+        <p style={P}>
           Wenn du mich per Formular kontaktierst, werden deine Angaben (z. B. Website-URL, Beschreibung,
           E-Mail-Adresse) zur Bearbeitung der Anfrage verarbeitet.
         </p>
-        <p style={pStyle}>
-          <strong style={{ color: "rgba(255,255,255,0.85)" }}>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen).
-        </p>
+        <Basis>Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen).</Basis>
 
-        <h2 style={h2Style}>4. Zahlungsabwicklung</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 4 */}
+        <SH num="4." >Zahlungsabwicklung</SH>
+        <p style={P}>
           Für die Bezahlung angebotener Leistungen nutze ich einen externen Zahlungsdienstleister
           (Stripe). Die Zahlungsabwicklung erfolgt ausschließlich über den Anbieter. Ich erhalte keine
           vollständigen Zahlungsdaten.
         </p>
-        <p style={pStyle}>
-          <strong style={{ color: "rgba(255,255,255,0.85)" }}>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
-        </p>
+        <Basis>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</Basis>
 
-        <h2 style={h2Style}>5. Webanalyse (Google Analytics)</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 5 */}
+        <SH num="5." >Webanalyse (Google Analytics)</SH>
+        <p style={P}>
           Diese Website nutzt Google Analytics 4 zur Analyse der Nutzung. Google Analytics wird nur
           eingesetzt, sofern du zuvor deine Einwilligung erteilt hast.
         </p>
-        <p style={pStyle}>
-          <strong style={{ color: "rgba(255,255,255,0.85)" }}>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).
-        </p>
+        <Basis>Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).</Basis>
 
-        <h2 style={h2Style}>6. Speicherdauer</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 6 */}
+        <SH num="6." >Speicherdauer</SH>
+        <p style={P}>
           Personenbezogene Daten werden nur so lange gespeichert, wie dies zur Erfüllung der jeweiligen
           Zwecke erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen.
         </p>
 
-        <h2 style={h2Style}>7. Deine Rechte</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 7 */}
+        <SH num="7." >Deine Rechte</SH>
+        <p style={P}>
           Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
           Datenübertragbarkeit sowie Widerspruch gegen die Verarbeitung deiner personenbezogenen Daten.
         </p>
 
-        <h2 style={h2Style}>8. Beschwerderecht</h2>
-        <p style={pStyle}>
+        <hr style={DIVIDER} />
+
+        {/* 8 */}
+        <SH num="8." >Beschwerderecht</SH>
+        <p style={P}>
           Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren.
         </p>
-      </main>
 
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "32px 24px", textAlign: "center" }}>
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
-          {`© ${new Date().getFullYear()} website-fix.com · `}
-          <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Startseite</Link>
-          {" · "}
-          <Link href="/impressum" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Impressum</Link>
-        </p>
-      </footer>
-    </>
+      </main>
+    </LegalLayout>
   );
 }
