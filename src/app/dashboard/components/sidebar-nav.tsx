@@ -27,24 +27,29 @@ type NavItem = {
   hot?: boolean;
 };
 
+const AGENCY_PLANS = ["agentur", "agency_core", "agency_scale"];
+
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard",               label: "Übersicht",      icon: <LayoutDashboard size={16} />, exact: true },
   { href: "/dashboard/scan",          label: "Scan starten",   icon: <Zap size={16} /> },
-  { href: "/dashboard/leads",          label: "Lead-Management",icon: <Target size={16} />,   plans: ["agentur"], hot: true },
-  { href: "/dashboard/clients",       label: "Kunden",         icon: <Users size={16} />,    plans: ["agentur"] },
-  { href: "/dashboard/monitoring",    label: "Monitoring",     icon: <Clock size={16} />,    plans: ["pro", "agentur"] },
-  { href: "/dashboard/activity",      label: "Activity Log",   icon: <Activity size={16} />, plans: ["agentur"] },
-  { href: "/dashboard/reports",       label: "Berichte",       icon: <FileText size={16} />, plans: ["pro", "agentur"] },
-  { href: "/dashboard/integrations",  label: "Integrationen",  icon: <Plug size={16} />, plans: ["pro", "agentur"] },
-  { href: "/dashboard/team",          label: "Mein Team",      icon: <Users2 size={16} />, plans: ["agentur"], soon: true },
-  { href: "/dashboard/settings",      label: "Einstellungen",  icon: <Settings size={16} />, plans: ["agentur"] },
+  { href: "/dashboard/leads",         label: "Lead-Management",icon: <Target size={16} />,   plans: AGENCY_PLANS, hot: true },
+  { href: "/dashboard/clients",       label: "Kunden",         icon: <Users size={16} />,    plans: AGENCY_PLANS },
+  { href: "/dashboard/monitoring",    label: "Monitoring",     icon: <Clock size={16} />,    plans: ["pro", ...AGENCY_PLANS] },
+  { href: "/dashboard/activity",      label: "Activity Log",   icon: <Activity size={16} />, plans: AGENCY_PLANS },
+  { href: "/dashboard/reports",       label: "Berichte",       icon: <FileText size={16} />, plans: ["pro", ...AGENCY_PLANS] },
+  { href: "/dashboard/integrations",  label: "Integrationen",  icon: <Plug size={16} />,     plans: ["pro", ...AGENCY_PLANS] },
+  { href: "/dashboard/team",          label: "Mein Team",      icon: <Users2 size={16} />,   plans: AGENCY_PLANS, soon: true },
+  { href: "/dashboard/settings",      label: "Einstellungen",  icon: <Settings size={16} />, plans: AGENCY_PLANS },
 ];
 
-const PLAN_CONFIG = {
-  free:    { label: "Free",    color: "rgba(255,255,255,0.45)", bg: "rgba(255,255,255,0.06)",  border: "rgba(255,255,255,0.1)" },
-  pro:     { label: "Pro",     color: "#8df3d3",  bg: "rgba(141,243,211,0.08)", border: "rgba(141,243,211,0.2)" },
-  agentur: { label: "Agentur", color: "#007BFF",  bg: "rgba(0,123,255,0.12)",   border: "rgba(0,123,255,0.3)" },
-} as const;
+const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  free:          { label: "Free",           color: "rgba(255,255,255,0.45)", bg: "rgba(255,255,255,0.06)",  border: "rgba(255,255,255,0.1)" },
+  pro:           { label: "Pro",            color: "#8df3d3",  bg: "rgba(141,243,211,0.08)", border: "rgba(141,243,211,0.2)" },
+  freelancer:    { label: "Freelancer",     color: "#8df3d3",  bg: "rgba(141,243,211,0.08)", border: "rgba(141,243,211,0.2)" },
+  agentur:       { label: "Agentur",        color: "#007BFF",  bg: "rgba(0,123,255,0.12)",   border: "rgba(0,123,255,0.3)" },
+  agency_core:   { label: "Agency Core",    color: "#7C3AED",  bg: "rgba(124,58,237,0.12)",  border: "rgba(124,58,237,0.3)" },
+  agency_scale:  { label: "Agency Scale",   color: "#F59E0B",  bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.3)" },
+};
 
 type Props = {
   plan: string;
@@ -56,7 +61,7 @@ type Props = {
 
 export default function SidebarNav({ plan, userName, userImage, signOutButton, lastScanClean }: Props) {
   const pathname = usePathname();
-  const planCfg = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG] ?? PLAN_CONFIG.free;
+  const planCfg = PLAN_CONFIG[plan] ?? PLAN_CONFIG.free;
 
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);

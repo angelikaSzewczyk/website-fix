@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       SELECT u.id, u.email, u.name,
              ag.agency_name, ag.logo_url, ag.primary_color
       FROM users u
-      LEFT JOIN agency_settings ag ON ag.user_id = u.id::text
+      LEFT JOIN agency_settings ag ON ag.user_id = u.id
       WHERE u.id::text = ${agencyId}
       LIMIT 1
     ` as { id: string; email: string; name: string; agency_name: string | null; logo_url: string | null; primary_color: string | null }[];
