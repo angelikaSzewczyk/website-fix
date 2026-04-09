@@ -12,6 +12,8 @@ import {
   Settings,
   Activity,
   Plug,
+  Target,
+  Clock,
 } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 
@@ -22,12 +24,15 @@ type NavItem = {
   plans?: string[];
   exact?: boolean;
   soon?: boolean;
+  hot?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard",               label: "Übersicht",      icon: <LayoutDashboard size={16} />, exact: true },
   { href: "/dashboard/scan",          label: "Scan starten",   icon: <Zap size={16} /> },
-  { href: "/dashboard/clients",       label: "Kunden",         icon: <Users size={16} />, plans: ["agentur"] },
+  { href: "/dashboard/leads",          label: "Lead-Management",icon: <Target size={16} />,   plans: ["agentur"], hot: true },
+  { href: "/dashboard/clients",       label: "Kunden",         icon: <Users size={16} />,    plans: ["agentur"] },
+  { href: "/dashboard/monitoring",    label: "Monitoring",     icon: <Clock size={16} />,    plans: ["pro", "agentur"] },
   { href: "/dashboard/activity",      label: "Activity Log",   icon: <Activity size={16} />, plans: ["agentur"] },
   { href: "/dashboard/reports",       label: "Berichte",       icon: <FileText size={16} />, plans: ["pro", "agentur"] },
   { href: "/dashboard/integrations",  label: "Integrationen",  icon: <Plug size={16} />, plans: ["pro", "agentur"] },
@@ -111,6 +116,13 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
                   background: "rgba(217,119,6,0.15)", color: "#D97706",
                   letterSpacing: "0.06em",
                 }}>BALD</span>
+              )}
+              {item.hot && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4,
+                  background: "rgba(239,68,68,0.15)", color: "#ef4444",
+                  letterSpacing: "0.06em",
+                }}>NEU</span>
               )}
             </>
           );
