@@ -441,14 +441,14 @@ export default function AgencyPage() {
         </section>
 
         {/* FEATURE DEEP-DIVE */}
-        <section style={{ background: "#ffffff", padding: "80px 24px" }}>
+        <section style={{ background: "#080c12", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Gebaut für Agenturen, die skalieren.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "#64748B", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
                 Jedes Feature ist darauf ausgelegt, deinen Workflow zu automatisieren und deine Kunden zu begeistern.
               </p>
             </div>
@@ -537,15 +537,54 @@ export default function AgencyPage() {
           </div>
         </section>
 
+        {/* DEEP-SCAN TECHNOLOGIE */}
+        <section style={{ background: "#080c12", padding: "0 24px 72px", borderTop: "none" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <div style={{
+              padding: "32px 36px", borderRadius: 18,
+              border: "1px solid rgba(122,166,255,0.15)",
+              background: "rgba(0,123,255,0.04)",
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: "45%", height: "100%", background: "radial-gradient(ellipse at 80% 50%, rgba(0,123,255,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 16,
+                  padding: "4px 12px", borderRadius: 20, fontSize: 11,
+                  background: "rgba(122,166,255,0.1)", border: "1px solid rgba(122,166,255,0.2)",
+                  color: "#7aa6ff", fontWeight: 700, letterSpacing: "0.06em",
+                }}>
+                  🔬 Deep-Scan Technologie
+                </div>
+                <h3 style={{ margin: "0 0 14px", fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.2 }}>
+                  Wir prüfen nicht nur die Oberfläche,<br />
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}>sondern jede einzelne Unterseite.</span>
+                </h3>
+                <p style={{ margin: "0 0 20px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 640 }}>
+                  Unser Crawler analysiert automatisch <strong style={{ color: "rgba(255,255,255,0.85)" }}>jede Unterseite</strong> der Kundendomain — nicht nur die Startseite. Die KI findet dabei ca. <strong style={{ color: "rgba(255,255,255,0.85)" }}>50% der technischen Barrieren vollautomatisch</strong>. Den Rest erledigt dein Team mit unseren präzisen, seiten-genauen Reports — mit exakten URLs, Fehlerbeschreibungen und Code-Fixes.
+                </p>
+                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                  {["Sitemap + BFS-Crawl", "Seitentyp-Klassifikation", "Aggregierte Fehler-Reports", "KI-Batch-Analyse"].map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PRICING */}
-        <section id="pricing" style={{ background: "#F8FAFC", padding: "80px 24px", borderTop: "1px solid #E2E8F0" }}>
+        <section id="pricing" style={{ background: "#0b0c10", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Einfach. Transparent. Ehrlich.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "#64748B" }}>
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)" }}>
                 Keine versteckten Kosten. Monatlich kündbar. DSGVO-konform.
               </p>
             </div>
@@ -646,7 +685,7 @@ export default function AgencyPage() {
 
             <div style={{ marginTop: 28, textAlign: "center", display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
               {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#94A3B8" }}>
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   {t}
                 </div>
@@ -656,16 +695,16 @@ export default function AgencyPage() {
         </section>
 
         {/* FAQ */}
-        <section style={{ background: "#F8FAFC", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0" }}>
+        <section style={{ background: "#0b0c10", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
-            <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: "#0F172A" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
+            <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: "#fff" }}>
               Häufige Fragen
             </h2>
-            <p style={{ margin: "0 0 40px", fontSize: 15, color: "#64748B", lineHeight: 1.6 }}>
+            <p style={{ margin: "0 0 40px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
               Alles, was Agentur-Inhaber vor dem Start wissen wollen.
             </p>
-            <FaqAccordion items={FAQ} light={true} />
+            <FaqAccordion items={FAQ} />
           </div>
         </section>
 
