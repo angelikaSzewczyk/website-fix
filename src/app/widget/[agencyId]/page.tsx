@@ -30,6 +30,12 @@ export default function WidgetPage() {
       .then(r => r.json())
       .then(d => { if (d.agencyName) setBranding(d); })
       .catch(() => null);
+    // Track widget view (fire-and-forget)
+    fetch("/api/widget/view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agencyId }),
+    }).catch(() => null);
   }, [agencyId]);
 
   const primary = branding?.agencyColor ?? "#007BFF";

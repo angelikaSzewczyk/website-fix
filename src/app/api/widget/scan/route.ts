@@ -109,6 +109,9 @@ export async function POST(req: NextRequest) {
     <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2)">Powered by WebsiteFix · Lead-Widget</p>
   </div>
 </div>`,
+      }).then(() => {
+        // Mark notification as sent in DB
+        sql`UPDATE widget_leads SET notification_sent = true WHERE id::text = ${lead?.id}`.catch(() => null);
       }).catch(() => null);
     }
 
