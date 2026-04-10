@@ -296,7 +296,7 @@ export default function Page() {
               color: "#fff", textDecoration: "none",
               boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
             }}>
-              Jetzt Agentur-Account erstellen →
+              Jetzt Agency-Account erstellen →
             </Link>
             <Link href="#pricing" style={{
               padding: "14px 28px", borderRadius: 10, fontSize: 15,
@@ -308,7 +308,7 @@ export default function Page() {
           </div>
 
           <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
-            Keine Kreditkarte · Keine Installation · Ergebnis in unter 60 Sekunden
+            Keine Installation nötig · Ergebnis in unter 60 Sekunden
           </p>
 
           {/* ── DASHBOARD PREVIEW MOCKUP ── */}
@@ -861,40 +861,34 @@ export default function Page() {
                   position: "relative",
                 }}>
 
-                  {/* Top stripe / badge */}
-                  {plan.recommended && (
-                    <div style={{
-                      background: "#2563EB", padding: "8px 24px",
-                      display: "flex", alignItems: "center", justifyContent: "center",
+                  {/* Top stripe — uniform height across all cards */}
+                  <div style={{
+                    padding: "8px 24px",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: plan.recommended
+                      ? "#2563EB"
+                      : ("scale" in plan && plan.scale)
+                        ? "#7C3AED"
+                        : "rgba(255,255,255,0.04)",
+                    borderBottom: (plan.recommended || ("scale" in plan && plan.scale))
+                      ? "none"
+                      : "1px solid rgba(255,255,255,0.06)",
+                  }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 800, letterSpacing: "0.1em",
+                      color: (plan.recommended || ("scale" in plan && plan.scale))
+                        ? "#fff"
+                        : "rgba(255,255,255,0.2)",
                     }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>
-                        ★ BESTSELLER
-                      </span>
-                    </div>
-                  )}
-                  {"scale" in plan && plan.scale && (
-                    <div style={{
-                      background: "#7C3AED", padding: "8px 24px",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>
-                        SCALE
-                      </span>
-                    </div>
-                  )}
-                  {plan.enterprise && (
-                    <div style={{
-                      background: "#0F172A", padding: "8px 24px",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", letterSpacing: "0.1em" }}>
-                        ENTERPRISE
-                      </span>
-                    </div>
-                  )}
-                  {!plan.recommended && !("scale" in plan && plan.scale) && !plan.enterprise && (
-                    <div style={{ height: 4, background: "rgba(255,255,255,0.05)" }} />
-                  )}
+                      {plan.recommended
+                        ? "★ BESTSELLER"
+                        : ("scale" in plan && plan.scale)
+                          ? "FULL WHITE-LABEL"
+                          : plan.name === "Free"
+                            ? "KOSTENLOS TESTEN"
+                            : "FÜR AGENTUREN"}
+                    </span>
+                  </div>
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     {/* Plan name + desc */}
