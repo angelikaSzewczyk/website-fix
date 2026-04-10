@@ -614,7 +614,7 @@ export default function DashboardScanClient({
         </nav>
         {/* Upgrade nudge at bottom */}
         <div style={{ padding: "12px 12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <Link href="/smart-guard" style={{
+          <Link href="/pricing" style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "8px 14px", borderRadius: 7,
             background: "rgba(0,123,255,0.1)", border: "1px solid rgba(0,123,255,0.25)",
@@ -746,7 +746,7 @@ export default function DashboardScanClient({
             </span>
           </div>
           {limitReached && (
-            <Link href="/smart-guard" style={{
+            <Link href="/pricing" style={{
               fontSize: 11, fontWeight: 700,
               padding: "4px 12px", borderRadius: C.radiusSm,
               background: C.blueBg, border: `1px solid ${C.blueBorder}`,
@@ -777,7 +777,7 @@ export default function DashboardScanClient({
                 Du hast {scanLimit} von {scanLimit} Gratis-Scans verbraucht. Nächste Scans sind ab dem 1. des nächsten Monats wieder verfügbar — oder jetzt upgraden für unlimitierte Scans.
               </p>
             </div>
-            <Link href="/smart-guard" style={{
+            <Link href="/pricing" style={{
               flexShrink: 0, padding: "10px 20px", borderRadius: C.radiusSm,
               background: C.blue, color: "#fff",
               fontSize: 13, fontWeight: 700, textDecoration: "none",

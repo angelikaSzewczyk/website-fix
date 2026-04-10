@@ -798,7 +798,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
 
             {/* Upgrade CTA */}
-            <Link href="/smart-guard" style={{
+            <Link href="/pricing" style={{
               padding: "6px 16px", borderRadius: D.radiusSm,
               background: D.blue, color: "#fff",
               fontSize: 12, fontWeight: 700, textDecoration: "none",
@@ -916,7 +916,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </p>
               </div>
               {!bfsgOk && (
-                <Link href="/smart-guard" style={{
+                <Link href="/pricing" style={{
                   flexShrink: 0, fontSize: 11, fontWeight: 700,
                   padding: "5px 12px", borderRadius: D.radiusXs,
                   background: D.amberBg, border: `1px solid ${D.amberBorder}`,
@@ -1023,7 +1023,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {/* Snapshot disclaimer */}
             <p style={{ margin: "10px 0 0", fontSize: 11, color: D.textFaint, lineHeight: 1.6, fontWeight: 400 }}>
               Diese Werte basieren auf Scan-Schätzungen.{" "}
-              <Link href="/smart-guard" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
+              <Link href="/pricing" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
                 Präzise Live-Daten aus GSC &amp; PageSpeed
               </Link>
               {" "}sind im Smart-Guard Plan verfügbar.
@@ -1149,7 +1149,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                                     Freischalten mit Smart-Guard
                                   </p>
                                 </div>
-                                <Link href="/smart-guard" style={{
+                                <Link href="/pricing" style={{
                                   flexShrink: 0,
                                   display: "inline-flex", alignItems: "center", gap: 4,
                                   padding: "7px 14px", borderRadius: D.radiusXs,
@@ -1315,7 +1315,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
                   {/* CTA — monitoring gets full-width prominent style */}
                   {module.status ? (
-                    <Link href="/smart-guard" style={{
+                    <Link href="/pricing" style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                       padding: "10px 18px", borderRadius: D.radiusXs,
                       background: D.blue, color: "#fff",
@@ -1325,7 +1325,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       {module.cta} →
                     </Link>
                   ) : (
-                    <Link href="/smart-guard" style={{
+                    <Link href="/pricing" style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
                       alignSelf: "flex-start",
                       padding: "8px 16px", borderRadius: D.radiusXs,
@@ -1476,7 +1476,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               Jederzeit kündbar.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link href="/smart-guard" style={{
+              <Link href="/pricing" style={{
                 padding: "13px 32px", borderRadius: D.radiusSm,
                 background: D.blue, color: "#fff",
                 fontSize: 14, fontWeight: 700, textDecoration: "none",
@@ -1484,7 +1484,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               }}>
                 Smart-Guard aktivieren →
               </Link>
-              <Link href="/smart-guard" style={{
+              <Link href="/pricing" style={{
                 padding: "13px 24px", borderRadius: D.radiusSm,
                 border: `1px solid ${D.borderStrong}`,
                 color: D.textSub, fontSize: 14, textDecoration: "none",

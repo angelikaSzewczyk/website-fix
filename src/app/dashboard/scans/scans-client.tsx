@@ -250,7 +250,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
             </div>
 
             <div style={{ position: "relative", zIndex: 1 }}>
-              <Link href="/smart-guard" style={{
+              <Link href="/pricing" style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "13px 28px", borderRadius: D.radiusSm,
                 background: D.blue, color: "#fff",
@@ -437,7 +437,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <Link
-                href="/smart-guard"
+                href="/pricing"
                 style={{
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
                   padding: "13px 28px", borderRadius: D.radiusSm,
