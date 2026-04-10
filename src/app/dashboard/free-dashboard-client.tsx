@@ -315,19 +315,200 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     if (/php\s*7/.test(scanText)) return "7.x";
     return "Nicht eindeutig erkannt";
   };
+  const detectFramework = (): string | null => {
+    if (/next\.js|nextjs|_next\//.test(scanText))         return "Next.js";
+    if (/nuxt\.js|nuxtjs|\/__nuxt/.test(scanText))        return "Nuxt.js";
+    if (/gatsby/.test(scanText))                          return "Gatsby";
+    if (/remix\.run|remixjs/.test(scanText))              return "Remix";
+    if (/astro\.build|astro-island/.test(scanText))       return "Astro";
+    if (/svelte/.test(scanText))                          return "SvelteKit";
+    return null;
+  };
+  const detectTracking = (): string | null => {
+    if (/googletagmanager\.com\/gtm/.test(scanText))      return "Google Tag Manager";
+    if (/gtag\('config'|google-analytics\.com|googletagmanager\.com\/gtag/.test(scanText)) return "Google Analytics";
+    if (/connect\.facebook\.net|fbq\('init'/.test(scanText)) return "Meta Pixel";
+    if (/static\.hotjar\.com|hj\('/.test(scanText))       return "Hotjar";
+    if (/js\.hs-scripts\.com|hubspot/.test(scanText))     return "HubSpot";
+    if (/cdn\.matomo\.cloud|matomo\.js|piwik\.js/.test(scanText)) return "Matomo";
+    return null;
+  };
 
   const cmsLabel   = cms.label === "Custom" ? "Nicht eindeutig erkannt" : cms.label + (cms.version ? ` ${cms.version}` : "");
   const builder    = detectBuilder();
+  const framework  = detectFramework();
   const server     = detectServer();
   const php        = detectPhp();
+  const tracking   = detectTracking();
   const sslLabel   = "Aktiv";
 
   // ── Impact label per category / severity ──────────────────────────────────
   function getImpact(category: string, severity: string): { label: string; color: string } {
-    if (category === "recht")   return { label: "BFSG-Risiko",       color: "#f87171" };
-    if (category === "speed")   return { label: "Conversion-Risiko", color: D.amber   };
-    if (severity === "red")     return { label: "SEO-Risiko",        color: "#f87171" };
-    return                             { label: "SEO-Risiko",        color: D.textMuted };
+    if (category === "recht")                            return { label: "BFSG- & Barrierefreiheits-Risiko", color: "#f87171" };
+    if (category === "speed" && severity === "red")      return { label: "Performance- & Conversion-Risiko", color: D.amber   };
+    if (category === "speed")                            return { label: "Performance-Risiko",               color: D.amber   };
+    if (severity === "red")                              return { label: "SEO-Risiko",                       color: "#f87171" };
+    if (severity === "yellow")                           return { label: "Vertrauens-Risiko",                color: D.amber   };
+    return                                                      { label: "Hinweis",                          color: D.textMuted };
+  }
+
+  // ── Fix guidance per issue ─────────────────────────────────────────────────
+  function generateFixSteps(issue: ParsedIssueProp): { steps: string[]; verify: string } {
+    const t = issue.title.toLowerCase();
+    const b = issue.body.toLowerCase();
+    const combined = t + ' ' + b;
+
+    if (/alt.?text|alternativtext|bilder ohne/.test(combined)) return {
+      steps: [
+        'Oeffne im CMS-Dashboard die Mediathek (WordPress: Medien \u2192 Bibliothek).',
+        'Klicke auf ein Bild ohne Alt-Text und trage im Feld Alternativtext eine kurze, inhaltliche Beschreibung ein \u2014 z.\u00a0B. "Teamfoto im Buero Muenchen".',
+        'Fuer Bilder direkt auf Seiten: oeffne die Seite im Editor, klicke das Bild an und befuelle das Alt-Text-Feld in der Seitenleiste.',
+        'Wiederhole das fuer alle betroffenen Bilder. Rein dekorative Bilder koennen ein leeres alt-Attribut erhalten.',
+        'Tipp: Bildunterschriften sind kein Ersatz fuer Alt-Texte \u2014 beide Felder erfuellen unterschiedliche Zwecke.',
+      ],
+      verify: 'Starte danach einen neuen Scan \u2014 die Anzahl der Bilder ohne Alt-Text sollte deutlich gesunken sein.',
+    };
+
+    if (/h1|hauptüberschrift/.test(combined)) return {
+      steps: [
+        'Oeffne die betroffene Seite im Editor deines CMS.',
+        'Pruefe, ob eine Ueberschrift als H1 formatiert ist. In WordPress-Gutenberg: Blocktyp Ueberschrift, Ebene H1 auswaehlen.',
+        'Jede Seite sollte genau eine H1 haben \u2014 sie beschreibt das Hauptthema der Seite.',
+        'Integriere das wichtigste Keyword der Seite in die H1-Ueberschrift.',
+        'Speichere und veroeffentliche die Seite.',
+      ],
+      verify: 'Rechtsklick \u2192 Seitenquelltext anzeigen und nach dem h1-Tag suchen \u2014 genau ein Treffer sollte erscheinen.',
+    };
+
+    if (/meta.?description|beschreibung fehlt|snippet/.test(combined)) return {
+      steps: [
+        'Installiere ein SEO-Plugin falls nicht vorhanden \u2014 z.\u00a0B. Yoast SEO oder RankMath (beide kostenlos).',
+        'Oeffne die betroffene Seite im Editor und scrolle zur SEO-Sektion des Plugins.',
+        'Trage im Feld Meta-Beschreibung einen Text mit 120\u2013155 Zeichen ein, der den Seiteninhalt treffend zusammenfasst.',
+        'Die Meta-Beschreibung erscheint in Google-Suchergebnissen als Vorschautext \u2014 formuliere sie einladend und klickstark.',
+        'Speichere und veroeffentliche die Seite.',
+      ],
+      verify: 'Pruefe mit PageSpeed Insights (developers.google.com/speed/pagespeed/insights) ob die Meta-Beschreibung erkannt wird.',
+    };
+
+    if (/sitemap/.test(combined)) return {
+      steps: [
+        'Installiere ein SEO-Plugin wie Yoast SEO oder RankMath \u2014 beide erstellen automatisch eine XML-Sitemap.',
+        'Aktiviere die Sitemap-Funktion im Plugin (Yoast: SEO \u2192 Allgemein \u2192 Funktionen \u2192 XML-Sitemaps).',
+        'Die Sitemap erscheint automatisch unter yourdomain.com/sitemap.xml.',
+        'Melde die Sitemap in der Google Search Console an: search.google.com/search-console \u2192 Sitemaps \u2192 URL eintragen.',
+      ],
+      verify: 'Rufe yourdomain.com/sitemap.xml direkt im Browser auf \u2014 eine XML-Datei mit deinen Seiten sollte erscheinen.',
+    };
+
+    if (/cookie|einwilligung|consent|banner/.test(combined)) return {
+      steps: [
+        'Installiere ein DSGVO-konformes Cookie-Consent-Plugin \u2014 z.\u00a0B. Complianz, Borlabs Cookie oder CookieYes.',
+        'Konfiguriere den Banner so, dass Nutzer aktiv zustimmen muessen (Opt-in), bevor Tracking-Cookies gesetzt werden.',
+        'Stelle sicher, dass Ablehnen-Button und Zustimmen-Button gleichwertig sichtbar sind \u2014 kein Dark Pattern.',
+        'Verlinke im Cookie-Banner auf deine Datenschutzerklaerung.',
+        'Teste den Banner im Inkognito-Modus \u2014 er muss beim ersten Besuch erscheinen.',
+      ],
+      verify: 'Oeffne die Website in einem neuen Inkognito-Fenster \u2014 der Cookie-Banner muss sofort beim ersten Besuch erscheinen.',
+    };
+
+    if (/ssl|https|zertifikat/.test(combined)) return {
+      steps: [
+        "Kontaktiere deinen Hosting-Anbieter und aktiviere ein SSL-Zertifikat \u2014 Let's Encrypt ist kostenlos und weitverbreitet.",
+        'Stelle sicher, dass alle HTTP-Anfragen automatisch auf HTTPS weitergeleitet werden (301-Redirect).',
+        'Pruefe in den CMS-Einstellungen, ob die Website-URL auf https:// gesetzt ist (WordPress: Einstellungen \u2192 Allgemein).',
+        'Scanne alle internen Links und Bildquellen auf HTTP-Referenzen und aktualisiere sie auf HTTPS.',
+        'Aktiviere den HSTS-Header auf dem Server \u2014 das erzwingt HTTPS dauerhaft.',
+      ],
+      verify: 'Pruefe das Schloss-Symbol in der Browserleiste \u2014 es sollte ohne Sicherheitswarnung erscheinen.',
+    };
+
+    if (/404|nicht erreichbar|broken link|kaputte/.test(combined)) return {
+      steps: [
+        'Notiere alle betroffenen URLs aus dem Scan-Ergebnis.',
+        'Pruefe, ob die Seiten versehentlich geloescht oder umbenannt wurden.',
+        'Erstelle die fehlende Seite neu oder setze eine 301-Weiterleitung auf die naechstgelegene relevante Seite.',
+        'In WordPress: nutze das Plugin Redirection um 301-Weiterleitungen einfach zu verwalten.',
+        'Pruefe alle internen Links, die auf die fehlerhafte URL verweisen, und aktualisiere sie.',
+      ],
+      verify: 'Rufe die betroffene URL direkt im Browser auf \u2014 keine 404-Fehlerseite sollte mehr erscheinen.',
+    };
+
+    if (/ladezeit|pagespeed|performance|lcp|cls|core web|langsam/.test(combined)) return {
+      steps: [
+        'Komprimiere alle Bilder auf der Website \u2014 nutze dafuer das Plugin Smush, ShortPixel oder Imagify fuer WordPress.',
+        'Stelle das Bildformat auf WebP um \u2014 das reduziert die Dateigroe\u00dfe um 30\u201350\u00a0% ohne sichtbaren Qualitaetsverlust.',
+        'Aktiviere Browser-Caching ueber dein Hosting oder ein Caching-Plugin wie WP Rocket oder W3 Total Cache.',
+        'Entferne nicht genutzte JavaScript- und CSS-Dateien \u2014 pruefe welche Plugins aktiv, aber ungenutzt sind.',
+        'Aktiviere Lazy Loading fuer Bilder unterhalb des sichtbaren Bereichs (in WordPress Standard seit Version 5.5).',
+      ],
+      verify: 'Teste mit PageSpeed Insights \u2014 der Score sollte nach den Optimierungen deutlich steigen.',
+    };
+
+    if (/datenschutz|dsgvo|impressum|rechtlich/.test(combined)) return {
+      steps: [
+        'Pruefe, ob eine Datenschutzerklaerung und ein Impressum auf der Website vorhanden sind.',
+        'Beide Seiten muessen vom Footer aus mit maximal zwei Klicks erreichbar sein.',
+        'Aktualisiere die Datenschutzerklaerung auf alle aktuell genutzten Dienste (Analytics, Fonts, Maps etc.).',
+        'Nutze einen DSGVO-Generator \u2014 z.\u00a0B. datenschutz.org oder e-recht24.de.',
+        'Pruefe, ob externe Ressourcen wie Google Fonts DSGVO-konform eingebunden sind (lokal hosten oder anonymisieren).',
+      ],
+      verify: 'Klicke im Footer auf Datenschutz und Impressum \u2014 beide Seiten muessen erreichbar und aktuell sein.',
+    };
+
+    if (/mobile|viewport|responsive|smartphone/.test(combined)) return {
+      steps: [
+        'Oeffne die Website auf einem Smartphone oder nutze den DevTools-Mobil-Modus (F12 \u2192 Geraetesymbol).',
+        'Pruefe, ob der Meta-Viewport-Tag im head-Bereich vorhanden ist: content="width=device-width, initial-scale=1".',
+        'Identifiziere Elemente, die auf kleinen Bildschirmen ueberlappen oder ausserhalb des sichtbaren Bereichs liegen.',
+        'Stelle sicher, dass alle Buttons und Links mindestens 44\u00d744\u00a0Pixel gross sind \u2014 kleinere Touch-Targets sind schwer bedienbar.',
+        'Teste mit Google Mobile Friendly Test: search.google.com/test/mobile-friendly.',
+      ],
+      verify: 'Oeffne die Website auf einem echten Smartphone \u2014 alle Inhalte muessen lesbar und alle Buttons bedienbar sein.',
+    };
+
+    if (/canonical|duplicate|doppelt/.test(combined)) return {
+      steps: [
+        'Installiere ein SEO-Plugin (Yoast SEO oder RankMath) falls nicht vorhanden.',
+        'Oeffne die betroffene Seite und setze im SEO-Plugin den kanonischen URL manuell auf die bevorzugte Version.',
+        'Pruefe, ob Seiten mit und ohne www oder mit und ohne Trailing-Slash unterschiedliche Inhalte liefern \u2014 richte 301-Weiterleitungen ein.',
+        'Stelle sicher, dass jede Seite auf sich selbst als Canonical verweist (Self-Canonical).',
+      ],
+      verify: 'Pruefe im Seitenquelltext, ob ein canonical-Link-Tag vorhanden ist.',
+    };
+
+    // Category fallbacks
+    if (issue.category === 'recht') return {
+      steps: [
+        'Pruefe den betroffenen Bereich auf Konformitaet mit dem BFSG (Barrierefreiheitsstaerkungsgesetz, gilt ab Juni 2025).',
+        'Stelle sicher, dass alle interaktiven Elemente per Tastatur bedienbar sind.',
+        'Pruefe den Farbkontrast zwischen Text und Hintergrund \u2014 Mindestkontrast ist 4,5:1 nach WCAG AA.',
+        'Fuege ARIA-Labels zu Elementen ohne sichtbaren Text hinzu (z.\u00a0B. Icon-Buttons, Formularfelder).',
+        'Teste mit dem kostenlosen Tool WAVE unter wave.webaim.org.',
+      ],
+      verify: 'Pruefe mit WAVE (wave.webaim.org) \u2014 die Fehleranzahl sollte nach der Korrektur zurueckgehen.',
+    };
+
+    if (issue.category === 'speed') return {
+      steps: [
+        'Analysiere die Ladezeit mit Google PageSpeed Insights (developers.google.com/speed/pagespeed/insights).',
+        'Behebe die hoechstpriorisierten Empfehlungen zuerst \u2014 haeufig Bilder und nicht genutztes JavaScript.',
+        'Aktiviere Server-seitiges Caching ueber dein Hosting-Dashboard oder ein Caching-Plugin.',
+        'Pruefe, ob externe Ressourcen (Fonts, Scripts von Drittanbietern) die Ladezeit blockieren.',
+        'Erwaege ein CDN fuer schnellere Auslieferung von statischen Ressourcen.',
+      ],
+      verify: 'Starte einen erneuten PageSpeed-Test \u2014 der Score sollte gestiegen sein.',
+    };
+
+    return {
+      steps: [
+        'Lies die obige Fehlerbeschreibung sorgfaeltig durch und identifiziere den betroffenen Bereich.',
+        'Oeffne die betroffene Seite oder Einstellung im CMS-Backend.',
+        'Behebe das beschriebene Problem anhand der Fehlerbeschreibung.',
+        'Speichere alle Aenderungen und stelle sicher, dass die Seite korrekt veroeffentlicht ist.',
+      ],
+      verify: 'Starte einen neuen Scan um zu pruefen, ob das Problem behoben wurde.',
+    };
   }
 
   // Simulated performance
@@ -342,7 +523,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     { icon: "dashboard", label: "Dashboard",    href: "/dashboard",       active: true  },
     { icon: "scan",      label: "Live Scan",    href: "/dashboard/scan",  active: false },
     { icon: "reports",   label: "Berichte",     href: "/dashboard/scans", active: false },
-    { icon: "settings",  label: "Einstellungen",href: "/dashboard/settings", active: false },
   ];
 
   const SIDEBAR_W = 200;
@@ -581,11 +761,13 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           {lastScan && (() => {
             const unknown = "Nicht eindeutig erkannt";
             const chips: { label: string; value: string; color: string }[] = [
-              { label: "CMS",     value: cmsLabel,                    color: "#7aa6ff" },
-              ...(builder ? [{ label: "Builder", value: builder,      color: "#c084fc" }] : []),
-              { label: "Server",  value: server,                      color: "#8df3d3" },
-              { label: "PHP",     value: php,                         color: "#a78bfa" },
-              { label: "SSL",     value: sslLabel,                    color: "#4ade80" },
+              { label: "CMS",       value: cmsLabel,                          color: "#7aa6ff" },
+              ...(builder   ? [{ label: "Builder",   value: builder,          color: "#c084fc" }] : []),
+              ...(framework ? [{ label: "Framework", value: framework,        color: "#38bdf8" }] : []),
+              { label: "Server",    value: server,                            color: "#8df3d3" },
+              { label: "PHP",       value: php,                               color: "#a78bfa" },
+              { label: "SSL",       value: sslLabel,                          color: "#4ade80" },
+              ...(tracking  ? [{ label: "Tracking",  value: tracking,         color: "#fb923c" }] : []),
             ];
             return (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
@@ -755,7 +937,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               </Card>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {issues.slice(0, 5).map((issue, idx) => {
+                {issues.map((issue, idx) => {
                   const isOpen = expandedFinding === idx;
                   const accentColor = issue.severity === "red" ? "#f87171" : issue.severity === "yellow" ? D.amber : D.green;
                   return (
@@ -805,98 +987,81 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       })()}
 
                       {/* Expanded body */}
-                      {isOpen && (
-                        <div style={{
-                          padding: "0 18px 16px",
-                          borderTop: `1px solid ${D.divider}`,
-                        }}>
-                          <p style={{ margin: "12px 0 10px", fontSize: 13, color: D.textSub, lineHeight: 1.7 }}>
-                            {issue.body}
-                          </p>
-                          {/* AI hint box */}
-                          <div style={{
-                            padding: "10px 14px", borderRadius: D.radiusXs,
-                            background: "rgba(122,166,255,0.04)",
-                            border: "1px solid rgba(122,166,255,0.15)",
-                            marginBottom: 12,
-                          }}>
-                            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700,
-                              color: D.blueSoft, textTransform: "uppercase", letterSpacing: "0.08em",
-                            }}>
-                              KI-Diagnose
+                      {isOpen && (() => {
+                        const fix = generateFixSteps(issue);
+                        return (
+                          <div style={{ padding: "0 18px 20px", borderTop: `1px solid ${D.divider}` }}>
+
+                            {/* Explanation */}
+                            <p style={{ margin: "14px 0 18px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
+                              {issue.body}
                             </p>
-                            <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.6,
-                              fontFamily: "'SF Mono','Fira Code','Courier New',monospace",
+
+                            {/* Fix steps */}
+                            <div style={{ marginBottom: 14 }}>
+                              <p style={{
+                                margin: "0 0 10px",
+                                fontSize: 11, fontWeight: 700,
+                                color: D.text,
+                                textTransform: "uppercase", letterSpacing: "0.08em",
+                              }}>
+                                So behebst du das:
+                              </p>
+                              <ol style={{ margin: 0, padding: "0 0 0 20px", listStyle: "decimal" }}>
+                                {fix.steps.map((step, si) => (
+                                  <li key={si} style={{
+                                    fontSize: 13, color: D.textSub, lineHeight: 1.7,
+                                    paddingLeft: 4, marginBottom: si < fix.steps.length - 1 ? 6 : 0,
+                                  }}>
+                                    {step}
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+
+                            {/* Verification */}
+                            <div style={{
+                              display: "flex", alignItems: "flex-start", gap: 10,
+                              padding: "10px 14px", borderRadius: D.radiusXs,
+                              background: "rgba(74,222,128,0.04)",
+                              border: "1px solid rgba(74,222,128,0.15)",
                             }}>
-                              {issue.body.slice(0, 120)}
-                              {issue.body.length > 120 && "…"}
-                            </p>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                stroke={D.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                style={{ flexShrink: 0, marginTop: 2 }}>
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                              </svg>
+                              <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>
+                                <span style={{ fontWeight: 700, color: D.green }}>Prüfung: </span>
+                                {fix.verify}
+                              </p>
+                            </div>
+
                           </div>
-                          {/* Locked fix guide */}
-                          <div style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "11px 14px", borderRadius: D.radiusXs,
-                            background: D.blueBg,
-                            border: `1px solid ${D.blueBorder}`,
-                          }}>
-                            <LockIco size={14} color={D.blueSoft} />
-                            <span style={{ flex: 1, fontSize: 12, color: D.textSub, lineHeight: 1.4 }}>
-                              Detaillierte Handlungsempfehlung im Smart-Guard Plan verfügbar
-                            </span>
-                            <Link href="/smart-guard" style={{
-                              fontSize: 11, fontWeight: 700,
-                              padding: "5px 12px", borderRadius: 6,
-                              background: D.blue, color: "#fff",
-                              textDecoration: "none", whiteSpace: "nowrap",
-                              boxShadow: D.blueGlow,
-                            }}>
-                              Smart-Guard →
-                            </Link>
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   );
                 })}
 
-                {/* Locked remaining */}
-                {issues.length > 5 && (
-                  <div style={{
-                    padding: "14px 18px",
-                    borderRadius: D.radiusSm,
-                    background: "rgba(255,255,255,0.015)",
-                    border: `1px solid ${D.border}`,
-                    display: "flex", alignItems: "center", gap: 10,
-                  }}>
-                    <LockIco size={14} />
-                    <span style={{ fontSize: 12, color: D.textMuted, flex: 1 }}>
-                      {issues.length - 5} weitere Befunde — nur mit Smart-Guard sichtbar
-                    </span>
-                    <Link href="/smart-guard" style={{
-                      fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 6,
-                      background: D.blue, color: "#fff", textDecoration: "none",
-                      boxShadow: D.blueGlow,
-                    }}>
-                      Alle anzeigen
-                    </Link>
-                  </div>
-                )}
               </div>
             )}
           </div>
 
           <Divider style={{ marginBottom: 28 }} />
 
-          {/* ⑦ LOCKED SMART-GUARD MODULES */}
+          {/* ⑦ SMART-GUARD AUTOMATION MODULES */}
           <div style={{ marginBottom: 28 }}>
-            <SectionLabel>Smart-Guard · Nur im bezahlten Plan</SectionLabel>
-            <SectionHead>Kontinuierliche Website-Überwachung</SectionHead>
+            <SectionLabel color={D.blueSoft}>Smart-Guard · Automatisierung & Überwachung</SectionLabel>
+            <SectionHead>Du weißt was zu tun ist — wir machen es automatisch.</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
                 {
                   title: "Score-Verlauf",
-                  valueLabel: "7 Tage · täglich",
-                  desc: "Verfolge, wie sich dein Website-Score über Zeit entwickelt — und erkenne Rückschritte bevor sie zum Problem werden.",
+                  badge: "7 Tage · täglich",
+                  desc: "Verfolge, wie sich dein Website-Score nach jeder Änderung entwickelt. Erkenne Rückschritte sofort — bevor sie sich auf Rankings auswirken.",
+                  cta: "Verlauf aktivieren",
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -905,8 +1070,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 },
                 {
                   title: "24/7 Live-Monitoring",
-                  valueLabel: "Echtzeit · Sofort-Alert",
-                  desc: "Automatische Überwachung auf Ausfälle, veränderte Inhalte und neue Sicherheitsrisiken — rund um die Uhr.",
+                  badge: "Echtzeit · Sofort-Alert",
+                  desc: "Wir überwachen deine Website rund um die Uhr. Du wirst sofort per E-Mail informiert, wenn etwas schiefläuft — kein manuelles Prüfen nötig.",
+                  cta: "Monitoring aktivieren",
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
@@ -914,9 +1080,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   ),
                 },
                 {
-                  title: "PDF-Bericht",
-                  valueLabel: "Monatlich · automatisch",
-                  desc: "Professionell aufbereiteter Auditbericht als PDF — jederzeit abrufbar, teilbar und für Kunden- oder Archivzwecke verwendbar.",
+                  title: "Monatlicher PDF-Bericht",
+                  badge: "Automatisch · Teilbar",
+                  desc: "Jeden Monat ein professioneller Audit-Bericht als PDF — automatisch erstellt, jederzeit abrufbar und bereit für Kunden oder interne Ablage.",
+                  cta: "Berichte aktivieren",
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -932,25 +1099,29 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   border: `1px solid ${D.border}`,
                   overflow: "hidden",
                   position: "relative",
-                  minHeight: 180,
+                  minHeight: 200,
                 }}>
-                  {/* Blurred mock data behind */}
-                  <div style={{ padding: "20px", filter: "blur(4px)", pointerEvents: "none", userSelect: "none", opacity: 0.25 }}>
-                    <div style={{ height: 7, borderRadius: 4, background: D.borderStrong, marginBottom: 12, width: "70%" }} />
-                    <div style={{ height: 5, borderRadius: 3, background: D.border, marginBottom: 8, width: "45%" }} />
-                    <div style={{ height: 55, borderRadius: D.radiusXs, background: "rgba(0,123,255,0.04)", border: `1px solid ${D.border}` }} />
+                  {/* Blurred mock chart behind */}
+                  <div style={{ padding: "20px", filter: "blur(5px)", pointerEvents: "none", userSelect: "none", opacity: 0.2 }}>
+                    <div style={{ height: 8, borderRadius: 4, background: D.borderStrong, marginBottom: 10, width: "60%" }} />
+                    <div style={{ height: 5, borderRadius: 3, background: D.border, marginBottom: 16, width: "40%" }} />
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 48 }}>
+                      {[30,55,42,70,58,80,65].map((h, i) => (
+                        <div key={i} style={{ flex: 1, borderRadius: "3px 3px 0 0", height: `${h}%`, background: "rgba(0,123,255,0.3)" }} />
+                      ))}
+                    </div>
                   </div>
-                  {/* Lock overlay */}
+                  {/* Overlay */}
                   <div style={{
                     position: "absolute", inset: 0,
                     display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center", gap: 7,
+                    alignItems: "center", justifyContent: "center", gap: 8,
                     padding: "20px",
-                    background: "rgba(10,25,47,0.55)",
-                    backdropFilter: "blur(1px)",
+                    background: "rgba(10,12,16,0.7)",
+                    backdropFilter: "blur(2px)",
                   }}>
                     <div style={{
-                      width: 38, height: 38, borderRadius: "50%",
+                      width: 40, height: 40, borderRadius: "50%",
                       background: D.blueBg, border: `1px solid ${D.blueBorder}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
@@ -958,22 +1129,29 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       {module.icon}
                     </div>
                     <div style={{ textAlign: "center" }}>
-                      <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: D.text }}>{module.title}</p>
-                      <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: D.blueSoft, letterSpacing: "0.05em" }}>{module.valueLabel}</p>
+                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: D.text }}>{module.title}</p>
+                      <span style={{
+                        display: "inline-block",
+                        fontSize: 10, fontWeight: 600,
+                        padding: "2px 8px", borderRadius: 20,
+                        background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                        color: D.blueSoft, letterSpacing: "0.04em",
+                      }}>
+                        {module.badge}
+                      </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, textAlign: "center", lineHeight: 1.55, maxWidth: 160 }}>
+                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 170 }}>
                       {module.desc}
                     </p>
                     <Link href="/smart-guard" style={{
-                      marginTop: 2,
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "6px 14px", borderRadius: D.radiusXs,
+                      marginTop: 4,
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      padding: "7px 16px", borderRadius: D.radiusXs,
                       background: D.blue, color: "#fff",
                       fontSize: 11, fontWeight: 700, textDecoration: "none",
                       boxShadow: D.blueGlow,
                     }}>
-                      <LockIco size={11} color="#fff" />
-                      Im Smart-Guard freischalten
+                      {module.cta} →
                     </Link>
                   </div>
                 </div>
@@ -986,32 +1164,35 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           {/* ⑧ DONE-FOR-YOU FIXES */}
           <div style={{ marginBottom: 40 }}>
             <SectionLabel color={D.blueSoft}>Professioneller Service</SectionLabel>
-            <SectionHead>Wir beheben es für dich</SectionHead>
+            <SectionHead>Du weißt wie's geht — wir erledigen es für dich.</SectionHead>
+            <p style={{ margin: "-10px 0 20px", fontSize: 13, color: D.textMuted, lineHeight: 1.7, maxWidth: 620 }}>
+              Die Fixes oben kannst du selbst umsetzen. Falls du lieber jemanden beauftragst: Unser Team übernimmt das für dich — schnell, dokumentiert und nachweisbar.
+            </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
                 {
                   step: "01",
                   color: "#7aa6ff",
-                  title: "Formular & DSGVO",
-                  outcome: "Rechtssicherheit in 24h",
-                  desc: "Wir prüfen und korrigieren dein Kontaktformular auf DSGVO-Konformität, korrekte Einwilligungstexte und BFSG-Barrierefreiheit — dokumentiert und abnahmebereit.",
-                  pills: ["DSGVO-konform", "BFSG", "WCAG 2.2"],
+                  title: "Rechtliches & DSGVO",
+                  outcome: "Rechtssicherheit in 24 h",
+                  desc: "Kontaktformular, Cookie-Banner, Datenschutzerklärung und Impressum — DSGVO-konform, BFSG-geprüft und dokumentiert. Abnahmebereit.",
+                  pills: ["DSGVO", "BFSG 2025", "WCAG 2.2"],
                 },
                 {
                   step: "02",
                   color: "#8df3d3",
-                  title: "Performance-Optimierung",
-                  outcome: "Messbar schneller laden",
-                  desc: "Bilder komprimieren, Lazy Loading einrichten, Server-Caching aktivieren und kritisches JavaScript reduzieren — spürbare Verbesserung der Core Web Vitals.",
-                  pills: ["LCP < 2.5s", "Core Web Vitals", "PageSpeed 90+"],
+                  title: "Performance & Ladezeit",
+                  outcome: "PageSpeed 90+ in 48 h",
+                  desc: "Bilder komprimieren, Lazy Loading, Server-Caching, JavaScript-Optimierung — messbar schnellere Ladezeit und bessere Core Web Vitals.",
+                  pills: ["LCP < 2.5 s", "Core Web Vitals", "PageSpeed 90+"],
                 },
                 {
                   step: "03",
                   color: "#c084fc",
-                  title: "Mobile-Optimierung",
-                  outcome: "Auf allen Geräten perfekt",
-                  desc: "Viewport-Konfiguration, Touch-Target-Größen und responsive Layoutprobleme werden gezielt behoben — für ein einwandfreies Nutzererlebnis auf Smartphone und Tablet.",
-                  pills: ["Viewport", "Touch-Targets", "Responsive Design"],
+                  title: "Mobile & Barrierefreiheit",
+                  outcome: "Auf allen Geräten einwandfrei",
+                  desc: "Viewport, Touch-Targets, Responsive Layout, Alt-Texte, Tastaturnavigation — alle Probleme auf einmal behoben, getestet und übergeben.",
+                  pills: ["Responsive", "WCAG AA", "Touch-Targets"],
                 },
               ].map(fix => (
                 <div key={fix.title} style={{
@@ -1022,7 +1203,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   position: "relative", overflow: "hidden",
                   display: "flex", flexDirection: "column",
                 }}>
-                  {/* Background step watermark */}
                   <div style={{
                     position: "absolute", right: 14, top: 8,
                     fontSize: 52, fontWeight: 900,
@@ -1032,16 +1212,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   }}>
                     {fix.step}
                   </div>
-                  {/* Label */}
                   <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700,
                     color: fix.color, textTransform: "uppercase", letterSpacing: "0.1em",
                   }}>
-                    Service
+                    Wir beheben es
                   </p>
                   <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: D.text, letterSpacing: "-0.01em" }}>
                     {fix.title}
                   </h3>
-                  {/* Outcome promise */}
                   <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 600, color: fix.color, opacity: 0.9 }}>
                     → {fix.outcome}
                   </p>
@@ -1061,14 +1239,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       </span>
                     ))}
                   </div>
-                  <Link href="/smart-guard" style={{
+                  <Link href="/kontakt" style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "9px 18px", borderRadius: D.radiusSm,
                     background: D.blue, color: "#fff",
                     fontSize: 12, fontWeight: 700, textDecoration: "none",
                     boxShadow: D.blueGlow, alignSelf: "flex-start",
                   }}>
-                    Beheben lassen →
+                    Jetzt beauftragen →
                   </Link>
                 </div>
               ))}
@@ -1093,10 +1271,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               Smart-Guard
             </div>
             <h2 style={{ margin: "0 0 12px", fontSize: 26, fontWeight: 800, color: D.text, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
-              Automatischer Schutz für deine Website.
+              Du weißt was zu tun ist.<br/>Wir überwachen, ob es erledigt bleibt.
             </h2>
-            <p style={{ margin: "0 auto 28px", fontSize: 15, color: D.textSub, maxWidth: 500, lineHeight: 1.75 }}>
-              24/7 Monitoring, Score-Verlauf, PDF-Berichte und unbegrenzte Scans — für 39 €/Monat.
+            <p style={{ margin: "0 auto 28px", fontSize: 15, color: D.textSub, maxWidth: 520, lineHeight: 1.75 }}>
+              Smart-Guard scannt deine Website automatisch, überwacht Veränderungen rund um die Uhr und informiert dich sofort — ohne dass du selbst prüfen musst. Inkl. Score-Verlauf, monatlichem PDF-Bericht und unbegrenzten Scans. Für 39 €/Monat.
               Jederzeit kündbar.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
