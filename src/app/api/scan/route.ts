@@ -397,19 +397,27 @@ Erstelle Diagnose auf Deutsch:
       orphanedPages.length > 0,
     ].filter(Boolean).length;
 
-    // Fire-and-forget: DB write runs after response is sent
+    // Await DB write — must complete before response so the dashboard can read it
+    let savedScanId: string | null = null;
     if (session?.user?.id) {
-      const sql = neon(process.env.DATABASE_URL!);
-      sql`INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint)
-        VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose}, ${JSON.stringify(techFingerprint)})
-      `.catch(() => null);
+      try {
+        const sql = neon(process.env.DATABASE_URL!);
+        const rows = await sql`
+          INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint)
+          VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose}, ${JSON.stringify(techFingerprint)})
+          RETURNING id::text
+        ` as { id: string }[];
+        savedScanId = rows[0]?.id ?? null;
+      } catch (dbErr) {
+        console.error("DB write error:", dbErr);
+      }
     }
 
     // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
     await saveScanAsync(targetUrl, { scanData, diagnose });
 
     logScan({ userId: session?.user?.id, url: targetUrl, scanType: "website", status: "success", durationMs: Date.now() - scanStart });
-    return NextResponse.json({ success: true, scanData, diagnose });
+    return NextResponse.json({ success: true, scanData, diagnose, scanId: savedScanId });
 
   } catch (err) {
     console.error("Scan-Fehler:", err);
