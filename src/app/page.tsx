@@ -975,7 +975,7 @@ export default function Page() {
 
             {/* Trust line */}
             <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
-              {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
+              {["Sichere Zahlung", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
                 <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
@@ -1243,7 +1243,7 @@ export default function Page() {
                 Deine erste Website<br />scannst du kostenlos.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                Keine Kreditkarte. Keine Installation.<br />Ergebnis in unter 60 Sekunden.
+                Keine Installation. Ergebnis in unter 60 Sekunden.
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
