@@ -740,8 +740,8 @@ export default async function DashboardPage() {
                               <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
                                 {/* Smart-Guard: Erledigt-Checkbox */}
                                 {isSingle && (
-                                  <label htmlFor={cbId} onClick={e => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: C.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid #A7F3D0", background: "#ECFDF5", whiteSpace: "nowrap" }}>
-                                    <input type="checkbox" id={cbId} className="fix-done" onClick={e => e.stopPropagation()} style={{ width: 12, height: 12, accentColor: C.green, cursor: "pointer" }} />
+                                  <label htmlFor={cbId} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: C.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid #A7F3D0", background: "#ECFDF5", whiteSpace: "nowrap" }}>
+                                    <input type="checkbox" id={cbId} className="fix-done" style={{ width: 12, height: 12, accentColor: C.green, cursor: "pointer" }} />
                                     Erledigt ✓
                                   </label>
                                 )}
