@@ -889,12 +889,12 @@ export default function Page() {
               Kundenstimmen
             </p>
             <h2 style={{ margin: 0, fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
-              Vertraut von führenden Agenturen
+              Was unsere Kunden sagen
             </h2>
           </div>
 
           <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20 }}>
-            {/* Testimonial 1 — Profit */}
+            {/* Testimonial 1 — Sicherheit */}
             <div style={{
               background: "rgba(255,255,255,0.03)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -910,7 +910,7 @@ export default function Page() {
                 ))}
               </div>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
-                "Seit wir website-fix.com nutzen, fakturieren wir den BFSG-Report als eigene Position — <strong style={{ color: "#fff", fontStyle: "normal" }}>+400€ Zusatzumsatz pro Wartungskunde</strong>. Das Tool hat sich im ersten Monat amortisiert."
+                "Das Thema BFSG 2025 hat mir schlaflose Nächte bereitet. Mit WebsiteFix habe ich jetzt die Gewissheit, dass meine Seite <strong style={{ color: "#fff", fontStyle: "normal" }}>rechtssicher ist, ohne dass ich selbst zum IT-Experten werden musste</strong>."
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
                 <div style={{
@@ -920,27 +920,20 @@ export default function Page() {
                   fontSize: 16, fontWeight: 700, color: "#fff",
                 }}>M</div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Markus T.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Geschäftsführer, Pixelwerk Agentur</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Michael R.</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Inhaber, Online-Shop für Bio-Feinkost</div>
                 </div>
               </div>
             </div>
 
-            {/* Testimonial 2 — Effizienz */}
+            {/* Testimonial 2 — Einfachheit */}
             <div style={{
               background: "rgba(255,255,255,0.03)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 16,
               padding: "28px 28px 24px",
               display: "flex", flexDirection: "column", gap: 20,
-              position: "relative",
             }}>
-              <div style={{
-                position: "absolute", top: 20, right: 20,
-                fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-                background: "rgba(37,99,235,0.15)", color: "#7aa6ff",
-                border: "1px solid rgba(37,99,235,0.25)", letterSpacing: "0.04em",
-              }}>Jira-Integration</div>
               <div style={{ display: "flex", gap: 4 }}>
                 {[1,2,3,4,5].map(i => (
                   <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
@@ -949,7 +942,7 @@ export default function Page() {
                 ))}
               </div>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
-                "Die <strong style={{ color: "#fff", fontStyle: "normal" }}>Jira-Integration ist ein Game-Changer</strong>. Scan läuft, Tickets landen automatisch beim Entwickler — ohne Copy-Paste. Wir sparen locker 3 Stunden pro Woche."
+                "Endlich ein Tool, das keine komplizierte Installation braucht. <strong style={{ color: "#fff", fontStyle: "normal" }}>URL eingegeben, Scan läuft</strong> – und die wöchentlichen Reports geben mir das gute Gefühl, dass technisch alles perfekt ist."
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
                 <div style={{
@@ -957,29 +950,22 @@ export default function Page() {
                   background: "linear-gradient(135deg, #059669 0%, #0891B2 100%)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 16, fontWeight: 700, color: "#fff",
-                }}>S</div>
+                }}>J</div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Sarah K.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Projektleiterin, Studio Nord GmbH</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Julia S.</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Marketing-Leitung, Mittelstands-GmbH</div>
                 </div>
               </div>
             </div>
 
-            {/* Testimonial 3 — Sicherheit */}
+            {/* Testimonial 3 — Zeitersparnis */}
             <div style={{
               background: "rgba(255,255,255,0.03)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 16,
               padding: "28px 28px 24px",
               display: "flex", flexDirection: "column", gap: 20,
-              position: "relative",
             }}>
-              <div style={{
-                position: "absolute", top: 20, right: 20,
-                fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-                background: "rgba(5,150,105,0.15)", color: "#34D399",
-                border: "1px solid rgba(5,150,105,0.25)", letterSpacing: "0.04em",
-              }}>BFSG-Report</div>
               <div style={{ display: "flex", gap: 4 }}>
                 {[1,2,3,4,5].map(i => (
                   <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
@@ -988,7 +974,7 @@ export default function Page() {
                 ))}
               </div>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
-                "Kein Kunde hat uns nach dem BFSG-Inkrafttreten um Schadenersatz gebeten — weil wir durch den <strong style={{ color: "#fff", fontStyle: "normal" }}>automatischen BFSG-Report schon Monate vorher</strong> alle Lücken geschlossen hatten."
+                "Ich habe früher Stunden damit verbracht, Fehler auf meiner Seite zu suchen. <strong style={{ color: "#fff", fontStyle: "normal" }}>WebsiteFix findet sie sofort und informiert mich per E-Mail</strong>. Absolute Empfehlung für jeden, der sich auf sein Kerngeschäft konzentrieren will."
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
                 <div style={{
@@ -998,8 +984,8 @@ export default function Page() {
                   fontSize: 16, fontWeight: 700, color: "#fff",
                 }}>T</div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Tobias M.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Inhaber, Webagentur Rheinland</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Dr. Thomas W.</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Betreiber einer Gemeinschaftspraxis</div>
                 </div>
               </div>
             </div>
