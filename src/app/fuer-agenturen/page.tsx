@@ -134,11 +134,11 @@ export default function AgencyPage() {
           </div>
 
           <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            Verwandle deine Wartung<br />in eine Profit-Maschine.
+            Skaliere deine Agentur mit automatisierten Wartungsverträgen.
           </h1>
 
           <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 40px", fontWeight: 400 }}>
-            WebsiteFix ist deine automatisierte White-Label Zentrale für BFSG-Compliance &amp; Kundenbindung — mit Jira, Trello und Asana direkt integriert.
+            Generiere monatlich wiederkehrende Umsätze (MRR) durch vollautomatisierte BFSG- und Sicherheits-Audits – ganz ohne manuellen Aufwand.
           </p>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -641,11 +641,10 @@ export default function AgencyPage() {
                 KAUFARGUMENT NR. 1 FÜR AGENTUREN
               </div>
               <h2 style={{ margin: "0 0 12px", fontSize: "clamp(28px, 3.5vw, 46px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                Dein Logo. Deine Farben.<br />
-                <span style={{ color: "rgba(255,255,255,0.3)" }}>Kein WebsiteFix-Branding.</span>
+                Dein Tool. Dein Branding. Deine Marge.
               </h2>
               <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)", maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Lade einmalig dein Agentur-Logo hoch und wähle deine Primärfarbe. Danach erscheint auf jedem Monatsbericht dein Name — der Kunde sieht nie, dass WebsiteFix dahinter steckt.
+                Versende professionelle PDF-Reports mit deinem Agentur-Logo und in deinen Markenfarben. WebsiteFix bleibt im Hintergrund – du bist der Experte für deine Kunden.
               </p>
             </div>
 
@@ -778,22 +777,22 @@ export default function AgencyPage() {
             </div>
 
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-              {/* BFSG Deep-Dive */}
-              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Karte 1: Profitabilität */}
+              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(37,99,235,0.12)", color: "#7aa6ff", letterSpacing: "0.06em" }}>BFSG 2025</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(37,99,235,0.12)", color: "#7aa6ff", letterSpacing: "0.06em" }}>Profitabilität</span>
                 </div>
-                <div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Barrierefreiheits-Prüfung</h3>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Neue Umsatzpotenziale</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
-                    Das Barrierefreiheitsstärkungsgesetz (BFSG) ist seit Juni 2025 in Kraft. Agenturen, die B2C-Websites betreuen, tragen Mitverantwortung. WebsiteFix prüft automatisch alle WCAG 2.1 AA-Kriterien und dokumentiert die Ergebnisse lückenlos.
+                    Verwandle deine Wartungsleistungen in monatlich wiederkehrende Umsätze. Automatisierte BFSG-Audits und Sicherheits-Checks rechtfertigen höhere Wartungspauschalen – ohne zusätzlichen Aufwand.
                   </p>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                  <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["WCAG 2.1 AA vollständig", "Audit-Trail als Nachweis", "Automatische Meldung bei Verstoß", "BFSG Haftungsschutz-Monitor"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -804,9 +803,9 @@ export default function AgencyPage() {
                 </div>
               </div>
 
-              {/* White-Label Report Deep-Dive */}
-              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Karte 2: Effizienz */}
+              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(22,163,74,0.12)", border: "1px solid rgba(22,163,74,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -814,14 +813,14 @@ export default function AgencyPage() {
                       <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(22,163,74,0.12)", color: "#4ade80", letterSpacing: "0.06em" }}>White-Label</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(22,163,74,0.12)", color: "#4ade80", letterSpacing: "0.06em" }}>Effizienz</span>
                 </div>
-                <div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Automatische Monatsberichte</h3>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Null manueller Aufwand</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
                     Am 1. jeden Monats wird automatisch ein professioneller PDF-Report mit deinem Logo, deiner Farbe und einer KI-generierten Management-Zusammenfassung an jeden Kunden versendet.
                   </p>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                  <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Agentur-Logo & Primärfarbe", "KI-Zusammenfassung auf Agentur-Niveau", "PDF-Export + direkter E-Mail-Versand", "Kein WebsiteFix-Branding sichtbar"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -832,22 +831,22 @@ export default function AgencyPage() {
                 </div>
               </div>
 
-              {/* Workflow Automation Deep-Dive */}
-              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Karte 3: Loyalität */}
+              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(217,119,6,0.12)", color: "#fbbf24", letterSpacing: "0.06em" }}>Automation</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(217,119,6,0.12)", color: "#fbbf24", letterSpacing: "0.06em" }}>Loyalität</span>
                 </div>
-                <div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Automatischer Workflow</h3>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Kunden langfristig binden</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
                     Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich sofort. Dein Team arbeitet immer am aktuellen Stand — ohne Copy-Paste.
                   </p>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                  <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Jira · Trello · Asana Integration", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall", "Lückenloser Audit-Trail"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

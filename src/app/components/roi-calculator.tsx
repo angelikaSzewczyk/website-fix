@@ -19,7 +19,7 @@ export default function RoiCalculator() {
             ROI-Kalkulator
           </p>
           <h2 style={{ margin: "0 0 12px", fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-            Was sparst du mit WebsiteFix?
+            Berechne deinen monatlichen Zusatzgewinn.
           </h2>
           <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
             Passe die Werte an — und sieh, wie viel Zeit und Geld du jeden Monat zurückgewinnst.
