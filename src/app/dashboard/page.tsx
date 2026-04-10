@@ -422,6 +422,8 @@ export default async function DashboardPage() {
           100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
         }
         .pulse-dot { animation: pulse-ring 2s infinite; }
+        /* Glassmorphism lock overlay for Free-plan locked features */
+        .lock-glass { position: absolute; inset: 0; background: rgba(248,250,252,0.9); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 14px; padding: 24px; text-align: center; z-index: 2; }
         /* Auto-Report CSS toggle (server component, no JS) */
         .ar-cb { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .ar-track { display: inline-flex; width: 36px; height: 20px; border-radius: 10px; background: #CBD5E1; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
@@ -430,10 +432,7 @@ export default async function DashboardPage() {
         .ar-wrap:has(.ar-cb:checked) .ar-thumb { left: 19px; }
       `}</style>
 
-      {isAgency
-        ? <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} />
-        : <ProgressBar plan={plan} />
-      }
+      {isAgency && <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} />}
 
       {/* ══════════════════════════════════════════════════════════
           FREE / SINGLE (Smart-Guard) LAYOUT
@@ -441,51 +440,60 @@ export default async function DashboardPage() {
       {!isAgency && (
         <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px 100px" }}>
 
-          {/* ── Top Bar ── */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, gap: 12, flexWrap: "wrap" }}>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: 11, color: C.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dein Audit-Dashboard</p>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
-                Hallo, {firstName} 👋
-              </h1>
-            </div>
-
-            {/* FREE: Scan counter + Upgrade */}
-            {isFree && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? C.redBg : C.card, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "#FECACA" : C.border}` }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                  </svg>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? C.red : C.text }}>{monthlyScans} / {SCAN_LIMIT}</span>
-                  <span style={{ fontSize: 11, color: C.textMuted }}>Scans</span>
-                </div>
-                <Link href="/preise" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 10px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
-                  ⚡ Upgrade auf Smart-Guard
-                </Link>
-              </div>
-            )}
-
-            {/* SMART-GUARD: Plan badge + Monitoring aktiv */}
-            {isSingle && (
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                {/* Plan badge */}
-                <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 13px", borderRadius: 20, background: "#ECFDF5", border: "1px solid #A7F3D0" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Plan: Smart-Guard</span>
-                </div>
-                {/* Monitoring aktiv */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Monitoring: AKTIV</span>
+          {/* ── Pro Header ── */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 20, boxShadow: C.shadow }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              {/* Left: Domain + timestamp */}
+              <div style={{ minWidth: 0 }}>
+                {lastScan ? (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0 }}>Domain</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: C.blue, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 340 }}>{lastScan.url}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0 }}>Letzter Scan</span>
+                      <span style={{ fontSize: 12, color: C.textSub, fontVariantNumeric: "tabular-nums" }}>
+                        {new Date(lastScan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })}
+                        {" · "}
+                        {new Date(lastScan.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <p style={{ margin: "0 0 2px", fontSize: 11, color: C.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dein Audit-Dashboard</p>
+                    <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>Hallo, {firstName}</h1>
                   </div>
-                  <span style={{ fontSize: 10, color: C.textMuted, paddingLeft: 14 }}>Nächster automatischer Check: in 14 Minuten</span>
-                </div>
+                )}
               </div>
-            )}
+
+              {/* Right: Plan badge + scan counter */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
+                {/* Plan badge */}
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
+                  Plan: {badge.label}
+                </span>
+                {/* Free scan counter */}
+                {isFree && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? C.redBg : C.divider, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "#FECACA" : C.border}` }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? C.red : C.text, whiteSpace: "nowrap" }}>
+                      {monthlyScans} / {SCAN_LIMIT} Scans
+                    </span>
+                  </div>
+                )}
+                {/* Smart-Guard monitoring dot */}
+                {isSingle && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#ECFDF5", border: "1px solid #A7F3D0" }}>
+                    <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.green, whiteSpace: "nowrap" }}>Monitoring aktiv</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* ── No Scan State ── */}
@@ -517,14 +525,50 @@ export default async function DashboardPage() {
           {lastScan && (
             <>
 
-              {/* ── History Chart (Smart-Guard only) ── */}
+              {/* ── History Chart: Smart-Guard active / Free: glassmorphism locked ── */}
               {isSingle && scans.length > 0 && <HistoryChart scans={scans} />}
+              {isFree && (
+                <div style={{ position: "relative", overflow: "hidden", marginBottom: 16 }}>
+                  {/* Blurred dummy chart */}
+                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 20px 10px", filter: "blur(3px)", opacity: 0.5, pointerEvents: "none", userSelect: "none", minHeight: 110 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: C.green }}>82</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 44 }}>
+                      {[58, 62, 59, 68, 72, 77, 82].map((h, i) => (
+                        <div key={i} style={{ flex: 1, borderRadius: 3, background: i === 6 ? C.green : "#A7F3D0", height: `${(h / 90) * 100}%` }} />
+                      ))}
+                    </div>
+                  </div>
+                  {/* Glassmorphism overlay */}
+                  <div className="lock-glass">
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "#FFFBEB", border: "1.5px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: C.text }}>Score-Verlauf & Monitoring</p>
+                      <p style={{ margin: 0, fontSize: 11, color: C.textSub }}>7-Tage-Trend wird im Smart-Guard Plan live aufgezeichnet.</p>
+                    </div>
+                    <Link href="/smart-guard" style={{ padding: "6px 18px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>
+                      Smart-Guard aktivieren →
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* ── System Detection Bar ── */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: C.shadow }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>System</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{cms.label}{cms.version ? ` ${cms.version}` : ""}</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: C.text }}>
+                    {cms.label === "WordPress" && (
+                      <span style={{ width: 18, height: 18, borderRadius: 4, background: "#21759B", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#fff", fontFamily: "serif", flexShrink: 0, letterSpacing: "-0.05em" }}>W</span>
+                    )}
+                    {cms.label}{cms.version ? ` ${cms.version}` : ""}
+                  </span>
                 </div>
                 <div style={{ width: 1, height: 16, background: C.border }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
@@ -695,6 +739,48 @@ export default async function DashboardPage() {
                 })()}
               </div>
 
+              {/* ── Google Search Console Einblicke ── */}
+              {(() => {
+                const indexedPages = lastScanResult ? Math.max(12, 80 - issues.filter(i => /index|robots/.test(i.title.toLowerCase())).length * 5) : 87;
+                const mobileOk    = !issues.some(i => /mobil|viewport|responsive/.test(i.title.toLowerCase()));
+                const sitemapOk   = !issues.some(i => /sitemap/.test(i.title.toLowerCase()));
+                return (
+                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, marginBottom: 20 }}>
+                    <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
+                      {/* Google Search Console color dots icon */}
+                      <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                        {["#4285F4","#EA4335","#FBBC04","#34A853"].map(c => (
+                          <span key={c} style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }} />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Google Search Console Einblicke</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`, letterSpacing: "0.04em", textTransform: "uppercase" }}>Simuliert</span>
+                    </div>
+                    <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                      {[
+                        { label: "Indexierte Seiten", value: String(indexedPages), status: indexedPages > 50 ? "green" : "amber", sub: "von ~120 Seiten erkannt", icon: "📄" },
+                        { label: "Mobile Nutzbarkeit", value: mobileOk ? "OK" : "Fehler", status: mobileOk ? "green" : "red", sub: mobileOk ? "Keine kritischen Fehler" : "Viewport-Probleme erkannt", icon: "📱" },
+                        { label: "Sitemap erkannt", value: sitemapOk ? "1 gefunden" : "Fehlt", status: sitemapOk ? "green" : "amber", sub: sitemapOk ? "sitemap.xml eingereicht" : "Sitemap nicht gefunden", icon: "🗺" },
+                      ].map(m => {
+                        const col = m.status === "green" ? C.green : m.status === "amber" ? C.amber : C.red;
+                        const bg  = m.status === "green" ? C.greenBg : m.status === "amber" ? C.amberBg : C.redBg;
+                        const brd = m.status === "green" ? "#A7F3D0" : m.status === "amber" ? "#FDE68A" : "#FECACA";
+                        return (
+                          <div key={m.label} style={{ padding: "14px 16px", borderRadius: 10, background: bg, border: `1px solid ${brd}` }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                              <span style={{ fontSize: 14 }}>{m.icon}</span>
+                              <span style={{ fontSize: 20, fontWeight: 800, color: col, letterSpacing: "-0.03em", lineHeight: 1 }}>{m.value}</span>
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: col, marginBottom: 2 }}>{m.label}</div>
+                            <div style={{ fontSize: 10, color: col, opacity: 0.7 }}>{m.sub}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* ── Fehler-Liste mit Fix-Anleitungen ── */}
               {issues.length > 0 && (
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadow, marginBottom: 20 }}>
@@ -759,41 +845,47 @@ export default async function DashboardPage() {
               )}
 
               {/* ── 24/7 Monitoring ── */}
-              <div style={{ background: C.card, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, marginBottom: 14 }}>
-                <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
-                  {isSingle && <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />}
-                  <span style={{ fontSize: 13, fontWeight: 700, color: isSingle ? C.text : C.textMuted }}>24/7 Live-Überwachung</span>
-                  {isSingle
-                    ? <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#ECFDF5", color: C.green, border: "1px solid #A7F3D0" }}>AKTIV</span>
-                    : <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#F1F5F9", color: C.textMuted, border: `1px solid ${C.border}` }}>
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Gesperrt
-                      </span>
-                  }
-                </div>
-                <div style={{ padding: "18px 20px", opacity: isSingle ? 1 : 0.5, pointerEvents: isSingle ? "auto" : "none", filter: isSingle ? "none" : "grayscale(0.4)" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                    {[
-                      { label: "Stündliche Prüfung", icon: "⏱" },
-                      { label: "SSL-Ablauf Alarm",   icon: "🔒" },
-                      { label: "Downtime-Alarm",     icon: "📡" },
-                    ].map(item => (
-                      <div key={item.label} style={{ padding: "12px 14px", borderRadius: 8, background: isSingle ? "#ECFDF5" : C.bg, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 14 }}>{item.icon}</span>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: isSingle ? C.text : C.textSub }}>{item.label}</div>
-                          {isSingle && <div style={{ fontSize: 10, fontWeight: 700, color: C.green, marginTop: 1 }}>AN</div>}
+              <div style={{ position: "relative", overflow: "hidden", borderRadius: 14, marginBottom: 14 }}>
+                {/* Content (blurred for Free) */}
+                <div style={{ background: C.card, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, ...(isFree ? { filter: "blur(2px)", opacity: 0.55, pointerEvents: "none", userSelect: "none" } : {}) }}>
+                  <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
+                    {isSingle && <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>24/7 Live-Überwachung</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: isSingle ? "#ECFDF5" : "#F1F5F9", color: isSingle ? C.green : C.textMuted, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}` }}>
+                      {isSingle ? "AKTIV" : "Smart-Guard"}
+                    </span>
+                  </div>
+                  <div style={{ padding: "18px 20px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                      {[
+                        { label: "Stündliche Prüfung", sub: "Jede Stunde", icon: "⏱", ok: isSingle },
+                        { label: "SSL-Ablauf Alarm",   sub: "87 Tage",     icon: "🔒", ok: isSingle },
+                        { label: "Downtime-Alarm",     sub: "Echtzeit",    icon: "📡", ok: isSingle },
+                      ].map(item => (
+                        <div key={item.label} style={{ padding: "12px 14px", borderRadius: 8, background: item.ok ? "#ECFDF5" : C.bg, border: `1px solid ${item.ok ? "#A7F3D0" : C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>{item.icon}</span>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{item.label}</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: item.ok ? C.green : C.textMuted, marginTop: 1 }}>{item.ok ? item.sub : "—"}</div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
+                {/* Glassmorphism overlay — Free only */}
                 {isFree && (
-                  <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.divider}`, background: "#FAFAFA", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                    <p style={{ margin: 0, fontSize: 12, color: C.textSub, flex: 1, lineHeight: 1.5 }}>
-                      Du hast diesen Scan manuell gestartet. Möchtest du, dass wir deine Seite <strong>jede Stunde automatisch prüfen</strong> und dich bei Fehlern warnen?
-                    </p>
-                    <Link href="/preise" style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 8, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 8px rgba(234,179,8,0.3)" }}>
+                  <div className="lock-glass">
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FFFBEB", border: "1.5px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: C.text }}>24/7 Live-Überwachung</p>
+                      <p style={{ margin: 0, fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Im Smart-Guard Plan wird deine Website stündlich auf Downtime, SSL-Ablauf und Fehler geprüft.</p>
+                    </div>
+                    <Link href="/smart-guard" style={{ padding: "7px 20px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
                       Smart-Guard aktivieren →
                     </Link>
                   </div>
@@ -801,27 +893,37 @@ export default async function DashboardPage() {
               </div>
 
               {/* ── PDF Export ── */}
-              <div style={{ background: C.card, border: `1px solid ${isSingle ? C.blueBorder : C.border}`, borderRadius: 14, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "center", gap: 14, boxShadow: C.shadow }}>
-                <div style={{ width: 38, height: 38, borderRadius: 9, background: isSingle ? C.blueBg : "#F1F5F9", border: `1px solid ${isSingle ? C.blueBorder : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {isSingle
-                    ? <PdfIcon />
-                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  }
+              <div style={{ position: "relative", overflow: "hidden", borderRadius: 14, marginBottom: 24 }}>
+                {/* Content (blurred for Free) */}
+                <div style={{ background: C.card, border: `1px solid ${isSingle ? C.blueBorder : C.border}`, borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: C.shadow, ...(isFree ? { filter: "blur(2px)", opacity: 0.55, pointerEvents: "none", userSelect: "none" } : {}) }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 9, background: C.blueBg, border: `1px solid ${C.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <PdfIcon />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>Bericht als PDF herunterladen</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 11, color: C.textSub }}>Vollständiger Audit-Bericht als professionelles PDF.</p>
+                  </div>
+                  <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 8, background: C.blue, color: "#fff", fontWeight: 700, fontSize: 12, boxShadow: "0 2px 10px rgba(37,99,235,0.25)" }}>
+                    <PdfIcon /> PDF herunterladen
+                  </Link>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: isSingle ? C.text : C.textMuted }}>Bericht als PDF herunterladen</p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: isSingle ? C.textSub : C.textMuted }}>
-                    {isSingle ? "Vollständiger Audit-Bericht als professionelles PDF." : "White-Label PDF-Export ist im Smart-Guard Plan verfügbar."}
-                  </p>
-                </div>
-                {isSingle
-                  ? <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 8, background: C.blue, color: "#fff", fontWeight: 700, fontSize: 12, boxShadow: "0 2px 10px rgba(37,99,235,0.25)" }}>
-                      <PdfIcon /> PDF herunterladen
+                {/* Glassmorphism overlay — Free only */}
+                {isFree && (
+                  <div className="lock-glass">
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FFFBEB", border: "1.5px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: C.text }}>PDF-Export</p>
+                      <p style={{ margin: 0, fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Im Smart-Guard Plan kannst du jeden Audit-Bericht als professionelles PDF herunterladen.</p>
+                    </div>
+                    <Link href="/smart-guard" style={{ padding: "7px 20px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
+                      Smart-Guard aktivieren →
                     </Link>
-                  : <Link href="/preise" style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontWeight: 700, fontSize: 12 }}>
-                      Freischalten →
-                    </Link>
-                }
+                  </div>
+                )}
               </div>
 
               {/* ── New Scan CTA ── */}
