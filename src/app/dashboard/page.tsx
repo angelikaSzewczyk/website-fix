@@ -401,7 +401,7 @@ export default async function DashboardPage() {
   const slotsLabel      = plan === "agentur" ? "∞" : String(clientSlotLimit);
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ background: isAgency ? C.bg : "#080C14", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`
         a { text-decoration: none; }
         .dash-row:hover  { background: ${C.divider} !important; }
@@ -435,25 +435,137 @@ export default async function DashboardPage() {
       {isAgency && <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} />}
 
       {/* ══════════════════════════════════════════════════════════
-          FREE / SINGLE (Smart-Guard) LAYOUT
+          FREE / SINGLE (Smart-Guard) LAYOUT — DARK CYBER INTERFACE
           ══════════════════════════════════════════════════════════ */}
-      {!isAgency && (
-        <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px 100px" }}>
+      {!isAgency && (() => {
+        // ── Dark design tokens ──────────────────────────────────
+        const D = {
+          bg:          "#080C14",
+          surface:     "#0D1321",
+          surfaceHigh: "#111827",
+          border:      "rgba(255,255,255,0.07)",
+          borderMed:   "rgba(255,255,255,0.13)",
+          text:        "#E2E8F0",
+          textSub:     "#8B9AB0",
+          textMuted:   "#4B5675",
+          cyan:        "#22D3EE",
+          cyanBg:      "rgba(34,211,238,0.07)",
+          green:       "#4ADE80",
+          greenBg:     "rgba(74,222,128,0.07)",
+          red:         "#F87171",
+          redBg:       "rgba(248,113,113,0.07)",
+          amber:       "#FBBF24",
+          amberBg:     "rgba(251,191,36,0.07)",
+          blue:        "#60A5FA",
+          blueBg:      "rgba(96,165,250,0.07)",
+          gold:        "#D97706",
+          goldBg:      "rgba(217,119,6,0.12)",
+        } as const;
 
-          {/* ── Pro Header ── */}
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 20, boxShadow: C.shadow }}>
+        // ── Tech stack detection ─────────────────────────────────
+        const scanText = (lastScanResult ?? "").toLowerCase() + " " + (lastScan?.url ?? "").toLowerCase();
+        const techStack: { cat: string; name: string; ver?: string; col: string; bg: string; bdr: string }[] = [];
+
+        if (cms.label === "WordPress")
+          techStack.push({ cat: "CMS", name: "WordPress", ver: "6.4", col: "#21759B", bg: "rgba(33,117,155,0.12)", bdr: "rgba(33,117,155,0.28)" });
+        else if (cms.label === "Next.js")
+          techStack.push({ cat: "Framework", name: "Next.js", col: "#E2E8F0", bg: "rgba(255,255,255,0.05)", bdr: "rgba(255,255,255,0.14)" });
+        else if (cms.label === "Shopify")
+          techStack.push({ cat: "E-Commerce", name: "Shopify", col: "#95BF47", bg: "rgba(149,191,71,0.08)", bdr: "rgba(149,191,71,0.22)" });
+        else if (cms.label !== "–")
+          techStack.push({ cat: "CMS", name: cms.label, col: "#60A5FA", bg: "rgba(96,165,250,0.07)", bdr: "rgba(96,165,250,0.2)" });
+
+        if (cms.label === "WordPress")
+          techStack.push({ cat: "Backend", name: "PHP 8.x", col: "#7B7FB5", bg: "rgba(123,127,181,0.07)", bdr: "rgba(123,127,181,0.2)" });
+
+        if (/cloudflare/.test(scanText))
+          techStack.push({ cat: "CDN", name: "Cloudflare", col: "#F6821F", bg: "rgba(246,130,31,0.08)", bdr: "rgba(246,130,31,0.22)" });
+        else if (/nginx/.test(scanText))
+          techStack.push({ cat: "Server", name: "nginx", col: "#4ADE80", bg: "rgba(74,222,128,0.06)", bdr: "rgba(74,222,128,0.16)" });
+        else if (/apache/.test(scanText))
+          techStack.push({ cat: "Server", name: "Apache", col: "#F87171", bg: "rgba(248,113,113,0.07)", bdr: "rgba(248,113,113,0.2)" });
+
+        const sslOk = !issues.some(i => /ssl|https/.test(i.title.toLowerCase()));
+        techStack.push(sslOk
+          ? { cat: "SSL/TLS", name: "HTTPS aktiv", col: "#4ADE80", bg: "rgba(74,222,128,0.06)", bdr: "rgba(74,222,128,0.16)" }
+          : { cat: "SSL/TLS", name: "SSL fehlt",   col: "#F87171", bg: "rgba(248,113,113,0.07)", bdr: "rgba(248,113,113,0.22)" });
+
+        if (/google.*analytics|gtag|ga\.js|analytics\.js|googletagmanager/.test(scanText))
+          techStack.push({ cat: "Analytics", name: "Google Analytics", col: "#F9AB00", bg: "rgba(249,171,0,0.07)", bdr: "rgba(249,171,0,0.2)" });
+        else if (/matomo|piwik/.test(scanText))
+          techStack.push({ cat: "Analytics", name: "Matomo", col: "#3B5CA8", bg: "rgba(59,92,168,0.08)", bdr: "rgba(59,92,168,0.22)" });
+        else if (/hotjar/.test(scanText))
+          techStack.push({ cat: "Analytics", name: "Hotjar", col: "#FD3A5C", bg: "rgba(253,58,92,0.07)", bdr: "rgba(253,58,92,0.2)" });
+
+        // ── Impact score (deterministic) ─────────────────────────
+        const impactScore = (issue: ParsedIssue): number => {
+          const base    = issue.severity === "red" ? 78 : issue.severity === "yellow" ? 44 : 16;
+          const jitter  = issue.title.length % 18;
+          const catBump = issue.category === "recht" ? 12 : issue.category === "speed" ? 6 : 0;
+          return Math.min(99, base + jitter + catBump);
+        };
+
+        // ── Web Vitals simulation ────────────────────────────────
+        const indexedPages = lastScanResult ? Math.max(12, 80 - issues.filter(i => /index|robots/.test(i.title.toLowerCase())).length * 5) : 87;
+        const lcpMs  = speedScore >= 70 ? 1800 + Math.round((100 - speedScore) * 12) : 3200 + Math.round((70 - speedScore) * 20);
+        const clsVal = speedIssues.filter(i => /cls|layout.shift/.test(i.title.toLowerCase())).length > 0 ? "0.18" : "0.05";
+        const mobileOk  = !issues.some(i => /mobil|viewport|responsive/.test(i.title.toLowerCase()));
+        const sitemapOk = !issues.some(i => /sitemap/.test(i.title.toLowerCase()));
+
+        // ── Sparkline for isSingle ───────────────────────────────
+        const sparkScans = scans.slice(0, 7).reverse();
+        const sparkRaw   = sparkScans.map(s => Math.max(10, 100 - (s.issue_count ?? 5) * 8));
+        while (sparkRaw.length < 2) sparkRaw.unshift(sparkRaw[0] ?? 72);
+        const sN = sparkRaw.length;
+        const SW = 500, SH = 48, SPX = 8, SPY = 6;
+        const sMin = Math.min(...sparkRaw), sMax = Math.max(...sparkRaw);
+        const sRange = Math.max(sMax - sMin, 20);
+        const sPts = sparkRaw.map((v, i) => ({
+          x: SPX + (i / (sN - 1)) * (SW - SPX * 2),
+          y: SPY + (1 - (v - sMin) / sRange) * (SH - SPY * 2),
+          v,
+        }));
+        const sparkLine = sPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+        const sparkDates = sparkScans.map(s => {
+          const d = new Date(s.created_at);
+          return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
+        });
+        const sparkLatest = sparkRaw[sN - 1];
+        const sparkDelta  = sparkLatest - sparkRaw[sN - 2];
+        const sparkCol    = sparkLatest >= 70 ? D.green : sparkLatest >= 50 ? D.amber : D.red;
+
+        const MONO = "'Courier New', monospace";
+
+        return (
+        <>
+          <style>{`
+            a { text-decoration: none; }
+            .d-fix summary { cursor: pointer; user-select: none; }
+            .d-fix summary::-webkit-details-marker { display: none; }
+            .d-row:hover { background: rgba(255,255,255,0.025) !important; }
+            .d-fix:has(.fix-done:checked) { background: rgba(74,222,128,0.04) !important; }
+            .d-fix:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: #4B5675 !important; }
+            @keyframes pulse-g { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); } 70% { box-shadow: 0 0 0 5px rgba(74,222,128,0); } }
+            .pulse-g { animation: pulse-g 2.2s infinite; }
+            .lock-dark { position: absolute; inset: 0; background: rgba(8,12,20,0.88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; flex-direction: row; align-items: center; gap: 18px; border-radius: 12px; padding: 18px 24px; z-index: 2; }
+            .tech-pill:hover { border-color: rgba(255,255,255,0.22) !important; }
+          `}</style>
+
+          <main style={{ maxWidth: 860, margin: "0 auto", padding: "28px 20px 80px" }}>
+
+          {/* ① TERMINAL HEADER ────────────────────────────── */}
+          <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, padding: "14px 20px", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              {/* Left: Domain + timestamp */}
               <div style={{ minWidth: 0 }}>
                 {lastScan ? (
                   <>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0 }}>Domain</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: C.blue, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 340 }}>{lastScan.url}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", flexShrink: 0 }}>TARGET</span>
+                      <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: D.cyan, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 380 }}>{lastScan.url}</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0 }}>Letzter Scan</span>
-                      <span style={{ fontSize: 12, color: C.textSub, fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", flexShrink: 0 }}>SCAN</span>
+                      <span style={{ fontFamily: MONO, fontSize: 11, color: D.textSub, fontVariantNumeric: "tabular-nums" }}>
                         {new Date(lastScan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })}
                         {" · "}
                         {new Date(lastScan.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr
@@ -462,34 +574,25 @@ export default async function DashboardPage() {
                   </>
                 ) : (
                   <div>
-                    <p style={{ margin: "0 0 2px", fontSize: 11, color: C.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dein Audit-Dashboard</p>
-                    <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>Hallo, {firstName}</h1>
+                    <p style={{ margin: 0, fontFamily: MONO, fontSize: 9, color: D.cyan, letterSpacing: "0.1em", textTransform: "uppercase" }}>WEBSITE AUDIT SYSTEM v2.4</p>
+                    <h1 style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 800, color: D.text }}>Hallo, {firstName}</h1>
                   </div>
                 )}
               </div>
-
-              {/* Right: Plan badge + scan counter */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
-                {/* Plan badge */}
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
-                  Plan: {badge.label}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: "rgba(255,255,255,0.05)", border: `1px solid ${D.borderMed}`, whiteSpace: "nowrap" }}>
+                  {badge.label}
                 </span>
-                {/* Free scan counter */}
                 {isFree && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? C.redBg : C.divider, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "#FECACA" : C.border}` }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? C.red : C.text, whiteSpace: "nowrap" }}>
-                      {monthlyScans} / {SCAN_LIMIT} Scans
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? D.redBg : D.surfaceHigh, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "rgba(248,113,113,0.25)" : D.border}` }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? D.red : D.textMuted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? D.red : D.textSub, whiteSpace: "nowrap" }}>{monthlyScans}/{SCAN_LIMIT} SCANS</span>
                   </div>
                 )}
-                {/* Smart-Guard monitoring dot */}
                 {isSingle && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#ECFDF5", border: "1px solid #A7F3D0" }}>
-                    <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.green, whiteSpace: "nowrap" }}>Monitoring aktiv</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: D.greenBg, border: "1px solid rgba(74,222,128,0.2)" }}>
+                    <span className="pulse-g" style={{ width: 6, height: 6, borderRadius: "50%", background: D.green, display: "inline-block", flexShrink: 0 }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: D.green, whiteSpace: "nowrap" }}>MONITORING AKTIV</span>
                   </div>
                 )}
               </div>
@@ -498,281 +601,202 @@ export default async function DashboardPage() {
 
           {/* ── No Scan State ── */}
           {!lastScan && (
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, boxShadow: C.shadowMd, padding: "52px 40px", textAlign: "center" }}>
-              <div style={{ width: 64, height: 64, borderRadius: 16, background: C.blueBg, border: `1px solid ${C.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 20, padding: "52px 40px", textAlign: "center" }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: D.cyanBg, border: "1px solid rgba(34,211,238,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={D.cyan} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
               </div>
-              <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: C.text }}>Starte deinen ersten Audit</h2>
-              <p style={{ margin: "0 auto 20px", fontSize: 14, color: C.textSub, lineHeight: 1.7, maxWidth: 440 }}>
-                Finde in 60 Sekunden heraus, warum Google dich nicht findet, welche Rechtsfehler auf Abmahnungen warten und was deine Conversion-Rate blockiert.
+              <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: D.text }}>Starte deinen ersten Audit</h2>
+              <p style={{ margin: "0 auto 20px", fontSize: 14, color: D.textSub, lineHeight: 1.7, maxWidth: 440 }}>
+                Finde in 60 Sekunden heraus, warum Google dich nicht findet, welche Rechtsfehler auf Abmahnungen warten und was deine Conversion blockiert.
               </p>
               <form action="/dashboard/scan" method="GET" style={{ display: "flex", gap: 10, maxWidth: 500, margin: "0 auto 16px", flexWrap: "wrap", justifyContent: "center" }}>
-                <input name="url" type="url" placeholder="https://deine-website.de" required style={{ flex: 1, minWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit" }} />
-                <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(37,99,235,0.35)", fontFamily: "inherit" }}>
+                <input name="url" type="url" placeholder="https://deine-website.de" required style={{ flex: 1, minWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1px solid ${D.borderMed}`, fontSize: 14, color: D.text, background: D.surfaceHigh, outline: "none", fontFamily: "inherit" }} />
+                <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, background: D.cyan, color: "#080C14", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(34,211,238,0.3)", fontFamily: "inherit" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   Kostenlos scannen
                 </button>
               </form>
-              <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>
-                {isFree ? "Keine Kreditkarte · 3 Scans pro Monat gratis" : "Smart-Guard aktiv · automatische Überwachung läuft"}
+              <p style={{ margin: 0, fontFamily: MONO, fontSize: 9, color: D.textMuted, letterSpacing: "0.08em" }}>
+                {isFree ? "3 SCANS / MONAT · KEINE INSTALLATION · ERGEBNIS IN 60 SEK" : "SMART-GUARD AKTIV · AUTOMATISCHE ÜBERWACHUNG LÄUFT"}
               </p>
             </div>
           )}
 
-          {/* ── Has Scan: Full Dashboard ── */}
+          {/* ② HAS SCAN ─────────────────────────────────────────── */}
           {lastScan && (
             <>
 
-              {/* ── History Chart: Smart-Guard active / Free: glassmorphism locked ── */}
-              {isSingle && scans.length > 0 && <HistoryChart scans={scans} />}
-              {isFree && (
-                <div style={{ position: "relative", overflow: "hidden", marginBottom: 16 }}>
-                  {/* Blurred dummy chart */}
-                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 20px 10px", filter: "blur(3px)", opacity: 0.5, pointerEvents: "none", userSelect: "none", minHeight: 110 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: C.green }}>82</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 44 }}>
-                      {[58, 62, 59, 68, 72, 77, 82].map((h, i) => (
-                        <div key={i} style={{ flex: 1, borderRadius: 3, background: i === 6 ? C.green : "#A7F3D0", height: `${(h / 90) * 100}%` }} />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Glassmorphism overlay */}
-                  <div className="lock-glass">
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "#FFFBEB", border: "1.5px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: C.text }}>Score-Verlauf & Monitoring</p>
-                      <p style={{ margin: 0, fontSize: 11, color: C.textSub }}>7-Tage-Trend wird im Smart-Guard Plan live aufgezeichnet.</p>
-                    </div>
-                    <Link href="/smart-guard" style={{ padding: "6px 18px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>
-                      Smart-Guard aktivieren →
-                    </Link>
-                  </div>
+              {/* ── TECH STACK WALL ─────────────────────────────── */}
+              <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+                <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: D.cyan, boxShadow: `0 0 7px ${D.cyan}`, flexShrink: 0 }} />
+                  <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.cyan, textTransform: "uppercase", letterSpacing: "0.1em" }}>Technologie-Identifikation</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: D.cyanBg, color: D.cyan, border: "1px solid rgba(34,211,238,0.2)", marginLeft: "auto", letterSpacing: "0.05em" }}>DEEP SCAN</span>
                 </div>
-              )}
-
-              {/* ── System Detection Bar ── */}
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: C.shadow }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>System</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: C.text }}>
-                    {cms.label === "WordPress" && (
-                      <span style={{ width: 18, height: 18, borderRadius: 4, background: "#21759B", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#fff", fontFamily: "serif", flexShrink: 0, letterSpacing: "-0.05em" }}>W</span>
-                    )}
-                    {cms.label}{cms.version ? ` ${cms.version}` : ""}
-                  </span>
-                </div>
-                <div style={{ width: 1, height: 16, background: C.border }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Domain</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lastScan.url}</span>
-                </div>
-                <div style={{ width: 1, height: 16, background: C.border }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Befunde</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: redIssues.length > 0 ? C.red : C.green }}>
-                    {redIssues.length} kritisch · {yellowIssues.length} Warnung
-                  </span>
-                </div>
-                <div style={{ marginLeft: "auto" }}>
-                  <Link href={`/dashboard/scans/${lastScan.id}`} style={{ fontSize: 12, fontWeight: 700, color: C.blue, display: "flex", alignItems: "center", gap: 4 }}>
-                    Vollständiger Bericht →
-                  </Link>
+                <div style={{ padding: "14px 18px", display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {techStack.length > 0 ? techStack.map((t, i) => (
+                    <div key={i} className="tech-pill" style={{ display: "flex", flexDirection: "column", gap: 5, padding: "10px 14px", borderRadius: 10, background: t.bg, border: `1px solid ${t.bdr}`, transition: "border-color 0.15s" }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>{t.cat}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        {t.cat === "CMS" && t.name === "WordPress" && (
+                          <span style={{ width: 16, height: 16, borderRadius: 3, background: "#21759B", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: "#fff", fontFamily: "serif", flexShrink: 0 }}>W</span>
+                        )}
+                        {t.cat === "SSL/TLS" && (
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        )}
+                        {t.cat === "Analytics" && (
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        )}
+                        {t.cat === "CDN" && (
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.657 18.657A8 8 0 0 1 5.79 7.03M2 12h2m18 0h-2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        )}
+                        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: t.col }}>{t.name}</span>
+                        {t.ver && <span style={{ fontFamily: MONO, fontSize: 9, color: D.textMuted }}>{t.ver}</span>}
+                      </div>
+                    </div>
+                  )) : (
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: D.textMuted }}>Stack nicht eindeutig erkannt</span>
+                  )}
                 </div>
               </div>
 
-              {/* ── BFSG Banner ── */}
-              <div style={{ background: bfsgOk ? C.greenBg : C.redBg, border: `1px solid ${bfsgOk ? "#A7F3D0" : "#FECACA"}`, borderRadius: 12, padding: "13px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: bfsgOk ? "#16A34A20" : "#DC262620", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {/* ── BFSG SIGNAL STRIP ───────────────────────────── */}
+              <div style={{ background: bfsgOk ? D.greenBg : D.redBg, border: `1px solid ${bfsgOk ? "rgba(74,222,128,0.2)" : "rgba(248,113,113,0.2)"}`, borderRadius: 12, padding: "12px 18px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: bfsgOk ? "rgba(74,222,128,0.12)" : "rgba(248,113,113,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {bfsgOk
-                    ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                   }
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: bfsgOk ? C.green : C.red }}>
-                    Barrierefreiheit & Recht Status: {bfsgOk ? "KONFORM (BFSG 2025)" : "KRITISCH — Nicht konform mit BFSG 2025"}
+                  <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, fontWeight: 800, color: bfsgOk ? D.green : D.red }}>
+                    BFSG 2025: {bfsgOk ? "KONFORM" : `KRITISCH — ${rechtIssues.length} Rechts-Verstöße erkannt`}
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: bfsgOk ? "#166534" : "#991B1B", lineHeight: 1.5 }}>
-                    {bfsgOk
-                      ? "Keine kritischen Rechts- oder Barrierefreiheits-Verstöße gefunden."
-                      : `${rechtIssues.length} Rechts- und Barrierefreiheitsfehler gefunden. Abmahnrisiko ab 28. Juni 2025.`}
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: D.textSub }}>
+                    {bfsgOk ? "Keine kritischen Barrierefreiheits- oder Rechtsfehler." : `${redIssues.length} kritische · ${yellowIssues.length} Warnungen · Abmahnrisiko ab 28.06.2025`}
                   </p>
                 </div>
                 {!bfsgOk && (
-                  <Link href={`/dashboard/scans/${lastScan.id}`} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: C.red, color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                  <Link href={`/dashboard/scans/${lastScan.id}`} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: D.red, color: "#080C14", fontWeight: 700, fontSize: 11 }}>
                     Jetzt beheben →
                   </Link>
                 )}
               </div>
 
-              {/* ── 3 Problem Tiles ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
-
-                {/* Tile 1: Sichtbarkeit */}
-                {((): React.ReactNode => {
-                  const seoI  = issues.filter(i => /meta|title|h1|sitemap|robots|index|canonical|seo/.test(i.title.toLowerCase()));
-                  const st    = seoI.filter(i => i.severity === "red").length > 0 ? "red" : seoI.length > 0 ? "amber" : "green";
-                  const col   = st === "green" ? C.green : st === "amber" ? C.amber : C.red;
-                  const bg    = st === "green" ? C.greenBg : st === "amber" ? C.amberBg : C.redBg;
-                  const brd   = st === "green" ? "#A7F3D0" : st === "amber" ? "#FDE68A" : "#FECACA";
-                  const lbl   = st === "green" ? "Gut indexiert" : st === "amber" ? "Verbesserbar" : "Kritisch";
-                  return (
-                    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow }}>
-                      <div style={{ height: 3, background: col }} />
-                      <div style={{ padding: "18px 16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${brd}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                          </div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: col, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${brd}` }}>{lbl}</span>
-                        </div>
-                        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: C.text }}>Sichtbarkeit</p>
-                        <p style={{ margin: "0 0 12px", fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Warum findet Google mich nicht?</p>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
-                          {[
-                            { label: "Indexierung", ok: seoI.filter(i => /index/.test(i.title.toLowerCase())).length === 0 },
-                            { label: "Meta-Tags",   ok: seoI.filter(i => /meta|title/.test(i.title.toLowerCase())).length === 0 },
-                            { label: "Sitemap",     ok: seoI.filter(i => /sitemap/.test(i.title.toLowerCase())).length === 0 },
-                          ].map(item => (
-                            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontSize: 9, color: item.ok ? C.green : C.red }}>●</span>
-                              <span style={{ fontSize: 11, color: C.textSub }}>{item.label}</span>
-                              <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 700, color: item.ok ? C.green : C.red }}>{item.ok ? "OK" : "⚠"}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>Details →</Link>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Tile 2: Stabilität */}
-                {((): React.ReactNode => {
-                  const crit  = redIssues.length;
-                  const st    = crit > 2 ? "red" : crit > 0 ? "amber" : "green";
-                  const col   = st === "green" ? C.green : st === "amber" ? C.amber : C.red;
-                  const bg    = st === "green" ? C.greenBg : st === "amber" ? C.amberBg : C.redBg;
-                  const brd   = st === "green" ? "#A7F3D0" : st === "amber" ? "#FDE68A" : "#FECACA";
-                  const lbl   = st === "green" ? "Stabil" : st === "amber" ? "Warnung" : "Kritisch";
-                  return (
-                    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow }}>
-                      <div style={{ height: 3, background: col }} />
-                      <div style={{ padding: "18px 16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${brd}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                          </div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: col, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${brd}` }}>{lbl}</span>
-                        </div>
-                        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: C.text }}>Stabilität</p>
-                        <p style={{ margin: "0 0 12px", fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Kritische Fehler & System</p>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
-                          {[
-                            { label: "System erkannt",    ok: cms.label !== "–" },
-                            { label: "Kritische Fehler",  ok: crit === 0, val: crit > 0 ? `${crit}×` : undefined },
-                            { label: "Tech-Fehler",       ok: techIssues.filter(i => i.severity === "red").length === 0 },
-                          ].map(item => (
-                            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontSize: 9, color: item.ok ? C.green : C.red }}>●</span>
-                              <span style={{ fontSize: 11, color: C.textSub }}>{item.label}</span>
-                              <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 700, color: item.ok ? C.green : C.red }}>{item.val ?? (item.ok ? "OK" : "⚠")}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>Details →</Link>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Tile 3: Umsatz */}
-                {((): React.ReactNode => {
-                  const st   = speedScore >= 70 ? "green" : speedScore >= 50 ? "amber" : "red";
-                  const col  = st === "green" ? C.green : st === "amber" ? C.amber : C.red;
-                  const bg   = st === "green" ? C.greenBg : st === "amber" ? C.amberBg : C.redBg;
-                  const brd  = st === "green" ? "#A7F3D0" : st === "amber" ? "#FDE68A" : "#FECACA";
-                  const lbl  = st === "green" ? "Schnell" : st === "amber" ? "Optimierbar" : "Zu langsam";
-                  const loss = speedScore < 70 ? Math.round((70 - speedScore) * 0.4) : 0;
-                  return (
-                    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow }}>
-                      <div style={{ height: 3, background: col }} />
-                      <div style={{ padding: "18px 16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${brd}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                          </div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: col, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${brd}` }}>{lbl}</span>
-                        </div>
-                        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: C.text }}>Umsatz / Speed</p>
-                        <p style={{ margin: "0 0 12px", fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Warum keine Anfragen?</p>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 9, color: col }}>●</span>
-                            <span style={{ fontSize: 11, color: C.textSub }}>Speed-Score</span>
-                            <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 800, color: col }}>{speedScore}/100</span>
-                          </div>
-                          {loss > 0 && (
-                            <div style={{ fontSize: 10, color: C.red, background: C.redBg, border: "1px solid #FECACA", borderRadius: 5, padding: "4px 8px", lineHeight: 1.5, marginTop: 2 }}>
-                              ~{loss}% der Besucher verlassen deine Seite vor dem Laden.
-                            </div>
-                          )}
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 9, color: bfsgOk ? C.green : C.red }}>●</span>
-                            <span style={{ fontSize: 11, color: C.textSub }}>BFSG 2025</span>
-                            <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 700, color: bfsgOk ? C.green : C.red }}>{bfsgOk ? "OK" : "⚠"}</span>
-                          </div>
-                        </div>
-                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>Details →</Link>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* ── Google Search Console Einblicke ── */}
+              {/* ── SCORE TRIPTYCH ──────────────────────────────── */}
               {(() => {
-                const indexedPages = lastScanResult ? Math.max(12, 80 - issues.filter(i => /index|robots/.test(i.title.toLowerCase())).length * 5) : 87;
-                const mobileOk    = !issues.some(i => /mobil|viewport|responsive/.test(i.title.toLowerCase()));
-                const sitemapOk   = !issues.some(i => /sitemap/.test(i.title.toLowerCase()));
+                const seoIs = issues.filter(i => /meta|title|h1|sitemap|robots|index|canonical/.test(i.title.toLowerCase()));
+                const seoSt = seoIs.filter(i => i.severity === "red").length > 0 ? "red" : seoIs.length > 0 ? "amber" : "green";
+                const stabSt = redIssues.length > 2 ? "red" : redIssues.length > 0 ? "amber" : "green";
+                const perfSt = speedScore >= 70 ? "green" : speedScore >= 50 ? "amber" : "red";
+                const lcpOk = lcpMs < 2500;
+                const clsOk = parseFloat(clsVal) < 0.1;
+                const tiles = [
+                  {
+                    label: "Sichtbarkeit", sub: "SEO & Indexierung",
+                    state: seoSt,
+                    score: seoSt === "green" ? 91 : seoSt === "amber" ? 57 : 22,
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+                    rows: [
+                      { l: "Indexiert",  ok: seoIs.filter(i => /index/.test(i.title.toLowerCase())).length === 0 },
+                      { l: "Meta-Tags",  ok: seoIs.filter(i => /meta|title/.test(i.title.toLowerCase())).length === 0 },
+                      { l: "Sitemap",    ok: seoIs.filter(i => /sitemap/.test(i.title.toLowerCase())).length === 0 },
+                    ],
+                  },
+                  {
+                    label: "Stabilität", sub: "Kritische Fehler",
+                    state: stabSt,
+                    score: stabSt === "green" ? 96 : stabSt === "amber" ? 62 : 31,
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+                    rows: [
+                      { l: "CMS erkannt",    ok: cms.label !== "–" },
+                      { l: `Kritisch (${redIssues.length})`, ok: redIssues.length === 0 },
+                      { l: "Tech-Stack",     ok: techIssues.filter(i => i.severity === "red").length === 0 },
+                    ],
+                  },
+                  {
+                    label: "Performance", sub: `Score ${speedScore}/100`,
+                    state: perfSt,
+                    score: speedScore,
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+                    rows: [
+                      { l: `LCP: ${(lcpMs/1000).toFixed(1)}s`, ok: lcpOk },
+                      { l: `CLS: ${clsVal}`,                   ok: clsOk },
+                      { l: "Mobile",                            ok: mobileOk },
+                    ],
+                  },
+                ];
                 return (
-                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, marginBottom: 20 }}>
-                    <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
-                      {/* Google Search Console color dots icon */}
-                      <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 14 }}>
+                    {tiles.map(tile => {
+                      const col = tile.state === "green" ? D.green : tile.state === "amber" ? D.amber : D.red;
+                      const bg  = tile.state === "green" ? D.greenBg : tile.state === "amber" ? D.amberBg : D.redBg;
+                      const bdr = tile.state === "green" ? "rgba(74,222,128,0.18)" : tile.state === "amber" ? "rgba(251,191,36,0.18)" : "rgba(248,113,113,0.18)";
+                      return (
+                        <div key={tile.label} style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden" }}>
+                          <div style={{ height: 2, background: col, boxShadow: `0 0 8px ${col}50` }} />
+                          <div style={{ padding: "14px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                              <div style={{ width: 26, height: 26, borderRadius: 6, background: bg, border: `1px solid ${bdr}`, display: "flex", alignItems: "center", justifyContent: "center", color: col }}>
+                                {tile.icon}
+                              </div>
+                              <div style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 22, fontWeight: 800, color: col, lineHeight: 1, letterSpacing: "-0.03em" }}>{tile.score}</div>
+                            </div>
+                            <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 800, color: D.text }}>{tile.label}</p>
+                            <p style={{ margin: "0 0 10px", fontSize: 9, fontFamily: MONO, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{tile.sub}</p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                              {tile.rows.map(row => (
+                                <div key={row.l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                                  <span style={{ fontSize: 7, color: row.ok ? D.green : D.red }}>●</span>
+                                  <span style={{ fontFamily: MONO, fontSize: 10, color: D.textSub, flex: 1 }}>{row.l}</span>
+                                  <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: row.ok ? D.green : D.red }}>{row.ok ? "OK" : "ERR"}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* ── INDEX & SEARCH STATUS ───────────────────────── */}
+              {(() => {
+                const metrics = [
+                  { l: "Indexierte Seiten", v: String(indexedPages), u: "/ ~120",            s: indexedPages > 50 ? "green" : "amber" as const, sub: "robots.txt + sitemap" },
+                  { l: "LCP",              v: `${(lcpMs/1000).toFixed(2)}s`, u: "",          s: lcpMs < 2500 ? "green" : lcpMs < 4000 ? "amber" : "red" as const, sub: "Largest Contentful Paint" },
+                  { l: "CLS",              v: clsVal, u: "",                                  s: parseFloat(clsVal) < 0.1 ? "green" : parseFloat(clsVal) < 0.25 ? "amber" : "red" as const, sub: "Cumulative Layout Shift" },
+                  { l: "Mobile",           v: mobileOk ? "PASS" : "FAIL", u: "",              s: mobileOk ? "green" : "red" as const, sub: "Viewport / Responsive" },
+                  { l: "Sitemap",          v: sitemapOk ? "1 aktiv" : "fehlt", u: "",         s: sitemapOk ? "green" : "amber" as const, sub: "sitemap.xml" },
+                  { l: "HTTPS/SSL",        v: sslOk ? "AKTIV" : "FEHLT", u: "",              s: sslOk ? "green" : "red" as const, sub: "TLS-Zertifikat" },
+                ];
+                return (
+                  <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+                    <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ display: "flex", gap: 3 }}>
                         {["#4285F4","#EA4335","#FBBC04","#34A853"].map(c => (
-                          <span key={c} style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }} />
+                          <span key={c} style={{ width: 6, height: 6, borderRadius: "50%", background: c, boxShadow: `0 0 4px ${c}80` }} />
                         ))}
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Google Search Console Einblicke</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`, letterSpacing: "0.04em", textTransform: "uppercase" }}>Simuliert</span>
+                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textSub, textTransform: "uppercase", letterSpacing: "0.1em" }}>Index & Search Status</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: D.blueBg, color: D.blue, border: "1px solid rgba(96,165,250,0.2)", letterSpacing: "0.04em", marginLeft: "auto" }}>SIMULIERT</span>
                     </div>
-                    <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                      {[
-                        { label: "Indexierte Seiten", value: String(indexedPages), status: indexedPages > 50 ? "green" : "amber", sub: "von ~120 Seiten erkannt", icon: "📄" },
-                        { label: "Mobile Nutzbarkeit", value: mobileOk ? "OK" : "Fehler", status: mobileOk ? "green" : "red", sub: mobileOk ? "Keine kritischen Fehler" : "Viewport-Probleme erkannt", icon: "📱" },
-                        { label: "Sitemap erkannt", value: sitemapOk ? "1 gefunden" : "Fehlt", status: sitemapOk ? "green" : "amber", sub: sitemapOk ? "sitemap.xml eingereicht" : "Sitemap nicht gefunden", icon: "🗺" },
-                      ].map(m => {
-                        const col = m.status === "green" ? C.green : m.status === "amber" ? C.amber : C.red;
-                        const bg  = m.status === "green" ? C.greenBg : m.status === "amber" ? C.amberBg : C.redBg;
-                        const brd = m.status === "green" ? "#A7F3D0" : m.status === "amber" ? "#FDE68A" : "#FECACA";
+                    <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                      {metrics.map(m => {
+                        const col = m.s === "green" ? D.green : m.s === "amber" ? D.amber : D.red;
+                        const bg  = m.s === "green" ? D.greenBg : m.s === "amber" ? D.amberBg : D.redBg;
+                        const bdr = m.s === "green" ? "rgba(74,222,128,0.16)" : m.s === "amber" ? "rgba(251,191,36,0.16)" : "rgba(248,113,113,0.16)";
                         return (
-                          <div key={m.label} style={{ padding: "14px 16px", borderRadius: 10, background: bg, border: `1px solid ${brd}` }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                              <span style={{ fontSize: 14 }}>{m.icon}</span>
-                              <span style={{ fontSize: 20, fontWeight: 800, color: col, letterSpacing: "-0.03em", lineHeight: 1 }}>{m.value}</span>
+                          <div key={m.l} style={{ padding: "11px 13px", borderRadius: 9, background: bg, border: `1px solid ${bdr}` }}>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 3 }}>
+                              <span style={{ fontFamily: MONO, fontSize: 17, fontWeight: 800, color: col, lineHeight: 1 }}>{m.v}</span>
+                              {m.u && <span style={{ fontSize: 9, color: D.textMuted }}>{m.u}</span>}
                             </div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: col, marginBottom: 2 }}>{m.label}</div>
-                            <div style={{ fontSize: 10, color: col, opacity: 0.7 }}>{m.sub}</div>
+                            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: col, marginBottom: 1, letterSpacing: "0.06em", textTransform: "uppercase" }}>{m.l}</div>
+                            <div style={{ fontSize: 9, color: D.textMuted }}>{m.sub}</div>
                           </div>
                         );
                       })}
@@ -781,155 +805,195 @@ export default async function DashboardPage() {
                 );
               })()}
 
-              {/* ── Fehler-Liste mit Fix-Anleitungen ── */}
-              {issues.length > 0 && (
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadow, marginBottom: 20 }}>
-                  <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Vollständige Fehlerliste</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: C.red, background: C.redBg, border: "1px solid #FECACA", padding: "2px 7px", borderRadius: 5 }}>{redIssues.length} Kritisch</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: C.amber, background: C.amberBg, border: "1px solid #FDE68A", padding: "2px 7px", borderRadius: 5 }}>{yellowIssues.length} Warnung</span>
-                    <span style={{ marginLeft: "auto", fontSize: 11, color: C.textMuted }}>System: {cms.label}</span>
-                  </div>
-
-                  {[
-                    { key: "recht",  label: "Recht & BFSG",         items: rechtIssues,  color: C.red,   bg: C.redBg,   border: "#FECACA" },
-                    { key: "speed",  label: "Performance & Speed",   items: speedIssues,  color: C.amber, bg: C.amberBg, border: "#FDE68A" },
-                    { key: "technik",label: "Technik",               items: techIssues,   color: C.blue,  bg: C.blueBg,  border: C.blueBorder },
-                  ].filter(cat => cat.items.length > 0).map(cat => (
-                    <div key={cat.key}>
-                      <div style={{ padding: "8px 20px", background: C.bg, borderTop: `1px solid ${C.divider}`, borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 10, fontWeight: 800, color: cat.color, textTransform: "uppercase", letterSpacing: "0.08em" }}>{cat.label}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: cat.bg, border: `1px solid ${cat.border}`, color: cat.color }}>{cat.items.length}</span>
-                      </div>
-                      {cat.items.map((issue, i) => {
-                        const sevColor = issue.severity === "red" ? C.red : issue.severity === "yellow" ? C.amber : C.green;
-                        const fix = getFixGuide(issue.title, cms.label);
-                        const cbId = `fix-${cat.key}-${i}`;
-                        return (
-                          <details key={i} className="fix-details" style={{ borderBottom: i < cat.items.length - 1 ? `1px solid ${C.divider}` : "none" }}>
-                            <summary style={{ padding: "12px 20px", display: "flex", alignItems: "flex-start", gap: 12, listStyle: "none" }} className="issue-row">
-                              <span style={{ flexShrink: 0, fontSize: 14, marginTop: 1 }}>{issue.severity === "red" ? "🔴" : issue.severity === "yellow" ? "🟡" : "🟢"}</span>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p className="issue-title" style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>{issue.title}</p>
-                                {issue.body && <p style={{ margin: "3px 0 0", fontSize: 12, color: C.textSub, lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{issue.body.substring(0, 90)}…</p>}
-                              </div>
-                              <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-                                {/* Smart-Guard: Erledigt-Checkbox */}
-                                {isSingle && (
-                                  <label htmlFor={cbId} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: C.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid #A7F3D0", background: "#ECFDF5", whiteSpace: "nowrap" }}>
-                                    <input type="checkbox" id={cbId} className="fix-done" style={{ width: 12, height: 12, accentColor: C.green, cursor: "pointer" }} />
-                                    Erledigt ✓
-                                  </label>
-                                )}
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: issue.severity === "red" ? C.redBg : issue.severity === "yellow" ? C.amberBg : C.greenBg, color: sevColor, border: `1px solid ${issue.severity === "red" ? "#FECACA" : issue.severity === "yellow" ? "#FDE68A" : "#A7F3D0"}` }}>
-                                  {issue.severity === "red" ? "Kritisch" : issue.severity === "yellow" ? "Warnung" : "Info"}
-                                </span>
-                                <span style={{ fontSize: 11, fontWeight: 600, color: C.blue, whiteSpace: "nowrap" }}>Wie fix ich das? ▾</span>
-                              </div>
-                            </summary>
-                            <div style={{ padding: "0 20px 14px 20px", background: "#FAFCFF", borderTop: `1px solid ${C.divider}` }}>
-                              {issue.body && <p style={{ margin: "12px 0 8px", fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>{issue.body}</p>}
-                              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px", borderRadius: 8, background: "#EFF6FF", border: `1px solid ${C.blueBorder}`, marginTop: 8 }}>
-                                <svg style={{ flexShrink: 0, marginTop: 2 }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                <p style={{ margin: 0, fontSize: 12, color: "#1E40AF", lineHeight: 1.65 }}>
-                                  <strong>Fix für {cms.label}:</strong> {fix}
-                                </p>
-                              </div>
-                            </div>
-                          </details>
-                        );
-                      })}
+              {/* ── ERROR MATRIX ────────────────────────────────── */}
+              {issues.length > 0 && (() => {
+                const cats = [
+                  { key: "recht",   label: "BFSG / Recht",   items: rechtIssues, ac: D.red,   acBg: D.redBg,   acBdr: "rgba(248,113,113,0.2)" },
+                  { key: "speed",   label: "Performance",    items: speedIssues, ac: D.amber, acBg: D.amberBg, acBdr: "rgba(251,191,36,0.2)" },
+                  { key: "technik", label: "Technical SEO",  items: techIssues,  ac: D.blue,  acBg: D.blueBg,  acBdr: "rgba(96,165,250,0.2)" },
+                ].filter(c => c.items.length > 0);
+                return (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: D.red, boxShadow: `0 0 6px ${D.red}` }} />
+                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.1em" }}>Error Matrix</span>
+                      <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: D.redBg, color: D.red, border: "1px solid rgba(248,113,113,0.2)", fontWeight: 700 }}>{redIssues.length} KRITISCH</span>
+                      <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: D.amberBg, color: D.amber, border: "1px solid rgba(251,191,36,0.2)", fontWeight: 700 }}>{yellowIssues.length} WARNUNGEN</span>
+                      <Link href={`/dashboard/scans/${lastScan.id}`} style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, color: D.cyan, letterSpacing: "0.04em" }}>Vollbericht →</Link>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* ── 24/7 Monitoring ── */}
-              <div style={{ position: "relative", overflow: "hidden", borderRadius: 14, marginBottom: 14 }}>
-                {/* Content (blurred for Free) */}
-                <div style={{ background: C.card, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, ...(isFree ? { filter: "blur(2px)", opacity: 0.55, pointerEvents: "none", userSelect: "none" } : {}) }}>
-                  <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
-                    {isSingle && <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />}
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>24/7 Live-Überwachung</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: isSingle ? "#ECFDF5" : "#F1F5F9", color: isSingle ? C.green : C.textMuted, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}` }}>
-                      {isSingle ? "AKTIV" : "Smart-Guard"}
-                    </span>
-                  </div>
-                  <div style={{ padding: "18px 20px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                      {[
-                        { label: "Stündliche Prüfung", sub: "Jede Stunde", icon: "⏱", ok: isSingle },
-                        { label: "SSL-Ablauf Alarm",   sub: "87 Tage",     icon: "🔒", ok: isSingle },
-                        { label: "Downtime-Alarm",     sub: "Echtzeit",    icon: "📡", ok: isSingle },
-                      ].map(item => (
-                        <div key={item.label} style={{ padding: "12px 14px", borderRadius: 8, background: item.ok ? "#ECFDF5" : C.bg, border: `1px solid ${item.ok ? "#A7F3D0" : C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>{item.icon}</span>
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, 1fr)`, gap: 12 }}>
+                      {cats.map(cat => (
+                        <div key={cat.key} style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 12, overflow: "hidden" }}>
+                          <div style={{ padding: "9px 14px", borderBottom: `1px solid ${D.border}`, background: D.surfaceHigh, display: "flex", alignItems: "center", gap: 7 }}>
+                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: cat.ac, flexShrink: 0 }} />
+                            <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, color: cat.ac, textTransform: "uppercase", letterSpacing: "0.1em" }}>{cat.label}</span>
+                            <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: cat.acBg, color: cat.ac, border: `1px solid ${cat.acBdr}`, fontWeight: 700, marginLeft: "auto" }}>{cat.items.length}</span>
+                          </div>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{item.label}</div>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: item.ok ? C.green : C.textMuted, marginTop: 1 }}>{item.ok ? item.sub : "—"}</div>
+                            {cat.items.slice(0, 5).map((issue, i) => {
+                              const score = impactScore(issue);
+                              const col   = issue.severity === "red" ? D.red : issue.severity === "yellow" ? D.amber : D.green;
+                              const fix   = getFixGuide(issue.title, cms.label);
+                              const cbId  = `dm-${cat.key}-${i}`;
+                              return (
+                                <details key={i} className="d-fix" style={{ borderBottom: i < Math.min(cat.items.length, 5) - 1 ? `1px solid ${D.border}` : "none", background: "transparent" }}>
+                                  <summary style={{ padding: "9px 14px", display: "flex", alignItems: "center", gap: 8, listStyle: "none" }} className="d-row">
+                                    <div style={{ width: 30, flexShrink: 0, textAlign: "right" }}>
+                                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 800, color: col }}>{score}</span>
+                                      <div style={{ marginTop: 2, height: 2, borderRadius: 1, background: D.surfaceHigh, overflow: "hidden" }}>
+                                        <div style={{ height: "100%", width: `${score}%`, background: col }} />
+                                      </div>
+                                    </div>
+                                    <p className="issue-title" style={{ margin: 0, flex: 1, fontSize: 11, fontWeight: 600, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{issue.title}</p>
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={D.textMuted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="6 9 12 15 18 9"/></svg>
+                                  </summary>
+                                  <div style={{ padding: "0 14px 12px", background: D.surfaceHigh, borderTop: `1px solid ${D.border}` }}>
+                                    {issue.body && <p style={{ margin: "10px 0 8px", fontSize: 11, color: D.textSub, lineHeight: 1.6 }}>{issue.body}</p>}
+                                    <div style={{ padding: "8px 12px", borderRadius: 7, background: D.cyanBg, border: "1px solid rgba(34,211,238,0.15)", display: "flex", gap: 8, alignItems: "flex-start", marginTop: 8 }}>
+                                      <svg style={{ flexShrink: 0, marginTop: 2 }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={D.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                      <p style={{ margin: 0, fontSize: 11, color: D.textSub, lineHeight: 1.6 }}><strong style={{ color: D.cyan }}>Fix ({cms.label}):</strong> {fix}</p>
+                                    </div>
+                                    {isSingle && (
+                                      <label htmlFor={cbId} style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, fontSize: 10, fontWeight: 600, color: D.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(74,222,128,0.22)", background: D.greenBg }}>
+                                        <input type="checkbox" id={cbId} className="fix-done" style={{ width: 11, height: 11, accentColor: D.green, cursor: "pointer" }} />
+                                        Erledigt ✓
+                                      </label>
+                                    )}
+                                  </div>
+                                </details>
+                              );
+                            })}
+                            {cat.items.length > 5 && (
+                              <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", padding: "8px 14px", fontFamily: MONO, fontSize: 9, color: D.textMuted, borderTop: `1px solid ${D.border}` }}>
+                                +{cat.items.length - 5} weitere im Vollbericht →
+                              </Link>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
+                );
+              })()}
+
+              {/* ── PASSIVE MODULES ─────────────────────────────── */}
+
+              {/* Score History */}
+              {isSingle && scans.length > 0 && (
+                <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 12, padding: "14px 18px 10px", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
+                      <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 6px", borderRadius: 3, background: D.greenBg, color: D.green, border: "1px solid rgba(74,222,128,0.2)" }}>LIVE</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 20, fontWeight: 800, color: sparkCol, lineHeight: 1 }}>{sparkLatest}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: sparkDelta >= 0 ? D.green : D.red }}>{sparkDelta >= 0 ? "↑" : "↓"}{Math.abs(sparkDelta)}</span>
+                    </div>
+                  </div>
+                  <svg width="100%" viewBox={`0 0 ${SW} ${SH}`} preserveAspectRatio="none" style={{ display: "block", height: 44, overflow: "visible" }}>
+                    <defs>
+                      <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={sparkCol} stopOpacity="0.2" />
+                        <stop offset="100%" stopColor={sparkCol} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={`M${sPts[0].x.toFixed(1)},${sPts[0].y.toFixed(1)} ` + sPts.slice(1).map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + ` L${sPts[sN-1].x.toFixed(1)},${(SH-SPY).toFixed(1)} L${sPts[0].x.toFixed(1)},${(SH-SPY).toFixed(1)} Z`} fill="url(#dg)" />
+                    <polyline points={sparkLine} fill="none" stroke={sparkCol} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    {sPts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill={i === sN-1 ? sparkCol : D.surface} stroke={sparkCol} strokeWidth="1.5" />)}
+                  </svg>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                    {sparkDates.map((d, i) => <span key={i} style={{ fontFamily: MONO, fontSize: 8, color: D.textMuted }}>{d}</span>)}
+                  </div>
                 </div>
-                {/* Glassmorphism overlay — Free only */}
+              )}
+              {isFree && (
+                <div style={{ position: "relative", overflow: "hidden", borderRadius: 12, marginBottom: 12 }}>
+                  <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 12, padding: "14px 18px", filter: "blur(3px)", opacity: 0.4, pointerEvents: "none", userSelect: "none", minHeight: 96 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, color: D.textMuted, textTransform: "uppercase" }}>Score-Verlauf · 7 Tage</span>
+                      <span style={{ fontFamily: MONO, fontSize: 20, fontWeight: 800, color: D.green }}>82</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 40 }}>
+                      {[58,62,59,68,72,77,82].map((h, i) => <div key={i} style={{ flex: 1, borderRadius: 2, background: i===6 ? D.green : "rgba(74,222,128,0.25)", height: `${(h/90)*100}%` }} />)}
+                    </div>
+                  </div>
+                  <div className="lock-dark">
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: D.goldBg, border: "1px solid rgba(217,119,6,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: D.text }}>Score-Verlauf & Monitoring</p>
+                      <p style={{ margin: 0, fontSize: 10, color: D.textSub }}>7-Tage-Trend wird im Smart-Guard Plan live aufgezeichnet.</p>
+                    </div>
+                    <Link href="/smart-guard" style={{ flexShrink: 0, padding: "6px 16px", borderRadius: 8, background: D.surfaceHigh, border: `1px solid ${D.borderMed}`, color: D.text, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>Aktivieren →</Link>
+                  </div>
+                </div>
+              )}
+
+              {/* 24/7 Monitoring */}
+              <div style={{ position: "relative", overflow: "hidden", borderRadius: 12, marginBottom: 12 }}>
+                <div style={{ background: D.surface, border: `1px solid ${isSingle ? "rgba(74,222,128,0.18)" : D.border}`, borderRadius: 12, overflow: "hidden", ...(isFree ? { filter: "blur(2px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" } : {}) }}>
+                  <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+                    {isSingle && <span className="pulse-g" style={{ width: 6, height: 6, borderRadius: "50%", background: D.green, flexShrink: 0 }} />}
+                    <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textSub, textTransform: "uppercase", letterSpacing: "0.08em" }}>24/7 Live-Überwachung</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: isSingle ? D.greenBg : D.surfaceHigh, color: isSingle ? D.green : D.textMuted, border: `1px solid ${isSingle ? "rgba(74,222,128,0.2)" : D.border}`, marginLeft: "auto" }}>{isSingle ? "AKTIV" : "SMART-GUARD"}</span>
+                  </div>
+                  <div style={{ padding: "12px 18px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                    {[{ l: "Stündliche Prüfung", v: "1h" }, { l: "SSL-Ablauf Alarm", v: "87d" }, { l: "Downtime-Alarm", v: "RT" }].map(item => (
+                      <div key={item.l} style={{ padding: "10px 12px", borderRadius: 8, background: isSingle ? D.greenBg : D.surfaceHigh, border: `1px solid ${isSingle ? "rgba(74,222,128,0.15)" : D.border}` }}>
+                        <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: isSingle ? D.green : D.textMuted, marginBottom: 2 }}>{isSingle ? item.v : "—"}</div>
+                        <div style={{ fontSize: 10, color: D.textSub }}>{item.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 {isFree && (
-                  <div className="lock-glass">
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FFFBEB", border: "1.5px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                      </svg>
+                  <div className="lock-dark">
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: D.goldBg, border: "1px solid rgba(217,119,6,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <div>
-                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: C.text }}>24/7 Live-Überwachung</p>
-                      <p style={{ margin: 0, fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Im Smart-Guard Plan wird deine Website stündlich auf Downtime, SSL-Ablauf und Fehler geprüft.</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: D.text }}>24/7 Live-Überwachung</p>
+                      <p style={{ margin: 0, fontSize: 10, color: D.textSub }}>Stündliche Prüfung auf Downtime, SSL-Ablauf und Fehler.</p>
                     </div>
-                    <Link href="/smart-guard" style={{ padding: "7px 20px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
-                      Smart-Guard aktivieren →
-                    </Link>
+                    <Link href="/smart-guard" style={{ flexShrink: 0, padding: "6px 16px", borderRadius: 8, background: D.surfaceHigh, border: `1px solid ${D.borderMed}`, color: D.text, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>Aktivieren →</Link>
                   </div>
                 )}
               </div>
 
-              {/* ── PDF Export ── */}
-              <div style={{ position: "relative", overflow: "hidden", borderRadius: 14, marginBottom: 24 }}>
-                {/* Content (blurred for Free) */}
-                <div style={{ background: C.card, border: `1px solid ${isSingle ? C.blueBorder : C.border}`, borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: C.shadow, ...(isFree ? { filter: "blur(2px)", opacity: 0.55, pointerEvents: "none", userSelect: "none" } : {}) }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 9, background: C.blueBg, border: `1px solid ${C.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {/* PDF Export */}
+              <div style={{ position: "relative", overflow: "hidden", borderRadius: 12, marginBottom: 20 }}>
+                <div style={{ background: D.surface, border: `1px solid ${isSingle ? "rgba(96,165,250,0.18)" : D.border}`, borderRadius: 12, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, ...(isFree ? { filter: "blur(2px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" } : {}) }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, background: D.blueBg, border: "1px solid rgba(96,165,250,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: D.blue }}>
                     <PdfIcon />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>Bericht als PDF herunterladen</p>
-                    <p style={{ margin: "2px 0 0", fontSize: 11, color: C.textSub }}>Vollständiger Audit-Bericht als professionelles PDF.</p>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: D.text }}>Bericht als PDF herunterladen</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 10, color: D.textSub }}>Vollständiger Audit-Bericht als professionelles PDF.</p>
                   </div>
-                  <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 8, background: C.blue, color: "#fff", fontWeight: 700, fontSize: 12, boxShadow: "0 2px 10px rgba(37,99,235,0.25)" }}>
-                    <PdfIcon /> PDF herunterladen
+                  <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, background: D.blue, color: "#07090F", fontWeight: 700, fontSize: 11 }}>
+                    <PdfIcon /> Export
                   </Link>
                 </div>
-                {/* Glassmorphism overlay — Free only */}
                 {isFree && (
-                  <div className="lock-glass">
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FFFBEB", border: "1.5px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                      </svg>
+                  <div className="lock-dark">
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: D.goldBg, border: "1px solid rgba(217,119,6,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <div>
-                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: C.text }}>PDF-Export</p>
-                      <p style={{ margin: 0, fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Im Smart-Guard Plan kannst du jeden Audit-Bericht als professionelles PDF herunterladen.</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: D.text }}>PDF-Export</p>
+                      <p style={{ margin: 0, fontSize: 10, color: D.textSub }}>Professioneller Audit-Bericht — im Smart-Guard Plan.</p>
                     </div>
-                    <Link href="/smart-guard" style={{ padding: "7px 20px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
-                      Smart-Guard aktivieren →
-                    </Link>
+                    <Link href="/smart-guard" style={{ flexShrink: 0, padding: "6px 16px", borderRadius: 8, background: D.surfaceHigh, border: `1px solid ${D.borderMed}`, color: D.text, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>Aktivieren →</Link>
                   </div>
                 )}
               </div>
 
-              {/* ── New Scan CTA ── */}
+              {/* New Scan CTA */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-                <Link href="/dashboard/scan" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 24px", borderRadius: 10, background: C.card, color: C.blue, fontWeight: 700, fontSize: 13, border: `1px solid ${C.blueBorder}`, boxShadow: C.shadow }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <Link href="/dashboard/scan" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 22px", borderRadius: 10, background: D.surfaceHigh, color: D.cyan, fontWeight: 700, fontSize: 12, border: "1px solid rgba(34,211,238,0.2)" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   {isFree ? `Neuen Scan starten (${SCAN_LIMIT - monthlyScans} verbleibend)` : "Neuen Scan starten"}
                 </Link>
               </div>
@@ -937,20 +1001,21 @@ export default async function DashboardPage() {
             </>
           )}
 
-          {/* ── Footer: FREE → Upgrade Banner / SINGLE → dezenter Agency-Link ── */}
+          {/* ── UPGRADE BANNER ─────────────────────────────────── */}
           {isFree && (
-            <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", boxShadow: "0 8px 32px rgba(15,23,42,0.25)" }}>
+            <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #0D2040 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", border: "1px solid rgba(96,165,250,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
               <div style={{ flex: 1, minWidth: 260 }}>
-                <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.yellow, textTransform: "uppercase", letterSpacing: "0.1em" }}>⚡ Maximaler Schutz</p>
+                <p style={{ margin: "0 0 4px", fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.cyan, textTransform: "uppercase", letterSpacing: "0.12em" }}>SMART-GUARD MODULE</p>
                 <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>
-                  Maximaler Schutz mit<br />Smart-Guard — automatisch.
+                  Echtzeit-Wächter aktivieren<br />
+                  <span style={{ color: D.cyan }}>— automatisch & persistent.</span>
                 </h3>
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
-                  Echtzeit-Monitoring · BFSG-Watchdog · PDF-Export · unbegrenzte Scans<br />
-                  <strong style={{ color: "rgba(255,255,255,0.9)" }}>39 €/Monat · jederzeit kündbar</strong>
+                <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
+                  24/7 Monitoring · PDF-Export · Score-Verlauf · Unbegrenzte Scans<br />
+                  <strong style={{ color: "rgba(255,255,255,0.75)" }}>39 €/Monat · jederzeit kündbar</strong>
                 </p>
               </div>
-              <Link href="/preise" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 16px rgba(234,179,8,0.45)" }}>
+              <Link href="/smart-guard" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: D.cyan, color: "#07090F", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 20px rgba(34,211,238,0.35)" }}>
                 Smart-Guard aktivieren →
               </Link>
             </div>
@@ -958,14 +1023,16 @@ export default async function DashboardPage() {
 
           {isSingle && (
             <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <Link href="/fuer-agenturen" style={{ fontSize: 12, color: C.textMuted, fontWeight: 500 }}>
-                Du hast mehr als 1 Website? Zum Agency-Dashboard wechseln →
+              <Link href="/fuer-agenturen" style={{ fontFamily: MONO, fontSize: 10, color: D.textMuted, letterSpacing: "0.04em" }}>
+                Mehr als 1 Website? → Agency-Dashboard
               </Link>
             </div>
           )}
 
-        </main>
-      )}
+          </main>
+        </>
+        );
+      })()} 
 
       {/* ══════════════════════════════════════════════════════════
           AGENCY LAYOUT  (plan: pro = Agency Starter | agentur = Agency Pro)
