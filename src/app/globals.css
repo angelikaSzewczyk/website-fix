@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-navy-950: #060912;
+  --color-navy-900: #070A12;
+  --color-navy-850: #0A0E1A;
+  --color-navy-800: #0D1117;
+  --color-navy-700: #111827;
+  --color-navy-600: #1C2333;
+  --font-family-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+}
 
 /* styles.css / globals.css (überarbeitet: Conversion + Form-UX + Error-Styles + Sticky CTA) */
 
