@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import BrandLogo from "@/app/components/BrandLogo";
@@ -340,10 +341,14 @@ export default function DashboardScanClient({
   userName,
   plan,
   projectUrl = null,
+  monthlyScans = 0,
+  scanLimit = 3,
 }: {
   userName: string;
   plan: string;
   projectUrl?: string | null;
+  monthlyScans?: number;
+  scanLimit?: number;
 }) {
   const [tab, setTab] = useState<TabType>("website");
   const [url, setUrl] = useState("");
@@ -363,13 +368,41 @@ export default function DashboardScanClient({
   const [fsResult, setFsResult] = useState<FullSiteResult | null>(null);
 
   const [urlFocused, setUrlFocused] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const router = useRouter();
   const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
+  const limitReached = monthlyScans >= scanLimit;
 
   // Pre-fill the URL field with the active project URL on mount
   useEffect(() => {
     if (projectUrl && !url) setUrl(projectUrl);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectUrl]);
+
+  function startRedirectCountdown() {
+    setRedirectCountdown(5);
+    countdownRef.current = setInterval(() => {
+      setRedirectCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          router.push("/dashboard");
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  function cancelRedirect() {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setRedirectCountdown(null);
+  }
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, []);
 
   function resetState() {
     setState("idle"); setDiagnose(""); setError("");
@@ -405,6 +438,7 @@ export default function DashboardScanClient({
         if (tab === "performance") setPerfData({ scores: data.scores, vitals: data.vitals, opportunities: data.opportunities });
         if (data.scanId) setSavedScanId(data.scanId);
         setState("done");
+        startRedirectCountdown();
       } else {
         setError(data.error ?? "Fehler beim Scannen.");
         setState("error");
@@ -446,6 +480,7 @@ export default function DashboardScanClient({
       setFromCache(d.fromCache === true);
       setCachedAt(d.cachedAt ?? null);
       setState("done");
+      startRedirectCountdown();
       es.close();
     });
 
@@ -520,6 +555,7 @@ export default function DashboardScanClient({
   const projectDomain = projectUrl
     ? projectUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")
     : null;
+  const scansRemaining = Math.max(0, scanLimit - monthlyScans);
   const buttonLabel = state === "scanning"
     ? "Scannt..."
     : projectUrl && url === projectUrl
@@ -697,42 +733,140 @@ export default function DashboardScanClient({
           </div>
         )}
 
+        {/* Scan-limit indicator */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 500 }}>Gratis-Scans diesen Monat:</span>
+            <span style={{
+              fontSize: 11, fontWeight: 700,
+              padding: "2px 9px", borderRadius: 20,
+              background: limitReached ? C.redBg : "rgba(255,255,255,0.05)",
+              border: `1px solid ${limitReached ? C.redBorder : C.borderMid}`,
+              color: limitReached ? C.red : C.textSub,
+            }}>
+              {monthlyScans} / {scanLimit}{limitReached ? " — Limit erreicht" : ` — ${scansRemaining} verbleibend`}
+            </span>
+          </div>
+          {limitReached && (
+            <Link href="/smart-guard" style={{
+              fontSize: 11, fontWeight: 700,
+              padding: "4px 12px", borderRadius: C.radiusSm,
+              background: C.blueBg, border: `1px solid ${C.blueBorder}`,
+              color: C.blueSoft, textDecoration: "none",
+            }}>
+              Limit erhöhen →
+            </Link>
+          )}
+        </div>
+
         {/* SCAN FORM */}
-        <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
-          <input
-            id="dashboard-scan-url"
-            type="text" value={url} onChange={e => setUrl(e.target.value)}
-            placeholder="https://kunden-website.de"
-            disabled={state === "scanning"}
-            onFocus={() => setUrlFocused(true)}
-            onBlur={() => setUrlFocused(false)}
-            style={{
-              flex: 1, minWidth: 280,
-              background: "rgba(255,255,255,0.04)",
-              border: `1px solid ${urlFocused ? C.blue : C.borderMid}`,
-              borderRadius: C.radiusSm,
-              padding: "12px 16px",
-              color: C.text, fontSize: 14, outline: "none",
-              boxShadow: urlFocused ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
-              transition: "border-color 0.15s, box-shadow 0.15s",
-            }}
-          />
-          <button type="submit" disabled={state === "scanning" || !url} style={{
-            padding: "12px 28px", borderRadius: C.radiusSm, border: "none",
-            background: !url || state === "scanning" ? "rgba(255,255,255,0.06)" : C.blue,
-            color: !url || state === "scanning" ? C.textMuted : "#fff",
-            fontWeight: 700, fontSize: 14,
-            cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
-            boxShadow: !url || state === "scanning" ? "none" : "0 4px 20px rgba(0,123,255,0.4)",
-            transition: "background 0.15s, box-shadow 0.15s",
-            fontFamily: "inherit",
+        {limitReached ? (
+          <div style={{
+            padding: "20px 24px", borderRadius: C.radiusSm,
+            background: C.redBg, border: `1px solid ${C.redBorder}`,
+            display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
           }}>
-            {buttonLabel}
-          </button>
-        </form>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke={C.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: C.red }}>
+                Scan-Limit für diesen Monat erreicht
+              </p>
+              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
+                Du hast {scanLimit} von {scanLimit} Gratis-Scans verbraucht. Nächste Scans sind ab dem 1. des nächsten Monats wieder verfügbar — oder jetzt upgraden für unlimitierte Scans.
+              </p>
+            </div>
+            <Link href="/smart-guard" style={{
+              flexShrink: 0, padding: "10px 20px", borderRadius: C.radiusSm,
+              background: C.blue, color: "#fff",
+              fontSize: 13, fontWeight: 700, textDecoration: "none",
+              boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
+            }}>
+              Smart-Guard aktivieren →
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
+            <input
+              id="dashboard-scan-url"
+              type="text" value={url} onChange={e => setUrl(e.target.value)}
+              placeholder="https://kunden-website.de"
+              disabled={state === "scanning"}
+              onFocus={() => setUrlFocused(true)}
+              onBlur={() => setUrlFocused(false)}
+              style={{
+                flex: 1, minWidth: 280,
+                background: "rgba(255,255,255,0.04)",
+                border: `1px solid ${urlFocused ? C.blue : C.borderMid}`,
+                borderRadius: C.radiusSm,
+                padding: "12px 16px",
+                color: C.text, fontSize: 14, outline: "none",
+                boxShadow: urlFocused ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
+                transition: "border-color 0.15s, box-shadow 0.15s",
+              }}
+            />
+            <button type="submit" disabled={state === "scanning" || !url} style={{
+              padding: "12px 28px", borderRadius: C.radiusSm, border: "none",
+              background: !url || state === "scanning" ? "rgba(255,255,255,0.06)" : C.blue,
+              color: !url || state === "scanning" ? C.textMuted : "#fff",
+              fontWeight: 700, fontSize: 14,
+              cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
+              boxShadow: !url || state === "scanning" ? "none" : "0 4px 20px rgba(0,123,255,0.4)",
+              transition: "background 0.15s, box-shadow 0.15s",
+              fontFamily: "inherit",
+            }}>
+              {buttonLabel}
+            </button>
+          </form>
+        )}
 
       </div>
+
+      {/* ── REDIRECT COUNTDOWN BANNER ──────────────────────── */}
+      {redirectCountdown !== null && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 14,
+          padding: "16px 22px", borderRadius: C.radiusSm, marginBottom: 24,
+          background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.25)",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.green }}>
+              Scan abgeschlossen — Daten wurden gespeichert
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: C.textSub }}>
+              Weiterleitung zum Dashboard in {redirectCountdown}s…
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard")}
+            style={{
+              flexShrink: 0, padding: "8px 18px", borderRadius: C.radiusSm,
+              background: C.green, border: "none", color: "#0b0c10",
+              fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            Jetzt zum Dashboard →
+          </button>
+          <button
+            onClick={cancelRedirect}
+            style={{
+              flexShrink: 0, padding: "8px 14px", borderRadius: C.radiusSm,
+              background: "transparent", border: `1px solid ${C.border}`,
+              color: C.textMuted, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            Hier bleiben
+          </button>
+        </div>
+      )}
 
       {/* FULL-SITE: upgrade prompt for free users */}
       {tab === "fullsite" && !isAgencyPlan && (

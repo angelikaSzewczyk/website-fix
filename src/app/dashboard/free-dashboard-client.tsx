@@ -545,7 +545,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     };
   }
 
-  // Simulated performance
+  // Simulated performance — only meaningful when a scan exists
+  const hasData     = !!lastScan;
   const lcpMs       = Math.max(1200, 4200 - speedScore * 30);
   const cls         = speedScore > 70 ? 0.05 : 0.18;
   const indexedUrls = 80 + Math.round(speedScore / 2);
@@ -720,27 +721,42 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>
                 Aktives Projekt
               </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
-                {domain !== "—" ? domain : "Noch kein Scan"}
-              </span>
-              {domain !== "—" && (
-                <button
-                  onClick={() => setProjectDialogOpen(true)}
-                  title="Projekt wechseln"
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    width: 22, height: 22, borderRadius: 5,
-                    background: "transparent", border: `1px solid ${D.border}`,
-                    cursor: "pointer", padding: 0, flexShrink: 0,
-                    transition: "border-color 0.15s",
-                  }}
-                >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                    stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              {domain !== "—" ? (
+                <>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
+                    {domain}
+                  </span>
+                  <button
+                    onClick={() => setProjectDialogOpen(true)}
+                    title="Projekt wechseln"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      width: 22, height: 22, borderRadius: 5,
+                      background: "transparent", border: `1px solid ${D.border}`,
+                      cursor: "pointer", padding: 0, flexShrink: 0,
+                      transition: "border-color 0.15s",
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                      stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <Link href="/dashboard/scan" style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "4px 12px", borderRadius: D.radiusSm,
+                  background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                  color: D.blueSoft, fontSize: 12, fontWeight: 700, textDecoration: "none",
+                }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
-                </button>
+                  Website hinzufügen
+                </Link>
               )}
             </div>
 
@@ -834,7 +850,21 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <BtnPrimary href="/dashboard/scan">Neuen Scan starten →</BtnPrimary>
+                {monthlyScans >= scanLimit ? (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "9px 20px", borderRadius: D.radiusSm,
+                    background: D.redBg, border: `1px solid ${D.redBorder}`,
+                    color: D.red, fontSize: 13, fontWeight: 700,
+                  }}>
+                    <LockIco size={13} color={D.red} />
+                    Scan-Limit erreicht
+                  </span>
+                ) : (
+                  <BtnPrimary href="/dashboard/scan">
+                    {lastScan ? "Neuen Scan starten →" : "+ Website hinzufügen"}
+                  </BtnPrimary>
+                )}
                 {lastScan && (
                   <BtnGhost href={`/dashboard/scans/${lastScan.id}`}>Bericht ansehen</BtnGhost>
                 )}
@@ -951,45 +981,41 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               {[
                 {
                   label: "Indexierte URLs",
-                  value: `${indexedUrls}`,
-                  sub: "Im Google Index",
-                  ok: indexedUrls > 30,
-                  color: D.blueSoft,
+                  value: hasData ? `${indexedUrls}` : "—",
+                  sub: hasData ? "Im Google Index" : "Noch kein Scan",
+                  color: hasData ? D.blueSoft : D.textFaint,
                 },
                 {
                   label: "Sitemap",
-                  value: sitemapOk ? "/sitemap.xml" : "Fehlt",
-                  sub: sitemapOk ? "Status: 200 OK" : "Nicht eingereicht",
-                  ok: sitemapOk,
-                  color: sitemapOk ? D.green : D.red,
+                  value: hasData ? (sitemapOk ? "/sitemap.xml" : "Fehlt") : "—",
+                  sub: hasData ? (sitemapOk ? "Status: 200 OK" : "Nicht eingereicht") : "Noch kein Scan",
+                  color: hasData ? (sitemapOk ? D.green : D.red) : D.textFaint,
                 },
                 {
                   label: "Core Web Vitals",
-                  value: `LCP ${(lcpMs / 1000).toFixed(1)}s`,
-                  sub: `CLS ${cls.toFixed(2)}`,
-                  ok: lcpMs < 2500,
-                  color: lcpMs < 2500 ? D.green : D.amber,
+                  value: hasData ? `LCP ${(lcpMs / 1000).toFixed(1)}s` : "—",
+                  sub: hasData ? `CLS ${cls.toFixed(2)}` : "Noch kein Scan",
+                  color: hasData ? (lcpMs < 2500 ? D.green : D.amber) : D.textFaint,
                 },
                 {
                   label: "Mobil",
-                  value: mobileOk ? "Bestanden" : "Fehlgeschlagen",
-                  sub: "Viewport & Responsive",
-                  ok: mobileOk,
-                  color: mobileOk ? D.green : D.red,
+                  value: hasData ? (mobileOk ? "Bestanden" : "Fehlgeschlagen") : "—",
+                  sub: hasData ? "Viewport & Responsive" : "Noch kein Scan",
+                  color: hasData ? (mobileOk ? D.green : D.red) : D.textFaint,
                 },
               ].map(tile => (
                 <div key={tile.label} style={{
                   padding: "16px 16px",
                   borderRadius: D.radiusSm,
-                  background: `rgba(${hexToRgb(tile.color)},0.05)`,
-                  border: `1px solid rgba(${hexToRgb(tile.color)},0.18)`,
+                  background: hasData ? `rgba(${hexToRgb(tile.color)},0.05)` : D.card,
+                  border: `1px solid ${hasData ? `rgba(${hexToRgb(tile.color)},0.18)` : D.border}`,
                 }}>
                   <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700,
-                    color: tile.color, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.8,
+                    color: tile.color, textTransform: "uppercase", letterSpacing: "0.08em", opacity: hasData ? 0.8 : 0.5,
                   }}>
                     {tile.label}
                   </p>
-                  <p style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 800, color: D.text, lineHeight: 1.2 }}>
+                  <p style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 800, color: hasData ? D.text : D.textFaint, lineHeight: 1.2 }}>
                     {tile.value}
                   </p>
                   <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>{tile.sub}</p>
