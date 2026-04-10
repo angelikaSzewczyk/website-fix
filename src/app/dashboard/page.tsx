@@ -365,13 +365,18 @@ export default async function DashboardPage() {
     } catch { /* table may not exist yet */ }
   }
 
-  // Free/Single: last scan result for issue parsing
+  // Free/Single: last scan result for issue parsing + tech fingerprint
   let lastScanResult: string | null = null;
+  let techFingerprint: import("@/lib/tech-detector").TechFingerprint | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
-      const rows = await sql`SELECT result FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}` as { result: string | null }[];
+      const rows = await sql`
+        SELECT result, tech_fingerprint
+        FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
+      ` as { result: string | null; tech_fingerprint: unknown }[];
       lastScanResult = rows[0]?.result ?? null;
+      techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
     } catch {}
   }
 
@@ -456,6 +461,7 @@ export default async function DashboardPage() {
           scans={scans}
           monthlyScans={monthlyScans}
           scanLimit={SCAN_LIMIT}
+          fingerprint={techFingerprint}
         />
       )}
 

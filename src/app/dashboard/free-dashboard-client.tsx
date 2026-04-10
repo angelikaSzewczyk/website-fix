@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
+import type { TechFingerprint } from "@/lib/tech-detector";
+import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ParsedIssueProp {
@@ -35,6 +37,8 @@ export interface FreeDashboardProps {
   scans: ScanBriefProp[];
   monthlyScans: number;
   scanLimit: number;
+  /** Structured tech fingerprint from the detection engine. Null for legacy scans. */
+  fingerprint: TechFingerprint | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -262,6 +266,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     rechtIssues, speedIssues, techIssues,
     cms, bfsgOk, speedScore,
     scans, monthlyScans, scanLimit,
+    fingerprint,
   } = props;
 
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
@@ -289,58 +294,69 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     : null;
   const greenCount = issues.filter(i => i.severity === "green").length;
 
-  // ── Tech fingerprint detection from scan text ──────────────────────────────
-  const scanText = (lastScanResult ?? "").toLowerCase();
-  const detectBuilder = (): string | null => {
-    if (/elementor/.test(scanText))                      return "Elementor";
-    if (/divi/.test(scanText))                           return "Divi";
-    if (/wpbakery|vc_row|vc-row/.test(scanText))         return "WPBakery";
-    if (/beaver[\s_-]?builder/.test(scanText))           return "Beaver Builder";
-    if (/avada/.test(scanText))                          return "Avada";
-    if (/oxygen[\s_-]?builder/.test(scanText))           return "Oxygen";
-    if (/gutenberg/.test(scanText))                      return "Gutenberg";
-    return null;
-  };
-  const detectServer = (): string => {
-    if (/nginx/.test(scanText))                          return "Nginx";
-    if (/apache/.test(scanText))                         return "Apache";
-    if (/litespeed/.test(scanText))                      return "LiteSpeed";
-    if (/cloudflare/.test(scanText))                     return "Cloudflare";
-    return "Nicht eindeutig erkannt";
-  };
-  const detectPhp = (): string => {
-    const m = scanText.match(/php[\s/]?(8\.\d|7\.\d)/);
-    if (m) return m[1];
-    if (/php\s*8/.test(scanText)) return "8.x";
-    if (/php\s*7/.test(scanText)) return "7.x";
-    return "Nicht eindeutig erkannt";
-  };
-  const detectFramework = (): string | null => {
-    if (/next\.js|nextjs|_next\//.test(scanText))         return "Next.js";
-    if (/nuxt\.js|nuxtjs|\/__nuxt/.test(scanText))        return "Nuxt.js";
-    if (/gatsby/.test(scanText))                          return "Gatsby";
-    if (/remix\.run|remixjs/.test(scanText))              return "Remix";
-    if (/astro\.build|astro-island/.test(scanText))       return "Astro";
-    if (/svelte/.test(scanText))                          return "SvelteKit";
-    return null;
-  };
-  const detectTracking = (): string | null => {
-    if (/googletagmanager\.com\/gtm/.test(scanText))      return "Google Tag Manager";
-    if (/gtag\('config'|google-analytics\.com|googletagmanager\.com\/gtag/.test(scanText)) return "Google Analytics";
-    if (/connect\.facebook\.net|fbq\('init'/.test(scanText)) return "Meta Pixel";
-    if (/static\.hotjar\.com|hj\('/.test(scanText))       return "Hotjar";
-    if (/js\.hs-scripts\.com|hubspot/.test(scanText))     return "HubSpot";
-    if (/cdn\.matomo\.cloud|matomo\.js|piwik\.js/.test(scanText)) return "Matomo";
-    return null;
-  };
+  // ── Tech chip building ─────────────────────────────────────────────────────
+  // Prefer the structured fingerprint (real HTML signals). Falls back to
+  // text-based heuristics only for scans performed before the fingerprint
+  // column was added.
 
-  const cmsLabel   = cms.label === "Custom" ? "Nicht eindeutig erkannt" : cms.label + (cms.version ? ` ${cms.version}` : "");
-  const builder    = detectBuilder();
-  const framework  = detectFramework();
-  const server     = detectServer();
-  const php        = detectPhp();
-  const tracking   = detectTracking();
-  const sslLabel   = "Aktiv";
+  type ChipDef = { label: string; value: string; color: string };
+
+  function chipsFromFingerprint(fp: TechFingerprint): ChipDef[] {
+    const T = CONFIDENCE_THRESHOLD;
+    const chips: ChipDef[] = [];
+
+    const pick = (d: { value: string; confidence: number }) =>
+      d.confidence >= T && d.value !== UNKNOWN ? d.value : null;
+
+    const cmsVal = pick(fp.cms);
+    if (cmsVal) chips.push({ label: "CMS",       value: cmsVal,           color: "#7aa6ff" });
+
+    const bldr = pick(fp.builder);
+    if (bldr)   chips.push({ label: "Builder",   value: bldr,             color: "#c084fc" });
+
+    const frm = pick(fp.framework);
+    if (frm)    chips.push({ label: "Framework", value: frm,              color: "#38bdf8" });
+
+    const eco = pick(fp.ecommerce);
+    if (eco)    chips.push({ label: "E-Commerce",value: eco,              color: "#34d399" });
+
+    const srv = pick(fp.server);
+    if (srv)    chips.push({ label: "Server",    value: srv,              color: "#8df3d3" });
+
+    const php = pick(fp.phpVersion);
+    if (php)    chips.push({ label: "PHP",       value: php,              color: "#a78bfa" });
+
+    // SSL is always shown
+    const sslDisplay = fp.ssl.value.startsWith("SSL aktiv") ? "Aktiv"
+      : fp.ssl.value === "Kein SSL / HTTP" ? "Kein SSL" : fp.ssl.value;
+    chips.push({ label: "SSL", value: sslDisplay, color: sslDisplay === "Aktiv" ? "#4ade80" : "#f87171" });
+
+    // Tracking: tagManager wins, then analytics, then any tracker
+    const tm = pick(fp.tagManager);
+    const an = pick(fp.analytics);
+    const tr = fp.tracking.find(t => t.confidence >= T && t.value !== UNKNOWN);
+    const trackingVal = tm ?? an ?? tr?.value ?? null;
+    if (trackingVal) chips.push({ label: "Tracking", value: trackingVal, color: "#fb923c" });
+
+    return chips;
+  }
+
+  function chipsFromText(): ChipDef[] {
+    // Legacy fallback: text-based heuristics on the AI report
+    const t = (lastScanResult ?? "").toLowerCase();
+    const chips: ChipDef[] = [];
+    const cmsLabel = cms.label === "Custom" ? null : cms.label + (cms.version ? ` ${cms.version}` : "");
+    if (cmsLabel) chips.push({ label: "CMS", value: cmsLabel, color: "#7aa6ff" });
+    if (/elementor/.test(t))            chips.push({ label: "Builder",  value: "Elementor",   color: "#c084fc" });
+    else if (/divi/.test(t))            chips.push({ label: "Builder",  value: "Divi",         color: "#c084fc" });
+    if (/next\.js|nextjs|_next\//.test(t)) chips.push({ label: "Framework", value: "Next.js", color: "#38bdf8" });
+    const srvMatch = /nginx/.test(t) ? "Nginx" : /apache/.test(t) ? "Apache" : /litespeed/.test(t) ? "LiteSpeed" : /cloudflare/.test(t) ? "Cloudflare" : null;
+    if (srvMatch) chips.push({ label: "Server", value: srvMatch, color: "#8df3d3" });
+    chips.push({ label: "SSL", value: "Aktiv", color: "#4ade80" });
+    return chips;
+  }
+
+  const techChips: ChipDef[] = fingerprint ? chipsFromFingerprint(fingerprint) : chipsFromText();
 
   // ── Impact label per category / severity ──────────────────────────────────
   function getImpact(category: string, severity: string): { label: string; color: string } {
@@ -758,47 +774,28 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           </Card>
 
           {/* ② TECH FINGERPRINT STRIP */}
-          {lastScan && (() => {
-            const unknown = "Nicht eindeutig erkannt";
-            const chips: { label: string; value: string; color: string }[] = [
-              { label: "CMS",       value: cmsLabel,                          color: "#7aa6ff" },
-              ...(builder   ? [{ label: "Builder",   value: builder,          color: "#c084fc" }] : []),
-              ...(framework ? [{ label: "Framework", value: framework,        color: "#38bdf8" }] : []),
-              { label: "Server",    value: server,                            color: "#8df3d3" },
-              { label: "PHP",       value: php,                               color: "#a78bfa" },
-              { label: "SSL",       value: sslLabel,                          color: "#4ade80" },
-              ...(tracking  ? [{ label: "Tracking",  value: tracking,         color: "#fb923c" }] : []),
-            ];
-            return (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
-                {chips.map(item => {
-                  const isUnknown = item.value === unknown;
-                  const col = isUnknown ? D.textMuted : item.color;
-                  return (
-                    <div key={item.label} style={{
-                      display: "flex", alignItems: "center", gap: 7,
-                      padding: "5px 12px 5px 10px",
-                      borderRadius: 20,
-                      background: isUnknown ? "rgba(255,255,255,0.02)" : `rgba(${hexToRgb(item.color)},0.06)`,
-                      border: `1px solid ${isUnknown ? D.border : `rgba(${hexToRgb(item.color)},0.2)`}`,
-                    }}>
-                      <span style={{
-                        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-                        background: col, opacity: isUnknown ? 0.4 : 0.85,
-                      }} />
-                      <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
-                      <span style={{
-                        fontSize: 11, fontWeight: isUnknown ? 400 : 700,
-                        color: col, fontStyle: isUnknown ? "italic" : "normal",
-                      }}>
-                        {item.value}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+          {lastScan && techChips.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
+              {techChips.map(item => (
+                <div key={item.label} style={{
+                  display: "flex", alignItems: "center", gap: 7,
+                  padding: "5px 12px 5px 10px",
+                  borderRadius: 20,
+                  background: `rgba(${hexToRgb(item.color)},0.06)`,
+                  border: `1px solid rgba(${hexToRgb(item.color)},0.2)`,
+                }}>
+                  <span style={{
+                    width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                    background: item.color, opacity: 0.85,
+                  }} />
+                  <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* ③ BFSG / COMPLIANCE BANNER */}
           {lastScan && (

@@ -8,6 +8,8 @@ import { getCachedScan, saveScanAsync, cacheTtlHours } from "@/lib/scan-cache";
 import { logScan } from "@/lib/scan-logger";
 import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
+import { buildFingerprintFromRaw } from "@/lib/tech-detector";
+import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
 
 export const maxDuration = 60;
 
@@ -204,6 +206,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Tech fingerprint — runs against the already-fetched HTML ─────────────
+    // buildFingerprintFromRaw is synchronous; no extra HTTP request needed.
+    const techFingerprint = buildFingerprintFromRaw(
+      buildRawWebsiteData({ url: targetUrl, response: mainRes, html: mainHtml }),
+    );
+
     const host0 = (() => { try { return new URL(targetUrl).hostname; } catch { return targetUrl; } })();
     if (!isRealWebsiteContent(mainRes, mainHtml, host0)) {
       return NextResponse.json(
@@ -335,6 +343,7 @@ export async function POST(req: NextRequest) {
     };
 
     scanData.audit = audit;
+    scanData.techFingerprint = techFingerprint;
 
     // ── 10. CLAUDE DIAGNOSE ─────────────────────────────────
     // Token-optimised prompt: paths only (not full URLs), counts over lists,
@@ -391,8 +400,8 @@ Erstelle Diagnose auf Deutsch:
     // Fire-and-forget: DB write runs after response is sent
     if (session?.user?.id) {
       const sql = neon(process.env.DATABASE_URL!);
-      sql`INSERT INTO scans (user_id, url, type, issue_count, result)
-        VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose})
+      sql`INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint)
+        VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose}, ${JSON.stringify(techFingerprint)})
       `.catch(() => null);
     }
 
