@@ -15,6 +15,59 @@ export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ── Compute issue count from scanData ───────────────────────
+function computeIssueCount(sd: Record<string, unknown>): number {
+  const audit = sd.audit as {
+    unterseiten?: { erreichbar: boolean }[];
+    duplicateTitles?: unknown[];
+    duplicateMetas?: unknown[];
+    altTexte?: { fehlend: number };
+    brokenLinks?: unknown[];
+    verwaistSeiten?: unknown[];
+  } | undefined;
+  return [
+    !sd.https,
+    !sd.erreichbar,
+    !sd.title,
+    !sd.metaDescription,
+    !sd.h1,
+    sd.robotsBlockiertAlles,
+    !sd.sitemapVorhanden,
+    audit?.unterseiten?.some(p => !p.erreichbar),
+    (audit?.duplicateTitles?.length ?? 0) > 0,
+    (audit?.duplicateMetas?.length ?? 0) > 0,
+    (audit?.altTexte?.fehlend ?? 0) > 0,
+    (audit?.brokenLinks?.length ?? 0) > 0,
+    (audit?.verwaistSeiten?.length ?? 0) > 0,
+  ].filter(Boolean).length;
+}
+
+// ── Save scan to user's history ──────────────────────────────
+async function saveUserScan(params: {
+  userId: string;
+  url: string;
+  issueCount: number;
+  diagnose: string;
+  techFingerprint?: unknown;
+}): Promise<string | null> {
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const rows = await sql`
+      INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint)
+      VALUES (
+        ${params.userId}, ${params.url}, 'website',
+        ${params.issueCount}, ${params.diagnose},
+        ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null}
+      )
+      RETURNING id::text
+    ` as { id: string }[];
+    return rows[0]?.id ?? null;
+  } catch (err) {
+    console.error("DB write error:", err);
+    return null;
+  }
+}
+
 // ── Rate Limiting ───────────────────────────────────────────
 const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
 const globalLimit = { count: 0, resetAt: 0 };
@@ -175,8 +228,21 @@ export async function POST(req: NextRequest) {
       const cached = await getCachedScan(targetUrl, ttl);
       if (cached) {
         const { cachedAt, ...payload } = cached;
+        // Still save to this user's scan history even on cache hit
+        let scanId: string | null = null;
+        if (session?.user?.id) {
+          const issueCount = computeIssueCount(cached.scanData);
+          const fp = cached.scanData.techFingerprint;
+          scanId = await saveUserScan({
+            userId: session.user.id,
+            url: targetUrl,
+            issueCount,
+            diagnose: cached.diagnose,
+            techFingerprint: fp,
+          });
+        }
         logScan({ userId: session?.user?.id, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
-        return NextResponse.json({ success: true, fromCache: true, cachedAt, ...payload });
+        return NextResponse.json({ success: true, fromCache: true, cachedAt, scanId, ...payload });
       }
     }
 
@@ -398,20 +464,9 @@ Erstelle Diagnose auf Deutsch:
     ].filter(Boolean).length;
 
     // Await DB write — must complete before response so the dashboard can read it
-    let savedScanId: string | null = null;
-    if (session?.user?.id) {
-      try {
-        const sql = neon(process.env.DATABASE_URL!);
-        const rows = await sql`
-          INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint)
-          VALUES (${session.user.id}, ${targetUrl}, 'website', ${issueCount}, ${diagnose}, ${JSON.stringify(techFingerprint)})
-          RETURNING id::text
-        ` as { id: string }[];
-        savedScanId = rows[0]?.id ?? null;
-      } catch (dbErr) {
-        console.error("DB write error:", dbErr);
-      }
-    }
+    const savedScanId = session?.user?.id
+      ? await saveUserScan({ userId: session.user.id, url: targetUrl, issueCount, diagnose, techFingerprint })
+      : null;
 
     // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
     await saveScanAsync(targetUrl, { scanData, diagnose });
