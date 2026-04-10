@@ -580,7 +580,7 @@ export default function Page() {
         </section>
 
         {/* ── INTEGRATIONS ── */}
-        <section style={{ background: "#0a0a0a", padding: "72px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <section style={{ padding: "72px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
             <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
               Integrationen
@@ -711,7 +711,7 @@ export default function Page() {
         </section>
 
         {/* ── AGENTUR FEATURES ── */}
-        <section style={{ background: "#0a0a0a", padding: "80px 24px" }}>
+        <section style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Agentur-Features</p>
@@ -824,7 +824,7 @@ export default function Page() {
         <RoiCalculator />
 
         {/* PRICING */}
-        <section id="pricing" style={{ background: "#0a0a0a", padding: "80px 24px" }}>
+        <section id="pricing" style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
             <div style={{ textAlign: "center", marginBottom: 56 }}>
