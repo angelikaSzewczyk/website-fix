@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
@@ -272,7 +273,21 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
   const [userMenuOpen, setUserMenuOpen]         = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [cancelHover, setCancelHover]           = useState(false);
+  const [switchHover, setSwitchHover]           = useState(false);
+  const [switching, setSwitching]               = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  async function handleProjectSwitch() {
+    if (switching) return;
+    setSwitching(true);
+    try {
+      await fetch("/api/clear-project", { method: "POST" });
+    } catch { /* non-critical */ }
+    setProjectDialogOpen(false);
+    router.push("/dashboard/scan");
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -1470,6 +1485,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           style={{
             position: "fixed", inset: 0, zIndex: 200,
             background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "24px",
           }}
@@ -1488,9 +1505,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {/* Icon */}
             <div style={{
               width: 44, height: 44, borderRadius: 11,
-              background: D.redBg, border: `1px solid ${D.redBorder}`,
+              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 20,
+              marginBottom: 24,
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke={D.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1504,44 +1521,53 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <h2 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
               Projekt wechseln?
             </h2>
-            <p style={{ margin: "0 0 8px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
               Im Free-Plan ist <strong style={{ color: D.text }}>1 Wechsel pro Monat</strong> inkludiert.
             </p>
             <div style={{
-              padding: "12px 14px", borderRadius: D.radiusXs, marginBottom: 24,
-              background: D.redBg, border: `1px solid ${D.redBorder}`,
+              padding: "14px 16px", borderRadius: D.radiusXs, marginBottom: 24,
+              background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)",
             }}>
-              <p style={{ margin: 0, fontSize: 12, color: D.red, lineHeight: 1.65, fontWeight: 500 }}>
-                Achtung: Alle Daten und Berichte der aktuellen Website werden dabei
-                unwiderruflich gelöscht.
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(248,113,113,0.85)", lineHeight: 1.65, fontWeight: 500 }}>
+                Achtung: Alle Daten und Berichte der aktuellen Website werden dabei unwiderruflich gelöscht.
               </p>
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={() => setProjectDialogOpen(false)}
+                onMouseEnter={() => setCancelHover(true)}
+                onMouseLeave={() => setCancelHover(false)}
                 style={{
                   flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
                   border: `1px solid ${D.borderStrong}`,
-                  background: "transparent", color: D.textSub,
+                  background: cancelHover ? "rgba(255,255,255,0.06)" : "transparent",
+                  color: cancelHover ? D.text : D.textSub,
                   fontSize: 13, fontWeight: 600, cursor: "pointer",
                   fontFamily: "inherit",
+                  transition: "background 0.15s, color 0.15s",
                 }}
               >
                 Abbrechen
               </button>
               <button
-                onClick={() => setProjectDialogOpen(false)}
+                onClick={handleProjectSwitch}
+                onMouseEnter={() => setSwitchHover(true)}
+                onMouseLeave={() => setSwitchHover(false)}
+                disabled={switching}
                 style={{
                   flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
                   border: "none",
-                  background: D.red, color: "#fff",
-                  fontSize: 13, fontWeight: 700, cursor: "pointer",
-                  boxShadow: "0 2px 12px rgba(248,113,113,0.3)",
+                  background: switchHover ? "#ef4444" : D.red,
+                  color: "#fff",
+                  fontSize: 13, fontWeight: 700, cursor: switching ? "default" : "pointer",
+                  boxShadow: "0 4px 16px rgba(248,113,113,0.25)",
                   fontFamily: "inherit",
+                  opacity: switching ? 0.7 : 1,
+                  transition: "background 0.15s, opacity 0.15s",
                 }}
               >
-                Wechseln &amp; Daten löschen
+                {switching ? "Wird gelöscht..." : "Wechseln & Daten löschen"}
               </button>
             </div>
           </div>
