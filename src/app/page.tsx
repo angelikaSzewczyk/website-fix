@@ -831,7 +831,7 @@ export default function Page() {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(74,222,128,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Einfach. Transparent. Ehrlich.
               </h2>

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const H2: React.CSSProperties = {
-  fontSize: 14, fontWeight: 700, color: "#EAB308",
+  fontSize: 14, fontWeight: 700, color: "#7aa6ff",
   margin: "36px 0 10px", letterSpacing: "0.04em", textTransform: "uppercase",
 };
 
@@ -42,7 +42,7 @@ export default function ImpressumPage() {
       <p style={P}>
         E-Mail:{" "}
         <a href="mailto:support@website-fix.com"
-          style={{ color: "#EAB308", textDecoration: "none", fontWeight: 500 }}>
+          style={{ color: "#7aa6ff", textDecoration: "none", fontWeight: 500 }}>
           support@website-fix.com
         </a>
       </p>
@@ -65,7 +65,7 @@ export default function ImpressumPage() {
       <p style={P}>
         Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{" "}
         <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer"
-          className="legal-a" style={{ color: "#EAB308", textDecoration: "none" }}>
+          className="legal-a" style={{ color: "#7aa6ff", textDecoration: "none" }}>
           https://ec.europa.eu/consumers/odr
         </a>
       </p>

@@ -20,12 +20,12 @@ function SH({ num, children }: { num: string; children: string }) {
   return (
     <h2 style={{
       display: "flex", alignItems: "center", gap: 12,
-      fontSize: 13, fontWeight: 700, color: "#EAB308",
+      fontSize: 13, fontWeight: 700, color: "#7aa6ff",
       margin: "36px 0 10px", letterSpacing: "0.04em", textTransform: "uppercase",
     }}>
       <span style={{
         flexShrink: 0, width: 24, height: 24, borderRadius: "50%",
-        background: "#EAB308", color: "#0a0a0a",
+        background: "#2563EB", color: "#fff",
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         fontSize: 11, fontWeight: 800,
       }}>
@@ -41,18 +41,18 @@ function Basis({ children }: { children: React.ReactNode }) {
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 10,
       margin: "10px 0 12px", padding: "10px 14px", borderRadius: 8,
-      background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.18)",
+      background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)",
     }}>
       <span style={{
         flexShrink: 0, whiteSpace: "nowrap",
         fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
         padding: "3px 7px", borderRadius: 4,
-        background: "rgba(234,179,8,0.15)", color: "#EAB308",
-        border: "1px solid rgba(234,179,8,0.25)", marginTop: 1,
+        background: "rgba(37,99,235,0.15)", color: "#7aa6ff",
+        border: "1px solid rgba(37,99,235,0.3)", marginTop: 1,
       }}>
         Rechtsgrundlage
       </span>
-      <span style={{ fontSize: 13, color: "rgba(253,230,138,0.75)", lineHeight: 1.7 }}>{children}</span>
+      <span style={{ fontSize: 13, color: "rgba(147,197,253,0.75)", lineHeight: 1.7 }}>{children}</span>
     </div>
   );
 }
@@ -72,7 +72,7 @@ export default function DatenschutzPage() {
         Einzelunternehmen · Am Hühnerberg 5 · 51381 Leverkusen · Deutschland<br />
         E-Mail:{" "}
         <a href="mailto:support@website-fix.com"
-          style={{ color: "#EAB308", textDecoration: "none", fontWeight: 500 }}>
+          style={{ color: "#7aa6ff", textDecoration: "none", fontWeight: 500 }}>
           support@website-fix.com
         </a>
       </p>
@@ -125,7 +125,7 @@ export default function DatenschutzPage() {
         Datenübertragbarkeit sowie Widerspruch gegen die Verarbeitung deiner personenbezogenen Daten.
         Wende dich dazu an:{" "}
         <a href="mailto:support@website-fix.com"
-          style={{ color: "#EAB308", textDecoration: "none", fontWeight: 500 }}>
+          style={{ color: "#7aa6ff", textDecoration: "none", fontWeight: 500 }}>
           support@website-fix.com
         </a>
       </p>
