@@ -68,9 +68,9 @@ const BENEFITS = [
     iconBg: "rgba(22,163,74,0.12)",
     iconBorder: "rgba(22,163,74,0.25)",
     iconColor: "#4ade80",
-    label: "Mehr Umsatz",
-    title: "BFSG als neues Service-Paket",
-    desc: "Verkaufe BFSG-Compliance als eigenständiges Wartungspaket und fakturiere monatlich — ohne zusätzlichen Aufwand.",
+    label: "Automatischer Wachdienst",
+    title: "AUTOMATISCHER WACHDIENST",
+    desc: "Keine manuellen Updates oder teure Wartungsverträge mehr. WebsiteFix scannt und sichert deine Seite vollautomatisch – 24/7.",
   },
   {
     icon: (
@@ -81,9 +81,9 @@ const BENEFITS = [
     iconBg: "rgba(37,99,235,0.12)",
     iconBorder: "rgba(37,99,235,0.25)",
     iconColor: "#7aa6ff",
-    label: "Weniger Haftung",
-    title: "BFSG 2025 automatisch im Griff",
-    desc: "Wir überwachen die gesetzlichen Anforderungen (BFSG 2025) für dich — und dokumentieren alles lückenlos für den Ernstfall.",
+    label: "Rechtssicher durch 2025",
+    title: "RECHTSSICHER DURCH 2025",
+    desc: "Wir überwachen die gesetzlichen Anforderungen des BFSG 2025 automatisch für dich und dokumentieren alles lückenlos für den Ernstfall.",
   },
   {
     icon: (
@@ -94,9 +94,9 @@ const BENEFITS = [
     iconBg: "rgba(217,119,6,0.12)",
     iconBorder: "rgba(217,119,6,0.25)",
     iconColor: "#fbbf24",
-    label: "Integrierter Workflow",
-    title: "Kein Tool-Hopping mehr",
-    desc: "Kein Tool-Hopping. Fehler landen direkt da, wo dein Team arbeitet — als Jira-Ticket, Trello-Karte oder Asana-Task.",
+    label: "Nahtlose Integration",
+    title: "NAHTLOSE INTEGRATION",
+    desc: "Probleme werden sofort erkannt und landen genau dort, wo du sie brauchst (z.B. Slack oder E-Mail) – so bleibst du immer informiert.",
   },
   {
     icon: (
@@ -110,9 +110,9 @@ const BENEFITS = [
     iconBg: "rgba(124,58,237,0.12)",
     iconBorder: "rgba(124,58,237,0.25)",
     iconColor: "#c084fc",
-    label: "Kunden-Bindung",
-    title: "Reports die Kunden begeistern",
-    desc: "Monatliche Reports zeigen deinen Kunden schwarz auf weiß, was du für sie tust — und warum sie ohne dich nicht auskommen.",
+    label: "Verständliche Status-Reports",
+    title: "VERSTÄNDLICHE STATUS-REPORTS",
+    desc: "Unsere Reports zeigen dir schwarz auf weiß, dass deine Seite sicher und performant ist – in einer Sprache, die jeder versteht.",
   },
 ];
 
@@ -446,9 +446,9 @@ export default function Page() {
         <section style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum Agenturen uns wählen</p>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum WebsiteFix?</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Vier Gründe, die dein Business verändern.
+                Sicherheit, die mitdenkt.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
                 Mehr Marge, weniger Risiko, glücklichere Kunden. Das ist kein Versprechen — das ist das System.
