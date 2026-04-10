@@ -286,11 +286,11 @@ export default function Page() {
           </div>
 
           <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            Verdiene mehr mit automatisierten<br />Wartungsverträgen.
+            Deine Website. Sicher, gewartet und immer online.
           </h1>
 
           <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
-            WebsiteFix ist das White-Label Dashboard für Agenturen. Scanne Kunden-Websites vollautomatisch, erstelle Profi-Reports und integriere alles in Jira, Trello oder Asana.
+            WebsiteFix ist die automatisierte Lösung für maximale Webseiten-Sicherheit. Ob Smart-Guard Schutz für deine eigene Seite oder White-Label Berichte für deine Kunden – wir automatisieren deine Wartung.
           </p>
 
           {/* Einzige CTA */}
@@ -301,7 +301,7 @@ export default function Page() {
               color: "#fff", textDecoration: "none",
               boxShadow: "0 4px 24px rgba(0,123,255,0.45), 0 1px 8px rgba(0,123,255,0.3)",
             }}>
-              Kostenlos scannen →
+              Kostenlosen Check starten →
             </Link>
             <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
               Keine Anmeldung · Ergebnis in unter 60 Sekunden
