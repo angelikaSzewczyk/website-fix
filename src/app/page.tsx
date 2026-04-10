@@ -69,7 +69,7 @@ const BENEFITS = [
     iconBorder: "rgba(22,163,74,0.25)",
     iconColor: "#4ade80",
     label: "Automatischer Wachdienst",
-    title: "AUTOMATISCHER WACHDIENST",
+    title: "Automatische Wartung",
     desc: "Keine manuellen Updates oder teure Wartungsverträge mehr. WebsiteFix scannt und sichert deine Seite vollautomatisch – 24/7.",
   },
   {
@@ -82,7 +82,7 @@ const BENEFITS = [
     iconBorder: "rgba(37,99,235,0.25)",
     iconColor: "#7aa6ff",
     label: "Rechtssicher durch 2025",
-    title: "RECHTSSICHER DURCH 2025",
+    title: "Rechtssicher durch 2025",
     desc: "Wir überwachen die gesetzlichen Anforderungen des BFSG 2025 automatisch für dich und dokumentieren alles lückenlos für den Ernstfall.",
   },
   {
@@ -95,7 +95,7 @@ const BENEFITS = [
     iconBorder: "rgba(217,119,6,0.25)",
     iconColor: "#fbbf24",
     label: "Nahtlose Integration",
-    title: "NAHTLOSE INTEGRATION",
+    title: "Nahtlose Integration",
     desc: "Probleme werden sofort erkannt und landen genau dort, wo du sie brauchst (z.B. Slack oder E-Mail) – so bleibst du immer informiert.",
   },
   {
@@ -111,7 +111,7 @@ const BENEFITS = [
     iconBorder: "rgba(124,58,237,0.25)",
     iconColor: "#c084fc",
     label: "Verständliche Status-Reports",
-    title: "VERSTÄNDLICHE STATUS-REPORTS",
+    title: "Verständliche Berichte",
     desc: "Unsere Reports zeigen dir schwarz auf weiß, dass deine Seite sicher und performant ist – in einer Sprache, die jeder versteht.",
   },
 ];
