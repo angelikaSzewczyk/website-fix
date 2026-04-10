@@ -269,8 +269,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     fingerprint,
   } = props;
 
-  const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
-  const [userMenuOpen, setUserMenuOpen]       = useState(false);
+  const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
+  const [userMenuOpen, setUserMenuOpen]         = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -697,24 +698,58 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           <div style={{
             maxWidth: 1100, margin: "0 auto", padding: "0 24px",
             height: 52,
-            display: "flex", alignItems: "center", gap: 16,
+            display: "flex", alignItems: "center", gap: 14,
           }}>
-            {/* Domain */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>Target</span>
+            {/* Aktives Projekt + Stift-Icon */}
+            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                Aktives Projekt
+              </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
                 {domain !== "—" ? domain : "Noch kein Scan"}
               </span>
+              {domain !== "—" && (
+                <button
+                  onClick={() => setProjectDialogOpen(true)}
+                  title="Projekt wechseln"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 22, height: 22, borderRadius: 5,
+                    background: "transparent", border: `1px solid ${D.border}`,
+                    cursor: "pointer", padding: 0, flexShrink: 0,
+                    transition: "border-color 0.15s",
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                    stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              )}
             </div>
 
             <div style={{ flex: 1 }} />
 
-            {/* Scan usage */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12, color: D.textMuted }}>Scans</span>
+            {/* Projekt-Slots */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekt-Slots</span>
               <span style={{
-                fontSize: 12, fontWeight: 700,
-                padding: "2px 10px", borderRadius: 20,
+                fontSize: 11, fontWeight: 700,
+                padding: "2px 9px", borderRadius: 20,
+                background: D.card, border: `1px solid ${D.borderMid}`,
+                color: D.textSub,
+              }}>
+                1 / 1
+              </span>
+            </div>
+
+            {/* Scan usage */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans</span>
+              <span style={{
+                fontSize: 11, fontWeight: 700,
+                padding: "2px 9px", borderRadius: 20,
                 background: monthlyScans >= scanLimit ? D.redBg : D.card,
                 border: `1px solid ${monthlyScans >= scanLimit ? D.redBorder : D.borderMid}`,
                 color: monthlyScans >= scanLimit ? D.red : D.textSub,
@@ -722,9 +757,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 {monthlyScans} / {scanLimit}
               </span>
             </div>
-
-            {/* Free badge */}
-            <Pill color="#7aa6ff" size="xs">Free</Pill>
 
             {/* Upgrade CTA */}
             <Link href="/smart-guard" style={{
@@ -1418,6 +1450,94 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
         </main>
       </div>
+
+      {/* ══════════════════════════════════════════════════
+          PROJEKT-WECHSEL DIALOG
+      ══════════════════════════════════════════════════ */}
+      {projectDialogOpen && (
+        <div
+          onClick={() => setProjectDialogOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.65)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "24px",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#0f1623",
+              border: `1px solid ${D.borderStrong}`,
+              borderRadius: D.radius,
+              padding: "32px 32px 28px",
+              maxWidth: 420, width: "100%",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* Icon */}
+            <div style={{
+              width: 44, height: 44, borderRadius: 11,
+              background: D.redBg, border: `1px solid ${D.redBorder}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 20,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke={D.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </div>
+
+            <h2 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
+              Projekt wechseln?
+            </h2>
+            <p style={{ margin: "0 0 8px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
+              Im Free-Plan ist <strong style={{ color: D.text }}>1 Wechsel pro Monat</strong> inkludiert.
+            </p>
+            <div style={{
+              padding: "12px 14px", borderRadius: D.radiusXs, marginBottom: 24,
+              background: D.redBg, border: `1px solid ${D.redBorder}`,
+            }}>
+              <p style={{ margin: 0, fontSize: 12, color: D.red, lineHeight: 1.65, fontWeight: 500 }}>
+                Achtung: Alle Daten und Berichte der aktuellen Website werden dabei
+                unwiderruflich gelöscht.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setProjectDialogOpen(false)}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
+                  border: `1px solid ${D.borderStrong}`,
+                  background: "transparent", color: D.textSub,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={() => setProjectDialogOpen(false)}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
+                  border: "none",
+                  background: D.red, color: "#fff",
+                  fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "0 2px 12px rgba(248,113,113,0.3)",
+                  fontFamily: "inherit",
+                }}
+              >
+                Wechseln &amp; Daten löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
