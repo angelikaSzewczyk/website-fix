@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     num: "01",
-    label: "URL eingeben",
+    label: "Setup",
     title: "URL eingeben",
     desc: "Kein Plugin, kein Hosting-Zugang nötig. Einfach deine URL eintragen und unser System analysiert deine Seite sofort.",
     color: "#7aa6ff",
@@ -29,8 +29,8 @@ const STEPS = [
   },
   {
     num: "02",
-    label: "KI-Wachdienst aktivieren",
-    title: "KI-Wachdienst aktivieren",
+    label: "Monitoring",
+    title: "Wachdienst aktivieren",
     desc: "Unsere KI scannt deine Seite täglich auf Sicherheitslücken, Performance-Einbußen und gesetzliche Anforderungen wie das BFSG 2025.",
     color: "#8df3d3",
     icon: (
@@ -43,8 +43,8 @@ const STEPS = [
   },
   {
     num: "03",
-    label: "Entspannt zurücklehnen",
-    title: "Entspannt zurücklehnen",
+    label: "Reports",
+    title: "Sicherheit genießen",
     desc: "Du erhältst klare, verständliche Status-Berichte. Bei Problemen wirst du sofort informiert – so bleibt deine Seite immer online und sicher.",
     color: "#c084fc",
     icon: (
