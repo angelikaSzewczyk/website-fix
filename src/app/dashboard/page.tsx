@@ -3,7 +3,6 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
-import BillingPortalButton from "../components/billing-portal-button";
 
 export const metadata: Metadata = {
   title: "Dashboard — WebsiteFix",
@@ -37,8 +36,8 @@ const C = {
 } as const;
 
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
-function getLayout(plan: string): "free" | "single" | "agency" | "enterprise" {
-  if (plan === "enterprise")                return "enterprise";
+// DB plan values: "free" | "single" | "pro" (Agency Starter) | "agentur" (Agency Pro)
+function getLayout(plan: string): "free" | "single" | "agency" {
   if (plan === "agentur" || plan === "pro") return "agency";
   if (plan === "single")                    return "single";
   return "free";
@@ -205,12 +204,12 @@ type CriticalSite = {
   alerts: { level: string; message: string }[] | null;
 };
 
+// Agency Starter = DB plan "pro" (99€)  |  Agency Pro = DB plan "agentur" (199€)
 const PLAN_BADGE = {
-  free:       { label: "Free",          color: C.textMuted,  bg: "#F1F5F9",  border: C.border },
-  single:     { label: "Smart-Guard",   color: "#059669",    bg: "#ECFDF5",  border: "#A7F3D0" },
-  pro:        { label: "Agency Starter",color: C.blue,       bg: C.blueBg,   border: C.blueBorder },
-  agentur:    { label: "Agency Pro",    color: "#7C3AED",    bg: "#F5F3FF",  border: "#DDD6FE" },
-  enterprise: { label: "Enterprise",   color: "#0F172A",    bg: "#F8FAFC",  border: C.border },
+  free:    { label: "Free",           color: C.textMuted, bg: "#F1F5F9", border: C.border },
+  single:  { label: "Smart-Guard",    color: "#059669",   bg: "#ECFDF5", border: "#A7F3D0" },
+  pro:     { label: "Agency Starter", color: C.blue,      bg: C.blueBg,  border: C.blueBorder },
+  agentur: { label: "Agency Pro",     color: "#7C3AED",   bg: "#F5F3FF", border: "#DDD6FE" },
 } as const;
 
 const DUMMY_CLIENTS = [
@@ -294,59 +293,6 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit }: {
   );
 }
 
-// ─── Agency Sidebar ─────────────────────────────────────────────────────────────
-function AgencySidebar({ firstName, plan, planBadge, domainCount, domainLimit, isEnterprise }: {
-  firstName: string; plan: string;
-  planBadge: { label: string; color: string; bg: string; border: string };
-  domainCount: number; domainLimit: number; isEnterprise: boolean;
-}) {
-  const navItems = [
-    { label: "Kommandozentrale",   href: "/dashboard",          active: true,  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
-    { label: "Kundenliste",        href: "/dashboard/clients",  active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-    { label: "Berichte-Archiv",    href: "/dashboard/reports",  active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-    { label: "Team-Einstellungen", href: "/dashboard/team",     active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
-    ...(isEnterprise ? [{ label: "Admin / Rechte", href: "/dashboard/admin", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> }] : []),
-  ];
-  return (
-    <aside style={{ width: 230, flexShrink: 0, minHeight: "calc(100vh - 45px)", borderRight: `1px solid ${C.border}`, background: C.card, display: "flex", flexDirection: "column" }}>
-      <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${C.divider}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: C.blueBg, border: `1px solid ${C.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: C.blue }}>
-            {firstName[0]?.toUpperCase()}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName}</div>
-            <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 20, color: planBadge.color, background: planBadge.bg, border: `1px solid ${planBadge.border}` }}>{planBadge.label}</span>
-          </div>
-        </div>
-        <BillingPortalButton />
-      </div>
-      <nav style={{ flex: 1, padding: "8px 0" }}>
-        {navItems.map(item => (
-          <Link key={item.label} href={item.href} style={{ textDecoration: "none" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 18px", background: item.active ? C.blueBg : "transparent", color: item.active ? C.blue : C.textSub, fontSize: 13, fontWeight: item.active ? 700 : 500, borderLeft: item.active ? `3px solid ${C.blue}` : "3px solid transparent" }}>
-              {item.icon}
-              {item.label}
-              {item.label === "Admin / Rechte" && (
-                <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 800, padding: "1px 6px", borderRadius: 4, background: "#F5F3FF", color: "#7C3AED", border: "1px solid #DDD6FE" }}>ENT</span>
-              )}
-            </div>
-          </Link>
-        ))}
-      </nav>
-      <div style={{ padding: "14px 18px", borderTop: `1px solid ${C.divider}` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 500 }}>Domains</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{domainCount} <span style={{ color: C.textMuted, fontWeight: 400 }}>/ {domainLimit}</span></span>
-        </div>
-        <div style={{ height: 4, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
-          <div style={{ height: "100%", borderRadius: 99, width: `${Math.min(100, (domainCount / domainLimit) * 100)}%`, background: domainCount / domainLimit > 0.8 ? C.red : C.blue }} />
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 function ClientRow({ client, last }: { client: typeof DUMMY_CLIENTS[0]; last: boolean }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 1fr 180px", gap: 16, alignItems: "center", padding: "13px 20px", borderBottom: last ? "none" : `1px solid ${C.divider}` }}>
@@ -386,7 +332,7 @@ export default async function DashboardPage() {
   const badge     = PLAN_BADGE[plan] ?? PLAN_BADGE.free;
   const firstName = session.user.name?.split(" ")[0] ?? "Dashboard";
   const layout    = getLayout(plan);
-  const isAgency  = layout === "agency" || layout === "enterprise";
+  const isAgency  = layout === "agency";
   const isSingle  = layout === "single";   // Smart-Guard plan
   const isFree    = layout === "free";
 
@@ -399,7 +345,7 @@ export default async function DashboardPage() {
   // Agency data
   let criticalSites: CriticalSite[] = [];
   let domainCount = DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0);
-  const domainLimit = plan === "agentur" ? 50 : plan === "pro" ? 20 : 1;
+  const domainLimit = plan === "agentur" ? 999 : 10;
   if (isAgency) {
     try {
       criticalSites = await sql`
@@ -449,10 +395,10 @@ export default async function DashboardPage() {
   const bfsgOk     = rechtIssues.length === 0;
   const speedScore = Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
 
-  // Agency slots
-  const clientSlotLimit = layout === "enterprise" ? 999 : plan === "agentur" ? 50 : 10;
+  // Agency slots: Starter = 10, Pro = unlimited
+  const clientSlotLimit = plan === "agentur" ? 999 : 10;
   const usedSlots       = DUMMY_CLIENTS.length;
-  const slotsLabel      = layout === "enterprise" ? "∞" : String(clientSlotLimit);
+  const slotsLabel      = plan === "agentur" ? "∞" : String(clientSlotLimit);
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -914,13 +860,9 @@ export default async function DashboardPage() {
       )}
 
       {/* ══════════════════════════════════════════════════════════
-          AGENCY LAYOUT  (plan: pro / agentur / enterprise)
+          AGENCY LAYOUT  (plan: pro = Agency Starter | agentur = Agency Pro)
           ══════════════════════════════════════════════════════════ */}
       {isAgency && (()=> {
-        const clientSlotLimit = layout === "enterprise" ? 999 : plan === "agentur" ? 50 : 10;
-        const usedSlots       = DUMMY_CLIENTS.length;
-        const slotsLabel      = layout === "enterprise" ? "∞" : String(clientSlotLimit);
-
         const healthScore = (status: string) =>
           status === "ok" ? 88 : status === "warning" ? 61 : 34;
 
@@ -944,11 +886,18 @@ export default async function DashboardPage() {
                       Slots: {usedSlots} / {slotsLabel}
                     </span>
                   </div>
-                  {/* Neutrales Branding aktiv */}
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F0FDF4", border: "1px solid #A7F3D0", color: "#16A34A", whiteSpace: "nowrap" }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Neutrales Branding aktiv
-                  </span>
+                  {/* Branding badge — differs by plan tier */}
+                  {plan === "agentur" ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", whiteSpace: "nowrap" }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Full White-Label aktiv
+                    </span>
+                  ) : (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F0FDF4", border: "1px solid #A7F3D0", color: "#16A34A", whiteSpace: "nowrap" }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Neutrales Branding aktiv
+                    </span>
+                  )}
                   {/* CTA */}
                   <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 2px 12px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
