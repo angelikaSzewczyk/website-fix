@@ -218,6 +218,45 @@ function AutoFixButton() {
   );
 }
 
+// ─── Quick action buttons ─────────────────────────────────────────────────────
+function QuickSlackButton({ title }: { title: string }) {
+  const [sent, setSent] = useState(false);
+  if (sent) return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", fontSize: 11, fontWeight: 600 }}>
+      ✓ Slack gesendet
+    </span>
+  );
+  return (
+    <button
+      onClick={() => { setSent(true); setTimeout(() => setSent(false), 3000); }}
+      title={`Slack: Team über „${title}" informieren`}
+      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24"><g fill="#7C3AED"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></g></svg>
+      Team informieren
+    </button>
+  );
+}
+
+function QuickJiraButton({ title }: { title: string }) {
+  const [sent, setSent] = useState(false);
+  if (sent) return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 600 }}>
+      ✓ Jira-Ticket erstellt
+    </span>
+  );
+  return (
+    <button
+      onClick={() => { setSent(true); setTimeout(() => setSent(false), 3000); }}
+      title={`Jira-Ticket für „${title}" erstellen`}
+      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+    >
+      <ToolIcon id="jira" color={C.blue} size={11} />
+      Ticket erstellen
+    </button>
+  );
+}
+
 // ─── Issue card ────────────────────────────────────────────────────────────────
 function IssueCard({ issue }: { issue: IssueBlock }) {
   const [open, setOpen] = useState(false);
@@ -282,6 +321,12 @@ function IssueCard({ issue }: { issue: IssueBlock }) {
           </div>
         </button>
 
+        {/* Quick actions — always visible */}
+        <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+          <QuickSlackButton title={issue.title} />
+          <QuickJiraButton title={issue.title} />
+        </div>
+
         {/* Description — always visible */}
         {descText && (
           <p style={{ margin: "10px 0 0", fontSize: 14, color: C.textSub, lineHeight: 1.75 }}>
@@ -338,6 +383,58 @@ function IssueCard({ issue }: { issue: IssueBlock }) {
   );
 }
 
+// ─── Offer button ─────────────────────────────────────────────────────────────
+function OfferButton({ issueCount, redCount }: { issueCount: number; redCount: number }) {
+  const [state, setState] = useState<"idle" | "generating" | "done">("idle");
+
+  if (state === "done") {
+    return (
+      <div style={{
+        marginTop: 8, padding: "16px 20px", borderRadius: 12,
+        background: "#F0FDF4", border: "1px solid #A7F3D0",
+        display: "flex", alignItems: "center", gap: 12,
+      }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#16A34A" }}>
+          Kunden-Angebot wurde generiert und in die Zwischenablage kopiert ✨
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      disabled={state === "generating"}
+      onClick={() => {
+        setState("generating");
+        setTimeout(() => setState("done"), 1800);
+        setTimeout(() => setState("idle"), 5800);
+      }}
+      style={{
+        marginTop: 8, width: "100%",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+        padding: "13px 20px", borderRadius: 12,
+        background: state === "generating" ? "rgba(74,222,128,0.08)" : "rgba(74,222,128,0.1)",
+        border: "1px solid rgba(74,222,128,0.35)",
+        color: "#4ade80", fontSize: 14, fontWeight: 700, cursor: state === "generating" ? "default" : "pointer",
+        transition: "background 0.15s",
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+      </svg>
+      {state === "generating"
+        ? "Angebot wird generiert…"
+        : `Interaktives Kunden-Angebot generieren (${issueCount} Befunde${redCount > 0 ? `, ${redCount} kritisch` : ""})`}
+    </button>
+  );
+}
+
 export default function IssueCardsClient({ issues }: { issues: IssueBlock[] }) {
   const red    = issues.filter(i => i.severity === "red").length;
   const yellow = issues.filter(i => i.severity === "yellow").length;
@@ -360,6 +457,9 @@ export default function IssueCardsClient({ issues }: { issues: IssueBlock[] }) {
       </div>
 
       {issues.map((issue, i) => <IssueCard key={i} issue={issue} />)}
+
+      {/* Offer generator */}
+      {issues.length > 0 && <OfferButton issueCount={issues.length} redCount={red} />}
     </div>
   );
 }

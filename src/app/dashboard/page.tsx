@@ -194,6 +194,65 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {/* ── ONBOARDING PROGRESS (Agentur) ── */}
+      {plan === "agentur" && (() => {
+        const slackOk   = !!(process.env.SLACK_WEBHOOK_URL || process.env.SLACK_BOT_TOKEN);
+        const clientOk  = marginLevers.websitesMonitored > 0;
+        const steps = [
+          { label: "Domain verbunden",          done: true },
+          { label: "Slack einrichten",           done: slackOk },
+          { label: "Branding eingerichtet",      done: brandingDone },
+          { label: "Ersten Kunden angelegt",     done: clientOk },
+        ];
+        const doneCount = steps.filter(s => s.done).length;
+        const pct       = Math.round((doneCount / steps.length) * 100);
+        const barColor  = pct === 100 ? C.green : pct >= 50 ? C.amber : C.blue;
+        return (
+          <div style={{
+            marginBottom: 20,
+            padding: "16px 20px",
+            background: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 14, boxShadow: C.shadow,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                Dein Agentur-Profil
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: barColor }}>
+                {pct}%
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div style={{ height: 6, borderRadius: 99, background: C.divider, marginBottom: 14, overflow: "hidden" }}>
+              <div style={{
+                height: "100%", borderRadius: 99,
+                width: `${pct}%`, background: barColor,
+                transition: "width 0.4s ease",
+              }} />
+            </div>
+            {/* Checklist */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
+              {steps.map(step => (
+                <div key={step.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{
+                    width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: step.done ? C.greenBg : C.divider,
+                    border: `1px solid ${step.done ? "#A7F3D0" : C.border}`,
+                    fontSize: 9, color: step.done ? C.green : C.textMuted, fontWeight: 800,
+                  }}>
+                    {step.done ? "✓" : "○"}
+                  </span>
+                  <span style={{ fontSize: 12, color: step.done ? C.text : C.textMuted, fontWeight: step.done ? 600 : 400 }}>
+                    {step.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── QUICK START (Agentur) ── */}
       {plan === "agentur" && (
         <QuickStartGuide

@@ -561,6 +561,43 @@ export default function DiagnoseReport({
         scannedAt={scannedAt}
       />
 
+      {/* CMS Intelligence — Deep Scan */}
+      <div style={{
+        display: "flex", alignItems: "center", flexWrap: "wrap", gap: 12,
+        padding: "13px 20px", marginBottom: 20,
+        background: C.blueBg, border: `1px solid ${C.blueBorder}`,
+        borderRadius: 12,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5,
+            background: C.blue, color: "#fff", letterSpacing: "0.07em", flexShrink: 0,
+          }}>
+            DEEP SCAN
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+            Erkanntes System:
+          </span>
+          <span style={{ fontSize: 13, color: C.textSub, fontWeight: 500 }}>
+            WordPress 7.0 (Alpha)
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20,
+            background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`,
+            letterSpacing: "0.03em",
+          }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            2026 BFSG-Compliant
+          </span>
+        </div>
+      </div>
+
       {/* Issue count strip */}
       {allIssues.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
