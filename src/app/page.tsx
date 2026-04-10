@@ -620,16 +620,16 @@ export default function Page() {
           </div>
         </section>
 
-        {/* ── AGENTUR FEATURES ── */}
+        {/* ── ALLES IM GRIFF ── */}
         <section style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Agentur-Features</p>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Dein Vorteil</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Gebaut für Agenturen, die skalieren.
+                Alles im Griff.
               </h2>
               <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
-                Jedes Feature ist darauf ausgelegt, deinen Agentur-Workflow zu automatisieren und deine Kunden zu beeindrucken.
+                Für jeden, der eine Website betreibt — ob Selbstständiger, KMU oder Agentur.
               </p>
             </div>
 
@@ -638,37 +638,33 @@ export default function Page() {
                 {
                   icon: (
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
                     </svg>
                   ),
                   iconBg: "rgba(37,99,235,0.12)",
                   iconBorder: "rgba(37,99,235,0.25)",
-                  title: "White-Label PDF",
-                  desc: "Reports mit deinem Logo, deiner Farbe und KI-generierter Management-Zusammenfassung — automatisch am Monatsende versendet.",
-                  tag: "Branding",
+                  title: "KI-Experte an deiner Seite",
+                  tag: "KI-Analyse",
                   tagColor: "#7aa6ff",
                   tagBg: "rgba(37,99,235,0.12)",
-                  bullets: ["Agentur-Logo & Farben", "KI-Zusammenfassung", "Auto-Versand an Kunden"],
+                  desc: "Automatische Erkennung von Sicherheitslücken und Performance-Fressern, bevor sie zum Problem werden.",
+                  bullets: ["Täglich automatisch gescannt", "Sofort-Benachrichtigung", "Verständliche Ergebnisse"],
                 },
                 {
                   icon: (
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                   ),
                   iconBg: "rgba(22,163,74,0.12)",
                   iconBorder: "rgba(22,163,74,0.25)",
-                  title: "Multi-User Support",
-                  desc: "Lade Kollegen ein, vergib Rollen und lass dein Team zusammen an Kunden-Projekten arbeiten — ohne Chaos.",
-                  tag: "Teamwork",
+                  title: "Rechtssicherheit 2025",
+                  tag: "BFSG",
                   tagColor: "#4ade80",
                   tagBg: "rgba(22,163,74,0.12)",
-                  bullets: ["Bis zu 5 Team-Seats", "Rollen & Berechtigungen", "Gemeinsame Kunden-Übersicht"],
+                  desc: "Volle Überwachung der BFSG-Konformität inkl. lückenloser Dokumentation — automatisch und ohne Aufwand.",
+                  bullets: ["BFSG 2025 überwacht", "Audit-Dokumentation", "Keine manuelle Prüfung"],
                 },
                 {
                   icon: (
@@ -678,19 +674,19 @@ export default function Page() {
                   ),
                   iconBg: "rgba(217,119,6,0.12)",
                   iconBorder: "rgba(217,119,6,0.25)",
-                  title: "Automatischer Workflow",
-                  desc: "Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich, bevor der Kunde anruft.",
-                  tag: "Automation",
+                  title: "Einfachheit",
+                  tag: "Setup",
                   tagColor: "#fbbf24",
                   tagBg: "rgba(217,119,6,0.12)",
-                  bullets: ["Jira · Trello · Asana", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall"],
+                  desc: "Kein Plugin, kein Code-Wissen nötig. Einmal einrichten, dauerhaft geschützt sein.",
+                  bullets: ["URL eingeben & fertig", "Keine technischen Kenntnisse", "Dauerhaft aktiv"],
                 },
               ].map(f => (
                 <div key={f.title} style={{
-                  background: "rgba(255,255,255,0.04)",
+                  background: "rgba(8,10,20,0.7)",
                   backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(234,179,8,0.12)",
-                  borderRadius: 16,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 20,
                   padding: "28px 26px",
                   boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
                   display: "flex", flexDirection: "column", gap: 16,
@@ -703,12 +699,10 @@ export default function Page() {
                     }}>
                       {f.icon}
                     </div>
-                    <div>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
-                        background: f.tagBg, color: f.tagColor, letterSpacing: "0.06em",
-                      }}>{f.tag}</span>
-                    </div>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
+                      background: f.tagBg, color: f.tagColor, letterSpacing: "0.06em",
+                    }}>{f.tag}</span>
                   </div>
                   <div>
                     <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{f.title}</h3>
