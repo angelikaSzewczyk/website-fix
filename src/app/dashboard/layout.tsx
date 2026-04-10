@@ -46,7 +46,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const sidebarW    = isAuditPlan ? 64 : 220;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#F0F4F8" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: isAuditPlan ? "#070A12" : "#F0F4F8" }}>
 
       {/* CSS custom properties — available throughout the dashboard */}
       <style>{`
@@ -99,7 +99,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       </header>
 
       {/* CONTENT */}
-      <div className="dashboard-content" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, background: "#F8FAFC", minHeight: "100vh" }}>
+      <div className="dashboard-content" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, background: isAuditPlan ? "#070A12" : "#F8FAFC", minHeight: "100vh" }}>
         {children}
       </div>
 
