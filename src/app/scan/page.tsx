@@ -10,7 +10,7 @@ type ScanPhase =
   | "idle"
   | "step1"   // Crawl startet
   | "step2"   // Sitemap / Link-Discovery
-  | "step3"   // Technische Barrieren
+  | "step3"   // Technische Barrieren (crawl counter shown here)
   | "step4"   // KI-Diagnose
   | "done"
   | "error";
@@ -19,6 +19,10 @@ type ScanResult = {
   diagnose: string;
   pagesScanned: number;
 };
+
+const FREE_SCAN_KEY = "wf_free_scan_ts";
+const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
+const MAX_FREE_PAGES = 25;
 
 // ── Progress steps data ───────────────────────────────────────────────────────
 const STEPS: { phase: ScanPhase; label: string; sub?: string }[] = [
@@ -92,6 +96,16 @@ function renderDiagnose(text: string) {
   });
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatTimeRemaining(nextScanMs: number): string {
+  const remaining = nextScanMs - Date.now();
+  if (remaining <= 0) return "0h";
+  const hours = Math.floor(remaining / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 0) return `${hours}h`;
+  return `${minutes}m`;
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function ScanPage() {
   const router = useRouter();
@@ -100,8 +114,66 @@ export default function ScanPage() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
+  const [crawlCounter, setCrawlCounter] = useState(0);
+  const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextScanMs: number }>({ blocked: false, nextScanMs: 0 });
+  const [timeRemaining, setTimeRemaining] = useState("");
+
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const apiDone = useRef(false);
+
+  // ── Check localStorage 24h gate on mount ───────────────────
+  useEffect(() => {
+    try {
+      const ts = localStorage.getItem(FREE_SCAN_KEY);
+      if (ts) {
+        const elapsed = Date.now() - parseInt(ts);
+        if (elapsed < FREE_SCAN_LIMIT_MS) {
+          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
+          setScanBlocked({ blocked: true, nextScanMs: nextMs });
+          setTimeRemaining(formatTimeRemaining(nextMs));
+        }
+      }
+    } catch { /* localStorage not available */ }
+  }, []);
+
+  // ── Countdown ticker when blocked ──────────────────────────
+  useEffect(() => {
+    if (!scanBlocked.blocked) return;
+    const id = setInterval(() => {
+      const remaining = scanBlocked.nextScanMs - Date.now();
+      if (remaining <= 0) {
+        setScanBlocked({ blocked: false, nextScanMs: 0 });
+        setTimeRemaining("");
+        clearInterval(id);
+      } else {
+        setTimeRemaining(formatTimeRemaining(scanBlocked.nextScanMs));
+      }
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [scanBlocked]);
+
+  // ── Crawl counter during step3 ──────────────────────────────
+  useEffect(() => {
+    if (phase === "step3") {
+      setCrawlCounter(1);
+      crawlIntervalRef.current = setInterval(() => {
+        setCrawlCounter(prev => {
+          if (prev >= MAX_FREE_PAGES) {
+            if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
+            return MAX_FREE_PAGES;
+          }
+          return prev + 1;
+        });
+      }, 400);
+    } else {
+      if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
+      if (phase === "idle") setCrawlCounter(0);
+    }
+    return () => {
+      if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
+    };
+  }, [phase]);
 
   function clearTimers() {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -115,7 +187,7 @@ export default function ScanPage() {
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!url || phase !== "idle") return;
+    if (!url || phase !== "idle" || scanBlocked.blocked) return;
 
     clearTimers();
     apiDone.current = false;
@@ -140,6 +212,9 @@ export default function ScanPage() {
       apiDone.current = true;
 
       if (data.success) {
+        // Save scan timestamp to localStorage for 24h gate
+        try { localStorage.setItem(FREE_SCAN_KEY, Date.now().toString()); } catch { /* ignore */ }
+
         setPhase("done");
         // Store real scan data for the results page
         try {
@@ -165,6 +240,7 @@ export default function ScanPage() {
             hasUnreachable:      (audit.unterseiten ?? []).some((p: { erreichbar: boolean }) => !p.erreichbar),
           }));
         } catch { /* sessionStorage not available */ }
+
         // Redirect to results page after a brief "done" flash
         setTimeout(() => {
           router.push(`/scan/results?url=${encodeURIComponent(url)}`);
@@ -183,16 +259,19 @@ export default function ScanPage() {
 
   function reset() {
     clearTimers();
+    if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
     apiDone.current = false;
     setPhase("idle");
     setUrl("");
     setResult(null);
     setErrorMsg("");
     setShowOverlay(false);
+    setCrawlCounter(0);
   }
 
   const isScanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
   const currentStepIdx = isScanning ? PHASE_ORDER.indexOf(phase) - 1 : -1;
+  const pagesAtLimit = result && result.pagesScanned >= MAX_FREE_PAGES;
 
   return (
     <>
@@ -226,38 +305,30 @@ export default function ScanPage() {
       <main>
         <section style={{ maxWidth: 760, margin: "0 auto", padding: "72px 24px 56px", textAlign: "center" }}>
 
-          {/* Monitoring badges */}
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
-            {[
-              { label: "🟢 HTTPS-Monitor",     color: "#8df3d3" },
-              { label: "⚡ Core Web Vitals",   color: "#7aa6ff" },
-              { label: "🛡 BFSG-Compliance",   color: "#c084fc" },
-              { label: "🕷 Full-Site Crawl",   color: "#fbbf24" },
-            ].map(b => (
-              <div key={b.label} style={{
-                padding: "5px 13px", borderRadius: 20, fontSize: 11,
-                border: `1px solid ${b.color}30`,
-                background: `${b.color}0d`,
-                color: b.color, fontWeight: 600, letterSpacing: "0.03em",
-                display: "flex", alignItems: "center", gap: 5,
-              }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: "50%",
-                  background: b.color, flexShrink: 0,
-                  boxShadow: `0 0 5px ${b.color}`,
-                }} />
-                {b.label.replace(/^[^\s]+\s/, "")}
-              </div>
-            ))}
+          {/* Deep Scan badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 28,
+            padding: "5px 14px", borderRadius: 20,
+            border: "1px solid rgba(141,243,211,0.25)",
+            background: "rgba(141,243,211,0.06)",
+            fontSize: 12, color: "#8df3d3", fontWeight: 700, letterSpacing: "0.08em",
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "#8df3d3", flexShrink: 0,
+              boxShadow: "0 0 6px #8df3d3",
+              animation: "pulseDot 1.5s ease-in-out infinite",
+            }} />
+            Deep Scan aktiv
           </div>
 
           <h1 style={{
-            fontSize: "clamp(30px, 5vw, 52px)", fontWeight: 800, lineHeight: 1.08,
+            fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
             margin: "0 0 16px", letterSpacing: "-0.035em",
           }}>
-            Starte deinen ersten<br />
+            Vollständige Analyse<br />
             <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Deep-Scan.
+              deiner gesamten Präsenz.
             </span>
           </h1>
 
@@ -266,48 +337,93 @@ export default function ScanPage() {
             <span style={{ color: "rgba(255,255,255,0.7)" }}>über alle Unterseiten hinweg.</span>
           </p>
 
-          {/* ── INPUT FORM ── */}
+          {/* ── INPUT FORM / BLOCKED STATE ── */}
           {phase === "idle" && (
-            <form onSubmit={handleScan} style={{ position: "relative", maxWidth: 580, margin: "0 auto 14px" }}>
-              <div style={{
-                display: "flex",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 14,
-                overflow: "hidden",
-                boxShadow: "0 0 0 0 rgba(0,123,255,0)",
-                transition: "box-shadow 0.2s",
-              }}>
-                <label htmlFor="scan-url" className="sr-only">Website-URL</label>
-                <input
-                  id="scan-url"
-                  type="text" value={url}
-                  onChange={e => setUrl(e.target.value)}
-                  placeholder="https://kunden-website.de"
-                  style={{
-                    flex: 1, background: "transparent",
-                    border: "none", outline: "none",
-                    padding: "16px 20px", color: "#fff", fontSize: 16,
-                  }}
-                  autoFocus
-                />
-                <button type="submit" disabled={!url} style={{
-                  padding: "14px 28px", background: url ? "#007BFF" : "rgba(255,255,255,0.08)",
-                  border: "none", color: url ? "#fff" : "rgba(255,255,255,0.3)",
-                  fontWeight: 700, fontSize: 14, cursor: url ? "pointer" : "default",
-                  whiteSpace: "nowrap", transition: "background 0.15s",
-                  borderLeft: "1px solid rgba(255,255,255,0.08)",
-                }}>
-                  Jetzt scannen →
-                </button>
-              </div>
-            </form>
-          )}
+            <>
+              {scanBlocked.blocked ? (
+                /* 24h limit reached */
+                <div style={{ maxWidth: 580, margin: "0 auto 14px" }}>
+                  <div style={{
+                    padding: "20px 24px",
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 14,
+                    textAlign: "center",
+                  }}>
+                    <div style={{ fontSize: 22, marginBottom: 10 }}>⏱</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: "#fff", marginBottom: 6 }}>
+                      Limit erreicht.
+                    </div>
+                    <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                      Dein nächster freier Deep Scan ist in{" "}
+                      <span style={{ color: "#8df3d3", fontWeight: 700 }}>{timeRemaining}</span>{" "}
+                      verfügbar.
+                    </p>
+                    <Link href="/register" style={{
+                      display: "inline-block",
+                      padding: "10px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
+                      background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                      color: "#fff", textDecoration: "none",
+                      boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
+                    }}>
+                      Unbegrenzt scannen mit Pro →
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                /* Normal scan form */
+                <form onSubmit={handleScan} style={{ position: "relative", maxWidth: 580, margin: "0 auto" }}>
+                  <div style={{
+                    display: "flex",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    boxShadow: "0 0 0 0 rgba(0,123,255,0)",
+                    transition: "box-shadow 0.2s",
+                  }}>
+                    <label htmlFor="scan-url" className="sr-only">Website-URL</label>
+                    <input
+                      id="scan-url"
+                      type="text" value={url}
+                      onChange={e => setUrl(e.target.value)}
+                      placeholder="https://kunden-website.de"
+                      style={{
+                        flex: 1, background: "transparent",
+                        border: "none", outline: "none",
+                        padding: "16px 20px", color: "#fff", fontSize: 16,
+                      }}
+                      autoFocus
+                    />
+                    <button type="submit" disabled={!url} style={{
+                      padding: "14px 24px", background: url ? "#007BFF" : "rgba(255,255,255,0.08)",
+                      border: "none", color: url ? "#fff" : "rgba(255,255,255,0.3)",
+                      fontWeight: 700, fontSize: 14, cursor: url ? "pointer" : "default",
+                      whiteSpace: "nowrap", transition: "background 0.15s",
+                      borderLeft: "1px solid rgba(255,255,255,0.08)",
+                    }}>
+                      Einmaligen Gratis-Deep-Scan starten →
+                    </button>
+                  </div>
 
-          {phase === "idle" && (
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: "0.02em" }}>
-              Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
-            </p>
+                  {/* Trust chips */}
+                  <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 12, flexWrap: "wrap" }}>
+                    {[
+                      "Prüft bis zu 25 Unterseiten",
+                      "Inkl. BFSG-Check",
+                      "Keine Anmeldung",
+                    ].map(t => (
+                      <span key={t} style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5 }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </form>
+              )}
+            </>
           )}
         </section>
 
@@ -343,7 +459,6 @@ export default function ScanPage() {
                 {STEPS.map((step, i) => {
                   const isDone = i < currentStepIdx;
                   const isActive = i === currentStepIdx;
-                  const isPending = i > currentStepIdx;
                   return (
                     <div key={step.phase} style={{
                       display: "flex", gap: 14, alignItems: "flex-start",
@@ -384,7 +499,7 @@ export default function ScanPage() {
                         ) : null}
                       </div>
                       {/* Text */}
-                      <div>
+                      <div style={{ flex: 1 }}>
                         <div style={{
                           fontSize: 14, fontWeight: isActive ? 600 : 400,
                           color: isDone ? "#8df3d3" : isActive ? "#fff" : "rgba(255,255,255,0.25)",
@@ -392,9 +507,12 @@ export default function ScanPage() {
                         }}>
                           {step.label}
                         </div>
-                        {isActive && step.sub && (
+                        {isActive && (
                           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                            {step.sub}
+                            {/* Crawl counter shown during step3 */}
+                            {step.phase === "step3" && crawlCounter > 0
+                              ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…`
+                              : step.sub}
                           </div>
                         )}
                       </div>
@@ -403,11 +521,8 @@ export default function ScanPage() {
                 })}
               </div>
 
-              {/* Bottom bar */}
-              <div style={{
-                height: 2, background: "rgba(255,255,255,0.04)",
-                overflow: "hidden",
-              }}>
+              {/* Progress bar */}
+              <div style={{ height: 2, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                 <div style={{
                   height: "100%",
                   width: `${((currentStepIdx + 1) / STEPS.length) * 100}%`,
@@ -466,6 +581,26 @@ export default function ScanPage() {
               </button>
             </div>
 
+            {/* Truncation notice */}
+            {pagesAtLimit && (
+              <div style={{
+                marginBottom: 16, padding: "14px 18px",
+                background: "rgba(122,166,255,0.06)",
+                border: "1px solid rgba(122,166,255,0.2)",
+                borderRadius: 10,
+                display: "flex", alignItems: "center", gap: 12,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                  Tiefen-Analyse der ersten <strong style={{ color: "#fff" }}>{MAX_FREE_PAGES} Seiten</strong> abgeschlossen.
+                  Für einen vollständigen Scan aller Seiten{" "}
+                  <Link href="/pricing" style={{ color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>wähle einen Pro-Plan →</Link>
+                </p>
+              </div>
+            )}
+
             {/* Diagnose */}
             <div style={{
               position: "relative",
@@ -477,7 +612,7 @@ export default function ScanPage() {
                 {renderDiagnose(result.diagnose)}
               </div>
 
-              {/* Blur + Upgrade Overlay — appears after 1.2s */}
+              {/* Blur + Upgrade Overlay */}
               {showOverlay && (
                 <div style={{
                   position: "absolute", bottom: 0, left: 0, right: 0,
@@ -495,11 +630,9 @@ export default function ScanPage() {
                     textAlign: "center",
                   }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-                      🚀 Du hast ein großes Projekt
+                      Vollständigen Scan freischalten
                     </div>
                     <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-                      Dieser Scan prüfte{" "}
-                      <strong style={{ color: "#fff" }}>{result.pagesScanned} Seiten</strong>.
                       Erstelle einen kostenlosen Account, um{" "}
                       <strong style={{ color: "#fff" }}>alle Unterseiten</strong> zu analysieren und den vollständigen Deep-Scan zu erhalten.
                     </p>
@@ -510,7 +643,7 @@ export default function ScanPage() {
                         color: "#fff", textDecoration: "none",
                         boxShadow: "0 4px 16px rgba(0,123,255,0.4)",
                       }}>
-                        Kostenlosen Agentur-Account erstellen →
+                        Kostenlosen Account erstellen →
                       </Link>
                       <button onClick={() => setShowOverlay(false)} style={{
                         padding: "11px 18px", borderRadius: 9, fontSize: 13,
