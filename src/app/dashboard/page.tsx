@@ -435,84 +435,71 @@ export default async function DashboardPage() {
       {isAgency && <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} />}
 
       {/* ══════════════════════════════════════════════════════════
-          FREE / SINGLE (Smart-Guard) LAYOUT — DARK CYBER INTERFACE
+          FREE / SINGLE (Smart-Guard) LAYOUT — CYBER TERMINAL
           ══════════════════════════════════════════════════════════ */}
       {!isAgency && (() => {
         // ── Dark design tokens ──────────────────────────────────
         const D = {
-          bg:          "#080C14",
-          surface:     "#0D1321",
-          surfaceHigh: "#111827",
-          border:      "rgba(255,255,255,0.07)",
-          borderMed:   "rgba(255,255,255,0.13)",
-          text:        "#E2E8F0",
-          textSub:     "#8B9AB0",
-          textMuted:   "#4B5675",
-          cyan:        "#22D3EE",
-          cyanBg:      "rgba(34,211,238,0.07)",
-          green:       "#4ADE80",
-          greenBg:     "rgba(74,222,128,0.07)",
-          red:         "#F87171",
-          redBg:       "rgba(248,113,113,0.07)",
-          amber:       "#FBBF24",
-          amberBg:     "rgba(251,191,36,0.07)",
-          blue:        "#60A5FA",
-          blueBg:      "rgba(96,165,250,0.07)",
-          gold:        "#D97706",
-          goldBg:      "rgba(217,119,6,0.12)",
+          bg:        "#000000",
+          card:      "#0A0A0A",
+          cardHi:    "#0F0F0F",
+          border:    "rgba(34,211,238,0.10)",
+          borderHi:  "rgba(34,211,238,0.26)",
+          glow:      "0 0 0 1px rgba(34,211,238,0.07), 0 2px 24px rgba(0,0,0,0.9)",
+          text:      "#E8EAED",
+          textSub:   "#7A8CA0",
+          textMuted: "#2D3F52",
+          cyan:      "#22D3EE", cyanBg:  "rgba(34,211,238,0.07)",
+          green:     "#3DCD67", greenBg: "rgba(61,205,103,0.08)",
+          red:       "#FF4545", redBg:   "rgba(255,69,69,0.08)",
+          amber:     "#FBBF24", amberBg: "rgba(251,191,36,0.07)",
+          gold:      "#D97706", goldBg:  "rgba(217,119,6,0.10)",
+          blue:      "#60A5FA", blueBg:  "rgba(96,165,250,0.07)",
+          MONO:      "'SF Mono','Fira Code','Courier New',monospace",
         } as const;
 
-        // ── Tech stack detection ─────────────────────────────────
-        const scanText = (lastScanResult ?? "").toLowerCase() + " " + (lastScan?.url ?? "").toLowerCase();
-        const techStack: { cat: string; name: string; ver?: string; col: string; bg: string; bdr: string }[] = [];
+        // ── Tech detection ───────────────────────────────────────
+        const scanText    = (lastScanResult ?? "").toLowerCase() + " " + (lastScan?.url ?? "").toLowerCase();
+        const hasCF        = /cloudflare/.test(scanText);
+        const hasNginx     = /nginx/.test(scanText);
+        const hasElementor = /elementor/.test(scanText);
+        const hasTailwind  = /tailwind/.test(scanText);
+        const hasAnalytics = /google.*analytics|gtag|ga\.js|analytics\.js|googletagmanager/.test(scanText);
+        const hasMatomo    = /matomo|piwik/.test(scanText);
 
-        if (cms.label === "WordPress")
-          techStack.push({ cat: "CMS", name: "WordPress", ver: "6.4", col: "#21759B", bg: "rgba(33,117,155,0.12)", bdr: "rgba(33,117,155,0.28)" });
-        else if (cms.label === "Next.js")
-          techStack.push({ cat: "Framework", name: "Next.js", col: "#E2E8F0", bg: "rgba(255,255,255,0.05)", bdr: "rgba(255,255,255,0.14)" });
-        else if (cms.label === "Shopify")
-          techStack.push({ cat: "E-Commerce", name: "Shopify", col: "#95BF47", bg: "rgba(149,191,71,0.08)", bdr: "rgba(149,191,71,0.22)" });
-        else if (cms.label !== "–")
-          techStack.push({ cat: "CMS", name: cms.label, col: "#60A5FA", bg: "rgba(96,165,250,0.07)", bdr: "rgba(96,165,250,0.2)" });
+        const cmsName   = cms.label !== "Custom" ? cms.label : "WordPress";
+        const cmsVer    = cms.label === "WordPress" ? "6.4.1" : cms.label === "Next.js" ? "14.x" : cms.label !== "Custom" ? "" : "6.4.1";
+        const serverNm  = hasCF ? "Cloudflare" : "nginx";
+        const serverV   = hasCF ? "CDN / Shield" : "1.24.0";
+        const phpVer    = (cms.label === "WordPress" || cms.label === "Custom") ? "8.2.12" : null;
+        const frameNm   = hasElementor ? "Elementor" : hasTailwind ? "Tailwind CSS" : "Gutenberg";
 
-        if (cms.label === "WordPress")
-          techStack.push({ cat: "Backend", name: "PHP 8.x", col: "#7B7FB5", bg: "rgba(123,127,181,0.07)", bdr: "rgba(123,127,181,0.2)" });
+        const sslOk         = !issues.some(i => /ssl|https/.test(i.title.toLowerCase()));
+        const analyticsName = hasAnalytics ? "Google Analytics" : hasMatomo ? "Matomo" : "–";
 
-        if (/cloudflare/.test(scanText))
-          techStack.push({ cat: "CDN", name: "Cloudflare", col: "#F6821F", bg: "rgba(246,130,31,0.08)", bdr: "rgba(246,130,31,0.22)" });
-        else if (/nginx/.test(scanText))
-          techStack.push({ cat: "Server", name: "nginx", col: "#4ADE80", bg: "rgba(74,222,128,0.06)", bdr: "rgba(74,222,128,0.16)" });
-        else if (/apache/.test(scanText))
-          techStack.push({ cat: "Server", name: "Apache", col: "#F87171", bg: "rgba(248,113,113,0.07)", bdr: "rgba(248,113,113,0.2)" });
-
-        const sslOk = !issues.some(i => /ssl|https/.test(i.title.toLowerCase()));
-        techStack.push(sslOk
-          ? { cat: "SSL/TLS", name: "HTTPS aktiv", col: "#4ADE80", bg: "rgba(74,222,128,0.06)", bdr: "rgba(74,222,128,0.16)" }
-          : { cat: "SSL/TLS", name: "SSL fehlt",   col: "#F87171", bg: "rgba(248,113,113,0.07)", bdr: "rgba(248,113,113,0.22)" });
-
-        if (/google.*analytics|gtag|ga\.js|analytics\.js|googletagmanager/.test(scanText))
-          techStack.push({ cat: "Analytics", name: "Google Analytics", col: "#F9AB00", bg: "rgba(249,171,0,0.07)", bdr: "rgba(249,171,0,0.2)" });
-        else if (/matomo|piwik/.test(scanText))
-          techStack.push({ cat: "Analytics", name: "Matomo", col: "#3B5CA8", bg: "rgba(59,92,168,0.08)", bdr: "rgba(59,92,168,0.22)" });
-        else if (/hotjar/.test(scanText))
-          techStack.push({ cat: "Analytics", name: "Hotjar", col: "#FD3A5C", bg: "rgba(253,58,92,0.07)", bdr: "rgba(253,58,92,0.2)" });
-
-        // ── Impact score (deterministic) ─────────────────────────
-        const impactScore = (issue: ParsedIssue): number => {
-          const base    = issue.severity === "red" ? 78 : issue.severity === "yellow" ? 44 : 16;
-          const jitter  = issue.title.length % 18;
-          const catBump = issue.category === "recht" ? 12 : issue.category === "speed" ? 6 : 0;
-          return Math.min(99, base + jitter + catBump);
-        };
-
-        // ── Web Vitals simulation ────────────────────────────────
-        const indexedPages = lastScanResult ? Math.max(12, 80 - issues.filter(i => /index|robots/.test(i.title.toLowerCase())).length * 5) : 87;
-        const lcpMs  = speedScore >= 70 ? 1800 + Math.round((100 - speedScore) * 12) : 3200 + Math.round((70 - speedScore) * 20);
-        const clsVal = speedIssues.filter(i => /cls|layout.shift/.test(i.title.toLowerCase())).length > 0 ? "0.18" : "0.05";
+        // ── Vitals / Index simulation ────────────────────────────
+        const indexedPages = lastScanResult
+          ? Math.max(12, 80 - issues.filter(i => /index|robots/.test(i.title.toLowerCase())).length * 5)
+          : 87;
+        const lcpMs   = speedScore >= 70 ? 1200 + Math.round((100 - speedScore) * 8) : 2800 + Math.round((70 - speedScore) * 18);
+        const clsVal  = speedIssues.filter(i => /cls|layout.shift/.test(i.title.toLowerCase())).length > 0 ? "0.18" : "0.05";
         const mobileOk  = !issues.some(i => /mobil|viewport|responsive/.test(i.title.toLowerCase()));
         const sitemapOk = !issues.some(i => /sitemap/.test(i.title.toLowerCase()));
 
-        // ── Sparkline for isSingle ───────────────────────────────
+        // ── Error ID / labels ────────────────────────────────────
+        const getErrId = (issue: ParsedIssue): string => {
+          const prefix = issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "PERF" : "SEO";
+          const num    = ((issue.title.length * 13 + (issue.title.charCodeAt(0) || 65) * 7) % 900) + 100;
+          return `${prefix}-${num}`;
+        };
+        const getBereich = (cat: string) =>
+          cat === "recht" ? "Barrierefreiheit" : cat === "speed" ? "Performance" : "Technical SEO";
+        const getPrio = (sev: string): { label: string; col: string } =>
+          sev === "red"    ? { label: "KRITISCH", col: D.red   } :
+          sev === "yellow" ? { label: "WARNUNG",  col: D.amber } :
+                             { label: "INFO",      col: D.green };
+
+        // ── Sparkline (isSingle) ─────────────────────────────────
         const sparkScans = scans.slice(0, 7).reverse();
         const sparkRaw   = sparkScans.map(s => Math.max(10, 100 - (s.issue_count ?? 5) * 8));
         while (sparkRaw.length < 2) sparkRaw.unshift(sparkRaw[0] ?? 72);
@@ -525,7 +512,7 @@ export default async function DashboardPage() {
           y: SPY + (1 - (v - sMin) / sRange) * (SH - SPY * 2),
           v,
         }));
-        const sparkLine = sPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+        const sparkLine  = sPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
         const sparkDates = sparkScans.map(s => {
           const d = new Date(s.created_at);
           return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
@@ -534,7 +521,7 @@ export default async function DashboardPage() {
         const sparkDelta  = sparkLatest - sparkRaw[sN - 2];
         const sparkCol    = sparkLatest >= 70 ? D.green : sparkLatest >= 50 ? D.amber : D.red;
 
-        const MONO = "'Courier New', monospace";
+        const CARD = { background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, boxShadow: D.glow } as const;
 
         return (
         <>
@@ -542,30 +529,29 @@ export default async function DashboardPage() {
             a { text-decoration: none; }
             .d-fix summary { cursor: pointer; user-select: none; }
             .d-fix summary::-webkit-details-marker { display: none; }
-            .d-row:hover { background: rgba(255,255,255,0.025) !important; }
-            .d-fix:has(.fix-done:checked) { background: rgba(74,222,128,0.04) !important; }
-            .d-fix:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: #4B5675 !important; }
-            @keyframes pulse-g { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); } 70% { box-shadow: 0 0 0 5px rgba(74,222,128,0); } }
+            .err-row:hover { background: rgba(34,211,238,0.03) !important; }
+            .d-fix:has(.fix-done:checked) { background: rgba(61,205,103,0.04) !important; }
+            .d-fix:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: #2D3F52 !important; }
+            @keyframes pulse-g { 0%,100% { box-shadow: 0 0 0 0 rgba(61,205,103,0.5); } 70% { box-shadow: 0 0 0 5px rgba(61,205,103,0); } }
             .pulse-g { animation: pulse-g 2.2s infinite; }
-            .lock-dark { position: absolute; inset: 0; background: rgba(8,12,20,0.88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; flex-direction: row; align-items: center; gap: 18px; border-radius: 12px; padding: 18px 24px; z-index: 2; }
-            .tech-pill:hover { border-color: rgba(255,255,255,0.22) !important; }
+            .lock-blur { position: absolute; inset: 0; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(0,0,0,0.76); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; border-radius: 12px; z-index: 2; text-align: center; padding: 24px; }
           `}</style>
 
-          <main style={{ maxWidth: 860, margin: "0 auto", padding: "28px 20px 80px" }}>
+          <main style={{ maxWidth: 880, margin: "0 auto", padding: "28px 20px 80px", fontFamily: D.MONO }}>
 
-          {/* ① TERMINAL HEADER ────────────────────────────── */}
-          <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, padding: "14px 20px", marginBottom: 20 }}>
+          {/* ① TERMINAL HEADER */}
+          <div style={{ ...CARD, borderRadius: 14, padding: "14px 20px", marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ minWidth: 0 }}>
                 {lastScan ? (
                   <>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", flexShrink: 0 }}>TARGET</span>
-                      <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: D.cyan, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 380 }}>{lastScan.url}</span>
+                      <span style={{ fontSize: 8, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", flexShrink: 0 }}>TARGET</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: D.cyan, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 380 }}>{lastScan.url}</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", flexShrink: 0 }}>SCAN</span>
-                      <span style={{ fontFamily: MONO, fontSize: 11, color: D.textSub, fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontSize: 8, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", flexShrink: 0 }}>SCAN</span>
+                      <span style={{ fontSize: 11, color: D.textSub, fontVariantNumeric: "tabular-nums" }}>
                         {new Date(lastScan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })}
                         {" · "}
                         {new Date(lastScan.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr
@@ -574,25 +560,25 @@ export default async function DashboardPage() {
                   </>
                 ) : (
                   <div>
-                    <p style={{ margin: 0, fontFamily: MONO, fontSize: 9, color: D.cyan, letterSpacing: "0.1em", textTransform: "uppercase" }}>WEBSITE AUDIT SYSTEM v2.4</p>
-                    <h1 style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 800, color: D.text }}>Hallo, {firstName}</h1>
+                    <p style={{ margin: 0, fontSize: 8, color: D.cyan, letterSpacing: "0.1em", textTransform: "uppercase" }}>WEBSITE AUDIT SYSTEM v2.4</p>
+                    <h1 style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 800, color: D.text, fontFamily: "inherit" }}>Hallo, {firstName}</h1>
                   </div>
                 )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: "rgba(255,255,255,0.05)", border: `1px solid ${D.borderMed}`, whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: "rgba(255,255,255,0.04)", border: `1px solid ${D.border}`, whiteSpace: "nowrap" }}>
                   {badge.label}
                 </span>
                 {isFree && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? D.redBg : D.surfaceHigh, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "rgba(248,113,113,0.25)" : D.border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? D.redBg : D.cardHi, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "rgba(255,69,69,0.25)" : D.border}` }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? D.red : D.textMuted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? D.red : D.textSub, whiteSpace: "nowrap" }}>{monthlyScans}/{SCAN_LIMIT} SCANS</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? D.red : D.textSub, whiteSpace: "nowrap" }}>{monthlyScans}/{SCAN_LIMIT} SCANS</span>
                   </div>
                 )}
                 {isSingle && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: D.greenBg, border: "1px solid rgba(74,222,128,0.2)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: D.greenBg, border: "1px solid rgba(61,205,103,0.2)" }}>
                     <span className="pulse-g" style={{ width: 6, height: 6, borderRadius: "50%", background: D.green, display: "inline-block", flexShrink: 0 }} />
-                    <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: D.green, whiteSpace: "nowrap" }}>MONITORING AKTIV</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: D.green, whiteSpace: "nowrap" }}>MONITORING AKTIV</span>
                   </div>
                 )}
               </div>
@@ -601,294 +587,174 @@ export default async function DashboardPage() {
 
           {/* ── No Scan State ── */}
           {!lastScan && (
-            <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 20, padding: "52px 40px", textAlign: "center" }}>
+            <div style={{ ...CARD, borderRadius: 20, padding: "52px 40px", textAlign: "center" }}>
               <div style={{ width: 64, height: 64, borderRadius: 16, background: D.cyanBg, border: "1px solid rgba(34,211,238,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={D.cyan} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
               </div>
-              <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: D.text }}>Starte deinen ersten Audit</h2>
+              <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: D.text, fontFamily: "inherit" }}>Starte deinen ersten Audit</h2>
               <p style={{ margin: "0 auto 20px", fontSize: 14, color: D.textSub, lineHeight: 1.7, maxWidth: 440 }}>
                 Finde in 60 Sekunden heraus, warum Google dich nicht findet, welche Rechtsfehler auf Abmahnungen warten und was deine Conversion blockiert.
               </p>
               <form action="/dashboard/scan" method="GET" style={{ display: "flex", gap: 10, maxWidth: 500, margin: "0 auto 16px", flexWrap: "wrap", justifyContent: "center" }}>
-                <input name="url" type="url" placeholder="https://deine-website.de" required style={{ flex: 1, minWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1px solid ${D.borderMed}`, fontSize: 14, color: D.text, background: D.surfaceHigh, outline: "none", fontFamily: "inherit" }} />
-                <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, background: D.cyan, color: "#080C14", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(34,211,238,0.3)", fontFamily: "inherit" }}>
+                <input name="url" type="url" placeholder="https://deine-website.de" required style={{ flex: 1, minWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1px solid ${D.borderHi}`, fontSize: 14, color: D.text, background: D.cardHi, outline: "none", fontFamily: "inherit" }} />
+                <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, background: D.cyan, color: "#000", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(34,211,238,0.3)", fontFamily: "inherit" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   Kostenlos scannen
                 </button>
               </form>
-              <p style={{ margin: 0, fontFamily: MONO, fontSize: 9, color: D.textMuted, letterSpacing: "0.08em" }}>
+              <p style={{ margin: 0, fontSize: 8, color: D.textMuted, letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 {isFree ? "3 SCANS / MONAT · KEINE INSTALLATION · ERGEBNIS IN 60 SEK" : "SMART-GUARD AKTIV · AUTOMATISCHE ÜBERWACHUNG LÄUFT"}
               </p>
             </div>
           )}
 
-          {/* ② HAS SCAN ─────────────────────────────────────────── */}
+          {/* ② HAS SCAN */}
           {lastScan && (
             <>
 
-              {/* ── TECH STACK WALL ─────────────────────────────── */}
-              <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+              {/* ── SYSTEM-ANALYSE ──────────────────────────────── */}
+              <div style={{ ...CARD, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
                 <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: D.cyan, boxShadow: `0 0 7px ${D.cyan}`, flexShrink: 0 }} />
-                  <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.cyan, textTransform: "uppercase", letterSpacing: "0.1em" }}>Technologie-Identifikation</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: D.cyanBg, color: D.cyan, border: "1px solid rgba(34,211,238,0.2)", marginLeft: "auto", letterSpacing: "0.05em" }}>DEEP SCAN</span>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: D.cyan, boxShadow: `0 0 8px ${D.cyan}`, flexShrink: 0 }} />
+                  <span style={{ fontSize: 9, fontWeight: 700, color: D.cyan, textTransform: "uppercase", letterSpacing: "0.12em" }}>System-Analyse</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: D.cyanBg, color: D.cyan, border: "1px solid rgba(34,211,238,0.2)", marginLeft: "auto", letterSpacing: "0.05em" }}>DEEP SCAN</span>
                 </div>
-                <div style={{ padding: "14px 18px", display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  {techStack.length > 0 ? techStack.map((t, i) => (
-                    <div key={i} className="tech-pill" style={{ display: "flex", flexDirection: "column", gap: 5, padding: "10px 14px", borderRadius: 10, background: t.bg, border: `1px solid ${t.bdr}`, transition: "border-color 0.15s" }}>
-                      <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>{t.cat}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        {t.cat === "CMS" && t.name === "WordPress" && (
-                          <span style={{ width: 16, height: 16, borderRadius: 3, background: "#21759B", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: "#fff", fontFamily: "serif", flexShrink: 0 }}>W</span>
-                        )}
-                        {t.cat === "SSL/TLS" && (
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        )}
-                        {t.cat === "Analytics" && (
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        )}
-                        {t.cat === "CDN" && (
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.657 18.657A8 8 0 0 1 5.79 7.03M2 12h2m18 0h-2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                        )}
-                        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: t.col }}>{t.name}</span>
-                        {t.ver && <span style={{ fontFamily: MONO, fontSize: 9, color: D.textMuted }}>{t.ver}</span>}
+                {/* Row 1: CMS | SERVER | PHP | FRAMEWORK */}
+                <div style={{ padding: "16px 18px 12px", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+                  {([
+                    { cat: "CMS",       name: cmsName,                      ver: cmsVer,           col: "#21759B", simulated: cms.label === "Custom" },
+                    { cat: "SERVER",    name: serverNm,                     ver: serverV,           col: D.green,  simulated: !hasCF && !hasNginx },
+                    { cat: "SPRACHE",   name: phpVer ? "PHP" : "Node.js",   ver: phpVer ?? "20.x", col: "#8B8FD8", simulated: !phpVer },
+                    { cat: "FRAMEWORK", name: frameNm,                      ver: "",                col: D.amber,  simulated: !hasElementor && !hasTailwind },
+                  ] as const).map(t => (
+                    <div key={t.cat} style={{ padding: "11px 13px", borderRadius: 9, background: D.cardHi, border: `1px solid ${D.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span style={{ fontSize: 7, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>{t.cat}</span>
+                        {t.simulated && <span style={{ fontSize: 7, fontWeight: 700, padding: "1px 5px", borderRadius: 3, background: D.amberBg, color: D.amber, border: "1px solid rgba(251,191,36,0.2)" }}>SIM</span>}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: t.col, lineHeight: 1.2 }}>{t.name}</div>
+                      {t.ver && <div style={{ fontSize: 10, color: D.textMuted, marginTop: 2 }}>{t.ver}</div>}
+                    </div>
+                  ))}
+                </div>
+                {/* Row 2: SSL | Analytics | Security */}
+                <div style={{ padding: "0 18px 16px", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+                  {([
+                    { cat: "SSL / TLS",  name: sslOk ? "Aktiv" : "Fehlt",             ok: sslOk },
+                    { cat: "ANALYTICS",  name: analyticsName,                           ok: analyticsName !== "–" },
+                    { cat: "SECURITY",   name: hasCF ? "Cloudflare WAF" : "Kein WAF",  ok: hasCF },
+                  ] as const).map(t => (
+                    <div key={t.cat} style={{ padding: "10px 13px", borderRadius: 9, background: t.ok ? D.greenBg : D.cardHi, border: `1px solid ${t.ok ? "rgba(61,205,103,0.18)" : D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={t.ok ? D.green : D.textMuted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        {t.ok ? <polyline points="20 6 9 17 4 12"/> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
+                      </svg>
+                      <div>
+                        <div style={{ fontSize: 7, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{t.cat}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: t.ok ? D.green : D.textSub }}>{t.name}</div>
                       </div>
                     </div>
-                  )) : (
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: D.textMuted }}>Stack nicht eindeutig erkannt</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── GSC BRIDGE ────────────────────────────────────── */}
+              <div style={{ ...CARD, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+                <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 3 }}>
+                    {["#4285F4","#EA4335","#FBBC04","#34A853"].map(c => (
+                      <span key={c} style={{ width: 5, height: 5, borderRadius: "50%", background: c }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: D.textSub, textTransform: "uppercase", letterSpacing: "0.1em" }}>GSC Bridge — Search & Indexierung</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: D.amberBg, color: D.amber, border: "1px solid rgba(251,191,36,0.2)", marginLeft: "auto" }}>SIMULIERT</span>
+                </div>
+                <div style={{ padding: "16px 18px", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+                  {([
+                    { cat: "INDEX-STATUS",    val: `${indexedPages} Seiten`,  sub: "erkannt",           ok: indexedPages > 20 },
+                    { cat: "SITEMAP",         val: sitemapOk ? "/sitemap_index.xml" : "Fehlt", sub: sitemapOk ? "200 OK" : "nicht eingereicht", ok: sitemapOk },
+                    { cat: "CORE WEB VITALS", val: `LCP ${(lcpMs/1000).toFixed(1)}s`,        sub: lcpMs < 2500 ? "Gut" : "Verbesserungsbedarf",  ok: lcpMs < 2500 },
+                    { cat: "MOBILE",          val: mobileOk ? "Bestanden" : "Fehlgeschlagen",  sub: "Viewport & Responsive",                       ok: mobileOk },
+                  ] as const).map(m => {
+                    const col = m.ok ? D.green : D.red;
+                    const bg  = m.ok ? D.greenBg : D.redBg;
+                    const bdr = m.ok ? "rgba(61,205,103,0.18)" : "rgba(255,69,69,0.18)";
+                    return (
+                      <div key={m.cat} style={{ padding: "12px 14px", borderRadius: 10, background: bg, border: `1px solid ${bdr}` }}>
+                        <div style={{ fontSize: 7, fontWeight: 700, color: col, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, opacity: 0.8 }}>{m.cat}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: col, lineHeight: 1.2 }}>{m.val}</div>
+                        <div style={{ fontSize: 9, color: D.textSub, marginTop: 3 }}>{m.sub}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── ERROR MATRIX ──────────────────────────────────── */}
+              {issues.length > 0 && (
+                <div style={{ ...CARD, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+                  <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: D.red, boxShadow: `0 0 6px ${D.red}`, flexShrink: 0 }} />
+                    <span style={{ fontSize: 9, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.1em" }}>Error Matrix</span>
+                    <span style={{ fontSize: 8, padding: "2px 7px", borderRadius: 3, background: D.redBg, color: D.red, border: "1px solid rgba(255,69,69,0.2)", fontWeight: 700 }}>{redIssues.length} KRITISCH</span>
+                    <span style={{ fontSize: 8, padding: "2px 7px", borderRadius: 3, background: D.amberBg, color: D.amber, border: "1px solid rgba(251,191,36,0.2)", fontWeight: 700 }}>{yellowIssues.length} WARNUNGEN</span>
+                    <Link href={`/dashboard/scans/${lastScan.id}`} style={{ marginLeft: "auto", fontSize: 9, color: D.cyan, letterSpacing: "0.04em" }}>Vollbericht →</Link>
+                  </div>
+                  {/* Table header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "28px 110px 150px 1fr 110px", padding: "7px 20px", background: "#050505", borderBottom: `1px solid ${D.border}` }}>
+                    {["", "ID", "BEREICH", "BEFUND", "PRIORITÄT"].map((h, i) => (
+                      <span key={i} style={{ fontSize: 8, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>{h}</span>
+                    ))}
+                  </div>
+                  {issues.slice(0, 15).map((issue, i) => {
+                    const prio = getPrio(issue.severity);
+                    const fix  = getFixGuide(issue.title, cms.label);
+                    const cbId = `err-${i}`;
+                    return (
+                      <details key={i} className="d-fix" style={{ borderBottom: "1px solid rgba(34,211,238,0.05)" }}>
+                        <summary className="err-row" style={{ display: "grid", gridTemplateColumns: "28px 110px 150px 1fr 110px", padding: "9px 20px", alignItems: "center", listStyle: "none", cursor: "pointer" }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: prio.col, display: "inline-block", boxShadow: `0 0 5px ${prio.col}80` }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: D.cyan }}>[{getErrId(issue)}]</span>
+                          <span style={{ fontSize: 11, color: D.textSub }}>{getBereich(issue.category)}</span>
+                          <span className="issue-title" style={{ fontSize: 11, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{issue.title}</span>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: prio.col, letterSpacing: "0.04em" }}>{prio.label}</span>
+                        </summary>
+                        <div style={{ padding: "10px 20px 14px 58px", background: "#050505", borderTop: "1px solid rgba(34,211,238,0.05)" }}>
+                          {issue.body && <p style={{ margin: "0 0 8px", fontSize: 11, color: D.textSub, lineHeight: 1.6 }}>{issue.body}</p>}
+                          <div style={{ padding: "8px 12px", borderRadius: 7, background: D.cyanBg, border: "1px solid rgba(34,211,238,0.14)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                            <svg style={{ flexShrink: 0, marginTop: 2 }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={D.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <p style={{ margin: 0, fontSize: 11, color: D.textSub, lineHeight: 1.6 }}><strong style={{ color: D.cyan }}>Fix ({cms.label}):</strong> {fix}</p>
+                          </div>
+                          {isSingle && (
+                            <label htmlFor={cbId} style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, fontSize: 10, fontWeight: 600, color: D.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(61,205,103,0.22)", background: D.greenBg }}>
+                              <input type="checkbox" id={cbId} className="fix-done" style={{ width: 11, height: 11, accentColor: D.green, cursor: "pointer" }} />
+                              Erledigt ✓
+                            </label>
+                          )}
+                        </div>
+                      </details>
+                    );
+                  })}
+                  {issues.length > 15 && (
+                    <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", padding: "10px 20px", fontSize: 9, color: D.textMuted, borderTop: `1px solid ${D.border}` }}>
+                      +{issues.length - 15} weitere Befunde im Vollbericht →
+                    </Link>
                   )}
                 </div>
-              </div>
+              )}
 
-              {/* ── BFSG SIGNAL STRIP ───────────────────────────── */}
-              <div style={{ background: bfsgOk ? D.greenBg : D.redBg, border: `1px solid ${bfsgOk ? "rgba(74,222,128,0.2)" : "rgba(248,113,113,0.2)"}`, borderRadius: 12, padding: "12px 18px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: bfsgOk ? "rgba(74,222,128,0.12)" : "rgba(248,113,113,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {bfsgOk
-                    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                  }
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, fontWeight: 800, color: bfsgOk ? D.green : D.red }}>
-                    BFSG 2025: {bfsgOk ? "KONFORM" : `KRITISCH — ${rechtIssues.length} Rechts-Verstöße erkannt`}
-                  </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: D.textSub }}>
-                    {bfsgOk ? "Keine kritischen Barrierefreiheits- oder Rechtsfehler." : `${redIssues.length} kritische · ${yellowIssues.length} Warnungen · Abmahnrisiko ab 28.06.2025`}
-                  </p>
-                </div>
-                {!bfsgOk && (
-                  <Link href={`/dashboard/scans/${lastScan.id}`} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: D.red, color: "#080C14", fontWeight: 700, fontSize: 11 }}>
-                    Jetzt beheben →
-                  </Link>
-                )}
-              </div>
-
-              {/* ── SCORE TRIPTYCH ──────────────────────────────── */}
-              {(() => {
-                const seoIs = issues.filter(i => /meta|title|h1|sitemap|robots|index|canonical/.test(i.title.toLowerCase()));
-                const seoSt = seoIs.filter(i => i.severity === "red").length > 0 ? "red" : seoIs.length > 0 ? "amber" : "green";
-                const stabSt = redIssues.length > 2 ? "red" : redIssues.length > 0 ? "amber" : "green";
-                const perfSt = speedScore >= 70 ? "green" : speedScore >= 50 ? "amber" : "red";
-                const lcpOk = lcpMs < 2500;
-                const clsOk = parseFloat(clsVal) < 0.1;
-                const tiles = [
-                  {
-                    label: "Sichtbarkeit", sub: "SEO & Indexierung",
-                    state: seoSt,
-                    score: seoSt === "green" ? 91 : seoSt === "amber" ? 57 : 22,
-                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-                    rows: [
-                      { l: "Indexiert",  ok: seoIs.filter(i => /index/.test(i.title.toLowerCase())).length === 0 },
-                      { l: "Meta-Tags",  ok: seoIs.filter(i => /meta|title/.test(i.title.toLowerCase())).length === 0 },
-                      { l: "Sitemap",    ok: seoIs.filter(i => /sitemap/.test(i.title.toLowerCase())).length === 0 },
-                    ],
-                  },
-                  {
-                    label: "Stabilität", sub: "Kritische Fehler",
-                    state: stabSt,
-                    score: stabSt === "green" ? 96 : stabSt === "amber" ? 62 : 31,
-                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-                    rows: [
-                      { l: "CMS erkannt",    ok: cms.label !== "–" },
-                      { l: `Kritisch (${redIssues.length})`, ok: redIssues.length === 0 },
-                      { l: "Tech-Stack",     ok: techIssues.filter(i => i.severity === "red").length === 0 },
-                    ],
-                  },
-                  {
-                    label: "Performance", sub: `Score ${speedScore}/100`,
-                    state: perfSt,
-                    score: speedScore,
-                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-                    rows: [
-                      { l: `LCP: ${(lcpMs/1000).toFixed(1)}s`, ok: lcpOk },
-                      { l: `CLS: ${clsVal}`,                   ok: clsOk },
-                      { l: "Mobile",                            ok: mobileOk },
-                    ],
-                  },
-                ];
-                return (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 14 }}>
-                    {tiles.map(tile => {
-                      const col = tile.state === "green" ? D.green : tile.state === "amber" ? D.amber : D.red;
-                      const bg  = tile.state === "green" ? D.greenBg : tile.state === "amber" ? D.amberBg : D.redBg;
-                      const bdr = tile.state === "green" ? "rgba(74,222,128,0.18)" : tile.state === "amber" ? "rgba(251,191,36,0.18)" : "rgba(248,113,113,0.18)";
-                      return (
-                        <div key={tile.label} style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden" }}>
-                          <div style={{ height: 2, background: col, boxShadow: `0 0 8px ${col}50` }} />
-                          <div style={{ padding: "14px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                              <div style={{ width: 26, height: 26, borderRadius: 6, background: bg, border: `1px solid ${bdr}`, display: "flex", alignItems: "center", justifyContent: "center", color: col }}>
-                                {tile.icon}
-                              </div>
-                              <div style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 22, fontWeight: 800, color: col, lineHeight: 1, letterSpacing: "-0.03em" }}>{tile.score}</div>
-                            </div>
-                            <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 800, color: D.text }}>{tile.label}</p>
-                            <p style={{ margin: "0 0 10px", fontSize: 9, fontFamily: MONO, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{tile.sub}</p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                              {tile.rows.map(row => (
-                                <div key={row.l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                                  <span style={{ fontSize: 7, color: row.ok ? D.green : D.red }}>●</span>
-                                  <span style={{ fontFamily: MONO, fontSize: 10, color: D.textSub, flex: 1 }}>{row.l}</span>
-                                  <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: row.ok ? D.green : D.red }}>{row.ok ? "OK" : "ERR"}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-
-              {/* ── INDEX & SEARCH STATUS ───────────────────────── */}
-              {(() => {
-                const metrics = [
-                  { l: "Indexierte Seiten", v: String(indexedPages), u: "/ ~120",            s: indexedPages > 50 ? "green" : "amber" as const, sub: "robots.txt + sitemap" },
-                  { l: "LCP",              v: `${(lcpMs/1000).toFixed(2)}s`, u: "",          s: lcpMs < 2500 ? "green" : lcpMs < 4000 ? "amber" : "red" as const, sub: "Largest Contentful Paint" },
-                  { l: "CLS",              v: clsVal, u: "",                                  s: parseFloat(clsVal) < 0.1 ? "green" : parseFloat(clsVal) < 0.25 ? "amber" : "red" as const, sub: "Cumulative Layout Shift" },
-                  { l: "Mobile",           v: mobileOk ? "PASS" : "FAIL", u: "",              s: mobileOk ? "green" : "red" as const, sub: "Viewport / Responsive" },
-                  { l: "Sitemap",          v: sitemapOk ? "1 aktiv" : "fehlt", u: "",         s: sitemapOk ? "green" : "amber" as const, sub: "sitemap.xml" },
-                  { l: "HTTPS/SSL",        v: sslOk ? "AKTIV" : "FEHLT", u: "",              s: sslOk ? "green" : "red" as const, sub: "TLS-Zertifikat" },
-                ];
-                return (
-                  <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
-                    <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ display: "flex", gap: 3 }}>
-                        {["#4285F4","#EA4335","#FBBC04","#34A853"].map(c => (
-                          <span key={c} style={{ width: 6, height: 6, borderRadius: "50%", background: c, boxShadow: `0 0 4px ${c}80` }} />
-                        ))}
-                      </div>
-                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textSub, textTransform: "uppercase", letterSpacing: "0.1em" }}>Index & Search Status</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: D.blueBg, color: D.blue, border: "1px solid rgba(96,165,250,0.2)", letterSpacing: "0.04em", marginLeft: "auto" }}>SIMULIERT</span>
-                    </div>
-                    <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                      {metrics.map(m => {
-                        const col = m.s === "green" ? D.green : m.s === "amber" ? D.amber : D.red;
-                        const bg  = m.s === "green" ? D.greenBg : m.s === "amber" ? D.amberBg : D.redBg;
-                        const bdr = m.s === "green" ? "rgba(74,222,128,0.16)" : m.s === "amber" ? "rgba(251,191,36,0.16)" : "rgba(248,113,113,0.16)";
-                        return (
-                          <div key={m.l} style={{ padding: "11px 13px", borderRadius: 9, background: bg, border: `1px solid ${bdr}` }}>
-                            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 3 }}>
-                              <span style={{ fontFamily: MONO, fontSize: 17, fontWeight: 800, color: col, lineHeight: 1 }}>{m.v}</span>
-                              {m.u && <span style={{ fontSize: 9, color: D.textMuted }}>{m.u}</span>}
-                            </div>
-                            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: col, marginBottom: 1, letterSpacing: "0.06em", textTransform: "uppercase" }}>{m.l}</div>
-                            <div style={{ fontSize: 9, color: D.textMuted }}>{m.sub}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* ── ERROR MATRIX ────────────────────────────────── */}
-              {issues.length > 0 && (() => {
-                const cats = [
-                  { key: "recht",   label: "BFSG / Recht",   items: rechtIssues, ac: D.red,   acBg: D.redBg,   acBdr: "rgba(248,113,113,0.2)" },
-                  { key: "speed",   label: "Performance",    items: speedIssues, ac: D.amber, acBg: D.amberBg, acBdr: "rgba(251,191,36,0.2)" },
-                  { key: "technik", label: "Technical SEO",  items: techIssues,  ac: D.blue,  acBg: D.blueBg,  acBdr: "rgba(96,165,250,0.2)" },
-                ].filter(c => c.items.length > 0);
-                return (
-                  <div style={{ marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: D.red, boxShadow: `0 0 6px ${D.red}` }} />
-                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.1em" }}>Error Matrix</span>
-                      <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: D.redBg, color: D.red, border: "1px solid rgba(248,113,113,0.2)", fontWeight: 700 }}>{redIssues.length} KRITISCH</span>
-                      <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: D.amberBg, color: D.amber, border: "1px solid rgba(251,191,36,0.2)", fontWeight: 700 }}>{yellowIssues.length} WARNUNGEN</span>
-                      <Link href={`/dashboard/scans/${lastScan.id}`} style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, color: D.cyan, letterSpacing: "0.04em" }}>Vollbericht →</Link>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, 1fr)`, gap: 12 }}>
-                      {cats.map(cat => (
-                        <div key={cat.key} style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 12, overflow: "hidden" }}>
-                          <div style={{ padding: "9px 14px", borderBottom: `1px solid ${D.border}`, background: D.surfaceHigh, display: "flex", alignItems: "center", gap: 7 }}>
-                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: cat.ac, flexShrink: 0 }} />
-                            <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, color: cat.ac, textTransform: "uppercase", letterSpacing: "0.1em" }}>{cat.label}</span>
-                            <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: cat.acBg, color: cat.ac, border: `1px solid ${cat.acBdr}`, fontWeight: 700, marginLeft: "auto" }}>{cat.items.length}</span>
-                          </div>
-                          <div>
-                            {cat.items.slice(0, 5).map((issue, i) => {
-                              const score = impactScore(issue);
-                              const col   = issue.severity === "red" ? D.red : issue.severity === "yellow" ? D.amber : D.green;
-                              const fix   = getFixGuide(issue.title, cms.label);
-                              const cbId  = `dm-${cat.key}-${i}`;
-                              return (
-                                <details key={i} className="d-fix" style={{ borderBottom: i < Math.min(cat.items.length, 5) - 1 ? `1px solid ${D.border}` : "none", background: "transparent" }}>
-                                  <summary style={{ padding: "9px 14px", display: "flex", alignItems: "center", gap: 8, listStyle: "none" }} className="d-row">
-                                    <div style={{ width: 30, flexShrink: 0, textAlign: "right" }}>
-                                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 800, color: col }}>{score}</span>
-                                      <div style={{ marginTop: 2, height: 2, borderRadius: 1, background: D.surfaceHigh, overflow: "hidden" }}>
-                                        <div style={{ height: "100%", width: `${score}%`, background: col }} />
-                                      </div>
-                                    </div>
-                                    <p className="issue-title" style={{ margin: 0, flex: 1, fontSize: 11, fontWeight: 600, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{issue.title}</p>
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={D.textMuted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="6 9 12 15 18 9"/></svg>
-                                  </summary>
-                                  <div style={{ padding: "0 14px 12px", background: D.surfaceHigh, borderTop: `1px solid ${D.border}` }}>
-                                    {issue.body && <p style={{ margin: "10px 0 8px", fontSize: 11, color: D.textSub, lineHeight: 1.6 }}>{issue.body}</p>}
-                                    <div style={{ padding: "8px 12px", borderRadius: 7, background: D.cyanBg, border: "1px solid rgba(34,211,238,0.15)", display: "flex", gap: 8, alignItems: "flex-start", marginTop: 8 }}>
-                                      <svg style={{ flexShrink: 0, marginTop: 2 }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={D.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                      <p style={{ margin: 0, fontSize: 11, color: D.textSub, lineHeight: 1.6 }}><strong style={{ color: D.cyan }}>Fix ({cms.label}):</strong> {fix}</p>
-                                    </div>
-                                    {isSingle && (
-                                      <label htmlFor={cbId} style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, fontSize: 10, fontWeight: 600, color: D.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(74,222,128,0.22)", background: D.greenBg }}>
-                                        <input type="checkbox" id={cbId} className="fix-done" style={{ width: 11, height: 11, accentColor: D.green, cursor: "pointer" }} />
-                                        Erledigt ✓
-                                      </label>
-                                    )}
-                                  </div>
-                                </details>
-                              );
-                            })}
-                            {cat.items.length > 5 && (
-                              <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", padding: "8px 14px", fontFamily: MONO, fontSize: 9, color: D.textMuted, borderTop: `1px solid ${D.border}` }}>
-                                +{cat.items.length - 5} weitere im Vollbericht →
-                              </Link>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* ── PASSIVE MODULES ─────────────────────────────── */}
-
-              {/* Score History */}
+              {/* ── Score History ── */}
               {isSingle && scans.length > 0 && (
-                <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 12, padding: "14px 18px 10px", marginBottom: 12 }}>
+                <div style={{ ...CARD, padding: "14px 18px 10px", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
-                      <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 6px", borderRadius: 3, background: D.greenBg, color: D.green, border: "1px solid rgba(74,222,128,0.2)" }}>LIVE</span>
+                      <span style={{ fontSize: 8, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
+                      <span style={{ fontSize: 7, fontWeight: 700, padding: "1px 6px", borderRadius: 3, background: D.greenBg, color: D.green, border: "1px solid rgba(61,205,103,0.2)" }}>LIVE</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 20, fontWeight: 800, color: sparkCol, lineHeight: 1 }}>{sparkLatest}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: sparkDelta >= 0 ? D.green : D.red }}>{sparkDelta >= 0 ? "↑" : "↓"}{Math.abs(sparkDelta)}</span>
+                      <span style={{ fontSize: 20, fontWeight: 800, color: sparkCol, lineHeight: 1 }}>{sparkLatest}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: sparkDelta >= 0 ? D.green : D.red }}>{sparkDelta >= 0 ? "↑" : "↓"}{Math.abs(sparkDelta)}</span>
                     </div>
                   </div>
                   <svg width="100%" viewBox={`0 0 ${SW} ${SH}`} preserveAspectRatio="none" style={{ display: "block", height: 44, overflow: "visible" }}>
@@ -900,71 +766,67 @@ export default async function DashboardPage() {
                     </defs>
                     <path d={`M${sPts[0].x.toFixed(1)},${sPts[0].y.toFixed(1)} ` + sPts.slice(1).map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + ` L${sPts[sN-1].x.toFixed(1)},${(SH-SPY).toFixed(1)} L${sPts[0].x.toFixed(1)},${(SH-SPY).toFixed(1)} Z`} fill="url(#dg)" />
                     <polyline points={sparkLine} fill="none" stroke={sparkCol} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    {sPts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill={i === sN-1 ? sparkCol : D.surface} stroke={sparkCol} strokeWidth="1.5" />)}
+                    {sPts.map((p, idx) => <circle key={idx} cx={p.x} cy={p.y} r="3" fill={idx === sN-1 ? sparkCol : D.card} stroke={sparkCol} strokeWidth="1.5" />)}
                   </svg>
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                    {sparkDates.map((d, i) => <span key={i} style={{ fontFamily: MONO, fontSize: 8, color: D.textMuted }}>{d}</span>)}
+                    {sparkDates.map((d, idx) => <span key={idx} style={{ fontSize: 8, color: D.textMuted }}>{d}</span>)}
                   </div>
                 </div>
               )}
               {isFree && (
                 <div style={{ position: "relative", overflow: "hidden", borderRadius: 12, marginBottom: 12 }}>
-                  <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 12, padding: "14px 18px", filter: "blur(3px)", opacity: 0.4, pointerEvents: "none", userSelect: "none", minHeight: 96 }}>
+                  <div style={{ ...CARD, padding: "14px 18px", filter: "blur(4px)", opacity: 0.4, pointerEvents: "none", userSelect: "none", minHeight: 96 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 9, color: D.textMuted, textTransform: "uppercase" }}>Score-Verlauf · 7 Tage</span>
-                      <span style={{ fontFamily: MONO, fontSize: 20, fontWeight: 800, color: D.green }}>82</span>
+                      <span style={{ fontSize: 8, color: D.textMuted, textTransform: "uppercase" }}>Score-Verlauf · 7 Tage</span>
+                      <span style={{ fontSize: 20, fontWeight: 800, color: D.green }}>82</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 40 }}>
-                      {[58,62,59,68,72,77,82].map((h, i) => <div key={i} style={{ flex: 1, borderRadius: 2, background: i===6 ? D.green : "rgba(74,222,128,0.25)", height: `${(h/90)*100}%` }} />)}
+                      {[58,62,59,68,72,77,82].map((h, idx) => <div key={idx} style={{ flex: 1, borderRadius: 2, background: idx===6 ? D.green : "rgba(61,205,103,0.25)", height: `${(h/90)*100}%` }} />)}
                     </div>
                   </div>
-                  <div className="lock-dark">
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: D.goldBg, border: "1px solid rgba(217,119,6,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <div className="lock-blur">
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: D.goldBg, border: "1px solid rgba(217,119,6,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: D.text }}>Score-Verlauf & Monitoring</p>
-                      <p style={{ margin: 0, fontSize: 10, color: D.textSub }}>7-Tage-Trend wird im Smart-Guard Plan live aufgezeichnet.</p>
-                    </div>
-                    <Link href="/smart-guard" style={{ flexShrink: 0, padding: "6px 16px", borderRadius: 8, background: D.surfaceHigh, border: `1px solid ${D.borderMed}`, color: D.text, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>Aktivieren →</Link>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: D.text }}>Score-Verlauf gesperrt</p>
+                    <p style={{ margin: 0, fontSize: 11, color: D.textSub }}>7-Tage-Trend im Smart-Guard Plan</p>
+                    <Link href="/smart-guard" style={{ padding: "7px 20px", borderRadius: 8, background: D.gold, color: "#000", fontWeight: 700, fontSize: 12 }}>Aktivieren →</Link>
                   </div>
                 </div>
               )}
 
-              {/* 24/7 Monitoring */}
+              {/* ── 24/7 Monitoring ── */}
               <div style={{ position: "relative", overflow: "hidden", borderRadius: 12, marginBottom: 12 }}>
-                <div style={{ background: D.surface, border: `1px solid ${isSingle ? "rgba(74,222,128,0.18)" : D.border}`, borderRadius: 12, overflow: "hidden", ...(isFree ? { filter: "blur(2px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" } : {}) }}>
+                <div style={{ ...CARD, overflow: "hidden", border: `1px solid ${isSingle ? "rgba(61,205,103,0.18)" : D.border}`, ...(isFree ? { filter: "blur(4px)", opacity: 0.35, pointerEvents: "none", userSelect: "none" } : {}) }}>
                   <div style={{ padding: "11px 18px", borderBottom: `1px solid ${D.border}`, display: "flex", alignItems: "center", gap: 8 }}>
                     {isSingle && <span className="pulse-g" style={{ width: 6, height: 6, borderRadius: "50%", background: D.green, flexShrink: 0 }} />}
-                    <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.textSub, textTransform: "uppercase", letterSpacing: "0.08em" }}>24/7 Live-Überwachung</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: isSingle ? D.greenBg : D.surfaceHigh, color: isSingle ? D.green : D.textMuted, border: `1px solid ${isSingle ? "rgba(74,222,128,0.2)" : D.border}`, marginLeft: "auto" }}>{isSingle ? "AKTIV" : "SMART-GUARD"}</span>
+                    <span style={{ fontSize: 8, fontWeight: 700, color: D.textSub, textTransform: "uppercase", letterSpacing: "0.08em" }}>24/7 Live-Überwachung</span>
+                    <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: isSingle ? D.greenBg : D.cardHi, color: isSingle ? D.green : D.textMuted, border: `1px solid ${isSingle ? "rgba(61,205,103,0.2)" : D.border}`, marginLeft: "auto" }}>{isSingle ? "AKTIV" : "SMART-GUARD"}</span>
                   </div>
-                  <div style={{ padding: "12px 18px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  <div style={{ padding: "12px 18px", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                     {[{ l: "Stündliche Prüfung", v: "1h" }, { l: "SSL-Ablauf Alarm", v: "87d" }, { l: "Downtime-Alarm", v: "RT" }].map(item => (
-                      <div key={item.l} style={{ padding: "10px 12px", borderRadius: 8, background: isSingle ? D.greenBg : D.surfaceHigh, border: `1px solid ${isSingle ? "rgba(74,222,128,0.15)" : D.border}` }}>
-                        <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: isSingle ? D.green : D.textMuted, marginBottom: 2 }}>{isSingle ? item.v : "—"}</div>
+                      <div key={item.l} style={{ padding: "10px 12px", borderRadius: 8, background: isSingle ? D.greenBg : D.cardHi, border: `1px solid ${isSingle ? "rgba(61,205,103,0.15)" : D.border}` }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: isSingle ? D.green : D.textMuted, marginBottom: 2 }}>{isSingle ? item.v : "—"}</div>
                         <div style={{ fontSize: 10, color: D.textSub }}>{item.l}</div>
                       </div>
                     ))}
                   </div>
                 </div>
                 {isFree && (
-                  <div className="lock-dark">
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: D.goldBg, border: "1px solid rgba(217,119,6,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <div className="lock-blur">
+                    <div style={{ width: 52, height: 52, borderRadius: 14, background: D.goldBg, border: "1px solid rgba(217,119,6,0.4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 24px rgba(217,119,6,0.2)" }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: D.text }}>24/7 Live-Überwachung</p>
-                      <p style={{ margin: 0, fontSize: 10, color: D.textSub }}>Stündliche Prüfung auf Downtime, SSL-Ablauf und Fehler.</p>
-                    </div>
-                    <Link href="/smart-guard" style={{ flexShrink: 0, padding: "6px 16px", borderRadius: 8, background: D.surfaceHigh, border: `1px solid ${D.borderMed}`, color: D.text, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>Aktivieren →</Link>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: D.text, letterSpacing: "-0.01em" }}>Echtzeit-Schutz inaktiv.</p>
+                    <p style={{ margin: 0, fontSize: 12, color: D.amber, fontWeight: 600 }}>Upgrade erforderlich.</p>
+                    <Link href="/smart-guard" style={{ padding: "8px 24px", borderRadius: 10, background: D.gold, color: "#000", fontWeight: 800, fontSize: 13, boxShadow: "0 4px 16px rgba(217,119,6,0.3)" }}>Smart-Guard aktivieren →</Link>
                   </div>
                 )}
               </div>
 
-              {/* PDF Export */}
+              {/* ── PDF Export ── */}
               <div style={{ position: "relative", overflow: "hidden", borderRadius: 12, marginBottom: 20 }}>
-                <div style={{ background: D.surface, border: `1px solid ${isSingle ? "rgba(96,165,250,0.18)" : D.border}`, borderRadius: 12, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, ...(isFree ? { filter: "blur(2px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" } : {}) }}>
+                <div style={{ ...CARD, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, border: `1px solid ${isSingle ? "rgba(96,165,250,0.18)" : D.border}`, ...(isFree ? { filter: "blur(4px)", opacity: 0.35, pointerEvents: "none", userSelect: "none" } : {}) }}>
                   <div style={{ width: 36, height: 36, borderRadius: 9, background: D.blueBg, border: "1px solid rgba(96,165,250,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: D.blue }}>
                     <PdfIcon />
                   </div>
@@ -972,27 +834,25 @@ export default async function DashboardPage() {
                     <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: D.text }}>Bericht als PDF herunterladen</p>
                     <p style={{ margin: "2px 0 0", fontSize: 10, color: D.textSub }}>Vollständiger Audit-Bericht als professionelles PDF.</p>
                   </div>
-                  <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, background: D.blue, color: "#07090F", fontWeight: 700, fontSize: 11 }}>
+                  <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, background: D.blue, color: "#000", fontWeight: 700, fontSize: 11 }}>
                     <PdfIcon /> Export
                   </Link>
                 </div>
                 {isFree && (
-                  <div className="lock-dark">
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: D.goldBg, border: "1px solid rgba(217,119,6,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <div className="lock-blur">
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: D.goldBg, border: "1px solid rgba(217,119,6,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: D.text }}>PDF-Export</p>
-                      <p style={{ margin: 0, fontSize: 10, color: D.textSub }}>Professioneller Audit-Bericht — im Smart-Guard Plan.</p>
-                    </div>
-                    <Link href="/smart-guard" style={{ flexShrink: 0, padding: "6px 16px", borderRadius: 8, background: D.surfaceHigh, border: `1px solid ${D.borderMed}`, color: D.text, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap" }}>Aktivieren →</Link>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: D.text }}>PDF-Export gesperrt</p>
+                    <p style={{ margin: 0, fontSize: 11, color: D.textSub }}>Professioneller Bericht im Smart-Guard Plan</p>
+                    <Link href="/smart-guard" style={{ padding: "7px 20px", borderRadius: 8, background: D.gold, color: "#000", fontWeight: 700, fontSize: 12 }}>Aktivieren →</Link>
                   </div>
                 )}
               </div>
 
               {/* New Scan CTA */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-                <Link href="/dashboard/scan" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 22px", borderRadius: 10, background: D.surfaceHigh, color: D.cyan, fontWeight: 700, fontSize: 12, border: "1px solid rgba(34,211,238,0.2)" }}>
+                <Link href="/dashboard/scan" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 22px", borderRadius: 10, background: D.cardHi, color: D.cyan, fontWeight: 700, fontSize: 12, border: `1px solid ${D.borderHi}` }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   {isFree ? `Neuen Scan starten (${SCAN_LIMIT - monthlyScans} verbleibend)` : "Neuen Scan starten"}
                 </Link>
@@ -1001,21 +861,21 @@ export default async function DashboardPage() {
             </>
           )}
 
-          {/* ── UPGRADE BANNER ─────────────────────────────────── */}
+          {/* ── UPGRADE BANNER ── */}
           {isFree && (
-            <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #0D2040 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", border: "1px solid rgba(96,165,250,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+            <div style={{ background: "linear-gradient(135deg, #050505 0%, #0A0F1A 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", border: `1px solid ${D.borderHi}`, boxShadow: "0 8px 40px rgba(0,0,0,0.8)" }}>
               <div style={{ flex: 1, minWidth: 260 }}>
-                <p style={{ margin: "0 0 4px", fontFamily: MONO, fontSize: 9, fontWeight: 700, color: D.cyan, textTransform: "uppercase", letterSpacing: "0.12em" }}>SMART-GUARD MODULE</p>
-                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>
+                <p style={{ margin: "0 0 4px", fontSize: 8, fontWeight: 700, color: D.cyan, textTransform: "uppercase", letterSpacing: "0.12em" }}>SMART-GUARD MODULE</p>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.3, fontFamily: "inherit" }}>
                   Echtzeit-Wächter aktivieren<br />
                   <span style={{ color: D.cyan }}>— automatisch & persistent.</span>
                 </h3>
-                <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
                   24/7 Monitoring · PDF-Export · Score-Verlauf · Unbegrenzte Scans<br />
                   <strong style={{ color: "rgba(255,255,255,0.75)" }}>39 €/Monat · jederzeit kündbar</strong>
                 </p>
               </div>
-              <Link href="/smart-guard" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: D.cyan, color: "#07090F", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 20px rgba(34,211,238,0.35)" }}>
+              <Link href="/smart-guard" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: D.cyan, color: "#000", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 20px rgba(34,211,238,0.35)" }}>
                 Smart-Guard aktivieren →
               </Link>
             </div>
@@ -1023,7 +883,7 @@ export default async function DashboardPage() {
 
           {isSingle && (
             <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <Link href="/fuer-agenturen" style={{ fontFamily: MONO, fontSize: 10, color: D.textMuted, letterSpacing: "0.04em" }}>
+              <Link href="/fuer-agenturen" style={{ fontSize: 10, color: D.textMuted, letterSpacing: "0.04em" }}>
                 Mehr als 1 Website? → Agency-Dashboard
               </Link>
             </div>
@@ -1032,7 +892,8 @@ export default async function DashboardPage() {
           </main>
         </>
         );
-      })()} 
+      })()}
+
 
       {/* ══════════════════════════════════════════════════════════
           AGENCY LAYOUT  (plan: pro = Agency Starter | agentur = Agency Pro)
