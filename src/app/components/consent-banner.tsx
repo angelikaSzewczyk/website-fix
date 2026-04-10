@@ -42,13 +42,13 @@ export default function ConsentBanner() {
         background: "#ffffff",
         border: "1px solid #E2E8F0",
         boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
-        padding: "18px 20px",
+        padding: "22px 24px",
         fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
       }}
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
-        <BrandLogo size="sm" />
+        <BrandLogo size="sm" theme="light" />
         <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginLeft: 4 }}>
           Cookie-Einstellungen
         </span>
@@ -77,7 +77,7 @@ export default function ConsentBanner() {
             fontWeight: 700,
             background: "#2563EB",
             color: "#ffffff",
-            boxShadow: "0 2px 6px rgba(37,99,235,0.3)",
+            boxShadow: "0 4px 20px rgba(37,99,235,0.45), 0 1px 6px rgba(37,99,235,0.3)",
             transition: "background 0.15s",
             fontFamily: "inherit",
           }}

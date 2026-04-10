@@ -23,10 +23,14 @@ import Link from "next/link";
 
 export type LogoSize    = "sm" | "md" | "lg";
 export type LogoVariant = "default" | "powered-by";
+export type LogoTheme   = "dark" | "light";
 
 interface BrandLogoProps {
   size?:    LogoSize;
   variant?: LogoVariant;
+  /** "dark" = weißer Wordmark (für dunkle Hintergründe, Standard)
+   *  "light" = anthrazit-farbener Wordmark (für helle Hintergründe) */
+  theme?:   LogoTheme;
   /** Link target. Defaults to "/" */
   href?:    string;
 }
@@ -106,13 +110,14 @@ function IconBox({
 }
 
 // ── Wordmark ──────────────────────────────────────────────────────────────────
-function Wordmark({ fontSize }: { fontSize: number }) {
+function Wordmark({ fontSize, theme = "dark" }: { fontSize: number; theme?: LogoTheme }) {
+  const websiteColor = theme === "light" ? "#0F172A" : "#fff";
   return (
     <span
       style={{
         fontWeight: 300,
         fontSize,
-        color: "#fff",
+        color: websiteColor,
         letterSpacing: "-0.01em",
         lineHeight: 1,
       }}
@@ -127,6 +132,7 @@ function Wordmark({ fontSize }: { fontSize: number }) {
 export default function BrandLogo({
   size    = "md",
   variant = "default",
+  theme   = "dark",
   href    = "/",
 }: BrandLogoProps) {
   const t = S[size];
@@ -174,7 +180,7 @@ export default function BrandLogo({
         borderRadius={t.r}
         sw={t.sw}
       />
-      <Wordmark fontSize={t.fs} />
+      <Wordmark fontSize={t.fs} theme={theme} />
     </Link>
   );
 }
