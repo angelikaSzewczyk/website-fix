@@ -245,7 +245,6 @@ export default function Page() {
             <div className="hide-sm" style={{ display: "flex", gap: 24 }}>
               <Link href="/fuer-agenturen" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Für Agenturen</Link>
               <Link href="/blog" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Blog</Link>
-              <Link href="#pricing" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Preise</Link>
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <NavAuthLink />
@@ -255,13 +254,6 @@ export default function Page() {
                 textDecoration: "none",
               }}>
                 Anmelden
-              </Link>
-              <Link href="/scan" className="hide-sm" style={{
-                fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
-                background: "#007BFF", color: "#fff", textDecoration: "none",
-                boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
-              }}>
-                Kostenlos scannen →
               </Link>
               {/* Burger-Menü — nur auf Mobile sichtbar */}
               <MobileNav />
@@ -290,23 +282,16 @@ export default function Page() {
           </h1>
 
           <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
-            WebsiteFix ist die automatisierte Lösung für maximale Webseiten-Sicherheit. Ob Smart-Guard Schutz für deine eigene Seite oder White-Label Berichte für deine Kunden – wir automatisieren deine Wartung.
+            WebsiteFix ist die automatisierte Lösung für maximale Webseiten-Sicherheit. Ob automatischer Schutz für deine eigene Seite oder professionelle Wartungs-Reports für deine Kunden – wir automatisieren deine Wartung.
           </p>
 
-          {/* Einzige CTA */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-            <Link href="/scan" style={{
-              padding: "16px 40px", borderRadius: 12, fontWeight: 700, fontSize: 16,
-              background: "linear-gradient(90deg, #007BFF, #0069d9)",
-              color: "#fff", textDecoration: "none",
-              boxShadow: "0 4px 24px rgba(0,123,255,0.45), 0 1px 8px rgba(0,123,255,0.3)",
-            }}>
-              Kostenlosen Check starten →
-            </Link>
-            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
-              Keine Anmeldung · Ergebnis in unter 60 Sekunden
-            </p>
+          {/* URL Input */}
+          <div style={{ maxWidth: 580, margin: "0 auto 14px" }}>
+            <InlineScan />
           </div>
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
+            Keine Anmeldung · Ergebnis in unter 60 Sekunden
+          </p>
 
           {/* ── DASHBOARD PREVIEW MOCKUP ── */}
           <div style={{

@@ -27,7 +27,7 @@ function renderDiagnose(text: string) {
   });
 }
 
-export default function InlineScan({ placeholder = "https://deine-website.de" }: { placeholder?: string }) {
+export default function InlineScan({ placeholder = "Deine Website-URL eingeben (z.B. https://deinewebsite.de)" }: { placeholder?: string }) {
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ScanState>("idle");
   const [diagnose, setDiagnose] = useState("");
@@ -61,48 +61,66 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
 
   return (
     <div>
-      <form onSubmit={handleScan} className="heroScanForm">
+      <form onSubmit={handleScan} style={{ position: "relative" }}>
         <label htmlFor="inline-scan-url" className="sr-only">Website-URL eingeben</label>
-        <input
-          id="inline-scan-url"
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder={placeholder}
-          disabled={state === "scanning"}
-          style={{
-            flex: 1, minWidth: 260,
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            borderRadius: 12, padding: "14px 18px",
-            color: "#fff", fontSize: 16, outline: "none",
-          }}
-        />
-        <button
-          type="submit"
-          disabled={state === "scanning" || !url}
-          className="heroScanBtn"
-          style={{
-            fontSize: 15, padding: "14px 28px", whiteSpace: "nowrap",
-            background: "#fff", color: "#0b0c10", border: "none", borderRadius: 12,
-            fontWeight: 700, cursor: state === "scanning" || !url ? "default" : "pointer",
-            opacity: state === "scanning" || !url ? 0.45 : 1,
-          }}
-        >
-          {state === "scanning" ? "Scannt..." : "Jetzt kostenlos scannen"}
-        </button>
+        <div style={{
+          display: "flex", alignItems: "center",
+          background: "rgba(8, 10, 20, 0.9)",
+          border: "1px solid rgba(37,99,235,0.3)",
+          borderRadius: 14,
+          padding: "6px 6px 6px 16px",
+          boxShadow: "0 0 20px 3px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.04)",
+        }}>
+          {/* Lock icon */}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginRight: 10 }} aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input
+            id="inline-scan-url"
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder={placeholder}
+            disabled={state === "scanning"}
+            style={{
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              color: "#fff",
+              fontSize: 15,
+              padding: "10px 8px",
+              minWidth: 0,
+            }}
+          />
+          <button
+            type="submit"
+            disabled={state === "scanning" || !url}
+            style={{
+              flexShrink: 0,
+              display: "flex", alignItems: "center", gap: 6,
+              background: state === "scanning" || !url ? "rgba(37,99,235,0.4)" : "#2563EB",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "11px 20px",
+              fontWeight: 700,
+              fontSize: 14,
+              whiteSpace: "nowrap",
+              cursor: state === "scanning" || !url ? "default" : "pointer",
+              transition: "background 0.15s",
+            }}
+          >
+            {state === "scanning" ? "Scannt…" : "Jetzt scannen"}
+            {state !== "scanning" && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </form>
-
-      <div className="heroCheckpoints" style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
-        {["Kostenlos", "Keine Anmeldung", "Ergebnis in unter 60 Sek."].map((item) => (
-          <span key={item} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(141,243,211,0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            {item}
-          </span>
-        ))}
-      </div>
 
       {state === "scanning" && (
         <div style={{ marginTop: 20, padding: "20px 24px", background: "rgba(255,255,255,0.04)", borderRadius: 12 }}>
