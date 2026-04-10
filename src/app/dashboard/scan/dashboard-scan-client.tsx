@@ -5,28 +5,35 @@ import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import DiagnoseReport from "./diagnose-report";
 
-// ─── Light-mode tokens ────────────────────────────────────────────────────────
+// ─── Dark glassmorphism tokens — matches free-dashboard-client ────────────────
 const C = {
-  bg:         "#F8FAFC",
-  card:       "#FFFFFF",
-  border:     "#E2E8F0",
-  divider:    "#F1F5F9",
-  shadow:     "0 1px 4px rgba(0,0,0,0.07)",
-  text:       "#0F172A",
-  textSub:    "#475569",
-  textMuted:  "#94A3B8",
-  blue:       "#2563EB",
-  blueBg:     "#EFF6FF",
-  blueBorder: "#BFDBFE",
-  green:      "#16A34A",
-  greenBg:    "#F0FDF4",
-  greenDot:   "#22C55E",
-  amber:      "#D97706",
-  amberBg:    "#FFFBEB",
-  amberBorder:"#FDE68A",
-  red:        "#DC2626",
-  redBg:      "#FEF2F2",
-  redBorder:  "#FCA5A5",
+  page:        "#0b0c10",
+  card:        "rgba(255,255,255,0.03)",
+  cardSolid:   "#0f1623",
+  border:      "rgba(255,255,255,0.07)",
+  borderMid:   "rgba(255,255,255,0.11)",
+  divider:     "rgba(255,255,255,0.06)",
+  shadow:      "none",
+  text:        "#ffffff",
+  textSub:     "rgba(255,255,255,0.5)",
+  textMuted:   "rgba(255,255,255,0.3)",
+  blue:        "#007BFF",
+  blueSoft:    "#7aa6ff",
+  blueBg:      "rgba(0,123,255,0.08)",
+  blueBorder:  "rgba(0,123,255,0.25)",
+  blueGlow:    "0 2px 14px rgba(0,123,255,0.35)",
+  green:       "#4ade80",
+  greenBg:     "rgba(74,222,128,0.1)",
+  greenBorder: "rgba(74,222,128,0.25)",
+  greenDot:    "#4ade80",
+  amber:       "#fbbf24",
+  amberBg:     "rgba(251,191,36,0.1)",
+  amberBorder: "rgba(251,191,36,0.25)",
+  red:         "#f87171",
+  redBg:       "rgba(239,68,68,0.1)",
+  redBorder:   "rgba(239,68,68,0.25)",
+  radius:      14,
+  radiusSm:    8,
 };
 
 // ─── WCAG priority → severity mapping ────────────────────────────────────────
@@ -43,9 +50,11 @@ function CopyButton({ code }: { code: string }) {
   return (
     <button onClick={go} style={{
       display: "flex", alignItems: "center", gap: 5,
-      padding: "5px 10px", borderRadius: 6, border: `1px solid ${copied ? "#A7F3D0" : C.border}`,
-      background: copied ? C.greenBg : "#fff", color: copied ? C.green : C.textMuted,
-      fontSize: 11, fontWeight: 600, cursor: "pointer",
+      padding: "5px 10px", borderRadius: 6,
+      border: `1px solid ${copied ? C.greenBorder : C.border}`,
+      background: copied ? C.greenBg : "rgba(255,255,255,0.04)",
+      color: copied ? C.green : C.textMuted,
+      fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0,
     }}>
       {copied ? "✓ Kopiert" : "Kopieren"}
     </button>
@@ -58,46 +67,37 @@ function WcagViolationCard({ v, i }: { v: { priority: string; help: string; node
 
   return (
     <div style={{
-      background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 14, boxShadow: C.shadow, overflow: "hidden",
+      background: C.card,
+      border: `1px solid rgba(${isRed ? "239,68,68" : "251,191,36"},0.2)`,
+      borderRadius: C.radiusSm, overflow: "hidden",
     }}>
-      <div style={{ height: 3, background: isRed ? `linear-gradient(90deg, ${C.red}, ${C.red}66)` : `linear-gradient(90deg, ${C.amber}, ${C.amber}66)` }} />
-      <div style={{ padding: "18px 22px" }}>
-        {/* Header */}
+      <div style={{ height: 2, background: isRed ? `linear-gradient(90deg,${C.red},transparent)` : `linear-gradient(90deg,${C.amber},transparent)` }} />
+      <div style={{ padding: "16px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
           <span style={{
-            fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
+            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
             background: isRed ? C.redBg : C.amberBg,
             color: isRed ? C.red : C.amber,
             border: `1px solid ${isRed ? C.redBorder : C.amberBorder}`,
-            letterSpacing: "0.04em",
+            letterSpacing: "0.05em",
           }}>
-            {isRed ? "🔴" : "🟡"} {info.label}
+            {info.label}
           </span>
           <span style={{ fontSize: 11, color: C.textMuted }}>#{i + 1}</span>
         </div>
-
-        {/* Title */}
-        <h3 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.4 }}>
+        <h3 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: C.text, lineHeight: 1.4 }}>
           {v.help}
         </h3>
-
-        {/* Affected element */}
         {v.nodeHtml && (
-          <div style={{ marginBottom: 14 }}>
-            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <div>
+            <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               Betroffenes Element
             </p>
-            <div style={{ background: C.blueBg, border: `1px solid ${C.blueBorder}`, borderRadius: 8, padding: "10px 14px" }}>
+            <div style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${C.border}`, borderRadius: 6, padding: "10px 14px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                <div style={{
-                  background: "#0F172A", borderRadius: 6, padding: "10px 12px",
-                  flex: 1, overflow: "auto",
-                }}>
-                  <code style={{ fontSize: 11, color: "#94A3B8", fontFamily: "'Fira Code','Cascadia Code','Courier New',monospace", whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.6 }}>
-                    {v.nodeHtml}
-                  </code>
-                </div>
+                <code style={{ fontSize: 11, color: "#94A3B8", fontFamily: "'Fira Code','Cascadia Code','Courier New',monospace", whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.6, flex: 1 }}>
+                  {v.nodeHtml}
+                </code>
                 <CopyButton code={v.nodeHtml} />
               </div>
             </div>
@@ -147,33 +147,22 @@ function ScoreCard({
   return (
     <div style={{
       padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 12, boxShadow: C.shadow, position: "relative", overflow: "hidden",
+      borderRadius: C.radius, position: "relative", overflow: "hidden",
     }}>
-      {/* Loading overlay — shown while force-refresh scan is running */}
       {refreshing && (
         <div style={{
           position: "absolute", inset: 0, zIndex: 10,
-          background: "rgba(248,250,252,0.92)",
+          background: "rgba(11,12,16,0.88)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
-          borderRadius: 12,
+          borderRadius: C.radius,
         }}>
-          <RefreshCw
-            size={22}
-            color={C.blue}
-            style={{ animation: "wf-spin 1s linear infinite" }}
-          />
+          <RefreshCw size={22} color={C.blue} style={{ animation: "wf-spin 1s linear infinite" }} />
           <div style={{ textAlign: "center" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: C.text }}>
-              Cache wird umgangen...
-            </p>
-            <p style={{ margin: 0, fontSize: 13, color: C.textSub }}>
-              Starte Live-Analyse.
-            </p>
+            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: C.text }}>Cache wird umgangen...</p>
+            <p style={{ margin: 0, fontSize: 13, color: C.textSub }}>Starte Live-Analyse.</p>
           </div>
         </div>
       )}
-
-      {/* Card header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
           {title}
@@ -184,8 +173,8 @@ function ScoreCard({
           title="Neu scannen – Cache umgehen"
           style={{
             display: "flex", alignItems: "center", gap: 5,
-            padding: "5px 10px", borderRadius: 7,
-            border: `1px solid ${C.border}`, background: C.card,
+            padding: "5px 12px", borderRadius: C.radiusSm,
+            border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.03)",
             cursor: refreshing ? "default" : "pointer",
             color: C.textSub, fontSize: 12, fontWeight: 500,
             opacity: refreshing ? 0.4 : 1, transition: "opacity 0.15s",
@@ -227,8 +216,8 @@ function AutoPilotWidget({ url, type }: { url: string; type: string }) {
     return (
       <button onClick={activate} style={{
         display: "flex", alignItems: "center", gap: 7,
-        fontSize: 13, color: C.textSub, background: C.card,
-        border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",
+        fontSize: 12, color: C.textSub, background: C.card,
+        border: `1px solid ${C.border}`, borderRadius: C.radiusSm, cursor: "pointer", padding: "7px 14px",
       }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
@@ -240,33 +229,24 @@ function AutoPilotWidget({ url, type }: { url: string; type: string }) {
 
   return (
     <div style={{
-      background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
-      overflow: "hidden", minWidth: 220,
+      background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: C.radiusSm,
+      overflow: "hidden", minWidth: 200,
     }}>
-      {/* Header */}
       <div style={{
-        padding: "8px 12px", background: "#F0FDF4", borderBottom: `1px solid #A7F3D0`,
+        padding: "7px 12px", borderBottom: `1px solid ${C.greenBorder}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{
-            width: 7, height: 7, borderRadius: "50%", background: C.greenDot, flexShrink: 0,
-            boxShadow: `0 0 0 2px #bbf7d0`,
-          }} />
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.greenDot, flexShrink: 0 }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Auto-Pilot · Aktiv</span>
         </div>
-        <button
-          onClick={() => setShowEdit(e => !e)}
-          style={{
-            fontSize: 11, color: C.blue, background: "none", border: "none",
-            cursor: "pointer", fontWeight: 600, padding: 0,
-          }}
-        >
-          {showEdit ? "Fertig" : "Zeitplan anpassen"}
+        <button onClick={() => setShowEdit(e => !e)} style={{
+          fontSize: 11, color: C.blueSoft, background: "none", border: "none",
+          cursor: "pointer", fontWeight: 600, padding: 0,
+        }}>
+          {showEdit ? "Fertig" : "Anpassen"}
         </button>
       </div>
-
-      {/* Schedule rows */}
       <div style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
         {!showEdit ? (
           <>
@@ -283,22 +263,16 @@ function AutoPilotWidget({ url, type }: { url: string; type: string }) {
           <>
             <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: C.textSub }}>
               Security-Scan
-              <select
-                value={secInterval}
-                onChange={e => setSecInterval(e.target.value as typeof secInterval)}
-                style={{ fontSize: 11, border: `1px solid ${C.border}`, borderRadius: 5, padding: "2px 6px", color: C.text, background: C.card }}
-              >
+              <select value={secInterval} onChange={e => setSecInterval(e.target.value as typeof secInterval)}
+                style={{ fontSize: 11, border: `1px solid ${C.border}`, borderRadius: 5, padding: "2px 6px", color: C.text, background: C.cardSolid }}>
                 <option value="täglich">Täglich</option>
                 <option value="wöchentlich">Wöchentlich</option>
               </select>
             </label>
             <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: C.textSub }}>
               Deep-Scan
-              <select
-                value={deepInterval}
-                onChange={e => setDeepInterval(e.target.value as typeof deepInterval)}
-                style={{ fontSize: 11, border: `1px solid ${C.border}`, borderRadius: 5, padding: "2px 6px", color: C.text, background: C.card }}
-              >
+              <select value={deepInterval} onChange={e => setDeepInterval(e.target.value as typeof deepInterval)}
+                style={{ fontSize: 11, border: `1px solid ${C.border}`, borderRadius: 5, padding: "2px 6px", color: C.text, background: C.cardSolid }}>
                 <option value="wöchentlich">Wöchentlich</option>
                 <option value="monatlich">Monatlich</option>
               </select>
@@ -379,6 +353,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
   const [fsProgress, setFsProgress] = useState<FullSiteProgress | null>(null);
   const [fsResult, setFsResult] = useState<FullSiteResult | null>(null);
 
+  const [urlFocused, setUrlFocused] = useState(false);
   const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
 
   function resetState() {
@@ -528,104 +503,157 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
   return (
     <main style={{ maxWidth: 1040, margin: "0 auto", padding: "36px 24px 80px" }}>
+      <style>{`@keyframes wf-spin{to{transform:rotate(360deg)}} @keyframes wf-dot-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
 
-      {/* Page header */}
-      <div style={{ marginBottom: 28 }}>
-        <p style={{ margin: "0 0 4px", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+      {/* ── PAGE HEADER ─────────────────────────────────────── */}
+      <div style={{ marginBottom: 32 }}>
+        <p style={{ margin: "0 0 4px", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
           {userName ? `${userName} — ` : ""}Scan
         </p>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: "-0.025em" }}>
+        <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", color: C.text, letterSpacing: "-0.03em" }}>
           Website scannen
         </h1>
+        <p style={{ margin: 0, fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
+          Wähle einen Scan-Modus und analysiere deine Ziel-URL in Echtzeit.
+        </p>
       </div>
 
-      {/* TABS */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: `1px solid ${C.border}`, flexWrap: "wrap" }}>
-        {TABS.map(t => (
-          <button key={t.key}
-            onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); setFsProgress(null); setFsResult(null); }}
-            style={{
-              padding: "10px 18px", background: "none", border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: tab === t.key ? 700 : 400,
-              color: tab === t.key ? C.blue : C.textMuted,
-              borderBottom: tab === t.key ? `2px solid ${C.blue}` : "2px solid transparent",
-              marginBottom: -1,
-              transition: "color 0.1s",
-              display: "flex", alignItems: "center", gap: 6,
-            }}>
-            {t.label}
-            {t.badge && (
-              <span style={{
-                fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4,
-                background: C.blueBg, color: C.blue, letterSpacing: "0.05em",
-              }}>
-                {t.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* ── SCAN COCKPIT CARD ───────────────────────────────── */}
+      <div style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: C.radius,
+        padding: "28px 28px 24px",
+        marginBottom: 28,
+      }}>
 
-      {/* Device toggle */}
-      {tab === "performance" && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-          {(["mobile", "desktop"] as const).map(d => (
-            <button key={d} onClick={() => setDevice(d)} style={{
-              padding: "7px 16px", borderRadius: 8, border: `1px solid ${device === d ? C.blueBorder : C.border}`,
-              background: device === d ? C.blueBg : C.card,
-              color: device === d ? C.blue : C.textMuted,
-              fontSize: 13, cursor: "pointer", fontWeight: device === d ? 600 : 400,
-            }}>
-              {d === "mobile" ? "📱 Mobile" : "🖥 Desktop"}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* SCAN FORM */}
-      <form onSubmit={handleScan} style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
-        <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
-        <input
-          id="dashboard-scan-url"
-          type="text" value={url} onChange={e => setUrl(e.target.value)}
-          placeholder="https://kunden-website.de"
-          disabled={state === "scanning"}
-          style={{
-            flex: 1, minWidth: 280,
-            background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 10, padding: "12px 16px", color: C.text, fontSize: 14, outline: "none",
-            boxShadow: C.shadow,
-          }}
-        />
-        <button type="submit" disabled={state === "scanning" || !url} style={{
-          padding: "12px 28px", borderRadius: 10, border: "none",
-          background: !url || state === "scanning" ? "#E2E8F0" : C.blue,
-          color: !url || state === "scanning" ? C.textMuted : "#fff",
-          fontWeight: 700, fontSize: 14,
-          cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
-          boxShadow: !url || state === "scanning" ? "none" : "0 2px 8px rgba(37,99,235,0.3)",
-          transition: "background 0.15s",
+        {/* TABS — pill segment style */}
+        <div style={{
+          display: "inline-flex", gap: 4, marginBottom: 24,
+          padding: 4, borderRadius: 10,
+          background: "rgba(255,255,255,0.03)",
+          border: `1px solid ${C.border}`,
         }}>
-          {state === "scanning" ? "Scannt..." : "Scan starten"}
-        </button>
-      </form>
+          {TABS.map(t => {
+            const isActive = tab === t.key;
+            const isLocked = t.key === "fullsite" && !isAgencyPlan;
+            return (
+              <button key={t.key}
+                onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); setFsProgress(null); setFsResult(null); }}
+                style={{
+                  padding: "7px 16px", borderRadius: 7, border: "none", cursor: "pointer",
+                  fontSize: 12, fontWeight: isActive ? 700 : 500,
+                  color: isActive ? "#fff" : C.textMuted,
+                  background: isActive ? C.blue : "transparent",
+                  boxShadow: isActive ? C.blueGlow : "none",
+                  transition: "all 0.15s",
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontFamily: "inherit",
+                }}>
+                {t.label}
+                {isLocked && (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke={isActive ? "rgba(255,255,255,0.7)" : C.textMuted}
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                )}
+                {t.badge && !isLocked && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+                    background: isActive ? "rgba(255,255,255,0.2)" : C.blueBg,
+                    color: isActive ? "#fff" : C.blueSoft,
+                    letterSpacing: "0.05em",
+                  }}>
+                    {t.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Device toggle (performance only) */}
+        {tab === "performance" && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+            {(["mobile", "desktop"] as const).map(d => (
+              <button key={d} onClick={() => setDevice(d)} style={{
+                padding: "6px 14px", borderRadius: C.radiusSm,
+                border: `1px solid ${device === d ? C.blueBorder : C.border}`,
+                background: device === d ? C.blueBg : "transparent",
+                color: device === d ? C.blueSoft : C.textMuted,
+                fontSize: 12, cursor: "pointer", fontWeight: device === d ? 700 : 400,
+                fontFamily: "inherit",
+              }}>
+                {d === "mobile" ? "📱 Mobile" : "🖥 Desktop"}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* SCAN FORM */}
+        <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
+          <input
+            id="dashboard-scan-url"
+            type="text" value={url} onChange={e => setUrl(e.target.value)}
+            placeholder="https://kunden-website.de"
+            disabled={state === "scanning"}
+            onFocus={() => setUrlFocused(true)}
+            onBlur={() => setUrlFocused(false)}
+            style={{
+              flex: 1, minWidth: 280,
+              background: "rgba(255,255,255,0.04)",
+              border: `1px solid ${urlFocused ? C.blue : C.borderMid}`,
+              borderRadius: C.radiusSm,
+              padding: "12px 16px",
+              color: C.text, fontSize: 14, outline: "none",
+              boxShadow: urlFocused ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
+              transition: "border-color 0.15s, box-shadow 0.15s",
+            }}
+          />
+          <button type="submit" disabled={state === "scanning" || !url} style={{
+            padding: "12px 28px", borderRadius: C.radiusSm, border: "none",
+            background: !url || state === "scanning" ? "rgba(255,255,255,0.06)" : C.blue,
+            color: !url || state === "scanning" ? C.textMuted : "#fff",
+            fontWeight: 700, fontSize: 14,
+            cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
+            boxShadow: !url || state === "scanning" ? "none" : "0 4px 20px rgba(0,123,255,0.4)",
+            transition: "background 0.15s, box-shadow 0.15s",
+            fontFamily: "inherit",
+          }}>
+            {state === "scanning" ? "Scannt..." : "Scan starten"}
+          </button>
+        </form>
+
+      </div>
 
       {/* FULL-SITE: upgrade prompt for free users */}
       {tab === "fullsite" && !isAgencyPlan && (
         <div style={{
-          padding: "24px 28px", background: C.blueBg, border: `1px solid ${C.blueBorder}`,
-          borderRadius: 14, marginBottom: 24,
+          padding: "24px 28px",
+          background: "rgba(0,123,255,0.05)",
+          border: `1px solid ${C.blueBorder}`,
+          borderRadius: C.radius, marginBottom: 24,
         }}>
-          <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: C.text }}>
-            Full-Site Crawl — ab Freelancer Plan
-          </p>
-          <p style={{ margin: "0 0 16px", fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blueSoft} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
+              Full-Site Crawl — ab Freelancer Plan
+            </p>
+          </div>
+          <p style={{ margin: "0 0 18px", fontSize: 13, color: C.textSub, lineHeight: 1.7 }}>
             Analysiere deine gesamte Website automatisch — alle Unterseiten, aggregierte Fehler, Seitentyp-Auswertung.
             Verfügbar ab dem Freelancer-Plan (25 Seiten) bis Agency Scale (150 Seiten).
           </p>
           <a href="/fuer-agenturen#pricing" style={{
-            display: "inline-block", padding: "9px 20px", borderRadius: 8,
-            background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "9px 20px", borderRadius: C.radiusSm,
+            background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13,
+            textDecoration: "none", boxShadow: C.blueGlow,
           }}>
             Plan upgraden →
           </a>
@@ -636,16 +664,19 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       {tab === "fullsite" && isAgencyPlan && state === "idle" && (
         <div style={{
           padding: "14px 18px", background: C.blueBg, border: `1px solid ${C.blueBorder}`,
-          borderRadius: 10, marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10,
+          borderRadius: C.radiusSm, marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10,
         }}>
-          <span style={{ fontSize: 16, flexShrink: 0 }}>🕷</span>
+          <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>🕷</span>
           <div>
-            <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 600, color: C.text }}>
+            <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: C.text }}>
               Full-Site Crawl — crawlt alle Unterseiten automatisch
             </p>
             <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
-              Gibt die Domain ein (z.B. <code style={{ background: C.divider, padding: "1px 4px", borderRadius: 3 }}>https://kundenwebsite.de</code>).
-              Der Crawler findet alle Seiten via Sitemap + interne Links und liefert einen aggregierten Report für die gesamte Website.
+              Domain eingeben (z.B.{" "}
+              <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 5px", borderRadius: 4, fontSize: 11 }}>
+                https://kundenwebsite.de
+              </code>
+              ). Crawler findet alle Seiten via Sitemap + interne Links.
               {plan === "freelancer" ? " Limit: 25 Seiten." : plan === "agency_core" || plan === "agentur" ? " Limit: 50 Seiten." : " Limit: 150 Seiten."}
             </p>
           </div>
@@ -654,11 +685,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
       {/* SCANNING STATE — Full-Site live progress */}
       {state === "scanning" && tab === "fullsite" && fsProgress && (
-        <div style={{
-          padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 12, marginBottom: 24, boxShadow: C.shadow,
-        }}>
-          {/* Phase indicator */}
+        <div style={{ padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radius, marginBottom: 24 }}>
           <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
             {(["crawling", "analyzing", "ai"] as const).map((ph, i) => {
               const phaseOrder = ["crawling", "analyzing", "ai"];
@@ -671,53 +698,34 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                     width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
                     background: isDone ? C.green : isActive ? C.blue : C.border,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, color: isDone || isActive ? "#fff" : C.textMuted, fontWeight: 700,
+                    fontSize: 10, color: isDone || isActive ? "#fff" : C.textMuted, fontWeight: 700,
                   }}>
                     {isDone ? "✓" : i + 1}
                   </div>
-                  <span style={{
-                    fontSize: 12, fontWeight: isActive ? 700 : 400,
-                    color: isActive ? C.text : isDone ? C.green : C.textMuted,
-                  }}>
+                  <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 400, color: isActive ? C.text : isDone ? C.green : C.textMuted }}>
                     {ph === "crawling" ? "Crawlen" : ph === "analyzing" ? "Analysieren" : "KI-Report"}
                   </span>
-                  {i < 2 && <span style={{ color: C.border, fontSize: 14, marginLeft: 2 }}>›</span>}
+                  {i < 2 && <span style={{ color: C.textMuted, fontSize: 14, marginLeft: 2 }}>›</span>}
                 </div>
               );
             })}
           </div>
-
-          {/* Live message */}
-          <div style={{
-            padding: "12px 16px", background: C.blueBg, borderRadius: 8,
-            border: `1px solid ${C.blueBorder}`, marginBottom: 12,
-          }}>
+          <div style={{ padding: "12px 16px", background: C.blueBg, borderRadius: C.radiusSm, border: `1px solid ${C.blueBorder}`, marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: "50%", background: C.blue, flexShrink: 0,
-                animation: "pulse 1.5s infinite",
-              }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.blue, flexShrink: 0, animation: "wf-dot-pulse 1.5s ease-in-out infinite" }} />
               <span style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>{fsProgress.message}</span>
             </div>
           </div>
-
-          {/* Found count progress */}
           {fsProgress.phase === "crawling" && typeof fsProgress.found === "number" && (
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{
-                flex: 1, height: 4, background: C.border, borderRadius: 2, overflow: "hidden",
-              }}>
+              <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 2, overflow: "hidden" }}>
                 <div style={{
                   height: "100%", background: C.blue, borderRadius: 2,
-                  width: `${Math.min(100, (fsProgress.found / (
-                    plan === "agency_scale" ? 150 : plan === "agency_core" || plan === "agentur" ? 50 : 25
-                  )) * 100)}%`,
+                  width: `${Math.min(100, (fsProgress.found / (plan === "agency_scale" ? 150 : plan === "agency_core" || plan === "agentur" ? 50 : 25)) * 100)}%`,
                   transition: "width 0.3s ease",
                 }} />
               </div>
-              <span style={{ fontSize: 12, color: C.textMuted, whiteSpace: "nowrap", fontWeight: 600 }}>
-                {fsProgress.found} Seiten
-              </span>
+              <span style={{ fontSize: 12, color: C.textMuted, whiteSpace: "nowrap", fontWeight: 600 }}>{fsProgress.found} Seiten</span>
             </div>
           )}
         </div>
@@ -725,11 +733,11 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
       {/* SCANNING STATE — regular scans */}
       {state === "scanning" && tab !== "fullsite" && (
-        <div style={{ padding: "20px 24px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 24, boxShadow: C.shadow }}>
+        <div style={{ padding: "20px 24px", background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radiusSm, marginBottom: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {SCAN_STEPS[tab as Exclude<TabType, "fullsite">].map((step, i) => (
               <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: C.textSub, fontSize: 13 }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.blue, flexShrink: 0, opacity: 0.6 }} />
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.blue, flexShrink: 0, animation: "wf-dot-pulse 1.5s ease-in-out infinite" }} />
                 {step}
               </div>
             ))}
@@ -739,7 +747,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
       {/* ERROR */}
       {state === "error" && (
-        <div style={{ padding: "14px 18px", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 10, marginBottom: 24 }}>
+        <div style={{ padding: "14px 18px", background: C.redBg, border: `1px solid ${C.redBorder}`, borderRadius: C.radiusSm, marginBottom: 24 }}>
           <p style={{ margin: 0, color: C.red, fontSize: 14 }}>{error}</p>
         </div>
       )}
@@ -748,61 +756,60 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
       {state === "done" && (
         <div>
           {/* Result header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot, flexShrink: 0 }} />
-              <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.greenDot, flexShrink: 0, boxShadow: `0 0 0 3px rgba(74,222,128,0.2)` }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: C.text }}>
                 {tab === "fullsite" ? "Full-Site Crawl abgeschlossen" : "Scan abgeschlossen"}
               </span>
               <span style={{ color: C.textMuted, fontSize: 13 }}>— {url}</span>
               {tab === "fullsite" && fsResult && (
                 <span style={{
-                  fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 5,
-                  background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`,
+                  fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                  background: C.blueBg, color: C.blueSoft, border: `1px solid ${C.blueBorder}`,
                 }}>
                   {fsResult.totalPages} Seiten · {fsResult.issueCount} Problemtypen
                 </span>
               )}
-              {/* Cache badge */}
               {fromCache && (
                 <span style={{
-                  fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 5,
+                  fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 20,
                   background: C.amberBg, color: C.amber, border: `1px solid ${C.amberBorder}`,
                   display: "flex", alignItems: "center", gap: 4,
                 }}>
-                  🕐 Gecacht{cachedAt ? ` · ${formatCacheAge(cachedAt)}` : ""}
+                  Gecacht{cachedAt ? ` · ${formatCacheAge(cachedAt)}` : ""}
                 </span>
               )}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {(savedScanId || fsResult?.scanId) && (
                 <a href={`/dashboard/scans/${savedScanId ?? fsResult?.scanId}`} style={{
-                  fontSize: 13, padding: "7px 14px", borderRadius: 8, textDecoration: "none",
-                  background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBorder}`, fontWeight: 600,
+                  fontSize: 12, padding: "7px 14px", borderRadius: C.radiusSm, textDecoration: "none",
+                  background: C.blueBg, color: C.blueSoft, border: `1px solid ${C.blueBorder}`, fontWeight: 600,
                 }}>
                   Vollständige Analyse →
                 </a>
               )}
               {tab !== "fullsite" && <AutoPilotWidget url={url} type={tab} />}
-              {/* Neu scannen — re-runs same URL with cache bypass */}
               <button
                 onClick={handleForceRefresh}
                 disabled={isForceRefreshing}
                 style={{
-                  fontSize: 13, color: C.blue, background: C.blueBg,
-                  border: `1px solid ${C.blueBorder}`, borderRadius: 8,
+                  fontSize: 12, color: C.blueSoft, background: C.blueBg,
+                  border: `1px solid ${C.blueBorder}`, borderRadius: C.radiusSm,
                   cursor: isForceRefreshing ? "default" : "pointer",
                   padding: "7px 14px", fontWeight: 600,
                   display: "flex", alignItems: "center", gap: 5,
-                  opacity: isForceRefreshing ? 0.6 : 1,
+                  opacity: isForceRefreshing ? 0.6 : 1, fontFamily: "inherit",
                 }}
               >
-                <RefreshCw size={13} style={isForceRefreshing ? { animation: "wf-spin 1s linear infinite" } : undefined} />
+                <RefreshCw size={12} style={isForceRefreshing ? { animation: "wf-spin 1s linear infinite" } : undefined} />
                 Neu scannen
               </button>
               <button onClick={resetState} style={{
-                fontSize: 13, color: C.textSub, background: C.card,
-                border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", padding: "7px 14px",
+                fontSize: 12, color: C.textSub, background: "transparent",
+                border: `1px solid ${C.border}`, borderRadius: C.radiusSm,
+                cursor: "pointer", padding: "7px 14px", fontFamily: "inherit",
               }}>
                 Andere URL
               </button>
@@ -811,24 +818,17 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
           {/* FULL-SITE result summary bar */}
           {tab === "fullsite" && fsResult && (
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-              gap: 10, marginBottom: 20,
-            }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 20 }}>
               {[
-                { label: "Seiten analysiert", value: fsResult.totalPages, color: C.blue, bg: C.blueBg },
+                { label: "Seiten analysiert", value: fsResult.totalPages, color: C.blueSoft, bg: C.blueBg, border: C.blueBorder },
                 { label: "Problemtypen", value: fsResult.issueCount,
                   color: fsResult.issueCount === 0 ? C.green : fsResult.issueCount <= 3 ? C.amber : C.red,
-                  bg: fsResult.issueCount === 0 ? C.greenBg : fsResult.issueCount <= 3 ? C.amberBg : "#FEF2F2",
+                  bg: fsResult.issueCount === 0 ? C.greenBg : fsResult.issueCount <= 3 ? C.amberBg : C.redBg,
+                  border: fsResult.issueCount === 0 ? C.greenBorder : fsResult.issueCount <= 3 ? C.amberBorder : C.redBorder,
                 },
               ].map(s => (
-                <div key={s.label} style={{
-                  background: s.bg, borderRadius: 10, padding: "16px 20px", textAlign: "center",
-                  border: `1px solid ${C.border}`,
-                }}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: s.color, letterSpacing: "-0.02em" }}>
-                    {s.value}
-                  </div>
+                <div key={s.label} style={{ background: s.bg, borderRadius: C.radiusSm, padding: "16px 20px", textAlign: "center", border: `1px solid ${s.border}` }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: s.color, letterSpacing: "-0.02em" }}>{s.value}</div>
                   <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{s.label}</div>
                 </div>
               ))}
@@ -849,11 +849,12 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                   const isHigh = p === "critical" || p === "serious";
                   return (
                     <span key={p} style={{
-                      fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 10,
-                      background: isHigh ? "#FEF2F2" : "#FFFBEB",
+                      fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                      background: isHigh ? C.redBg : C.amberBg,
                       color: isHigh ? C.red : C.amber,
+                      border: `1px solid ${isHigh ? C.redBorder : C.amberBorder}`,
                     }}>
-                      {isHigh ? "🔴" : "🟡"} {n}
+                      {n} {isHigh ? "Kritisch" : "Mittel"}
                     </span>
                   );
                 })}
@@ -866,8 +867,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
           {/* WCAG — no violations */}
           {tab === "wcag" && wcagViolations.length === 0 && (
-            <div style={{ padding: "28px", background: C.greenBg, border: "1px solid #A7F3D0", borderRadius: 12, marginBottom: 24, textAlign: "center" }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>✓</div>
+            <div style={{ padding: "28px", background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: C.radiusSm, marginBottom: 24, textAlign: "center" }}>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: C.green }}>Keine WCAG-Verstöße gefunden</p>
             </div>
           )}
@@ -883,9 +883,9 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                   { label: "Best Practices", value: perfData.scores.bestPractices },
                 ].map(s => {
                   const color = s.value >= 90 ? C.green : s.value >= 50 ? C.amber : C.red;
-                  const bg = s.value >= 90 ? C.greenBg : s.value >= 50 ? C.amberBg : "#FEF2F2";
+                  const bg = s.value >= 90 ? C.greenBg : s.value >= 50 ? C.amberBg : C.redBg;
                   return (
-                    <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px", textAlign: "center", boxShadow: C.shadow }}>
+                    <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radiusSm, padding: "18px", textAlign: "center" }}>
                       <div style={{ fontSize: 32, fontWeight: 800, color, letterSpacing: "-0.02em" }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>{s.label}</div>
                       <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: `${color}20`, overflow: "hidden" }}>
@@ -895,7 +895,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
                   );
                 })}
               </div>
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", boxShadow: C.shadow }}>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radiusSm, padding: "20px 24px" }}>
                 <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                   Core Web Vitals
                 </p>
