@@ -14,6 +14,7 @@ import {
   Plug,
   Target,
   Clock,
+  Archive,
 } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 
@@ -27,19 +28,22 @@ type NavItem = {
   hot?: boolean;
 };
 
-const AGENCY_PLANS = ["agentur", "agency_core", "agency_scale"];
+const AGENCY_PLANS = ["pro", "agentur", "agency_core", "agency_scale"];
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard",               label: "Übersicht",      icon: <LayoutDashboard size={16} />, exact: true },
   { href: "/dashboard/scan",          label: "Scan starten",   icon: <Zap size={16} /> },
-  { href: "/dashboard/lead-generator", label: "Lead-Generator", icon: <Target size={16} />,   plans: AGENCY_PLANS, hot: true },
-  { href: "/dashboard/clients",       label: "Kunden",         icon: <Users size={16} />,    plans: AGENCY_PLANS },
-  { href: "/dashboard/monitoring",    label: "Monitoring",     icon: <Clock size={16} />,    plans: ["pro", ...AGENCY_PLANS] },
-  { href: "/dashboard/activity",      label: "Activity Log",   icon: <Activity size={16} />, plans: AGENCY_PLANS },
+  { href: "/dashboard/monitoring",    label: "Monitoring",     icon: <Clock size={16} />,    plans: ["single", "pro", ...AGENCY_PLANS] },
   { href: "/dashboard/reports",       label: "Berichte",       icon: <FileText size={16} />, plans: ["pro", ...AGENCY_PLANS] },
   { href: "/dashboard/integrations",  label: "Integrationen",  icon: <Plug size={16} />,     plans: ["pro", ...AGENCY_PLANS] },
-  { href: "/dashboard/team",          label: "Mein Team",      icon: <Users2 size={16} />,   plans: AGENCY_PLANS, soon: true },
   { href: "/dashboard/settings",      label: "Einstellungen",  icon: <Settings size={16} />, plans: AGENCY_PLANS },
+];
+
+const AGENCY_NAV_ITEMS: NavItem[] = [
+  { href: "/dashboard",             label: "Kommandozentrale",   icon: <LayoutDashboard size={16} />, exact: true },
+  { href: "/dashboard/clients",     label: "Kundenliste",        icon: <Users size={16} /> },
+  { href: "/dashboard/reports",     label: "Berichte-Archiv",    icon: <Archive size={16} /> },
+  { href: "/dashboard/settings",    label: "Team-Einstellungen", icon: <Settings size={16} /> },
 ];
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -66,9 +70,10 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.plans || item.plans.includes(plan)
-  );
+  const isAgencyPlan = AGENCY_PLANS.includes(plan);
+  const visibleItems = isAgencyPlan
+    ? AGENCY_NAV_ITEMS
+    : NAV_ITEMS.filter((item) => !item.plans || item.plans.includes(plan));
 
   return (
     <div style={{
