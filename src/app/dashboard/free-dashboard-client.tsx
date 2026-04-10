@@ -747,15 +747,25 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {/* Scan usage */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans</span>
-              <span style={{
-                fontSize: 11, fontWeight: 700,
-                padding: "2px 9px", borderRadius: 20,
-                background: monthlyScans >= scanLimit ? D.redBg : D.card,
-                border: `1px solid ${monthlyScans >= scanLimit ? D.redBorder : D.borderMid}`,
-                color: monthlyScans >= scanLimit ? D.red : D.textSub,
-              }}>
-                {monthlyScans} / {scanLimit}
-              </span>
+              {monthlyScans >= scanLimit ? (
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: "2px 10px", borderRadius: 20,
+                  background: D.redBg, border: `1px solid ${D.redBorder}`,
+                  color: D.red,
+                }}>
+                  Limit erreicht
+                </span>
+              ) : (
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: "2px 9px", borderRadius: 20,
+                  background: D.card, border: `1px solid ${D.borderMid}`,
+                  color: D.textSub,
+                }}>
+                  {scanLimit - monthlyScans} verbleibend
+                </span>
+              )}
             </div>
 
             {/* Upgrade CTA */}
