@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import BrandLogo from "@/app/components/BrandLogo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ParsedIssueProp {
@@ -10,14 +11,12 @@ export interface ParsedIssueProp {
   body: string;
   category: "recht" | "speed" | "technik";
 }
-
 export interface ScanBriefProp {
   id: string;
   url: string;
   created_at: string;
   issue_count: number | null;
 }
-
 export interface FreeDashboardProps {
   firstName: string;
   plan: string;
@@ -37,40 +36,71 @@ export interface FreeDashboardProps {
   scanLimit: number;
 }
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const T = {
-  pageBg:    "#F5F6FA",
-  sidebar:   "#1A1C23",
-  sidebarBorder: "#2A2C35",
-  card:      "#FFFFFF",
-  border:    "#E5E7EB",
-  divider:   "#F3F4F6",
-  text:      "#111827",
-  sub:       "#6B7280",
-  muted:     "#9CA3AF",
-  blue:      "#2563EB",
-  blueBg:    "#EFF6FF",
-  blueBorder:"#BFDBFE",
-  red:       "#EF4444",
-  redBg:     "#FEF2F2",
-  redBorder: "#FECACA",
-  amber:     "#F59E0B",
-  amberBg:   "#FFFBEB",
-  amberBorder:"#FDE68A",
-  green:     "#22C55E",
-  greenBg:   "#F0FDF4",
-  greenBorder:"#BBF7D0",
-  shadow:    "0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05)",
+// ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
+const D = {
+  // Backgrounds
+  page:         "#0b0c10",
+  sidebar:      "#0A192F",
+  card:         "rgba(255,255,255,0.03)",
+  cardHover:    "rgba(255,255,255,0.05)",
+  topbar:       "rgba(11,12,16,0.96)",
+
+  // Borders
+  border:       "rgba(255,255,255,0.07)",
+  borderMid:    "rgba(255,255,255,0.1)",
+  borderStrong: "rgba(255,255,255,0.14)",
+  divider:      "rgba(255,255,255,0.06)",
+  sidebarBdr:   "rgba(255,255,255,0.06)",
+
+  // Typography
+  text:         "#ffffff",
+  textSub:      "rgba(255,255,255,0.5)",
+  textMuted:    "rgba(255,255,255,0.3)",
+  textFaint:    "rgba(255,255,255,0.18)",
+
+  // Brand blue (primary)
+  blue:         "#007BFF",
+  blueSoft:     "#7aa6ff",
+  blueBg:       "rgba(0,123,255,0.08)",
+  blueBorder:   "rgba(0,123,255,0.25)",
+  blueGlow:     "0 2px 14px rgba(0,123,255,0.35)",
+
+  // Functional
+  red:          "#f87171",
+  redBg:        "rgba(239,68,68,0.1)",
+  redBorder:    "rgba(239,68,68,0.25)",
+  amber:        "#fbbf24",
+  amberBg:      "rgba(251,191,36,0.1)",
+  amberBorder:  "rgba(251,191,36,0.25)",
+  green:        "#4ade80",
+  greenBg:      "rgba(74,222,128,0.1)",
+  greenBorder:  "rgba(74,222,128,0.25)",
+
+  // Shapes
+  radius:   14,
+  radiusSm: 8,
+  radiusXs: 6,
 } as const;
 
-// ─── Small helpers ─────────────────────────────────────────────────────────────
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+// ─── Shared sub-components ────────────────────────────────────────────────────
+
+/** Dark card matching marketing-site feature cards */
+function Card({
+  children,
+  style,
+  accent,
+}: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  accent?: string;
+}) {
+  const border = accent ? `rgba(${hexToRgb(accent)},0.2)` : D.border;
+  const bg     = accent ? `rgba(${hexToRgb(accent)},0.04)` : D.card;
   return (
     <div style={{
-      background: T.card,
-      border: `1px solid ${T.border}`,
-      borderRadius: 10,
-      boxShadow: T.shadow,
+      background: bg,
+      border: `1px solid ${border}`,
+      borderRadius: D.radius,
       ...style,
     }}>
       {children}
@@ -78,27 +108,111 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+/** Label above sections — same style as marketing site */
+function SectionLabel({ children, color }: { children: React.ReactNode; color?: string }) {
   return (
-    <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: T.sub, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <p style={{
+      margin: "0 0 6px",
+      fontSize: 11, fontWeight: 700,
+      color: color ?? D.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: "0.1em",
+    }}>
       {children}
     </p>
   );
 }
 
-function SevBadge({ severity }: { severity: "red" | "yellow" | "green" }) {
-  const map = {
-    red:    { label: "Kritisch", color: T.red,   bg: T.redBg,   border: T.redBorder },
-    yellow: { label: "Warnung",  color: T.amber, bg: T.amberBg, border: T.amberBorder },
-    green:  { label: "OK",       color: T.green, bg: T.greenBg, border: T.greenBorder },
-  };
-  const s = map[severity];
+/** Section heading */
+function SectionHead({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 style={{
+      margin: "0 0 20px",
+      fontSize: 20, fontWeight: 800,
+      color: D.text,
+      letterSpacing: "-0.02em",
+    }}>
+      {children}
+    </h2>
+  );
+}
+
+/** Pill / badge — same language as marketing site pills */
+function Pill({
+  children,
+  color,
+  size = "sm",
+}: {
+  children: React.ReactNode;
+  color: string;
+  size?: "xs" | "sm";
+}) {
+  const pad = size === "xs" ? "2px 7px" : "3px 10px";
+  const fs  = size === "xs" ? 10 : 11;
   return (
     <span style={{
       display: "inline-block",
+      fontSize: fs, fontWeight: 700,
+      padding: pad,
+      borderRadius: 20,
+      background: `rgba(${hexToRgb(color)},0.12)`,
+      border: `1px solid rgba(${hexToRgb(color)},0.28)`,
+      color,
+      whiteSpace: "nowrap",
+    }}>
+      {children}
+    </span>
+  );
+}
+
+/** Primary button — same as marketing site */
+function BtnPrimary({ href, children, onClick }: { href?: string; children: React.ReactNode; onClick?: () => void }) {
+  const style: React.CSSProperties = {
+    display: "inline-flex", alignItems: "center", gap: 6,
+    padding: "9px 20px", borderRadius: D.radiusSm,
+    background: D.blue, color: "#fff",
+    fontSize: 13, fontWeight: 700,
+    textDecoration: "none", border: "none", cursor: "pointer",
+    boxShadow: D.blueGlow,
+    fontFamily: "inherit",
+  };
+  if (href) return <Link href={href} style={style}>{children}</Link>;
+  return <button onClick={onClick} style={style}>{children}</button>;
+}
+
+/** Ghost button */
+function BtnGhost({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "9px 18px", borderRadius: D.radiusSm,
+      border: `1px solid ${D.borderStrong}`,
+      color: D.textSub, fontSize: 13,
+      textDecoration: "none",
+    }}>
+      {children}
+    </Link>
+  );
+}
+
+/** Horizontal divider */
+function Divider({ style }: { style?: React.CSSProperties }) {
+  return <div style={{ borderTop: `1px solid ${D.divider}`, ...style }} />;
+}
+
+// ─── Severity badge ───────────────────────────────────────────────────────────
+function SevBadge({ sev }: { sev: "red" | "yellow" | "green" }) {
+  const map = {
+    red:    { label: "Kritisch", color: D.red,   bg: D.redBg,   border: D.redBorder   },
+    yellow: { label: "Warnung",  color: D.amber, bg: D.amberBg, border: D.amberBorder },
+    green:  { label: "Hinweis",  color: D.green, bg: D.greenBg, border: D.greenBorder },
+  };
+  const s = map[sev];
+  return (
+    <span style={{
       fontSize: 10, fontWeight: 700,
       padding: "2px 8px", borderRadius: 20,
-      color: s.color, background: s.bg, border: `1px solid ${s.border}`,
+      background: s.bg, border: `1px solid ${s.border}`, color: s.color,
       whiteSpace: "nowrap",
     }}>
       {s.label}
@@ -106,420 +220,748 @@ function SevBadge({ severity }: { severity: "red" | "yellow" | "green" }) {
   );
 }
 
-// ─── Main component ────────────────────────────────────────────────────────────
+// ─── Nav icon ─────────────────────────────────────────────────────────────────
+function NavIco({ name, c }: { name: string; c: string }) {
+  const props = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: c, strokeWidth: "1.8", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (name === "dashboard") return <svg {...props}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+  if (name === "scan")      return <svg {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+  if (name === "reports")   return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+  if (name === "settings")  return <svg {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
+  return null;
+}
+
+// ─── Lock icon ────────────────────────────────────────────────────────────────
+function LockIco({ size = 16, color = D.textMuted }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  );
+}
+
+// ─── Hex → "r,g,b" helper ─────────────────────────────────────────────────────
+function hexToRgb(hex: string): string {
+  const h = hex.replace("#", "");
+  if (h.length === 6) {
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `${r},${g},${b}`;
+  }
+  return "255,255,255";
+}
+
+// ─── Main export ──────────────────────────────────────────────────────────────
 export default function FreeDashboardClient(props: FreeDashboardProps) {
   const {
-    firstName,
-    plan,
-    lastScan,
-    issues,
-    redCount,
-    yellowCount,
-    cms,
-    speedScore,
-    monthlyScans,
-    scanLimit,
+    firstName, plan,
+    lastScan, issues,
+    redCount, yellowCount,
+    rechtIssues, speedIssues, techIssues,
+    cms, bfsgOk, speedScore,
+    scans, monthlyScans, scanLimit,
   } = props;
 
-  const [findingsOpen, setFindingsOpen] = useState(true);
+  const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
 
-  const okCount     = issues.filter(i => i.severity === "green").length;
-  const domain      = lastScan?.url
+  const isFree     = plan === "free";
+  const planLabel  = isFree ? "Free" : "Smart-Guard";
+  const domain     = lastScan?.url
     ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
     : "—";
-  const isFree      = plan === "free";
-  const planLabel   = isFree ? "Free" : "Smart-Guard";
+  const scanDate   = lastScan?.created_at
+    ? new Date(lastScan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })
+    : null;
+  const greenCount = issues.filter(i => i.severity === "green").length;
 
-  // Simulated tech details
-  const server = "Nginx";
-  const php    = "8.2";
-  const ssl    = "Aktiv";
+  // Simulated tech
+  const server  = "Nginx";
+  const php     = "8.2";
+  const sslLabel = "Aktiv";
 
-  // Performance simulation
-  const lcpMs  = Math.max(1200, 4200 - speedScore * 30);
-  const cls    = speedScore > 70 ? 0.05 : 0.18;
-  const fid    = speedScore > 60 ? 42 : 180;
+  // Simulated performance
+  const lcpMs       = Math.max(1200, 4200 - speedScore * 30);
+  const cls         = speedScore > 70 ? 0.05 : 0.18;
+  const indexedUrls = 80 + Math.round(speedScore / 2);
+  const sitemapOk   = speedScore > 40;
+  const mobileOk    = speedScore > 55;
 
-  const navItems = [
-    { label: "Dashboard",    href: "/dashboard",         active: true  },
-    { label: "Live Scan",    href: "/dashboard/scan",    active: false },
-    { label: "Monitoring",   href: "/dashboard/monitor", active: false },
-    { label: "Reports",      href: "/dashboard/scans",   active: false },
+  // Sidebar nav items
+  const nav = [
+    { icon: "dashboard", label: "Dashboard",    href: "/dashboard",       active: true  },
+    { icon: "scan",      label: "Live Scan",    href: "/dashboard/scan",  active: false },
+    { icon: "reports",   label: "Berichte",     href: "/dashboard/scans", active: false },
+    { icon: "settings",  label: "Einstellungen",href: "/dashboard/settings", active: false },
   ];
 
-  return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+  const SIDEBAR_W = 200;
 
-      {/* ── SIDEBAR ──────────────────────────────────────────────────────────── */}
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", background: D.page, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+
+      {/* ══════════════════════════════════════════════════
+          SIDEBAR
+      ══════════════════════════════════════════════════ */}
       <aside style={{
-        width: 240, flexShrink: 0,
+        width: SIDEBAR_W, flexShrink: 0,
         position: "fixed", top: 0, left: 0, bottom: 0,
-        background: T.sidebar,
-        borderRight: `1px solid ${T.sidebarBorder}`,
+        background: D.sidebar,
+        borderRight: `1px solid ${D.sidebarBdr}`,
         display: "flex", flexDirection: "column",
-        zIndex: 40,
-        overflowY: "auto",
+        zIndex: 50,
       }}>
 
         {/* Logo */}
-        <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.sidebarBorder}` }}>
-          <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 7,
-              background: T.blue,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.01em" }}>
-              WebsiteFix
-            </span>
-          </Link>
+        <div style={{ padding: "18px 16px 16px", borderBottom: `1px solid ${D.sidebarBdr}` }}>
+          <BrandLogo href="/dashboard" />
         </div>
 
         {/* Nav */}
-        <nav style={{ padding: "12px 12px", flex: 1 }}>
-          {navItems.map(item => (
+        <nav style={{ padding: "10px 8px", flex: 1 }}>
+          {nav.map(item => (
             <Link key={item.href} href={item.href} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 10px", borderRadius: 7,
-              textDecoration: "none",
+              display: "flex", alignItems: "center", gap: 9,
+              padding: "8px 10px",
+              borderRadius: 7,
               marginBottom: 2,
-              background: item.active ? "rgba(255,255,255,0.07)" : "transparent",
-              color: item.active ? "#FFFFFF" : "#9CA3AF",
-              fontSize: 14, fontWeight: item.active ? 600 : 400,
-              transition: "background 0.15s",
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: item.active ? 600 : 400,
+              color: item.active ? "#fff" : "rgba(255,255,255,0.38)",
+              background: item.active ? D.blueBg : "transparent",
+              borderLeft: item.active ? `2px solid ${D.blue}` : "2px solid transparent",
             }}>
-              <NavIcon name={item.label} active={item.active} />
+              <NavIco name={item.icon} c={item.active ? D.blueSoft : "rgba(255,255,255,0.3)"} />
               {item.label}
             </Link>
           ))}
         </nav>
 
         {/* User */}
-        <div style={{ padding: "16px 20px", borderTop: `1px solid ${T.sidebarBorder}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ padding: "14px 16px", borderTop: `1px solid ${D.sidebarBdr}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: "#2A2C35",
+              width: 28, height: 28, borderRadius: "50%",
+              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
             }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#9CA3AF" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft }}>
                 {firstName.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#FFFFFF" }}>{firstName}</p>
-              <p style={{ margin: 0, fontSize: 11, color: "#6B7280" }}>Plan: {planLabel}</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>{firstName}</p>
+              <p style={{ margin: 0, fontSize: 10, color: D.textMuted, lineHeight: 1.3 }}>Plan: {planLabel}</p>
             </div>
           </div>
         </div>
-
       </aside>
 
-      {/* ── MAIN ─────────────────────────────────────────────────────────────── */}
-      <div style={{ marginLeft: 240, flex: 1, minWidth: 0, background: T.pageBg, minHeight: "100vh" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+      {/* ══════════════════════════════════════════════════
+          MAIN
+      ══════════════════════════════════════════════════ */}
+      <div style={{ marginLeft: SIDEBAR_W, flex: 1, minWidth: 0 }}>
 
-          {/* ── HEADER ─────────────────────────────────────────────────────── */}
+        {/* ── TOP BAR ──────────────────────────────────── */}
+        <header style={{
+          position: "sticky", top: 0, zIndex: 40,
+          background: D.topbar,
+          backdropFilter: "blur(12px)",
+          borderBottom: `1px solid ${D.divider}`,
+        }}>
           <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            flexWrap: "wrap", gap: 12,
-            marginBottom: 24,
+            maxWidth: 1100, margin: "0 auto", padding: "0 24px",
+            height: 52,
+            display: "flex", alignItems: "center", gap: 16,
           }}>
-            <div>
-              <p style={{ margin: 0, fontSize: 12, color: T.muted, fontWeight: 500, marginBottom: 2 }}>Target</p>
-              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text }}>{domain}</p>
+            {/* Domain */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>Target</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
+                {domain !== "—" ? domain : "Noch kein Scan"}
+              </span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{
-                padding: "7px 14px", borderRadius: 8,
-                background: T.card, border: `1px solid ${T.border}`,
-                fontSize: 13, color: T.sub, fontWeight: 500,
+
+            <div style={{ flex: 1 }} />
+
+            {/* Scan usage */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, color: D.textMuted }}>Scans</span>
+              <span style={{
+                fontSize: 12, fontWeight: 700,
+                padding: "2px 10px", borderRadius: 20,
+                background: monthlyScans >= scanLimit ? D.redBg : D.card,
+                border: `1px solid ${monthlyScans >= scanLimit ? D.redBorder : D.borderMid}`,
+                color: monthlyScans >= scanLimit ? D.red : D.textSub,
               }}>
-                Scan-Nutzung: <strong style={{ color: T.text }}>{monthlyScans} / {scanLimit}</strong>
+                {monthlyScans} / {scanLimit}
+              </span>
+            </div>
+
+            {/* Free badge */}
+            <Pill color="#7aa6ff" size="xs">Free</Pill>
+
+            {/* Upgrade CTA */}
+            <Link href="/smart-guard" style={{
+              padding: "6px 16px", borderRadius: D.radiusSm,
+              background: D.blue, color: "#fff",
+              fontSize: 12, fontWeight: 700, textDecoration: "none",
+              boxShadow: D.blueGlow,
+            }}>
+              Upgrade →
+            </Link>
+          </div>
+        </header>
+
+        {/* ── PAGE CONTENT ─────────────────────────────── */}
+        <main style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
+
+          {/* ① AUDIT HERO CARD */}
+          <Card style={{ padding: "28px 32px", marginBottom: 12 }} accent="#007BFF">
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+              <div>
+                <SectionLabel color={D.blueSoft}>Letzter Website-Audit</SectionLabel>
+                <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: D.text, letterSpacing: "-0.025em" }}>
+                  {domain !== "—" ? domain : "Noch keine Website gescannt"}
+                </h1>
+                {lastScan && (
+                  <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
+                    Gescannt am {scanDate} ·{" "}
+                    {redCount > 0
+                      ? `${redCount} kritische Problem${redCount > 1 ? "e" : ""} gefunden`
+                      : yellowCount > 0
+                      ? `${yellowCount} Warnung${yellowCount > 1 ? "en" : ""} gefunden`
+                      : "Keine kritischen Probleme"}
+                  </p>
+                )}
+                {/* Status badge */}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "5px 12px", borderRadius: 20,
+                  background: redCount > 0 ? D.redBg : yellowCount > 0 ? D.amberBg : D.greenBg,
+                  border: `1px solid ${redCount > 0 ? D.redBorder : yellowCount > 0 ? D.amberBorder : D.greenBorder}`,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%",
+                    background: redCount > 0 ? D.red : yellowCount > 0 ? D.amber : D.green,
+                    flexShrink: 0,
+                  }} />
+                  <span style={{ fontSize: 11, fontWeight: 700,
+                    color: redCount > 0 ? D.red : yellowCount > 0 ? D.amber : D.green,
+                  }}>
+                    {redCount > 0 ? `${redCount} Kritisch` : yellowCount > 0 ? `${yellowCount} Warnungen` : "Alles in Ordnung"}
+                  </span>
+                </div>
               </div>
-              <Link href="/smart-guard" style={{
-                padding: "7px 16px", borderRadius: 8,
-                background: T.blue, color: "#fff",
-                fontSize: 13, fontWeight: 600,
-                textDecoration: "none",
-              }}>
-                Upgrade
-              </Link>
-            </div>
-          </div>
-
-          {/* ── TECH STRIP ─────────────────────────────────────────────────── */}
-          <div style={{
-            display: "flex", gap: 8, flexWrap: "wrap",
-            marginBottom: 28,
-          }}>
-            {[
-              { label: "CMS",    value: cms.label + (cms.version ? ` ${cms.version}` : "") },
-              { label: "Server", value: server },
-              { label: "PHP",    value: php },
-              { label: "SSL",    value: ssl },
-            ].map(item => (
-              <div key={item.label} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "5px 12px", borderRadius: 6,
-                background: T.card, border: `1px solid ${T.border}`,
-                fontSize: 12,
-              }}>
-                <span style={{ color: T.muted, fontWeight: 500 }}>{item.label}:</span>
-                <span style={{ color: T.text, fontWeight: 600 }}>{item.value}</span>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <BtnPrimary href="/dashboard/scan">Neuen Scan starten →</BtnPrimary>
+                {lastScan && (
+                  <BtnGhost href={`/dashboard/scans/${lastScan.id}`}>Bericht ansehen</BtnGhost>
+                )}
               </div>
-            ))}
-          </div>
-
-          {/* ── SECTION 1: STATUS ──────────────────────────────────────────── */}
-          <div style={{ marginBottom: 28 }}>
-            <SectionTitle>Status</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-              <Card style={{ padding: "18px 20px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.red }}>Kritisch</p>
-                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.text }}>{redCount}</p>
-              </Card>
-              <Card style={{ padding: "18px 20px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.amber }}>Warnungen</p>
-                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.text }}>{yellowCount}</p>
-              </Card>
-              <Card style={{ padding: "18px 20px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.green }}>OK</p>
-                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.text }}>{okCount}</p>
-              </Card>
             </div>
-          </div>
+          </Card>
 
-          {/* ── SECTION 2: PERFORMANCE ─────────────────────────────────────── */}
-          <div style={{ marginBottom: 28 }}>
-            <SectionTitle>Performance</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          {/* ② TECH FINGERPRINT STRIP */}
+          {lastScan && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
               {[
-                {
-                  metric: "LCP",
-                  value: `${(lcpMs / 1000).toFixed(1)}s`,
-                  label: "Largest Contentful Paint",
-                  ok: lcpMs < 2500,
-                },
-                {
-                  metric: "CLS",
-                  value: cls.toFixed(2),
-                  label: "Cumulative Layout Shift",
-                  ok: cls < 0.1,
-                },
-                {
-                  metric: "FID",
-                  value: `${fid}ms`,
-                  label: "First Input Delay",
-                  ok: fid < 100,
-                },
-              ].map(p => (
-                <Card key={p.metric} style={{ padding: "16px 20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: T.sub }}>{p.metric}</span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
-                      color: p.ok ? T.green : T.amber,
-                      background: p.ok ? T.greenBg : T.amberBg,
-                      border: `1px solid ${p.ok ? T.greenBorder : T.amberBorder}`,
-                    }}>
-                      {p.ok ? "Gut" : "Prüfen"}
-                    </span>
-                  </div>
-                  <p style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 800, color: T.text }}>{p.value}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: T.muted }}>{p.label}</p>
-                </Card>
+                { label: "CMS",    value: cms.label + (cms.version ? ` ${cms.version}` : ""), color: "#7aa6ff" },
+                { label: "Server", value: server,   color: "#8df3d3" },
+                { label: "PHP",    value: php,       color: "#c084fc" },
+                { label: "SSL",    value: sslLabel,  color: "#4ade80" },
+              ].map(item => (
+                <div key={item.label} style={{
+                  display: "flex", alignItems: "center", gap: 7,
+                  padding: "5px 12px 5px 10px",
+                  borderRadius: 20,
+                  background: `rgba(${hexToRgb(item.color)},0.06)`,
+                  border: `1px solid rgba(${hexToRgb(item.color)},0.2)`,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, flexShrink: 0, opacity: 0.8 }} />
+                  <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ③ BFSG / COMPLIANCE BANNER */}
+          {lastScan && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "14px 20px", borderRadius: D.radiusSm, marginBottom: 28,
+              background: bfsgOk ? D.greenBg : D.amberBg,
+              border: `1px solid ${bfsgOk ? D.greenBorder : D.amberBorder}`,
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{bfsgOk ? "✅" : "⚠️"}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700,
+                  color: bfsgOk ? D.green : D.amber,
+                }}>
+                  BFSG-Konformität: {bfsgOk ? "Bestanden" : "Verstöße gefunden"}
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: D.textSub, marginTop: 2 }}>
+                  {bfsgOk
+                    ? "Keine kritischen Barrierefreiheits-Verstöße erkannt — Gesetzeskonformität (BFSG 2025) ist gegeben."
+                    : `${rechtIssues.length} Barrierefreiheits-Problem${rechtIssues.length !== 1 ? "e" : ""} gefunden — Prüfung empfohlen (BFSG 2025 gilt ab Juni 2025).`}
+                </p>
+              </div>
+              {!bfsgOk && (
+                <Link href="/smart-guard" style={{
+                  flexShrink: 0, fontSize: 11, fontWeight: 700,
+                  padding: "5px 12px", borderRadius: D.radiusXs,
+                  background: D.amberBg, border: `1px solid ${D.amberBorder}`,
+                  color: D.amber, textDecoration: "none",
+                }}>
+                  Details →
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* ④ SUMMARY CARDS */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {[
+                { label: "Kritisch",   count: redCount,   color: "#f87171", bg: D.redBg,   border: D.redBorder,   icon: "⛔" },
+                { label: "Warnungen",  count: yellowCount, color: D.amber,   bg: D.amberBg, border: D.amberBorder, icon: "⚠️" },
+                { label: "Hinweise",   count: greenCount,  color: D.green,   bg: D.greenBg, border: D.greenBorder, icon: "✓"  },
+              ].map(s => (
+                <div key={s.label} style={{
+                  padding: "20px 22px",
+                  borderRadius: D.radius,
+                  background: s.count > 0 ? s.bg : D.card,
+                  border: `1px solid ${s.count > 0 ? s.border : D.border}`,
+                }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700,
+                    color: s.count > 0 ? s.color : D.textMuted,
+                    textTransform: "uppercase", letterSpacing: "0.07em",
+                  }}>
+                    {s.label}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 32, fontWeight: 900,
+                    color: s.count > 0 ? s.color : D.textFaint,
+                    letterSpacing: "-0.03em", lineHeight: 1.1,
+                  }}>
+                    {s.count}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* ── SECTION 3: FINDINGS ────────────────────────────────────────── */}
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <SectionTitle>Befunde</SectionTitle>
-              {issues.length > 0 && (
-                <button
-                  onClick={() => setFindingsOpen(o => !o)}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: T.blue, fontWeight: 600, padding: 0 }}
-                >
-                  {findingsOpen ? "Einklappen" : `Alle anzeigen (${issues.length})`}
-                </button>
-              )}
-            </div>
-            <Card>
-              {issues.length === 0 ? (
-                <div style={{ padding: "24px 20px", textAlign: "center", color: T.muted, fontSize: 13 }}>
-                  Keine Befunde gefunden.
-                </div>
-              ) : (
-                <>
-                  {(findingsOpen ? issues.slice(0, 5) : issues.slice(0, 3)).map((issue, idx) => (
-                    <div key={idx} style={{
-                      display: "flex", alignItems: "flex-start", gap: 14,
-                      padding: "14px 20px",
-                      borderBottom: `1px solid ${T.divider}`,
-                    }}>
-                      <div style={{ paddingTop: 1 }}>
-                        <SevBadge severity={issue.severity} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 600, color: T.text }}>{issue.title}</p>
-                        <p style={{ margin: 0, fontSize: 12, color: T.sub, lineHeight: 1.5 }}>
-                          {issue.body.length > 100 ? issue.body.slice(0, 100) + "…" : issue.body}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+          <Divider style={{ marginBottom: 28 }} />
 
-                  {/* Locked fix guide */}
-                  <div style={{
-                    padding: "14px 20px",
-                    display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
-                    background: "#FAFAFA",
-                    borderRadius: "0 0 10px 10px",
+          {/* ⑤ PERFORMANCE SNAPSHOT */}
+          <div style={{ marginBottom: 28 }}>
+            <SectionLabel>Scan · Sichtbarkeit & Performance</SectionLabel>
+            <SectionHead>Search &amp; Performance Snapshot</SectionHead>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+              {[
+                {
+                  label: "Indexierte URLs",
+                  value: `${indexedUrls}`,
+                  sub: "Im Google Index",
+                  ok: indexedUrls > 30,
+                  color: D.blueSoft,
+                },
+                {
+                  label: "Sitemap",
+                  value: sitemapOk ? "/sitemap.xml" : "Fehlt",
+                  sub: sitemapOk ? "Status: 200 OK" : "Nicht eingereicht",
+                  ok: sitemapOk,
+                  color: sitemapOk ? D.green : D.red,
+                },
+                {
+                  label: "Core Web Vitals",
+                  value: `LCP ${(lcpMs / 1000).toFixed(1)}s`,
+                  sub: `CLS ${cls.toFixed(2)}`,
+                  ok: lcpMs < 2500,
+                  color: lcpMs < 2500 ? D.green : D.amber,
+                },
+                {
+                  label: "Mobil",
+                  value: mobileOk ? "Bestanden" : "Fehlgeschlagen",
+                  sub: "Viewport & Responsive",
+                  ok: mobileOk,
+                  color: mobileOk ? D.green : D.red,
+                },
+              ].map(tile => (
+                <div key={tile.label} style={{
+                  padding: "16px 16px",
+                  borderRadius: D.radiusSm,
+                  background: `rgba(${hexToRgb(tile.color)},0.05)`,
+                  border: `1px solid rgba(${hexToRgb(tile.color)},0.18)`,
+                }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700,
+                    color: tile.color, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.8,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 15 }}>🔒</span>
-                      <span style={{ fontSize: 13, color: T.sub, fontWeight: 500 }}>
-                        Vollständige Anleitungen gesperrt
-                      </span>
-                    </div>
-                    <Link href="/smart-guard" style={{
-                      padding: "7px 14px", borderRadius: 7,
-                      background: T.blue, color: "#fff",
-                      fontSize: 12, fontWeight: 600,
-                      textDecoration: "none",
-                    }}>
-                      Anleitungen freischalten
-                    </Link>
-                  </div>
-                </>
-              )}
-            </Card>
+                    {tile.label}
+                  </p>
+                  <p style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 800, color: D.text, lineHeight: 1.2 }}>
+                    {tile.value}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>{tile.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* ── SECTION 4: LOCKED ──────────────────────────────────────────── */}
+          <Divider style={{ marginBottom: 28 }} />
+
+          {/* ⑥ FINDINGS LIST */}
           <div style={{ marginBottom: 28 }}>
-            <SectionTitle>Premium-Funktionen</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
+            <SectionLabel>Audit-Ergebnisse</SectionLabel>
+            <SectionHead>Gefundene Probleme</SectionHead>
+
+            {issues.length === 0 ? (
+              <Card style={{ padding: "32px", textAlign: "center" }}>
+                <p style={{ margin: 0, fontSize: 14, color: D.textMuted }}>
+                  Noch kein Scan — starte jetzt deinen ersten Audit.
+                </p>
+              </Card>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {issues.slice(0, 5).map((issue, idx) => {
+                  const isOpen = expandedFinding === idx;
+                  const accentColor = issue.severity === "red" ? "#f87171" : issue.severity === "yellow" ? D.amber : D.green;
+                  return (
+                    <div key={idx} style={{
+                      borderRadius: D.radiusSm,
+                      background: D.card,
+                      border: `1px solid rgba(${hexToRgb(accentColor)},0.15)`,
+                      overflow: "hidden",
+                    }}>
+                      {/* Row */}
+                      <button
+                        onClick={() => setExpandedFinding(isOpen ? null : idx)}
+                        style={{
+                          width: "100%", background: "none", border: "none", cursor: "pointer",
+                          padding: "14px 18px",
+                          display: "flex", alignItems: "center", gap: 12,
+                          textAlign: "left", fontFamily: "inherit",
+                        }}
+                      >
+                        <SevBadge sev={issue.severity} />
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: D.text }}>
+                          {issue.title}
+                        </span>
+                        <span style={{ fontSize: 11, color: D.textMuted,
+                          padding: "2px 8px", borderRadius: 4,
+                          background: `rgba(255,255,255,0.04)`, border: `1px solid ${D.border}`,
+                          textTransform: "uppercase", letterSpacing: "0.06em",
+                        }}>
+                          {issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "Speed" : "Technik"}
+                        </span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </button>
+
+                      {/* Expanded body */}
+                      {isOpen && (
+                        <div style={{
+                          padding: "0 18px 16px",
+                          borderTop: `1px solid ${D.divider}`,
+                        }}>
+                          <p style={{ margin: "12px 0 10px", fontSize: 13, color: D.textSub, lineHeight: 1.7 }}>
+                            {issue.body}
+                          </p>
+                          {/* AI hint box */}
+                          <div style={{
+                            padding: "10px 14px", borderRadius: D.radiusXs,
+                            background: "rgba(122,166,255,0.04)",
+                            border: "1px solid rgba(122,166,255,0.15)",
+                            marginBottom: 12,
+                          }}>
+                            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700,
+                              color: D.blueSoft, textTransform: "uppercase", letterSpacing: "0.08em",
+                            }}>
+                              KI-Diagnose
+                            </p>
+                            <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.6,
+                              fontFamily: "'SF Mono','Fira Code','Courier New',monospace",
+                            }}>
+                              {issue.body.slice(0, 120)}
+                              {issue.body.length > 120 && "…"}
+                            </p>
+                          </div>
+                          {/* Locked fix guide */}
+                          <div style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            padding: "10px 14px", borderRadius: D.radiusXs,
+                            background: "rgba(255,255,255,0.02)",
+                            border: `1px solid ${D.borderMid}`,
+                          }}>
+                            <LockIco size={14} color={D.textMuted} />
+                            <span style={{ flex: 1, fontSize: 12, color: D.textMuted }}>
+                              Vollständige Fix-Anleitung gesperrt
+                            </span>
+                            <Link href="/smart-guard" style={{
+                              fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
+                              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                              color: D.blueSoft, textDecoration: "none",
+                            }}>
+                              Freischalten
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Locked remaining */}
+                {issues.length > 5 && (
+                  <div style={{
+                    padding: "14px 18px",
+                    borderRadius: D.radiusSm,
+                    background: "rgba(255,255,255,0.015)",
+                    border: `1px solid ${D.border}`,
+                    display: "flex", alignItems: "center", gap: 10,
+                  }}>
+                    <LockIco size={14} />
+                    <span style={{ fontSize: 12, color: D.textMuted, flex: 1 }}>
+                      {issues.length - 5} weitere Befunde — nur mit Smart-Guard sichtbar
+                    </span>
+                    <Link href="/smart-guard" style={{
+                      fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 6,
+                      background: D.blue, color: "#fff", textDecoration: "none",
+                      boxShadow: D.blueGlow,
+                    }}>
+                      Alle anzeigen
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <Divider style={{ marginBottom: 28 }} />
+
+          {/* ⑦ LOCKED SMART-GUARD MODULES */}
+          <div style={{ marginBottom: 28 }}>
+            <SectionLabel>Smart-Guard — Premium</SectionLabel>
+            <SectionHead>Automatischer Schutz</SectionHead>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
-                { title: "Score-Verlauf", desc: "Entwicklung deines Website-Scores über Zeit" },
-                { title: "Live Monitoring", desc: "24/7 Überwachung mit sofortiger Alarmierung" },
-              ].map(block => (
-                <Card key={block.title} style={{ padding: "20px", position: "relative", overflow: "hidden" }}>
-                  {/* Blurred content behind */}
-                  <div style={{ filter: "blur(3px)", pointerEvents: "none", userSelect: "none", opacity: 0.4 }}>
-                    <div style={{ height: 8, borderRadius: 4, background: T.border, marginBottom: 10 }} />
-                    <div style={{ height: 8, borderRadius: 4, background: T.border, width: "70%", marginBottom: 10 }} />
-                    <div style={{ height: 60, borderRadius: 6, background: T.divider }} />
+                {
+                  title: "Score-Verlauf",
+                  desc: "7-Tage-Verlauf deines Website-Scores",
+                  icon: (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "24/7 Monitoring",
+                  desc: "Sofort-Alert bei Ausfall oder Änderungen",
+                  icon: (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "PDF-Bericht",
+                  desc: "Automatisch generierter Monatsbericht",
+                  icon: (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                  ),
+                },
+              ].map(module => (
+                <div key={module.title} style={{
+                  borderRadius: D.radius,
+                  background: D.card,
+                  border: `1px solid ${D.border}`,
+                  overflow: "hidden",
+                  position: "relative",
+                }}>
+                  {/* Blurred mock content */}
+                  <div style={{ padding: "20px", filter: "blur(3px)", pointerEvents: "none", userSelect: "none", opacity: 0.35 }}>
+                    <div style={{ height: 8, borderRadius: 4, background: D.borderStrong, marginBottom: 10, width: "75%" }} />
+                    <div style={{ height: 6, borderRadius: 3, background: D.border, marginBottom: 8, width: "55%" }} />
+                    <div style={{ height: 60, borderRadius: D.radiusXs, background: "rgba(255,255,255,0.03)", border: `1px solid ${D.border}` }} />
                   </div>
                   {/* Lock overlay */}
                   <div style={{
                     position: "absolute", inset: 0,
                     display: "flex", flexDirection: "column",
                     alignItems: "center", justifyContent: "center", gap: 8,
+                    padding: "16px",
                   }}>
                     <div style={{
-                      width: 36, height: 36, borderRadius: "50%",
-                      background: T.card, border: `1px solid ${T.border}`,
+                      width: 40, height: 40, borderRadius: "50%",
+                      background: D.blueBg,
+                      border: `1px solid ${D.blueBorder}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: T.shadow,
                     }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                      </svg>
+                      {module.icon}
                     </div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.text }}>{block.title}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 180 }}>{block.desc}</p>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: D.text, textAlign: "center" }}>
+                      {module.title}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, textAlign: "center", lineHeight: 1.5 }}>
+                      {module.desc}
+                    </p>
                     <Link href="/smart-guard" style={{
                       marginTop: 4,
-                      padding: "6px 14px", borderRadius: 7,
-                      background: T.blue, color: "#fff",
-                      fontSize: 12, fontWeight: 600,
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "6px 14px", borderRadius: D.radiusXs,
+                      background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                      color: D.blueSoft, fontSize: 11, fontWeight: 700,
                       textDecoration: "none",
                     }}>
+                      <LockIco size={11} color={D.blueSoft} />
                       Freischalten
                     </Link>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* ── SECTION 5: FIXES ───────────────────────────────────────────── */}
-          <div>
-            <SectionTitle>Sofort-Fixes</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          <Divider style={{ marginBottom: 28 }} />
+
+          {/* ⑧ DONE-FOR-YOU FIXES */}
+          <div style={{ marginBottom: 40 }}>
+            <SectionLabel color={D.blueSoft}>Professionelle Hilfe</SectionLabel>
+            <SectionHead>Done-for-you Fixes</SectionHead>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
-                { title: "Formular Fix",  desc: "Kontaktformular auf Datenschutz & Barrierefreiheit prüfen" },
-                { title: "Speed Fix",     desc: "Bilder komprimieren, Caching aktivieren, JS minimieren" },
-                { title: "Mobile Fix",    desc: "Viewport, Touch-Targets und responsive Layouts prüfen" },
+                {
+                  step: "01",
+                  color: "#7aa6ff",
+                  title: "Formular-Fix",
+                  desc: "Datenschutzkonformes Kontaktformular, DSGVO-Einwilligung und BFSG-Barrierefreiheit — sofort erledigt.",
+                  pills: ["DSGVO", "BFSG", "WCAG 2.2"],
+                },
+                {
+                  step: "02",
+                  color: "#8df3d3",
+                  title: "Speed-Optimierung",
+                  desc: "Bildkomprimierung, Lazy Loading, Caching und JS-Minimierung — messbar schneller in 24h.",
+                  pills: ["LCP < 2.5s", "Core Web Vitals", "PageSpeed"],
+                },
+                {
+                  step: "03",
+                  color: "#c084fc",
+                  title: "Mobile-Fix",
+                  desc: "Viewport, Touch-Targets und responsive Layout korrekt einrichten — auf allen Geräten perfekt.",
+                  pills: ["Viewport", "Touch-Targets", "Responsive"],
+                },
               ].map(fix => (
-                <Card key={fix.title} style={{ padding: "18px 20px" }}>
-                  <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: T.text }}>{fix.title}</p>
-                  <p style={{ margin: "0 0 14px", fontSize: 12, color: T.sub, lineHeight: 1.5 }}>{fix.desc}</p>
-                  <Link href="/smart-guard" style={{
-                    display: "inline-block",
-                    padding: "7px 14px", borderRadius: 7,
-                    background: T.blueBg, color: T.blue,
-                    border: `1px solid ${T.blueBorder}`,
-                    fontSize: 12, fontWeight: 600,
-                    textDecoration: "none",
+                <div key={fix.title} style={{
+                  padding: "24px 22px",
+                  borderRadius: D.radius,
+                  background: `rgba(${hexToRgb(fix.color)},0.04)`,
+                  border: `1px solid rgba(${hexToRgb(fix.color)},0.18)`,
+                  position: "relative", overflow: "hidden",
+                }}>
+                  {/* Background step number */}
+                  <div style={{
+                    position: "absolute", right: 16, top: 10,
+                    fontSize: 52, fontWeight: 900,
+                    color: `rgba(${hexToRgb(fix.color)},0.06)`,
+                    lineHeight: 1, userSelect: "none", pointerEvents: "none",
+                    letterSpacing: "-0.04em",
                   }}>
-                    Jetzt beheben
+                    {fix.step}
+                  </div>
+                  <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700,
+                    color: fix.color, textTransform: "uppercase", letterSpacing: "0.1em",
+                  }}>
+                    Done-for-you
+                  </p>
+                  <h3 style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: D.text, letterSpacing: "-0.01em" }}>
+                    {fix.title}
+                  </h3>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: D.textSub, lineHeight: 1.7 }}>
+                    {fix.desc}
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 18 }}>
+                    {fix.pills.map(p => (
+                      <span key={p} style={{
+                        fontSize: 10, fontWeight: 600,
+                        padding: "2px 8px", borderRadius: 16,
+                        background: `rgba(${hexToRgb(fix.color)},0.1)`,
+                        border: `1px solid rgba(${hexToRgb(fix.color)},0.22)`,
+                        color: fix.color,
+                      }}>
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                  <Link href="/smart-guard" style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "8px 16px", borderRadius: D.radiusSm,
+                    background: D.blue, color: "#fff",
+                    fontSize: 12, fontWeight: 700, textDecoration: "none",
+                    boxShadow: D.blueGlow,
+                  }}>
+                    Jetzt beheben →
                   </Link>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
 
-        </div>
+          {/* ⑨ UPGRADE CTA */}
+          <div style={{
+            padding: "40px 40px",
+            borderRadius: D.radius,
+            background: "rgba(0,123,255,0.06)",
+            border: "1px solid rgba(0,123,255,0.2)",
+            textAlign: "center",
+          }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 18,
+              padding: "4px 14px", borderRadius: 20,
+              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+              fontSize: 11, fontWeight: 700, color: D.blueSoft, letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}>
+              Smart-Guard
+            </div>
+            <h2 style={{ margin: "0 0 12px", fontSize: 26, fontWeight: 800, color: D.text, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
+              Automatischer Schutz für deine Website.
+            </h2>
+            <p style={{ margin: "0 auto 28px", fontSize: 15, color: D.textSub, maxWidth: 500, lineHeight: 1.75 }}>
+              24/7 Monitoring, Score-Verlauf, PDF-Berichte und unbegrenzte Scans — für 39 €/Monat.
+              Jederzeit kündbar.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/smart-guard" style={{
+                padding: "13px 32px", borderRadius: D.radiusSm,
+                background: D.blue, color: "#fff",
+                fontSize: 14, fontWeight: 700, textDecoration: "none",
+                boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
+              }}>
+                Smart-Guard aktivieren →
+              </Link>
+              <Link href="/smart-guard" style={{
+                padding: "13px 24px", borderRadius: D.radiusSm,
+                border: `1px solid ${D.borderStrong}`,
+                color: D.textSub, fontSize: 14, textDecoration: "none",
+              }}>
+                Mehr erfahren
+              </Link>
+            </div>
+            <p style={{ marginTop: 16, fontSize: 12, color: D.textFaint }}>
+              Keine Installation · Ergebnis sofort · Jederzeit kündbar
+            </p>
+          </div>
+
+        </main>
       </div>
     </div>
   );
-}
-
-// ─── Nav icon helper ───────────────────────────────────────────────────────────
-function NavIcon({ name, active }: { name: string; active: boolean }) {
-  const color = active ? "#FFFFFF" : "#6B7280";
-  const w = 16;
-  switch (name) {
-    case "Dashboard":
-      return (
-        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-        </svg>
-      );
-    case "Live Scan":
-      return (
-        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      );
-    case "Monitoring":
-      return (
-        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-      );
-    case "Reports":
-      return (
-        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          <polyline points="10 9 9 9 8 9"/>
-        </svg>
-      );
-    default:
-      return null;
-  }
 }
