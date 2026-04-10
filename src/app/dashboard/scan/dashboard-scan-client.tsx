@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import BrandLogo from "@/app/components/BrandLogo";
 import DiagnoseReport from "./diagnose-report";
 
 // ─── Dark glassmorphism tokens — matches free-dashboard-client ────────────────
@@ -335,7 +336,15 @@ function formatCacheAge(cachedAt: string): string {
   return "gerade eben";
 }
 
-export default function DashboardScanClient({ userName, plan }: { userName: string; plan: string }) {
+export default function DashboardScanClient({
+  userName,
+  plan,
+  projectUrl = null,
+}: {
+  userName: string;
+  plan: string;
+  projectUrl?: string | null;
+}) {
   const [tab, setTab] = useState<TabType>("website");
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ScanState>("idle");
@@ -355,6 +364,12 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
 
   const [urlFocused, setUrlFocused] = useState(false);
   const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
+
+  // Pre-fill the URL field with the active project URL on mount
+  useEffect(() => {
+    if (projectUrl && !url) setUrl(projectUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectUrl]);
 
   function resetState() {
     setState("idle"); setDiagnose(""); setError("");
@@ -501,20 +516,110 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
     }
   }
 
+  // Derived values
+  const projectDomain = projectUrl
+    ? projectUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")
+    : null;
+  const buttonLabel = state === "scanning"
+    ? "Scannt..."
+    : projectUrl && url === projectUrl
+      ? "Audit aktualisieren"
+      : "Live-Check starten";
+
+  const SIDEBAR_W = 200;
+
   return (
-    <main style={{ maxWidth: 1040, margin: "0 auto", padding: "36px 24px 80px" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0b0c10", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`@keyframes wf-spin{to{transform:rotate(360deg)}} @keyframes wf-dot-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+
+      {/* ── SIDEBAR ─────────────────────────────────────────── */}
+      <aside style={{
+        width: SIDEBAR_W, flexShrink: 0,
+        position: "fixed", top: 0, left: 0, bottom: 0,
+        background: "#0A192F",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+        display: "flex", flexDirection: "column",
+        zIndex: 50,
+      }}>
+        <div style={{ padding: "18px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <BrandLogo href="/dashboard" />
+        </div>
+        <nav style={{ padding: "10px 8px", flex: 1 }}>
+          {[
+            { label: "Dashboard",  href: "/dashboard",       active: false, icon: "dashboard" },
+            { label: "Live Scan",  href: "/dashboard/scan",  active: true,  icon: "scan"      },
+            { label: "Berichte",   href: "/dashboard/scans", active: false, icon: "reports"   },
+          ].map(item => (
+            <Link key={item.href} href={item.href} style={{
+              display: "flex", alignItems: "center", gap: 9,
+              padding: "8px 10px", borderRadius: 7, marginBottom: 2,
+              textDecoration: "none", fontSize: 13,
+              fontWeight: item.active ? 600 : 400,
+              color: item.active ? "#fff" : "rgba(255,255,255,0.38)",
+              background: item.active ? "rgba(0,123,255,0.08)" : "transparent",
+              borderLeft: item.active ? "2px solid #007BFF" : "2px solid transparent",
+            }}>
+              {item.icon === "dashboard" && (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={item.active ? "#7aa6ff" : "rgba(255,255,255,0.3)"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              )}
+              {item.icon === "scan" && (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={item.active ? "#7aa6ff" : "rgba(255,255,255,0.3)"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              )}
+              {item.icon === "reports" && (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={item.active ? "#7aa6ff" : "rgba(255,255,255,0.3)"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              )}
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        {/* Upgrade nudge at bottom */}
+        <div style={{ padding: "12px 12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <Link href="/smart-guard" style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "8px 14px", borderRadius: 7,
+            background: "rgba(0,123,255,0.1)", border: "1px solid rgba(0,123,255,0.25)",
+            color: "#7aa6ff", fontSize: 12, fontWeight: 700, textDecoration: "none",
+          }}>
+            Upgrade →
+          </Link>
+        </div>
+      </aside>
+
+      {/* ── MAIN CONTENT ────────────────────────────────────── */}
+      <main style={{ marginLeft: SIDEBAR_W, flex: 1, minWidth: 0, maxWidth: "none" }}>
+      <div style={{ maxWidth: 1040, margin: "0 auto", padding: "36px 24px 80px" }}>
 
       {/* ── PAGE HEADER ─────────────────────────────────────── */}
       <div style={{ marginBottom: 32 }}>
-        <p style={{ margin: "0 0 4px", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
-          {userName ? `${userName} — ` : ""}Scan
-        </p>
-        <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", color: C.text, letterSpacing: "-0.03em" }}>
-          Website scannen
-        </h1>
+        {projectDomain ? (
+          <>
+            <p style={{ margin: "0 0 4px", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+              Projekt-Analyse
+            </p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", color: C.text, letterSpacing: "-0.03em" }}>
+              {projectDomain}
+            </h1>
+          </>
+        ) : (
+          <>
+            <p style={{ margin: "0 0 4px", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+              {userName ? `${userName} — ` : ""}Scan
+            </p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", color: C.text, letterSpacing: "-0.03em" }}>
+              Website scannen
+            </h1>
+          </>
+        )}
         <p style={{ margin: 0, fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
-          Wähle einen Scan-Modus und analysiere deine Ziel-URL in Echtzeit.
+          {projectDomain
+            ? `Wähle einen Scan-Modus für dein aktives Projekt.`
+            : "Wähle einen Scan-Modus und analysiere deine Ziel-URL in Echtzeit."}
         </p>
       </div>
 
@@ -623,7 +728,7 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
             transition: "background 0.15s, box-shadow 0.15s",
             fontFamily: "inherit",
           }}>
-            {state === "scanning" ? "Scannt..." : "Scan starten"}
+            {buttonLabel}
           </button>
         </form>
 
@@ -931,6 +1036,8 @@ export default function DashboardScanClient({ userName, plan }: { userName: stri
           )}
         </div>
       )}
-    </main>
+      </div>{/* inner padding wrapper */}
+      </main>
+    </div>
   );
 }

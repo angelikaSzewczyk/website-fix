@@ -1299,7 +1299,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <SectionLabel color={D.blueSoft}>Optionaler Service</SectionLabel>
             <SectionHead>Lieber delegieren? Wir unterstützen gezielt.</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 620 }}>
-              Komplexe Optimierung lieber direkt an Profis abgeben? Wir setzen um, was wir im Audit gefunden haben — technisch sauber, dokumentiert und ohne Risiko für deine bestehende Website.
+              Du möchtest die Umsetzung lieber direkt an Profis abgeben? Wir setzen die gefundenen Optimierungen für dich um — technisch sauber, dokumentiert und ohne Risiko für deine bestehende Website.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
               {([
