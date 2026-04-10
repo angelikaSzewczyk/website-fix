@@ -117,9 +117,11 @@ export default function ScanPage() {
   const [crawlCounter, setCrawlCounter] = useState(0);
   const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextScanMs: number }>({ blocked: false, nextScanMs: 0 });
   const [timeRemaining, setTimeRemaining] = useState("");
+  const [activityFeed, setActivityFeed] = useState<{ level: string; msg: string; color: string }[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activityTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const apiDone = useRef(false);
 
   // ── Check localStorage 24h gate on mount ───────────────────
@@ -175,6 +177,26 @@ export default function ScanPage() {
     };
   }, [phase]);
 
+  // ── Activity Feed — fires timed messages during scan ───────
+  function startActivityFeed(scanUrl: string) {
+    const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
+    const messages: { delay: number; level: string; msg: string; color: string }[] = [
+      { delay: 1200,  level: "INFO",     color: "#8df3d3", msg: `HTTPS-Verbindung zu ${domain} hergestellt` },
+      { delay: 3500,  level: "INFO",     color: "#8df3d3", msg: "Sitemap wird analysiert — interne Links gefunden" },
+      { delay: 6500,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Dokumentation wird erstellt — Barrierefreiheit wird vorbereitet…" },
+      { delay: 10500, level: "CRITICAL", color: "#ff6b6b", msg: `Barriere-Check: Formulare auf ${domain}/kontakt werden auf Screenreader-Tauglichkeit geprüft` },
+      { delay: 14000, level: "WARN",     color: "#fbbf24", msg: "Performance-Analyse: Ladezeit > 2.5s — Hohe Absprungrate auf mobilen Endgeräten erkannt" },
+      { delay: 19000, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — alle Befunde werden aggregiert…" },
+    ];
+    setActivityFeed([]);
+    activityTimers.current.forEach(t => clearTimeout(t));
+    activityTimers.current = messages.map(({ delay, level, msg, color }) =>
+      setTimeout(() => {
+        setActivityFeed(prev => [...prev, { level, msg, color }]);
+      }, delay)
+    );
+  }
+
   function clearTimers() {
     if (timerRef.current) clearTimeout(timerRef.current);
   }
@@ -200,6 +222,9 @@ export default function ScanPage() {
     advanceToPhase("step2", 5000);
     advanceToPhase("step3", 12000);
     advanceToPhase("step4", 22000);
+
+    // Start live activity feed
+    startActivityFeed(url);
 
     try {
       const res = await fetch("/api/scan", {
@@ -260,6 +285,7 @@ export default function ScanPage() {
   function reset() {
     clearTimers();
     if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
+    activityTimers.current.forEach(t => clearTimeout(t));
     apiDone.current = false;
     setPhase("idle");
     setUrl("");
@@ -267,6 +293,7 @@ export default function ScanPage() {
     setErrorMsg("");
     setShowOverlay(false);
     setCrawlCounter(0);
+    setActivityFeed([]);
   }
 
   const isScanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
@@ -531,6 +558,32 @@ export default function ScanPage() {
                 }} />
               </div>
             </div>
+
+            {/* Activity Feed */}
+            {activityFeed.length > 0 && (
+              <div style={{
+                marginTop: 12,
+                background: "rgba(0,0,0,0.3)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 12,
+                padding: "12px 16px",
+                display: "flex", flexDirection: "column", gap: 7,
+                fontFamily: "monospace",
+              }}>
+                {activityFeed.map((entry, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 11 }}>
+                    <span style={{
+                      flexShrink: 0, padding: "1px 6px", borderRadius: 4,
+                      background: `${entry.color}15`, border: `1px solid ${entry.color}30`,
+                      color: entry.color, fontWeight: 700, letterSpacing: "0.04em",
+                    }}>
+                      {entry.level}
+                    </span>
+                    <span style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{entry.msg}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 

@@ -494,6 +494,84 @@ function ResultsInner() {
           </section>
         )}
 
+        {/* ── DRINGLICHKEITS-AMPEL ── */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 0" }}>
+          <div style={{ marginBottom: 14 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° Business Health Check</p>
+            <h2 style={{ margin: 0, fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>Dringlichkeits-Ampel</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            {/* Red */}
+            <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🔴</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>Kritisch — sofort handeln</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {[
+                  !scan?.https                             && "Kein HTTPS — Sicherheitsrisiko & SEO-Verlust",
+                  scan?.robotsBlocked                      && "robots.txt blockiert Suchmaschinen komplett",
+                  scan?.noIndex                            && "Startseite von Google ausgesperrt (noindex)",
+                  (scan?.brokenLinksCount ?? 0) > 0        && `${scan!.brokenLinksCount} kaputte Links — Nutzer landen ins Leere`,
+                  !scan?.hasTitle                          && "Kein Seitentitel — unsichtbar für Google",
+                  scan?.hasUnreachable                     && "Unterseiten nicht erreichbar — Umsatzverlust",
+                  isDemo                                   && "BFSG-Verstoß: Formularfelder ohne Label",
+                  isDemo                                   && "Broken Links auf 3 Unterseiten",
+                ].filter(Boolean).map((msg, i) => (
+                  <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
+                    <span style={{ color: "#ef4444", flexShrink: 0 }}>✕</span>{msg as string}
+                  </div>
+                ))}
+                {!isDemo && !scan?.robotsBlocked && scan?.https && !scan?.noIndex && (scan?.brokenLinksCount ?? 0) === 0 && scan?.hasTitle && !scan?.hasUnreachable && (
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine kritischen Fehler gefunden ✓</div>
+                )}
+              </div>
+            </div>
+            {/* Yellow */}
+            <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🟡</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Optimierung — binnen 30 Tagen</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {[
+                  !scan?.hasMeta                           && "Fehlende Meta-Description — schlechte CTR in Google",
+                  !scan?.hasH1                             && "Kein H1-Tag — schwaches SEO-Signal",
+                  !scan?.hasSitemap                        && "Keine Sitemap — erschwert Indexierung",
+                  (scan?.altMissingCount ?? 0) > 0         && `${scan!.altMissingCount} Bilder ohne Alt-Text — BFSG-Pflicht & SEO`,
+                  (scan?.duplicateTitlesCount ?? 0) > 1    && "Doppelte Seitentitel — Keyword-Kannibalisierung",
+                  isDemo                                   && "Ladezeit > 2.5s — erhöhte Absprungrate",
+                  isDemo                                   && "9 Seiten ohne Meta-Description",
+                ].filter(Boolean).map((msg, i) => (
+                  <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
+                    <span style={{ color: "#fbbf24", flexShrink: 0 }}>⚠</span>{msg as string}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Green */}
+            <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🟢</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>Gut — bereits erfüllt</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {[
+                  (scan?.https ?? isDemo)                  && "HTTPS aktiv — sichere Verbindung",
+                  (scan?.hasTitle ?? isDemo)               && "Seitentitel vorhanden",
+                  (scan?.hasSitemap ?? isDemo)             && "Sitemap gefunden",
+                  (scan?.hasMeta ?? isDemo)                && "Meta-Description gesetzt",
+                  isDemo                                   && "Startseite erreichbar",
+                ].filter(Boolean).map((msg, i) => (
+                  <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
+                    <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span>{msg as string}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── SECTION 3: AI EXPERT FIX ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "56px 24px 0" }}>
           <div style={{ marginBottom: 20 }}>
@@ -564,12 +642,12 @@ function ResultsInner() {
               </div>
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.7) 30%, rgba(11,12,16,0.97) 75%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 8px" }}>
                 <div style={{ textAlign: "center", background: "rgba(11,12,16,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "28px 36px", maxWidth: 520, width: "100%", backdropFilter: "blur(8px)" }}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.025em" }}>{lockedCount} weitere Fixes gesperrt</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.025em" }}>{lockedCount} Befunde & Fix-Anleitungen gesperrt</div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: 20 }}>
-                    Melde dich kostenlos an, um alle KI-Fixes<br />für <strong style={{ color: "#fff" }}>{pagesTotal} Unterseiten</strong> zu sehen.
+                    Schalte alle KI-generierten Code-Fixes<br />für <strong style={{ color: "#fff" }}>{pagesTotal} Unterseiten</strong> frei — inkl. BFSG-Dokumentation.
                   </div>
                   <Link href="/register" style={{ display: "inline-block", padding: "12px 28px", borderRadius: 10, background: "linear-gradient(90deg, #007BFF, #0057b8)", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none", boxShadow: "0 4px 20px rgba(0,123,255,0.45)" }}>
-                    Kostenlos registrieren → alle Fixes sehen
+                    Vollständigen Fehler-Report &amp; Fix-Anleitungen freischalten →
                   </Link>
                   <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Keine Kreditkarte · Sofortzugang</div>
                 </div>

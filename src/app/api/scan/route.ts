@@ -149,6 +149,31 @@ function countMissingAlt(html: string): { missing: number; total: number } {
   return { missing, total: imgs.length };
 }
 
+// ── Form Accessibility Check ────────────────────────────────
+function checkFormAccessibility(html: string): { formsCount: number; inputsWithoutLabel: number; buttonsWithoutText: number } {
+  const formsCount = (html.match(/<form[^>]*>/gi) ?? []).length;
+  // Inputs of interactive types that need a label
+  const inputs = html.match(/<input[^>]*type=["']?(?:text|email|tel|number|search|password|url)[^>]*>/gi) ?? [];
+  const inputsWithoutLabel = inputs.filter(tag => {
+    if (/aria-label=["'][^"']+["']/i.test(tag)) return false;
+    if (/aria-labelledby=["'][^"']+["']/i.test(tag)) return false;
+    const idMatch = tag.match(/\sid=["']([^"']+)["']/i);
+    if (idMatch) {
+      const id = idMatch[1];
+      if (html.includes(`for="${id}"`) || html.includes(`for='${id}'`)) return false;
+    }
+    return true;
+  }).length;
+  // Buttons without visible text or aria-label
+  const buttons = html.match(/<button[^>]*>[\s\S]*?<\/button>/gi) ?? [];
+  const buttonsWithoutText = buttons.filter(btn => {
+    if (/aria-label=["'][^"']+["']/i.test(btn)) return false;
+    const inner = btn.replace(/<[^>]+>/g, "").trim();
+    return inner.length === 0;
+  }).length;
+  return { formsCount, inputsWithoutLabel, buttonsWithoutText };
+}
+
 // ── Subpage Scan ────────────────────────────────────────────
 type PageResult = {
   url: string;
@@ -300,6 +325,8 @@ export async function POST(req: NextRequest) {
     scanData.canonical = canonicalMatch ? canonicalMatch[1] : "";
     scanData.istWordpress = mainHtml.includes("/wp-content/") || mainHtml.includes("/wp-includes/");
     scanData.formularVorhanden = mainHtml.includes("<form");
+    const formCheck = checkFormAccessibility(mainHtml);
+    scanData.formCheck = formCheck;
     const mainAlt = countMissingAlt(mainHtml);
     scanData.startseite_altMissing = mainAlt.missing;
     scanData.startseite_altTotal = mainAlt.total;
@@ -416,24 +443,32 @@ export async function POST(req: NextRequest) {
     // compact issue format. Target: ~900 input tokens instead of ~1800.
     const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
 
-    const prompt = `Website-Audit: ${host0} | ${audit.gescannteSeiten} Seiten gescannt
+    const fc = scanData.formCheck as { formsCount: number; inputsWithoutLabel: number; buttonsWithoutText: number } | undefined;
 
-STARTSEITE: title="${scanData.title || "fehlt"}" | meta="${scanData.metaDescription ? "ok" : "fehlt"}" | h1="${scanData.h1 ? "ok" : "fehlt"}" | https=${scanData.https} | noindex=${scanData.indexierungGesperrt} | sitemap=${scanData.sitemapVorhanden} | robots-block=${scanData.robotsBlockiertAlles}${scanData.wordpressFehler ? " | WP-FEHLER!" : ""}
+    const prompt = `360° Business Health Check: ${host0} | ${audit.gescannteSeiten} Seiten gescannt
+
+TECHNISCH: title="${scanData.title || "fehlt"}" | meta="${scanData.metaDescription ? "ok" : "fehlt"}" | h1="${scanData.h1 ? "ok" : "fehlt"}" | https=${scanData.https} | noindex=${scanData.indexierungGesperrt} | sitemap=${scanData.sitemapVorhanden} | robots-block=${scanData.robotsBlockiertAlles}${scanData.wordpressFehler ? " | WP-FEHLER!" : ""}
+
+BFSG / BARRIEREFREIHEIT: Formulare=${fc?.formsCount ?? 0} | Eingaben ohne Label=${fc?.inputsWithoutLabel ?? 0} | Buttons ohne Text=${fc?.buttonsWithoutText ?? 0} | Alt-Texte fehlend=${totalAltMissing}/${totalImages}
 
 UNTERSEITEN:
 ${unterseiten.map((p) => `${toPath(p.url)}: ${p.erreichbar ? "ok" : "DOWN"} | title=${p.title ? "ok" : "fehlt"} | h1=${p.h1 ? "ok" : "fehlt"} | noindex=${p.noindex} | alt-missing=${p.altMissing}`).join("\n") || "(keine)"}
 
-PROBLEME:
-- Doppelte Titles: ${duplicateTitles.length} (${duplicateTitles.slice(0,2).map(d => `"${d.title.slice(0,40)}" x${d.seiten.length}`).join("; ") || "keine"})
+BEFUNDE:
+- Doppelte Titles: ${duplicateTitles.length}
 - Doppelte Metas: ${duplicateMetas.length}
-- Alt-Texte fehlend: ${totalAltMissing}/${totalImages} Bilder
 - Broken Links: ${brokenLinks.length} (${brokenLinks.slice(0,3).map(b => `${toPath(b.url)} ${b.status}`).join(", ") || "keine"})
 - Verwaiste Seiten: ${orphanedPages.length}
 
-Erstelle Diagnose auf Deutsch:
-## Zusammenfassung (2-3 Sätze)
+Erstelle einen 360° Business Health Check Bericht auf Deutsch. Fokus: Umsatzverluste, Rechtspflichten, Nutzererlebnis.
+
+## Zusammenfassung (2-3 Sätze — konkrete Business-Auswirkung)
 ## Befunde (schwerwiegendste zuerst)
-**[🔴 KRITISCH / 🟡 WICHTIG / 🟢 OK]** Titel — Erklärung (max 2 Sätze, ohne Fachjargon)
+**[🔴 KRITISCH / 🟡 WICHTIG / 🟢 OK]** Titel — Erklärung mit Business-Bezug (max 2 Sätze, kein Fachjargon)${fc && fc.inputsWithoutLabel > 0 ? `\nHINWEIS: ${fc.inputsWithoutLabel} Formularfeld(er) ohne Label gefunden — als KRITISCH BFSG-Befund ausgeben.` : ""}
+## 🚦 Dringlichkeits-Ampel
+🔴 Kritisch (sofort handeln): Liste der kritischen Punkte
+🟡 Optimierung (binnen 30 Tagen): Liste der wichtigen Punkte
+🟢 Gut (bereits erfüllt): Was bereits funktioniert
 ## Top 3 nächste Schritte`;
 
     // ── 10. CLAUDE DIAGNOSE — with exponential backoff ─────
