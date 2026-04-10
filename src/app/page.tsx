@@ -232,6 +232,19 @@ const FAQ = [
 export default function Page() {
   return (
     <>
+      {/* MAINTENANCE BANNER */}
+      <div style={{
+        background: "linear-gradient(90deg, #f59e0b, #f97316)",
+        color: "#000",
+        textAlign: "center",
+        padding: "10px 24px",
+        fontSize: 14,
+        fontWeight: 600,
+        letterSpacing: "0.01em",
+      }}>
+        🚧 Diese Seite befindet sich im Aufbau — Tests laufen morgen. Danke für deine Geduld!
+      </div>
+
       {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
