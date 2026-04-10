@@ -18,33 +18,33 @@ import {
   CalendarDays, FileText, Lightbulb,
 } from "lucide-react";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+// ── Design tokens — dark glassmorphism ────────────────────────────────────────
 const C = {
-  bg:          "#F8FAFC",
-  card:        "#FFFFFF",
-  border:      "#E5E7EB",
-  divider:     "#F3F4F6",
-  shadow:      "0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)",
-  shadowMd:    "0 2px 12px rgba(0,0,0,0.08)",
-  text:        "#0D1321",   // very dark navy
-  textSub:     "#374151",
-  textMuted:   "#6B7280",
-  blue:        "#2563EB",
-  blueBg:      "#EFF6FF",
-  blueBorder:  "#BFDBFE",
-  blueDark:    "#1D4ED8",
-  green:       "#15803D",
-  greenBg:     "#F0FDF4",
-  greenBorder: "#BBF7D0",
-  greenLight:  "#DCFCE7",
-  amber:       "#B45309",
-  amberBg:     "#FFFBEB",
-  amberBorder: "#FDE68A",
-  amberLight:  "#FEF3C7",
-  red:         "#B91C1C",
-  redBg:       "#FEF2F2",
-  redBorder:   "#FECACA",
-  redLight:    "#FFE4E6",
+  bg:          "#0D1117",
+  card:        "rgba(255,255,255,0.04)",
+  border:      "rgba(255,255,255,0.09)",
+  divider:     "rgba(255,255,255,0.05)",
+  shadow:      "0 1px 12px rgba(0,0,0,0.5)",
+  shadowMd:    "0 4px 24px rgba(0,0,0,0.55)",
+  text:        "rgba(255,255,255,0.92)",
+  textSub:     "rgba(255,255,255,0.62)",
+  textMuted:   "rgba(255,255,255,0.35)",
+  blue:        "#7aa6ff",
+  blueBg:      "rgba(37,99,235,0.12)",
+  blueBorder:  "rgba(37,99,235,0.3)",
+  blueDark:    "#2563EB",
+  green:       "#4ade80",
+  greenBg:     "rgba(74,222,128,0.08)",
+  greenBorder: "rgba(74,222,128,0.25)",
+  greenLight:  "rgba(74,222,128,0.05)",
+  amber:       "#fbbf24",
+  amberBg:     "rgba(251,191,36,0.08)",
+  amberBorder: "rgba(251,191,36,0.25)",
+  amberLight:  "rgba(251,191,36,0.05)",
+  red:         "#f87171",
+  redBg:       "rgba(248,113,113,0.08)",
+  redBorder:   "rgba(248,113,113,0.25)",
+  redLight:    "rgba(248,113,113,0.05)",
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -188,9 +188,25 @@ function calcScore(issues: ParsedIssue[]): number {
 }
 
 function scoreColor(score: number) {
-  if (score >= 80) return { color: C.green,  ring: "#15803D", bg: C.greenBg,  border: C.greenBorder, label: "Gut aufgestellt",        hint: "Deine Website erfüllt die meisten Standards." };
-  if (score >= 60) return { color: C.amber,  ring: "#B45309", bg: C.amberBg,  border: C.amberBorder, label: "Verbesserungspotenzial", hint: "Es gibt wichtige Punkte, die optimiert werden sollten." };
-  return             { color: C.red,    ring: "#B91C1C", bg: C.redBg,    border: C.redBorder,   label: "Dringender Handlungsbedarf", hint: "Kritische Probleme beeinträchtigen deine Website erheblich." };
+  if (score >= 80) return { color: C.green,  ring: "#4ade80", bg: C.greenBg,  border: C.greenBorder, label: "Gut aufgestellt",        hint: "Deine Website erfüllt die meisten Standards." };
+  if (score >= 60) return { color: C.amber,  ring: "#fbbf24", bg: C.amberBg,  border: C.amberBorder, label: "Verbesserungspotenzial", hint: "Es gibt wichtige Punkte, die optimiert werden sollten." };
+  return             { color: C.red,    ring: "#f87171", bg: C.redBg,    border: C.redBorder,   label: "Dringender Handlungsbedarf", hint: "Kritische Probleme beeinträchtigen deine Website erheblich." };
+}
+
+// ── CMS / Framework detection ─────────────────────────────────────────────────
+function detectCMS(diagnose: string, url?: string): { label: string; version?: string } {
+  const t = (diagnose + " " + (url ?? "")).toLowerCase();
+  if (/wp-content|wp-admin|wp-json|wordpress/.test(t)) return { label: "WordPress", version: "6.x" };
+  if (/shopify/.test(t))                                return { label: "Shopify" };
+  if (/next\.js|nextjs|\/_next\//.test(t))              return { label: "Next.js" };
+  if (/react/.test(t))                                  return { label: "React" };
+  if (/webflow/.test(t))                                return { label: "Webflow" };
+  if (/wix\.com|wixsite/.test(t))                       return { label: "Wix" };
+  if (/squarespace/.test(t))                            return { label: "Squarespace" };
+  if (/typo3/.test(t))                                  return { label: "TYPO3" };
+  if (/joomla/.test(t))                                 return { label: "Joomla" };
+  if (/drupal/.test(t))                                 return { label: "Drupal" };
+  return { label: "Custom" };
 }
 
 // ── Score Ring SVG (standalone, no wrapper card) ──────────────────────────────
@@ -355,7 +371,7 @@ function IssueCard({ issue }: { issue: ParsedIssue }) {
           {issue.description && (
             <div style={{
               padding: "14px 18px",
-              background: "#F8FAFC",
+              background: "rgba(255,255,255,0.03)",
               borderRight: issue.impact ? `1px solid ${C.border}` : "none",
             }}>
               <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>
@@ -441,7 +457,7 @@ function TableSection({ rows, heading }: { rows: TableRow[]; heading: string }) 
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "12px 20px",
             borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : "none",
-            background: i % 2 === 0 ? C.card : "#FAFAFA",
+            background: i % 2 === 0 ? C.card : "rgba(255,255,255,0.02)",
           }}>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{row.label}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -504,6 +520,8 @@ export default function DiagnoseReport({
   scannedAt?:  string | null;
 }) {
   const sections   = parseReport(diagnose);
+  const cms        = detectCMS(diagnose, url);
+  const isWordPress = cms.label === "WordPress";
   const allIssues  = sections.flatMap(s => s.issues);
   const score      = calcScore(allIssues);
   const critCount  = allIssues.filter(i => i.severity === "critical").length;
@@ -527,7 +545,15 @@ export default function DiagnoseReport({
   );
 
   return (
-    <div id="wf-print-root" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div id="wf-print-root" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: C.bg, borderRadius: 16, padding: "20px 0" }}>
+      <style>{`
+        @media print {
+          #wf-print-root { background: #fff !important; padding: 0 !important; }
+          #wf-print-root .problem-card,
+          #wf-print-root .wf-score-hero { background: #fff !important; border-color: #e5e7eb !important; box-shadow: none !important; }
+          #wf-print-root * { color: #0D1321 !important; }
+        }
+      `}</style>
       {/* Print-only header */}
       <div className="wf-print-header" style={{ display: "none", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 14, borderBottom: `2px solid ${C.border}` }}>
@@ -579,7 +605,7 @@ export default function DiagnoseReport({
             Erkanntes System:
           </span>
           <span style={{ fontSize: 13, color: C.textSub, fontWeight: 500 }}>
-            WordPress 7.0 (Alpha)
+            {cms.label}{cms.version ? ` ${cms.version}` : ""}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -593,7 +619,7 @@ export default function DiagnoseReport({
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
               <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
-            2026 BFSG-Compliant
+            {isWordPress ? "WordPress 6.x BFSG-Ready" : "BFSG-Audit verfügbar"}
           </span>
         </div>
       </div>

@@ -284,17 +284,13 @@ function IssueCard({ issue }: { issue: IssueBlock }) {
       <div style={{ height: 4, background: `linear-gradient(90deg, ${stripeColor}, ${stripeColor}66)` }} />
 
       <div style={{ padding: "20px 24px" }}>
-        {/* Clickable header — toggles accordion */}
-        <button
-          onClick={() => setOpen(o => !o)}
-          style={{
-            width: "100%", background: "none", border: "none", cursor: "pointer",
-            display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-            gap: 12, padding: 0, textAlign: "left",
-          }}
-        >
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        {/* Header row: badge + title LEFT — quick actions + chevron RIGHT */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <button
+            onClick={() => setOpen(o => !o)}
+            style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
               <span style={{
                 fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
                 background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`,
@@ -303,33 +299,39 @@ function IssueCard({ issue }: { issue: IssueBlock }) {
                 {issue.emoji} {priorityLabel}
               </span>
             </div>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>
               {issue.title}
             </h3>
-          </div>
-          {/* Chevron */}
-          <div style={{
-            width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0, color: C.textMuted, marginTop: 2,
-            transform: open ? "rotate(180deg)" : "none",
-            transition: "transform 0.2s ease",
-          }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-        </button>
+          </button>
 
-        {/* Quick actions — always visible */}
-        <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-          <QuickSlackButton title={issue.title} />
-          <QuickJiraButton title={issue.title} />
+          {/* Right: quick actions + chevron */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, paddingTop: 2 }}>
+            <QuickSlackButton title={issue.title} />
+            <QuickJiraButton title={issue.title} />
+            <div
+              onClick={() => setOpen(o => !o)}
+              style={{
+                width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: C.textMuted, flexShrink: 0,
+                transform: open ? "rotate(180deg)" : "none",
+                transition: "transform 0.2s ease",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+          </div>
         </div>
 
-        {/* Description — always visible */}
+        {/* Description — max 2 lines, always visible */}
         {descText && (
-          <p style={{ margin: "10px 0 0", fontSize: 14, color: C.textSub, lineHeight: 1.75 }}>
+          <p style={{
+            margin: "8px 0 0", fontSize: 13, color: C.textSub, lineHeight: 1.65,
+            display: "-webkit-box", overflow: "hidden",
+            WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+          }}>
             {descText}
           </p>
         )}
