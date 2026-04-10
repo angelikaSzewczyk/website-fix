@@ -391,8 +391,8 @@ export default async function DashboardPage() {
                 <span style={{ fontSize: 11, color: C.textMuted }}>Scans</span>
               </div>
               {/* Upgrade CTA */}
-              <Link href="/preise" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 10px rgba(234,179,8,0.35)" }}>
-                ⚡ Upgrade
+              <Link href="/preise" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 10px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
+                ⚡ Upgrade auf Smart-Guard
               </Link>
             </div>
           </div>
@@ -406,14 +406,39 @@ export default async function DashboardPage() {
                 </svg>
               </div>
               <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: C.text }}>Starte deinen ersten Audit</h2>
-              <p style={{ margin: "0 auto 28px", fontSize: 14, color: C.textSub, lineHeight: 1.7, maxWidth: 420 }}>
+              <p style={{ margin: "0 auto 20px", fontSize: 14, color: C.textSub, lineHeight: 1.7, maxWidth: 440 }}>
                 Finde in 60 Sekunden heraus, warum Google dich nicht findet, welche Rechtsfehler auf Abmahnungen warten und was deine Conversion-Rate blockiert.
               </p>
-              <Link href="/dashboard/scan" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", borderRadius: 12, background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                Kostenlos scannen →
-              </Link>
-              <p style={{ margin: "16px 0 0", fontSize: 11, color: C.textMuted }}>Keine Kreditkarte · 3 Scans pro Monat gratis</p>
+
+              {/* URL Input Form */}
+              <form action="/dashboard/scan" method="GET" style={{ display: "flex", gap: 10, maxWidth: 500, margin: "0 auto 16px", flexWrap: "wrap", justifyContent: "center" }}>
+                <input
+                  name="url"
+                  type="url"
+                  placeholder="https://deine-website.de"
+                  required
+                  style={{
+                    flex: 1, minWidth: 260,
+                    padding: "12px 16px", borderRadius: 10,
+                    border: `1.5px solid ${C.border}`,
+                    fontSize: 14, color: C.text, background: C.bg,
+                    outline: "none", fontFamily: "inherit",
+                  }}
+                />
+                <button type="submit" style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "12px 24px", borderRadius: 10,
+                  background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14,
+                  border: "none", cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(37,99,235,0.35)",
+                  fontFamily: "inherit",
+                }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Kostenlos scannen
+                </button>
+              </form>
+
+              <p style={{ margin: "0 0 0", fontSize: 11, color: C.textMuted }}>Keine Kreditkarte · 3 Scans pro Monat gratis</p>
             </div>
           )}
 
@@ -691,7 +716,7 @@ export default async function DashboardPage() {
                     Du hast diesen Scan manuell gestartet. Möchtest du, dass wir deine Seite <strong>jede Stunde automatisch prüfen</strong> und dich bei Fehlern warnen?
                   </p>
                   <Link href="/preise" style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 8, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 8px rgba(234,179,8,0.3)" }}>
-                    Single-Fix aktivieren →
+                    Smart-Guard aktivieren →
                   </Link>
                 </div>
               </div>
@@ -703,7 +728,7 @@ export default async function DashboardPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textMuted }}>Bericht als PDF herunterladen</p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: C.textMuted }}>White-Label PDF-Export ist im Single-Fix Plan verfügbar.</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: C.textMuted }}>White-Label PDF-Export ist im Smart-Guard Plan verfügbar.</p>
                 </div>
                 <Link href="/preise" style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontWeight: 700, fontSize: 12 }}>
                   Freischalten →
@@ -724,17 +749,17 @@ export default async function DashboardPage() {
           {/* ── Upgrade Banner ── */}
           <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", boxShadow: "0 8px 32px rgba(15,23,42,0.25)" }}>
             <div style={{ flex: 1, minWidth: 260 }}>
-              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.yellow, textTransform: "uppercase", letterSpacing: "0.1em" }}>⚡ Dauerhaft geschützt</p>
+              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.yellow, textTransform: "uppercase", letterSpacing: "0.1em" }}>⚡ Maximaler Schutz</p>
               <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>
-                Schütze dich vor Abmahnungen<br />und Speed-Verlust — automatisch.
+                Maximaler Schutz mit<br />Smart-Guard — automatisch.
               </h3>
               <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
                 Echtzeit-Monitoring · BFSG-Watchdog · PDF-Export · unbegrenzte Scans<br />
-                <strong style={{ color: "rgba(255,255,255,0.9)" }}>ab 39 €/Monat</strong>
+                <strong style={{ color: "rgba(255,255,255,0.9)" }}>39 €/Monat · jederzeit kündbar</strong>
               </p>
             </div>
             <Link href="/preise" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 16px rgba(234,179,8,0.45)" }}>
-              Single-Fix Plan ansehen →
+              Smart-Guard aktivieren →
             </Link>
           </div>
 
