@@ -6,6 +6,8 @@ type AgencySettings = {
   agency_name: string;
   logo_url: string;
   primary_color: string;
+  subdomain?: string;
+  report_sender?: string;
 };
 
 type TeamMember = {
@@ -243,7 +245,12 @@ export default function SettingsClient({ initial }: { initial: AgencySettings })
           background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 16, padding: "28px",
         }}>
-          <h2 style={{ margin: "0 0 22px", fontSize: 17, fontWeight: 700 }}>White-Label Branding</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
+            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>White-Label Center</h2>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>
+              FULL WHITE-LABEL AKTIV
+            </span>
+          </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
@@ -270,6 +277,39 @@ export default function SettingsClient({ initial }: { initial: AgencySettings })
               <p style={{ margin: "6px 0 0", fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: 1.5 }}>
                 Öffentlich erreichbare URL (PNG, SVG oder WebP). Die Vorschau aktualisiert sich live →
               </p>
+            </div>
+
+            {/* Subdomain */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden" }}>
+                <span style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", fontSize: 13, color: "rgba(255,255,255,0.3)", borderRight: "1px solid rgba(255,255,255,0.12)", whiteSpace: "nowrap" }}>portal.</span>
+                <input
+                  style={{ ...input, borderRadius: 0, border: "none", flex: 1 }}
+                  placeholder="deine-agentur.de"
+                  value={settings.subdomain ?? ""}
+                  onChange={e => setSettings(s => ({ ...s, subdomain: e.target.value }))}
+                />
+              </div>
+              <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Kunden öffnen ihr Portal unter portal.deine-agentur.de (DNS-Eintrag erforderlich)</p>
+            </div>
+
+            {/* Report sender name */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <label style={{ ...label, marginBottom: 0 }}>E-Mail Absendername</label>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+              </div>
+              <input
+                style={input}
+                placeholder="z.B. Julia von Digitalagentur Schmidt"
+                value={settings.report_sender ?? ""}
+                onChange={e => setSettings(s => ({ ...s, report_sender: e.target.value }))}
+              />
+              <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Automatische Berichte werden im Namen dieser Person versendet.</p>
             </div>
 
             {/* Color picker */}

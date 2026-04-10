@@ -73,16 +73,24 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
       {/* Logo / Agency Pro placeholder */}
       <div style={{ padding: "20px 8px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         {isProPlan ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Logo placeholder frame */}
             <div style={{
-              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              background: "rgba(167,139,250,0.18)", border: "1px solid rgba(167,139,250,0.35)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 13, fontWeight: 800, color: "#A78BFA",
-            }}>A</div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: "-0.01em" }}>
-              Deine Agentur
-            </span>
+              width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+              background: "rgba(167,139,250,0.08)",
+              border: "1.5px dashed rgba(167,139,250,0.4)",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              gap: 2,
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>Agentur-Logo</div>
+              <div style={{ fontSize: 10, color: "rgba(167,139,250,0.7)", marginTop: 2, fontWeight: 500 }}>In Einstellungen setzen →</div>
+            </div>
           </div>
         ) : (
           <BrandLogo href="/dashboard" />

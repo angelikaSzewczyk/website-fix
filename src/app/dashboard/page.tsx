@@ -213,10 +213,10 @@ const PLAN_BADGE = {
 } as const;
 
 const DUMMY_CLIENTS = [
-  { id: "1", name: "Autohaus Müller GmbH",       contact: "Hans Müller",       initials: "AM", color: "#2563EB", domains: ["autohaus-mueller.de","gebrauchtwagen-mueller.de"], status: "warning"  as const, lastScan: "08. Apr 2026" },
-  { id: "2", name: "Kanzlei Schneider & Partner", contact: "Dr. Anna Schneider", initials: "KS", color: "#16A34A", domains: ["kanzlei-schneider.de"],                             status: "ok"       as const, lastScan: "09. Apr 2026" },
-  { id: "3", name: "Bäckerei Hoffmann",           contact: "Klaus Hoffmann",    initials: "BH", color: "#D97706", domains: ["baeckerei-hoffmann.de","hoffmann-catering.de","hoffmann-shop.de"], status: "critical" as const, lastScan: "07. Apr 2026" },
-  { id: "4", name: "TechStart Berlin UG",         contact: "Lena Vogel",        initials: "TB", color: "#7C3AED", domains: ["techstart.berlin"],                                   status: "ok"       as const, lastScan: "10. Apr 2026" },
+  { id: "1", name: "Autohaus Müller GmbH",       contact: "Hans Müller",       initials: "AM", color: "#2563EB", domains: ["autohaus-mueller.de","gebrauchtwagen-mueller.de"], status: "warning"  as const, lastScan: "08. Apr 2026", assignee: "JS", autoReport: true,  clientLogin: true  },
+  { id: "2", name: "Kanzlei Schneider & Partner", contact: "Dr. Anna Schneider", initials: "KS", color: "#16A34A", domains: ["kanzlei-schneider.de"],                             status: "ok"       as const, lastScan: "09. Apr 2026", assignee: "MK", autoReport: true,  clientLogin: true  },
+  { id: "3", name: "Bäckerei Hoffmann",           contact: "Klaus Hoffmann",    initials: "BH", color: "#D97706", domains: ["baeckerei-hoffmann.de","hoffmann-catering.de","hoffmann-shop.de"], status: "critical" as const, lastScan: "07. Apr 2026", assignee: "JS", autoReport: false, clientLogin: false },
+  { id: "4", name: "TechStart Berlin UG",         contact: "Lena Vogel",        initials: "TB", color: "#7C3AED", domains: ["techstart.berlin"],                                   status: "ok"       as const, lastScan: "10. Apr 2026", assignee: "AW", autoReport: true,  clientLogin: true  },
 ];
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────────
@@ -422,6 +422,12 @@ export default async function DashboardPage() {
           100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
         }
         .pulse-dot { animation: pulse-ring 2s infinite; }
+        /* Auto-Report CSS toggle (server component, no JS) */
+        .ar-cb { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+        .ar-track { display: inline-flex; width: 36px; height: 20px; border-radius: 10px; background: #CBD5E1; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .ar-thumb { display: block; width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; top: 3px; left: 3px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .ar-wrap:has(.ar-cb:checked) .ar-track { background: #16A34A; }
+        .ar-wrap:has(.ar-cb:checked) .ar-thumb { left: 19px; }
       `}</style>
 
       {isAgency
@@ -863,6 +869,11 @@ export default async function DashboardPage() {
           AGENCY LAYOUT  (plan: pro = Agency Starter | agentur = Agency Pro)
           ══════════════════════════════════════════════════════════ */}
       {isAgency && (()=> {
+        // Agency Pro gets Indigo/Violet accent; Starter stays blue
+        const accent       = plan === "agentur" ? "#7C3AED" : C.blue;
+        const accentBg     = plan === "agentur" ? "#F5F3FF" : C.blueBg;
+        const accentBorder = plan === "agentur" ? "#DDD6FE" : C.blueBorder;
+
         const healthScore = (status: string) =>
           status === "ok" ? 88 : status === "warning" ? 61 : 34;
 
@@ -929,48 +940,57 @@ export default async function DashboardPage() {
 
                 {/* Table header */}
                 <div style={{ padding: "14px 22px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
+                    {plan === "agentur" && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.04em" }}>
+                        UNLIMITIERT
+                      </span>
+                    )}
+                  </div>
                   <span style={{ fontSize: 11, color: C.textMuted }}>{DUMMY_CLIENTS.length} Projekte · Demo-Daten</span>
                 </div>
 
-                {/* Column headers */}
-                <div style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.6fr 110px 130px 140px", gap: 16, alignItems: "center" }}>
-                  {["Kunde", "Domain", "Status", "Health-Score", "Aktion"].map(h => (
+                {/* Column headers — 7 cols */}
+                <div style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center" }}>
+                  {["Kunde", "Domain", "Status", "Health", "Zuständig", "Login", "Aktion"].map(h => (
                     <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
                   ))}
                 </div>
 
                 {/* Rows */}
+                <div style={{ overflowX: "auto" }}>
                 {DUMMY_CLIENTS.map((client, i) => {
                   const score  = healthScore(client.status);
                   const isOk   = client.status === "ok";
                   const isCrit = client.status === "critical";
                   const statusConf = isOk
-                    ? { label: "Sicher",           color: C.green, bg: C.greenBg,  border: "#A7F3D0" }
+                    ? { label: "Sicher",          color: C.green, bg: C.greenBg, border: "#A7F3D0" }
                     : isCrit
-                    ? { label: "Handlungsbedarf",  color: C.red,   bg: C.redBg,    border: "#FECACA" }
-                    : { label: "Prüfen",           color: C.amber, bg: C.amberBg,  border: "#FDE68A" };
+                    ? { label: "Kritisch",        color: C.red,   bg: C.redBg,   border: "#FECACA" }
+                    : { label: "Prüfen",          color: C.amber, bg: C.amberBg, border: "#FDE68A" };
                   const scoreColor = score >= 75 ? C.green : score >= 50 ? C.amber : C.red;
                   const detailHref = lastScanId ? `/dashboard/scans/${lastScanId}` : "/dashboard/scan";
+                  const cbId = `ar-${client.id}`;
 
                   return (
-                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.6fr 110px 130px 140px", gap: 16, alignItems: "center", padding: "14px 22px", borderBottom: i < DUMMY_CLIENTS.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
+                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center", padding: "13px 22px", borderBottom: i < DUMMY_CLIENTS.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
 
                       {/* Kunde */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: `${client.color}14`, border: `1px solid ${client.color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: client.color }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: `${client.color}14`, border: `1px solid ${client.color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: client.color }}>
                           {client.initials}
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.name}</div>
-                          <div style={{ fontSize: 11, color: C.textMuted }}>{client.contact}</div>
+                          <div style={{ fontSize: 11, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.contact}</div>
                         </div>
                       </div>
 
                       {/* Domain */}
                       <div style={{ minWidth: 0 }}>
                         {client.domains.slice(0, 2).map((d, di) => (
-                          <a key={d} href={`https://${d}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: C.blue, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: di === 0 && client.domains.length > 1 ? 2 : 0, textDecoration: "none" }}>
+                          <a key={d} href={`https://${d}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: accent, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: di === 0 && client.domains.length > 1 ? 2 : 0 }}>
                             {d}
                           </a>
                         ))}
@@ -978,15 +998,15 @@ export default async function DashboardPage() {
                       </div>
 
                       {/* Status */}
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, color: statusConf.color, background: statusConf.bg, border: `1px solid ${statusConf.border}`, whiteSpace: "nowrap" }}>
-                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: statusConf.color, display: "inline-block" }} />
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 9px", borderRadius: 20, color: statusConf.color, background: statusConf.bg, border: `1px solid ${statusConf.border}`, whiteSpace: "nowrap" }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: statusConf.color, display: "inline-block", flexShrink: 0 }} />
                         {statusConf.label}
                       </span>
 
                       {/* Health-Score */}
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 16, fontWeight: 800, color: scoreColor, letterSpacing: "-0.02em" }}>{score}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: scoreColor, letterSpacing: "-0.02em", lineHeight: 1 }}>{score}</span>
                           <span style={{ fontSize: 10, color: C.textMuted }}>/100</span>
                         </div>
                         <div style={{ height: 4, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
@@ -994,14 +1014,44 @@ export default async function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Aktion */}
-                      <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: C.blue, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", boxShadow: "0 1px 6px rgba(37,99,235,0.3)" }}>
-                        Bericht öffnen →
-                      </Link>
+                      {/* Verantwortlich */}
+                      <div title={`Zuständig: ${client.assignee}`} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: accentBg, border: `1px solid ${accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: accent }}>
+                          {client.assignee}
+                        </div>
+                      </div>
+
+                      {/* Kunden-Login */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {client.clientLogin ? (
+                          <span title="Kunden-Login aktiv" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 7, background: "#F0FDF4", border: "1px solid #A7F3D0" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                          </span>
+                        ) : (
+                          <span title="Kein Kunden-Login" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 7, background: C.divider, border: `1px solid ${C.border}` }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Auto-Report toggle + Bericht-Button */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {/* CSS-only toggle (no JS) */}
+                        <div className="ar-wrap" style={{ display: "flex", alignItems: "center", gap: 5, position: "relative" }} title="Auto-Report">
+                          <input type="checkbox" className="ar-cb" id={cbId} defaultChecked={client.autoReport} />
+                          <label htmlFor={cbId} className="ar-track" aria-label="Auto-Report">
+                            <span className="ar-thumb" />
+                          </label>
+                        </div>
+                        <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: accent, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", boxShadow: `0 1px 6px ${accent}40` }}>
+                          Bericht →
+                        </Link>
+                      </div>
 
                     </div>
                   );
                 })}
+                </div>
 
               </div>
           </main>
