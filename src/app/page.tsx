@@ -212,20 +212,20 @@ const PLANS = [
 
 const FAQ = [
   {
-    q: "Für welche Websites funktioniert das?",
-    a: "Für jede öffentlich erreichbare Website — WordPress, Shopify, Wix, Squarespace, TYPO3, Custom-Entwicklungen. Kein Plugin, kein Hosting-Zugang nötig.",
+    q: "Für welche Websites funktioniert WebsiteFix?",
+    a: "WebsiteFix funktioniert für jede öffentlich erreichbare URL – egal ob WordPress, Shopify, Custom Code oder statische Seiten.",
   },
   {
-    q: "Was ist der Unterschied zwischen Pro und Agentur?",
-    a: "Pro ist für einzelne Websites. Der Agentur-Plan bietet White-Label Reports, automatische Monatsberichte, Team-Zugang und eine Kunden-Übersicht für bis zu 30 Domains.",
+    q: "Muss ich ein Plugin installieren oder Code ändern?",
+    a: "Nein. WebsiteFix arbeitet rein extern über Cloud-Scans. Du musst nichts installieren und gefährdest somit nicht die Stabilität deiner Seite.",
   },
   {
-    q: "Muss ich etwas installieren?",
-    a: "Nein. Einfach URL eingeben. Kein Plugin, kein FTP-Zugang, kein Code.",
+    q: "Wie hilft mir das Tool bei der BFSG-Pflicht 2025?",
+    a: "Wir scannen deine Seite auf die gesetzlichen Anforderungen der Barrierefreiheit (BFSG) und liefern dir eine lückenlose Dokumentation sowie konkrete Fix-Anleitungen für deine Entwickler.",
   },
   {
-    q: "Was ist BFSG und bin ich betroffen?",
-    a: "Das Barrierefreiheitsstärkungsgesetz gilt seit Juni 2025 für bestimmte B2C-Dienstleistungen (u.a. Online-Shops, Banking, Telekommunikation). Unser WCAG-Scan prüft die relevanten Kriterien.",
+    q: "Was passiert, wenn ein Problem gefunden wird?",
+    a: "Du wirst sofort per E-Mail oder über deine angebundenen Tools (wie Slack) informiert. Du erhältst einen klaren Bericht, was zu tun ist, um den Fehler zu beheben.",
   },
 ];
 
@@ -688,9 +688,9 @@ export default function Page() {
                   borderRadius: 20,
                   padding: "28px 26px",
                   boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
-                  display: "flex", flexDirection: "column", gap: 16,
+                  display: "flex", flexDirection: "column",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                     <div style={{
                       width: 46, height: 46, borderRadius: 12, flexShrink: 0,
                       background: f.iconBg, border: `1px solid ${f.iconBorder}`,
@@ -703,11 +703,11 @@ export default function Page() {
                       background: f.tagBg, color: f.tagColor, letterSpacing: "0.06em",
                     }}>{f.tag}</span>
                   </div>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{f.title}</h3>
                     <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{f.desc}</p>
                   </div>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                  <ul style={{ margin: "16px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {f.bullets.map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1082,10 +1082,10 @@ export default function Page() {
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>5 Min. Lesezeit</span>
                 </div>
                 <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.3 }}>
-                  Das BFSG 2025 – Warum Agenturen jetzt handeln müssen (oder haften)
+                  Das BFSG 2025 – Warum Webseitenbetreiber jetzt handeln müssen
                 </h3>
                 <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
-                  Ab dem 28. Juni 2025 greift das Barrierefreiheitsstärkungsgesetz. Was das für Agenturen mit Wartungskunden bedeutet — und wie du die Pflicht in ein Profit-Center verwandelst.
+                  Ab dem 28. Juni 2025 greift das Gesetz. Erfahre, was das für deine Haftung bedeutet.
                 </p>
               </div>
               <span style={{ fontSize: 13, color: "#7aa6ff", fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center" }}>
@@ -1135,7 +1135,7 @@ export default function Page() {
                 Jetzt kostenlos scannen →
               </Link>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
-                Danach: Agentur-Plan für 99€/Monat
+                Danach: Flexibler Schutz ab 19€/Monat
               </span>
             </div>
           </div>
