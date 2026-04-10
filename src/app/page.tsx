@@ -534,7 +534,7 @@ export default function Page() {
         </section>
 
         {/* ── AGENTUR-VORTEILE ── */}
-        <section style={{ background: "#0a0a0a", padding: "80px 24px" }}>
+        <section style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum Agenturen uns wählen</p>
