@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     num: "01",
-    label: "Setup",
-    title: "URL eingeben",
+    label: "Vorbereitung",
+    title: "Deine URL eingeben",
     desc: "Kein Plugin, kein Hosting-Zugang nötig. Einfach deine URL eintragen und unser System analysiert deine Seite sofort.",
     color: "#7aa6ff",
     icon: (
@@ -29,7 +29,7 @@ const STEPS = [
   },
   {
     num: "02",
-    label: "Monitoring",
+    label: "Analyse",
     title: "Wachdienst aktivieren",
     desc: "Unsere KI scannt deine Seite täglich auf Sicherheitslücken, Performance-Einbußen und gesetzliche Anforderungen wie das BFSG 2025.",
     color: "#8df3d3",
@@ -43,7 +43,7 @@ const STEPS = [
   },
   {
     num: "03",
-    label: "Reports",
+    label: "Resultat",
     title: "Sicherheit genießen",
     desc: "Du erhältst klare, verständliche Status-Berichte. Bei Problemen wirst du sofort informiert – so bleibt deine Seite immer online und sicher.",
     color: "#c084fc",
@@ -68,8 +68,8 @@ const BENEFITS = [
     iconBg: "rgba(22,163,74,0.12)",
     iconBorder: "rgba(22,163,74,0.25)",
     iconColor: "#4ade80",
-    label: "Automatischer Wachdienst",
-    title: "Automatische Wartung",
+    label: "Effizienz",
+    title: "Zeit & Kosten sparen",
     desc: "Keine manuellen Updates oder teure Wartungsverträge mehr. WebsiteFix scannt und sichert deine Seite vollautomatisch – 24/7.",
   },
   {
@@ -81,8 +81,8 @@ const BENEFITS = [
     iconBg: "rgba(37,99,235,0.12)",
     iconBorder: "rgba(37,99,235,0.25)",
     iconColor: "#7aa6ff",
-    label: "Rechtssicher durch 2025",
-    title: "Rechtssicher durch 2025",
+    label: "Compliance",
+    title: "Gesetzlich abgesichert",
     desc: "Wir überwachen die gesetzlichen Anforderungen des BFSG 2025 automatisch für dich und dokumentieren alles lückenlos für den Ernstfall.",
   },
   {
@@ -94,8 +94,8 @@ const BENEFITS = [
     iconBg: "rgba(217,119,6,0.12)",
     iconBorder: "rgba(217,119,6,0.25)",
     iconColor: "#fbbf24",
-    label: "Nahtlose Integration",
-    title: "Nahtlose Integration",
+    label: "Workflow",
+    title: "Sofort informiert werden",
     desc: "Probleme werden sofort erkannt und landen genau dort, wo du sie brauchst (z.B. Slack oder E-Mail) – so bleibst du immer informiert.",
   },
   {
@@ -110,8 +110,8 @@ const BENEFITS = [
     iconBg: "rgba(124,58,237,0.12)",
     iconBorder: "rgba(124,58,237,0.25)",
     iconColor: "#c084fc",
-    label: "Verständliche Status-Reports",
-    title: "Verständliche Berichte",
+    label: "Transparenz",
+    title: "Einfache Status-Berichte",
     desc: "Unsere Reports zeigen dir schwarz auf weiß, dass deine Seite sicher und performant ist – in einer Sprache, die jeder versteht.",
   },
 ];
