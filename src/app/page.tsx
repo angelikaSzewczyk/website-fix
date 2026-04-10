@@ -293,28 +293,19 @@ export default function Page() {
             WebsiteFix ist das White-Label Dashboard für Agenturen. Scanne Kunden-Websites vollautomatisch, erstelle Profi-Reports und integriere alles in Jira, Trello oder Asana.
           </p>
 
-          {/* InlineScan — URL-Input + Button, mobile-first */}
-          <div style={{ display: "flex", justifyContent: "center", padding: "0 8px" }}>
-            <InlineScan placeholder="https://kunden-website.de" />
-          </div>
-
-          {/* Sekundäre CTAs — Desktop-only stacking, blendet auf Mobile aus */}
-          <div className="hide-sm" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 8 }}>
-            <Link href="/login" style={{
-              padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
-              background: "linear-gradient(90deg, #007BFF, #0057b8)",
+          {/* Einzige CTA */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+            <Link href="/scan" style={{
+              padding: "16px 40px", borderRadius: 12, fontWeight: 700, fontSize: 16,
+              background: "linear-gradient(90deg, #007BFF, #0069d9)",
               color: "#fff", textDecoration: "none",
-              boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
+              boxShadow: "0 4px 24px rgba(0,123,255,0.45), 0 1px 8px rgba(0,123,255,0.3)",
             }}>
-              Jetzt Agency-Account erstellen →
+              Kostenlos scannen →
             </Link>
-            <Link href="#pricing" style={{
-              padding: "14px 28px", borderRadius: 10, fontSize: 15,
-              border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)",
-              textDecoration: "none",
-            }}>
-              Preise ansehen
-            </Link>
+            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
+              Keine Anmeldung · Ergebnis in unter 60 Sekunden
+            </p>
           </div>
 
           {/* ── DASHBOARD PREVIEW MOCKUP ── */}
