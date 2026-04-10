@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import BrandLogo from "@/app/components/BrandLogo";
@@ -370,7 +369,6 @@ export default function DashboardScanClient({
   const [urlFocused, setUrlFocused] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const router = useRouter();
   const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
   const limitReached = monthlyScans >= scanLimit;
 
@@ -386,7 +384,7 @@ export default function DashboardScanClient({
       setRedirectCountdown(prev => {
         if (prev === null || prev <= 1) {
           if (countdownRef.current) clearInterval(countdownRef.current);
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
           return null;
         }
         return prev - 1;
@@ -846,7 +844,7 @@ export default function DashboardScanClient({
             </p>
           </div>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => { window.location.href = "/dashboard"; }}
             style={{
               flexShrink: 0, padding: "8px 18px", borderRadius: C.radiusSm,
               background: C.green, border: "none", color: "#0b0c10",

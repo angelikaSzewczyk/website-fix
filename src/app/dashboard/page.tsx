@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import FreeDashboardClient from "./free-dashboard-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Dashboard — WebsiteFix",
   robots: { index: false },

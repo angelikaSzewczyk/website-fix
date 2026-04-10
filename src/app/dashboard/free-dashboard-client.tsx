@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
@@ -277,7 +276,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [switchHover, setSwitchHover]           = useState(false);
   const [switching, setSwitching]               = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   async function handleProjectSwitch() {
     if (switching) return;
@@ -286,7 +284,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
       await fetch("/api/clear-project", { method: "POST" });
     } catch { /* non-critical */ }
     setProjectDialogOpen(false);
-    router.push("/dashboard/scan");
+    window.location.href = "/dashboard/scan";
   }
 
   // Close dropdown when clicking outside
