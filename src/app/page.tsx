@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import FaqAccordion from "./components/faq-accordion";
-import RoiCalculator from "./components/roi-calculator";
 import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
@@ -724,8 +723,6 @@ export default function Page() {
           </div>
         </section>
 
-        {/* ROI CALCULATOR */}
-        <RoiCalculator />
 
         {/* PRICING */}
         <section id="pricing" style={{ padding: "80px 24px" }}>
