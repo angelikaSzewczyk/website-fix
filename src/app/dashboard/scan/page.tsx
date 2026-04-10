@@ -21,13 +21,13 @@ export default async function DashboardScanPage() {
         SELECT url FROM scans
         WHERE user_id = ${session.user.id}
         ORDER BY created_at DESC LIMIT 1
-      ` as Promise<{ url: string }[]>,
+      ` as unknown as Promise<{ url: string }[]>,
       sql`
         SELECT COUNT(*)::int AS cnt
         FROM scans
         WHERE user_id = ${session.user.id}
           AND created_at >= date_trunc('month', NOW())
-      ` as Promise<{ cnt: number }[]>,
+      ` as unknown as Promise<{ cnt: number }[]>,
     ]);
     if (urlRows[0]?.url) projectUrl = urlRows[0].url;
     monthlyScans = countRows[0]?.cnt ?? 0;
