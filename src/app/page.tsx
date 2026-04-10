@@ -534,7 +534,12 @@ export default function Page() {
         </section>
 
         {/* ── AGENTUR-VORTEILE ── */}
-        <section style={{ background: "#0a0a0a", padding: "80px 24px" }}>
+        <section style={{
+          background: "linear-gradient(180deg, #09090f 0%, #0d0d14 100%)",
+          padding: "80px 24px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum Agenturen uns wählen</p>
@@ -549,12 +554,13 @@ export default function Page() {
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
               {BENEFITS.map(b => (
                 <div key={b.label} style={{
-                  background: "rgba(255,255,255,0.04)",
-                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(234,179,8,0.15)",
-                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.055)",
+                  backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  borderTop: "1px solid rgba(255,255,255,0.13)",
+                  borderRadius: 18,
                   padding: "28px 24px",
-                  boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
+                  boxShadow: "0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
                   display: "flex", flexDirection: "column", gap: 14,
                 }}>
                   <div style={{
