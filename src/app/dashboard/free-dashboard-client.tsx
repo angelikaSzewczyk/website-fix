@@ -1053,107 +1053,100 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑦ SMART-GUARD AUTOMATION MODULES */}
           <div style={{ marginBottom: 28 }}>
-            <SectionLabel color={D.blueSoft}>Smart-Guard · Automatisierung & Überwachung</SectionLabel>
-            <SectionHead>Du weißt was zu tun ist — wir machen es automatisch.</SectionHead>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {[
+            <SectionLabel color={D.blueSoft}>Smart-Guard · Automatisierung</SectionLabel>
+            <SectionHead>Einmal verstehen — dauerhaft überwacht.</SectionHead>
+            <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 580 }}>
+              Die Analyse liegt vor dir. Smart Guard läuft im Hintergrund, beobachtet jede Veränderung und meldet sich — ohne dass du selbst regelmäßig prüfen musst.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+              {([
                 {
                   title: "Score-Verlauf",
-                  badge: "7 Tage · täglich",
-                  desc: "Verfolge, wie sich dein Website-Score nach jeder Änderung entwickelt. Erkenne Rückschritte sofort — bevor sie sich auf Rankings auswirken.",
-                  cta: "Verlauf aktivieren",
+                  badge: "Täglich · 30 Tage",
+                  desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
+                  cta: "Score-Verlauf aktivieren",
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
                   ),
                 },
                 {
                   title: "24/7 Live-Monitoring",
-                  badge: "Echtzeit · Sofort-Alert",
-                  desc: "Wir überwachen deine Website rund um die Uhr. Du wirst sofort per E-Mail informiert, wenn etwas schiefläuft — kein manuelles Prüfen nötig.",
-                  cta: "Monitoring aktivieren",
+                  badge: "Echtzeit · E-Mail-Alert",
+                  desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
+                  cta: "Monitoring einrichten",
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
                   ),
                 },
                 {
                   title: "Monatlicher PDF-Bericht",
                   badge: "Automatisch · Teilbar",
-                  desc: "Jeden Monat ein professioneller Audit-Bericht als PDF — automatisch erstellt, jederzeit abrufbar und bereit für Kunden oder interne Ablage.",
+                  desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
                   cta: "Berichte aktivieren",
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                       <polyline points="14 2 14 8 20 8"/>
                       <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                   ),
                 },
-              ].map(module => (
+              ] as const).map(module => (
                 <div key={module.title} style={{
                   borderRadius: D.radius,
                   background: D.card,
                   border: `1px solid ${D.border}`,
-                  overflow: "hidden",
-                  position: "relative",
-                  minHeight: 200,
+                  padding: "24px 22px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0,
                 }}>
-                  {/* Blurred mock chart behind */}
-                  <div style={{ padding: "20px", filter: "blur(5px)", pointerEvents: "none", userSelect: "none", opacity: 0.2 }}>
-                    <div style={{ height: 8, borderRadius: 4, background: D.borderStrong, marginBottom: 10, width: "60%" }} />
-                    <div style={{ height: 5, borderRadius: 3, background: D.border, marginBottom: 16, width: "40%" }} />
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 48 }}>
-                      {[30,55,42,70,58,80,65].map((h, i) => (
-                        <div key={i} style={{ flex: 1, borderRadius: "3px 3px 0 0", height: `${h}%`, background: "rgba(0,123,255,0.3)" }} />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Overlay */}
+                  {/* Icon */}
                   <div style={{
-                    position: "absolute", inset: 0,
-                    display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center", gap: 8,
-                    padding: "20px",
-                    background: "rgba(10,12,16,0.7)",
-                    backdropFilter: "blur(2px)",
+                    width: 40, height: 40, borderRadius: 10,
+                    background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, marginBottom: 16,
                   }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: "50%",
-                      background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      {module.icon}
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 700, color: D.text }}>{module.title}</p>
-                      <span style={{
-                        display: "inline-block",
-                        fontSize: 10, fontWeight: 600,
-                        padding: "2px 8px", borderRadius: 20,
-                        background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                        color: D.blueSoft, letterSpacing: "0.04em",
-                      }}>
-                        {module.badge}
-                      </span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 170 }}>
-                      {module.desc}
-                    </p>
-                    <Link href="/smart-guard" style={{
-                      marginTop: 4,
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      padding: "7px 16px", borderRadius: D.radiusXs,
-                      background: D.blue, color: "#fff",
-                      fontSize: 11, fontWeight: 700, textDecoration: "none",
-                      boxShadow: D.blueGlow,
-                    }}>
-                      {module.cta} →
-                    </Link>
+                    {module.icon}
                   </div>
+
+                  {/* Title */}
+                  <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: D.text, lineHeight: 1.3 }}>
+                    {module.title}
+                  </p>
+
+                  {/* Badge */}
+                  <span style={{
+                    display: "inline-block", alignSelf: "flex-start",
+                    fontSize: 10, fontWeight: 600,
+                    padding: "2px 9px", borderRadius: 20, marginBottom: 14,
+                    background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                    color: D.blueSoft, letterSpacing: "0.03em",
+                  }}>
+                    {module.badge}
+                  </span>
+
+                  {/* Description — flex: 1 to push button down */}
+                  <p style={{ margin: "0 0 20px", fontSize: 12, color: D.textMuted, lineHeight: 1.7, flex: 1 }}>
+                    {module.desc}
+                  </p>
+
+                  {/* CTA — always at bottom */}
+                  <Link href="/smart-guard" style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    alignSelf: "flex-start",
+                    padding: "8px 16px", borderRadius: D.radiusXs,
+                    background: D.blue, color: "#fff",
+                    fontSize: 11, fontWeight: 700, textDecoration: "none",
+                    boxShadow: D.blueGlow,
+                  }}>
+                    {module.cta} →
+                  </Link>
                 </div>
               ))}
             </div>
@@ -1161,92 +1154,108 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           <Divider style={{ marginBottom: 28 }} />
 
-          {/* ⑧ DONE-FOR-YOU FIXES */}
+          {/* ⑧ PROFESSIONELLER SERVICE */}
           <div style={{ marginBottom: 40 }}>
-            <SectionLabel color={D.blueSoft}>Professioneller Service</SectionLabel>
-            <SectionHead>Du weißt wie's geht — wir erledigen es für dich.</SectionHead>
-            <p style={{ margin: "-10px 0 20px", fontSize: 13, color: D.textMuted, lineHeight: 1.7, maxWidth: 620 }}>
-              Die Fixes oben kannst du selbst umsetzen. Falls du lieber jemanden beauftragst: Unser Team übernimmt das für dich — schnell, dokumentiert und nachweisbar.
+            <SectionLabel color={D.blueSoft}>Optionaler Service</SectionLabel>
+            <SectionHead>Lieber delegieren? Wir unterstützen gezielt.</SectionHead>
+            <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 620 }}>
+              Die Anleitung für jeden Fix liegt bereits im Dashboard. Wenn du bestimmte Punkte lieber abgeben möchtest, übernehmen wir die Umsetzung — dort, wo sie technisch sauber und ohne Risiko möglich ist. Alles andere erhältst du als genaue Schritt-für-Schritt-Anleitung.
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {[
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+              {([
                 {
-                  step: "01",
+                  num: "01",
                   color: "#7aa6ff",
                   title: "Rechtliches & DSGVO",
-                  outcome: "Rechtssicherheit in 24 h",
-                  desc: "Kontaktformular, Cookie-Banner, Datenschutzerklärung und Impressum — DSGVO-konform, BFSG-geprüft und dokumentiert. Abnahmebereit.",
+                  outcome: "Geprüft, dokumentiert, übergeben",
+                  desc: "Wir prüfen Cookie-Banner, Einwilligungstexte, Datenschutzerklärung und Impressum auf DSGVO- und BFSG-Konformität — und korrigieren, was technisch klar umsetzbar ist.",
                   pills: ["DSGVO", "BFSG 2025", "WCAG 2.2"],
                 },
                 {
-                  step: "02",
+                  num: "02",
                   color: "#8df3d3",
                   title: "Performance & Ladezeit",
-                  outcome: "PageSpeed 90+ in 48 h",
-                  desc: "Bilder komprimieren, Lazy Loading, Server-Caching, JavaScript-Optimierung — messbar schnellere Ladezeit und bessere Core Web Vitals.",
-                  pills: ["LCP < 2.5 s", "Core Web Vitals", "PageSpeed 90+"],
+                  outcome: "Messbar optimiert, nachweisbar besser",
+                  desc: "Bildoptimierung, Lazy Loading, Caching-Konfiguration, Script-Reduktion — wir implementieren, was sich sicher umsetzen lässt, und dokumentieren jeden Schritt.",
+                  pills: ["LCP", "Core Web Vitals", "Caching"],
                 },
                 {
-                  step: "03",
+                  num: "03",
                   color: "#c084fc",
                   title: "Mobile & Barrierefreiheit",
-                  outcome: "Auf allen Geräten einwandfrei",
-                  desc: "Viewport, Touch-Targets, Responsive Layout, Alt-Texte, Tastaturnavigation — alle Probleme auf einmal behoben, getestet und übergeben.",
-                  pills: ["Responsive", "WCAG AA", "Touch-Targets"],
+                  outcome: "Gezielt behoben, getestet, übergeben",
+                  desc: "Alt-Texte, Viewport-Konfiguration, Touch-Target-Größen, Tastaturnavigation — wir setzen um, was ohne Zugriff auf das CMS-Backend nicht möglich wäre.",
+                  pills: ["Alt-Texte", "WCAG AA", "Touch-Targets"],
                 },
-              ].map(fix => (
+              ] as const).map(fix => (
                 <div key={fix.title} style={{
                   padding: "24px 22px",
                   borderRadius: D.radius,
-                  background: `rgba(${hexToRgb(fix.color)},0.04)`,
-                  border: `1px solid rgba(${hexToRgb(fix.color)},0.18)`,
+                  background: `rgba(${hexToRgb(fix.color)},0.03)`,
+                  border: `1px solid rgba(${hexToRgb(fix.color)},0.15)`,
                   position: "relative", overflow: "hidden",
                   display: "flex", flexDirection: "column",
                 }}>
+                  {/* Subtle step watermark */}
                   <div style={{
-                    position: "absolute", right: 14, top: 8,
-                    fontSize: 52, fontWeight: 900,
-                    color: `rgba(${hexToRgb(fix.color)},0.06)`,
+                    position: "absolute", right: 16, top: 12,
+                    fontSize: 36, fontWeight: 900,
+                    color: `rgba(${hexToRgb(fix.color)},0.07)`,
                     lineHeight: 1, userSelect: "none", pointerEvents: "none",
-                    letterSpacing: "-0.04em",
+                    letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums",
                   }}>
-                    {fix.step}
+                    {fix.num}
                   </div>
-                  <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700,
+
+                  {/* Category label */}
+                  <p style={{
+                    margin: "0 0 8px",
+                    fontSize: 10, fontWeight: 700,
                     color: fix.color, textTransform: "uppercase", letterSpacing: "0.1em",
                   }}>
-                    Wir beheben es
+                    Umsetzung auf Wunsch
                   </p>
-                  <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: D.text, letterSpacing: "-0.01em" }}>
+
+                  {/* Title */}
+                  <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: D.text, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
                     {fix.title}
                   </h3>
-                  <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 600, color: fix.color, opacity: 0.9 }}>
-                    → {fix.outcome}
+
+                  {/* Outcome */}
+                  <p style={{ margin: "0 0 14px", fontSize: 12, fontWeight: 500, color: fix.color }}>
+                    {fix.outcome}
                   </p>
+
+                  {/* Description */}
                   <p style={{ margin: "0 0 16px", fontSize: 13, color: D.textSub, lineHeight: 1.7, flex: 1 }}>
                     {fix.desc}
                   </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 18 }}>
+
+                  {/* Tags */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 20 }}>
                     {fix.pills.map(p => (
                       <span key={p} style={{
                         fontSize: 10, fontWeight: 600,
                         padding: "2px 8px", borderRadius: 16,
-                        background: `rgba(${hexToRgb(fix.color)},0.1)`,
-                        border: `1px solid rgba(${hexToRgb(fix.color)},0.22)`,
+                        background: `rgba(${hexToRgb(fix.color)},0.08)`,
+                        border: `1px solid rgba(${hexToRgb(fix.color)},0.2)`,
                         color: fix.color,
                       }}>
                         {p}
                       </span>
                     ))}
                   </div>
+
+                  {/* CTA — pinned to bottom */}
                   <Link href="/kontakt" style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
+                    alignSelf: "flex-start",
                     padding: "9px 18px", borderRadius: D.radiusSm,
                     background: D.blue, color: "#fff",
                     fontSize: 12, fontWeight: 700, textDecoration: "none",
-                    boxShadow: D.blueGlow, alignSelf: "flex-start",
+                    boxShadow: D.blueGlow,
                   }}>
-                    Jetzt beauftragen →
+                    Anfrage stellen →
                   </Link>
                 </div>
               ))}
