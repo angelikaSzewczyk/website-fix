@@ -293,159 +293,63 @@ export default function Page() {
             Keine Anmeldung · Ergebnis in unter 60 Sekunden
           </p>
 
-          {/* ── DASHBOARD PREVIEW MOCKUP ── */}
-          <div style={{
-            marginTop: 64, position: "relative",
-            maxWidth: 860, marginLeft: "auto", marginRight: "auto",
-          }}>
-            {/* Glow behind mockup */}
-            <div style={{
-              position: "absolute", inset: "-40px -60px",
-              background: "radial-gradient(ellipse at 50% 60%, rgba(0,123,255,0.12) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
+          {/* ── STATUS CARDS ── */}
+          <div style={{ marginTop: 64, maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
 
-            {/* Browser frame */}
-            <div style={{
-              position: "relative", borderRadius: 14,
-              border: "1px solid rgba(255,255,255,0.1)",
-              background: "#0d0f14",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
-              overflow: "hidden",
-            }}>
-              {/* Browser chrome */}
+              {/* Sicherheit */}
               <div style={{
-                height: 36, background: "#161820",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
-                display: "flex", alignItems: "center", padding: "0 16px", gap: 6,
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 16, padding: "28px 24px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
               }}>
-                {["#ff5f57","#febc2e","#28c840"].map(c => (
-                  <span key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c, opacity: 0.7 }} />
-                ))}
                 <div style={{
-                  flex: 1, maxWidth: 240, margin: "0 auto",
-                  height: 18, borderRadius: 4, background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  width: 52, height: 52, borderRadius: "50%",
+                  background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
-                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>app.website-fix.com/dashboard</span>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                 </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Sicherheit</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Keine Schwachstellen gefunden</div>
               </div>
 
-              {/* Dashboard layout */}
-              <div style={{ display: "flex", height: 360 }}>
+              {/* Performance */}
+              <div style={{
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(37,99,235,0.2)",
+                borderRadius: 16, padding: "28px 24px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+                boxShadow: "0 0 24px rgba(59,130,246,0.08)",
+              }}>
+                <div style={{ fontSize: 42, fontWeight: 800, color: "#7aa6ff", letterSpacing: "-0.04em", lineHeight: 1 }}>
+                  98<span style={{ fontSize: 20, color: "rgba(122,166,255,0.5)" }}>/100</span>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Performance</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Deine Seite lädt blitzschnell</div>
+              </div>
 
-                {/* Sidebar */}
+              {/* Rechtssicherheit */}
+              <div style={{
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 16, padding: "28px 24px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+              }}>
                 <div style={{
-                  width: 160, flexShrink: 0,
-                  background: "#0A192F",
-                  borderRight: "1px solid rgba(255,255,255,0.06)",
-                  padding: "16px 10px",
-                  display: "flex", flexDirection: "column", gap: 3,
+                  width: 52, height: 52, borderRadius: "50%",
+                  background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 8px", marginBottom: 10 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 6, background: "linear-gradient(135deg,#007BFF,#0057b8)", flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>WebsiteFix</span>
-                  </div>
-                  {[
-                    { label: "Übersicht", active: false },
-                    { label: "Scan starten", active: false },
-                    { label: "Kunden", active: false },
-                    { label: "Activity Log", active: false },
-                    { label: "Berichte", active: true },
-                    { label: "Einstellungen", active: false },
-                  ].map(item => (
-                    <div key={item.label} style={{
-                      padding: "7px 10px", borderRadius: 6, fontSize: 10,
-                      color: item.active ? "#fff" : "rgba(255,255,255,0.3)",
-                      background: item.active ? "rgba(0,123,255,0.15)" : "transparent",
-                      borderLeft: item.active ? "2px solid #007BFF" : "2px solid transparent",
-                      fontWeight: item.active ? 600 : 400,
-                    }}>
-                      {item.label}
-                    </div>
-                  ))}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
                 </div>
-
-                {/* Main content: White-Label Report preview */}
-                <div style={{ flex: 1, padding: "16px", overflowY: "hidden", background: "#0d0f14" }}>
-                  {/* Report card */}
-                  <div style={{
-                    background: "#fff", borderRadius: 10, overflow: "hidden",
-                    fontSize: 0, /* collapse whitespace */
-                  }}>
-                    {/* Report header */}
-                    <div style={{
-                      background: "linear-gradient(135deg, #007BFF, #0057b8)",
-                      padding: "12px 16px",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 24, height: 24, borderRadius: 5, background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: "#fff" }}>M</span>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>Muster Agentur GmbH</div>
-                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)" }}>Monatlicher Website-Report</div>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: "#fff" }}>April 2026</div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)" }}>Müller & Söhne Sanitär</div>
-                      </div>
-                    </div>
-
-                    <div style={{ padding: "12px 16px" }}>
-                      {/* Executive summary box */}
-                      <div style={{ padding: "8px 10px", borderRadius: 6, background: "rgba(0,123,255,0.06)", border: "1px solid rgba(0,123,255,0.15)", marginBottom: 10 }}>
-                        <div style={{ fontSize: 7, fontWeight: 700, color: "#007BFF", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Management-Zusammenfassung</div>
-                        <div style={{ fontSize: 8, color: "#444", lineHeight: 1.6 }}>
-                          Im April 2026 haben wir alle vereinbarten Leistungen erbracht und den reibungslosen Betrieb Ihrer Website sichergestellt. Durch proaktive WCAG-Audits und sofortige Fehlerbehebung per KI-Assistent wurde die Rechtssicherheit Ihrer Online-Präsenz kontinuierlich gewährleistet.
-                        </div>
-                      </div>
-
-                      {/* KPI row */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
-                        {[
-                          { label: "Uptime", value: "98%", color: "#007BFF" },
-                          { label: "Ladezeit", value: "420ms", color: "#007BFF" },
-                          { label: "Scans", value: "3", color: "#007BFF" },
-                          { label: "Aktionen", value: "7", color: "#007BFF" },
-                        ].map(k => (
-                          <div key={k.label} style={{ padding: "6px 8px", borderRadius: 5, border: "1px solid #e5e7eb", textAlign: "center" }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: k.color }}>{k.value}</div>
-                            <div style={{ fontSize: 7, color: "#999", marginTop: 1 }}>{k.label}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Activity rows */}
-                      <div style={{ border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden" }}>
-                        {[
-                          { icon: "🤖", label: "KI-Optimierungsvorschlag erstellt", date: "12.04" },
-                          { icon: "📋", label: "Jira-Ticket: PHP-Update erforderlich", date: "08.04" },
-                          { icon: "🔍", label: "WCAG-Audit durchgeführt (7 Issues)", date: "04.04" },
-                        ].map((a, i) => (
-                          <div key={i} style={{
-                            padding: "5px 10px", display: "flex", alignItems: "center", gap: 6,
-                            borderBottom: i < 2 ? "1px solid #f5f5f5" : "none",
-                          }}>
-                            <span style={{ fontSize: 9 }}>{a.icon}</span>
-                            <span style={{ flex: 1, fontSize: 8, color: "#333" }}>{a.label}</span>
-                            <span style={{ fontSize: 7, color: "#bbb" }}>{a.date}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Rechtssicherheit</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>BFSG 2025 konform</div>
               </div>
-            </div>
 
-            {/* Caption */}
-            <p style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
-              White-Label Report — mit deinem Logo, deiner Farbe, deinem Namen
-            </p>
+            </div>
           </div>
         </section>
 

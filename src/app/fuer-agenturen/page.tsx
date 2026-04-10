@@ -182,6 +182,147 @@ export default function AgencyPage() {
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
+        {/* ── WHITE-LABEL DASHBOARD PREVIEW ── */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px", textAlign: "center" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(122,166,255,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>White-Label Dashboard</p>
+          <h2 style={{ fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, margin: "0 0 48px", letterSpacing: "-0.025em", color: "#fff" }}>
+            Dein Branding. Deine Kunden. Dein Dashboard.
+          </h2>
+
+          <div style={{ position: "relative", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{
+              position: "absolute", inset: "-40px -60px",
+              background: "radial-gradient(ellipse at 50% 60%, rgba(0,123,255,0.12) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }} />
+            <div style={{
+              position: "relative", borderRadius: 14,
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "#0d0f14",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+              overflow: "hidden",
+            }}>
+              {/* Browser chrome */}
+              <div style={{
+                height: 36, background: "#161820",
+                borderBottom: "1px solid rgba(255,255,255,0.07)",
+                display: "flex", alignItems: "center", padding: "0 16px", gap: 6,
+              }}>
+                {["#ff5f57","#febc2e","#28c840"].map(c => (
+                  <span key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c, opacity: 0.7 }} />
+                ))}
+                <div style={{
+                  flex: 1, maxWidth: 240, margin: "0 auto",
+                  height: 18, borderRadius: 4, background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>app.website-fix.com/dashboard</span>
+                </div>
+              </div>
+
+              {/* Dashboard layout */}
+              <div style={{ display: "flex", height: 360 }}>
+                {/* Sidebar */}
+                <div style={{
+                  width: 160, flexShrink: 0, background: "#0A192F",
+                  borderRight: "1px solid rgba(255,255,255,0.06)",
+                  padding: "16px 10px", display: "flex", flexDirection: "column", gap: 3,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 8px", marginBottom: 10 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 6, background: "linear-gradient(135deg,#007BFF,#0057b8)", flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>WebsiteFix</span>
+                  </div>
+                  {[
+                    { label: "Übersicht", active: false },
+                    { label: "Scan starten", active: false },
+                    { label: "Kunden", active: false },
+                    { label: "Activity Log", active: false },
+                    { label: "Berichte", active: true },
+                    { label: "Einstellungen", active: false },
+                  ].map(item => (
+                    <div key={item.label} style={{
+                      padding: "7px 10px", borderRadius: 6, fontSize: 10,
+                      color: item.active ? "#fff" : "rgba(255,255,255,0.3)",
+                      background: item.active ? "rgba(0,123,255,0.15)" : "transparent",
+                      borderLeft: item.active ? "2px solid #007BFF" : "2px solid transparent",
+                      fontWeight: item.active ? 600 : 400,
+                    }}>
+                      {item.label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Main: White-Label Report */}
+                <div style={{ flex: 1, padding: "16px", overflowY: "hidden", background: "#0d0f14" }}>
+                  <div style={{ background: "#fff", borderRadius: 10, overflow: "hidden", fontSize: 0 }}>
+                    <div style={{
+                      background: "linear-gradient(135deg, #007BFF, #0057b8)",
+                      padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 5, background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: "#fff" }}>M</span>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>Muster Agentur GmbH</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)" }}>Monatlicher Website-Report</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: "#fff" }}>April 2026</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)" }}>Müller & Söhne Sanitär</div>
+                      </div>
+                    </div>
+                    <div style={{ padding: "12px 16px" }}>
+                      <div style={{ padding: "8px 10px", borderRadius: 6, background: "rgba(0,123,255,0.06)", border: "1px solid rgba(0,123,255,0.15)", marginBottom: 10 }}>
+                        <div style={{ fontSize: 7, fontWeight: 700, color: "#007BFF", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Management-Zusammenfassung</div>
+                        <div style={{ fontSize: 8, color: "#444", lineHeight: 1.6 }}>
+                          Im April 2026 haben wir alle vereinbarten Leistungen erbracht und den reibungslosen Betrieb Ihrer Website sichergestellt. Durch proaktive WCAG-Audits und sofortige Fehlerbehebung per KI-Assistent wurde die Rechtssicherheit Ihrer Online-Präsenz kontinuierlich gewährleistet.
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
+                        {[
+                          { label: "Uptime", value: "98%" },
+                          { label: "Ladezeit", value: "420ms" },
+                          { label: "Scans", value: "3" },
+                          { label: "Aktionen", value: "7" },
+                        ].map(k => (
+                          <div key={k.label} style={{ padding: "6px 8px", borderRadius: 5, border: "1px solid #e5e7eb", textAlign: "center" }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: "#007BFF" }}>{k.value}</div>
+                            <div style={{ fontSize: 7, color: "#999", marginTop: 1 }}>{k.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden" }}>
+                        {[
+                          { icon: "🤖", label: "KI-Optimierungsvorschlag erstellt", date: "12.04" },
+                          { icon: "📋", label: "Jira-Ticket: PHP-Update erforderlich", date: "08.04" },
+                          { icon: "🔍", label: "WCAG-Audit durchgeführt (7 Issues)", date: "04.04" },
+                        ].map((a, i) => (
+                          <div key={i} style={{
+                            padding: "5px 10px", display: "flex", alignItems: "center", gap: 6,
+                            borderBottom: i < 2 ? "1px solid #f5f5f5" : "none",
+                          }}>
+                            <span style={{ fontSize: 9 }}>{a.icon}</span>
+                            <span style={{ flex: 1, fontSize: 8, color: "#333" }}>{a.label}</span>
+                            <span style={{ fontSize: 7, color: "#bbb" }}>{a.date}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
+              White-Label Report — mit deinem Logo, deiner Farbe, deinem Namen
+            </p>
+          </div>
+        </section>
+
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
         {/* INTEGRATIONS SCHALTZENTRALE */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
           <style>{`
