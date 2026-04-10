@@ -274,11 +274,10 @@ function AgencySidebar({ firstName, plan, planBadge, domainCount, domainLimit, i
   domainCount: number; domainLimit: number; isEnterprise: boolean;
 }) {
   const navItems = [
-    { label: "Übersicht",   href: "/dashboard",         active: true,  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
-    { label: "Kunden",      href: "/dashboard/clients", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-    { label: "Deep-Audits", href: "/dashboard/scan",    active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
-    { label: "Berichte",    href: "/dashboard/reports", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-    { label: "Team",        href: "/dashboard/team",    active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { label: "Kommandozentrale",   href: "/dashboard",          active: true,  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
+    { label: "Kundenliste",        href: "/dashboard/clients",  active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { label: "Berichte-Archiv",    href: "/dashboard/reports",  active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+    { label: "Team-Einstellungen", href: "/dashboard/team",     active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
     ...(isEnterprise ? [{ label: "Admin / Rechte", href: "/dashboard/admin", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> }] : []),
   ];
   return (
@@ -431,6 +430,10 @@ export default async function DashboardPage() {
         .fix-details summary { cursor: pointer; user-select: none; }
         .fix-details summary::-webkit-details-marker { display: none; }
         .issue-row:hover { background: #F8FAFC !important; }
+        /* Agency: new-client modal via CSS :target */
+        .agency-modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .agency-modal:target { display: flex; }
+        .agency-client-row:hover { background: #F8FAFC !important; }
         /* Smart-Guard: checkbox-based done state via :has() */
         .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
         .fix-details:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: ${C.textMuted} !important; }
@@ -878,53 +881,180 @@ export default async function DashboardPage() {
       {/* ══════════════════════════════════════════════════════════
           AGENCY LAYOUT  (plan: pro / agentur / enterprise)
           ══════════════════════════════════════════════════════════ */}
-      {isAgency && (
-        <div style={{ display: "flex", maxWidth: 1400, margin: "0 auto" }}>
-          <AgencySidebar firstName={firstName} plan={plan} planBadge={badge} domainCount={domainCount} domainLimit={domainLimit} isEnterprise={layout === "enterprise"} />
-          <main style={{ flex: 1, minWidth: 0, padding: "32px 32px 80px" }}>
-            <div style={{ marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <p style={{ margin: "0 0 2px", fontSize: 11, color: C.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Willkommen zurück</p>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>{firstName}</h1>
-              </div>
-              <Link href="/dashboard/clients/new" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 10, background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13, boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Neuen Kunden anlegen
-              </Link>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginBottom: 28 }}>
-              {[
-                { value: DUMMY_CLIENTS.length,                                      label: "Kunden gesamt",  color: C.blue },
-                { value: DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0),  label: "Domains",        color: C.green },
-                { value: DUMMY_CLIENTS.filter(c => c.status === "critical").length, label: "Kritisch",       color: C.red },
-                { value: scans.length,                                              label: "Scans gesamt",   color: C.textSub },
-              ].map(s => (
-                <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", boxShadow: C.shadow }}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: s.color, letterSpacing: "-0.025em", lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 5 }}>{s.label}</div>
+      {isAgency && (()=> {
+        const clientSlotLimit = layout === "enterprise" ? 999 : plan === "agentur" ? 50 : 10;
+        const usedSlots       = DUMMY_CLIENTS.length;
+        const slotsLabel      = layout === "enterprise" ? "∞" : String(clientSlotLimit);
+
+        const healthScore = (status: string) =>
+          status === "ok" ? 88 : status === "warning" ? 61 : 34;
+
+        const lastScanId = scans[0]?.id ?? null;
+
+        return (
+          <div style={{ display: "flex", maxWidth: 1400, margin: "0 auto" }}>
+            <AgencySidebar firstName={firstName} plan={plan} planBadge={badge} domainCount={domainCount} domainLimit={domainLimit} isEnterprise={layout === "enterprise"} />
+
+            <main style={{ flex: 1, minWidth: 0, padding: "28px 32px 80px" }}>
+
+              {/* ── Header ── */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <p style={{ margin: "0 0 2px", fontSize: 11, color: C.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Agentur-Dashboard</p>
+                  <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>Kommandozentrale</h1>
                 </div>
-              ))}
-            </div>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, boxShadow: C.shadow, overflow: "hidden" }}>
-              <div style={{ padding: "13px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Kunden-Übersicht</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 11, color: C.textMuted }}>{DUMMY_CLIENTS.length} Kunden · Dummy-Daten</span>
-                  <Link href="/dashboard/clients" style={{ fontSize: 12, color: C.blue, fontWeight: 600 }}>Alle →</Link>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {/* Plan badge */}
+                  <span style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}` }}>
+                    Plan: {badge.label}
+                  </span>
+                  {/* Slots */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 13px", borderRadius: 20, background: usedSlots >= clientSlotLimit ? C.redBg : C.card, border: `1px solid ${usedSlots >= clientSlotLimit ? "#FECACA" : C.border}` }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={usedSlots >= clientSlotLimit ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: usedSlots >= clientSlotLimit ? C.red : C.text }}>
+                      Kunden-Slots: {usedSlots} / {slotsLabel}
+                    </span>
+                  </div>
+                  {/* CTA */}
+                  <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 2px 12px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    + Neuen Kunden / Projekt
+                  </a>
                 </div>
               </div>
-              <div style={{ padding: "8px 20px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 1fr 180px", gap: 16 }}>
-                {["Kunde / Logo", "Domains", "Status", "Letzter Scan", "Quick-Actions"].map(h => (
-                  <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
+
+              {/* ── Stat Strip ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+                {[
+                  { value: DUMMY_CLIENTS.length,                                          label: "Aktive Kunden",     color: C.blue,    icon: "👥" },
+                  { value: DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0),       label: "Domains gesamt",   color: C.green,   icon: "🌐" },
+                  { value: DUMMY_CLIENTS.filter(c => c.status === "critical").length,      label: "Handlungsbedarf",  color: C.red,     icon: "🔴" },
+                  { value: scans.length,                                                   label: "Scans gesamt",     color: C.textSub, icon: "📊" },
+                ].map(s => (
+                  <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", boxShadow: C.shadow, display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 22 }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 26, fontWeight: 800, color: s.color, letterSpacing: "-0.025em", lineHeight: 1 }}>{s.value}</div>
+                      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{s.label}</div>
+                    </div>
+                  </div>
                 ))}
               </div>
-              {DUMMY_CLIENTS.map((client, i) => (
-                <ClientRow key={client.id} client={client} last={i === DUMMY_CLIENTS.length - 1} />
-              ))}
+
+              {/* ── Kunden-Matrix ── */}
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadowMd }}>
+
+                {/* Table header */}
+                <div style={{ padding: "14px 22px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
+                  <span style={{ fontSize: 11, color: C.textMuted }}>{DUMMY_CLIENTS.length} Projekte · Demo-Daten</span>
+                </div>
+
+                {/* Column headers */}
+                <div style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.6fr 110px 130px 140px", gap: 16, alignItems: "center" }}>
+                  {["Kunde", "Domain", "Status", "Health-Score", "Aktion"].map(h => (
+                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
+                  ))}
+                </div>
+
+                {/* Rows */}
+                {DUMMY_CLIENTS.map((client, i) => {
+                  const score  = healthScore(client.status);
+                  const isOk   = client.status === "ok";
+                  const isCrit = client.status === "critical";
+                  const statusConf = isOk
+                    ? { label: "Sicher",           color: C.green, bg: C.greenBg,  border: "#A7F3D0" }
+                    : isCrit
+                    ? { label: "Handlungsbedarf",  color: C.red,   bg: C.redBg,    border: "#FECACA" }
+                    : { label: "Prüfen",           color: C.amber, bg: C.amberBg,  border: "#FDE68A" };
+                  const scoreColor = score >= 75 ? C.green : score >= 50 ? C.amber : C.red;
+                  const detailHref = lastScanId ? `/dashboard/scans/${lastScanId}` : "/dashboard/scan";
+
+                  return (
+                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.6fr 110px 130px 140px", gap: 16, alignItems: "center", padding: "14px 22px", borderBottom: i < DUMMY_CLIENTS.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
+
+                      {/* Kunde */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: `${client.color}14`, border: `1px solid ${client.color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: client.color }}>
+                          {client.initials}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.name}</div>
+                          <div style={{ fontSize: 11, color: C.textMuted }}>{client.contact}</div>
+                        </div>
+                      </div>
+
+                      {/* Domain */}
+                      <div style={{ minWidth: 0 }}>
+                        {client.domains.slice(0, 2).map((d, di) => (
+                          <a key={d} href={`https://${d}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: C.blue, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: di === 0 && client.domains.length > 1 ? 2 : 0, textDecoration: "none" }}>
+                            {d}
+                          </a>
+                        ))}
+                        {client.domains.length > 2 && <span style={{ fontSize: 10, color: C.textMuted }}>+{client.domains.length - 2} weitere</span>}
+                      </div>
+
+                      {/* Status */}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, color: statusConf.color, background: statusConf.bg, border: `1px solid ${statusConf.border}`, whiteSpace: "nowrap" }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: statusConf.color, display: "inline-block" }} />
+                        {statusConf.label}
+                      </span>
+
+                      {/* Health-Score */}
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: scoreColor, letterSpacing: "-0.02em" }}>{score}</span>
+                          <span style={{ fontSize: 10, color: C.textMuted }}>/100</span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
+                          <div style={{ height: "100%", borderRadius: 99, width: `${score}%`, background: scoreColor }} />
+                        </div>
+                      </div>
+
+                      {/* Aktion */}
+                      <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+                        Zu den Details →
+                      </Link>
+
+                    </div>
+                  );
+                })}
+
+              </div>
+            </main>
+          </div>
+        );
+      })()}
+
+      {/* ── New Client Modal (CSS :target, no JS) ── */}
+      <div id="modal-new-client" className="agency-modal">
+        <div style={{ background: C.card, borderRadius: 20, padding: "32px", maxWidth: 480, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", position: "relative" }}>
+          <a href="#" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, textDecoration: "none", lineHeight: 1 }}>×</a>
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>Neues Projekt</p>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>Kunden anlegen</h2>
+            <p style={{ margin: "6px 0 0", fontSize: 13, color: C.textSub }}>Füge einen neuen Kunden zur Kunden-Matrix hinzu.</p>
+          </div>
+          <form action="/dashboard/scan" method="GET" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 5 }}>Kundenname</label>
+              <input name="clientName" type="text" placeholder="z.B. Autohaus Müller GmbH" style={{ width: "100%", padding: "10px 14px", borderRadius: 9, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
             </div>
-          </main>
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 5 }}>Website-URL</label>
+              <input name="url" type="url" placeholder="https://kunde-website.de" required style={{ width: "100%", padding: "10px 14px", borderRadius: 9, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button type="submit" style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
+                Ersten Scan starten →
+              </button>
+              <a href="#" style={{ padding: "11px 18px", borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`, color: C.textSub, fontWeight: 700, fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center" }}>
+                Abbrechen
+              </a>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
 
     </div>
   );

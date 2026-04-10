@@ -194,8 +194,9 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
       <main style={{ maxWidth: 920, margin: "0 auto", padding: "40px 24px 80px" }}>
 
         {/* BACK */}
-        <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: C.textMuted, textDecoration: "none", marginBottom: 24 }}>
-          ← Dashboard
+        <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: C.textSub, textDecoration: "none", marginBottom: 24, padding: "7px 14px", borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Zurück zur Übersicht
         </Link>
 
         {/* PAGE HEADER */}
@@ -264,7 +265,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
         )}
 
         {/* ACTIONS */}
-        <div style={{ marginTop: 28, display: "flex", gap: 10, flexWrap: "wrap" }} className="no-print">
+        <div style={{ marginTop: 28, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }} className="no-print">
           <Link href="/dashboard/scan" style={{
             padding: "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 700,
             background: C.blue, color: "#fff",
@@ -272,7 +273,22 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
           }}>
             Neuer Scan →
           </Link>
-          <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
+
+          {/* PDF Export: White-Label für Agency-Pläne */}
+          {(plan === "agentur" || plan === "pro" || plan === "enterprise" || plan === "single") ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
+              {(plan === "agentur" || plan === "pro" || plan === "enterprise") && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, background: "#F0FDF4", border: "1px solid #A7F3D0", color: "#16A34A" }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Neutrales Branding aktiv
+                </span>
+              )}
+            </div>
+          ) : (
+            <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
+          )}
+
           <Link href="/dashboard" style={{
             padding: "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14,
             border: `1px solid ${C.border}`, color: C.textSub, background: C.card,
