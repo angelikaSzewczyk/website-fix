@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -256,7 +257,7 @@ function hexToRgb(hex: string): string {
 export default function FreeDashboardClient(props: FreeDashboardProps) {
   const {
     firstName, plan,
-    lastScan, issues,
+    lastScan, lastScanResult, issues,
     redCount, yellowCount,
     rechtIssues, speedIssues, techIssues,
     cms, bfsgOk, speedScore,
@@ -264,6 +265,19 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   } = props;
 
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
+  const [userMenuOpen, setUserMenuOpen]       = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const isFree     = plan === "free";
   const planLabel  = isFree ? "Free" : "Smart-Guard";
@@ -275,10 +289,46 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     : null;
   const greenCount = issues.filter(i => i.severity === "green").length;
 
-  // Simulated tech
-  const server  = "Nginx";
-  const php     = "8.2";
-  const sslLabel = "Aktiv";
+  // ── Tech fingerprint detection from scan text ──────────────────────────────
+  const scanText = (lastScanResult ?? "").toLowerCase();
+  const detectBuilder = (): string | null => {
+    if (/elementor/.test(scanText))                      return "Elementor";
+    if (/divi/.test(scanText))                           return "Divi";
+    if (/wpbakery|vc_row|vc-row/.test(scanText))         return "WPBakery";
+    if (/beaver[\s_-]?builder/.test(scanText))           return "Beaver Builder";
+    if (/avada/.test(scanText))                          return "Avada";
+    if (/oxygen[\s_-]?builder/.test(scanText))           return "Oxygen";
+    if (/gutenberg/.test(scanText))                      return "Gutenberg";
+    return null;
+  };
+  const detectServer = (): string => {
+    if (/nginx/.test(scanText))                          return "Nginx";
+    if (/apache/.test(scanText))                         return "Apache";
+    if (/litespeed/.test(scanText))                      return "LiteSpeed";
+    if (/cloudflare/.test(scanText))                     return "Cloudflare";
+    return "Nicht eindeutig erkannt";
+  };
+  const detectPhp = (): string => {
+    const m = scanText.match(/php[\s/]?(8\.\d|7\.\d)/);
+    if (m) return m[1];
+    if (/php\s*8/.test(scanText)) return "8.x";
+    if (/php\s*7/.test(scanText)) return "7.x";
+    return "Nicht eindeutig erkannt";
+  };
+
+  const cmsLabel   = cms.label === "Custom" ? "Nicht eindeutig erkannt" : cms.label + (cms.version ? ` ${cms.version}` : "");
+  const builder    = detectBuilder();
+  const server     = detectServer();
+  const php        = detectPhp();
+  const sslLabel   = "Aktiv";
+
+  // ── Impact label per category / severity ──────────────────────────────────
+  function getImpact(category: string, severity: string): { label: string; color: string } {
+    if (category === "recht")   return { label: "BFSG-Risiko",       color: "#f87171" };
+    if (category === "speed")   return { label: "Conversion-Risiko", color: D.amber   };
+    if (severity === "red")     return { label: "SEO-Risiko",        color: "#f87171" };
+    return                             { label: "SEO-Risiko",        color: D.textMuted };
+  }
 
   // Simulated performance
   const lcpMs       = Math.max(1200, 4200 - speedScore * 30);
@@ -338,24 +388,89 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           ))}
         </nav>
 
-        {/* User */}
-        <div style={{ padding: "14px 16px", borderTop: `1px solid ${D.sidebarBdr}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        {/* User area + dropdown */}
+        <div ref={userMenuRef} style={{ padding: "10px 10px 12px", borderTop: `1px solid ${D.sidebarBdr}`, position: "relative" }}>
+
+          {/* Dropdown menu — renders above the trigger */}
+          {userMenuOpen && (
             <div style={{
-              width: 28, height: 28, borderRadius: "50%",
+              position: "absolute", bottom: "calc(100% - 2px)", left: 10, right: 10,
+              background: "#0f1623",
+              border: `1px solid ${D.borderMid}`,
+              borderRadius: D.radiusSm,
+              boxShadow: "0 -8px 24px rgba(0,0,0,0.5)",
+              overflow: "hidden",
+              zIndex: 60,
+            }}>
+              <Link
+                href="/dashboard/settings"
+                onClick={() => setUserMenuOpen(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  padding: "9px 12px",
+                  fontSize: 13, color: D.textSub,
+                  textDecoration: "none",
+                  borderBottom: `1px solid ${D.divider}`,
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Einstellungen
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  width: "100%", padding: "9px 12px",
+                  fontSize: 13, color: "rgba(248,113,113,0.8)",
+                  background: "none", border: "none", cursor: "pointer",
+                  textAlign: "left", fontFamily: "inherit",
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Abmelden
+              </button>
+            </div>
+          )}
+
+          {/* Trigger row */}
+          <button
+            onClick={() => setUserMenuOpen(o => !o)}
+            style={{
+              display: "flex", alignItems: "center", gap: 9,
+              width: "100%", padding: "7px 8px",
+              background: userMenuOpen ? "rgba(255,255,255,0.04)" : "transparent",
+              border: `1px solid ${userMenuOpen ? D.borderMid : "transparent"}`,
+              borderRadius: D.radiusXs,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
               background: D.blueBg, border: `1px solid ${D.blueBorder}`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
             }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft }}>
                 {firstName.charAt(0).toUpperCase()}
               </span>
             </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>{firstName}</p>
+            <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: D.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {firstName}
+              </p>
               <p style={{ margin: 0, fontSize: 10, color: D.textMuted, lineHeight: 1.3 }}>Plan: {planLabel}</p>
             </div>
-          </div>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ flexShrink: 0, transform: userMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+          </button>
         </div>
       </aside>
 
@@ -463,28 +578,45 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           </Card>
 
           {/* ② TECH FINGERPRINT STRIP */}
-          {lastScan && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
-              {[
-                { label: "CMS",    value: cms.label + (cms.version ? ` ${cms.version}` : ""), color: "#7aa6ff" },
-                { label: "Server", value: server,   color: "#8df3d3" },
-                { label: "PHP",    value: php,       color: "#c084fc" },
-                { label: "SSL",    value: sslLabel,  color: "#4ade80" },
-              ].map(item => (
-                <div key={item.label} style={{
-                  display: "flex", alignItems: "center", gap: 7,
-                  padding: "5px 12px 5px 10px",
-                  borderRadius: 20,
-                  background: `rgba(${hexToRgb(item.color)},0.06)`,
-                  border: `1px solid rgba(${hexToRgb(item.color)},0.2)`,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, flexShrink: 0, opacity: 0.8 }} />
-                  <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {lastScan && (() => {
+            const unknown = "Nicht eindeutig erkannt";
+            const chips: { label: string; value: string; color: string }[] = [
+              { label: "CMS",     value: cmsLabel,                    color: "#7aa6ff" },
+              ...(builder ? [{ label: "Builder", value: builder,      color: "#c084fc" }] : []),
+              { label: "Server",  value: server,                      color: "#8df3d3" },
+              { label: "PHP",     value: php,                         color: "#a78bfa" },
+              { label: "SSL",     value: sslLabel,                    color: "#4ade80" },
+            ];
+            return (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
+                {chips.map(item => {
+                  const isUnknown = item.value === unknown;
+                  const col = isUnknown ? D.textMuted : item.color;
+                  return (
+                    <div key={item.label} style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "5px 12px 5px 10px",
+                      borderRadius: 20,
+                      background: isUnknown ? "rgba(255,255,255,0.02)" : `rgba(${hexToRgb(item.color)},0.06)`,
+                      border: `1px solid ${isUnknown ? D.border : `rgba(${hexToRgb(item.color)},0.2)`}`,
+                    }}>
+                      <span style={{
+                        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                        background: col, opacity: isUnknown ? 0.4 : 0.85,
+                      }} />
+                      <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
+                      <span style={{
+                        fontSize: 11, fontWeight: isUnknown ? 400 : 700,
+                        color: col, fontStyle: isUnknown ? "italic" : "normal",
+                      }}>
+                        {item.value}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* ③ BFSG / COMPLIANCE BANNER */}
           {lastScan && (
@@ -634,32 +766,43 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       overflow: "hidden",
                     }}>
                       {/* Row */}
-                      <button
-                        onClick={() => setExpandedFinding(isOpen ? null : idx)}
-                        style={{
-                          width: "100%", background: "none", border: "none", cursor: "pointer",
-                          padding: "14px 18px",
-                          display: "flex", alignItems: "center", gap: 12,
-                          textAlign: "left", fontFamily: "inherit",
-                        }}
-                      >
-                        <SevBadge sev={issue.severity} />
-                        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: D.text }}>
-                          {issue.title}
-                        </span>
-                        <span style={{ fontSize: 11, color: D.textMuted,
-                          padding: "2px 8px", borderRadius: 4,
-                          background: `rgba(255,255,255,0.04)`, border: `1px solid ${D.border}`,
-                          textTransform: "uppercase", letterSpacing: "0.06em",
-                        }}>
-                          {issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "Speed" : "Technik"}
-                        </span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                          stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
-                          <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                      </button>
+                      {(() => {
+                        const impact = getImpact(issue.category, issue.severity);
+                        return (
+                          <button
+                            onClick={() => setExpandedFinding(isOpen ? null : idx)}
+                            style={{
+                              width: "100%", background: "none", border: "none", cursor: "pointer",
+                              padding: "13px 18px",
+                              display: "flex", alignItems: "center", gap: 12,
+                              textAlign: "left", fontFamily: "inherit",
+                            }}
+                          >
+                            <SevBadge sev={issue.severity} />
+                            {/* Title + impact */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>
+                                {issue.title}
+                              </p>
+                              <p style={{ margin: "2px 0 0", fontSize: 11, color: impact.color, fontWeight: 500, opacity: 0.85 }}>
+                                ↑ {impact.label}
+                              </p>
+                            </div>
+                            <span style={{ fontSize: 10, color: D.textMuted, flexShrink: 0,
+                              padding: "2px 7px", borderRadius: 4,
+                              background: "rgba(255,255,255,0.03)", border: `1px solid ${D.border}`,
+                              textTransform: "uppercase", letterSpacing: "0.06em",
+                            }}>
+                              {issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "Speed" : "Technik"}
+                            </span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                              stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                              style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                              <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                          </button>
+                        );
+                      })()}
 
                       {/* Expanded body */}
                       {isOpen && (
@@ -692,20 +835,22 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                           {/* Locked fix guide */}
                           <div style={{
                             display: "flex", alignItems: "center", gap: 10,
-                            padding: "10px 14px", borderRadius: D.radiusXs,
-                            background: "rgba(255,255,255,0.02)",
-                            border: `1px solid ${D.borderMid}`,
+                            padding: "11px 14px", borderRadius: D.radiusXs,
+                            background: D.blueBg,
+                            border: `1px solid ${D.blueBorder}`,
                           }}>
-                            <LockIco size={14} color={D.textMuted} />
-                            <span style={{ flex: 1, fontSize: 12, color: D.textMuted }}>
-                              Vollständige Fix-Anleitung gesperrt
+                            <LockIco size={14} color={D.blueSoft} />
+                            <span style={{ flex: 1, fontSize: 12, color: D.textSub, lineHeight: 1.4 }}>
+                              Detaillierte Handlungsempfehlung im Smart-Guard Plan verfügbar
                             </span>
                             <Link href="/smart-guard" style={{
-                              fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
-                              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                              color: D.blueSoft, textDecoration: "none",
+                              fontSize: 11, fontWeight: 700,
+                              padding: "5px 12px", borderRadius: 6,
+                              background: D.blue, color: "#fff",
+                              textDecoration: "none", whiteSpace: "nowrap",
+                              boxShadow: D.blueGlow,
                             }}>
-                              Freischalten
+                              Smart-Guard →
                             </Link>
                           </div>
                         </div>
@@ -744,13 +889,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑦ LOCKED SMART-GUARD MODULES */}
           <div style={{ marginBottom: 28 }}>
-            <SectionLabel>Smart-Guard — Premium</SectionLabel>
-            <SectionHead>Automatischer Schutz</SectionHead>
+            <SectionLabel>Smart-Guard · Nur im bezahlten Plan</SectionLabel>
+            <SectionHead>Kontinuierliche Website-Überwachung</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
                 {
                   title: "Score-Verlauf",
-                  desc: "7-Tage-Verlauf deines Website-Scores",
+                  valueLabel: "7 Tage · täglich",
+                  desc: "Verfolge, wie sich dein Website-Score über Zeit entwickelt — und erkenne Rückschritte bevor sie zum Problem werden.",
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -758,17 +904,19 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   ),
                 },
                 {
-                  title: "24/7 Monitoring",
-                  desc: "Sofort-Alert bei Ausfall oder Änderungen",
+                  title: "24/7 Live-Monitoring",
+                  valueLabel: "Echtzeit · Sofort-Alert",
+                  desc: "Automatische Überwachung auf Ausfälle, veränderte Inhalte und neue Sicherheitsrisiken — rund um die Uhr.",
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
                   ),
                 },
                 {
                   title: "PDF-Bericht",
-                  desc: "Automatisch generierter Monatsbericht",
+                  valueLabel: "Monatlich · automatisch",
+                  desc: "Professionell aufbereiteter Auditbericht als PDF — jederzeit abrufbar, teilbar und für Kunden- oder Archivzwecke verwendbar.",
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -784,44 +932,48 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   border: `1px solid ${D.border}`,
                   overflow: "hidden",
                   position: "relative",
+                  minHeight: 180,
                 }}>
-                  {/* Blurred mock content */}
-                  <div style={{ padding: "20px", filter: "blur(3px)", pointerEvents: "none", userSelect: "none", opacity: 0.35 }}>
-                    <div style={{ height: 8, borderRadius: 4, background: D.borderStrong, marginBottom: 10, width: "75%" }} />
-                    <div style={{ height: 6, borderRadius: 3, background: D.border, marginBottom: 8, width: "55%" }} />
-                    <div style={{ height: 60, borderRadius: D.radiusXs, background: "rgba(255,255,255,0.03)", border: `1px solid ${D.border}` }} />
+                  {/* Blurred mock data behind */}
+                  <div style={{ padding: "20px", filter: "blur(4px)", pointerEvents: "none", userSelect: "none", opacity: 0.25 }}>
+                    <div style={{ height: 7, borderRadius: 4, background: D.borderStrong, marginBottom: 12, width: "70%" }} />
+                    <div style={{ height: 5, borderRadius: 3, background: D.border, marginBottom: 8, width: "45%" }} />
+                    <div style={{ height: 55, borderRadius: D.radiusXs, background: "rgba(0,123,255,0.04)", border: `1px solid ${D.border}` }} />
                   </div>
                   {/* Lock overlay */}
                   <div style={{
                     position: "absolute", inset: 0,
                     display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center", gap: 8,
-                    padding: "16px",
+                    alignItems: "center", justifyContent: "center", gap: 7,
+                    padding: "20px",
+                    background: "rgba(10,25,47,0.55)",
+                    backdropFilter: "blur(1px)",
                   }}>
                     <div style={{
-                      width: 40, height: 40, borderRadius: "50%",
-                      background: D.blueBg,
-                      border: `1px solid ${D.blueBorder}`,
+                      width: 38, height: 38, borderRadius: "50%",
+                      background: D.blueBg, border: `1px solid ${D.blueBorder}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
                     }}>
                       {module.icon}
                     </div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: D.text, textAlign: "center" }}>
-                      {module.title}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, textAlign: "center", lineHeight: 1.5 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: D.text }}>{module.title}</p>
+                      <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: D.blueSoft, letterSpacing: "0.05em" }}>{module.valueLabel}</p>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, textAlign: "center", lineHeight: 1.55, maxWidth: 160 }}>
                       {module.desc}
                     </p>
                     <Link href="/smart-guard" style={{
-                      marginTop: 4,
+                      marginTop: 2,
                       display: "flex", alignItems: "center", gap: 5,
                       padding: "6px 14px", borderRadius: D.radiusXs,
-                      background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                      color: D.blueSoft, fontSize: 11, fontWeight: 700,
-                      textDecoration: "none",
+                      background: D.blue, color: "#fff",
+                      fontSize: 11, fontWeight: 700, textDecoration: "none",
+                      boxShadow: D.blueGlow,
                     }}>
-                      <LockIco size={11} color={D.blueSoft} />
-                      Freischalten
+                      <LockIco size={11} color="#fff" />
+                      Im Smart-Guard freischalten
                     </Link>
                   </div>
                 </div>
@@ -833,30 +985,33 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑧ DONE-FOR-YOU FIXES */}
           <div style={{ marginBottom: 40 }}>
-            <SectionLabel color={D.blueSoft}>Professionelle Hilfe</SectionLabel>
-            <SectionHead>Done-for-you Fixes</SectionHead>
+            <SectionLabel color={D.blueSoft}>Professioneller Service</SectionLabel>
+            <SectionHead>Wir beheben es für dich</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
                 {
                   step: "01",
                   color: "#7aa6ff",
-                  title: "Formular-Fix",
-                  desc: "Datenschutzkonformes Kontaktformular, DSGVO-Einwilligung und BFSG-Barrierefreiheit — sofort erledigt.",
-                  pills: ["DSGVO", "BFSG", "WCAG 2.2"],
+                  title: "Formular & DSGVO",
+                  outcome: "Rechtssicherheit in 24h",
+                  desc: "Wir prüfen und korrigieren dein Kontaktformular auf DSGVO-Konformität, korrekte Einwilligungstexte und BFSG-Barrierefreiheit — dokumentiert und abnahmebereit.",
+                  pills: ["DSGVO-konform", "BFSG", "WCAG 2.2"],
                 },
                 {
                   step: "02",
                   color: "#8df3d3",
-                  title: "Speed-Optimierung",
-                  desc: "Bildkomprimierung, Lazy Loading, Caching und JS-Minimierung — messbar schneller in 24h.",
-                  pills: ["LCP < 2.5s", "Core Web Vitals", "PageSpeed"],
+                  title: "Performance-Optimierung",
+                  outcome: "Messbar schneller laden",
+                  desc: "Bilder komprimieren, Lazy Loading einrichten, Server-Caching aktivieren und kritisches JavaScript reduzieren — spürbare Verbesserung der Core Web Vitals.",
+                  pills: ["LCP < 2.5s", "Core Web Vitals", "PageSpeed 90+"],
                 },
                 {
                   step: "03",
                   color: "#c084fc",
-                  title: "Mobile-Fix",
-                  desc: "Viewport, Touch-Targets und responsive Layout korrekt einrichten — auf allen Geräten perfekt.",
-                  pills: ["Viewport", "Touch-Targets", "Responsive"],
+                  title: "Mobile-Optimierung",
+                  outcome: "Auf allen Geräten perfekt",
+                  desc: "Viewport-Konfiguration, Touch-Target-Größen und responsive Layoutprobleme werden gezielt behoben — für ein einwandfreies Nutzererlebnis auf Smartphone und Tablet.",
+                  pills: ["Viewport", "Touch-Targets", "Responsive Design"],
                 },
               ].map(fix => (
                 <div key={fix.title} style={{
@@ -865,10 +1020,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   background: `rgba(${hexToRgb(fix.color)},0.04)`,
                   border: `1px solid rgba(${hexToRgb(fix.color)},0.18)`,
                   position: "relative", overflow: "hidden",
+                  display: "flex", flexDirection: "column",
                 }}>
-                  {/* Background step number */}
+                  {/* Background step watermark */}
                   <div style={{
-                    position: "absolute", right: 16, top: 10,
+                    position: "absolute", right: 14, top: 8,
                     fontSize: 52, fontWeight: 900,
                     color: `rgba(${hexToRgb(fix.color)},0.06)`,
                     lineHeight: 1, userSelect: "none", pointerEvents: "none",
@@ -876,15 +1032,20 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   }}>
                     {fix.step}
                   </div>
-                  <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700,
+                  {/* Label */}
+                  <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700,
                     color: fix.color, textTransform: "uppercase", letterSpacing: "0.1em",
                   }}>
-                    Done-for-you
+                    Service
                   </p>
-                  <h3 style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: D.text, letterSpacing: "-0.01em" }}>
+                  <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: D.text, letterSpacing: "-0.01em" }}>
                     {fix.title}
                   </h3>
-                  <p style={{ margin: "0 0 16px", fontSize: 13, color: D.textSub, lineHeight: 1.7 }}>
+                  {/* Outcome promise */}
+                  <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 600, color: fix.color, opacity: 0.9 }}>
+                    → {fix.outcome}
+                  </p>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: D.textSub, lineHeight: 1.7, flex: 1 }}>
                     {fix.desc}
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 18 }}>
@@ -902,12 +1063,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </div>
                   <Link href="/smart-guard" style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
-                    padding: "8px 16px", borderRadius: D.radiusSm,
+                    padding: "9px 18px", borderRadius: D.radiusSm,
                     background: D.blue, color: "#fff",
                     fontSize: 12, fontWeight: 700, textDecoration: "none",
-                    boxShadow: D.blueGlow,
+                    boxShadow: D.blueGlow, alignSelf: "flex-start",
                   }}>
-                    Jetzt beheben →
+                    Beheben lassen →
                   </Link>
                 </div>
               ))}
