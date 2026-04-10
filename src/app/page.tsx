@@ -129,6 +129,8 @@ const PLANS = [
       { text: "Basis-Check: Recht, Speed, Technik", highlight: false },
       { text: "KI-Diagnose auf Deutsch", highlight: false },
       { text: "Manuelle Fix-Guides", highlight: false },
+      { text: "Dashboard-Übersicht", highlight: false },
+      { text: "1 Website", highlight: false },
     ],
     cta: "Kostenlos starten",
     href: "/register",
@@ -176,11 +178,34 @@ const PLANS = [
       { text: "Team-Initialen in der Matrix", highlight: false },
       { text: "Multi-Projekt-Dashboard", highlight: false },
     ],
-    cta: "Agency Starter testen",
+    cta: "Agency-Account erstellen",
     href: "/register",
     recommended: false,
     enterprise: false,
     scale: false,
+  },
+  {
+    name: "Agency Pro",
+    price: "199",
+    per: "/Monat",
+    desc: "Full White-Label für professionelle Agenturen",
+    badge: null,
+    accent: "#7C3AED",
+    accentBg: "#F5F3FF",
+    accentBorder: "#DDD6FE",
+    features: [
+      { text: "Alles aus Agency Starter", highlight: false },
+      { text: "Unlimitierte Projekte (∞)", highlight: true },
+      { text: "Full White-Label (Logo & Farben)", highlight: true },
+      { text: "Eigene Subdomain", highlight: true },
+      { text: "Kunden-Login-Bereich", highlight: true },
+      { text: "Auto-Report-Versand an Kunden", highlight: true },
+    ],
+    cta: "Agency-Account erstellen",
+    href: "/register",
+    recommended: false,
+    enterprise: false,
+    scale: true,
   },
 ];
 
@@ -524,7 +549,7 @@ export default function Page() {
               </p>
             </div>
 
-            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
               {BENEFITS.map(b => (
                 <div key={b.label} style={{
                   background: "rgba(255,255,255,0.04)",
@@ -820,13 +845,19 @@ export default function Page() {
                 <div key={plan.name} style={{
                   background: "rgba(255,255,255,0.04)",
                   backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: plan.recommended ? `2px solid #2563EB` : `1px solid rgba(255,255,255,0.08)`,
+                  border: plan.recommended
+                    ? `2px solid #2563EB`
+                    : ("scale" in plan && plan.scale)
+                      ? `2px solid #7C3AED`
+                      : `1px solid rgba(255,255,255,0.08)`,
                   borderRadius: 18,
                   display: "flex", flexDirection: "column",
                   overflow: "hidden",
                   boxShadow: plan.recommended
                     ? "0 8px 40px rgba(37,99,235,0.2)"
-                    : "0 2px 20px rgba(0,0,0,0.3)",
+                    : ("scale" in plan && plan.scale)
+                      ? "0 8px 40px rgba(124,58,237,0.2)"
+                      : "0 2px 20px rgba(0,0,0,0.3)",
                   position: "relative",
                 }}>
 
@@ -867,7 +898,7 @@ export default function Page() {
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     {/* Plan name + desc */}
-                    <div style={{ marginBottom: 20 }}>
+                    <div style={{ marginBottom: 20, minHeight: 128 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: plan.recommended ? "#7aa6ff" : plan.enterprise ? "rgba(255,255,255,0.5)" : plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                         {plan.name}
                       </div>
@@ -894,7 +925,7 @@ export default function Page() {
                           <div style={{
                             width: 18, height: 18, borderRadius: 5, flexShrink: 0,
                             background: f.highlight
-                              ? (plan.recommended ? "#2563EB" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
+                              ? (plan.recommended ? "#2563EB" : ("scale" in plan && plan.scale) ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
                               : "rgba(255,255,255,0.07)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
@@ -920,14 +951,18 @@ export default function Page() {
                         textDecoration: "none",
                         background: plan.recommended
                           ? "#2563EB"
-                          : plan.enterprise
-                            ? "rgba(255,255,255,0.08)"
-                            : "rgba(255,255,255,0.06)",
-                        color: plan.recommended ? "#ffffff" : "rgba(255,255,255,0.7)",
-                        border: plan.recommended ? "none" : "1px solid rgba(255,255,255,0.1)",
+                          : ("scale" in plan && plan.scale)
+                            ? "#7C3AED"
+                            : plan.enterprise
+                              ? "rgba(255,255,255,0.08)"
+                              : "rgba(255,255,255,0.06)",
+                        color: (plan.recommended || ("scale" in plan && plan.scale)) ? "#ffffff" : "rgba(255,255,255,0.7)",
+                        border: (plan.recommended || ("scale" in plan && plan.scale)) ? "none" : "1px solid rgba(255,255,255,0.1)",
                         boxShadow: plan.recommended
                           ? "0 4px 14px rgba(37,99,235,0.35)"
-                          : "none",
+                          : ("scale" in plan && plan.scale)
+                            ? "0 4px 14px rgba(124,58,237,0.35)"
+                            : "none",
                         transition: "opacity 0.15s",
                       }}>
                         {plan.cta}
@@ -1205,7 +1240,7 @@ export default function Page() {
             }} />
             <div style={{ position: "relative" }}>
               <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Deine erste Website<br />scannt du kostenlos.
+                Deine erste Website<br />scannst du kostenlos.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
                 Keine Kreditkarte. Keine Installation.<br />Ergebnis in unter 60 Sekunden.
@@ -1222,7 +1257,7 @@ export default function Page() {
                 Jetzt kostenlos scannen →
               </Link>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
-                Danach: Agentur-Plan für 149€/Monat
+                Danach: Agentur-Plan für 99€/Monat
               </span>
             </div>
           </div>

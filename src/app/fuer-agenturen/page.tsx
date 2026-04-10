@@ -25,7 +25,7 @@ const PLANS = [
       { text: "PDF-Berichte & Score-Historie", highlight: false },
       { text: "24/7 Live-Monitoring", highlight: false },
     ],
-    cta: "Agency Starter starten",
+    cta: "Agency-Account erstellen",
     href: "/register",
     recommended: false,
     scale: false,
@@ -45,7 +45,7 @@ const PLANS = [
       { text: "Kunden-Login-Bereich", highlight: true },
       { text: "E-Mail Absendername konfigurierbar", highlight: false },
     ],
-    cta: "Agency Pro starten",
+    cta: "Agency-Account erstellen",
     href: "/register",
     recommended: true,
     scale: false,
@@ -823,7 +823,7 @@ export default function AgencyPage() {
                 }}
               />
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
-                Agency Core ab 149€/Monat · Jederzeit kündbar
+                Agency Starter ab 99€/Monat · Jederzeit kündbar
               </span>
             </div>
           </div>
