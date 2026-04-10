@@ -267,6 +267,33 @@ function ProgressBar({ plan }: { plan: string }) {
   );
 }
 
+// ─── Agency Top Bar ─────────────────────────────────────────────────────────────
+function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit }: {
+  badge: { label: string; color: string; bg: string; border: string };
+  usedSlots: number; slotsLabel: string; clientSlotLimit: number;
+}) {
+  return (
+    <div style={{ position: "sticky", top: 0, zIndex: 30, background: "#fff", borderBottom: `1px solid ${C.border}`, padding: "8px 28px" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", gap: 14 }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: C.text, whiteSpace: "nowrap" }}>Kommandozentrale</span>
+        <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
+          Plan: {badge.label}
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 12px", borderRadius: 20, background: usedSlots >= clientSlotLimit ? C.redBg : C.divider, border: `1px solid ${usedSlots >= clientSlotLimit ? "#FECACA" : C.border}` }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={usedSlots >= clientSlotLimit ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span style={{ fontSize: 11, fontWeight: 700, color: usedSlots >= clientSlotLimit ? C.red : C.text, whiteSpace: "nowrap" }}>
+            Slots: {usedSlots} / {slotsLabel}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Agency Sidebar ─────────────────────────────────────────────────────────────
 function AgencySidebar({ firstName, plan, planBadge, domainCount, domainLimit, isEnterprise }: {
   firstName: string; plan: string;
@@ -422,6 +449,11 @@ export default async function DashboardPage() {
   const bfsgOk     = rechtIssues.length === 0;
   const speedScore = Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
 
+  // Agency slots
+  const clientSlotLimit = layout === "enterprise" ? 999 : plan === "agentur" ? 50 : 10;
+  const usedSlots       = DUMMY_CLIENTS.length;
+  const slotsLabel      = layout === "enterprise" ? "∞" : String(clientSlotLimit);
+
   return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`
@@ -446,7 +478,10 @@ export default async function DashboardPage() {
         .pulse-dot { animation: pulse-ring 2s infinite; }
       `}</style>
 
-      <ProgressBar plan={plan} />
+      {isAgency
+        ? <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} />
+        : <ProgressBar plan={plan} />
+      }
 
       {/* ══════════════════════════════════════════════════════════
           FREE / SINGLE (Smart-Guard) LAYOUT
@@ -892,10 +927,7 @@ export default async function DashboardPage() {
         const lastScanId = scans[0]?.id ?? null;
 
         return (
-          <div style={{ display: "flex", maxWidth: 1400, margin: "0 auto" }}>
-            <AgencySidebar firstName={firstName} plan={plan} planBadge={badge} domainCount={domainCount} domainLimit={domainLimit} isEnterprise={layout === "enterprise"} />
-
-            <main style={{ flex: 1, minWidth: 0, padding: "28px 32px 80px" }}>
+          <main style={{ padding: "28px 32px 80px" }}>
 
               {/* ── Header ── */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, gap: 12, flexWrap: "wrap" }}>
@@ -1021,8 +1053,7 @@ export default async function DashboardPage() {
                 })}
 
               </div>
-            </main>
-          </div>
+          </main>
         );
       })()}
 
