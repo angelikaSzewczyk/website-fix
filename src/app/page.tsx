@@ -294,59 +294,74 @@ export default function Page() {
           </p>
 
           {/* ── STATUS CARDS ── */}
-          <div style={{ marginTop: 64, maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+          <div style={{ marginTop: 48, maxWidth: 580, marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
 
               {/* Sicherheit */}
               <div style={{
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 16, padding: "28px 24px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+                background: "rgba(8,10,20,0.7)",
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 20, padding: "22px 16px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                boxShadow: "0 0 20px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.4)",
               }}>
                 <div style={{
-                  width: 52, height: 52, borderRadius: "50%",
-                  background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+                  width: 44, height: 44, borderRadius: "50%",
+                  background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
                   display: "flex", alignItems: "center", justifyContent: "center",
+                  filter: "drop-shadow(0 0 6px rgba(34,197,94,0.4))",
                 }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Sicherheit</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Keine Schwachstellen gefunden</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Sicherheit</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>Keine Schwachstellen gefunden</div>
               </div>
 
               {/* Performance */}
               <div style={{
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(37,99,235,0.2)",
-                borderRadius: 16, padding: "28px 24px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-                boxShadow: "0 0 24px rgba(59,130,246,0.08)",
+                background: "rgba(8,10,20,0.7)",
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(37,99,235,0.15)",
+                borderRadius: 20, padding: "22px 16px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                boxShadow: "0 0 20px rgba(59,130,246,0.12), 0 2px 12px rgba(0,0,0,0.4)",
               }}>
-                <div style={{ fontSize: 42, fontWeight: 800, color: "#7aa6ff", letterSpacing: "-0.04em", lineHeight: 1 }}>
-                  98<span style={{ fontSize: 20, color: "rgba(122,166,255,0.5)" }}>/100</span>
+                <div style={{
+                  fontSize: 36, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.04em",
+                  background: "linear-gradient(135deg, #fff 30%, #7aa6ff 100%)",
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  filter: "drop-shadow(0 0 8px rgba(122,166,255,0.35))",
+                }}>
+                  98<span style={{ fontSize: 16 }}>/100</span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Performance</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Deine Seite lädt blitzschnell</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Performance</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>Deine Seite lädt blitzschnell</div>
               </div>
 
               {/* Rechtssicherheit */}
               <div style={{
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 16, padding: "28px 24px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+                background: "rgba(8,10,20,0.7)",
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 20, padding: "22px 16px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                boxShadow: "0 0 20px rgba(234,179,8,0.08), 0 2px 12px rgba(0,0,0,0.4)",
               }}>
                 <div style={{
-                  width: 52, height: 52, borderRadius: "50%",
-                  background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)",
+                  width: 44, height: 44, borderRadius: "50%",
+                  background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.2)",
                   display: "flex", alignItems: "center", justifyContent: "center",
+                  filter: "drop-shadow(0 0 6px rgba(234,179,8,0.35))",
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Rechtssicherheit</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>BFSG 2025 konform</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rechtssicherheit</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>BFSG 2025 konform</div>
               </div>
 
             </div>
