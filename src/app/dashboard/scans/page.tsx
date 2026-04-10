@@ -30,13 +30,13 @@ export default async function ScansPage() {
         WHERE user_id = ${session.user.id}
         ORDER BY created_at DESC
         LIMIT 20
-      ` as Promise<typeof scans>,
+      ` as unknown as Promise<typeof scans>,
       sql`
         SELECT COUNT(*)::int AS cnt
         FROM scans
         WHERE user_id = ${session.user.id}
           AND created_at >= date_trunc('month', NOW())
-      ` as Promise<{ cnt: number }[]>,
+      ` as unknown as Promise<{ cnt: number }[]>,
     ]);
 
     scans = scanRows;
