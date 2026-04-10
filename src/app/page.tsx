@@ -302,9 +302,10 @@ export default function Page() {
                 background: "rgba(8,10,20,0.7)",
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 20, padding: "22px 16px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                borderRadius: 20, padding: "22px 12px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
                 boxShadow: "0 0 20px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.4)",
+                overflow: "visible",
               }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: "50%",
@@ -325,17 +326,20 @@ export default function Page() {
                 background: "rgba(8,10,20,0.7)",
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 border: "1px solid rgba(37,99,235,0.15)",
-                borderRadius: 20, padding: "22px 16px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                borderRadius: 20, padding: "22px 12px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
                 boxShadow: "0 0 20px rgba(59,130,246,0.12), 0 2px 12px rgba(0,0,0,0.4)",
+                overflow: "visible",
               }}>
                 <div style={{
-                  fontSize: 36, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.04em",
+                  fontSize: "clamp(22px, 4vw, 34px)", fontWeight: 800, lineHeight: 1,
+                  letterSpacing: "-0.03em", whiteSpace: "nowrap",
                   background: "linear-gradient(135deg, #fff 30%, #7aa6ff 100%)",
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
                   filter: "drop-shadow(0 0 8px rgba(122,166,255,0.35))",
+                  padding: "0 4px",
                 }}>
-                  98<span style={{ fontSize: 16 }}>/100</span>
+                  98<span style={{ fontSize: "0.5em" }}>/100</span>
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Performance</div>
                 <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>Deine Seite lädt blitzschnell</div>
@@ -346,9 +350,10 @@ export default function Page() {
                 background: "rgba(8,10,20,0.7)",
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 20, padding: "22px 16px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                borderRadius: 20, padding: "22px 12px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
                 boxShadow: "0 0 20px rgba(234,179,8,0.08), 0 2px 12px rgba(0,0,0,0.4)",
+                overflow: "visible",
               }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: "50%",
