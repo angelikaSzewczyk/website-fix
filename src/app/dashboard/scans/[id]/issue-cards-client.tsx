@@ -4,28 +4,29 @@ import { useState, useRef, useEffect } from "react";
 import { CopyCodeButton, ResolvedButton } from "./issue-actions";
 
 const C = {
-  card:        "#FFFFFF",
-  border:      "#E2E8F0",
-  divider:     "#F1F5F9",
-  shadow:      "0 1px 4px rgba(0,0,0,0.07)",
-  text:        "#0F172A",
-  textSub:     "#475569",
-  textMuted:   "#94A3B8",
-  blue:        "#2563EB",
-  blueBg:      "#EFF6FF",
-  blueBorder:  "#BFDBFE",
-  green:       "#16A34A",
-  greenBg:     "#F0FDF4",
-  greenBorder: "#A7F3D0",
-  amber:       "#D97706",
-  amberBg:     "#FFFBEB",
-  amberBorder: "#FDE68A",
-  red:         "#DC2626",
-  redBg:       "#FEF2F2",
-  redBorder:   "#FCA5A5",
-  violet:      "#7C3AED",
-  violetBg:    "#F5F3FF",
-  violetBorder:"#DDD6FE",
+  bg:          "#0a0a0a",
+  card:        "rgba(255,255,255,0.04)",
+  border:      "rgba(255,255,255,0.09)",
+  divider:     "rgba(255,255,255,0.05)",
+  shadow:      "0 1px 12px rgba(0,0,0,0.6)",
+  text:        "rgba(255,255,255,0.92)",
+  textSub:     "rgba(255,255,255,0.62)",
+  textMuted:   "rgba(255,255,255,0.35)",
+  blue:        "#7aa6ff",
+  blueBg:      "rgba(37,99,235,0.15)",
+  blueBorder:  "rgba(37,99,235,0.35)",
+  green:       "#4ade80",
+  greenBg:     "rgba(74,222,128,0.1)",
+  greenBorder: "rgba(74,222,128,0.3)",
+  amber:       "#fbbf24",
+  amberBg:     "rgba(251,191,36,0.1)",
+  amberBorder: "rgba(251,191,36,0.3)",
+  red:         "#f87171",
+  redBg:       "rgba(248,113,113,0.1)",
+  redBorder:   "rgba(248,113,113,0.3)",
+  violet:      "#c084fc",
+  violetBg:    "rgba(192,132,252,0.12)",
+  violetBorder:"rgba(192,132,252,0.3)",
 };
 
 export type IssueBlock = {
@@ -218,22 +219,35 @@ function AutoFixButton() {
   );
 }
 
-// ─── Quick action buttons ─────────────────────────────────────────────────────
+// ─── Quick action buttons — prominent, always visible ─────────────────────────
 function QuickSlackButton({ title }: { title: string }) {
   const [sent, setSent] = useState(false);
   if (sent) return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", fontSize: 11, fontWeight: 600 }}>
-      ✓ Slack gesendet
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "6px 12px", borderRadius: 8,
+      background: "rgba(192,132,252,0.2)", border: "1px solid rgba(192,132,252,0.5)",
+      color: "#c084fc", fontSize: 12, fontWeight: 700,
+    }}>
+      ✓ Slack
     </span>
   );
   return (
     <button
       onClick={() => { setSent(true); setTimeout(() => setSent(false), 3000); }}
-      title={`Slack: Team über „${title}" informieren`}
-      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+      title={`Team über „${title}" informieren`}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "6px 12px", borderRadius: 8,
+        background: "rgba(192,132,252,0.12)", border: "1px solid rgba(192,132,252,0.35)",
+        color: "#c084fc", fontSize: 12, fontWeight: 700, cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
     >
-      <svg width="11" height="11" viewBox="0 0 24 24"><g fill="#7C3AED"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></g></svg>
-      Team informieren
+      <svg width="13" height="13" viewBox="0 0 24 24"><g fill="#c084fc">
+        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+      </g></svg>
+      Slack
     </button>
   );
 }
@@ -241,18 +255,29 @@ function QuickSlackButton({ title }: { title: string }) {
 function QuickJiraButton({ title }: { title: string }) {
   const [sent, setSent] = useState(false);
   if (sent) return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 600 }}>
-      ✓ Jira-Ticket erstellt
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "6px 12px", borderRadius: 8,
+      background: "rgba(122,166,255,0.2)", border: "1px solid rgba(122,166,255,0.5)",
+      color: "#7aa6ff", fontSize: 12, fontWeight: 700,
+    }}>
+      ✓ Jira
     </span>
   );
   return (
     <button
       onClick={() => { setSent(true); setTimeout(() => setSent(false), 3000); }}
       title={`Jira-Ticket für „${title}" erstellen`}
-      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "6px 12px", borderRadius: 8,
+        background: "rgba(37,99,235,0.15)", border: "1px solid rgba(122,166,255,0.35)",
+        color: "#7aa6ff", fontSize: 12, fontWeight: 700, cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
     >
-      <ToolIcon id="jira" color={C.blue} size={11} />
-      Ticket erstellen
+      <ToolIcon id="jira" color="#7aa6ff" size={13} />
+      Jira
     </button>
   );
 }
@@ -274,46 +299,60 @@ function IssueCard({ issue }: { issue: IssueBlock }) {
 
   return (
     <div style={{
-      background: C.card,
-      border: `1px solid ${C.border}`,
+      background: "rgba(255,255,255,0.04)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      border: `1px solid rgba(255,255,255,0.08)`,
+      borderLeft: `3px solid ${stripeColor}`,
       borderRadius: 14,
       boxShadow: C.shadow,
       overflow: "hidden",
     }}>
-      {/* Color stripe */}
-      <div style={{ height: 4, background: `linear-gradient(90deg, ${stripeColor}, ${stripeColor}66)` }} />
+      <div style={{ padding: "16px 20px" }}>
+        {/* TOP: badge row */}
+        <div style={{ marginBottom: 10 }}>
+          <span style={{
+            fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 5,
+            background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`,
+            letterSpacing: "0.06em", textTransform: "uppercase",
+          }}>
+            {issue.emoji} {priorityLabel}
+          </span>
+        </div>
 
-      <div style={{ padding: "20px 24px" }}>
-        {/* Header row: badge + title LEFT — quick actions + chevron RIGHT */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        {/* GRID: left = title + desc, right = actions */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 16, alignItems: "start" }}>
+
+          {/* Left: title + description */}
           <button
             onClick={() => setOpen(o => !o)}
-            style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-                background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`,
-                letterSpacing: "0.04em",
-              }}>
-                {issue.emoji} {priorityLabel}
-              </span>
-            </div>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>
+            <h3 style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>
               {issue.title}
             </h3>
+            {descText && (
+              <p style={{
+                margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6,
+                display: "-webkit-box", overflow: "hidden",
+                WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+              }}>
+                {descText}
+              </p>
+            )}
           </button>
 
-          {/* Right: quick actions + chevron */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, paddingTop: 2 }}>
+          {/* Right: Slack + Jira + chevron */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
             <QuickSlackButton title={issue.title} />
             <QuickJiraButton title={issue.title} />
             <div
               onClick={() => setOpen(o => !o)}
               style={{
-                width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`,
+                width: 28, height: 28, borderRadius: 8,
+                border: `1px solid ${C.border}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: C.textMuted, flexShrink: 0,
+                cursor: "pointer", color: C.textMuted, marginTop: 2,
                 transform: open ? "rotate(180deg)" : "none",
                 transition: "transform 0.2s ease",
               }}
@@ -324,17 +363,6 @@ function IssueCard({ issue }: { issue: IssueBlock }) {
             </div>
           </div>
         </div>
-
-        {/* Description — max 2 lines, always visible */}
-        {descText && (
-          <p style={{
-            margin: "8px 0 0", fontSize: 13, color: C.textSub, lineHeight: 1.65,
-            display: "-webkit-box", overflow: "hidden",
-            WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-          }}>
-            {descText}
-          </p>
-        )}
 
         {/* Accordion: AI Fix + Actions */}
         {open && (
@@ -443,7 +471,7 @@ export default function IssueCardsClient({ issues }: { issues: IssueBlock[] }) {
   const green  = issues.filter(i => i.severity === "green").length;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, background: "#0a0a0a", borderRadius: 16, padding: "20px" }}>
       {/* Summary row */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>

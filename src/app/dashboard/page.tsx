@@ -157,15 +157,14 @@ export default async function DashboardPage() {
   return (
     <main style={{ maxWidth: 1040, margin: "0 auto", padding: "36px 28px 80px" }}>
 
-      {/* ── ONBOARDING PROGRESS (Agentur) — TOP ── */}
-      {plan === "agentur" && (() => {
+      {/* ── ONBOARDING PROGRESS — TOP (alle Pläne) ── */}
+      {(() => {
         const slackOk  = !!(process.env.SLACK_WEBHOOK_URL || process.env.SLACK_BOT_TOKEN);
-        const clientOk = marginLevers.websitesMonitored > 0;
         const steps = [
-          { label: "Domain verbunden",      done: true },
-          { label: "Slack einrichten",       done: slackOk },
+          { label: "Account erstellt",       done: true },
+          { label: "Ersten Scan gestartet",  done: scans.length > 0 },
+          { label: "Slack verbunden",        done: slackOk },
           { label: "Branding eingerichtet",  done: brandingDone },
-          { label: "Ersten Kunden angelegt", done: clientOk },
         ];
         const doneCount = steps.filter(s => s.done).length;
         const pct       = Math.round((doneCount / steps.length) * 100);

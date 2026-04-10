@@ -20,7 +20,7 @@ import {
 
 // ── Design tokens — dark glassmorphism ────────────────────────────────────────
 const C = {
-  bg:          "#0D1117",
+  bg:          "#0a0a0a",
   card:        "rgba(255,255,255,0.04)",
   border:      "rgba(255,255,255,0.09)",
   divider:     "rgba(255,255,255,0.05)",
