@@ -353,7 +353,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     const srvMatch = /nginx/.test(t) ? "Nginx" : /apache/.test(t) ? "Apache" : /litespeed/.test(t) ? "LiteSpeed" : /cloudflare/.test(t) ? "Cloudflare" : null;
     if (srvMatch) chips.push({ label: "Server", value: srvMatch, color: "#8df3d3" });
     // Always show SSL and security — never leave strip empty
-    chips.push({ label: "SSL", value: "Pr\u00fcfung OK", color: "#4ade80" });
+    chips.push({ label: "SSL", value: "Prüfung OK", color: "#4ade80" });
     if (!srvMatch) chips.push({ label: "Server", value: "Analyse abgeschlossen", color: "#8df3d3" });
     return chips;
   }
@@ -547,6 +547,16 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: D.page, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <style>{`
+        @keyframes wf-pulse-dot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.35; transform: scale(0.8); }
+        }
+        @keyframes wf-ring {
+          0%   { transform: scale(1); opacity: 0.55; }
+          100% { transform: scale(2.4); opacity: 0; }
+        }
+      `}</style>
 
       {/* ══════════════════════════════════════════════════
           SIDEBAR
@@ -871,12 +881,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <SectionLabel>Scan · Sichtbarkeit &amp; Performance</SectionLabel>
               <span style={{
-                fontSize: 10, fontWeight: 700,
+                fontSize: 10, fontWeight: 600,
                 padding: "2px 9px", borderRadius: 20,
-                background: D.amberBg, border: `1px solid ${D.amberBorder}`,
-                color: D.amber, letterSpacing: "0.04em", whiteSpace: "nowrap",
+                background: "rgba(255,255,255,0.04)", border: `1px solid ${D.borderMid}`,
+                color: D.textMuted, letterSpacing: "0.04em", whiteSpace: "nowrap",
               }}>
-                Snapshot-Modus (gesch\u00e4tzt)
+                Snapshot-Modus
               </span>
             </div>
             <SectionHead>Search &amp; Performance Snapshot</SectionHead>
@@ -930,24 +940,13 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               ))}
             </div>
             {/* Snapshot disclaimer */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8,
-              marginTop: 12, padding: "8px 14px",
-              borderRadius: D.radiusXs,
-              background: "rgba(251,191,36,0.04)",
-              border: `1px solid rgba(251,191,36,0.12)`,
-            }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                stroke={D.amber} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                style={{ flexShrink: 0, opacity: 0.7 }}>
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <p style={{ margin: 0, fontSize: 11, color: D.textMuted, lineHeight: 1.5 }}>
-                Diese Werte sind Scan-Sch\u00e4tzungen. Pr\u00e4zise Live-Daten aus Google Search Console &amp; PageSpeed API sind im{" "}
-                <Link href="/smart-guard" style={{ color: D.blueSoft, textDecoration: "none", fontWeight: 600 }}>Smart-Guard Plan</Link>
-                {" "}verf\u00fcgbar.
-              </p>
-            </div>
+            <p style={{ margin: "10px 0 0", fontSize: 11, color: D.textFaint, lineHeight: 1.6, fontWeight: 400 }}>
+              Diese Werte basieren auf Scan-Schätzungen.{" "}
+              <Link href="/smart-guard" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
+                Präzise Live-Daten aus GSC &amp; PageSpeed
+              </Link>
+              {" "}sind im Smart-Guard Plan verfügbar.
+            </p>
           </div>
 
           <Divider style={{ marginBottom: 28 }} />
@@ -1023,39 +1022,64 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                             {issue.body}
                           </p>
 
-                          {/* Fix teaser — Smart-Guard gate */}
-                          <div style={{
-                            padding: "16px 18px",
-                            borderRadius: D.radiusSm,
-                            background: "rgba(0,123,255,0.05)",
-                            border: "1px solid rgba(0,123,255,0.2)",
-                            display: "flex", alignItems: "center", gap: 16,
-                          }}>
+                          {/* Fix teaser — milchglas Smart-Guard gate */}
+                          <div style={{ position: "relative", borderRadius: D.radiusSm, overflow: "hidden" }}>
+
+                            {/* Ghost steps — blurred behind glass */}
                             <div style={{
-                              width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                              display: "flex", alignItems: "center", justifyContent: "center",
+                              padding: "14px 18px 16px",
+                              background: "rgba(255,255,255,0.02)",
+                              border: `1px solid ${D.border}`,
+                              borderRadius: D.radiusSm,
+                              filter: "blur(3.5px)",
+                              userSelect: "none", pointerEvents: "none",
+                              opacity: 0.5,
                             }}>
-                              <LockIco size={15} color={D.blueSoft} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: D.text }}>
-                                Schritt-f\u00fcr-Schritt L\u00f6sung verf\u00fcgbar
+                              <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                                So behebst du das:
                               </p>
-                              <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.5 }}>
-                                Konkrete Handlungsschritte + Pr\u00fcfprotokoll im Smart-Guard Plan.
-                              </p>
+                              {[
+                                "Öffne das CMS-Dashboard und navigiere zum betroffenen Bereich.",
+                                "Aktiviere die Einstellung und speichere die Änderungen.",
+                                "Überprüfe die Korrektur im Browser und führe eine Verifikation durch.",
+                              ].map((s, i) => (
+                                <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < 2 ? 6 : 0 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft, flexShrink: 0, lineHeight: 1.6 }}>{i + 1}.</span>
+                                  <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
+                                </div>
+                              ))}
                             </div>
-                            <Link href="/smart-guard" style={{
-                              flexShrink: 0,
-                              display: "inline-flex", alignItems: "center", gap: 5,
-                              padding: "8px 16px", borderRadius: D.radiusXs,
-                              background: D.blue, color: "#fff",
-                              fontSize: 12, fontWeight: 700, textDecoration: "none",
-                              boxShadow: D.blueGlow, whiteSpace: "nowrap",
+
+                            {/* Frosted glass overlay */}
+                            <div style={{
+                              position: "absolute", inset: 0,
+                              background: "linear-gradient(to bottom, rgba(11,12,16,0.05) 0%, rgba(11,12,16,0.72) 55%, rgba(11,12,16,0.97) 100%)",
+                              borderRadius: D.radiusSm,
+                              display: "flex", flexDirection: "column", justifyContent: "flex-end",
+                              padding: "14px 16px",
                             }}>
-                              L\u00f6sung freischalten \u2192
-                            </Link>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <LockIco size={13} color={D.blueSoft} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: D.text }}>
+                                    Schritt-für-Schritt Lösung verfügbar
+                                  </p>
+                                  <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
+                                    Freischalten mit Smart-Guard
+                                  </p>
+                                </div>
+                                <Link href="/smart-guard" style={{
+                                  flexShrink: 0,
+                                  display: "inline-flex", alignItems: "center", gap: 4,
+                                  padding: "7px 14px", borderRadius: D.radiusXs,
+                                  background: D.blue, color: "#fff",
+                                  fontSize: 11, fontWeight: 700, textDecoration: "none",
+                                  boxShadow: D.blueGlow, whiteSpace: "nowrap",
+                                }}>
+                                  Lösung freischalten →
+                                </Link>
+                              </div>
+                            </div>
                           </div>
 
                         </div>
@@ -1080,45 +1104,31 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
               {([
                 {
+                  key: "score",
                   title: "Score-Verlauf",
-                  badge: "T\u00e4glich \u00b7 30 Tage",
-                  desc: "Jede Verbesserung, jeder R\u00fcckschritt \u2014 sauber dokumentiert. Du siehst, ob deine Ma\u00dfnahmen wirken, bevor Google es tut.",
+                  badge: "Täglich · 30 Tage",
+                  desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
                   cta: "Score-Verlauf aktivieren",
-                  status: null,
-                  icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                  ),
+                  status: null as string | null,
                 },
                 {
+                  key: "monitor",
                   title: "24/7 Live-Monitoring",
-                  badge: "Echtzeit \u00b7 E-Mail-Alert",
-                  desc: "Ausfall, ver\u00e4nderte Inhalte, neue Sicherheitsprobleme \u2014 du wirst sofort informiert. Nicht einmal t\u00e4glich, sondern in dem Moment, in dem es passiert.",
+                  badge: "Echtzeit · E-Mail-Alert",
+                  desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
                   cta: "Monitoring aktivieren",
-                  status: "Inaktiv \u00b7 Wartet auf Aktivierung",
-                  icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                  ),
+                  status: "Inaktiv · Wartet auf Aktivierung" as string | null,
                 },
                 {
+                  key: "pdf",
                   title: "Monatlicher PDF-Bericht",
-                  badge: "Automatisch \u00b7 Teilbar",
-                  desc: "Jeden Monat ein vollst\u00e4ndiger Auditbericht als PDF \u2014 automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder f\u00fcr die interne Dokumentation.",
+                  badge: "Automatisch · Teilbar",
+                  desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
                   cta: "Berichte aktivieren",
-                  status: null,
-                  icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                  ),
+                  status: null as string | null,
                 },
-              ] as const).map(module => (
-                <div key={module.title} style={{
+              ]).map(module => (
+                <div key={module.key} style={{
                   borderRadius: D.radius,
                   background: module.status ? "rgba(0,123,255,0.04)" : D.card,
                   border: `1px solid ${module.status ? D.blueBorder : D.border}`,
@@ -1129,14 +1139,66 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 }}>
                   {/* Icon row + optional status badge */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 10,
-                      background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      {module.icon}
-                    </div>
+
+                    {/* Score: icon + blurred mini chart */}
+                    {module.key === "score" ? (
+                      <div style={{ position: "relative", width: 40, height: 40, flexShrink: 0 }}>
+                        <div style={{
+                          width: 40, height: 40, borderRadius: 10,
+                          background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <svg width="20" height="14" viewBox="0 0 60 28" fill="none">
+                            <polyline points="0,22 10,16 20,20 30,8 40,12 50,4 60,10"
+                              stroke={D.blueSoft} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                              fill="none" opacity="0.9"/>
+                            <polyline points="0,22 10,16 20,20 30,8 40,12 50,4 60,10 60,28 0,28"
+                              stroke="none" fill="url(#sg)" opacity="0.25"/>
+                            <defs>
+                              <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#7aa6ff"/>
+                                <stop offset="100%" stopColor="#7aa6ff" stopOpacity="0"/>
+                              </linearGradient>
+                            </defs>
+                          </svg>
+                        </div>
+                      </div>
+                    ) : module.key === "monitor" ? (
+                      /* Monitoring: pulsing ring icon */
+                      <div style={{ position: "relative", width: 40, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {/* Outer pulse ring */}
+                        <div style={{
+                          position: "absolute", inset: 0, borderRadius: 10,
+                          border: `1px solid ${D.blueBorder}`,
+                          animation: "wf-ring 2s ease-out infinite",
+                        }} />
+                        <div style={{
+                          width: 40, height: 40, borderRadius: 10,
+                          background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          position: "relative", zIndex: 1,
+                        }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ animation: "wf-pulse-dot 2s ease-in-out infinite" }}>
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                          </svg>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 10,
+                        background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0,
+                      }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                      </div>
+                    )}
+
                     {module.status && (
                       <span style={{
                         fontSize: 10, fontWeight: 700,
@@ -1170,7 +1232,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     {module.desc}
                   </p>
 
-                  {/* CTA — always at bottom; monitoring card gets prominent full-width style */}
+                  {/* CTA — monitoring gets full-width prominent style */}
                   {module.status ? (
                     <Link href="/smart-guard" style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
@@ -1179,7 +1241,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       fontSize: 13, fontWeight: 700, textDecoration: "none",
                       boxShadow: "0 4px 18px rgba(0,123,255,0.4)",
                     }}>
-                      {module.cta} \u2192
+                      {module.cta} →
                     </Link>
                   ) : (
                     <Link href="/smart-guard" style={{
@@ -1190,7 +1252,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       fontSize: 11, fontWeight: 700, textDecoration: "none",
                       boxShadow: D.blueGlow,
                     }}>
-                      {module.cta} \u2192
+                      {module.cta} →
                     </Link>
                   )}
                 </div>
@@ -1205,7 +1267,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <SectionLabel color={D.blueSoft}>Optionaler Service</SectionLabel>
             <SectionHead>Lieber delegieren? Wir unterstützen gezielt.</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 620 }}>
-              Die Anleitung für jeden Fix liegt bereits im Dashboard. Wenn du bestimmte Punkte lieber abgeben möchtest, übernehmen wir die Umsetzung — dort, wo sie technisch sauber und ohne Risiko möglich ist. Alles andere erhältst du als genaue Schritt-für-Schritt-Anleitung.
+              Komplexe Optimierung lieber direkt an Profis abgeben? Wir setzen um, was wir im Audit gefunden haben — technisch sauber, dokumentiert und ohne Risiko für deine bestehende Website.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
               {([
