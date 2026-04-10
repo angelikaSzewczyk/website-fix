@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     num: "01",
-    label: "Vorbereitung",
-    title: "Deine URL eingeben",
+    label: "Schritt 01",
+    title: "Website scannen",
     desc: "Kein Plugin, kein Hosting-Zugang nötig. Einfach deine URL eintragen und unser System analysiert deine Seite sofort.",
     color: "#7aa6ff",
     icon: (
@@ -29,8 +29,8 @@ const STEPS = [
   },
   {
     num: "02",
-    label: "Analyse",
-    title: "Wachdienst aktivieren",
+    label: "Schritt 02",
+    title: "Überwachung aktiv",
     desc: "Unsere KI scannt deine Seite täglich auf Sicherheitslücken, Performance-Einbußen und gesetzliche Anforderungen wie das BFSG 2025.",
     color: "#8df3d3",
     icon: (
@@ -43,8 +43,8 @@ const STEPS = [
   },
   {
     num: "03",
-    label: "Resultat",
-    title: "Sicherheit genießen",
+    label: "Schritt 03",
+    title: "Bericht erhalten",
     desc: "Du erhältst klare, verständliche Status-Berichte. Bei Problemen wirst du sofort informiert – so bleibt deine Seite immer online und sicher.",
     color: "#c084fc",
     icon: (
@@ -81,8 +81,8 @@ const BENEFITS = [
     iconBg: "rgba(37,99,235,0.12)",
     iconBorder: "rgba(37,99,235,0.25)",
     iconColor: "#7aa6ff",
-    label: "Compliance",
-    title: "Gesetzlich abgesichert",
+    label: "Rechtssicher",
+    title: "BFSG 2025 konform",
     desc: "Wir überwachen die gesetzlichen Anforderungen des BFSG 2025 automatisch für dich und dokumentieren alles lückenlos für den Ernstfall.",
   },
   {
@@ -95,7 +95,7 @@ const BENEFITS = [
     iconBorder: "rgba(217,119,6,0.25)",
     iconColor: "#fbbf24",
     label: "Workflow",
-    title: "Sofort informiert werden",
+    title: "Sofort informiert",
     desc: "Probleme werden sofort erkannt und landen genau dort, wo du sie brauchst (z.B. Slack oder E-Mail) – so bleibst du immer informiert.",
   },
   {
@@ -111,7 +111,7 @@ const BENEFITS = [
     iconBorder: "rgba(124,58,237,0.25)",
     iconColor: "#c084fc",
     label: "Transparenz",
-    title: "Einfache Status-Berichte",
+    title: "Klare Auswertungen",
     desc: "Unsere Reports zeigen dir schwarz auf weiß, dass deine Seite sicher und performant ist – in einer Sprache, die jeder versteht.",
   },
 ];
