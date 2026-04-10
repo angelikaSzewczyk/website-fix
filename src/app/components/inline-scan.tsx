@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 
 type ScanPhase = "idle" | "scanning" | "done" | "error";
 
@@ -23,7 +22,6 @@ export default function InlineScan({
 }: {
   placeholder?: string;
 }) {
-  const router = useRouter();
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<ScanPhase>("idle");
   const [error, setError] = useState("");
@@ -162,9 +160,9 @@ export default function InlineScan({
         } catch { /* sessionStorage not available */ }
 
         setPhase("done");
-        // Brief pause to let "done" register, then redirect to results
+        // Use window.location.href to bypass Next.js router cache (same fix as adc4ac9)
         setTimeout(() => {
-          router.push(`/scan/results?url=${encodeURIComponent(url)}`);
+          window.location.href = `/scan/results?url=${encodeURIComponent(url)}`;
         }, 600);
       } else {
         setError(data.error ?? "Etwas ist schiefgelaufen.");

@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const maxSubpages = isPaid ? 50 : 25;
+    const maxSubpages = isPaid ? 30 : 10;
     const maxBrokenLinkChecks = isPaid ? 30 : 15;
 
     const scanData: Record<string, unknown> = { url: targetUrl };
