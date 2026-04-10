@@ -490,22 +490,23 @@ export default function Page() {
 
         {/* ── INTEGRATIONS ── */}
         <section style={{ padding: "72px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <style>{`@keyframes wf-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}`}</style>
           <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
             <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-              Integrationen
+              Connectivity
             </p>
             <h2 style={{ margin: "0 0 12px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>
-              Nahtlose Integration in deinen bestehenden Stack.
+              Nahtlose Integration in deinen Workflow.
             </h2>
-            <p style={{ margin: "0 0 48px", fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
-              WebsiteFix verbindet sich mit den Tools, die dein Team bereits nutzt. Kein Umlernen, kein Chaos.
+            <p style={{ margin: "0 0 48px", fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              WebsiteFix verbindet sich direkt mit den Tools, die dein Team bereits nutzt. Kein manuelles Hin-und-her-Kopieren von Fehlern mehr.
             </p>
 
             {/* Integration logos */}
             <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 48 }}>
               {/* Slack */}
               <div style={{
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -527,7 +528,7 @@ export default function Page() {
 
               {/* Jira */}
               <div style={{
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -553,7 +554,7 @@ export default function Page() {
 
               {/* Trello */}
               <div style={{
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -570,7 +571,7 @@ export default function Page() {
 
               {/* Asana */}
               <div style={{
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
                 backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                 padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -612,8 +613,8 @@ export default function Page() {
                 backdropFilter: "blur(8px)",
                 fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600,
               }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.15)", flexShrink: 0 }} />
-                Scan fertig → Jira-Ticket erstellt → Slack-Alert gesendet
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", flexShrink: 0, animation: "wf-pulse 2s ease-in-out infinite" }} />
+                Scan abgeschlossen → Ticket erstellt → Team informiert
               </div>
             </div>
           </div>
