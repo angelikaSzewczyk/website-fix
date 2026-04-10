@@ -3237,3 +3237,24 @@ footer a, nav a.footerLink {
   .dashboard-content  { margin-left: 0 !important; padding-top: 52px; }
   .dashboard-mobile-bar { display: flex !important; }
 }
+
+/* ===== MARKETING PAGE — MOBILE GRID STACKING ===== */
+/* All .mkt-grid containers collapse to single column on mobile */
+@media (max-width: 768px) {
+  .mkt-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Global overflow protection — prevents horizontal scroll on all pages */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Responsive padding for marketing sections on small screens */
+@media (max-width: 480px) {
+  .mkt-grid > * {
+    min-width: 0 !important;
+  }
+}

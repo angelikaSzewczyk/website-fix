@@ -7,12 +7,12 @@ export const metadata: Metadata = {
 };
 
 const H2: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: "#fff",
-  margin: "36px 0 10px", letterSpacing: "-0.01em",
+  fontSize: 14, fontWeight: 700, color: "#EAB308",
+  margin: "36px 0 10px", letterSpacing: "0.04em", textTransform: "uppercase",
 };
 
 const P: React.CSSProperties = {
-  fontSize: 14, color: "rgba(203,213,225,0.85)",
+  fontSize: 14, color: "rgba(255,255,255,0.85)",
   lineHeight: 1.8, margin: "0 0 6px",
 };
 

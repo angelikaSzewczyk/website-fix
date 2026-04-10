@@ -319,19 +319,19 @@ export default function AgencyPage() {
                 {[
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
-                    bg: "#EFF6FF", border: "#BFDBFE",
+                    bg: "rgba(37,99,235,0.12)", border: "rgba(37,99,235,0.25)",
                     title: "Einmalig einrichten",
                     desc: "Logo & Primärfarbe in den Einstellungen hinterlegen — fertig. Alle künftigen Reports werden automatisch gebrandert.",
                   },
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-                    bg: "#F5F3FF", border: "#DDD6FE",
+                    bg: "rgba(124,58,237,0.12)", border: "rgba(124,58,237,0.25)",
                     title: "KI schreibt die Management-Zusammenfassung",
                     desc: "Professioneller Agentur-Ton, auf Deutsch, mit konkreten Handlungsempfehlungen — vollautomatisch.",
                   },
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
-                    bg: "#F0FDF4", border: "#A7F3D0",
+                    bg: "rgba(22,163,74,0.12)", border: "rgba(22,163,74,0.25)",
                     title: "Report wird automatisch versendet",
                     desc: "Am 1. jeden Monats landet der PDF-Report direkt beim Kunden — mit deinem Absender, deinem Branding.",
                   },
@@ -429,10 +429,10 @@ export default function AgencyPage() {
         </section>
 
         {/* FEATURE DEEP-DIVE */}
-        <section style={{ background: "#0b0c10", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <section style={{ background: "#0a0a0a", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#7aa6ff", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Gebaut für Agenturen, die skalieren.
               </h2>
@@ -441,26 +441,26 @@ export default function AgencyPage() {
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
               {/* BFSG Deep-Dive */}
-              <div style={{ background: "#FAFBFC", border: "1px solid #E2E8F0", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "#EFF6FF", border: "1px solid #BFDBFE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#EFF6FF", color: "#2563EB", letterSpacing: "0.06em" }}>BFSG 2025</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(37,99,235,0.12)", color: "#7aa6ff", letterSpacing: "0.06em" }}>BFSG 2025</span>
                 </div>
                 <div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em" }}>Barrierefreiheits-Prüfung</h3>
-                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Barrierefreiheits-Prüfung</h3>
+                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
                     Das Barrierefreiheitsstärkungsgesetz (BFSG) ist seit Juni 2025 in Kraft. Agenturen, die B2C-Websites betreuen, tragen Mitverantwortung. WebsiteFix prüft automatisch alle WCAG 2.1 AA-Kriterien und dokumentiert die Ergebnisse lückenlos.
                   </p>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["WCAG 2.1 AA vollständig", "Audit-Trail als Nachweis", "Automatische Meldung bei Verstoß", "BFSG Haftungsschutz-Monitor"].map(b => (
-                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         {b}
                       </li>
                     ))}
@@ -469,26 +469,26 @@ export default function AgencyPage() {
               </div>
 
               {/* White-Label Report Deep-Dive */}
-              <div style={{ background: "#FAFBFC", border: "1px solid #E2E8F0", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "#F0FDF4", border: "1px solid #A7F3D0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(22,163,74,0.12)", border: "1px solid rgba(22,163,74,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                       <polyline points="14 2 14 8 20 8"/>
                       <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#F0FDF4", color: "#16A34A", letterSpacing: "0.06em" }}>White-Label</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(22,163,74,0.12)", color: "#4ade80", letterSpacing: "0.06em" }}>White-Label</span>
                 </div>
                 <div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em" }}>Automatische Monatsberichte</h3>
-                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Automatische Monatsberichte</h3>
+                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
                     Am 1. jeden Monats wird automatisch ein professioneller PDF-Report mit deinem Logo, deiner Farbe und einer KI-generierten Management-Zusammenfassung an jeden Kunden versendet.
                   </p>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Agentur-Logo & Primärfarbe", "KI-Zusammenfassung auf Agentur-Niveau", "PDF-Export + direkter E-Mail-Versand", "Kein WebsiteFix-Branding sichtbar"].map(b => (
-                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         {b}
                       </li>
                     ))}
@@ -497,24 +497,24 @@ export default function AgencyPage() {
               </div>
 
               {/* Workflow Automation Deep-Dive */}
-              <div style={{ background: "#FAFBFC", border: "1px solid #E2E8F0", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "#FFFBEB", border: "1px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#FFFBEB", color: "#D97706", letterSpacing: "0.06em" }}>Automation</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(217,119,6,0.12)", color: "#fbbf24", letterSpacing: "0.06em" }}>Automation</span>
                 </div>
                 <div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em" }}>Automatischer Workflow</h3>
-                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Automatischer Workflow</h3>
+                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
                     Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich sofort. Dein Team arbeitet immer am aktuellen Stand — ohne Copy-Paste.
                   </p>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Jira · Trello · Asana Integration", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall", "Lückenloser Audit-Trail"].map(b => (
-                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         {b}
                       </li>
                     ))}
@@ -565,31 +565,30 @@ export default function AgencyPage() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" style={{ background: "#ffffff", padding: "80px 24px", borderTop: "1px solid #E2E8F0" }}>
+        <section id="pricing" style={{ background: "#0a0a0a", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Einfach. Transparent. Ehrlich.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "#64748B" }}>
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)" }}>
                 Keine versteckten Kosten. Monatlich kündbar. DSGVO-konform.
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
               {PLANS.map(plan => (
                 <div key={plan.name} style={{
-                  background: "#ffffff",
-                  border: plan.recommended ? `2px solid #2563EB` : `1px solid #E2E8F0`,
+                  background: "rgba(255,255,255,0.04)",
+                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                  border: plan.recommended ? `2px solid #2563EB` : `1px solid rgba(255,255,255,0.08)`,
                   borderRadius: 18,
                   display: "flex", flexDirection: "column",
                   overflow: "hidden",
                   boxShadow: plan.recommended
-                    ? "0 8px 40px rgba(37,99,235,0.15)"
-                    : plan.scale
-                      ? "0 4px 20px rgba(124,58,237,0.08)"
-                      : "0 2px 12px rgba(0,0,0,0.05)",
+                    ? "0 8px 40px rgba(37,99,235,0.2)"
+                    : "0 2px 20px rgba(0,0,0,0.3)",
                 }}>
                   {/* Top stripe */}
                   {plan.recommended && (
@@ -608,26 +607,26 @@ export default function AgencyPage() {
                     </div>
                   )}
                   {!plan.recommended && !plan.scale && !plan.enterprise && (
-                    <div style={{ height: 4, background: "#F1F5F9" }} />
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.05)" }} />
                   )}
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{plan.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.recommended ? "#7aa6ff" : plan.enterprise ? "rgba(255,255,255,0.5)" : plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{plan.name}</div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
                         {plan.enterprise ? (
-                          <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: "#0F172A" }}>Auf Anfrage</span>
+                          <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>Auf Anfrage</span>
                         ) : (
                           <>
-                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
-                            <span style={{ fontSize: 13, color: "#94A3B8" }}>{plan.per}</span>
+                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>{plan.price}€</span>
+                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{plan.per}</span>
                           </>
                         )}
                       </div>
-                      <p style={{ margin: 0, fontSize: 12, color: "#64748B" }}>{plan.desc}</p>
+                      <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{plan.desc}</p>
                     </div>
 
-                    <div style={{ height: 1, background: "#F1F5F9", marginBottom: 20 }} />
+                    <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
 
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
                       {plan.features.map(f => (
@@ -635,15 +634,15 @@ export default function AgencyPage() {
                           <div style={{
                             width: 18, height: 18, borderRadius: 5, flexShrink: 0,
                             background: f.highlight
-                              ? (plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "#0F172A" : "#475569")
-                              : "#F1F5F9",
+                              ? (plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
+                              : "rgba(255,255,255,0.07)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "#94A3B8"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: f.highlight ? 600 : 400, color: f.highlight ? "#0F172A" : "#64748B" }}>
+                          <span style={{ fontSize: 12, fontWeight: f.highlight ? 600 : 400, color: f.highlight ? "#fff" : "rgba(255,255,255,0.4)" }}>
                             {f.text}
                           </span>
                         </div>
@@ -659,9 +658,9 @@ export default function AgencyPage() {
                           display: "block", textAlign: "center", width: "100%",
                           padding: "13px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700,
                           textDecoration: "none",
-                          background: plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "#0F172A" : "#F8FAFC",
-                          color: plan.recommended || plan.scale || plan.enterprise ? "#ffffff" : "#475569",
-                          border: plan.recommended || plan.scale || plan.enterprise ? "none" : "1px solid #E2E8F0",
+                          background: plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)",
+                          color: plan.recommended || plan.scale ? "#ffffff" : "rgba(255,255,255,0.7)",
+                          border: plan.recommended || plan.scale ? "none" : "1px solid rgba(255,255,255,0.1)",
                           boxShadow: plan.recommended ? "0 4px 14px rgba(37,99,235,0.35)" : "none",
                         }}
                       />
@@ -673,7 +672,7 @@ export default function AgencyPage() {
 
             <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
               {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#94A3B8" }}>
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   {t}
                 </div>

@@ -26,13 +26,15 @@ function Field({
 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
-    background: focused ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.04)",
+    background: focused ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.4)",
     border: `1px solid ${focused ? "#EAB308" : "rgba(255,255,255,0.1)"}`,
-    borderRadius: 10, padding: "13px 16px",
-    color: "#F8FAFC", fontSize: 14, outline: "none",
+    borderRadius: 10, padding: "14px 16px",
+    color: "#fff", fontSize: 14, outline: "none",
     fontFamily: "inherit",
-    transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
-    boxShadow: focused ? "0 0 0 3px rgba(234,179,8,0.12), 0 0 20px rgba(234,179,8,0.08)" : "none",
+    transition: "border-color 0.2s, box-shadow 0.2s, background 0.2s",
+    boxShadow: focused
+      ? "0 0 0 3px rgba(234,179,8,0.25), 0 0 24px rgba(234,179,8,0.15)"
+      : "inset 0 1px 3px rgba(0,0,0,0.3)",
     resize: rows ? "vertical" : undefined,
   };
 
@@ -40,7 +42,7 @@ function Field({
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <label htmlFor={id} style={{
         fontSize: 12, fontWeight: 700,
-        color: "#94A3B8",
+        color: "#fff",
         letterSpacing: "0.07em", textTransform: "uppercase",
       }}>
         {label}{required && <span style={{ color: "#EAB308", marginLeft: 3 }}>*</span>}
@@ -86,7 +88,7 @@ function SuccessCard() {
         <h2 style={{ margin: "0 0 10px", fontSize: 24, fontWeight: 800, color: "#F8FAFC", letterSpacing: "-0.025em" }}>
           Nachricht gesendet!
         </h2>
-        <p style={{ margin: 0, fontSize: 15, color: "#64748B", lineHeight: 1.75 }}>
+        <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
           Danke! Wir melden uns in Kürze bei dir.
         </p>
       </div>
@@ -181,19 +183,20 @@ export default function KontaktClient() {
           }}>
             Kontakt
           </h1>
-          <p style={{ margin: 0, fontSize: 15, color: "#64748B", lineHeight: 1.75 }}>
+          <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
             Fragen, Feedback oder Partneranfragen? Schreib uns — wir melden uns
             in der Regel innerhalb von{" "}
             <span style={{ color: "#EAB308", fontWeight: 600 }}>24&nbsp;Stunden</span>.
           </p>
         </div>
 
-        {/* Form card — soft yellow glow */}
+        {/* Form card — glass + yellow glow */}
         <div style={{
-          background: "#1E293B",
-          border: "1px solid #334155",
+          background: "rgba(255,255,255,0.04)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(234,179,8,0.2)",
           borderRadius: 24,
-          boxShadow: "0 0 40px rgba(234,179,8,0.15), 0 0 80px rgba(234,179,8,0.06), 0 16px 40px rgba(0,0,0,0.4)",
+          boxShadow: "0 0 60px rgba(234,179,8,0.12), 0 0 120px rgba(234,179,8,0.05), 0 24px 60px rgba(0,0,0,0.5)",
           overflow: "hidden",
         }}>
           {sent ? <SuccessCard /> : (
@@ -202,7 +205,7 @@ export default function KontaktClient() {
               display: "flex", flexDirection: "column", gap: 22,
             }}>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <Field id="name" label="Name" placeholder="Dein Name"
                   value={name} onChange={setName} required />
                 <Field id="email" label="E-Mail" type="email" placeholder="du@beispiel.de"
@@ -225,17 +228,17 @@ export default function KontaktClient() {
                 </div>
               )}
 
-              {/* Always-yellow CTA — full width */}
+              {/* Premium yellow CTA — full width */}
               <button type="submit" disabled={loading} style={{
-                width: "100%", padding: "15px", borderRadius: 10, border: "none",
+                width: "100%", padding: "16px", borderRadius: 10, border: "none",
                 background: loading ? "rgba(234,179,8,0.5)" : "#EAB308",
-                color: "#0F172A", fontWeight: 700, fontSize: 15,
+                color: "#0a0a0a", fontWeight: 800, fontSize: 15,
                 cursor: loading ? "default" : "pointer",
-                boxShadow: loading ? "none" : "0 4px 20px rgba(234,179,8,0.4)",
-                transition: "background 0.15s, box-shadow 0.15s",
+                boxShadow: loading ? "none" : "0 4px 28px rgba(234,179,8,0.5), 0 0 0 1px rgba(234,179,8,0.3)",
+                transition: "background 0.15s, box-shadow 0.15s, transform 0.1s",
                 letterSpacing: "-0.01em",
               }}>
-                {loading ? "Wird gesendet…" : "Nachricht senden →"}
+                {loading ? "Wird gesendet…" : "Kostenlose Experten-Analyse anfordern →"}
               </button>
 
             </form>

@@ -63,9 +63,9 @@ const BENEFITS = [
         <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
       </svg>
     ),
-    iconBg: "#F0FDF4",
-    iconBorder: "#A7F3D0",
-    iconColor: "#16A34A",
+    iconBg: "rgba(22,163,74,0.12)",
+    iconBorder: "rgba(22,163,74,0.25)",
+    iconColor: "#4ade80",
     label: "Mehr Umsatz",
     title: "BFSG als neues Service-Paket",
     desc: "Verkaufe BFSG-Compliance als eigenständiges Wartungspaket und fakturiere monatlich — ohne zusätzlichen Aufwand.",
@@ -76,9 +76,9 @@ const BENEFITS = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
     ),
-    iconBg: "#EFF6FF",
-    iconBorder: "#BFDBFE",
-    iconColor: "#2563EB",
+    iconBg: "rgba(37,99,235,0.12)",
+    iconBorder: "rgba(37,99,235,0.25)",
+    iconColor: "#7aa6ff",
     label: "Weniger Haftung",
     title: "BFSG 2025 automatisch im Griff",
     desc: "Wir überwachen die gesetzlichen Anforderungen (BFSG 2025) für dich — und dokumentieren alles lückenlos für den Ernstfall.",
@@ -89,9 +89,9 @@ const BENEFITS = [
         <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
       </svg>
     ),
-    iconBg: "#FFFBEB",
-    iconBorder: "#FDE68A",
-    iconColor: "#D97706",
+    iconBg: "rgba(217,119,6,0.12)",
+    iconBorder: "rgba(217,119,6,0.25)",
+    iconColor: "#fbbf24",
     label: "Integrierter Workflow",
     title: "Kein Tool-Hopping mehr",
     desc: "Kein Tool-Hopping. Fehler landen direkt da, wo dein Team arbeitet — als Jira-Ticket, Trello-Karte oder Asana-Task.",
@@ -105,9 +105,9 @@ const BENEFITS = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
     ),
-    iconBg: "#F5F3FF",
-    iconBorder: "#DDD6FE",
-    iconColor: "#7C3AED",
+    iconBg: "rgba(124,58,237,0.12)",
+    iconBorder: "rgba(124,58,237,0.25)",
+    iconColor: "#c084fc",
     label: "Kunden-Bindung",
     title: "Reports die Kunden begeistern",
     desc: "Monatliche Reports zeigen deinen Kunden schwarz auf weiß, was du für sie tust — und warum sie ohne dich nicht auskommen.",
@@ -479,7 +479,7 @@ export default function Page() {
             Drei Schritte zu mehr Marge.
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
             {STEPS.map((step) => (
               <div key={step.num} style={{
                 padding: "28px 28px 24px",
@@ -537,26 +537,27 @@ export default function Page() {
         </section>
 
         {/* ── AGENTUR-VORTEILE ── */}
-        <section style={{ background: "#ffffff", padding: "80px 24px" }}>
+        <section style={{ background: "#0a0a0a", padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum Agenturen uns wählen</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum Agenturen uns wählen</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Vier Gründe, die dein Business verändern.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "#64748B", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
                 Mehr Marge, weniger Risiko, glücklichere Kunden. Das ist kein Versprechen — das ist das System.
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
               {BENEFITS.map(b => (
                 <div key={b.label} style={{
-                  background: "#FAFBFC",
-                  border: "1px solid #E2E8F0",
+                  background: "rgba(255,255,255,0.04)",
+                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(234,179,8,0.15)",
                   borderRadius: 16,
                   padding: "28px 24px",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                  boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
                   display: "flex", flexDirection: "column", gap: 14,
                 }}>
                   <div style={{
@@ -570,10 +571,10 @@ export default function Page() {
                     <div style={{ fontSize: 11, fontWeight: 700, color: b.iconColor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
                       {b.label}
                     </div>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
                       {b.title}
                     </h3>
-                    <p style={{ margin: 0, fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>{b.desc}</p>
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{b.desc}</p>
                   </div>
                 </div>
               ))}
@@ -582,15 +583,15 @@ export default function Page() {
         </section>
 
         {/* ── INTEGRATIONS ── */}
-        <section style={{ background: "#F8FAFC", padding: "72px 24px", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0" }}>
+        <section style={{ background: "#0a0a0a", padding: "72px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
               Integrationen
             </p>
-            <h2 style={{ margin: "0 0 12px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#0F172A", letterSpacing: "-0.025em" }}>
+            <h2 style={{ margin: "0 0 12px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>
               Nahtlose Integration in deinen bestehenden Stack.
             </h2>
-            <p style={{ margin: "0 0 48px", fontSize: 15, color: "#64748B", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+            <p style={{ margin: "0 0 48px", fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
               WebsiteFix verbindet sich mit den Tools, die dein Team bereits nutzt. Kein Umlernen, kein Chaos.
             </p>
 
@@ -598,8 +599,9 @@ export default function Page() {
             <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 48 }}>
               {/* Slack */}
               <div style={{
-                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
-                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                 minWidth: 120,
               }}>
@@ -613,14 +615,15 @@ export default function Page() {
                   <path d="M33.3 39.3c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4v-4h4z" fill="#ECB22E"/>
                   <path d="M33.3 37.3c-2.2 0-4-1.8-4-4s1.8-4 4-4h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10z" fill="#ECB22E"/>
                 </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Slack</span>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Sofort-Alerts</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Slack</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Sofort-Alerts</span>
               </div>
 
               {/* Jira */}
               <div style={{
-                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
-                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                 minWidth: 120,
               }}>
@@ -638,14 +641,15 @@ export default function Page() {
                   <path d="M15.9 2.1L2.1 15.9a1.4 1.4 0 000 2l6.1 6.1 7.7-7.7L22.7 10l-6.8-7.9z" fill="url(#jira-g1)"/>
                   <path d="M16.1 29.9L29.9 16.1a1.4 1.4 0 000-2l-6.1-6.1-7.7 7.7-6.8 6.4 6.8 7.8z" fill="url(#jira-g2)"/>
                 </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Jira</span>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Auto-Tickets</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Jira</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Auto-Tickets</span>
               </div>
 
               {/* Trello */}
               <div style={{
-                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
-                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                 minWidth: 120,
               }}>
@@ -654,14 +658,15 @@ export default function Page() {
                   <rect x="5" y="5" width="9" height="19" rx="2" fill="white"/>
                   <rect x="18" y="5" width="9" height="13" rx="2" fill="white"/>
                 </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Trello</span>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Board-Karten</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Trello</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Board-Karten</span>
               </div>
 
               {/* Asana */}
               <div style={{
-                background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14,
-                padding: "20px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                 minWidth: 120,
               }}>
@@ -670,25 +675,25 @@ export default function Page() {
                   <circle cx="7" cy="22" r="6" fill="#F06A6A"/>
                   <circle cx="25" cy="22" r="6" fill="#F06A6A"/>
                 </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Asana</span>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>Task-Erstellung</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Asana</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Task-Erstellung</span>
               </div>
 
               {/* Mehr kommt */}
               <div style={{
-                background: "#F8FAFC", border: "1px dashed #CBD5E1", borderRadius: 14,
+                background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 14,
                 padding: "20px 28px",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                 minWidth: 120,
               }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: 9,
-                  background: "#F1F5F9", border: "1px solid #E2E8F0",
+                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 20, color: "#94A3B8",
+                  fontSize: 20, color: "rgba(255,255,255,0.3)",
                 }}>+</div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#94A3B8" }}>Mehr folgt</span>
-                <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>GitHub · Linear</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.3)" }}>Mehr folgt</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontWeight: 500 }}>GitHub · Linear</span>
               </div>
             </div>
 
@@ -697,9 +702,9 @@ export default function Page() {
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 20px", borderRadius: 999,
-                background: "#fff", border: "1px solid #E2E8F0",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                fontSize: 13, color: "#475569", fontWeight: 600,
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                backdropFilter: "blur(8px)",
+                fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600,
               }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.15)", flexShrink: 0 }} />
                 Scan fertig → Jira-Ticket erstellt → Slack-Alert gesendet
@@ -709,77 +714,78 @@ export default function Page() {
         </section>
 
         {/* ── AGENTUR FEATURES ── */}
-        <section style={{ background: "#F0F4F8", padding: "80px 24px" }}>
+        <section style={{ background: "#0a0a0a", padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Agentur-Features</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Agentur-Features</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Gebaut für Agenturen, die skalieren.
               </h2>
-              <p style={{ margin: 0, fontSize: 16, color: "#64748B", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
                 Jedes Feature ist darauf ausgelegt, deinen Agentur-Workflow zu automatisieren und deine Kunden zu beeindrucken.
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
               {[
                 {
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                       <polyline points="14 2 14 8 20 8"/>
                       <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                   ),
-                  iconBg: "#EFF6FF",
-                  iconBorder: "#BFDBFE",
+                  iconBg: "rgba(37,99,235,0.12)",
+                  iconBorder: "rgba(37,99,235,0.25)",
                   title: "White-Label PDF",
                   desc: "Reports mit deinem Logo, deiner Farbe und KI-generierter Management-Zusammenfassung — automatisch am Monatsende versendet.",
                   tag: "Branding",
-                  tagColor: "#2563EB",
-                  tagBg: "#EFF6FF",
+                  tagColor: "#7aa6ff",
+                  tagBg: "rgba(37,99,235,0.12)",
                   bullets: ["Agentur-Logo & Farben", "KI-Zusammenfassung", "Auto-Versand an Kunden"],
                 },
                 {
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                       <circle cx="9" cy="7" r="4"/>
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                       <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
                   ),
-                  iconBg: "#F0FDF4",
-                  iconBorder: "#A7F3D0",
+                  iconBg: "rgba(22,163,74,0.12)",
+                  iconBorder: "rgba(22,163,74,0.25)",
                   title: "Multi-User Support",
                   desc: "Lade Kollegen ein, vergib Rollen und lass dein Team zusammen an Kunden-Projekten arbeiten — ohne Chaos.",
                   tag: "Teamwork",
-                  tagColor: "#16A34A",
-                  tagBg: "#F0FDF4",
+                  tagColor: "#4ade80",
+                  tagBg: "rgba(22,163,74,0.12)",
                   bullets: ["Bis zu 5 Team-Seats", "Rollen & Berechtigungen", "Gemeinsame Kunden-Übersicht"],
                 },
                 {
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                     </svg>
                   ),
-                  iconBg: "#FFFBEB",
-                  iconBorder: "#FDE68A",
+                  iconBg: "rgba(217,119,6,0.12)",
+                  iconBorder: "rgba(217,119,6,0.25)",
                   title: "Automatischer Workflow",
                   desc: "Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich, bevor der Kunde anruft.",
                   tag: "Automation",
-                  tagColor: "#D97706",
-                  tagBg: "#FFFBEB",
+                  tagColor: "#fbbf24",
+                  tagBg: "rgba(217,119,6,0.12)",
                   bullets: ["Jira · Trello · Asana", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall"],
                 },
               ].map(f => (
                 <div key={f.title} style={{
-                  background: "#ffffff",
-                  border: "1px solid #E2E8F0",
+                  background: "rgba(255,255,255,0.04)",
+                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(234,179,8,0.12)",
                   borderRadius: 16,
                   padding: "28px 26px",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+                  boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
                   display: "flex", flexDirection: "column", gap: 16,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -798,13 +804,13 @@ export default function Page() {
                     </div>
                   </div>
                   <div>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em" }}>{f.title}</h3>
-                    <p style={{ margin: 0, fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>{f.desc}</p>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{f.title}</h3>
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{f.desc}</p>
                   </div>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {f.bullets.map(b => (
-                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                         {b}
@@ -821,32 +827,31 @@ export default function Page() {
         <RoiCalculator />
 
         {/* PRICING */}
-        <section id="pricing" style={{ background: "#ffffff", padding: "80px 24px" }}>
+        <section id="pricing" style={{ background: "#0a0a0a", padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#0F172A" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Einfach. Transparent. Ehrlich.
               </h2>
-              <p style={{ margin: 0, fontSize: 16, color: "#64748B" }}>
+              <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)" }}>
                 Keine versteckten Kosten. Monatlich kündbar. DSGVO-konform.
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
               {PLANS.map(plan => (
                 <div key={plan.name} style={{
-                  background: "#ffffff",
-                  border: plan.recommended ? `2px solid #2563EB` : `1px solid #E2E8F0`,
+                  background: "rgba(255,255,255,0.04)",
+                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                  border: plan.recommended ? `2px solid #2563EB` : `1px solid rgba(255,255,255,0.08)`,
                   borderRadius: 18,
                   display: "flex", flexDirection: "column",
                   overflow: "hidden",
                   boxShadow: plan.recommended
-                    ? "0 8px 40px rgba(37,99,235,0.15)"
-                    : plan.enterprise
-                      ? "0 4px 24px rgba(0,0,0,0.08)"
-                      : "0 2px 12px rgba(0,0,0,0.05)",
+                    ? "0 8px 40px rgba(37,99,235,0.2)"
+                    : "0 2px 20px rgba(0,0,0,0.3)",
                   position: "relative",
                 }}>
 
@@ -882,30 +887,30 @@ export default function Page() {
                     </div>
                   )}
                   {!plan.recommended && !("scale" in plan && plan.scale) && !plan.enterprise && (
-                    <div style={{ height: 4, background: "#F1F5F9" }} />
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.05)" }} />
                   )}
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     {/* Plan name + desc */}
                     <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.recommended ? "#7aa6ff" : plan.enterprise ? "rgba(255,255,255,0.5)" : plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                         {plan.name}
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
                         {plan.enterprise ? (
-                          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#0F172A" }}>Auf Anfrage</span>
+                          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>Auf Anfrage</span>
                         ) : (
                           <>
-                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#0F172A" }}>{plan.price}€</span>
-                            <span style={{ fontSize: 13, color: "#94A3B8" }}>{plan.per}</span>
+                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>{plan.price}€</span>
+                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{plan.per}</span>
                           </>
                         )}
                       </div>
-                      <p style={{ margin: 0, fontSize: 13, color: "#64748B" }}>{plan.desc}</p>
+                      <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>{plan.desc}</p>
                     </div>
 
                     {/* Divider */}
-                    <div style={{ height: 1, background: "#F1F5F9", marginBottom: 20 }} />
+                    <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
 
                     {/* Feature list */}
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
@@ -914,17 +919,17 @@ export default function Page() {
                           <div style={{
                             width: 18, height: 18, borderRadius: 5, flexShrink: 0,
                             background: f.highlight
-                              ? (plan.recommended ? "#2563EB" : plan.enterprise ? "#0F172A" : "#475569")
-                              : "#F1F5F9",
+                              ? (plan.recommended ? "#2563EB" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
+                              : "rgba(255,255,255,0.07)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "#94A3B8"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </div>
                           <span style={{
                             fontSize: 13, fontWeight: f.highlight ? 600 : 400,
-                            color: f.highlight ? "#0F172A" : "#64748B",
+                            color: f.highlight ? "#fff" : "rgba(255,255,255,0.4)",
                           }}>
                             {f.text}
                           </span>
@@ -941,10 +946,10 @@ export default function Page() {
                         background: plan.recommended
                           ? "#2563EB"
                           : plan.enterprise
-                            ? "#0F172A"
-                            : "#F8FAFC",
-                        color: plan.recommended || plan.enterprise ? "#ffffff" : "#475569",
-                        border: plan.recommended || plan.enterprise ? "none" : "1px solid #E2E8F0",
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(255,255,255,0.06)",
+                        color: plan.recommended ? "#ffffff" : "rgba(255,255,255,0.7)",
+                        border: plan.recommended ? "none" : "1px solid rgba(255,255,255,0.1)",
                         boxShadow: plan.recommended
                           ? "0 4px 14px rgba(37,99,235,0.35)"
                           : "none",
@@ -961,7 +966,7 @@ export default function Page() {
             {/* Trust line */}
             <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
               {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#94A3B8" }}>
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
@@ -986,7 +991,7 @@ export default function Page() {
             </h2>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20 }}>
+          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20 }}>
             {/* Testimonial 1 — Profit */}
             <div style={{
               background: "rgba(255,255,255,0.03)",
