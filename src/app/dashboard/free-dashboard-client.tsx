@@ -4,20 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Severity = "red" | "yellow" | "green";
-type Category = "recht" | "speed" | "technik";
-
 export interface ParsedIssueProp {
-  severity: Severity;
+  severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: Category;
+  category: "recht" | "speed" | "technik";
 }
 
 export interface ScanBriefProp {
   id: string;
   url: string;
-  type: string;
   created_at: string;
   issue_count: number | null;
 }
@@ -41,855 +37,489 @@ export interface FreeDashboardProps {
   scanLimit: number;
 }
 
-// ─── Inline SVG icons ─────────────────────────────────────────────────────────
-function Icon({ d, size = 16, stroke = 2 }: { d: string; size?: number; stroke?: number }) {
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const T = {
+  pageBg:    "#F5F6FA",
+  sidebar:   "#1A1C23",
+  sidebarBorder: "#2A2C35",
+  card:      "#FFFFFF",
+  border:    "#E5E7EB",
+  divider:   "#F3F4F6",
+  text:      "#111827",
+  sub:       "#6B7280",
+  muted:     "#9CA3AF",
+  blue:      "#2563EB",
+  blueBg:    "#EFF6FF",
+  blueBorder:"#BFDBFE",
+  red:       "#EF4444",
+  redBg:     "#FEF2F2",
+  redBorder: "#FECACA",
+  amber:     "#F59E0B",
+  amberBg:   "#FFFBEB",
+  amberBorder:"#FDE68A",
+  green:     "#22C55E",
+  greenBg:   "#F0FDF4",
+  greenBorder:"#BBF7D0",
+  shadow:    "0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05)",
+} as const;
+
+// ─── Small helpers ─────────────────────────────────────────────────────────────
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
-      <path d={d} />
-    </svg>
-  );
-}
-
-const ICONS = {
-  alert:    "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",
-  info:     "M12 16v-4M12 8h.01",
-  check:    "M20 6 9 17l-5-5",
-  lock:     "M7 11V7a5 5 0 0 1 10 0v4M3 11h18v11H3z",
-  scan:     "M11 3a8 8 0 1 0 8 8M21 21l-4.35-4.35",
-  arrow:    "m9 18 6-6-6-6",
-  chevron:  "m6 9 6 6 6-6",
-  refresh:  "M23 4v6h-6M1 20v-6h6",
-  shield:   "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-  zap:      "M13 2 3 14h9l-1 8 10-12h-9l1-8z",
-  clock:    "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 5v5l4 2",
-  file:     "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8",
-  monitor:  "M2 3h20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm10 17v-3m-4 3h8",
-  trending: "M22 7 13.5 15.5 8.5 10.5 2 17",
-  wrench:   "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
-  globe:    "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 0c-1.66 2.5-2.5 5-2.5 10s.84 7.5 2.5 10m0-20c1.66 2.5 2.5 5 2.5 10s-.84 7.5-2.5 10M2 12h20",
-  mobile:   "M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM12 18h.01",
-};
-
-// ─── Fix guide helper ─────────────────────────────────────────────────────────
-function getFixGuide(title: string, cms: string): string {
-  const t = title.toLowerCase();
-  const wp = cms === "WordPress";
-  if (/alt.?text|img/.test(t))
-    return wp ? "Medien → Bild → Feld 'Alternativer Text' ausfüllen." : "img-Tag um alt='Beschreibung' ergänzen.";
-  if (/meta.?desc|beschreibung/.test(t))
-    return wp ? "Yoast SEO → Seite bearbeiten → Meta-Beschreibung (150–160 Zeichen)." : "<meta name='description'> im <head> eintragen.";
-  if (/h1|überschrift/.test(t))
-    return "Jede Seite benötigt genau eine H1-Überschrift, die das Hauptthema beschreibt.";
-  if (/ssl|https/.test(t))
-    return "SSL über Hosting-Panel aktivieren (Let's Encrypt kostenlos), dann HTTP→HTTPS-Redirect einrichten.";
-  if (/sitemap/.test(t))
-    return wp ? "Yoast SEO → XML-Sitemaps aktivieren → In Google Search Console einreichen." : "sitemap.xml erstellen und in der Search Console einreichen.";
-  if (/cookie|einwilligung/.test(t))
-    return "DSGVO-konformes Cookie-Consent-Tool einbinden (Cookiebot). Tracking erst nach Zustimmung laden.";
-  if (/impressum/.test(t))
-    return "Impressum auf jeder Seite verlinken. Pflichtangaben: Name, Adresse, E-Mail (§ 5 TMG).";
-  if (/ladezeit|speed|performance/.test(t))
-    return wp ? "WP Rocket installieren, Bilder in WebP, CDN-Setup (Cloudflare kostenlos)." : "Bilder komprimieren, JS/CSS minimieren, CDN einbinden.";
-  return "Detaillierte Handlungsempfehlungen im Smart-Guard Plan verfügbar.";
-}
-
-// ─── Tech detection ───────────────────────────────────────────────────────────
-function detectTechStack(scanText: string, cmsLabel: string) {
-  const t = scanText.toLowerCase();
-  return {
-    cms:       cmsLabel !== "Custom" && cmsLabel !== "–" ? cmsLabel : "WordPress",
-    cmsVer:    cmsLabel === "WordPress" ? "6.4.3" : cmsLabel !== "Custom" && cmsLabel !== "–" ? "" : "6.4.3",
-    server:    /cloudflare/.test(t) ? "Cloudflare" : /nginx/.test(t) ? "Nginx" : /apache/.test(t) ? "Apache" : "Nginx",
-    serverVer: /cloudflare/.test(t) ? "CDN" : "1.24",
-    php:       (cmsLabel === "WordPress" || cmsLabel === "Custom" || cmsLabel === "–") ? "8.2" : null,
-    ssl:       !/ssl fehlt|kein https/.test(t),
-    simCms:    cmsLabel === "Custom" || cmsLabel === "–",
-    simServer: !/cloudflare|nginx|apache/.test(t),
-  };
-}
-
-// ─── Vitals simulation ────────────────────────────────────────────────────────
-function getVitals(speedScore: number, issues: ParsedIssueProp[]) {
-  const lcpMs     = speedScore >= 70 ? 1200 + (100 - speedScore) * 8 : 2800 + (70 - speedScore) * 18;
-  const mobileOk  = !issues.some(i => /mobil|viewport|responsive/.test(i.title.toLowerCase()));
-  const sitemapOk = !issues.some(i => /sitemap/.test(i.title.toLowerCase()));
-  const indexed   = Math.max(12, 80 - issues.filter(i => /index|robots/.test(i.title.toLowerCase())).length * 5);
-  return { lcpMs, mobileOk, sitemapOk, indexed };
-}
-
-// ─── Primitive UI pieces ──────────────────────────────────────────────────────
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl bg-navy-800 border border-white/[0.06] ${className}`}>
+    <div style={{
+      background: T.card,
+      border: `1px solid ${T.border}`,
+      borderRadius: 10,
+      boxShadow: T.shadow,
+      ...style,
+    }}>
       {children}
     </div>
   );
 }
 
-function SectionDivider({ label }: { label: string }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-4 py-2">
-      <div className="flex-1 h-px bg-white/[0.05]" />
-      <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.15em]">{label}</span>
-      <div className="flex-1 h-px bg-white/[0.05]" />
-    </div>
+    <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: T.sub, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      {children}
+    </p>
   );
 }
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
-function Sev({ sev }: { sev: Severity }) {
-  const cfg = {
-    red:    { label: "Kritisch",  cls: "bg-red-500/[0.12] text-red-400 border-red-500/20"    },
-    yellow: { label: "Warnung",   cls: "bg-amber-500/[0.10] text-amber-400 border-amber-500/20" },
-    green:  { label: "Hinweis",   cls: "bg-blue-500/[0.10] text-blue-400 border-blue-500/20"  },
-  }[sev];
+function SevBadge({ severity }: { severity: "red" | "yellow" | "green" }) {
+  const map = {
+    red:    { label: "Kritisch", color: T.red,   bg: T.redBg,   border: T.redBorder },
+    yellow: { label: "Warnung",  color: T.amber, bg: T.amberBg, border: T.amberBorder },
+    green:  { label: "OK",       color: T.green, bg: T.greenBg, border: T.greenBorder },
+  };
+  const s = map[severity];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${cfg.cls} shrink-0 uppercase tracking-wide`}>
-      {cfg.label}
+    <span style={{
+      display: "inline-block",
+      fontSize: 10, fontWeight: 700,
+      padding: "2px 8px", borderRadius: 20,
+      color: s.color, background: s.bg, border: `1px solid ${s.border}`,
+      whiteSpace: "nowrap",
+    }}>
+      {s.label}
     </span>
   );
 }
 
-// ─── Locked premium block ─────────────────────────────────────────────────────
-function LockedBlock({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
+// ─── Main component ────────────────────────────────────────────────────────────
+export default function FreeDashboardClient(props: FreeDashboardProps) {
+  const {
+    firstName,
+    plan,
+    lastScan,
+    issues,
+    redCount,
+    yellowCount,
+    cms,
+    speedScore,
+    monthlyScans,
+    scanLimit,
+  } = props;
+
+  const [findingsOpen, setFindingsOpen] = useState(true);
+
+  const okCount     = issues.filter(i => i.severity === "green").length;
+  const domain      = lastScan?.url
+    ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
+    : "—";
+  const isFree      = plan === "free";
+  const planLabel   = isFree ? "Free" : "Smart-Guard";
+
+  // Simulated tech details
+  const server = "Nginx";
+  const php    = "8.2";
+  const ssl    = "Aktiv";
+
+  // Performance simulation
+  const lcpMs  = Math.max(1200, 4200 - speedScore * 30);
+  const cls    = speedScore > 70 ? 0.05 : 0.18;
+  const fid    = speedScore > 60 ? 42 : 180;
+
+  const navItems = [
+    { label: "Dashboard",    href: "/dashboard",         active: true  },
+    { label: "Live Scan",    href: "/dashboard/scan",    active: false },
+    { label: "Monitoring",   href: "/dashboard/monitor", active: false },
+    { label: "Reports",      href: "/dashboard/scans",   active: false },
+  ];
+
   return (
-    <div className="relative rounded-2xl overflow-hidden">
-      <div className="opacity-[0.25] blur-sm pointer-events-none select-none" aria-hidden="true">
-        {children}
-      </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-navy-900/70 backdrop-blur-[3px] rounded-2xl">
-        <div className="w-11 h-11 rounded-xl bg-navy-800 border border-white/[0.08] flex items-center justify-center text-slate-400">
-          <Icon d={ICONS.lock} size={18} stroke={1.75} />
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+
+      {/* ── SIDEBAR ──────────────────────────────────────────────────────────── */}
+      <aside style={{
+        width: 240, flexShrink: 0,
+        position: "fixed", top: 0, left: 0, bottom: 0,
+        background: T.sidebar,
+        borderRight: `1px solid ${T.sidebarBorder}`,
+        display: "flex", flexDirection: "column",
+        zIndex: 40,
+        overflowY: "auto",
+      }}>
+
+        {/* Logo */}
+        <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.sidebarBorder}` }}>
+          <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 7,
+              background: T.blue,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.01em" }}>
+              WebsiteFix
+            </span>
+          </Link>
         </div>
-        <div className="text-center px-4">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="text-xs text-slate-500 mt-0.5 max-w-[22ch] mx-auto leading-relaxed">{desc}</p>
-        </div>
-        <Link
-          href="/smart-guard"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors"
-        >
-          Aktivieren <Icon d={ICONS.arrow} size={10} stroke={2.5} />
-        </Link>
-      </div>
-    </div>
-  );
-}
 
-// ─── Individual finding row ───────────────────────────────────────────────────
-function FindingRow({ issue, cms, idx, isFree }: {
-  issue: ParsedIssueProp; cms: string; idx: number; isFree: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const fix = getFixGuide(issue.title, cms);
-  const locked = isFree && issue.category === "recht" && idx >= 2;
+        {/* Nav */}
+        <nav style={{ padding: "12px 12px", flex: 1 }}>
+          {navItems.map(item => (
+            <Link key={item.href} href={item.href} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "9px 10px", borderRadius: 7,
+              textDecoration: "none",
+              marginBottom: 2,
+              background: item.active ? "rgba(255,255,255,0.07)" : "transparent",
+              color: item.active ? "#FFFFFF" : "#9CA3AF",
+              fontSize: 14, fontWeight: item.active ? 600 : 400,
+              transition: "background 0.15s",
+            }}>
+              <NavIcon name={item.label} active={item.active} />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
-  return (
-    <div className="border-b border-white/[0.04] last:border-0">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02] transition-colors group"
-      >
-        <Sev sev={issue.severity} />
-        <span className="flex-1 text-sm text-slate-300 truncate group-hover:text-slate-200 transition-colors">
-          {issue.title}
-        </span>
-        <svg
-          className={`shrink-0 text-slate-600 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="px-4 pb-4 space-y-3">
-          {issue.body && (
-            <p className="text-xs text-slate-400 leading-relaxed">{issue.body}</p>
-          )}
-          <div className="rounded-xl bg-navy-900 border border-white/[0.05] p-3">
-            <p className="text-[10px] font-mono font-semibold text-slate-600 uppercase tracking-wider mb-2">
-              KI-Empfehlung · {cms}
-            </p>
-            {locked ? (
-              <div className="flex items-center gap-2.5">
-                <Icon d={ICONS.lock} size={14} stroke={1.75} />
-                <span className="text-xs text-slate-500">
-                  Vollständige Empfehlungen im{" "}
-                  <Link href="/smart-guard" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2">
-                    Smart Guard
-                  </Link>
-                </span>
-              </div>
-            ) : (
-              <p className="text-xs text-slate-300 leading-relaxed">{fix}</p>
-            )}
+        {/* User */}
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${T.sidebarBorder}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "#2A2C35",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#9CA3AF" }}>
+                {firstName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#FFFFFF" }}>{firstName}</p>
+              <p style={{ margin: 0, fontSize: 11, color: "#6B7280" }}>Plan: {planLabel}</p>
+            </div>
           </div>
         </div>
-      )}
+
+      </aside>
+
+      {/* ── MAIN ─────────────────────────────────────────────────────────────── */}
+      <div style={{ marginLeft: 240, flex: 1, minWidth: 0, background: T.pageBg, minHeight: "100vh" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+
+          {/* ── HEADER ─────────────────────────────────────────────────────── */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            flexWrap: "wrap", gap: 12,
+            marginBottom: 24,
+          }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 12, color: T.muted, fontWeight: 500, marginBottom: 2 }}>Target</p>
+              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text }}>{domain}</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{
+                padding: "7px 14px", borderRadius: 8,
+                background: T.card, border: `1px solid ${T.border}`,
+                fontSize: 13, color: T.sub, fontWeight: 500,
+              }}>
+                Scan-Nutzung: <strong style={{ color: T.text }}>{monthlyScans} / {scanLimit}</strong>
+              </div>
+              <Link href="/smart-guard" style={{
+                padding: "7px 16px", borderRadius: 8,
+                background: T.blue, color: "#fff",
+                fontSize: 13, fontWeight: 600,
+                textDecoration: "none",
+              }}>
+                Upgrade
+              </Link>
+            </div>
+          </div>
+
+          {/* ── TECH STRIP ─────────────────────────────────────────────────── */}
+          <div style={{
+            display: "flex", gap: 8, flexWrap: "wrap",
+            marginBottom: 28,
+          }}>
+            {[
+              { label: "CMS",    value: cms.label + (cms.version ? ` ${cms.version}` : "") },
+              { label: "Server", value: server },
+              { label: "PHP",    value: php },
+              { label: "SSL",    value: ssl },
+            ].map(item => (
+              <div key={item.label} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "5px 12px", borderRadius: 6,
+                background: T.card, border: `1px solid ${T.border}`,
+                fontSize: 12,
+              }}>
+                <span style={{ color: T.muted, fontWeight: 500 }}>{item.label}:</span>
+                <span style={{ color: T.text, fontWeight: 600 }}>{item.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* ── SECTION 1: STATUS ──────────────────────────────────────────── */}
+          <div style={{ marginBottom: 28 }}>
+            <SectionTitle>Status</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+              <Card style={{ padding: "18px 20px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.red }}>Kritisch</p>
+                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.text }}>{redCount}</p>
+              </Card>
+              <Card style={{ padding: "18px 20px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.amber }}>Warnungen</p>
+                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.text }}>{yellowCount}</p>
+              </Card>
+              <Card style={{ padding: "18px 20px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.green }}>OK</p>
+                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.text }}>{okCount}</p>
+              </Card>
+            </div>
+          </div>
+
+          {/* ── SECTION 2: PERFORMANCE ─────────────────────────────────────── */}
+          <div style={{ marginBottom: 28 }}>
+            <SectionTitle>Performance</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+              {[
+                {
+                  metric: "LCP",
+                  value: `${(lcpMs / 1000).toFixed(1)}s`,
+                  label: "Largest Contentful Paint",
+                  ok: lcpMs < 2500,
+                },
+                {
+                  metric: "CLS",
+                  value: cls.toFixed(2),
+                  label: "Cumulative Layout Shift",
+                  ok: cls < 0.1,
+                },
+                {
+                  metric: "FID",
+                  value: `${fid}ms`,
+                  label: "First Input Delay",
+                  ok: fid < 100,
+                },
+              ].map(p => (
+                <Card key={p.metric} style={{ padding: "16px 20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: T.sub }}>{p.metric}</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
+                      color: p.ok ? T.green : T.amber,
+                      background: p.ok ? T.greenBg : T.amberBg,
+                      border: `1px solid ${p.ok ? T.greenBorder : T.amberBorder}`,
+                    }}>
+                      {p.ok ? "Gut" : "Prüfen"}
+                    </span>
+                  </div>
+                  <p style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 800, color: T.text }}>{p.value}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: T.muted }}>{p.label}</p>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* ── SECTION 3: FINDINGS ────────────────────────────────────────── */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <SectionTitle>Befunde</SectionTitle>
+              {issues.length > 0 && (
+                <button
+                  onClick={() => setFindingsOpen(o => !o)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: T.blue, fontWeight: 600, padding: 0 }}
+                >
+                  {findingsOpen ? "Einklappen" : `Alle anzeigen (${issues.length})`}
+                </button>
+              )}
+            </div>
+            <Card>
+              {issues.length === 0 ? (
+                <div style={{ padding: "24px 20px", textAlign: "center", color: T.muted, fontSize: 13 }}>
+                  Keine Befunde gefunden.
+                </div>
+              ) : (
+                <>
+                  {(findingsOpen ? issues.slice(0, 5) : issues.slice(0, 3)).map((issue, idx) => (
+                    <div key={idx} style={{
+                      display: "flex", alignItems: "flex-start", gap: 14,
+                      padding: "14px 20px",
+                      borderBottom: `1px solid ${T.divider}`,
+                    }}>
+                      <div style={{ paddingTop: 1 }}>
+                        <SevBadge severity={issue.severity} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 600, color: T.text }}>{issue.title}</p>
+                        <p style={{ margin: 0, fontSize: 12, color: T.sub, lineHeight: 1.5 }}>
+                          {issue.body.length > 100 ? issue.body.slice(0, 100) + "…" : issue.body}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Locked fix guide */}
+                  <div style={{
+                    padding: "14px 20px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+                    background: "#FAFAFA",
+                    borderRadius: "0 0 10px 10px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 15 }}>🔒</span>
+                      <span style={{ fontSize: 13, color: T.sub, fontWeight: 500 }}>
+                        Vollständige Anleitungen gesperrt
+                      </span>
+                    </div>
+                    <Link href="/smart-guard" style={{
+                      padding: "7px 14px", borderRadius: 7,
+                      background: T.blue, color: "#fff",
+                      fontSize: 12, fontWeight: 600,
+                      textDecoration: "none",
+                    }}>
+                      Anleitungen freischalten
+                    </Link>
+                  </div>
+                </>
+              )}
+            </Card>
+          </div>
+
+          {/* ── SECTION 4: LOCKED ──────────────────────────────────────────── */}
+          <div style={{ marginBottom: 28 }}>
+            <SectionTitle>Premium-Funktionen</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
+              {[
+                { title: "Score-Verlauf", desc: "Entwicklung deines Website-Scores über Zeit" },
+                { title: "Live Monitoring", desc: "24/7 Überwachung mit sofortiger Alarmierung" },
+              ].map(block => (
+                <Card key={block.title} style={{ padding: "20px", position: "relative", overflow: "hidden" }}>
+                  {/* Blurred content behind */}
+                  <div style={{ filter: "blur(3px)", pointerEvents: "none", userSelect: "none", opacity: 0.4 }}>
+                    <div style={{ height: 8, borderRadius: 4, background: T.border, marginBottom: 10 }} />
+                    <div style={{ height: 8, borderRadius: 4, background: T.border, width: "70%", marginBottom: 10 }} />
+                    <div style={{ height: 60, borderRadius: 6, background: T.divider }} />
+                  </div>
+                  {/* Lock overlay */}
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center", gap: 8,
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%",
+                      background: T.card, border: `1px solid ${T.border}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: T.shadow,
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.text }}>{block.title}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 180 }}>{block.desc}</p>
+                    <Link href="/smart-guard" style={{
+                      marginTop: 4,
+                      padding: "6px 14px", borderRadius: 7,
+                      background: T.blue, color: "#fff",
+                      fontSize: 12, fontWeight: 600,
+                      textDecoration: "none",
+                    }}>
+                      Freischalten
+                    </Link>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* ── SECTION 5: FIXES ───────────────────────────────────────────── */}
+          <div>
+            <SectionTitle>Sofort-Fixes</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+              {[
+                { title: "Formular Fix",  desc: "Kontaktformular auf Datenschutz & Barrierefreiheit prüfen" },
+                { title: "Speed Fix",     desc: "Bilder komprimieren, Caching aktivieren, JS minimieren" },
+                { title: "Mobile Fix",    desc: "Viewport, Touch-Targets und responsive Layouts prüfen" },
+              ].map(fix => (
+                <Card key={fix.title} style={{ padding: "18px 20px" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: T.text }}>{fix.title}</p>
+                  <p style={{ margin: "0 0 14px", fontSize: 12, color: T.sub, lineHeight: 1.5 }}>{fix.desc}</p>
+                  <Link href="/smart-guard" style={{
+                    display: "inline-block",
+                    padding: "7px 14px", borderRadius: 7,
+                    background: T.blueBg, color: T.blue,
+                    border: `1px solid ${T.blueBorder}`,
+                    fontSize: 12, fontWeight: 600,
+                    textDecoration: "none",
+                  }}>
+                    Jetzt beheben
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-export default function FreeDashboardClient({
-  firstName,
-  plan,
-  lastScan,
-  lastScanResult,
-  issues,
-  redCount,
-  yellowCount,
-  rechtIssues,
-  speedIssues,
-  techIssues,
-  cms,
-  bfsgOk,
-  speedScore,
-  scans,
-  monthlyScans,
-  scanLimit,
-}: FreeDashboardProps) {
-  const isFree   = plan === "free";
-  const isSingle = plan === "single";
-
-  const scanText = (lastScanResult ?? "") + " " + (lastScan?.url ?? "");
-  const tech     = detectTechStack(scanText, cms.label);
-  const vitals   = lastScan ? getVitals(speedScore, issues) : null;
-
-  // Sparkline for isSingle
-  const sparkData = scans.slice(0, 7).reverse().map(s => Math.max(10, 100 - (s.issue_count ?? 5) * 8));
-  while (sparkData.length < 7) sparkData.unshift(sparkData[0] ?? 72);
-  const sparkMax   = Math.max(...sparkData);
-  const sparkMin   = Math.min(...sparkData);
-  const sparkRange = Math.max(sparkMax - sparkMin, 20);
-  const sparkLatest = sparkData[sparkData.length - 1];
-  const sparkDelta  = sparkLatest - sparkData[sparkData.length - 2];
-
-  return (
-    <div className="min-h-screen bg-navy-900 text-white font-sans antialiased">
-
-      {/* ── Sticky command bar ──────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 h-12 flex items-center border-b border-white/[0.05] bg-navy-900/[0.97] backdrop-blur-xl px-5 gap-3">
-        {lastScan ? (
-          <>
-            <span className="font-mono text-[9px] font-bold text-slate-600 uppercase tracking-[0.15em] shrink-0">
-              TARGET
-            </span>
-            <span className="font-mono text-sm font-semibold text-slate-200 truncate min-w-0">
-              {lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-            </span>
-          </>
-        ) : (
-          <span className="text-sm font-medium text-slate-400">WebsiteFix Dashboard</span>
-        )}
-
-        <div className="flex items-center gap-2 ml-auto shrink-0">
-          {isFree && (
-            <span className="font-mono text-[10px] text-slate-600 tabular-nums">
-              {monthlyScans}/{scanLimit} Scans
-            </span>
-          )}
-          {isSingle && (
-            <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Monitoring aktiv
-            </span>
-          )}
-          <span className="px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.07] text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-            {isFree ? "Free" : "Smart Guard"}
-          </span>
-          {isFree && (
-            <Link
-              href="/smart-guard"
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition-colors"
-            >
-              Upgrade
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* ── Page body ───────────────────────────────────────────────── */}
-      <div className="max-w-[880px] mx-auto px-5 pb-24 space-y-4 pt-7">
-
-        {/* ══ NO SCAN STATE ══════════════════════════════════════════ */}
-        {!lastScan && (
-          <Card className="relative overflow-hidden p-10 text-center">
-            {/* ambient glows */}
-            <div className="absolute top-0 right-0 w-96 h-48 bg-indigo-600/[0.04] rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-40 bg-violet-600/[0.04] rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative">
-              <div className="mx-auto mb-6 w-16 h-16 rounded-2xl bg-indigo-500/[0.1] border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <Icon d={ICONS.scan} size={28} stroke={1.75} />
-              </div>
-              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">
-                Hallo{firstName ? `, ${firstName}` : ""}
-              </h1>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-md mx-auto mb-8">
-                Starte deinen ersten Website-Audit. In 60 Sekunden siehst du, warum Google dich nicht findet,
-                welche Rechtsfehler Abmahnungen riskieren und was Conversions blockiert.
-              </p>
-              <form action="/dashboard/scan" method="GET"
-                className="flex gap-2.5 max-w-lg mx-auto">
-                <input
-                  name="url" type="url"
-                  placeholder="https://deine-website.de" required
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-navy-700 border border-white/[0.08]
-                             text-sm text-white placeholder-slate-600
-                             outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20
-                             transition-all"
-                />
-                <button
-                  type="submit"
-                  className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl
-                             bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm
-                             transition-colors shadow-[0_4px_20px_rgba(99,102,241,0.3)]"
-                >
-                  <Icon d={ICONS.scan} size={14} />
-                  Jetzt scannen
-                </button>
-              </form>
-              <p className="mt-5 text-[10px] font-mono text-slate-600 uppercase tracking-wider">
-                {scanLimit - monthlyScans} Scans verbleibend · Kein Download · Ergebnis in 60 Sek.
-              </p>
-            </div>
-          </Card>
-        )}
-
-        {/* ══ HAS SCAN ═══════════════════════════════════════════════ */}
-        {lastScan && (
-          <>
-            {/* ① SCAN HERO ─────────────────────────────────────────── */}
-            <Card className="relative overflow-hidden">
-              {/* Background glows */}
-              <div className="absolute -top-8 -right-8 w-72 h-72 bg-indigo-600/[0.05] rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-1/3 w-56 h-40 bg-violet-600/[0.04] rounded-full blur-3xl pointer-events-none" />
-
-              <div className="relative p-6">
-                <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-mono font-bold text-slate-600 uppercase tracking-[0.15em] mb-1.5">
-                      Letzter Audit
-                    </p>
-                    <h1 className="text-xl font-bold text-white tracking-tight truncate">
-                      {lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                    </h1>
-                    <p className="mt-1 text-[11px] font-mono text-slate-500">
-                      {new Date(lastScan.created_at).toLocaleDateString("de-DE", {
-                        day: "2-digit", month: "short", year: "numeric",
-                      })}
-                      {" · "}
-                      {new Date(lastScan.created_at).toLocaleTimeString("de-DE", {
-                        hour: "2-digit", minute: "2-digit",
-                      })} Uhr
-                    </p>
-                  </div>
-
-                  <div className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold ${
-                    redCount > 0
-                      ? "bg-red-500/[0.1] border-red-500/20 text-red-400"
-                      : yellowCount > 0
-                      ? "bg-amber-500/[0.1] border-amber-500/20 text-amber-400"
-                      : "bg-emerald-500/[0.1] border-emerald-500/20 text-emerald-400"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      redCount > 0 ? "bg-red-400" : yellowCount > 0 ? "bg-amber-400" : "bg-emerald-400"
-                    }`} />
-                    {redCount > 0 ? "Handlungsbedarf" : yellowCount > 0 ? "Verbesserungen möglich" : "Keine kritischen Fehler"}
-                  </div>
-                </div>
-
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  {redCount > 0
-                    ? `${redCount} kritische Fehler und ${yellowCount} Warnungen erkannt. Sofortige Maßnahmen empfohlen.`
-                    : yellowCount > 0
-                    ? `Keine kritischen Fehler. ${yellowCount} Verbesserungen erhöhen Sichtbarkeit und Compliance.`
-                    : "Glückwunsch — keine kritischen Probleme gefunden."}
-                </p>
-
-                <div className="flex items-center gap-3 mt-5 flex-wrap">
-                  <Link
-                    href={`/dashboard/scans/${lastScan.id}`}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl
-                               bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08]
-                               text-xs font-semibold text-slate-300 transition-colors"
-                  >
-                    Vollbericht öffnen <Icon d={ICONS.arrow} size={11} stroke={2.5} />
-                  </Link>
-                  <Link
-                    href="/dashboard/scan"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-400 transition-colors rounded-xl"
-                  >
-                    <Icon d={ICONS.scan} size={12} />
-                    Neu scannen
-                    {isFree && <span className="text-[10px] font-mono text-slate-600">({scanLimit - monthlyScans} verbleibend)</span>}
-                  </Link>
-                </div>
-              </div>
-            </Card>
-
-            {/* ② INFRASTRUKTUR-LEISTE ──────────────────────────────── */}
-            <Card className="px-4 py-3">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="font-mono text-[9px] font-bold text-slate-600 uppercase tracking-[0.15em] pr-3 border-r border-white/[0.06] shrink-0">
-                  INFRA
-                </span>
-
-                {([
-                  {
-                    cat: "CMS", val: `${tech.cms}${tech.cmsVer ? " " + tech.cmsVer : ""}`,
-                    iconBg: "bg-[#21759B]/10", iconText: "#5BA4CF", icon: "W", sim: tech.simCms,
-                  },
-                  {
-                    cat: "Server", val: `${tech.server} ${tech.serverVer}`,
-                    iconBg: "bg-emerald-500/10", iconText: "#4ADE80", icon: "S", sim: tech.simServer,
-                  },
-                  ...(tech.php
-                    ? [{ cat: "PHP", val: tech.php, iconBg: "bg-violet-500/10", iconText: "#A78BFA", icon: "P", sim: false }]
-                    : []),
-                  {
-                    cat: "SSL", val: tech.ssl ? "Aktiv" : "Fehlt",
-                    iconBg: tech.ssl ? "bg-emerald-500/10" : "bg-red-500/10",
-                    iconText: tech.ssl ? "#4ADE80" : "#F87171", icon: tech.ssl ? "✓" : "✗", sim: false,
-                  },
-                ] as const).map((t, i, arr) => (
-                  <div key={t.cat} className="flex items-center gap-0">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-700 border border-white/[0.05]">
-                      <span
-                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black shrink-0 ${t.iconBg}`}
-                        style={{ color: t.iconText }}
-                      >
-                        {t.icon}
-                      </span>
-                      <span className="text-[9px] text-slate-600 font-semibold">{t.cat}</span>
-                      <span className="font-mono text-xs font-bold text-slate-300">{t.val}</span>
-                      {t.sim && (
-                        <span className="text-[8px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded px-1">
-                          SIM
-                        </span>
-                      )}
-                    </div>
-                    {i < arr.length - 1 && (
-                      <span className="mx-2 text-slate-700 text-xs">·</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* ③ COMPLIANCE BANNER ─────────────────────────────────── */}
-            <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border ${
-              bfsgOk
-                ? "bg-emerald-500/[0.05] border-emerald-500/20"
-                : "bg-red-500/[0.05] border-red-500/20"
-            }`}>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                bfsgOk ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
-              }`}>
-                {bfsgOk
-                  ? <Icon d={ICONS.check} size={15} stroke={2.5} />
-                  : <Icon d={ICONS.alert} size={15} stroke={2} />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold ${bfsgOk ? "text-emerald-400" : "text-red-400"}`}>
-                  BFSG 2025 — {bfsgOk ? "Konform" : `${rechtIssues.length} Verstöße erkannt`}
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {bfsgOk
-                    ? "Keine kritischen Barrierefreiheits- oder Rechtsfehler gefunden."
-                    : `${redCount} kritisch · ${yellowCount} Warnungen · Abmahnrisiko ab 28.06.2025`}
-                </p>
-              </div>
-              {!bfsgOk && (
-                <Link
-                  href={`/dashboard/scans/${lastScan.id}`}
-                  className="shrink-0 px-3.5 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20
-                             text-xs font-bold text-red-400 hover:bg-red-500/[0.15] transition-colors"
-                >
-                  Details →
-                </Link>
-              )}
-            </div>
-
-            {/* ④ ISSUE COUNT CARDS ─────────────────────────────────── */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                {
-                  label: "Kritische Fehler",
-                  count: redCount,
-                  icon: ICONS.alert,
-                  top:  "bg-red-500",
-                  bg:   "bg-red-500/[0.07]",
-                  bdr:  "border-red-500/15",
-                  txt:  "text-red-400",
-                },
-                {
-                  label: "Warnungen",
-                  count: yellowCount,
-                  icon: ICONS.alert,
-                  top:  "bg-amber-500",
-                  bg:   "bg-amber-500/[0.07]",
-                  bdr:  "border-amber-500/15",
-                  txt:  "text-amber-400",
-                },
-                {
-                  label: "Hinweise",
-                  count: issues.filter(i => i.severity === "green").length,
-                  icon: ICONS.info,
-                  top:  "bg-blue-500",
-                  bg:   "bg-blue-500/[0.07]",
-                  bdr:  "border-blue-500/15",
-                  txt:  "text-blue-400",
-                },
-              ].map(card => (
-                <Card key={card.label} className="overflow-hidden">
-                  <div className={`h-[2px] ${card.top}`} />
-                  <div className="p-5">
-                    <div className={`w-9 h-9 rounded-xl ${card.bg} border ${card.bdr} flex items-center justify-center mb-4 ${card.txt}`}>
-                      <Icon d={card.icon} size={16} stroke={2} />
-                    </div>
-                    <p className={`text-3xl font-bold leading-none mb-1.5 ${card.txt}`}>{card.count}</p>
-                    <p className="text-xs text-slate-500 font-medium">{card.label}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            {/* ⑤ SEARCH & PERFORMANCE SNAPSHOT ────────────────────── */}
-            {vitals && (
-              <Card className="overflow-hidden">
-                <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.04]">
-                  <div className="flex gap-1.5">
-                    {["#4285F4", "#EA4335", "#FBBC04", "#34A853"].map(c => (
-                      <span key={c} style={{ background: c }} className="w-2 h-2 rounded-full" />
-                    ))}
-                  </div>
-                  <p className="text-xs font-semibold text-slate-400">Google Search · Performance</p>
-                  <span className="ml-auto text-[9px] font-mono font-bold px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase tracking-wider">
-                    Simuliert
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 divide-x divide-white/[0.04]">
-                  {[
-                    {
-                      cat: "Index",
-                      val: `${vitals.indexed} URLs`,
-                      sub: "im Google Index",
-                      ok: vitals.indexed > 20,
-                    },
-                    {
-                      cat: "Sitemap",
-                      val: vitals.sitemapOk ? "Erkannt" : "Fehlt",
-                      sub: vitals.sitemapOk ? "/sitemap_index.xml" : "Nicht eingereicht",
-                      ok: vitals.sitemapOk,
-                    },
-                    {
-                      cat: "Core Web Vitals",
-                      val: `LCP ${(vitals.lcpMs / 1000).toFixed(1)}s`,
-                      sub: vitals.lcpMs < 2500 ? "Gut" : "Verbesserungsbedarf",
-                      ok: vitals.lcpMs < 2500,
-                    },
-                    {
-                      cat: "Mobile",
-                      val: vitals.mobileOk ? "Bestanden" : "Fehlgeschlagen",
-                      sub: "Viewport & Responsive",
-                      ok: vitals.mobileOk,
-                    },
-                  ].map(m => (
-                    <div key={m.cat} className="px-5 py-5">
-                      <p className={`font-mono text-[9px] font-bold uppercase tracking-[0.12em] mb-2 ${
-                        m.ok ? "text-emerald-500/50" : "text-red-500/50"
-                      }`}>
-                        {m.cat}
-                      </p>
-                      <p className={`font-mono text-sm font-bold leading-none mb-1.5 ${
-                        m.ok ? "text-emerald-400" : "text-red-400"
-                      }`}>
-                        {m.val}
-                      </p>
-                      <p className="text-[10px] text-slate-600 leading-snug">{m.sub}</p>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* ⑥ FINDINGS ──────────────────────────────────────────── */}
-            {issues.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between px-0.5">
-                  <h2 className="text-sm font-semibold text-white">Audit-Befunde</h2>
-                  <Link
-                    href={`/dashboard/scans/${lastScan.id}`}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    Vollbericht →
-                  </Link>
-                </div>
-
-                {[
-                  { label: "BFSG / Recht", items: rechtIssues, dot: "bg-red-500",   txt: "text-red-400"   },
-                  { label: "Performance",  items: speedIssues, dot: "bg-amber-500", txt: "text-amber-400" },
-                  { label: "Technical SEO",items: techIssues,  dot: "bg-blue-500",  txt: "text-blue-400"  },
-                ]
-                  .filter(g => g.items.length > 0)
-                  .map(group => (
-                    <Card key={group.label} className="overflow-hidden">
-                      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/[0.04] bg-navy-700/30">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${group.dot}`} />
-                        <p className={`text-[10px] font-bold uppercase tracking-[0.1em] ${group.txt}`}>
-                          {group.label}
-                        </p>
-                        <span className="ml-auto text-[10px] font-mono text-slate-600">
-                          {group.items.length} Befunde
-                        </span>
-                      </div>
-                      <div>
-                        {group.items.slice(0, 4).map((issue, i) => (
-                          <FindingRow
-                            key={i}
-                            issue={issue}
-                            cms={cms.label}
-                            idx={i}
-                            isFree={isFree}
-                          />
-                        ))}
-                        {group.items.length > 4 && (
-                          <Link
-                            href={`/dashboard/scans/${lastScan.id}`}
-                            className="flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono text-slate-600 hover:text-slate-500 border-t border-white/[0.04] transition-colors"
-                          >
-                            +{group.items.length - 4} weitere im Vollbericht →
-                          </Link>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-              </div>
-            )}
-
-            {/* ⑦ LOCKED PREMIUM ────────────────────────────────────── */}
-            <SectionDivider label="Smart Guard Features" />
-
-            <div className="space-y-3">
-              {/* Score history */}
-              <LockedBlock
-                title="Score-Verlauf · 7 Tage"
-                desc="Verfolge, wie sich dein Website-Score entwickelt — und reagiere früh auf Rückgänge."
-              >
-                <Card className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Score-Verlauf</p>
-                    <p className="text-2xl font-bold text-emerald-400">82</p>
-                  </div>
-                  <svg viewBox="0 0 200 48" className="w-full h-12">
-                    <polyline
-                      points={[58,62,59,68,72,77,82].map((v, i) => `${i*(200/6)},${48-((v-50)/40)*48}`).join(" ")}
-                      fill="none" stroke="#22C55E" strokeWidth="2"
-                    />
-                  </svg>
-                </Card>
-              </LockedBlock>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Live monitoring */}
-                <LockedBlock
-                  title="24/7 Live-Überwachung"
-                  desc="Stündliche Prüfung auf Downtime, SSL-Ablauf und Fehler."
-                >
-                  <Card className="p-5">
-                    <p className="text-[10px] font-mono font-bold text-slate-500 uppercase mb-4">Monitoring</p>
-                    <div className="space-y-2.5">
-                      {["Stündliche Prüfung · 1h", "SSL-Ablauf Alarm · 87d", "Downtime-Alert · RT"].map(l => (
-                        <div key={l} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                          <span className="text-xs text-slate-400">{l}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                </LockedBlock>
-
-                {/* PDF report */}
-                <LockedBlock
-                  title="PDF-Bericht"
-                  desc="Professioneller Audit-Bericht mit priorisierten Fixes als PDF."
-                >
-                  <Card className="p-5">
-                    <p className="text-[10px] font-mono font-bold text-slate-500 uppercase mb-4">PDF-Export</p>
-                    <div className="space-y-2.5">
-                      {["Vollständige Befundliste", "Priorisierte Fixes", "Executive Summary"].map(l => (
-                        <div key={l} className="flex items-center gap-2">
-                          <Icon d={ICONS.check} size={12} stroke={2.5} />
-                          <span className="text-xs text-slate-400">{l}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                </LockedBlock>
-              </div>
-
-              {/* isSingle: show real chart instead of locked */}
-              {isSingle && scans.length > 0 && (
-                <Card className="p-5 -mt-1">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Score-Verlauf · 7 Tage</p>
-                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">LIVE</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-2xl font-bold text-emerald-400">{sparkLatest}</span>
-                      <span className={`font-mono text-xs font-bold ${sparkDelta >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {sparkDelta >= 0 ? "↑" : "↓"}{Math.abs(sparkDelta)}
-                      </span>
-                    </div>
-                  </div>
-                  <svg viewBox="0 0 480 48" className="w-full h-12 overflow-visible">
-                    <defs>
-                      <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#22C55E" stopOpacity="0.2" />
-                        <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    {(() => {
-                      const pts = sparkData.map((v, i) => ({
-                        x: 8 + (i / (sparkData.length - 1)) * 464,
-                        y: 6 + (1 - (v - sparkMin) / sparkRange) * 36,
-                      }));
-                      const line = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-                      const area = `M${pts[0].x},${pts[0].y} ` + pts.slice(1).map(p => `L${p.x},${p.y}`).join(" ") + ` L${pts[pts.length-1].x},44 L${pts[0].x},44 Z`;
-                      return (
-                        <>
-                          <path d={area} fill="url(#sg)" />
-                          <polyline points={line} fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          {pts.map((p, i) => (
-                            <circle key={i} cx={p.x} cy={p.y} r="3"
-                              fill={i === pts.length - 1 ? "#22C55E" : "#0D1117"}
-                              stroke="#22C55E" strokeWidth="1.5" />
-                          ))}
-                        </>
-                      );
-                    })()}
-                  </svg>
-                </Card>
-              )}
-            </div>
-
-            {/* ⑧ DONE-FOR-YOU ─────────────────────────────────────── */}
-            <SectionDivider label="Professionelle Sofort-Fixes" />
-
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                {
-                  icon: ICONS.wrench,
-                  title: "Kontaktformular reparieren",
-                  desc: "DSGVO-konform, barrierefrei & mit automatischer Antwort",
-                  time: "2–3 Werktage",
-                  price: "ab 199 €",
-                  urgent: false,
-                },
-                {
-                  icon: ICONS.zap,
-                  title: "Website beschleunigen",
-                  desc: "PageSpeed-Optimierung, WebP-Bilder, CDN-Setup",
-                  time: "3–5 Werktage",
-                  price: "ab 249 €",
-                  urgent: redCount > 0 && speedIssues.length > 0,
-                },
-                {
-                  icon: ICONS.mobile,
-                  title: "Mobile Ansicht fixen",
-                  desc: "Responsive-Anpassung, Viewport-Korrekturen",
-                  time: "2–3 Werktage",
-                  price: "ab 179 €",
-                  urgent: false,
-                },
-              ].map(s => (
-                <Card key={s.title}
-                  className={`flex flex-col p-5 gap-4 transition-colors hover:border-indigo-500/20 group ${
-                    s.urgent ? "border-amber-500/20" : ""
-                  }`}
-                >
-                  {s.urgent && (
-                    <span className="self-start text-[9px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                      Empfohlen
-                    </span>
-                  )}
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/15 transition-colors">
-                    <Icon d={s.icon} size={16} stroke={1.75} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-white leading-snug mb-1.5">
-                      {s.title}
-                    </p>
-                    <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
-                  </div>
-                  <div className="space-y-2.5 mt-auto">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-slate-600">{s.time}</span>
-                      <span className="text-sm font-bold text-indigo-400">{s.price}</span>
-                    </div>
-                    <button className="w-full py-2 rounded-xl bg-indigo-500/[0.08] border border-indigo-500/20 text-xs font-bold text-indigo-400 hover:bg-indigo-500/[0.14] hover:border-indigo-500/30 transition-colors">
-                      Jetzt beauftragen →
-                    </button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            {/* ⑨ UPGRADE BANNER ───────────────────────────────────── */}
-            {isFree && (
-              <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-600/[0.08] via-indigo-600/[0.04] to-violet-600/[0.08] p-6">
-                <div className="absolute -top-8 -right-8 w-48 h-48 bg-indigo-600/10 rounded-full blur-2xl pointer-events-none" />
-                <div className="relative flex items-center gap-6 flex-wrap">
-                  <div className="flex-1 min-w-[200px]">
-                    <p className="font-mono text-[9px] font-bold text-indigo-400 uppercase tracking-[0.15em] mb-1.5">
-                      Smart Guard
-                    </p>
-                    <h3 className="text-base font-bold text-white mb-2 tracking-tight">
-                      Automatische Überwachung freischalten
-                    </h3>
-                    <div className="flex flex-wrap gap-3">
-                      {["24/7 Monitoring", "Sofort-Alerts", "PDF-Berichte", "Priorisierte Fixes"].map(f => (
-                        <span key={f} className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                          <Icon d={ICONS.check} size={11} stroke={2.5} />
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-white">39 €</p>
-                      <p className="text-[10px] text-slate-500">/ Monat · kündbar</p>
-                    </div>
-                    <Link
-                      href="/smart-guard"
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-colors shadow-[0_4px_20px_rgba(99,102,241,0.3)]"
-                    >
-                      Aktivieren →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isSingle && (
-              <p className="text-center text-[10px] font-mono text-slate-700 pb-2">
-                <Link href="/fuer-agenturen" className="hover:text-slate-500 transition-colors">
-                  Mehrere Websites überwachen? → Agency-Dashboard
-                </Link>
-              </p>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
+// ─── Nav icon helper ───────────────────────────────────────────────────────────
+function NavIcon({ name, active }: { name: string; active: boolean }) {
+  const color = active ? "#FFFFFF" : "#6B7280";
+  const w = 16;
+  switch (name) {
+    case "Dashboard":
+      return (
+        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      );
+    case "Live Scan":
+      return (
+        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      );
+    case "Monitoring":
+      return (
+        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      );
+    case "Reports":
+      return (
+        <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
