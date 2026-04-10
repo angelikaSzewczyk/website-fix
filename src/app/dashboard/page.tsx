@@ -36,11 +36,12 @@ const C = {
   yellow:      "#EAB308",
 } as const;
 
-// ─── Plan → Layout mapping ──────────────────────────────────────────────────────
-function getLayout(plan: string): "single" | "agency" | "enterprise" {
+// ─── Plan → Layout ──────────────────────────────────────────────────────────────
+function getLayout(plan: string): "free" | "single" | "agency" | "enterprise" {
   if (plan === "enterprise")                return "enterprise";
   if (plan === "agentur" || plan === "pro") return "agency";
-  return "single";
+  if (plan === "single")                    return "single";
+  return "free";
 }
 
 // ─── CMS Detection ──────────────────────────────────────────────────────────────
@@ -69,7 +70,6 @@ type ParsedIssue = {
 function parseIssues(text: string): ParsedIssue[] {
   const issues: ParsedIssue[] = [];
   let current: ParsedIssue | null = null;
-
   for (const raw of text.split("\n")) {
     const line = raw.trim();
     if (!line || line.startsWith("# ") || line.startsWith("## ")) {
@@ -80,7 +80,6 @@ function parseIssues(text: string): ParsedIssue[] {
     if (line.startsWith("**🔴")) sev = "red";
     else if (line.startsWith("**🟡")) sev = "yellow";
     else if (line.startsWith("**🟢")) sev = "green";
-
     if (sev) {
       if (current) issues.push(current);
       const title = line.replace(/\*\*/g, "").replace(/^[🔴🟡🟢]\s*/, "").trim();
@@ -122,12 +121,83 @@ function getFixGuide(title: string, cms: string): string {
   return "Prüfe den vollständigen Bericht für detaillierte Handlungsempfehlungen zu diesem Punkt.";
 }
 
+// ─── SVG History Chart ─────────────────────────────────────────────────────────
+type ScanBrief = { id: string; url: string; type: string; created_at: string; issue_count: number | null };
+
+function HistoryChart({ scans }: { scans: ScanBrief[] }) {
+  const last7 = scans.slice(0, 7).reverse();
+  const rawScores = last7.map(s => Math.max(10, 100 - (s.issue_count ?? 5) * 8));
+  // Pad to at least 2 points
+  while (rawScores.length < 2) rawScores.unshift(rawScores[0] ?? 72);
+  const n = rawScores.length;
+
+  const W = 520, H = 56, PX = 10, PY = 8;
+  const minV = Math.min(...rawScores);
+  const maxV = Math.max(...rawScores);
+  const range = Math.max(maxV - minV, 20);
+
+  const pts = rawScores.map((s, i) => ({
+    x: PX + (i / (n - 1)) * (W - PX * 2),
+    y: PY + (1 - (s - minV) / range) * (H - PY * 2),
+    s,
+  }));
+
+  const polyline = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const area     = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)} ` +
+                   pts.slice(1).map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") +
+                   ` L${pts[n-1].x.toFixed(1)},${(H - PY).toFixed(1)} L${pts[0].x.toFixed(1)},${(H - PY).toFixed(1)} Z`;
+
+  const latest = rawScores[n - 1];
+  const prev   = rawScores[n - 2];
+  const delta  = latest - prev;
+  const color  = latest >= 70 ? C.green : latest >= 50 ? C.amber : C.red;
+  const dates  = last7.map(s => {
+    const d = new Date(s.created_at);
+    return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
+  });
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 20px 10px", marginBottom: 16, boxShadow: C.shadow }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
+          <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "#ECFDF5", color: C.green, border: "1px solid #A7F3D0" }}>
+            LIVE MONITORING
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 22, fontWeight: 800, color, letterSpacing: "-0.03em", lineHeight: 1 }}>{latest}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: delta >= 0 ? C.green : C.red }}>
+            {delta >= 0 ? "↑" : "↓"}{Math.abs(delta)}
+          </span>
+        </div>
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", height: 52, overflow: "visible" }}>
+        <defs>
+          <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#hg)" />
+        <polyline points={polyline} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="3.5"
+            fill={i === n - 1 ? color : C.card}
+            stroke={color} strokeWidth="1.5" />
+        ))}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+        {dates.map((d, i) => (
+          <span key={i} style={{ fontSize: 9, color: C.textMuted, fontVariantNumeric: "tabular-nums" }}>{d}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
-type Scan = {
-  id: string; url: string; type: string;
-  created_at: string; issue_count: number | null;
-  result?: string | null;
-};
+type Scan = ScanBrief & { result?: string | null };
 type CriticalSite = {
   id: string; url: string; name: string | null;
   last_check_status: string; last_check_at: string;
@@ -137,9 +207,10 @@ type CriticalSite = {
 
 const PLAN_BADGE = {
   free:       { label: "Free",          color: C.textMuted,  bg: "#F1F5F9",  border: C.border },
-  pro:        { label: "Agency Starter",color: "#059669",    bg: "#ECFDF5",  border: "#A7F3D0" },
-  agentur:    { label: "Agency Pro",    color: C.blue,       bg: C.blueBg,   border: C.blueBorder },
-  enterprise: { label: "Enterprise",   color: "#7C3AED",    bg: "#F5F3FF",  border: "#DDD6FE" },
+  single:     { label: "Smart-Guard",   color: "#059669",    bg: "#ECFDF5",  border: "#A7F3D0" },
+  pro:        { label: "Agency Starter",color: C.blue,       bg: C.blueBg,   border: C.blueBorder },
+  agentur:    { label: "Agency Pro",    color: "#7C3AED",    bg: "#F5F3FF",  border: "#DDD6FE" },
+  enterprise: { label: "Enterprise",   color: "#0F172A",    bg: "#F8FAFC",  border: C.border },
 } as const;
 
 const DUMMY_CLIENTS = [
@@ -203,11 +274,11 @@ function AgencySidebar({ firstName, plan, planBadge, domainCount, domainLimit, i
   domainCount: number; domainLimit: number; isEnterprise: boolean;
 }) {
   const navItems = [
-    { label: "Übersicht",     href: "/dashboard",          active: true,  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
-    { label: "Kunden",        href: "/dashboard/clients",  active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-    { label: "Deep-Audits",   href: "/dashboard/scan",     active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
-    { label: "Berichte",      href: "/dashboard/reports",  active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-    { label: "Team",          href: "/dashboard/team",     active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { label: "Übersicht",   href: "/dashboard",         active: true,  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
+    { label: "Kunden",      href: "/dashboard/clients", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { label: "Deep-Audits", href: "/dashboard/scan",    active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
+    { label: "Berichte",    href: "/dashboard/reports", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+    { label: "Team",        href: "/dashboard/team",    active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
     ...(isEnterprise ? [{ label: "Admin / Rechte", href: "/dashboard/admin", active: false, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> }] : []),
   ];
   return (
@@ -252,7 +323,7 @@ function AgencySidebar({ firstName, plan, planBadge, domainCount, domainLimit, i
 
 function ClientRow({ client, last }: { client: typeof DUMMY_CLIENTS[0]; last: boolean }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 1fr 180px", gap: 16, alignItems: "center", padding: "13px 20px", borderBottom: last ? "none" : `1px solid ${C.divider}`, background: "transparent" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 1fr 180px", gap: 16, alignItems: "center", padding: "13px 20px", borderBottom: last ? "none" : `1px solid ${C.divider}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: `${client.color}18`, border: `1px solid ${client.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: client.color }}>{client.initials}</div>
         <div style={{ minWidth: 0 }}>
@@ -290,19 +361,19 @@ export default async function DashboardPage() {
   const firstName = session.user.name?.split(" ")[0] ?? "Dashboard";
   const layout    = getLayout(plan);
   const isAgency  = layout === "agency" || layout === "enterprise";
+  const isSingle  = layout === "single";   // Smart-Guard plan
+  const isFree    = layout === "free";
 
-  // ── Scans ──
   const scans = await sql`
     SELECT id, url, type, created_at, issue_count
     FROM scans WHERE user_id = ${session.user.id}
     ORDER BY created_at DESC LIMIT 20
   ` as Scan[];
 
-  // ── Agency data ──
+  // Agency data
   let criticalSites: CriticalSite[] = [];
   let domainCount = DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0);
   const domainLimit = plan === "agentur" ? 50 : plan === "pro" ? 20 : 1;
-
   if (isAgency) {
     try {
       criticalSites = await sql`
@@ -321,7 +392,7 @@ export default async function DashboardPage() {
     } catch { /* table may not exist yet */ }
   }
 
-  // ── Free: last scan with result for issue parsing ──
+  // Free/Single: last scan result for issue parsing
   let lastScanResult: string | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
@@ -331,7 +402,7 @@ export default async function DashboardPage() {
     } catch {}
   }
 
-  // Monthly scan count
+  // Monthly scan counter (Free only)
   const now = new Date();
   const monthlyScans = scans.filter(s => {
     const d = new Date(s.created_at);
@@ -339,7 +410,7 @@ export default async function DashboardPage() {
   }).length;
   const SCAN_LIMIT = 3;
 
-  // Parse issues from last scan
+  // Parse issues
   const issues: ParsedIssue[] = lastScanResult ? parseIssues(lastScanResult) : [];
   const cms = lastScanResult ? detectCMS(lastScanResult, lastScan?.url) : { label: "–" };
 
@@ -351,7 +422,6 @@ export default async function DashboardPage() {
 
   const bfsgOk     = rechtIssues.length === 0;
   const speedScore = Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
-  const overallOk  = redIssues.length === 0;
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -361,12 +431,22 @@ export default async function DashboardPage() {
         .fix-details summary { cursor: pointer; user-select: none; }
         .fix-details summary::-webkit-details-marker { display: none; }
         .issue-row:hover { background: #F8FAFC !important; }
+        /* Smart-Guard: checkbox-based done state via :has() */
+        .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
+        .fix-details:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: ${C.textMuted} !important; }
+        /* Pulse animation for monitoring dot */
+        @keyframes pulse-ring {
+          0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+          70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        }
+        .pulse-dot { animation: pulse-ring 2s infinite; }
       `}</style>
 
       <ProgressBar plan={plan} />
 
       {/* ══════════════════════════════════════════════════════════
-          FREE / SINGLE LAYOUT
+          FREE / SINGLE (Smart-Guard) LAYOUT
           ══════════════════════════════════════════════════════════ */}
       {!isAgency && (
         <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px 100px" }}>
@@ -379,22 +459,43 @@ export default async function DashboardPage() {
                 Hallo, {firstName} 👋
               </h1>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {/* Scan counter */}
-              <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? C.redBg : C.card, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "#FECACA" : C.border}` }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <span style={{ fontSize: 12, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? C.red : C.text }}>
-                  {monthlyScans} / {SCAN_LIMIT}
-                </span>
-                <span style={{ fontSize: 11, color: C.textMuted }}>Scans</span>
+
+            {/* FREE: Scan counter + Upgrade */}
+            {isFree && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 20, background: monthlyScans >= SCAN_LIMIT ? C.redBg : C.card, border: `1px solid ${monthlyScans >= SCAN_LIMIT ? "#FECACA" : C.border}` }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={monthlyScans >= SCAN_LIMIT ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: monthlyScans >= SCAN_LIMIT ? C.red : C.text }}>{monthlyScans} / {SCAN_LIMIT}</span>
+                  <span style={{ fontSize: 11, color: C.textMuted }}>Scans</span>
+                </div>
+                <Link href="/preise" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 10px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
+                  ⚡ Upgrade auf Smart-Guard
+                </Link>
               </div>
-              {/* Upgrade CTA */}
-              <Link href="/preise" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 10px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
-                ⚡ Upgrade auf Smart-Guard
-              </Link>
-            </div>
+            )}
+
+            {/* SMART-GUARD: Plan badge + Monitoring aktiv */}
+            {isSingle && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* Plan badge */}
+                <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 13px", borderRadius: 20, background: "#ECFDF5", border: "1px solid #A7F3D0" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Plan: Smart-Guard</span>
+                </div>
+                {/* Monitoring aktiv */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Monitoring: AKTIV</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: C.textMuted, paddingLeft: 14 }}>Nächster automatischer Check: in 14 Minuten</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── No Scan State ── */}
@@ -409,42 +510,25 @@ export default async function DashboardPage() {
               <p style={{ margin: "0 auto 20px", fontSize: 14, color: C.textSub, lineHeight: 1.7, maxWidth: 440 }}>
                 Finde in 60 Sekunden heraus, warum Google dich nicht findet, welche Rechtsfehler auf Abmahnungen warten und was deine Conversion-Rate blockiert.
               </p>
-
-              {/* URL Input Form */}
               <form action="/dashboard/scan" method="GET" style={{ display: "flex", gap: 10, maxWidth: 500, margin: "0 auto 16px", flexWrap: "wrap", justifyContent: "center" }}>
-                <input
-                  name="url"
-                  type="url"
-                  placeholder="https://deine-website.de"
-                  required
-                  style={{
-                    flex: 1, minWidth: 260,
-                    padding: "12px 16px", borderRadius: 10,
-                    border: `1.5px solid ${C.border}`,
-                    fontSize: 14, color: C.text, background: C.bg,
-                    outline: "none", fontFamily: "inherit",
-                  }}
-                />
-                <button type="submit" style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "12px 24px", borderRadius: 10,
-                  background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14,
-                  border: "none", cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(37,99,235,0.35)",
-                  fontFamily: "inherit",
-                }}>
+                <input name="url" type="url" placeholder="https://deine-website.de" required style={{ flex: 1, minWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit" }} />
+                <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(37,99,235,0.35)", fontFamily: "inherit" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   Kostenlos scannen
                 </button>
               </form>
-
-              <p style={{ margin: "0 0 0", fontSize: 11, color: C.textMuted }}>Keine Kreditkarte · 3 Scans pro Monat gratis</p>
+              <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>
+                {isFree ? "Keine Kreditkarte · 3 Scans pro Monat gratis" : "Smart-Guard aktiv · automatische Überwachung läuft"}
+              </p>
             </div>
           )}
 
           {/* ── Has Scan: Full Dashboard ── */}
           {lastScan && (
             <>
+
+              {/* ── History Chart (Smart-Guard only) ── */}
+              {isSingle && scans.length > 0 && <HistoryChart scans={scans} />}
 
               {/* ── System Detection Bar ── */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: C.shadow }}>
@@ -472,12 +556,7 @@ export default async function DashboardPage() {
               </div>
 
               {/* ── BFSG Banner ── */}
-              <div style={{
-                background: bfsgOk ? C.greenBg : C.redBg,
-                border: `1px solid ${bfsgOk ? "#A7F3D0" : "#FECACA"}`,
-                borderRadius: 12, padding: "13px 18px", marginBottom: 20,
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
+              <div style={{ background: bfsgOk ? C.greenBg : C.redBg, border: `1px solid ${bfsgOk ? "#A7F3D0" : "#FECACA"}`, borderRadius: 12, padding: "13px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: bfsgOk ? "#16A34A20" : "#DC262620", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {bfsgOk
                     ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -486,13 +565,12 @@ export default async function DashboardPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: bfsgOk ? C.green : C.red }}>
-                    Barrierefreiheit-Status: {bfsgOk ? "KONFORM (BFSG 2025)" : `KRITISCH — Nicht konform mit BFSG 2025`}
+                    Barrierefreiheit & Recht Status: {bfsgOk ? "KONFORM (BFSG 2025)" : "KRITISCH — Nicht konform mit BFSG 2025"}
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: bfsgOk ? "#166534" : "#991B1B", lineHeight: 1.5 }}>
                     {bfsgOk
-                      ? "Keine kritischen Barrierefreiheits-Verstöße gefunden. Weiter so!"
-                      : `${rechtIssues.length} Rechts- und Barrierefreiheitsfehler gefunden. Abmahnrisiko ab 28. Juni 2025.`
-                    }
+                      ? "Keine kritischen Rechts- oder Barrierefreiheits-Verstöße gefunden."
+                      : `${rechtIssues.length} Rechts- und Barrierefreiheitsfehler gefunden. Abmahnrisiko ab 28. Juni 2025.`}
                   </p>
                 </div>
                 {!bfsgOk && (
@@ -507,40 +585,38 @@ export default async function DashboardPage() {
 
                 {/* Tile 1: Sichtbarkeit */}
                 {((): React.ReactNode => {
-                  const seoIssues = issues.filter(i => /meta|title|h1|sitemap|robots|index|canonical|seo/.test(i.title.toLowerCase()));
-                  const status    = seoIssues.filter(i => i.severity === "red").length > 0 ? "red" : seoIssues.length > 0 ? "amber" : "green";
-                  const bg        = status === "green" ? C.greenBg : status === "amber" ? C.amberBg : C.redBg;
-                  const border    = status === "green" ? "#A7F3D0" : status === "amber" ? "#FDE68A" : "#FECACA";
-                  const color     = status === "green" ? C.green   : status === "amber" ? C.amber   : C.red;
-                  const label     = status === "green" ? "Gut indexiert" : status === "amber" ? "Verbesserbar" : "Kritisch";
+                  const seoI  = issues.filter(i => /meta|title|h1|sitemap|robots|index|canonical|seo/.test(i.title.toLowerCase()));
+                  const st    = seoI.filter(i => i.severity === "red").length > 0 ? "red" : seoI.length > 0 ? "amber" : "green";
+                  const col   = st === "green" ? C.green : st === "amber" ? C.amber : C.red;
+                  const bg    = st === "green" ? C.greenBg : st === "amber" ? C.amberBg : C.redBg;
+                  const brd   = st === "green" ? "#A7F3D0" : st === "amber" ? "#FDE68A" : "#FECACA";
+                  const lbl   = st === "green" ? "Gut indexiert" : st === "amber" ? "Verbesserbar" : "Kritisch";
                   return (
                     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow }}>
-                      <div style={{ height: 3, background: color }} />
+                      <div style={{ height: 3, background: col }} />
                       <div style={{ padding: "18px 16px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${brd}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${border}` }}>{label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: col, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${brd}` }}>{lbl}</span>
                         </div>
                         <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: C.text }}>Sichtbarkeit</p>
                         <p style={{ margin: "0 0 12px", fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Warum findet Google mich nicht?</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
                           {[
-                            { label: "Indexierung", ok: seoIssues.filter(i => /index/.test(i.title.toLowerCase())).length === 0 },
-                            { label: "Meta-Tags",   ok: seoIssues.filter(i => /meta|title/.test(i.title.toLowerCase())).length === 0 },
-                            { label: "Sitemap",     ok: seoIssues.filter(i => /sitemap/.test(i.title.toLowerCase())).length === 0 },
+                            { label: "Indexierung", ok: seoI.filter(i => /index/.test(i.title.toLowerCase())).length === 0 },
+                            { label: "Meta-Tags",   ok: seoI.filter(i => /meta|title/.test(i.title.toLowerCase())).length === 0 },
+                            { label: "Sitemap",     ok: seoI.filter(i => /sitemap/.test(i.title.toLowerCase())).length === 0 },
                           ].map(item => (
                             <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontSize: 9, color: item.ok ? C.green : C.red }}>{item.ok ? "●" : "●"}</span>
+                              <span style={{ fontSize: 9, color: item.ok ? C.green : C.red }}>●</span>
                               <span style={{ fontSize: 11, color: C.textSub }}>{item.label}</span>
                               <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 700, color: item.ok ? C.green : C.red }}>{item.ok ? "OK" : "⚠"}</span>
                             </div>
                           ))}
                         </div>
-                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>
-                          Details →
-                        </Link>
+                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>Details →</Link>
                       </div>
                     </div>
                   );
@@ -548,29 +624,29 @@ export default async function DashboardPage() {
 
                 {/* Tile 2: Stabilität */}
                 {((): React.ReactNode => {
-                  const critical = redIssues.length;
-                  const status   = critical > 2 ? "red" : critical > 0 ? "amber" : "green";
-                  const bg       = status === "green" ? C.greenBg : status === "amber" ? C.amberBg : C.redBg;
-                  const border   = status === "green" ? "#A7F3D0" : status === "amber" ? "#FDE68A" : "#FECACA";
-                  const color    = status === "green" ? C.green   : status === "amber" ? C.amber   : C.red;
-                  const label    = status === "green" ? "Stabil" : status === "amber" ? "Warnung" : "Kritisch";
+                  const crit  = redIssues.length;
+                  const st    = crit > 2 ? "red" : crit > 0 ? "amber" : "green";
+                  const col   = st === "green" ? C.green : st === "amber" ? C.amber : C.red;
+                  const bg    = st === "green" ? C.greenBg : st === "amber" ? C.amberBg : C.redBg;
+                  const brd   = st === "green" ? "#A7F3D0" : st === "amber" ? "#FDE68A" : "#FECACA";
+                  const lbl   = st === "green" ? "Stabil" : st === "amber" ? "Warnung" : "Kritisch";
                   return (
                     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow }}>
-                      <div style={{ height: 3, background: color }} />
+                      <div style={{ height: 3, background: col }} />
                       <div style={{ padding: "18px 16px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${brd}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${border}` }}>{label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: col, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${brd}` }}>{lbl}</span>
                         </div>
                         <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: C.text }}>Stabilität</p>
                         <p style={{ margin: "0 0 12px", fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Kritische Fehler & System</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
                           {[
-                            { label: "System erkannt", ok: cms.label !== "–" },
-                            { label: "Kritische Fehler", ok: critical === 0, val: critical > 0 ? `${critical}×` : undefined },
-                            { label: "Tech-Fehler",      ok: techIssues.filter(i => i.severity === "red").length === 0 },
+                            { label: "System erkannt",    ok: cms.label !== "–" },
+                            { label: "Kritische Fehler",  ok: crit === 0, val: crit > 0 ? `${crit}×` : undefined },
+                            { label: "Tech-Fehler",       ok: techIssues.filter(i => i.severity === "red").length === 0 },
                           ].map(item => (
                             <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <span style={{ fontSize: 9, color: item.ok ? C.green : C.red }}>●</span>
@@ -579,39 +655,37 @@ export default async function DashboardPage() {
                             </div>
                           ))}
                         </div>
-                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>
-                          Details →
-                        </Link>
+                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>Details →</Link>
                       </div>
                     </div>
                   );
                 })()}
 
-                {/* Tile 3: Umsatz / Performance */}
+                {/* Tile 3: Umsatz */}
                 {((): React.ReactNode => {
-                  const status = speedScore >= 70 ? "green" : speedScore >= 50 ? "amber" : "red";
-                  const bg     = status === "green" ? C.greenBg : status === "amber" ? C.amberBg : C.redBg;
-                  const border = status === "green" ? "#A7F3D0" : status === "amber" ? "#FDE68A" : "#FECACA";
-                  const color  = status === "green" ? C.green   : status === "amber" ? C.amber   : C.red;
-                  const label  = status === "green" ? "Schnell" : status === "amber" ? "Optimierbar" : "Zu langsam";
-                  const loss   = speedScore < 70 ? Math.round((70 - speedScore) * 0.4) : 0;
+                  const st   = speedScore >= 70 ? "green" : speedScore >= 50 ? "amber" : "red";
+                  const col  = st === "green" ? C.green : st === "amber" ? C.amber : C.red;
+                  const bg   = st === "green" ? C.greenBg : st === "amber" ? C.amberBg : C.redBg;
+                  const brd  = st === "green" ? "#A7F3D0" : st === "amber" ? "#FDE68A" : "#FECACA";
+                  const lbl  = st === "green" ? "Schnell" : st === "amber" ? "Optimierbar" : "Zu langsam";
+                  const loss = speedScore < 70 ? Math.round((70 - speedScore) * 0.4) : 0;
                   return (
                     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow }}>
-                      <div style={{ height: 3, background: color }} />
+                      <div style={{ height: 3, background: col }} />
                       <div style={{ padding: "18px 16px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                          <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${brd}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${border}` }}>{label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: col, padding: "2px 8px", borderRadius: 5, background: bg, border: `1px solid ${brd}` }}>{lbl}</span>
                         </div>
                         <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: C.text }}>Umsatz / Speed</p>
                         <p style={{ margin: "0 0 12px", fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>Warum keine Anfragen?</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 9, color }}>●</span>
+                            <span style={{ fontSize: 9, color: col }}>●</span>
                             <span style={{ fontSize: 11, color: C.textSub }}>Speed-Score</span>
-                            <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 800, color }}>{speedScore}/100</span>
+                            <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 800, color: col }}>{speedScore}/100</span>
                           </div>
                           {loss > 0 && (
                             <div style={{ fontSize: 10, color: C.red, background: C.redBg, border: "1px solid #FECACA", borderRadius: 5, padding: "4px 8px", lineHeight: 1.5, marginTop: 2 }}>
@@ -624,21 +698,16 @@ export default async function DashboardPage() {
                             <span style={{ fontSize: 10, marginLeft: "auto", fontWeight: 700, color: bfsgOk ? C.green : C.red }}>{bfsgOk ? "OK" : "⚠"}</span>
                           </div>
                         </div>
-                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>
-                          Details →
-                        </Link>
+                        <Link href={`/dashboard/scans/${lastScan.id}`} style={{ display: "block", textAlign: "center", padding: "6px 0", borderRadius: 7, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700 }}>Details →</Link>
                       </div>
                     </div>
                   );
                 })()}
-
               </div>
 
               {/* ── Fehler-Liste mit Fix-Anleitungen ── */}
               {issues.length > 0 && (
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadow, marginBottom: 20 }}>
-
-                  {/* Header */}
                   <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Vollständige Fehlerliste</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: C.red, background: C.redBg, border: "1px solid #FECACA", padding: "2px 7px", borderRadius: 5 }}>{redIssues.length} Kritisch</span>
@@ -646,11 +715,10 @@ export default async function DashboardPage() {
                     <span style={{ marginLeft: "auto", fontSize: 11, color: C.textMuted }}>System: {cms.label}</span>
                   </div>
 
-                  {/* Categories */}
                   {[
-                    { key: "recht", label: "Recht & BFSG", items: rechtIssues, color: C.red, bg: C.redBg, border: "#FECACA" },
-                    { key: "speed", label: "Performance & Speed", items: speedIssues, color: C.amber, bg: C.amberBg, border: "#FDE68A" },
-                    { key: "technik", label: "Technik", items: techIssues, color: C.blue, bg: C.blueBg, border: C.blueBorder },
+                    { key: "recht",  label: "Recht & BFSG",         items: rechtIssues,  color: C.red,   bg: C.redBg,   border: "#FECACA" },
+                    { key: "speed",  label: "Performance & Speed",   items: speedIssues,  color: C.amber, bg: C.amberBg, border: "#FDE68A" },
+                    { key: "technik",label: "Technik",               items: techIssues,   color: C.blue,  bg: C.blueBg,  border: C.blueBorder },
                   ].filter(cat => cat.items.length > 0).map(cat => (
                     <div key={cat.key}>
                       <div style={{ padding: "8px 20px", background: C.bg, borderTop: `1px solid ${C.divider}`, borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 8 }}>
@@ -660,15 +728,23 @@ export default async function DashboardPage() {
                       {cat.items.map((issue, i) => {
                         const sevColor = issue.severity === "red" ? C.red : issue.severity === "yellow" ? C.amber : C.green;
                         const fix = getFixGuide(issue.title, cms.label);
+                        const cbId = `fix-${cat.key}-${i}`;
                         return (
                           <details key={i} className="fix-details" style={{ borderBottom: i < cat.items.length - 1 ? `1px solid ${C.divider}` : "none" }}>
-                            <summary style={{ padding: "12px 20px", display: "flex", alignItems: "flex-start", gap: 12, listStyle: "none", cursor: "pointer" }} className="issue-row">
+                            <summary style={{ padding: "12px 20px", display: "flex", alignItems: "flex-start", gap: 12, listStyle: "none" }} className="issue-row">
                               <span style={{ flexShrink: 0, fontSize: 14, marginTop: 1 }}>{issue.severity === "red" ? "🔴" : issue.severity === "yellow" ? "🟡" : "🟢"}</span>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>{issue.title}</p>
+                                <p className="issue-title" style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>{issue.title}</p>
                                 {issue.body && <p style={{ margin: "3px 0 0", fontSize: 12, color: C.textSub, lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{issue.body.substring(0, 90)}…</p>}
                               </div>
                               <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                                {/* Smart-Guard: Erledigt-Checkbox */}
+                                {isSingle && (
+                                  <label htmlFor={cbId} onClick={e => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: C.green, cursor: "pointer", padding: "3px 8px", borderRadius: 6, border: "1px solid #A7F3D0", background: "#ECFDF5", whiteSpace: "nowrap" }}>
+                                    <input type="checkbox" id={cbId} className="fix-done" onClick={e => e.stopPropagation()} style={{ width: 12, height: 12, accentColor: C.green, cursor: "pointer" }} />
+                                    Erledigt ✓
+                                  </label>
+                                )}
                                 <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: issue.severity === "red" ? C.redBg : issue.severity === "yellow" ? C.amberBg : C.greenBg, color: sevColor, border: `1px solid ${issue.severity === "red" ? "#FECACA" : issue.severity === "yellow" ? "#FDE68A" : "#A7F3D0"}` }}>
                                   {issue.severity === "red" ? "Kritisch" : issue.severity === "yellow" ? "Warnung" : "Info"}
                                 </span>
@@ -692,76 +768,109 @@ export default async function DashboardPage() {
                 </div>
               )}
 
-              {/* ── Locked: 24/7 Monitoring ── */}
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, marginBottom: 14 }}>
+              {/* ── 24/7 Monitoring ── */}
+              <div style={{ background: C.card, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadow, marginBottom: 14 }}>
                 <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.textMuted }}>24/7 Live-Überwachung</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#F1F5F9", color: C.textMuted, border: `1px solid ${C.border}` }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Gesperrt
-                  </span>
+                  {isSingle && <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: C.greenDot, display: "inline-block", flexShrink: 0 }} />}
+                  <span style={{ fontSize: 13, fontWeight: 700, color: isSingle ? C.text : C.textMuted }}>24/7 Live-Überwachung</span>
+                  {isSingle
+                    ? <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#ECFDF5", color: C.green, border: "1px solid #A7F3D0" }}>AKTIV</span>
+                    : <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "#F1F5F9", color: C.textMuted, border: `1px solid ${C.border}` }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Gesperrt
+                      </span>
+                  }
                 </div>
-                <div style={{ padding: "18px 20px", opacity: 0.5, pointerEvents: "none", filter: "grayscale(0.4)" }}>
+                <div style={{ padding: "18px 20px", opacity: isSingle ? 1 : 0.5, pointerEvents: isSingle ? "auto" : "none", filter: isSingle ? "none" : "grayscale(0.4)" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                    {["Stündliche Prüfung", "SSL-Ablauf Alarm", "Downtime-Alarm"].map(item => (
-                      <div key={item} style={{ padding: "12px 14px", borderRadius: 8, background: C.bg, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.textMuted, display: "block", flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: C.textSub }}>{item}</span>
+                    {[
+                      { label: "Stündliche Prüfung", icon: "⏱" },
+                      { label: "SSL-Ablauf Alarm",   icon: "🔒" },
+                      { label: "Downtime-Alarm",     icon: "📡" },
+                    ].map(item => (
+                      <div key={item.label} style={{ padding: "12px 14px", borderRadius: 8, background: isSingle ? "#ECFDF5" : C.bg, border: `1px solid ${isSingle ? "#A7F3D0" : C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 14 }}>{item.icon}</span>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: isSingle ? C.text : C.textSub }}>{item.label}</div>
+                          {isSingle && <div style={{ fontSize: 10, fontWeight: 700, color: C.green, marginTop: 1 }}>AN</div>}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.divider}`, background: "#FAFAFA", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                  <p style={{ margin: 0, fontSize: 12, color: C.textSub, flex: 1, lineHeight: 1.5 }}>
-                    Du hast diesen Scan manuell gestartet. Möchtest du, dass wir deine Seite <strong>jede Stunde automatisch prüfen</strong> und dich bei Fehlern warnen?
-                  </p>
-                  <Link href="/preise" style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 8, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 8px rgba(234,179,8,0.3)" }}>
-                    Smart-Guard aktivieren →
-                  </Link>
-                </div>
+                {isFree && (
+                  <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.divider}`, background: "#FAFAFA", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: C.textSub, flex: 1, lineHeight: 1.5 }}>
+                      Du hast diesen Scan manuell gestartet. Möchtest du, dass wir deine Seite <strong>jede Stunde automatisch prüfen</strong> und dich bei Fehlern warnen?
+                    </p>
+                    <Link href="/preise" style={{ flexShrink: 0, padding: "7px 16px", borderRadius: 8, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 12, boxShadow: "0 2px 8px rgba(234,179,8,0.3)" }}>
+                      Smart-Guard aktivieren →
+                    </Link>
+                  </div>
+                )}
               </div>
 
-              {/* ── Locked: PDF Export ── */}
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "center", gap: 14, boxShadow: C.shadow }}>
-                <div style={{ width: 38, height: 38, borderRadius: 9, background: "#F1F5F9", border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              {/* ── PDF Export ── */}
+              <div style={{ background: C.card, border: `1px solid ${isSingle ? C.blueBorder : C.border}`, borderRadius: 14, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "center", gap: 14, boxShadow: C.shadow }}>
+                <div style={{ width: 38, height: 38, borderRadius: 9, background: isSingle ? C.blueBg : "#F1F5F9", border: `1px solid ${isSingle ? C.blueBorder : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {isSingle
+                    ? <PdfIcon />
+                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  }
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textMuted }}>Bericht als PDF herunterladen</p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: C.textMuted }}>White-Label PDF-Export ist im Smart-Guard Plan verfügbar.</p>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: isSingle ? C.text : C.textMuted }}>Bericht als PDF herunterladen</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: isSingle ? C.textSub : C.textMuted }}>
+                    {isSingle ? "Vollständiger Audit-Bericht als professionelles PDF." : "White-Label PDF-Export ist im Smart-Guard Plan verfügbar."}
+                  </p>
                 </div>
-                <Link href="/preise" style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontWeight: 700, fontSize: 12 }}>
-                  Freischalten →
-                </Link>
+                {isSingle
+                  ? <Link href={`/dashboard/scans/${lastScan.id}?print=1`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 8, background: C.blue, color: "#fff", fontWeight: 700, fontSize: 12, boxShadow: "0 2px 10px rgba(37,99,235,0.25)" }}>
+                      <PdfIcon /> PDF herunterladen
+                    </Link>
+                  : <Link href="/preise" style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 8, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontWeight: 700, fontSize: 12 }}>
+                      Freischalten →
+                    </Link>
+                }
               </div>
 
               {/* ── New Scan CTA ── */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
                 <Link href="/dashboard/scan" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 24px", borderRadius: 10, background: C.card, color: C.blue, fontWeight: 700, fontSize: 13, border: `1px solid ${C.blueBorder}`, boxShadow: C.shadow }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  Neuen Scan starten ({SCAN_LIMIT - monthlyScans} verbleibend)
+                  {isFree ? `Neuen Scan starten (${SCAN_LIMIT - monthlyScans} verbleibend)` : "Neuen Scan starten"}
                 </Link>
               </div>
 
             </>
           )}
 
-          {/* ── Upgrade Banner ── */}
-          <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", boxShadow: "0 8px 32px rgba(15,23,42,0.25)" }}>
-            <div style={{ flex: 1, minWidth: 260 }}>
-              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.yellow, textTransform: "uppercase", letterSpacing: "0.1em" }}>⚡ Maximaler Schutz</p>
-              <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>
-                Maximaler Schutz mit<br />Smart-Guard — automatisch.
-              </h3>
-              <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
-                Echtzeit-Monitoring · BFSG-Watchdog · PDF-Export · unbegrenzte Scans<br />
-                <strong style={{ color: "rgba(255,255,255,0.9)" }}>39 €/Monat · jederzeit kündbar</strong>
-              </p>
+          {/* ── Footer: FREE → Upgrade Banner / SINGLE → dezenter Agency-Link ── */}
+          {isFree && (
+            <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)", borderRadius: 18, padding: "28px 32px", display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap", boxShadow: "0 8px 32px rgba(15,23,42,0.25)" }}>
+              <div style={{ flex: 1, minWidth: 260 }}>
+                <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.yellow, textTransform: "uppercase", letterSpacing: "0.1em" }}>⚡ Maximaler Schutz</p>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>
+                  Maximaler Schutz mit<br />Smart-Guard — automatisch.
+                </h3>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
+                  Echtzeit-Monitoring · BFSG-Watchdog · PDF-Export · unbegrenzte Scans<br />
+                  <strong style={{ color: "rgba(255,255,255,0.9)" }}>39 €/Monat · jederzeit kündbar</strong>
+                </p>
+              </div>
+              <Link href="/preise" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 16px rgba(234,179,8,0.45)" }}>
+                Smart-Guard aktivieren →
+              </Link>
             </div>
-            <Link href="/preise" style={{ flexShrink: 0, padding: "12px 28px", borderRadius: 12, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 14, boxShadow: "0 4px 16px rgba(234,179,8,0.45)" }}>
-              Smart-Guard aktivieren →
-            </Link>
-          </div>
+          )}
+
+          {isSingle && (
+            <div style={{ textAlign: "center", padding: "8px 0" }}>
+              <Link href="/fuer-agenturen" style={{ fontSize: 12, color: C.textMuted, fontWeight: 500 }}>
+                Du hast mehr als 1 Website? Zum Agency-Dashboard wechseln →
+              </Link>
+            </div>
+          )}
 
         </main>
       )}
@@ -785,10 +894,10 @@ export default async function DashboardPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginBottom: 28 }}>
               {[
-                { value: DUMMY_CLIENTS.length,                                      label: "Kunden gesamt",     color: C.blue },
-                { value: DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0),  label: "Domains",           color: C.green },
-                { value: DUMMY_CLIENTS.filter(c => c.status === "critical").length, label: "Kritisch",          color: C.red },
-                { value: scans.length,                                              label: "Scans gesamt",      color: C.textSub },
+                { value: DUMMY_CLIENTS.length,                                      label: "Kunden gesamt",  color: C.blue },
+                { value: DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0),  label: "Domains",        color: C.green },
+                { value: DUMMY_CLIENTS.filter(c => c.status === "critical").length, label: "Kritisch",       color: C.red },
+                { value: scans.length,                                              label: "Scans gesamt",   color: C.textSub },
               ].map(s => (
                 <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", boxShadow: C.shadow }}>
                   <div style={{ fontSize: 28, fontWeight: 800, color: s.color, letterSpacing: "-0.025em", lineHeight: 1 }}>{s.value}</div>
