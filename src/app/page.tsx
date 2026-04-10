@@ -288,9 +288,6 @@ export default function Page() {
           <div style={{ maxWidth: 580, margin: "0 auto 14px" }}>
             <InlineScan />
           </div>
-          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
-            Keine Anmeldung · Ergebnis in unter 60 Sekunden
-          </p>
 
           {/* ── STATUS CARDS ── */}
           <div style={{ marginTop: 48, maxWidth: 580, marginLeft: "auto", marginRight: "auto" }}>
