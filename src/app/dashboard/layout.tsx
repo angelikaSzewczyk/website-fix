@@ -42,18 +42,28 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     if (lastScan) lastScanClean = lastScan.issue_count === 0;
   } catch { /* non-critical */ }
 
+  const isAuditPlan = plan === "free" || plan === "single";
+  const sidebarW    = isAuditPlan ? 64 : 220;
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#F0F4F8" }}>
 
       {/* CSS custom properties — available throughout the dashboard */}
-      <style>{`:root { --agency-primary: ${safeColor}; --agency-primary-bg: ${safeColor}18; --agency-primary-border: ${safeColor}35; }`}</style>
+      <style>{`
+        :root { --agency-primary: ${safeColor}; --agency-primary-bg: ${safeColor}18; --agency-primary-border: ${safeColor}35; }
+        @media (max-width: 768px) {
+          .dashboard-sidebar { display: none !important; }
+          .dashboard-mobile-bar { display: flex !important; }
+          .dashboard-content { margin-left: 0 !important; padding-top: 52px; }
+        }
+      `}</style>
 
       {/* SIDEBAR — desktop */}
       <aside className="dashboard-sidebar" style={{
-        width: 220, flexShrink: 0,
+        width: sidebarW, flexShrink: 0,
         position: "fixed", top: 0, left: 0, bottom: 0,
         background: "#0A192F",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
+        borderRight: isAuditPlan ? "1px solid rgba(34,211,238,0.08)" : "1px solid rgba(255,255,255,0.06)",
         overflowY: "auto",
         zIndex: 40,
       }}>
@@ -68,27 +78,28 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
       {/* MOBILE TOP BAR */}
       <header className="dashboard-mobile-bar" style={{
-        display: "none", // shown via CSS on mobile
+        display: "none",
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 40,
         height: 52,
-        background: "rgba(10,25,47,0.97)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: isAuditPlan ? "rgba(8,12,20,0.97)" : "rgba(10,25,47,0.97)",
+        backdropFilter: "blur(12px)",
+        borderBottom: isAuditPlan ? "1px solid rgba(34,211,238,0.1)" : "1px solid rgba(255,255,255,0.06)",
         alignItems: "center", justifyContent: "space-between",
         padding: "0 20px",
       }}>
         <BrandLogo href="/dashboard" />
         <span style={{
           fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-          color: plan === "agentur" ? "#007BFF" : plan === "pro" ? "#8df3d3" : "rgba(255,255,255,0.45)",
-          background: plan === "agentur" ? "rgba(0,123,255,0.1)" : plan === "pro" ? "rgba(141,243,211,0.08)" : "rgba(255,255,255,0.05)",
-          border: `1px solid ${plan === "agentur" ? "rgba(0,123,255,0.25)" : plan === "pro" ? "rgba(141,243,211,0.2)" : "rgba(255,255,255,0.1)"}`,
+          color: plan === "agentur" ? "#007BFF" : plan === "pro" ? "#8df3d3" : isAuditPlan ? "#22D3EE" : "rgba(255,255,255,0.45)",
+          background: plan === "agentur" ? "rgba(0,123,255,0.1)" : plan === "pro" ? "rgba(141,243,211,0.08)" : "rgba(34,211,238,0.07)",
+          border: `1px solid ${plan === "agentur" ? "rgba(0,123,255,0.25)" : plan === "pro" ? "rgba(141,243,211,0.2)" : "rgba(34,211,238,0.2)"}`,
         }}>
-          {plan === "agentur" ? "Agentur" : plan === "pro" ? "Pro" : "Free"}
+          {plan === "agentur" ? "Agency Pro" : plan === "pro" ? "Agency Starter" : plan === "single" ? "Smart-Guard" : "Free"}
         </span>
       </header>
 
       {/* CONTENT */}
-      <div className="dashboard-content" style={{ marginLeft: 220, flex: 1, minWidth: 0, background: "#F8FAFC", minHeight: "100vh" }}>
+      <div className="dashboard-content" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, background: "#F8FAFC", minHeight: "100vh" }}>
         {children}
       </div>
 
