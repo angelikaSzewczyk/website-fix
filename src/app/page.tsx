@@ -4,6 +4,8 @@ import FaqAccordion from "./components/faq-accordion";
 import RoiCalculator from "./components/roi-calculator";
 import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
+import MobileNav from "./components/MobileNav";
+import InlineScan from "./components/inline-scan";
 
 export const metadata: Metadata = {
   title: "WebsiteFix — Das Betriebssystem für deine Website-Wartung",
@@ -254,13 +256,15 @@ export default function Page() {
               }}>
                 Anmelden
               </Link>
-              <Link href="/scan" style={{
+              <Link href="/scan" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
                 background: "#007BFF", color: "#fff", textDecoration: "none",
                 boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
               }}>
                 Kostenlos scannen →
               </Link>
+              {/* Burger-Menü — nur auf Mobile sichtbar */}
+              <MobileNav />
             </div>
           </div>
         </div>
@@ -289,7 +293,13 @@ export default function Page() {
             WebsiteFix ist das White-Label Dashboard für Agenturen. Scanne Kunden-Websites vollautomatisch, erstelle Profi-Reports und integriere alles in Jira, Trello oder Asana.
           </p>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          {/* InlineScan — URL-Input + Button, mobile-first */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "0 8px" }}>
+            <InlineScan placeholder="https://kunden-website.de" />
+          </div>
+
+          {/* Sekundäre CTAs — Desktop-only stacking, blendet auf Mobile aus */}
+          <div className="hide-sm" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 8 }}>
             <Link href="/login" style={{
               padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
               background: "linear-gradient(90deg, #007BFF, #0057b8)",
@@ -306,10 +316,6 @@ export default function Page() {
               Preise ansehen
             </Link>
           </div>
-
-          <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
-            Keine Installation nötig · Ergebnis in unter 60 Sekunden
-          </p>
 
           {/* ── DASHBOARD PREVIEW MOCKUP ── */}
           <div style={{

@@ -28,7 +28,7 @@ export default function ConsentBanner() {
 
   return (
     <div
-      className="no-print"
+      className="no-print wf-cookie-banner"
       role="dialog"
       aria-label="Cookie-Einstellungen"
       style={{

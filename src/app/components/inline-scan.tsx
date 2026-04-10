@@ -61,7 +61,7 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
 
   return (
     <div>
-      <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 600 }}>
+      <form onSubmit={handleScan} className="heroScanForm">
         <label htmlFor="inline-scan-url" className="sr-only">Website-URL eingeben</label>
         <input
           id="inline-scan-url"
@@ -81,6 +81,7 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
         <button
           type="submit"
           disabled={state === "scanning" || !url}
+          className="heroScanBtn"
           style={{
             fontSize: 15, padding: "14px 28px", whiteSpace: "nowrap",
             background: "#fff", color: "#0b0c10", border: "none", borderRadius: 12,
@@ -92,9 +93,16 @@ export default function InlineScan({ placeholder = "https://deine-website.de" }:
         </button>
       </form>
 
-      <p style={{ margin: "10px 0 0", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
-        Kostenlos · Keine Anmeldung · Ergebnis in unter 60 Sekunden
-      </p>
+      <div className="heroCheckpoints" style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+        {["Kostenlos", "Keine Anmeldung", "Ergebnis in unter 60 Sek."].map((item) => (
+          <span key={item} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(141,243,211,0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {item}
+          </span>
+        ))}
+      </div>
 
       {state === "scanning" && (
         <div style={{ marginTop: 20, padding: "20px 24px", background: "rgba(255,255,255,0.04)", borderRadius: 12 }}>
