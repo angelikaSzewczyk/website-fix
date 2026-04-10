@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     num: "01",
-    label: "Connect & Sync",
-    title: "Alles in Sekunden verknüpft",
-    desc: "Verknüpfe deine Kunden-Websites und deine Workflow-Tools (Jira, Trello, Asana) in Sekunden. Kein Plugin, kein Hosting-Zugang — einfach URL eintragen und los.",
+    label: "URL eingeben",
+    title: "URL eingeben",
+    desc: "Kein Plugin, kein Hosting-Zugang nötig. Einfach deine URL eintragen und unser System analysiert deine Seite sofort.",
     color: "#7aa6ff",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -25,13 +25,13 @@ const STEPS = [
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
       </svg>
     ),
-    pills: ["1-Klick Setup", "Jira · Trello · Asana", "Kein Plugin nötig"],
+    pills: ["1-Klick Setup", "Kein Plugin", "Sofort-Start"],
   },
   {
     num: "02",
-    label: "Automatischer Deep-Scan",
-    title: "KI übernimmt den Wachdienst",
-    desc: "Die KI scannt täglich oder wöchentlich auf BFSG-Konformität, Technik-Fehler und Performance. Fehler landen automatisch als Ticket — direkt wo dein Team arbeitet.",
+    label: "KI-Wachdienst aktivieren",
+    title: "KI-Wachdienst aktivieren",
+    desc: "Unsere KI scannt deine Seite täglich auf Sicherheitslücken, Performance-Einbußen und gesetzliche Anforderungen wie das BFSG 2025.",
     color: "#8df3d3",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -39,13 +39,13 @@ const STEPS = [
         <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
       </svg>
     ),
-    pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich"],
+    pills: ["24/7 Monitoring", "Sicherheits-Check", "Täglich"],
   },
   {
     num: "03",
-    label: "White-Label Reporting",
-    title: "Kassierende Reports in deinem Design",
-    desc: "Kassiere monatlich für deine Wartung mit professionellen Reports in DEINEM Agentur-Design. Automatisch generiert, automatisch versendet — mit deinem Logo und deiner Farbe.",
+    label: "Entspannt zurücklehnen",
+    title: "Entspannt zurücklehnen",
+    desc: "Du erhältst klare, verständliche Status-Berichte. Bei Problemen wirst du sofort informiert – so bleibt deine Seite immer online und sicher.",
     color: "#c084fc",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +54,7 @@ const STEPS = [
         <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
       </svg>
     ),
-    pills: ["Dein Logo & Farben", "KI-Zusammenfassung", "Auto-Versand"],
+    pills: ["Echtzeit-Alarm", "Einfache Reports", "Auto-Fix"],
   },
 ];
 
@@ -362,7 +362,7 @@ export default function Page() {
             So funktioniert es
           </p>
           <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 56px", letterSpacing: "-0.02em", textAlign: "center" }}>
-            Drei Schritte zu mehr Marge.
+            In drei Schritten zu einer sorgenfreien Website.
           </h2>
 
           <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>

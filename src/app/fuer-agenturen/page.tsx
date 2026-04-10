@@ -323,6 +323,105 @@ export default function AgencyPage() {
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
+        {/* ── DREI SCHRITTE (AGENTUR) ── */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center" }}>
+            So funktioniert es
+          </p>
+          <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 56px", letterSpacing: "-0.02em", textAlign: "center" }}>
+            Drei Schritte zu mehr Marge.
+          </h2>
+          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+            {[
+              {
+                num: "01", label: "Connect & Sync", title: "Alles in Sekunden verknüpft",
+                desc: "Verknüpfe deine Kunden-Websites und deine Workflow-Tools (Jira, Trello, Asana) in Sekunden. Kein Plugin, kein Hosting-Zugang — einfach URL eintragen und los.",
+                color: "#7aa6ff",
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                ),
+                pills: ["1-Klick Setup", "Jira · Trello · Asana", "Kein Plugin nötig"],
+              },
+              {
+                num: "02", label: "Automatischer Deep-Scan", title: "KI übernimmt den Wachdienst",
+                desc: "Die KI scannt täglich oder wöchentlich auf BFSG-Konformität, Technik-Fehler und Performance. Fehler landen automatisch als Ticket — direkt wo dein Team arbeitet.",
+                color: "#8df3d3",
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                ),
+                pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich"],
+              },
+              {
+                num: "03", label: "White-Label Reporting", title: "Kassierende Reports in deinem Design",
+                desc: "Kassiere monatlich für deine Wartung mit professionellen Reports in DEINEM Agentur-Design. Automatisch generiert, automatisch versendet — mit deinem Logo und deiner Farbe.",
+                color: "#c084fc",
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                ),
+                pills: ["Dein Logo & Farben", "KI-Zusammenfassung", "Auto-Versand"],
+              },
+            ].map((step) => (
+              <div key={step.num} style={{
+                padding: "28px 28px 24px",
+                border: `1px solid ${step.color}20`,
+                borderRadius: 14,
+                background: `${step.color}06`,
+                display: "flex", flexDirection: "column", gap: 0,
+                position: "relative", overflow: "hidden",
+              }}>
+                <div style={{
+                  position: "absolute", right: 20, top: 16,
+                  fontSize: 64, fontWeight: 900, color: `${step.color}08`,
+                  lineHeight: 1, userSelect: "none", pointerEvents: "none",
+                  letterSpacing: "-0.04em",
+                }}>
+                  {step.num}
+                </div>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 11,
+                  background: `${step.color}15`, border: `1px solid ${step.color}30`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: step.color, marginBottom: 18, flexShrink: 0,
+                }}>
+                  {step.icon}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: step.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
+                  {step.label}
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 12, letterSpacing: "-0.02em" }}>
+                  {step.title}
+                </div>
+                <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, flexGrow: 1 }}>
+                  {step.desc}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {step.pills.map(pill => (
+                    <span key={pill} style={{
+                      fontSize: 11, padding: "3px 9px", borderRadius: 16,
+                      background: `${step.color}10`, border: `1px solid ${step.color}25`,
+                      color: step.color, fontWeight: 500,
+                    }}>
+                      {pill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
         {/* INTEGRATIONS SCHALTZENTRALE */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
           <style>{`
