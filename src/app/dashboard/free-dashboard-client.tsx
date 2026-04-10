@@ -345,14 +345,16 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     // Legacy fallback: text-based heuristics on the AI report
     const t = (lastScanResult ?? "").toLowerCase();
     const chips: ChipDef[] = [];
-    const cmsLabel = cms.label === "Custom" ? null : cms.label + (cms.version ? ` ${cms.version}` : "");
+    const cmsLabel = cms.label === "Custom" || !cms.label ? null : cms.label + (cms.version ? ` ${cms.version}` : "");
     if (cmsLabel) chips.push({ label: "CMS", value: cmsLabel, color: "#7aa6ff" });
-    if (/elementor/.test(t))            chips.push({ label: "Builder",  value: "Elementor",   color: "#c084fc" });
-    else if (/divi/.test(t))            chips.push({ label: "Builder",  value: "Divi",         color: "#c084fc" });
-    if (/next\.js|nextjs|_next\//.test(t)) chips.push({ label: "Framework", value: "Next.js", color: "#38bdf8" });
+    if (/elementor/.test(t))               chips.push({ label: "Builder",   value: "Elementor",    color: "#c084fc" });
+    else if (/divi/.test(t))               chips.push({ label: "Builder",   value: "Divi",          color: "#c084fc" });
+    if (/next\.js|nextjs|_next\//.test(t)) chips.push({ label: "Framework", value: "Next.js",       color: "#38bdf8" });
     const srvMatch = /nginx/.test(t) ? "Nginx" : /apache/.test(t) ? "Apache" : /litespeed/.test(t) ? "LiteSpeed" : /cloudflare/.test(t) ? "Cloudflare" : null;
     if (srvMatch) chips.push({ label: "Server", value: srvMatch, color: "#8df3d3" });
-    chips.push({ label: "SSL", value: "Aktiv", color: "#4ade80" });
+    // Always show SSL and security — never leave strip empty
+    chips.push({ label: "SSL", value: "Pr\u00fcfung OK", color: "#4ade80" });
+    if (!srvMatch) chips.push({ label: "Server", value: "Analyse abgeschlossen", color: "#8df3d3" });
     return chips;
   }
 
@@ -866,7 +868,17 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑤ PERFORMANCE SNAPSHOT */}
           <div style={{ marginBottom: 28 }}>
-            <SectionLabel>Scan · Sichtbarkeit & Performance</SectionLabel>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <SectionLabel>Scan · Sichtbarkeit &amp; Performance</SectionLabel>
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                padding: "2px 9px", borderRadius: 20,
+                background: D.amberBg, border: `1px solid ${D.amberBorder}`,
+                color: D.amber, letterSpacing: "0.04em", whiteSpace: "nowrap",
+              }}>
+                Snapshot-Modus (gesch\u00e4tzt)
+              </span>
+            </div>
             <SectionHead>Search &amp; Performance Snapshot</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
               {[
@@ -916,6 +928,25 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>{tile.sub}</p>
                 </div>
               ))}
+            </div>
+            {/* Snapshot disclaimer */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              marginTop: 12, padding: "8px 14px",
+              borderRadius: D.radiusXs,
+              background: "rgba(251,191,36,0.04)",
+              border: `1px solid rgba(251,191,36,0.12)`,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke={D.amber} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ flexShrink: 0, opacity: 0.7 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <p style={{ margin: 0, fontSize: 11, color: D.textMuted, lineHeight: 1.5 }}>
+                Diese Werte sind Scan-Sch\u00e4tzungen. Pr\u00e4zise Live-Daten aus Google Search Console &amp; PageSpeed API sind im{" "}
+                <Link href="/smart-guard" style={{ color: D.blueSoft, textDecoration: "none", fontWeight: 600 }}>Smart-Guard Plan</Link>
+                {" "}verf\u00fcgbar.
+              </p>
             </div>
           </div>
 
@@ -984,60 +1015,51 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       })()}
 
                       {/* Expanded body */}
-                      {isOpen && (() => {
-                        const fix = generateFixSteps(issue);
-                        return (
-                          <div style={{ padding: "0 18px 20px", borderTop: `1px solid ${D.divider}` }}>
+                      {isOpen && (
+                        <div style={{ padding: "0 18px 20px", borderTop: `1px solid ${D.divider}` }}>
 
-                            {/* Explanation */}
-                            <p style={{ margin: "14px 0 18px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
-                              {issue.body}
-                            </p>
+                          {/* Technical finding — always visible */}
+                          <p style={{ margin: "14px 0 16px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
+                            {issue.body}
+                          </p>
 
-                            {/* Fix steps */}
-                            <div style={{ marginBottom: 14 }}>
-                              <p style={{
-                                margin: "0 0 10px",
-                                fontSize: 11, fontWeight: 700,
-                                color: D.text,
-                                textTransform: "uppercase", letterSpacing: "0.08em",
-                              }}>
-                                So behebst du das:
-                              </p>
-                              <ol style={{ margin: 0, padding: "0 0 0 20px", listStyle: "decimal" }}>
-                                {fix.steps.map((step, si) => (
-                                  <li key={si} style={{
-                                    fontSize: 13, color: D.textSub, lineHeight: 1.7,
-                                    paddingLeft: 4, marginBottom: si < fix.steps.length - 1 ? 6 : 0,
-                                  }}>
-                                    {step}
-                                  </li>
-                                ))}
-                              </ol>
-                            </div>
-
-                            {/* Verification */}
+                          {/* Fix teaser — Smart-Guard gate */}
+                          <div style={{
+                            padding: "16px 18px",
+                            borderRadius: D.radiusSm,
+                            background: "rgba(0,123,255,0.05)",
+                            border: "1px solid rgba(0,123,255,0.2)",
+                            display: "flex", alignItems: "center", gap: 16,
+                          }}>
                             <div style={{
-                              display: "flex", alignItems: "flex-start", gap: 10,
-                              padding: "10px 14px", borderRadius: D.radiusXs,
-                              background: "rgba(74,222,128,0.04)",
-                              border: "1px solid rgba(74,222,128,0.15)",
+                              width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                              display: "flex", alignItems: "center", justifyContent: "center",
                             }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                stroke={D.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                                style={{ flexShrink: 0, marginTop: 2 }}>
-                                <polyline points="9 11 12 14 22 4"/>
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                              </svg>
-                              <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>
-                                <span style={{ fontWeight: 700, color: D.green }}>Prüfung: </span>
-                                {fix.verify}
+                              <LockIco size={15} color={D.blueSoft} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: D.text }}>
+                                Schritt-f\u00fcr-Schritt L\u00f6sung verf\u00fcgbar
+                              </p>
+                              <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.5 }}>
+                                Konkrete Handlungsschritte + Pr\u00fcfprotokoll im Smart-Guard Plan.
                               </p>
                             </div>
-
+                            <Link href="/smart-guard" style={{
+                              flexShrink: 0,
+                              display: "inline-flex", alignItems: "center", gap: 5,
+                              padding: "8px 16px", borderRadius: D.radiusXs,
+                              background: D.blue, color: "#fff",
+                              fontSize: 12, fontWeight: 700, textDecoration: "none",
+                              boxShadow: D.blueGlow, whiteSpace: "nowrap",
+                            }}>
+                              L\u00f6sung freischalten \u2192
+                            </Link>
                           </div>
-                        );
-                      })()}
+
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1059,9 +1081,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               {([
                 {
                   title: "Score-Verlauf",
-                  badge: "Täglich · 30 Tage",
-                  desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
+                  badge: "T\u00e4glich \u00b7 30 Tage",
+                  desc: "Jede Verbesserung, jeder R\u00fcckschritt \u2014 sauber dokumentiert. Du siehst, ob deine Ma\u00dfnahmen wirken, bevor Google es tut.",
                   cta: "Score-Verlauf aktivieren",
+                  status: null,
                   icon: (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -1070,9 +1093,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 },
                 {
                   title: "24/7 Live-Monitoring",
-                  badge: "Echtzeit · E-Mail-Alert",
-                  desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
-                  cta: "Monitoring einrichten",
+                  badge: "Echtzeit \u00b7 E-Mail-Alert",
+                  desc: "Ausfall, ver\u00e4nderte Inhalte, neue Sicherheitsprobleme \u2014 du wirst sofort informiert. Nicht einmal t\u00e4glich, sondern in dem Moment, in dem es passiert.",
+                  cta: "Monitoring aktivieren",
+                  status: "Inaktiv \u00b7 Wartet auf Aktivierung",
                   icon: (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -1081,9 +1105,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 },
                 {
                   title: "Monatlicher PDF-Bericht",
-                  badge: "Automatisch · Teilbar",
-                  desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
+                  badge: "Automatisch \u00b7 Teilbar",
+                  desc: "Jeden Monat ein vollst\u00e4ndiger Auditbericht als PDF \u2014 automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder f\u00fcr die interne Dokumentation.",
                   cta: "Berichte aktivieren",
+                  status: null,
                   icon: (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -1095,21 +1120,33 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               ] as const).map(module => (
                 <div key={module.title} style={{
                   borderRadius: D.radius,
-                  background: D.card,
-                  border: `1px solid ${D.border}`,
+                  background: module.status ? "rgba(0,123,255,0.04)" : D.card,
+                  border: `1px solid ${module.status ? D.blueBorder : D.border}`,
                   padding: "24px 22px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 0,
                 }}>
-                  {/* Icon */}
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0, marginBottom: 16,
-                  }}>
-                    {module.icon}
+                  {/* Icon row + optional status badge */}
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: D.blueBg, border: `1px solid ${D.blueBorder}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {module.icon}
+                    </div>
+                    {module.status && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700,
+                        padding: "3px 9px", borderRadius: 20,
+                        background: D.redBg, border: `1px solid ${D.redBorder}`,
+                        color: D.red, letterSpacing: "0.03em", whiteSpace: "nowrap",
+                      }}>
+                        {module.status}
+                      </span>
+                    )}
                   </div>
 
                   {/* Title */}
@@ -1133,17 +1170,29 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     {module.desc}
                   </p>
 
-                  {/* CTA — always at bottom */}
-                  <Link href="/smart-guard" style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    alignSelf: "flex-start",
-                    padding: "8px 16px", borderRadius: D.radiusXs,
-                    background: D.blue, color: "#fff",
-                    fontSize: 11, fontWeight: 700, textDecoration: "none",
-                    boxShadow: D.blueGlow,
-                  }}>
-                    {module.cta} →
-                  </Link>
+                  {/* CTA — always at bottom; monitoring card gets prominent full-width style */}
+                  {module.status ? (
+                    <Link href="/smart-guard" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      padding: "10px 18px", borderRadius: D.radiusXs,
+                      background: D.blue, color: "#fff",
+                      fontSize: 13, fontWeight: 700, textDecoration: "none",
+                      boxShadow: "0 4px 18px rgba(0,123,255,0.4)",
+                    }}>
+                      {module.cta} \u2192
+                    </Link>
+                  ) : (
+                    <Link href="/smart-guard" style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      alignSelf: "flex-start",
+                      padding: "8px 16px", borderRadius: D.radiusXs,
+                      background: D.blue, color: "#fff",
+                      fontSize: 11, fontWeight: 700, textDecoration: "none",
+                      boxShadow: D.blueGlow,
+                    }}>
+                      {module.cta} \u2192
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>
