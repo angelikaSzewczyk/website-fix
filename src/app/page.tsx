@@ -112,18 +112,16 @@ const PLANS = [
     name: "Free",
     price: "0",
     per: "/Monat",
-    desc: "Ideal für den ersten Website-Check",
+    desc: "Kostenloser Quick-Check",
     badge: null,
     accent: "#475569",
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "3 Scans pro Monat", highlight: false },
-      { text: "Basis-Check: Recht, Speed, Technik", highlight: false },
-      { text: "KI-Diagnose auf Deutsch", highlight: false },
+      { text: "25 Unterseiten Deep-Scan", highlight: false },
+      { text: "BFSG 2025 Schnelltest", highlight: false },
+      { text: "Technik- & Speed-Analyse", highlight: false },
       { text: "Manuelle Fix-Guides", highlight: false },
-      { text: "Dashboard-Übersicht", highlight: false },
-      { text: "1 Website", highlight: false },
     ],
     cta: "Kostenlos starten",
     href: "/register",
@@ -135,18 +133,16 @@ const PLANS = [
     name: "Smart-Guard",
     price: "39",
     per: "/Monat",
-    desc: "Automatischer Schutz für eine Website",
-    badge: "BESTSELLER",
+    desc: "Smart-Protect",
+    badge: "★ BESTSELLER",
     accent: "#2563EB",
     accentBg: "#EFF6FF",
     accentBorder: "#BFDBFE",
     features: [
       { text: "Alles aus Free", highlight: false },
-      { text: "24/7 Live-Monitoring", highlight: true },
-      { text: "Score-Historie (7 Tage)", highlight: true },
-      { text: "PDF-Berichte inklusive", highlight: true },
-      { text: "'Erledigt'-Checkbox für Fehler", highlight: true },
-      { text: "Unbegrenzte Scans", highlight: false },
+      { text: "24/7 BFSG-Überwachung", highlight: true },
+      { text: "Plugin-Deep-Insight (Read-only)", highlight: true },
+      { text: "Automatisierte Reports für Inhaber", highlight: true },
     ],
     cta: "Smart-Guard starten",
     href: "/register",
@@ -158,18 +154,17 @@ const PLANS = [
     name: "Agency Starter",
     price: "99",
     per: "/Monat",
-    desc: "Multi-Projekt-Dashboard für Agenturen",
-    badge: null,
+    desc: "Agency-Scale",
+    badge: "FÜR AGENTUREN",
     accent: "#7C3AED",
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
     features: [
       { text: "Alles aus Smart-Guard", highlight: false },
       { text: "Bis zu 10 Projekte", highlight: true },
-      { text: "Neutrales Branding (White-Label Light)", highlight: true },
-      { text: "Kunden-Matrix Übersicht", highlight: true },
-      { text: "Team-Initialen in der Matrix", highlight: false },
-      { text: "Multi-Projekt-Dashboard", highlight: false },
+      { text: "Zentrales Agentur-Dashboard", highlight: true },
+      { text: "BFSG-Dokumentation für Kunden", highlight: true },
+      { text: "White-Label Light (Dein Logo)", highlight: true },
     ],
     cta: "Agency-Account erstellen",
     href: "/register",
@@ -181,18 +176,17 @@ const PLANS = [
     name: "Agency Pro",
     price: "199",
     per: "/Monat",
-    desc: "Full White-Label für professionelle Agenturen",
-    badge: null,
+    desc: "Agency-Enterprise",
+    badge: "FULL WHITE-LABEL",
     accent: "#7C3AED",
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
     features: [
       { text: "Alles aus Agency Starter", highlight: false },
       { text: "Unlimitierte Projekte (∞)", highlight: true },
-      { text: "Full White-Label (Logo & Farben)", highlight: true },
-      { text: "Eigene Subdomain", highlight: true },
-      { text: "Kunden-Login-Bereich", highlight: true },
-      { text: "Auto-Report-Versand an Kunden", highlight: true },
+      { text: "Full White-Label (Eigene Domain)", highlight: true },
+      { text: "Schnittstellen-Anbindung (Slack/Jira)", highlight: true },
+      { text: "Auto-Report-Versand an Endkunden", highlight: true },
     ],
     cta: "Agency-Account erstellen",
     href: "/register",
@@ -752,33 +746,42 @@ export default function Page() {
                 }}>
 
                   {/* Top stripe — uniform height across all cards */}
-                  <div style={{
-                    padding: "8px 24px",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: plan.recommended
-                      ? "#2563EB"
-                      : ("scale" in plan && plan.scale)
-                        ? "#7C3AED"
-                        : "rgba(255,255,255,0.04)",
-                    borderBottom: (plan.recommended || ("scale" in plan && plan.scale))
-                      ? "none"
-                      : "1px solid rgba(255,255,255,0.06)",
-                  }}>
-                    <span style={{
-                      fontSize: 11, fontWeight: 800, letterSpacing: "0.1em",
-                      color: (plan.recommended || ("scale" in plan && plan.scale))
-                        ? "#fff"
-                        : "rgba(255,255,255,0.2)",
-                    }}>
-                      {plan.recommended
-                        ? "★ BESTSELLER"
-                        : ("scale" in plan && plan.scale)
-                          ? "FULL WHITE-LABEL"
-                          : plan.name === "Free"
-                            ? "KOSTENLOS TESTEN"
-                            : "FÜR AGENTUREN"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const isBlue   = plan.recommended;
+                    const isPurple = plan.scale;
+                    const isAgency = plan.name === "Agency Starter";
+                    const bg = isBlue
+                      ? "linear-gradient(90deg,#1d4ed8,#2563EB)"
+                      : isPurple
+                        ? "linear-gradient(90deg,#6d28d9,#7C3AED)"
+                        : isAgency
+                          ? "linear-gradient(90deg,#5b21b6,#7C3AED)"
+                          : "rgba(255,255,255,0.03)";
+                    const textColor = (isBlue || isPurple || isAgency) ? "#fff" : "rgba(255,255,255,0.22)";
+                    const label = isBlue ? "★ BESTSELLER"
+                      : isPurple ? "⚡ FULL WHITE-LABEL"
+                      : isAgency ? "🏢 FÜR AGENTUREN"
+                      : "KOSTENLOS TESTEN";
+                    return (
+                      <div style={{
+                        padding: "9px 24px",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        background: bg,
+                        borderBottom: (isBlue || isPurple || isAgency)
+                          ? "none"
+                          : "1px solid rgba(255,255,255,0.06)",
+                        boxShadow: isBlue
+                          ? "inset 0 -1px 0 rgba(255,255,255,0.1)"
+                          : (isPurple || isAgency)
+                            ? "inset 0 -1px 0 rgba(255,255,255,0.08)"
+                            : "none",
+                      }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: textColor }}>
+                          {label}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     {/* Plan name + desc */}
