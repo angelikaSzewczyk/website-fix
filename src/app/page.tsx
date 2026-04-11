@@ -302,83 +302,61 @@ export default function Page() {
             <InlineScan />
           </div>
 
-          {/* ── STATUS CARDS ── */}
-          <div style={{ marginTop: 48, maxWidth: 580, marginLeft: "auto", marginRight: "auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          {/* ── FEATURE CARDS ── */}
+          <div className="wf-feature-grid">
 
-              {/* Sicherheit */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)",
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 20, padding: "22px 12px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
-                boxShadow: "0 0 20px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.4)",
-                overflow: "visible",
+            {/* Card 1 — BFSG 2025 & Recht */}
+            <div className="wf-feature-card wf-feature-card--legal">
+              <div className="wf-feature-card__icon" style={{
+                background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.22)",
+                filter: "drop-shadow(0 0 6px rgba(234,179,8,0.3))",
               }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  filter: "drop-shadow(0 0 6px rgba(34,197,94,0.4))",
-                }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Sicherheit</div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>Keine Schwachstellen gefunden</div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
               </div>
-
-              {/* Performance */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)",
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                border: "1px solid rgba(37,99,235,0.15)",
-                borderRadius: 20, padding: "22px 12px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
-                boxShadow: "0 0 20px rgba(59,130,246,0.12), 0 2px 12px rgba(0,0,0,0.4)",
-                overflow: "visible",
-              }}>
-                <div style={{
-                  fontSize: "clamp(22px, 4vw, 34px)", fontWeight: 800, lineHeight: 1,
-                  letterSpacing: "-0.03em", whiteSpace: "nowrap",
-                  background: "linear-gradient(135deg, #fff 30%, #7aa6ff 100%)",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0 0 8px rgba(122,166,255,0.35))",
-                  padding: "0 4px",
-                }}>
-                  98<span style={{ fontSize: "0.5em" }}>/100</span>
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Performance</div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>Deine Seite lädt blitzschnell</div>
+              <div className="wf-feature-card__body">
+                <div className="wf-feature-card__label">Barrierefreiheit</div>
+                <div className="wf-feature-card__title">BFSG 2025 &amp; Recht</div>
+                <p className="wf-feature-card__text">Vollständiger Check nach BITV/EN&nbsp;301&nbsp;549 sowie DSGVO-Konformität deiner WordPress-Instanz.</p>
               </div>
-
-              {/* Rechtssicherheit */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)",
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 20, padding: "22px 12px", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
-                boxShadow: "0 0 20px rgba(234,179,8,0.08), 0 2px 12px rgba(0,0,0,0.4)",
-                overflow: "visible",
-              }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  filter: "drop-shadow(0 0 6px rgba(234,179,8,0.35))",
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rechtssicherheit</div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>BFSG 2025 konform</div>
-              </div>
-
             </div>
+
+            {/* Card 2 — Technik & Speed */}
+            <div className="wf-feature-card wf-feature-card--speed">
+              <div className="wf-feature-card__icon" style={{
+                background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.25)",
+                filter: "drop-shadow(0 0 6px rgba(59,130,246,0.3))",
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </div>
+              <div className="wf-feature-card__body">
+                <div className="wf-feature-card__label">Performance</div>
+                <div className="wf-feature-card__title">Technik &amp; Speed</div>
+                <p className="wf-feature-card__text">Analyse von Render-blocking Ressourcen, DOM-Tiefe und WordPress-spezifischen Ladezeit-Fressern.</p>
+              </div>
+            </div>
+
+            {/* Card 3 — Core- & Plugin-Health */}
+            <div className="wf-feature-card wf-feature-card--security">
+              <div className="wf-feature-card__icon" style={{
+                background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.22)",
+                filter: "drop-shadow(0 0 6px rgba(34,197,94,0.35))",
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <polyline points="9 12 11 14 15 10"/>
+                </svg>
+              </div>
+              <div className="wf-feature-card__body">
+                <div className="wf-feature-card__label">Sicherheit</div>
+                <div className="wf-feature-card__title">Core- &amp; Plugin-Health</div>
+                <p className="wf-feature-card__text">Tiefenprüfung auf veraltete Plugins, bekannte Sicherheitslücken (CVE) und technische Konflikte im Code.</p>
+              </div>
+            </div>
+
           </div>
         </section>
 
