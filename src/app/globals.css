@@ -3792,6 +3792,10 @@ html, body {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+  /* Grid-Muster auf Mobile ausblenden — wirkt sonst zu hart an den Rändern */
+  .wf-roi-section {
+    background-image: none !important;
+  }
 }
 
 /* Flash animation — triggers on every key change (slider move) */
