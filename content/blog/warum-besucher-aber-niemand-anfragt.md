@@ -83,7 +83,7 @@ Wenn Ihre Website:
 - aber keine Anfragen bringt
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 

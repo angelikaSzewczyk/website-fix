@@ -82,7 +82,7 @@ Wenn Ihre Website:
 Dann lohnt sich eine schnelle Analyse.
 
 👉 **WebsiteFix – schnelle Fehleranalyse & Fixpreise**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ---
 

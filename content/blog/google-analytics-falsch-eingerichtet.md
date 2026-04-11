@@ -57,7 +57,7 @@ Wenn ja → lies weiter.
 ## Wann sich ein Fix lohnt
 Wenn Sie **Zahlen siehst**, aber **keine Entscheidungen treffen kannst**:
 👉 **Fix #4 – Tracking & Analytics einrichten**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 ### Reicht Google Analytics Standard-Setup?

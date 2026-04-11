@@ -79,7 +79,7 @@ Wenn Ihre Website:
 - oder viele Funktionen enthält
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ---
 

@@ -89,7 +89,7 @@ Wenn Ihre Website:
 - oder Sie Ihnen unsicher bist
 
 👉 **Fix #4 – Website Problem analysieren & beheben**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ---
 

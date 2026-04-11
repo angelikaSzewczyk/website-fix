@@ -55,4 +55,4 @@ Wenn die Seite wirklich down ist, liegt es meist an einem dieser Gründe.
 Wenn die Website länger als eine Stunde offline ist, verlierst Sie bares Geld und Vertrauen — und Google bestraft Seiten, die es wiederholt „down” vorfindet.
 
 👉 **WebsiteFix – schnelle Hilfe für Websiteprobleme jeder Art**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)

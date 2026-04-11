@@ -71,7 +71,7 @@ Wenn Ihre WordPress Website:
 - oder Funktionen nicht mehr funktionieren
 
 👉 **WebsiteFix – schnelle Hilfe bei WordPress Problemen**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ---
 

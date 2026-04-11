@@ -62,7 +62,7 @@ Wenn Ihre Website:
 - nach Änderungen Probleme macht
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 

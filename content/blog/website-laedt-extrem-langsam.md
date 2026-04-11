@@ -101,7 +101,7 @@ Wenn Ihre Website:
 Ideal: sichtbar unter **2 Sekunden**, besonders mobil.
 
 👉 **Fix #2 – Website Speed optimieren**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 

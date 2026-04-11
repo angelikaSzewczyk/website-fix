@@ -94,7 +94,7 @@ Nicht jedes Websiteproblem braucht ein großes Projekt.
 Oft reicht eine **gezielte Reparatur**.
 
 👉 **WebsiteFix – schnelle Hilfe für Websiteprobleme jeder Art**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ---
 

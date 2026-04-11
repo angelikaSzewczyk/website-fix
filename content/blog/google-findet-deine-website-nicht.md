@@ -72,28 +72,31 @@ Google indexiert dann ggf. eine andere Version oder gar keine.
 - 2–4 Wochen sind normal
 - Weiter Inhalte veröffentlichen + interne Links setzen
 
-## 12) Domain-Rufen Sie (bei gebrauchten Domains)
-Falls Sie eine bereits genutzte Domain übernommen hast, kann Google sie als Spam eingestuft haben.
+## 12) Domain-Ruf (bei gebrauchten Domains)
+Falls Sie eine bereits genutzte Domain übernommen haben, kann Google sie als Spam eingestuft haben.
 
 **Quick-Win**
 - Suchen Sie bei Google: `site:deinedomain.de`
 - Wenn keine Ergebnisse kommen, obwohl die Seite läuft: Search Console → **Sicherheit und manuelle Maßnahmen** prüfen
 
 ## Wann lohnt sich ein Fix?
-Wenn Sie wollen, dass Google Ihre Seite **sauber erfasst** und Sie wieder sichtbar wirst:
+Wenn Sie wollen, dass Google Ihre Seite **sauber erfasst** und Sie wieder sichtbar werden:
 
-👉 **[WebsiteFix — KI-Diagnose für Ihre Website](/#waitlist)**
-Frühen Zugang sichern — das Tool analysiert automatisch, warum Google sich nicht findet.
+👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
 ## FAQ
-**Wie lange dauert es, bis Google indexiert?**  
-Neue Seiten: oft Tage bis Wochen. Mit sauberer Sitemap meist schneller.
 
-**Kann ich Indexierung „erzwingen”?**  
-Sie können sie anstoßen (URL-Prüfung in der Search Console), aber technische Sperren (noindex, robots.txt) müssen zuerst weg.
+### Warum wird meine WordPress Website nicht bei Google gefunden?
+Die häufigsten Gründe sind technische Blocker wie der „noindex”-Tag, eine fehlende Sitemap oder Fehler in der robots.txt. Mit einem Deep-Scan wie von WebsiteFix lassen sich diese Fehler in unter 60 Sekunden identifizieren.
 
-**Meine Seite ist bei Google, steht aber ganz hinten — ist das dasselbe Problem?**  
+### Wie lange dauert es, bis Google indexiert?
+Neue Seiten: oft Tage bis Wochen. Mit sauberer Sitemap und einer manuellen Indexierungsanforderung in der Search Console meist deutlich schneller.
+
+### Kann ich die Indexierung „erzwingen”?
+Sie können sie anstoßen (URL-Prüfung in der Search Console), aber technische Sperren wie noindex oder robots.txt-Blockaden müssen zuerst entfernt werden.
+
+### Meine Seite ist bei Google, steht aber ganz hinten — ist das dasselbe Problem?
 Nein. Indexiert aber schlecht gerankt ist ein separates Thema: Dann geht es um Inhalte, Keywords und Vertrauen. Erst indexiert sein ist Schritt 1.
 
-**Muss ich SEO-Profi sein, um das zu lösen?**  
+### Muss ich SEO-Profi sein, um das zu lösen?
 Für die meisten der oben genannten Punkte nicht. Es sind Einstellungen, keine Programmierung.

@@ -67,7 +67,7 @@ Manchmal blockiert die Server-Firewall das Absenden von Formularen, wenn diese z
 ## Keine Zeit für langes Debugging?
 Ein kaputtes Formular kostet sich jeden Tag echtes Geld. Wenn Sie die Fehlersuche abkürzen willst, erledigen wir das professionell für sich – inklusive SMTP-Einrichtung und Zustell-Garantie.
 
-👉 **[Frühen Zugang sichern →](/#waitlist)**
+👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
 ---
 

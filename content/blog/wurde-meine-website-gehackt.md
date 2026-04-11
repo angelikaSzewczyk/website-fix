@@ -67,7 +67,7 @@ Wenn:
 - Sicherheitswarnungen erscheinen
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 

@@ -86,7 +86,7 @@ Wenn Sie Besucher haben, aber zu wenig Klicks/Anfragen:
 
 👉 **Fix #5 – Kleine Änderungen & Bugs (bis 60 Minuten)**  
 Wir setzen die wichtigsten Conversion-Quick-Wins direkt um.  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 **Brauche ich dafür ein Redesign?**  

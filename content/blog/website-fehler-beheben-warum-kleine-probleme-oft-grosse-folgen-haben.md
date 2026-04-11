@@ -69,7 +69,7 @@ Auch kleine Websitefehler können große Auswirkungen haben.
 Eine schnelle Reparatur kann helfen, die Website wieder zuverlässig funktionieren zu lassen.
 
 👉 **WebsiteFix – schnelle Hilfe für Websiteprobleme jeder Art**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ---
 

@@ -135,8 +135,7 @@ Wenn Sie alle Schritte probiert haben und immer noch eine weiße Seite sehen —
 
 Genau dafür entsteht **WebsiteFix**: Sie geben Ihre Website-URL ein, die KI analysiert automatisch, was kaputt ist, und erklärt auf Deutsch, was zu tun ist — ohne Entwickler-Wissen, ohne Fachjargon.
 
-👉 **[Frühen Zugang sichern →](/#waitlist)**
-Kostenlos in der Beta. Keine Kreditkarte.
+👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
 ---
 

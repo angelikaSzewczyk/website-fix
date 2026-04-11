@@ -60,7 +60,7 @@ Wenn Ihre Website:
 - Besucher schnell abspringen
 
 👉 **Fix #3 – Mobile Layout reparieren**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 

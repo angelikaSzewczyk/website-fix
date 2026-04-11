@@ -65,7 +65,7 @@ Wenn Sie denkst:
 „Eigentlich passt alles – aber es fühlt sich nicht rund an“
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 ### Lohnt sich das wirklich?

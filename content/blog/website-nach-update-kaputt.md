@@ -58,7 +58,7 @@ Wenn Ihre Website:
 - nach einem Update Probleme macht
 
 👉 **Fix #6 – Website down / Critical Error**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 ### Wie schnell kann so etwas behoben werden?

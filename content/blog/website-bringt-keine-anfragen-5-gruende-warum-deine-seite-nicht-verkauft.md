@@ -50,10 +50,7 @@ Sie sind Experte für Ihr Business, wir für Ihre Website. Wir analysieren Ihre 
 
 **WebsiteFix analysiert genau das automatisch** — technische Fehler UND Conversion-Probleme. In Sekunden, ohne Entwickler-Wissen.
 
-👉 **[Frühen Zugang sichern →](/#waitlist)**
-Kostenlos in der Beta. Keine Kreditkarte.
-
-
+👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
 ### FAQ: „Soll ich die Website komplett neu bauen?“
 Meistens nicht! Oft reicht ein **„Conversion-Tuning“** der bestehenden Inhalte, um den Knoten zu lösen.

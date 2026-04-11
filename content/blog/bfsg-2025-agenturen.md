@@ -70,6 +70,22 @@ Der Report-Versand läuft vollautomatisch – für 10 Kunden genauso wie für 50
 
 ---
 
+## Häufige Fragen zum BFSG
+
+### Bis wann muss meine Website barrierefrei sein?
+Laut Barrierefreiheitsstärkungsgesetz (BFSG) müssen fast alle geschäftlichen Websites bis zum 28. Juni 2025 die WCAG 2.1 Richtlinien erfüllen, um Bußgelder und Abmahnungen zu vermeiden.
+
+### Wer ist vom BFSG betroffen?
+Das Gesetz gilt für Unternehmen, die digitale Produkte oder Dienstleistungen anbieten — also nahezu alle gewerblichen Websites. Kleinstunternehmen mit unter 10 Mitarbeitern und unter 2 Millionen Euro Jahresumsatz sind teilweise ausgenommen.
+
+### Was passiert, wenn meine Website nicht barrierefrei ist?
+Behörden können Bußgelder bis 100.000 € verhängen. Zusätzlich sind Abmahnungen durch Verbände und öffentliche Barrierefreiheits-Beschwerden möglich, die Reputationsschäden verursachen.
+
+### Reicht eine einmalige Prüfung für die Compliance?
+Nein. Barrierefreiheit muss kontinuierlich überwacht werden — jedes Content-Update, jedes neue Bild ohne Alt-Text kann einen neuen WCAG-Verstoß erzeugen. Kontinuierliche Scans sind für laufende Wartungsverträge unerlässlich.
+
+---
+
 **Bereit, Ihre Wartungsverträge auf das nächste Level zu heben?**
 
 Starten Sie jetzt mit WebsiteFix Agency – erste Website kostenlos, volle White-Label Kontrolle ab dem ersten Tag.

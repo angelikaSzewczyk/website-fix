@@ -61,7 +61,7 @@ Wenn Ihre Website:
 - nicht mehr zuverlässig arbeitet
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 

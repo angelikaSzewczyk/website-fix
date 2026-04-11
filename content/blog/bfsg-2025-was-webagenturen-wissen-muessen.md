@@ -46,7 +46,6 @@ Danach empfiehlt sich ein strukturiertes Vorgehen:
 
 WebsiteFix scannt jede Website automatisch auf WCAG-Verstöße — in unter 60 Sekunden. Die KI erklärt jeden Fehler auf Deutsch und zeigt Ihnen, was zu tun ist.
 
-
 ---
 
 **Sie sind eine Agentur und betreuen mehrere Kunden?** Unser Agency-Programm automatisiert BFSG-Audits, White-Label Reports und Jira-Integration für alle Ihre Projekte – skalierbar ab dem ersten Tag. [Zum Partner-Programm für Agenturen →](/fuer-agenturen)

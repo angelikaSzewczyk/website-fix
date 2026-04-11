@@ -55,7 +55,7 @@ Diese sind mobil fast immer problematisch.
 Wenn Besucher mobil abspringen oder sich beschweren:
 
 👉 **Fix #3 – Mobile Darstellung reparieren**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 **Ist „responsive“ automatisch gut mobil?**  

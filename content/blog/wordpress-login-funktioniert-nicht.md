@@ -92,8 +92,7 @@ Wenn die Website für alle down ist: Dann ist es ein anderes Problem — wahrsch
 
 Genau dafür entsteht **WebsiteFix**: Sie geben Ihre Website-URL ein, die KI analysiert automatisch was kaputt ist — und erklärt Ihnen in einfachen Worten was zu tun ist. Kein Entwickler-Wissen nötig.
 
-👉 **[Frühen Zugang sichern →](/#waitlist)**
-Kostenlos in der Beta. Keine Kreditkarte.
+👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
 ---
 

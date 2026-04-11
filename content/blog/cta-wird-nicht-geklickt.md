@@ -48,7 +48,7 @@ Wenn Sie denkst:
 „Die Website sieht gut aus – aber bringt keine Anfragen“
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  
-[Zur Warteliste →](/#waitlist)
+[Jetzt kostenlos scannen →](/)
 
 ## FAQ
 ### Ist das wirklich messbar?
