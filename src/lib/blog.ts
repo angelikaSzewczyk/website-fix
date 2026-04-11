@@ -123,6 +123,14 @@ export function getAllPosts(): BlogPost[] {
   });
 }
 
+export function getPostsByTag(tag: string, limit?: number): BlogPost[] {
+  const all = getAllPosts();
+  const filtered = all.filter(p =>
+    (p.frontmatter.tags ?? []).some(t => t.toLowerCase() === tag.toLowerCase())
+  );
+  return limit ? filtered.slice(0, limit) : filtered;
+}
+
 export function getRelatedPosts(currentSlug: string, limit = 4): BlogPost[] {
   const posts = getAllPosts();
   const currentPost = posts.find((post) => post.slug === currentSlug);

@@ -3,7 +3,7 @@ title: "Das BFSG 2025 – Warum Agenturen jetzt handeln müssen (oder haften)"
 description: "Ab dem 28. Juni 2025 greift das Barrierefreiheitsstärkungsgesetz. Was das für Agenturen mit Wartungskunden bedeutet – und wie du die Pflicht in ein Profit-Center verwandelst."
 date: "2025-05-12"
 category: "Recht & WCAG"
-tags: ["BFSG", "WCAG", "Barrierefreiheit", "Agenturen", "Haftung", "Recht"]
+tags: ["BFSG", "WCAG", "Barrierefreiheit", "Agenturen", "Haftung", "Recht", "agency"]
 ---
 
 > **Die tickende Zeitbombe im Wartungsvertrag:** Ab dem 28. Juni 2025 tritt das Barrierefreiheitsstärkungsgesetz (BFSG) in Kraft. Was viele Agenturen unterschätzen: Es ist nicht mehr nur eine „nette Empfehlung" für staatliche Seiten. Es trifft fast alle Unternehmen, die Produkte oder Dienstleistungen online anbieten.
