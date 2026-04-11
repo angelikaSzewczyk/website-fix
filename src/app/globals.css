@@ -3976,8 +3976,8 @@ html, body {
 }
 @media (max-width: 768px) {
   .wf-scan-features {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 12px;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
   /* Full-width card on mobile */
   .wf-scan-card {
