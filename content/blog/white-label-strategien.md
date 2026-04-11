@@ -2,7 +2,7 @@
 title: "White-Label Reports: So positionieren Sie sich als Premium-Agentur"
 description: "Automatisierte, gebrandete Monatsreports heben Sie aus der Masse heraus, rechtfertigen höhere Wartungspauschalen und binden Kunden langfristig – ohne zusätzlichen Aufwand."
 date: "2026-03-18"
-category: "Agentur & White-Label"
+category: "agency"
 tags: ["White-Label", "Wartungspauschalen", "Automatisierung", "Agenturen", "Branding", "agency"]
 ---
 

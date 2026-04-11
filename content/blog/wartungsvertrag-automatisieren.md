@@ -2,7 +2,7 @@
 title: "Wartungsverträge automatisieren: Von 10 auf 50 Kunden ohne Mehraufwand"
 description: "Welche Prozesse sich in der Website-Wartung vollständig automatisieren lassen – und wie Sie damit Ihre Marge pro Kunde verdoppeln, während der manuelle Aufwand sinkt."
 date: "2026-04-01"
-category: "Automatisierung"
+category: "agency"
 tags: ["Automatisierung", "Wartungsverträge", "White-Label Workflow", "Skalierung", "Agenturen", "skalierbare Wartungspauschalen", "agency"]
 ---
 

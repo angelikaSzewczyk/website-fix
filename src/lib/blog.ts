@@ -131,6 +131,15 @@ export function getPostsByTag(tag: string, limit?: number): BlogPost[] {
   return limit ? filtered.slice(0, limit) : filtered;
 }
 
+/** Filter by category slug: "agency" | "compliance" | any string */
+export function getPostsByCategory(category: string, limit?: number): BlogPost[] {
+  const all = getAllPosts();
+  const filtered = all.filter(p =>
+    p.frontmatter.category?.toLowerCase() === category.toLowerCase()
+  );
+  return limit ? filtered.slice(0, limit) : filtered;
+}
+
 export function getRelatedPosts(currentSlug: string, limit = 4): BlogPost[] {
   const posts = getAllPosts();
   const currentPost = posts.find((post) => post.slug === currentSlug);
