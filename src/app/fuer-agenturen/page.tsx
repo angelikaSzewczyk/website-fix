@@ -659,7 +659,7 @@ export default function AgencyPage() {
         </section>
 
         {/* WHITE-LABEL HIGHLIGHT */}
-        <section style={{ background: "#0d1520", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <section className="wf-wl-section" style={{ background: "#0d1520", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
             {/* Badge */}
@@ -684,7 +684,7 @@ export default function AgencyPage() {
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center", maxWidth: 960, margin: "0 auto" }}>
+            <div className="wf-wl-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center", maxWidth: 960, margin: "0 auto" }}>
               {/* Left: feature list */}
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {[
@@ -697,7 +697,7 @@ export default function AgencyPage() {
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
                     bg: "rgba(124,58,237,0.12)", border: "rgba(124,58,237,0.25)",
-                    title: "KI schreibt die Management-Zusammenfassung",
+                    title: "Automatisierte Management-Zusammenfassungen",
                     desc: "Professioneller Agentur-Ton, auf Deutsch, mit konkreten Handlungsempfehlungen — vollautomatisch.",
                   },
                   {
@@ -724,7 +724,7 @@ export default function AgencyPage() {
 
                 <CheckoutButton
                   plan="agency_core"
-                  label="White-Label jetzt einrichten →"
+                  label="Jetzt White-Label einrichten →"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 8,
                     padding: "12px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
@@ -737,7 +737,7 @@ export default function AgencyPage() {
               </div>
 
               {/* Right: report preview */}
-              <div style={{ position: "relative" }}>
+              <div className="wf-wl-mockup" style={{ position: "relative" }}>
                 <div style={{
                   position: "absolute", inset: "-30px",
                   background: "radial-gradient(ellipse at 50% 50%, rgba(0,123,255,0.1) 0%, transparent 70%)",

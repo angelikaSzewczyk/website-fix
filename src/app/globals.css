@@ -3907,6 +3907,36 @@ html, body {
   }
 }
 
+/* ===== WHITE-LABEL SECTION — Mobile responsive ===== */
+@media (max-width: 768px) {
+  .wf-wl-grid {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+  }
+  /* Mockup comes after features — enforce order */
+  .wf-wl-mockup {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .wf-wl-mockup > div:nth-child(2) {
+    /* The white report card */
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  /* Shrink feature icons on mobile */
+  .wf-wl-grid > div:first-child > div > div:first-child {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+  }
+  /* Clip radial glow overflow */
+  .wf-wl-mockup > div:first-child {
+    display: none !important;
+  }
+}
+
 /* ===== PROBLEM CARDS — Mobile: icon centered above text ===== */
 @media (max-width: 600px) {
   .wf-problem-card {
