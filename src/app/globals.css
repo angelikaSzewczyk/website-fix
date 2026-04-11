@@ -3906,3 +3906,20 @@ html, body {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* ===== PROBLEM CARDS — Mobile: icon centered above text ===== */
+@media (max-width: 600px) {
+  .wf-problem-card {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .wf-problem-card > div:last-child {
+    align-items: center;
+  }
+  .wf-problem-icon {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 4px;
+  }
+}

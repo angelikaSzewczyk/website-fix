@@ -1,10 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Layers, BellDot, ShieldAlert } from "lucide-react";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
 import BrandLogo from "../components/BrandLogo";
 import AgencyStats from "../components/agency-stats";
+
+const LayersIcon = Layers;
+const BellAlertIcon = BellDot;
+const ShieldAlertIcon = ShieldAlert;
 
 export const metadata: Metadata = {
   title: "WebsiteFix für Agenturen — Automatische Wartungsverträge & BFSG",
@@ -595,38 +600,58 @@ export default function AgencyPage() {
             Drei Situationen, die Sie kennen. Und die Sie jeden Monat Stunden und Vertrauen kosten.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {[
+            {([
               {
-                icon: "📋",
+                IconEl: LayersIcon,
+                glow: "rgba(122,166,255,0.20)",
+                border: "rgba(122,166,255,0.25)",
+                iconColor: "#a5c1ff",
                 title: "Manuelle Reports fressen Ihr Wochenende",
                 desc: "20 Kunden, 20 individuelle Reports. Recherche, Screenshots, Formatierung, versenden. Jede Stunde, die Sie dafür aufwenden, können Sie nicht verkaufen.",
                 quote: `\u201ESamstag, 14 Uhr. Ich sitze wieder an Reports statt mit meiner Familie.\u201C`,
               },
               {
-                icon: "📞",
+                IconEl: BellAlertIcon,
+                glow: "rgba(251,191,36,0.16)",
+                border: "rgba(251,191,36,0.25)",
+                iconColor: "#fcd34d",
                 title: "Fehler bemerken Sie, wenn der Kunde anruft",
                 desc: "SSL abgelaufen. Website offline. Google-Index verschwunden. Sie erfahren es nicht als Erste — der Kunde schon. Das kostet Vertrauen, das Sie in Monaten aufgebaut haben.",
                 quote: `\u201EWarum habt ihr das nicht gesehen? Ihr betreut ja unsere Website.\u201C`,
               },
               {
-                icon: "⚖️",
+                IconEl: ShieldAlertIcon,
+                glow: "rgba(255,107,107,0.16)",
+                border: "rgba(255,107,107,0.25)",
+                iconColor: "#fca5a5",
                 title: "BFSG-Haftung: Sie haften, nicht der Kunde",
                 desc: "Das Barrierefreiheitsstärkungsgesetz gilt seit Juni 2025. Wer die Website wartet, trägt Mitverantwortung. Ein manuelles WCAG-Audit kostet 4–8h pro Website — unmöglich skalierbar.",
-                quote: `\u201EWir brauchen eine WCAG-konforme Website. Kannst du das garantieren?\u201C`,
+                quote: `\u201EWir brauchen eine WCAG-konforme Website. Können Sie das garantieren?\u201C`,
               },
-            ].map((p, i) => (
-              <div key={i} style={{
+            ] as const).map((p, i) => (
+              <div key={i} className="wf-problem-card" style={{
                 padding: "24px 28px",
-                border: "1px solid rgba(255,107,107,0.12)",
+                border: "1px solid rgba(255,107,107,0.10)",
                 borderRadius: 14,
                 background: "rgba(255,107,107,0.03)",
-                display: "flex", gap: 16, alignItems: "flex-start",
+                display: "flex", gap: 20, alignItems: "flex-start",
               }}>
-                <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{p.icon}</span>
-                <div>
+                {/* Icon circle */}
+                <div className="wf-problem-icon" style={{
+                  flexShrink: 0,
+                  width: 44, height: 44,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${p.border}`,
+                  boxShadow: `0 0 20px ${p.glow}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <p.IconEl size={20} color={p.iconColor} strokeWidth={1.5} />
+                </div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 6 }}>{p.title}</div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 680 }}>{p.desc}</div>
-                  <div style={{ marginTop: 10, fontSize: 13, color: "rgba(255,150,150,0.5)", fontStyle: "italic" }}>{p.quote}</div>
+                  <div style={{ marginTop: 10, fontSize: 13, color: "rgba(255,255,255,0.28)", fontStyle: "italic" }}>{p.quote}</div>
                 </div>
               </div>
             ))}
