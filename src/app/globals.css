@@ -3968,17 +3968,16 @@ html, body {
 /* Headline font size */
 .wf-scan-headline { font-size: clamp(18px, 2.5vw, 26px); }
 
-/* Feature list: flex row on desktop, 2×2 grid on mobile */
+/* Feature list: 4-col flex on desktop, 2-col grid on mobile */
 .wf-scan-features {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px 20px;
 }
 @media (max-width: 768px) {
   .wf-scan-features {
-    display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px 16px;
+    gap: 10px 12px;
   }
   /* Full-width card on mobile */
   .wf-scan-card {

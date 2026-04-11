@@ -944,14 +944,33 @@ export default function AgencyPage() {
                   <span style={{ color: "#a5c1ff", fontWeight: 900 }}>sondern jede einzelne Unterseite.</span>
                 </h3>
                 <p style={{ margin: "0 0 24px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 640 }}>
-                  Unser Crawler analysiert automatisch <strong style={{ color: "rgba(255,255,255,0.85)" }}>jede Unterseite</strong> der Kundendomain — nicht nur die Startseite. Die KI findet dabei ca. <strong style={{ color: "rgba(255,255,255,0.85)" }}>50% der technischen Barrieren vollautomatisch</strong>. Den Rest erledigt Ihr Team mit unseren präzisen, seiten-genauen Reports — mit exakten URLs, Fehlerbeschreibungen und Code-Fixes.
+                  Unser Crawler analysiert automatisch <strong style={{ color: "rgba(255,255,255,0.85)" }}>jede Unterseite</strong> der Kundendomain — nicht nur die Startseite. Die KI findet dabei ca. <strong style={{ color: "rgba(255,255,255,0.85)" }}>50% der technischen Barrieren vollautomatisch</strong>. Während andere Tools nur die Oberfläche kratzen, erkennt unsere Engine auch dynamische Barrieren in komplexen Menüstrukturen und interaktiven Elementen. Ihr Team erhält fertige Code-Snippets zur Behebung — kein langes Suchen im Quelltext mehr.
                 </p>
                 <div className="wf-scan-features">
-                  {["Sitemap + BFS-Crawl", "Seitentyp-Klassifikation", "Aggregierte Fehler-Reports", "KI-Batch-Analyse"].map(f => (
+                  {[
+                    "Sitemap + BFS-Crawl",
+                    "JavaScript-Rendering (SPA Support)",
+                    "Modals, Flyouts & Formulare",
+                    "Shadow DOM & iFrame-Elemente",
+                    "Seitentyp-Klassifikation",
+                    "Aggregierte Fehler-Reports",
+                    "Fertige Code-Snippets",
+                    "KI-Batch-Analyse",
+                  ].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007BFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       {f}
                     </div>
+                  ))}
+                </div>
+                {/* Stack badge */}
+                <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.04em" }}>
+                  Optimiert für:&nbsp;
+                  {["WordPress", "Elementor", "Divi", "Custom JS Frameworks"].map((s, i, arr) => (
+                    <span key={s}>
+                      <span style={{ color: "rgba(122,166,255,0.6)", fontWeight: 600 }}>{s}</span>
+                      {i < arr.length - 1 && <span style={{ margin: "0 4px" }}>·</span>}
+                    </span>
                   ))}
                 </div>
               </div>
