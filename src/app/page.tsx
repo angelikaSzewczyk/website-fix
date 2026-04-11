@@ -888,102 +888,71 @@ export default function Page() {
             </h2>
           </div>
 
-          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20 }}>
-            {/* Testimonial 1 — Sicherheit */}
-            <div style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 16,
-              padding: "28px 28px 24px",
-              display: "flex", flexDirection: "column", gap: 20,
-            }}>
-              <div style={{ display: "flex", gap: 4 }}>
-                {[1,2,3,4,5].map(i => (
-                  <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                ))}
-              </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
-                "Das Thema BFSG 2025 hat mir schlaflose Nächte bereitet. Mit WebsiteFix habe ich jetzt die Gewissheit, dass meine Seite <strong style={{ color: "#fff", fontStyle: "normal" }}>rechtssicher ist, ohne dass ich selbst zum IT-Experten werden musste</strong>."
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                  background: "linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 16, fontWeight: 700, color: "#fff",
-                }}>M</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Michael R.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Inhaber, Online-Shop für Bio-Feinkost</div>
+          <div className="wf-testimonial-grid">
+            {[
+              {
+                initial: "M",
+                gradient: "linear-gradient(135deg,#2563EB,#7C3AED)",
+                name: "Michael R.",
+                role: "Inhaber, Online-Shop für Bio-Feinkost",
+                plan: "Smart-Protect",
+                planColor: "#7aa6ff",
+                quote: <>Das Thema BFSG 2025 hat mir schlaflose Nächte bereitet. Mit WebsiteFix habe ich jetzt die Gewissheit, dass meine Seite <strong style={{ color: "#fff", fontStyle: "normal" }}>rechtssicherer ist – ohne dass ich selbst zum IT-Experten werden musste</strong>.</>,
+              },
+              {
+                initial: "J",
+                gradient: "linear-gradient(135deg,#059669,#0891B2)",
+                name: "Julia S.",
+                role: "Marketing-Leitung, Mittelstands-GmbH",
+                plan: "Agency-Scale",
+                planColor: "#c084fc",
+                quote: <>Endlich ein Tool ohne komplizierte Installation. <strong style={{ color: "#fff", fontStyle: "normal" }}>URL eingegeben, Scan läuft</strong> – und die automatisierten Reports geben mir das Gefühl, dass technisch alles perfekt ist.</>,
+              },
+              {
+                initial: "T",
+                gradient: "linear-gradient(135deg,#D97706,#DC2626)",
+                name: "Dr. Thomas W.",
+                role: "Betreiber einer Gemeinschaftspraxis",
+                plan: "Smart-Protect",
+                planColor: "#7aa6ff",
+                quote: <>Früher habe ich Stunden damit verbracht, Fehler zu suchen. <strong style={{ color: "#fff", fontStyle: "normal" }}>WebsiteFix findet sie sofort und informiert mich per E-Mail</strong>. Absolute Empfehlung für jeden, der sich auf sein Kerngeschäft konzentrieren will.</>,
+              },
+            ].map(t => (
+              <div key={t.name} className="wf-testimonial-card" style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 16,
+                padding: "28px 28px 24px",
+                display: "flex", flexDirection: "column", gap: 20,
+              }}>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {[1,2,3,4,5].map(i => (
+                    <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  ))}
+                </div>
+                <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic", flex: 1 }}>
+                  "{t.quote}"
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                    background: t.gradient,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16, fontWeight: 700, color: "#fff",
+                  }}>{t.initial}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{t.name}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>{t.role}</div>
+                    <div style={{ fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ color: "rgba(255,255,255,0.25)" }}>Nutzt:</span>
+                      <span style={{ color: t.planColor, fontWeight: 700 }}>{t.plan}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Testimonial 2 — Einfachheit */}
-            <div style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 16,
-              padding: "28px 28px 24px",
-              display: "flex", flexDirection: "column", gap: 20,
-            }}>
-              <div style={{ display: "flex", gap: 4 }}>
-                {[1,2,3,4,5].map(i => (
-                  <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                ))}
-              </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
-                "Endlich ein Tool, das keine komplizierte Installation braucht. <strong style={{ color: "#fff", fontStyle: "normal" }}>URL eingegeben, Scan läuft</strong> – und die wöchentlichen Reports geben mir das gute Gefühl, dass technisch alles perfekt ist."
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                  background: "linear-gradient(135deg, #059669 0%, #0891B2 100%)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 16, fontWeight: 700, color: "#fff",
-                }}>J</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Julia S.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Marketing-Leitung, Mittelstands-GmbH</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 — Zeitersparnis */}
-            <div style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 16,
-              padding: "28px 28px 24px",
-              display: "flex", flexDirection: "column", gap: 20,
-            }}>
-              <div style={{ display: "flex", gap: 4 }}>
-                {[1,2,3,4,5].map(i => (
-                  <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                ))}
-              </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic" }}>
-                "Ich habe früher Stunden damit verbracht, Fehler auf meiner Seite zu suchen. <strong style={{ color: "#fff", fontStyle: "normal" }}>WebsiteFix findet sie sofort und informiert mich per E-Mail</strong>. Absolute Empfehlung für jeden, der sich auf sein Kerngeschäft konzentrieren will."
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                  background: "linear-gradient(135deg, #D97706 0%, #DC2626 100%)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 16, fontWeight: 700, color: "#fff",
-                }}>T</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Dr. Thomas W.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Betreiber einer Gemeinschaftspraxis</div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Logo band */}

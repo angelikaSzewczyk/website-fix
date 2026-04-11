@@ -3659,6 +3659,39 @@ html, body {
   }
 }
 
+/* ===== TESTIMONIALS — Desktop grid / Mobile scroll-snap slider ===== */
+.wf-testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .wf-testimonial-grid {
+    /* Switch to horizontal scroll-snap slider — no JS needed */
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+    padding-bottom: 16px;
+    /* Hide scrollbar but keep scroll functionality */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .wf-testimonial-grid::-webkit-scrollbar { display: none; }
+
+  .wf-testimonial-card {
+    flex: 0 0 82vw;   /* ~82% viewport = card + peek of next */
+    max-width: 340px;
+    scroll-snap-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .wf-testimonial-card { flex: 0 0 88vw; }
+}
+
 /* ===== ADVANTAGE SECTION ===== */
 .wf-advantage-section {
   padding: 80px 24px;
