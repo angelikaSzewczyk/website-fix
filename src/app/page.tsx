@@ -1000,10 +1000,21 @@ export default function Page() {
         {/* FAQ ACCORDION */}
         <section id="faq" style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
           <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 40px", letterSpacing: "-0.025em" }}>
+          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.025em" }}>
             Häufige Fragen
           </h2>
-          <FaqAccordion items={FAQ} />
+          <p style={{ margin: "0 0 40px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
+            Alles, was Sie vor dem Start wissen wollen.
+          </p>
+          <div style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 18,
+            overflow: "hidden",
+            padding: "0 28px",
+          }}>
+            <FaqAccordion items={FAQ} />
+          </div>
         </section>
 
         {/* DIVIDER */}
