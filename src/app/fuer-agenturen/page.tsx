@@ -442,20 +442,11 @@ export default function AgencyPage() {
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
-        {/* INTEGRATIONS SCHALTZENTRALE */}
+        {/* INTEGRATIONS NAHTLOSE WORKFLOWS */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
-          <style>{`
-            .integ-card { transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
-            .integ-card:hover { transform: translateY(-3px); }
-            .integ-card-slack:hover  { box-shadow: 0 0 36px rgba(74,21,75,0.55);    border-color: rgba(192,132,252,0.55) !important; }
-            .integ-card-jira:hover   { box-shadow: 0 0 36px rgba(37,99,235,0.45);   border-color: rgba(122,166,255,0.55) !important; }
-            .integ-card-trello:hover { box-shadow: 0 0 36px rgba(0,121,191,0.45);   border-color: rgba(91,184,250,0.5)  !important; }
-            .integ-card-zapier:hover { box-shadow: 0 0 36px rgba(255,76,0,0.45);    border-color: rgba(255,109,45,0.5)  !important; }
-          `}</style>
-
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(192,132,252,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-              Ihre Schaltzentrale
+              Nahtlose Workflows
             </p>
             <h2 style={{ fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em" }}>
               Alles verbunden. Nichts übersehen.
@@ -465,7 +456,7 @@ export default function AgencyPage() {
             </p>
           </div>
 
-          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          <div className="wf-integ-grid">
 
             {/* Slack */}
             <div className="integ-card integ-card-slack" style={{
@@ -475,17 +466,17 @@ export default function AgencyPage() {
               display: "flex", flexDirection: "column", gap: 14,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(192,132,252,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="integ-icon integ-icon-slack" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(192,132,252,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
                   <svg width="22" height="22" viewBox="0 0 24 24"><g fill="#c084fc"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></g></svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Slack</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Team-Notifications & Alerts</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Echtzeit-Alerts für Ihr Team. Wissen, wenn es brennt, bevor der Kunde anruft.</div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
+                  <span className="integ-pulse integ-pulse-slack" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(192,132,252,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(192,132,252,0.1)", border: "1px solid rgba(192,132,252,0.3)", color: "rgba(192,132,252,0.9)", cursor: "pointer" }}>
@@ -502,17 +493,17 @@ export default function AgencyPage() {
               display: "flex", flexDirection: "column", gap: 14,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="integ-icon integ-icon-jira" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="#7aa6ff"><path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005zm5.723-5.756H5.757a5.215 5.215 0 0 0 5.214 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.001 1.001 0 0 0-1.021-1.005zM23.013 0H11.459a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.019 12.49V1.005A1.001 1.001 0 0 0 23.013 0z"/></svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Jira</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Automatische Ticket-Erstellung</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Automatisierte Tickets. Fehler werden ohne manuelles Kopieren direkt zu Entwickler-Tasks.</div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
+                  <span className="integ-pulse integ-pulse-jira" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(122,166,255,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(37,99,235,0.1)", border: "1px solid rgba(122,166,255,0.3)", color: "rgba(122,166,255,0.9)", cursor: "pointer" }}>
@@ -529,7 +520,7 @@ export default function AgencyPage() {
               display: "flex", flexDirection: "column", gap: 14,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(0,121,191,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="integ-icon integ-icon-trello" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(0,121,191,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="#5bb8fa"><path d="M21 0H3C1.343 0 0 1.343 0 3v18c0 1.656 1.343 3 3 3h18c1.656 0 3-1.344 3-3V3c0-1.657-1.344-3-3-3zM10.44 18.18c0 .795-.645 1.44-1.44 1.44H4.56c-.795 0-1.44-.645-1.44-1.44V4.56c0-.795.645-1.44 1.44-1.44H9c.795 0 1.44.645 1.44 1.44v13.62zm10.44-6c0 .794-.645 1.44-1.44 1.44H15c-.795 0-1.44-.646-1.44-1.44V4.56c0-.795.645-1.44 1.44-1.44h4.44c.795 0 1.44.645 1.44 1.44v7.62z"/></svg>
                 </div>
                 <div>
@@ -539,7 +530,7 @@ export default function AgencyPage() {
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
+                  <span className="integ-pulse integ-pulse-trello" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(91,184,250,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(0,121,191,0.1)", border: "1px solid rgba(91,184,250,0.3)", color: "rgba(91,184,250,0.9)", cursor: "pointer" }}>
@@ -556,17 +547,17 @@ export default function AgencyPage() {
               display: "flex", flexDirection: "column", gap: 14,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(255,80,10,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="integ-icon integ-icon-zapier" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(255,80,10,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="#ff6d2d"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.83 14.5H13.5v4.33a1.5 1.5 0 0 1-3 0V14.5H6.17a1.5 1.5 0 0 1 0-3H10.5V7.17a1.5 1.5 0 0 1 3 0V11.5h4.33a1.5 1.5 0 0 1 0 3z"/></svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Zapier</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Beliebige Workflows automatisieren</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Grenzenlose Freiheit. Verbinden Sie WebsiteFix mit über 5.000 Apps wie HubSpot oder Salesforce.</div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
+                  <span className="integ-pulse integ-pulse-zapier" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,109,45,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(255,80,10,0.1)", border: "1px solid rgba(255,109,45,0.3)", color: "rgba(255,109,45,0.9)", cursor: "pointer" }}>

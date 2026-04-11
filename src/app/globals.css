@@ -3780,6 +3780,50 @@ html, body {
   }
 }
 
+/* ===== INTEGRATIONS GRID — 4-col desktop / 2×2 mobile ===== */
+.wf-integ-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .wf-integ-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 400px) {
+  .wf-integ-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card transitions */
+.integ-card { transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
+.integ-card:hover { transform: translateY(-3px); }
+.integ-card-slack:hover  { box-shadow: 0 0 36px rgba(74,21,75,0.55);    border-color: rgba(192,132,252,0.55) !important; }
+.integ-card-jira:hover   { box-shadow: 0 0 36px rgba(37,99,235,0.45);   border-color: rgba(122,166,255,0.55) !important; }
+.integ-card-trello:hover { box-shadow: 0 0 36px rgba(0,121,191,0.45);   border-color: rgba(91,184,250,0.5)  !important; }
+.integ-card-zapier:hover { box-shadow: 0 0 36px rgba(255,76,0,0.45);    border-color: rgba(255,109,45,0.5)  !important; }
+
+/* Logo icon glow on card hover */
+.integ-card-slack:hover  .integ-icon-slack  { background: rgba(192,132,252,0.20) !important; box-shadow: 0 0 16px rgba(192,132,252,0.35); }
+.integ-card-jira:hover   .integ-icon-jira   { background: rgba(37,99,235,0.22)   !important; box-shadow: 0 0 16px rgba(122,166,255,0.35); }
+.integ-card-trello:hover .integ-icon-trello { background: rgba(0,121,191,0.22)   !important; box-shadow: 0 0 16px rgba(91,184,250,0.35); }
+.integ-card-zapier:hover .integ-icon-zapier { background: rgba(255,80,10,0.22)   !important; box-shadow: 0 0 16px rgba(255,109,45,0.35); }
+
+/* Pulsing status dots */
+@keyframes integ-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.9; transform: scale(1.5); }
+}
+.integ-pulse { animation: integ-pulse 2.2s ease-in-out infinite; }
+.integ-pulse-slack  { animation-delay: 0s; }
+.integ-pulse-jira   { animation-delay: 0.55s; }
+.integ-pulse-trello { animation-delay: 1.1s; }
+.integ-pulse-zapier { animation-delay: 1.65s; }
+
 /* ===== AGENCY STEP CARDS — hover accent border ===== */
 .wf-step-card-01:hover { border-color: rgba(122,166,255,0.42) !important; box-shadow: 0 0 28px rgba(122,166,255,0.10); }
 .wf-step-card-02:hover { border-color: rgba(141,243,211,0.42) !important; box-shadow: 0 0 28px rgba(141,243,211,0.10); }
