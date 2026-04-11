@@ -277,7 +277,7 @@ export default function Page() {
       <main>
 
         {/* HERO */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "88px 24px 72px", textAlign: "center" }}>
+        <section className="wf-hero">
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 28,
             padding: "5px 14px", borderRadius: 20,
@@ -286,15 +286,15 @@ export default function Page() {
             fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
           }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-            Monitoring · KI-Fix · White-Label Reports
+            WordPress · BFSG 2025 · Deep Scan
           </div>
 
-          <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            Deine Website. Sicher, gewartet und immer online.
+          <h1 style={{ fontSize: "clamp(28px, 4.5vw, 58px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
+            Der 360° WordPress-Check für Agenturen &amp; Unternehmen.
           </h1>
 
-          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
-            WebsiteFix ist die automatisierte Lösung für maximale Webseiten-Sicherheit. Ob automatischer Schutz für deine eigene Seite oder professionelle Wartungs-Reports für deine Kunden – wir automatisieren deine Wartung.
+          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 40px", fontWeight: 400 }}>
+            Prüfe Barrierefreiheit (BFSG&nbsp;2025), SEO und Conversion-Sicherheit – Deep Scan über bis zu&nbsp;25&nbsp;Unterseiten.
           </p>
 
           {/* URL Input */}

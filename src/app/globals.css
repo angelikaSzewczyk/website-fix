@@ -3330,3 +3330,87 @@ html, body {
     font-size: 12px !important;
   }
 }
+
+/* ===== INLINE SCAN — Mobile-first responsive form ===== */
+.wf-scan-form {
+  display: flex;
+  align-items: center;
+  background: rgba(8, 10, 20, 0.9);
+  border: 1px solid rgba(37,99,235,0.3);
+  border-radius: 14px;
+  padding: 6px 6px 6px 16px;
+  box-shadow: 0 0 20px 3px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.wf-scan-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.15s;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.wf-scan-btn:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+/* sm: ≤640px — stack vertically, full-width button */
+@media (max-width: 640px) {
+  .wf-scan-form {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+  .wf-scan-lock-icon { display: none; }
+  .wf-scan-btn {
+    width: 100%;
+    padding: 15px 16px;
+    font-size: 15px;
+    border-radius: 12px;
+    min-height: 54px;
+    justify-content: center;
+  }
+  .wf-scan-input {
+    font-size: 16px !important; /* prevents iOS auto-zoom */
+    padding: 12px 6px !important;
+    min-height: 48px !important;
+  }
+}
+
+/* md: 641–768px — keep row layout, slightly larger targets */
+@media (min-width: 641px) and (max-width: 768px) {
+  .wf-scan-btn {
+    min-height: 50px;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+}
+
+/* ===== HERO SECTION — responsive padding ===== */
+.wf-hero {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 88px 24px 72px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .wf-hero { padding: 64px 20px 56px; }
+}
+
+@media (max-width: 480px) {
+  .wf-hero { padding: 48px 16px 48px; }
+}

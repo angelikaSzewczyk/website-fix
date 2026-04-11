@@ -92,12 +92,13 @@ export default function InlineScan({
   function startActivityFeed(scanUrl: string) {
     const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
     const messages: { delay: number; level: string; msg: string; color: string }[] = [
-      { delay: 1200,  level: "INFO",     color: "#8df3d3", msg: `HTTPS-Verbindung zu ${domain} hergestellt` },
-      { delay: 3800,  level: "INFO",     color: "#8df3d3", msg: "Sitemap analysiert — interne Links gefunden" },
-      { delay: 7000,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Dokumentation wird erstellt…" },
-      { delay: 11500, level: "CRITICAL", color: "#ff6b6b", msg: `Barriere-Check: Formulare auf ${domain} werden geprüft` },
-      { delay: 15000, level: "WARN",     color: "#fbbf24", msg: "Performance-Analyse: Ladezeit wird gemessen…" },
-      { delay: 20000, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Befunde werden aggregiert…" },
+      { delay: 400,   level: "SYSTEM",   color: "#7aa6ff", msg: "WordPress-Struktur wird erkannt…" },
+      { delay: 1400,  level: "INFO",     color: "#8df3d3", msg: `HTTPS-Verbindung zu ${domain} hergestellt` },
+      { delay: 4000,  level: "INFO",     color: "#8df3d3", msg: "Sitemap analysiert — interne Links gefunden" },
+      { delay: 7200,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Dokumentation wird erstellt…" },
+      { delay: 11800, level: "CRITICAL", color: "#ff6b6b", msg: `Barriere-Check: Formulare auf ${domain} werden geprüft` },
+      { delay: 15500, level: "WARN",     color: "#fbbf24", msg: "Performance-Analyse: Ladezeit wird gemessen…" },
+      { delay: 20500, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Befunde werden aggregiert…" },
     ];
     setActivityFeed([]);
     activityTimers.current.forEach(t => clearTimeout(t));
@@ -220,42 +221,41 @@ export default function InlineScan({
       {!isScanning && phase !== "done" && (
         <form onSubmit={handleScan} style={{ position: "relative" }}>
           <label htmlFor="inline-scan-url" className="sr-only">Website-URL eingeben</label>
-          <div style={{
-            display: "flex", alignItems: "center",
-            background: "rgba(8, 10, 20, 0.9)",
-            border: "1px solid rgba(37,99,235,0.3)",
-            borderRadius: 14,
-            padding: "6px 6px 6px 16px",
-            boxShadow: "0 0 20px 3px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.04)",
-          }}>
-            {/* Lock icon */}
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginRight: 10 }} aria-hidden="true">
+          <div className="wf-scan-form">
+            {/* Lock icon — hidden on mobile via CSS */}
+            <svg
+              className="wf-scan-lock-icon"
+              width="15" height="15" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(255,255,255,0.25)" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round"
+              style={{ flexShrink: 0, marginRight: 10 }}
+              aria-hidden="true"
+            >
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
             <input
               id="inline-scan-url"
               type="text"
+              inputMode="url"
+              autoComplete="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder={placeholder}
+              className="wf-scan-input"
               style={{
                 flex: 1, background: "transparent", border: "none", outline: "none",
                 color: "#fff", fontSize: 15, padding: "10px 8px", minWidth: 0,
+                minHeight: 44,
               }}
             />
             <button
               type="submit"
               disabled={!url}
-              style={{
-                flexShrink: 0, display: "flex", alignItems: "center", gap: 6,
-                background: !url ? "rgba(37,99,235,0.4)" : "#2563EB",
-                color: "#fff", border: "none", borderRadius: 10,
-                padding: "11px 20px", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap",
-                cursor: !url ? "default" : "pointer", transition: "background 0.15s",
-              }}
+              className="wf-scan-btn"
+              style={{ background: !url ? "rgba(37,99,235,0.4)" : "#2563EB" }}
             >
-              Einmaligen Gratis-Deep-Scan starten
+              Kostenlosen Deep Scan starten
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
               </svg>
@@ -264,7 +264,7 @@ export default function InlineScan({
 
           {/* Trust chips */}
           <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 10, flexWrap: "wrap" }}>
-            {["Prüft bis zu 25 Unterseiten", "Inkl. BFSG-Check", "Keine Anmeldung"].map(t => (
+            {["Bis zu 25 Unterseiten", "BFSG-Check inkl.", "Keine Anmeldung"].map(t => (
               <span key={t} style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", gap: 5 }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
