@@ -193,83 +193,97 @@ export default function InlineScan({
   if (scanBlocked.blocked) {
     return (
       <div style={{
-        padding: "32px 28px",
-        background: "rgba(141,243,211,0.03)",
-        border: "1px solid rgba(141,243,211,0.14)",
+        padding: "34px 28px 28px",
+        background: "rgba(10,8,18,0.72)",
+        border: "1px solid rgba(139,92,246,0.22)",
         borderRadius: 18,
         textAlign: "center",
         position: "relative",
         overflow: "hidden",
-        boxShadow: "0 0 48px rgba(141,243,211,0.05), inset 0 1px 0 rgba(141,243,211,0.08)",
+        boxShadow: "0 0 60px rgba(139,92,246,0.10), inset 0 1px 0 rgba(139,92,246,0.12)",
       }}>
-        {/* Glow orb top */}
+        {/* Purple glow orb — top center */}
         <div style={{
-          position: "absolute", top: -50, left: "50%",
+          position: "absolute", top: -60, left: "50%",
           transform: "translateX(-50%)",
-          width: 160, height: 160, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(141,243,211,0.10) 0%, transparent 70%)",
+          width: 200, height: 200, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)",
           pointerEvents: "none",
         }} />
 
-        {/* Icon circle */}
+        {/* Shield-Blitz Icon */}
         <div style={{
-          width: 54, height: 54, borderRadius: "50%",
-          background: "rgba(141,243,211,0.07)",
-          border: "1px solid rgba(141,243,211,0.22)",
+          width: 52, height: 52, borderRadius: 14,
+          background: "rgba(139,92,246,0.10)",
+          border: "1px solid rgba(139,92,246,0.28)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 18px",
-          boxShadow: "0 0 24px rgba(141,243,211,0.18)",
+          margin: "0 auto 20px",
+          boxShadow: "0 0 22px rgba(139,92,246,0.22)",
         }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="#8df3d3" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16.5 14.5"/>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+            stroke="#a78bfa" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
           </svg>
         </div>
 
-        {/* Title */}
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 6, letterSpacing: "-0.2px" }}>
-          Scan-Limit erreicht
-        </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginBottom: 18 }}>
-          Nächster freier Scan verfügbar in
+        {/* Headline */}
+        <div style={{
+          fontSize: 16, fontWeight: 800, color: "#fff",
+          letterSpacing: "-0.3px", marginBottom: 8, lineHeight: 1.3,
+        }}>
+          Optimierung ohne Unterbrechung
         </div>
 
-        {/* Countdown pill */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          background: "rgba(141,243,211,0.06)",
-          border: "1px solid rgba(141,243,211,0.18)",
-          borderRadius: 12, padding: "10px 22px", marginBottom: 22,
-          boxShadow: "0 0 16px rgba(141,243,211,0.08)",
+        {/* Subline */}
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6, marginBottom: 22 }}>
+          Ihre kostenlosen Scans für heute sind aufgebraucht.<br/>
+          Möchten Sie direkt weitermachen?
+        </div>
+
+        {/* Primary CTA — optical highlight */}
+        <a href="/register" className="wf-scan-limit-cta" style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          padding: "13px 26px", borderRadius: 11,
+          background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+          color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none",
+          boxShadow: "0 6px 28px rgba(124,58,237,0.45), 0 0 0 1px rgba(139,92,246,0.3)",
+          marginBottom: 6,
+          letterSpacing: "-0.1px",
+          transition: "box-shadow 0.2s, transform 0.15s",
         }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="rgba(141,243,211,0.5)" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 14.5"/>
+          Jetzt unbegrenzt scannen &amp; absichern →
+        </a>
+
+        {/* Countdown — secondary, muted */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 5,
+          padding: "4px 12px", borderRadius: 20, marginBottom: 14,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.07)",
+        }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
           <span style={{
-            fontSize: 26, fontWeight: 800, color: "#8df3d3",
-            letterSpacing: "-0.5px", fontVariantNumeric: "tabular-nums",
-            lineHeight: 1,
+            fontSize: 12, color: "rgba(255,255,255,0.35)",
+            fontVariantNumeric: "tabular-nums", fontWeight: 600,
           }}>
-            {timeRemaining}
+            Freigabe in {timeRemaining}
           </span>
         </div>
 
-        {/* CTA */}
+        {/* Secondary link */}
         <div>
           <a href="/register" style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "11px 26px", borderRadius: 10,
-            background: "linear-gradient(135deg, #007BFF 0%, #0057b8 100%)",
-            color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
-            boxShadow: "0 4px 22px rgba(0,123,255,0.38)",
+            fontSize: 12, color: "rgba(167,139,250,0.6)",
+            textDecoration: "underline", textUnderlineOffset: 3,
+            textDecorationColor: "rgba(167,139,250,0.3)",
+            cursor: "pointer",
           }}>
-            Unbegrenzt scannen mit Pro →
+            Oder erste Website dauerhaft kostenlos verknüpfen
           </a>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 10 }}>
-            oder warten bis der Countdown abläuft
-          </div>
         </div>
       </div>
     );

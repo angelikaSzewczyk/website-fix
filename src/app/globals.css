@@ -4098,3 +4098,13 @@ html, body {
     margin-bottom: 4px;
   }
 }
+
+/* ===== SCAN LIMIT BLOCKED STATE ===== */
+.wf-scan-limit-cta:hover {
+  box-shadow: 0 8px 36px rgba(124,58,237,0.60), 0 0 0 1px rgba(139,92,246,0.45) !important;
+  transform: translateY(-1px);
+}
+.wf-scan-limit-cta:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 18px rgba(124,58,237,0.40), 0 0 0 1px rgba(139,92,246,0.3) !important;
+}
