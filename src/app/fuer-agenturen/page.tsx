@@ -362,7 +362,7 @@ export default function AgencyPage() {
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                   </svg>
                 ),
-                pills: ["1-Klick Setup", "Jira · Trello · Asana", "Kein Plugin nötig"],
+                pills: ["1-Klick Setup", "Jira · Trello · Asana", "Kein technischer Zugriff nötig"],
               },
               {
                 num: "02", label: "Automatischer Deep-Scan", title: "KI übernimmt den Wachdienst",
@@ -374,7 +374,7 @@ export default function AgencyPage() {
                     <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
                   </svg>
                 ),
-                pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich"],
+                pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich", "Haftungsschutz inklusive"],
               },
               {
                 num: "03", label: "White-Label Reporting", title: "Professionelle Reports in Ihrem Design",
@@ -387,20 +387,21 @@ export default function AgencyPage() {
                     <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                   </svg>
                 ),
-                pills: ["Ihr Logo & Farben", "KI-Zusammenfassung", "Auto-Versand"],
+                pills: ["Ihr Logo & Farben", "Management-Zusammenfassung", "Auto-Versand"],
               },
             ].map((step) => (
-              <div key={step.num} style={{
+              <div key={step.num} className={`wf-step-card wf-step-card-${step.num}`} style={{
                 padding: "28px 28px 24px",
                 border: `1px solid ${step.color}20`,
                 borderRadius: 14,
                 background: `${step.color}06`,
                 display: "flex", flexDirection: "column", gap: 0,
                 position: "relative", overflow: "hidden",
+                transition: "border-color 0.22s ease, box-shadow 0.22s ease",
               }}>
                 <div style={{
                   position: "absolute", right: 20, top: 16,
-                  fontSize: 64, fontWeight: 900, color: `${step.color}08`,
+                  fontSize: 64, fontWeight: 900, color: `${step.color}03`,
                   lineHeight: 1, userSelect: "none", pointerEvents: "none",
                   letterSpacing: "-0.04em",
                 }}>

@@ -3780,6 +3780,11 @@ html, body {
   }
 }
 
+/* ===== AGENCY STEP CARDS — hover accent border ===== */
+.wf-step-card-01:hover { border-color: rgba(122,166,255,0.42) !important; box-shadow: 0 0 28px rgba(122,166,255,0.10); }
+.wf-step-card-02:hover { border-color: rgba(141,243,211,0.42) !important; box-shadow: 0 0 28px rgba(141,243,211,0.10); }
+.wf-step-card-03:hover { border-color: rgba(192,132,252,0.42) !important; box-shadow: 0 0 28px rgba(192,132,252,0.10); }
+
 /* ===== WHITE-LABEL DASHBOARD MOCKUP — Mobile responsive ===== */
 
 /* On mobile: hide sidebar so report gets full width */
