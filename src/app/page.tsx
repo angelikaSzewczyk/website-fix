@@ -462,134 +462,140 @@ export default function Page() {
         </section>
 
         {/* ── INTEGRATIONS ── */}
-        <section style={{ padding: "72px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <style>{`@keyframes wf-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}`}</style>
-          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-              Connectivity
-            </p>
-            <h2 style={{ margin: "0 0 12px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>
-              Nahtlose Integration in deinen Workflow.
-            </h2>
-            <p style={{ margin: "0 0 48px", fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
-              WebsiteFix verbindet sich direkt mit den Tools, die dein Team bereits nutzt. Kein manuelles Hin-und-her-Kopieren von Fehlern mehr.
-            </p>
+        <section className="wf-integration-section">
+          <style>{`
+            @keyframes wf-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+            @keyframes wf-flow {
+              0%   { stroke-dashoffset: 24; opacity: 0.3; }
+              50%  { opacity: 1; }
+              100% { stroke-dashoffset: 0;  opacity: 0.3; }
+            }
+            .wf-flow-line { stroke-dasharray: 6 6; animation: wf-flow 2.2s linear infinite; }
+            .wf-flow-line-2 { animation-delay: 0.55s; }
+            .wf-flow-line-3 { animation-delay: 1.1s; }
+            .wf-flow-line-4 { animation-delay: 1.65s; }
+          `}</style>
 
-            {/* Integration logos */}
-            <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 48 }}>
-              {/* Slack */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                padding: "20px 28px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                minWidth: 120,
-              }}>
-                <svg width="36" height="36" viewBox="0 0 54 54" fill="none">
-                  <path d="M19.7 33.3c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4h4v4z" fill="#E01E5A"/>
-                  <path d="M21.7 33.3c0-2.2 1.8-4 4-4s4 1.8 4 4v10c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10z" fill="#E01E5A"/>
-                  <path d="M25.7 19.7c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4v4h-4z" fill="#36C5F0"/>
-                  <path d="M25.7 21.7c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10c-2.2 0-4-1.8-4-4s1.8-4 4-4h10z" fill="#36C5F0"/>
-                  <path d="M39.3 25.7c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4h-4v-4z" fill="#2EB67D"/>
-                  <path d="M37.3 25.7c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10c0-2.2 1.8-4 4-4s4 1.8 4 4v10z" fill="#2EB67D"/>
-                  <path d="M33.3 39.3c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4v-4h4z" fill="#ECB22E"/>
-                  <path d="M33.3 37.3c-2.2 0-4-1.8-4-4s1.8-4 4-4h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10z" fill="#ECB22E"/>
-                </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Slack</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Sofort-Alerts</span>
-              </div>
+          <div className="wf-integration-layout">
 
-              {/* Jira */}
+            {/* ── Visual column (top on mobile, right on desktop) ── */}
+            <div className="wf-integration-visual">
+              {/* Hub diagram */}
               <div style={{
-                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                padding: "20px 28px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                minWidth: 120,
+                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 20, padding: "28px 20px 20px",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 0,
               }}>
-                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
-                  <defs>
-                    <linearGradient id="jira-g1" x1="17.8" y1="15.4" x2="10.9" y2="22.3" gradientUnits="userSpaceOnUse">
-                      <stop offset=".18" stopColor="#0052cc"/>
-                      <stop offset="1" stopColor="#2684ff"/>
-                    </linearGradient>
-                    <linearGradient id="jira-g2" x1="14.2" y1="16.6" x2="21.1" y2="9.7" gradientUnits="userSpaceOnUse">
-                      <stop offset=".18" stopColor="#0052cc"/>
-                      <stop offset="1" stopColor="#2684ff"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M15.9 2.1L2.1 15.9a1.4 1.4 0 000 2l6.1 6.1 7.7-7.7L22.7 10l-6.8-7.9z" fill="url(#jira-g1)"/>
-                  <path d="M16.1 29.9L29.9 16.1a1.4 1.4 0 000-2l-6.1-6.1-7.7 7.7-6.8 6.4 6.8 7.8z" fill="url(#jira-g2)"/>
-                </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Jira</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Auto-Tickets</span>
-              </div>
-
-              {/* Trello */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                padding: "20px 28px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                minWidth: 120,
-              }}>
-                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
-                  <rect width="32" height="32" rx="6" fill="#0079BF"/>
-                  <rect x="5" y="5" width="9" height="19" rx="2" fill="white"/>
-                  <rect x="18" y="5" width="9" height="13" rx="2" fill="white"/>
-                </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Trello</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Board-Karten</span>
-              </div>
-
-              {/* Asana */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
-                backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                padding: "20px 28px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                minWidth: 120,
-              }}>
-                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
-                  <circle cx="16" cy="10" r="6" fill="#F06A6A"/>
-                  <circle cx="7" cy="22" r="6" fill="#F06A6A"/>
-                  <circle cx="25" cy="22" r="6" fill="#F06A6A"/>
-                </svg>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Asana</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Task-Erstellung</span>
-              </div>
-
-              {/* Mehr kommt */}
-              <div style={{
-                background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 14,
-                padding: "20px 28px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                minWidth: 120,
-              }}>
+                {/* Central node */}
                 <div style={{
-                  width: 36, height: 36, borderRadius: 9,
-                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                  width: 52, height: 52, borderRadius: "50%",
+                  background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.3)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 20, color: "rgba(255,255,255,0.3)",
-                }}>+</div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.3)" }}>Mehr folgt</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontWeight: 500 }}>GitHub · Linear</span>
+                  boxShadow: "0 0 20px rgba(37,99,235,0.25)",
+                  zIndex: 1,
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                  </svg>
+                </div>
+
+                {/* Animated connection lines SVG */}
+                <svg width="200" height="44" viewBox="0 0 200 44" fill="none" style={{ overflow: "visible", margin: "-2px 0" }}>
+                  <line x1="100" y1="0" x2="22"  y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line"/>
+                  <line x1="100" y1="0" x2="68"  y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line wf-flow-line-2"/>
+                  <line x1="100" y1="0" x2="132" y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line wf-flow-line-3"/>
+                  <line x1="100" y1="0" x2="178" y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line wf-flow-line-4"/>
+                </svg>
+
+                {/* Tool logos */}
+                <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                  {/* Slack */}
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                    <svg width="28" height="28" viewBox="0 0 54 54" fill="none">
+                      <path d="M19.7 33.3c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4h4v4z" fill="#E01E5A"/>
+                      <path d="M21.7 33.3c0-2.2 1.8-4 4-4s4 1.8 4 4v10c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10z" fill="#E01E5A"/>
+                      <path d="M25.7 19.7c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4v4h-4z" fill="#36C5F0"/>
+                      <path d="M25.7 21.7c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10c-2.2 0-4-1.8-4-4s1.8-4 4-4h10z" fill="#36C5F0"/>
+                      <path d="M39.3 25.7c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4h-4v-4z" fill="#2EB67D"/>
+                      <path d="M37.3 25.7c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10c0-2.2 1.8-4 4-4s4 1.8 4 4v10z" fill="#2EB67D"/>
+                      <path d="M33.3 39.3c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4v-4h4z" fill="#ECB22E"/>
+                      <path d="M33.3 37.3c-2.2 0-4-1.8-4-4s1.8-4 4-4h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10z" fill="#ECB22E"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Slack</span>
+                  </div>
+                  {/* Jira */}
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                      <defs>
+                        <linearGradient id="jg1" x1="17.8" y1="15.4" x2="10.9" y2="22.3" gradientUnits="userSpaceOnUse"><stop offset=".18" stopColor="#0052cc"/><stop offset="1" stopColor="#2684ff"/></linearGradient>
+                        <linearGradient id="jg2" x1="14.2" y1="16.6" x2="21.1" y2="9.7" gradientUnits="userSpaceOnUse"><stop offset=".18" stopColor="#0052cc"/><stop offset="1" stopColor="#2684ff"/></linearGradient>
+                      </defs>
+                      <path d="M15.9 2.1L2.1 15.9a1.4 1.4 0 000 2l6.1 6.1 7.7-7.7L22.7 10l-6.8-7.9z" fill="url(#jg1)"/>
+                      <path d="M16.1 29.9L29.9 16.1a1.4 1.4 0 000-2l-6.1-6.1-7.7 7.7-6.8 6.4 6.8 7.8z" fill="url(#jg2)"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Jira</span>
+                  </div>
+                  {/* Trello */}
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                      <rect width="32" height="32" rx="6" fill="#0079BF"/>
+                      <rect x="5" y="5" width="9" height="19" rx="2" fill="white"/>
+                      <rect x="18" y="5" width="9" height="13" rx="2" fill="white"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Trello</span>
+                  </div>
+                  {/* Asana */}
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                      <circle cx="16" cy="10" r="6" fill="#F06A6A"/>
+                      <circle cx="7" cy="22" r="6" fill="#F06A6A"/>
+                      <circle cx="25" cy="22" r="6" fill="#F06A6A"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Asana</span>
+                  </div>
+                </div>
+
+                {/* Flow status */}
+                <div style={{
+                  marginTop: 18, display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "8px 16px", borderRadius: 999,
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                  fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: 600,
+                }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", flexShrink: 0, animation: "wf-pulse 2s ease-in-out infinite" }} />
+                  Scan → Ticket → Team informiert
+                </div>
               </div>
             </div>
 
-            {/* Connection arrows hint */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "10px 20px", borderRadius: 999,
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-                backdropFilter: "blur(8px)",
-                fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600,
-              }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", flexShrink: 0, animation: "wf-pulse 2s ease-in-out infinite" }} />
-                Scan abgeschlossen → Ticket erstellt → Team informiert
-              </div>
+            {/* ── Text column ── */}
+            <div className="wf-integration-text">
+              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                Schnittstellen
+              </p>
+              <h2 style={{ margin: "0 0 16px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em", lineHeight: 1.15 }}>
+                Nahtlose Anbindung an Ihr WordPress-System.
+              </h2>
+              <p style={{ margin: "0 0 28px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
+                WebsiteFix arbeitet nicht isoliert. Unsere Engine integriert sich direkt in Ihre bestehende Infrastruktur, um präzise Daten aus dem Core, den Plugins und dem Frontend zu korrelieren.
+              </p>
+              <ul className="wf-integration-bullets">
+                {[
+                  "Automatisierte WordPress-Schnittstelle",
+                  "Live-Abgleich mit BFSG & WCAG Richtlinien",
+                  "Deep-Scan über Cloud-Crawler-Technologie",
+                ].map(item => (
+                  <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
+
           </div>
         </section>
 

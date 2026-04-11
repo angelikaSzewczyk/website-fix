@@ -3557,6 +3557,53 @@ html, body {
   .wf-feature-card__text { font-size: 12px; }
 }
 
+/* ===== INTEGRATION SECTION ===== */
+.wf-integration-section {
+  padding: 72px 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Desktop: visual right, text left */
+.wf-integration-layout {
+  max-width: 1060px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: center;
+}
+
+/* Visual column order: right on desktop, top on mobile */
+.wf-integration-visual { order: 2; }
+.wf-integration-text   { order: 1; }
+
+.wf-integration-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Mobile: stack — visual on top, text below, centered */
+@media (max-width: 768px) {
+  .wf-integration-section { padding: 56px 20px; }
+  .wf-integration-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .wf-integration-visual { order: 1; }  /* graphic on top */
+  .wf-integration-text   { order: 2; text-align: center; }
+  .wf-integration-bullets { align-items: center; }
+  .wf-integration-bullets li { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .wf-integration-section { padding: 48px 16px; }
+}
+
 /* ===== BENEFITS SECTION ===== */
 .wf-benefits-section {
   padding: 80px 24px;
