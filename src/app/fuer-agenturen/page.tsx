@@ -897,35 +897,59 @@ export default function AgencyPage() {
         </section>
 
         {/* DEEP-SCAN TECHNOLOGIE */}
-        <section style={{ background: "#0b0c10", padding: "0 24px 72px", borderTop: "none" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <section style={{
+          position: "relative",
+          padding: "0 24px 80px",
+          backgroundColor: "#0d1520",
+          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}>
+          {/* Radial mask */}
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 100% 80% at 50% 50%, transparent 20%, #0d1520 100%)" }} />
+          {/* Top fade */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 100, pointerEvents: "none", background: "linear-gradient(to bottom, #0d1520, transparent)" }} />
+          {/* Bottom fade */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100, pointerEvents: "none", background: "linear-gradient(to top, #0d1520, transparent)" }} />
+
+          <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
             <div style={{
-              padding: "32px 36px", borderRadius: 18,
-              border: "1px solid rgba(122,166,255,0.15)",
-              background: "rgba(0,123,255,0.04)",
+              padding: "36px 40px", borderRadius: 20,
+              border: "1px solid rgba(122,166,255,0.20)",
+              background: "rgba(0,0,0,0.35)",
+              backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+              boxShadow: "0 0 40px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
               position: "relative", overflow: "hidden",
             }}>
-              <div style={{ position: "absolute", top: 0, right: 0, width: "45%", height: "100%", background: "radial-gradient(ellipse at 80% 50%, rgba(0,123,255,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+              {/* Radial glow right */}
+              <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", background: "radial-gradient(ellipse at 80% 50%, rgba(0,123,255,0.09) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+              {/* Crawl scan line animation */}
+              <div className="wf-scan-line" />
+
               <div style={{ position: "relative" }}>
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 16,
-                  padding: "4px 12px", borderRadius: 20, fontSize: 11,
-                  background: "rgba(122,166,255,0.1)", border: "1px solid rgba(122,166,255,0.2)",
+                {/* Badge */}
+                <div className="wf-scan-badge" style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 18,
+                  padding: "5px 14px", borderRadius: 20, fontSize: 11,
+                  background: "rgba(122,166,255,0.08)",
+                  border: "1px solid rgba(122,166,255,0.25)",
                   color: "#7aa6ff", fontWeight: 700, letterSpacing: "0.06em",
+                  backdropFilter: "blur(8px)",
                 }}>
                   🔬 Deep-Scan Technologie
                 </div>
-                <h3 style={{ margin: "0 0 14px", fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.2 }}>
+
+                <h3 className="wf-scan-headline" style={{ margin: "0 0 16px", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.25 }}>
                   Wir prüfen nicht nur die Oberfläche,<br />
-                  <span style={{ color: "rgba(255,255,255,0.45)" }}>sondern jede einzelne Unterseite.</span>
+                  <span style={{ color: "#a5c1ff", fontWeight: 900 }}>sondern jede einzelne Unterseite.</span>
                 </h3>
-                <p style={{ margin: "0 0 20px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 640 }}>
+                <p style={{ margin: "0 0 24px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 640 }}>
                   Unser Crawler analysiert automatisch <strong style={{ color: "rgba(255,255,255,0.85)" }}>jede Unterseite</strong> der Kundendomain — nicht nur die Startseite. Die KI findet dabei ca. <strong style={{ color: "rgba(255,255,255,0.85)" }}>50% der technischen Barrieren vollautomatisch</strong>. Den Rest erledigt Ihr Team mit unseren präzisen, seiten-genauen Reports — mit exakten URLs, Fehlerbeschreibungen und Code-Fixes.
                 </p>
-                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                <div className="wf-scan-features">
                   {["Sitemap + BFS-Crawl", "Seitentyp-Klassifikation", "Aggregierte Fehler-Reports", "KI-Batch-Analyse"].map(f => (
-                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007BFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       {f}
                     </div>
                   ))}
