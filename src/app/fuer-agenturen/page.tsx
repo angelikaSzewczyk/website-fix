@@ -1109,6 +1109,104 @@ export default function AgencyPage() {
           </div>
         </section>
 
+        {/* BLOG TEASER */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px 0" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Agentur-Wissen</p>
+              <h2 style={{ margin: 0, fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
+                Wissen, das Ihre Agentur weiterbringt.
+              </h2>
+              <p style={{ margin: "6px 0 0", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
+                Strategien zu Barrierefreiheit, Workflow-Optimierung und Haftungsschutz.
+              </p>
+            </div>
+            <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+              Alle Artikel →
+            </Link>
+          </div>
+
+          <div className="wf-agency-blog-grid">
+            {/* Card 1 */}
+            <Link href="/blog/bfsg-2025-agenturen" style={{ textDecoration: "none", display: "block" }}>
+              <div className="wf-blog-card" style={{
+                padding: "24px 26px", height: "100%", boxSizing: "border-box",
+                border: "1px solid rgba(122,166,255,0.15)", borderRadius: 14,
+                background: "rgba(122,166,255,0.04)",
+                display: "flex", flexDirection: "column", gap: 12,
+                transition: "border-color 0.2s ease, background 0.2s ease",
+              }}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, background: "rgba(122,166,255,0.12)", border: "1px solid rgba(122,166,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5, background: "rgba(122,166,255,0.12)", color: "#7aa6ff", border: "1px solid rgba(122,166,255,0.2)", letterSpacing: "0.05em" }}>BFSG · WCAG</span>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>5 Min.</span>
+                </div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.35 }}>
+                  Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen
+                </h3>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1 }}>
+                  Erfahren Sie, wie Sie Ihre Kunden vor Abmahnungen schützen und die neue Gesetzgebung als Umsatz-Chance nutzen.
+                </p>
+                <span style={{ fontSize: 13, color: "#7aa6ff", fontWeight: 600 }}>Jetzt lesen →</span>
+              </div>
+            </Link>
+
+            {/* Card 2 */}
+            <Link href="/blog/white-label-strategien" style={{ textDecoration: "none", display: "block" }}>
+              <div className="wf-blog-card" style={{
+                padding: "24px 26px", height: "100%", boxSizing: "border-box",
+                border: "1px solid rgba(141,243,211,0.12)", borderRadius: 14,
+                background: "rgba(141,243,211,0.03)",
+                display: "flex", flexDirection: "column", gap: 12,
+                transition: "border-color 0.2s ease, background 0.2s ease",
+              }}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, background: "rgba(141,243,211,0.10)", border: "1px solid rgba(141,243,211,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5, background: "rgba(141,243,211,0.10)", color: "#8df3d3", border: "1px solid rgba(141,243,211,0.18)", letterSpacing: "0.05em" }}>White-Label</span>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>4 Min.</span>
+                </div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.35 }}>
+                  White-Label Reports: So positionieren Sie sich als Premium-Agentur
+                </h3>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1 }}>
+                  Wie automatisierte, gebrandete Reports Ihre Kundenbindung erhöhen und höhere Wartungspauschalen rechtfertigen.
+                </p>
+                <span style={{ fontSize: 13, color: "#8df3d3", fontWeight: 600 }}>Jetzt lesen →</span>
+              </div>
+            </Link>
+
+            {/* Card 3 */}
+            <Link href="/blog/wartungsvertrag-automatisieren" style={{ textDecoration: "none", display: "block" }}>
+              <div className="wf-blog-card" style={{
+                padding: "24px 26px", height: "100%", boxSizing: "border-box",
+                border: "1px solid rgba(192,132,252,0.12)", borderRadius: 14,
+                background: "rgba(192,132,252,0.03)",
+                display: "flex", flexDirection: "column", gap: 12,
+                transition: "border-color 0.2s ease, background 0.2s ease",
+              }}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, background: "rgba(192,132,252,0.10)", border: "1px solid rgba(192,132,252,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5, background: "rgba(192,132,252,0.10)", color: "#c084fc", border: "1px solid rgba(192,132,252,0.18)", letterSpacing: "0.05em" }}>Automatisierung</span>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>6 Min.</span>
+                </div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.35 }}>
+                  Wartungsverträge automatisieren: Von 10 auf 50 Kunden ohne Mehraufwand
+                </h3>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1 }}>
+                  Welche Prozesse sich vollständig automatisieren lassen und wie Sie damit Ihre Marge pro Kunde verdoppeln.
+                </p>
+                <span style={{ fontSize: 13, color: "#c084fc", fontWeight: 600 }}>Jetzt lesen →</span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
         {/* CTA BANNER */}
         <section style={{
           position: "relative",

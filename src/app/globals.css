@@ -3938,6 +3938,17 @@ html, body {
   .wf-feat-card ul { gap: 5px !important; }
 }
 
+/* ===== AGENCY BLOG GRID ===== */
+.wf-agency-blog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+@media (max-width: 900px) {
+  .wf-agency-blog-grid { grid-template-columns: 1fr; gap: 12px; }
+}
+
 /* ===== AGENCY BOTTOM CTA ===== */
 /* Button hover glow */
 .wf-agency-cta-btn button:hover {
