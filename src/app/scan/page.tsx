@@ -99,11 +99,13 @@ function renderDiagnose(text: string) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatTimeRemaining(nextScanMs: number): string {
   const remaining = nextScanMs - Date.now();
-  if (remaining <= 0) return "0h";
-  const hours = Math.floor(remaining / (1000 * 60 * 60));
-  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 0) return `${hours}h`;
-  return `${minutes}m`;
+  if (remaining <= 0) return "0h 0m";
+  const hours = Math.floor(remaining / 3_600_000);
+  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+  const seconds = Math.floor((remaining % 60_000) / 1_000);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -151,7 +153,7 @@ export default function ScanPage() {
       } else {
         setTimeRemaining(formatTimeRemaining(scanBlocked.nextScanMs));
       }
-    }, 10_000);
+    }, 1_000);
     return () => clearInterval(id);
   }, [scanBlocked]);
 

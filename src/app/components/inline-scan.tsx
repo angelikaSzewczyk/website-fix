@@ -10,11 +10,13 @@ const MAX_FREE_PAGES = 25;
 
 function formatTimeRemaining(nextMs: number): string {
   const remaining = nextMs - Date.now();
-  if (remaining <= 0) return "0h";
+  if (remaining <= 0) return "0h 0m";
   const hours = Math.floor(remaining / 3_600_000);
   const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-  if (hours > 0) return `${hours}h`;
-  return `${minutes}m`;
+  const seconds = Math.floor((remaining % 60_000) / 1_000);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 export default function InlineScan({
@@ -59,7 +61,7 @@ export default function InlineScan({
       } else {
         setTimeRemaining(formatTimeRemaining(scanBlocked.nextMs));
       }
-    }, 10_000);
+    }, 1_000);
     return () => clearInterval(id);
   }, [scanBlocked]);
 
@@ -191,26 +193,84 @@ export default function InlineScan({
   if (scanBlocked.blocked) {
     return (
       <div style={{
-        padding: "18px 22px",
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 14,
+        padding: "32px 28px",
+        background: "rgba(141,243,211,0.03)",
+        border: "1px solid rgba(141,243,211,0.14)",
+        borderRadius: 18,
         textAlign: "center",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 0 48px rgba(141,243,211,0.05), inset 0 1px 0 rgba(141,243,211,0.08)",
       }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-          ⏱ Limit erreicht.
-        </div>
-        <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-          Nächster freier Scan in{" "}
-          <span style={{ color: "#8df3d3", fontWeight: 700 }}>{timeRemaining}</span>
-        </p>
-        <a href="/register" style={{
-          display: "inline-block", padding: "9px 20px", borderRadius: 9,
-          background: "linear-gradient(90deg, #007BFF, #0057b8)",
-          color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
+        {/* Glow orb top */}
+        <div style={{
+          position: "absolute", top: -50, left: "50%",
+          transform: "translateX(-50%)",
+          width: 160, height: 160, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(141,243,211,0.10) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Icon circle */}
+        <div style={{
+          width: 54, height: 54, borderRadius: "50%",
+          background: "rgba(141,243,211,0.07)",
+          border: "1px solid rgba(141,243,211,0.22)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 18px",
+          boxShadow: "0 0 24px rgba(141,243,211,0.18)",
         }}>
-          Unbegrenzt scannen mit Pro →
-        </a>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="#8df3d3" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16.5 14.5"/>
+          </svg>
+        </div>
+
+        {/* Title */}
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 6, letterSpacing: "-0.2px" }}>
+          Scan-Limit erreicht
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginBottom: 18 }}>
+          Nächster freier Scan verfügbar in
+        </div>
+
+        {/* Countdown pill */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          background: "rgba(141,243,211,0.06)",
+          border: "1px solid rgba(141,243,211,0.18)",
+          borderRadius: 12, padding: "10px 22px", marginBottom: 22,
+          boxShadow: "0 0 16px rgba(141,243,211,0.08)",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="rgba(141,243,211,0.5)" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 14.5"/>
+          </svg>
+          <span style={{
+            fontSize: 26, fontWeight: 800, color: "#8df3d3",
+            letterSpacing: "-0.5px", fontVariantNumeric: "tabular-nums",
+            lineHeight: 1,
+          }}>
+            {timeRemaining}
+          </span>
+        </div>
+
+        {/* CTA */}
+        <div>
+          <a href="/register" style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "11px 26px", borderRadius: 10,
+            background: "linear-gradient(135deg, #007BFF 0%, #0057b8 100%)",
+            color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none",
+            boxShadow: "0 4px 22px rgba(0,123,255,0.38)",
+          }}>
+            Unbegrenzt scannen mit Pro →
+          </a>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 10 }}>
+            oder warten bis der Countdown abläuft
+          </div>
+        </div>
       </div>
     );
   }
