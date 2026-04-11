@@ -1214,18 +1214,8 @@ export default function AgencyPage() {
         </section>
 
         {/* CTA BANNER */}
-        <section style={{
-          position: "relative",
-          padding: "60px 24px 80px",
-          backgroundColor: "#0d1520",
-          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}>
-          {/* Radial mask */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #0d1520 100%)" }} />
-
-          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+        <section style={{ padding: "60px 24px 80px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div className="wf-agency-cta-banner" style={{
               padding: "clamp(40px, 5vw, 64px) clamp(28px, 5vw, 56px)",
               borderRadius: 20,
