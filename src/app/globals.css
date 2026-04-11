@@ -3938,6 +3938,14 @@ html, body {
   .wf-feat-card ul { gap: 5px !important; }
 }
 
+/* ===== FAQ ACCORDION ===== */
+/* Card wrapper padding on desktop */
+.wf-faq-card > div { padding: 0 28px; }
+/* Larger touch targets on mobile */
+@media (max-width: 640px) {
+  .wf-faq-btn { padding: 20px 0 !important; min-height: 56px; }
+}
+
 /* ===== DEEP-SCAN SECTION ===== */
 
 /* Scan line: slow vertical light sweep */

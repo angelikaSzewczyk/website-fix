@@ -62,15 +62,15 @@ const PLANS = [
 const FAQ = [
   {
     q: "Kann ich mein eigenes Branding nutzen?",
-    a: "Ja, ab dem Agency Core Paket können Sie Logo, Farben und Domain anpassen (White-Labeling). Ihre Kunden sehen ausschließlich Ihr Agentur-Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool.",
+    a: "Ja, im Agency Pro Plan nutzen Sie Full White-Labeling inklusive eigener Subdomain und SMTP-Versand über Ihre Mail-Adresse. Ihre Kunden sehen ausschließlich Ihr Agentur-Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool.",
   },
   {
     q: "Wie sicher sind die Daten meiner Kunden?",
-    a: "Wir hosten 100% DSGVO-konform in Deutschland. Alle Daten werden verschlüsselt übertragen und gespeichert. Sie bleiben Eigentümer Ihrer Daten — wir verkaufen oder teilen sie nicht.",
+    a: "Wir hosten 100% DSGVO-konform auf Servern in Deutschland. Alle Daten werden TLS-verschlüsselt übertragen und gespeichert. Sie erhalten DSGVO-konforme Auftragsverarbeitungsverträge (AVV) und bleiben jederzeit Eigentümer Ihrer Daten — wir verkaufen oder teilen sie nicht.",
   },
   {
-    q: "Wann wird Barrierefreiheit Pflicht?",
-    a: "Ab Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz (BFSG) für die meisten kommerziellen Websites. Agenturen, die Websites betreuen, tragen Mitverantwortung. WebsiteFix prüft automatisch alle WCAG 2.1 AA-Kriterien und erstellt einen lückenlosen Audit-Trail als Nachweis.",
+    q: "Bietet WebsiteFix Schutz vor dem BFSG 2025?",
+    a: "Ja. Unser System überwacht Ihre Projekte kontinuierlich auf WCAG 2.1-Richtlinien und liefert den notwendigen Audit-Trail für Ihre Haftungsfreistellung. Ab Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz (BFSG) für die meisten kommerziellen Websites — Agenturen, die Websites betreuen, tragen Mitverantwortung.",
   },
   {
     q: "Für welche Website-Plattformen funktioniert das?",
@@ -78,7 +78,7 @@ const FAQ = [
   },
   {
     q: "Wie läuft die Jira / Trello / Asana Integration?",
-    a: "Sie verbinden Ihr Projekt-Management-Tool einmalig in den Einstellungen. Sobald ein Scan Probleme findet, wird automatisch ein Ticket mit allen Details (Screenshot, Code-Fix, Priorität) erstellt — ohne manuellen Aufwand.",
+    a: "Sie verbinden Ihr Projekt-Management-Tool einmalig in den Einstellungen. Sobald ein Scan Probleme findet, werden Fehler direkt als Tickets in Jira, Trello oder Asana erstellt — inklusive Screenshot und Code-Fix-Vorschlag. Kein manuelles Copy-Paste mehr.",
   },
   {
     q: "Kann ich den Plan jederzeit kündigen?",
@@ -1087,7 +1087,7 @@ export default function AgencyPage() {
         </section>
 
         {/* FAQ */}
-        <section style={{ background: "#0b0c10", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <section style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
             <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
             <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: "#fff" }}>
@@ -1096,7 +1096,16 @@ export default function AgencyPage() {
             <p style={{ margin: "0 0 40px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
               Alles, was Agentur-Inhaber vor dem Start wissen wollen.
             </p>
-            <FaqAccordion items={FAQ} />
+            {/* Card wrapper */}
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 18,
+              overflow: "hidden",
+              padding: "0 28px",
+            }}>
+              <FaqAccordion items={FAQ} />
+            </div>
           </div>
         </section>
 

@@ -45,6 +45,7 @@ export default function FaqAccordion({
           >
             <button
               onClick={() => setOpen(isOpen ? null : i)}
+              className="wf-faq-btn"
               style={{
                 width: "100%", textAlign: "left",
                 padding: "24px 4px 24px 0",
