@@ -282,7 +282,7 @@ export default function InlineScan({
             textDecorationColor: "rgba(167,139,250,0.3)",
             cursor: "pointer",
           }}>
-            Oder erste Website dauerhaft kostenlos verknüpfen
+            Oder die erste Website dauerhaft kostenlos verknüpfen
           </a>
         </div>
       </div>
