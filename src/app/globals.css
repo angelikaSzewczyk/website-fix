@@ -3659,6 +3659,13 @@ html, body {
   }
 }
 
+/* ===== ADVANTAGE SECTION ===== */
+.wf-advantage-section {
+  padding: 80px 24px;
+}
+@media (max-width: 768px) { .wf-advantage-section { padding: 64px 20px; } }
+@media (max-width: 480px) { .wf-advantage-section { padding: 48px 16px; } }
+
 /* ===== STEPS SECTION — responsive padding (matches feature cards) ===== */
 @media (max-width: 768px) {
   .wf-steps-section { padding: 64px 20px !important; }

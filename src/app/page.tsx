@@ -599,16 +599,18 @@ export default function Page() {
           </div>
         </section>
 
-        {/* ── ALLES IM GRIFF ── */}
-        <section style={{ padding: "80px 24px" }}>
+        {/* ── AGENTUR-VORTEIL ── */}
+        <section className="wf-advantage-section">
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Dein Vorteil</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Alles im Griff.
+              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                Dein Agentur-Vorteil
+              </p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
+                Sichern Sie Ihren gesamten WordPress-Bestand.
               </h2>
-              <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
-                Für jeden, der eine Website betreibt — ob Selbstständiger, KMU oder Agentur.
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
+                Automatisierte Konformität und technische Hygiene für Agenturen und KMU.
               </p>
             </div>
 
@@ -622,28 +624,33 @@ export default function Page() {
                     </svg>
                   ),
                   iconBg: "rgba(37,99,235,0.12)",
-                  iconBorder: "rgba(37,99,235,0.25)",
-                  title: "KI-Experte an deiner Seite",
-                  tag: "KI-Analyse",
+                  iconBorder: "rgba(37,99,235,0.28)",
+                  iconGlow: "rgba(37,99,235,0.35)",
+                  tag: "WP-Tiefen-Audit",
                   tagColor: "#7aa6ff",
                   tagBg: "rgba(37,99,235,0.12)",
-                  desc: "Automatische Erkennung von Sicherheitslücken und Performance-Fressern, bevor sie zum Problem werden.",
-                  bullets: ["Täglich automatisch gescannt", "Sofort-Benachrichtigung", "Verständliche Ergebnisse"],
+                  title: "Deep-Check für Theme & Plugins",
+                  desc: "Automatische Analyse von WordPress-Code-Qualität, Datenbank-Leaks und bekannten Plugin-Schwachstellen (CVEs).",
+                  bullets: ["Core- & Plugin-CVE-Scan", "Analyse von Render-blocking Ressourcen", "Code-Konflikt-Warnungen"],
+                  bulletColor: "#7aa6ff",
                 },
                 {
                   icon: (
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <polyline points="9 12 11 14 15 10"/>
                     </svg>
                   ),
-                  iconBg: "rgba(22,163,74,0.12)",
-                  iconBorder: "rgba(22,163,74,0.25)",
-                  title: "Rechtssicherheit 2025",
-                  tag: "BFSG",
+                  iconBg: "rgba(22,163,74,0.1)",
+                  iconBorder: "rgba(22,163,74,0.28)",
+                  iconGlow: "rgba(34,197,94,0.35)",
+                  tag: "BFSG 2025",
                   tagColor: "#4ade80",
                   tagBg: "rgba(22,163,74,0.12)",
-                  desc: "Volle Überwachung der BFSG-Konformität inkl. lückenloser Dokumentation — automatisch und ohne Aufwand.",
-                  bullets: ["BFSG 2025 überwacht", "Audit-Dokumentation", "Keine manuelle Prüfung"],
+                  title: "Haftungsrisiken minimieren",
+                  desc: "Lückenlose Dokumentation Ihrer BFSG-Konformität inkl. BITV-Check und DSGVO-Audits – exportierbar für Ihre Kunden.",
+                  bullets: ["Audit-Protokolle exportierbar", "BITV/EN 301 549 Konformitäts-Check", "Regelmäßiges Monitoring"],
+                  bulletColor: "#4ade80",
                 },
                 {
                   icon: (
@@ -652,13 +659,15 @@ export default function Page() {
                     </svg>
                   ),
                   iconBg: "rgba(217,119,6,0.12)",
-                  iconBorder: "rgba(217,119,6,0.25)",
-                  title: "Einfachheit",
-                  tag: "Setup",
+                  iconBorder: "rgba(217,119,6,0.28)",
+                  iconGlow: "rgba(251,191,36,0.35)",
+                  tag: "Agentur-Flow",
                   tagColor: "#fbbf24",
                   tagBg: "rgba(217,119,6,0.12)",
-                  desc: "Kein Plugin, kein Code-Wissen nötig. Einmal einrichten, dauerhaft geschützt sein.",
-                  bullets: ["URL eingeben & fertig", "Keine technischen Kenntnisse", "Dauerhaft aktiv"],
+                  title: "Skalierbare Überwachung",
+                  desc: "Zentrales Monitoring ohne Plugin-Zwang, keine technischen Kenntnisse nötig. Einmal einrichten, dauerhaft geschützt.",
+                  bullets: ["Unbegrenzte Scans (Gratis: 25 Seiten)", "Alarmierung via Slack oder Mail", "Volles Dashboard"],
+                  bulletColor: "#fbbf24",
                 },
               ].map(f => (
                 <div key={f.title} style={{
@@ -669,28 +678,31 @@ export default function Page() {
                   padding: "28px 26px",
                   boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
                   display: "flex", flexDirection: "column",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                     <div style={{
                       width: 46, height: 46, borderRadius: 12, flexShrink: 0,
                       background: f.iconBg, border: `1px solid ${f.iconBorder}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
+                      filter: `drop-shadow(0 0 8px ${f.iconGlow})`,
                     }}>
                       {f.icon}
                     </div>
                     <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
+                      fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 5,
                       background: f.tagBg, color: f.tagColor, letterSpacing: "0.06em",
+                      border: `1px solid ${f.iconBorder}`,
                     }}>{f.tag}</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{f.title}</h3>
-                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{f.desc}</p>
+                    <h3 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{f.title}</h3>
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>{f.desc}</p>
                   </div>
-                  <ul style={{ margin: "16px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                  <ul style={{ margin: "18px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
                     {f.bullets.map(b => (
-                      <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={f.bulletColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                         {b}
