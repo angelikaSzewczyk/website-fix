@@ -294,7 +294,7 @@ export default function Page() {
           </h1>
 
           <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 40px", fontWeight: 400 }}>
-            Prüfe Barrierefreiheit (BFSG&nbsp;2025), SEO und Conversion-Sicherheit – Deep Scan über bis zu&nbsp;25&nbsp;Unterseiten.
+            Prüfe Barrierefreiheit (BFSG&nbsp;2025), technisches SEO und Formulare. Kostenloser Deep Scan für die ersten&nbsp;25&nbsp;Unterseiten.
           </p>
 
           {/* URL Input */}
