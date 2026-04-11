@@ -72,6 +72,13 @@ Google indexiert dann ggf. eine andere Version oder gar keine.
 - 2–4 Wochen sind normal
 - Weiter Inhalte veröffentlichen + interne Links setzen
 
+## 12) Domain-Ruf (bei gebrauchten Domains)
+Falls du eine bereits genutzte Domain übernommen hast, kann Google sie als Spam eingestuft haben.
+
+**Quick-Win**
+- Suche bei Google: `site:deinedomain.de`
+- Wenn keine Ergebnisse kommen, obwohl die Seite läuft: Search Console → **Sicherheit und manuelle Maßnahmen** prüfen
+
 ## Wann lohnt sich ein Fix?
 Wenn du willst, dass Google deine Seite **sauber erfasst** und du wieder sichtbar wirst:
 
@@ -82,5 +89,11 @@ Frühen Zugang sichern — das Tool analysiert automatisch, warum Google dich ni
 **Wie lange dauert es, bis Google indexiert?**  
 Neue Seiten: oft Tage bis Wochen. Mit sauberer Sitemap meist schneller.
 
-**Kann ich Indexierung „erzwingen“?**  
-Du kannst sie anstoßen (URL-Prüfung), aber technische Sperren müssen zuerst weg.
+**Kann ich Indexierung „erzwingen”?**  
+Du kannst sie anstoßen (URL-Prüfung in der Search Console), aber technische Sperren (noindex, robots.txt) müssen zuerst weg.
+
+**Meine Seite ist bei Google, steht aber ganz hinten — ist das dasselbe Problem?**  
+Nein. Indexiert aber schlecht gerankt ist ein separates Thema: Dann geht es um Inhalte, Keywords und Vertrauen. Erst indexiert sein ist Schritt 1.
+
+**Muss ich SEO-Profi sein, um das zu lösen?**  
+Für die meisten der oben genannten Punkte nicht. Es sind Einstellungen, keine Programmierung.
