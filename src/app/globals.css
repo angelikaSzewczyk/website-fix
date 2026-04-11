@@ -3387,9 +3387,10 @@ html, body {
     justify-content: center;
   }
   .wf-scan-input {
-    font-size: 14px !important; /* smaller = URL fits without clipping; still above iOS zoom threshold via inputMode */
-    padding: 14px 6px !important; /* generous vertical padding so text isn't squeezed */
+    font-size: 14px !important;
+    padding: 14px 6px !important;
     min-height: 52px !important;
+    text-align: center !important;
   }
 }
 
