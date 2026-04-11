@@ -3660,36 +3660,67 @@ html, body {
 }
 
 /* ===== TESTIMONIALS — Desktop grid / Mobile scroll-snap slider ===== */
+.wf-testimonial-wrapper { position: relative; }
 .wf-testimonial-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 20px;
 }
+.wf-swipe-hint { display: none; }
 
 @media (max-width: 768px) {
+  /* Wrapper: gradient fade on right = peek hint */
+  .wf-testimonial-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 20px;
+    width: 48px;
+    background: linear-gradient(to left, #0b0c10 20%, transparent);
+    pointer-events: none;
+    z-index: 2;
+  }
+
   .wf-testimonial-grid {
-    /* Switch to horizontal scroll-snap slider — no JS needed */
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    gap: 16px;
-    padding-bottom: 16px;
-    /* Hide scrollbar but keep scroll functionality */
+    gap: 14px;
+    padding-bottom: 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    /* full-bleed: break out of section padding so cards reach the edge */
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
   .wf-testimonial-grid::-webkit-scrollbar { display: none; }
 
   .wf-testimonial-card {
-    flex: 0 0 82vw;   /* ~82% viewport = card + peek of next */
-    max-width: 340px;
-    scroll-snap-align: center;
+    flex: 0 0 78vw;   /* card + clear peek of next card */
+    max-width: 320px;
+    scroll-snap-align: start;
+  }
+
+  /* Swipe hint: visible on mobile */
+  .wf-swipe-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding: 0 4px;
   }
 }
 
 @media (max-width: 480px) {
-  .wf-testimonial-card { flex: 0 0 88vw; }
+  .wf-testimonial-grid {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .wf-testimonial-card { flex: 0 0 84vw; }
 }
 
 /* ===== ADVANTAGE SECTION ===== */
