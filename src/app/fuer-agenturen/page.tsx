@@ -800,7 +800,7 @@ export default function AgencyPage() {
         </section>
 
         {/* FEATURE DEEP-DIVE */}
-        <section className="wf-feat-section" style={{ padding: "80px 24px", background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <section className="wf-feat-section" style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
