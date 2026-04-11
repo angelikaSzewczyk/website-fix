@@ -3780,41 +3780,54 @@ html, body {
   }
 }
 
-/* ===== INTEGRATIONS GRID — 4-col desktop / 2×2 mobile ===== */
+/* ===== INTEGRATIONS GRID — 4-col desktop / single-col mobile ===== */
 .wf-integ-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 
-@media (max-width: 768px) {
+/* Tablet (641–900px): 2×2 grid */
+@media (min-width: 641px) and (max-width: 900px) {
   .wf-integ-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 }
 
-@media (max-width: 400px) {
+/* Mobile (≤640px): single column — descriptions too long for 2-col */
+@media (max-width: 640px) {
   .wf-integ-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  /* Reduce card padding so content breathes */
+  .integ-card {
+    padding: 18px !important;
+  }
+  /* Shrink icon slightly to free horizontal space */
+  .integ-icon {
+    width: 36px !important;
+    height: 36px !important;
   }
 }
 
 /* Card base — stretch to equal height, pin button row at bottom */
 .integ-card {
   transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
-  justify-content: space-between !important;  /* pin "Verknüpfen" row to bottom */
+  justify-content: space-between !important;
 }
 .integ-card:hover { transform: translateY(-3px); }
 
-/* Top row: icon stays top-aligned when text wraps to multiple lines */
+/* Top row: icon stays top-aligned when text wraps */
 .integ-card > div:first-child {
   align-items: flex-start !important;
 }
 
-/* Text container: prevent overflow on narrow viewports */
+/* Text container: no overflow on any viewport */
 .integ-card > div:first-child > div:last-child {
   min-width: 0;
-  overflow: hidden;
+  overflow-wrap: break-word;
   word-break: break-word;
 }
 .integ-card-slack:hover  { box-shadow: 0 0 36px rgba(74,21,75,0.55);    border-color: rgba(192,132,252,0.55) !important; }
