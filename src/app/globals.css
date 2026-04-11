@@ -3780,6 +3780,20 @@ html, body {
   }
 }
 
+/* ===== ROI CALCULATOR — responsive 2-col grid ===== */
+.wf-roi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 640px) {
+  .wf-roi-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 /* ===== INTEGRATIONS GRID — 4-col desktop / single-col mobile ===== */
 .wf-integ-grid {
   display: grid;
