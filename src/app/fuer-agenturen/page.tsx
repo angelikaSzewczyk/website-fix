@@ -897,19 +897,7 @@ export default function AgencyPage() {
         </section>
 
         {/* DEEP-SCAN TECHNOLOGIE */}
-        <section style={{
-          position: "relative",
-          padding: "0 24px 80px",
-          backgroundColor: "#0d1520",
-          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-        }}>
-          {/* Radial mask */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 100% 80% at 50% 50%, transparent 20%, #0d1520 100%)" }} />
-          {/* Top fade */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 100, pointerEvents: "none", background: "linear-gradient(to bottom, #0d1520, transparent)" }} />
-          {/* Bottom fade */}
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100, pointerEvents: "none", background: "linear-gradient(to top, #0d1520, transparent)" }} />
+        <section style={{ padding: "0 24px 80px" }}>
 
           <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
             <div style={{
