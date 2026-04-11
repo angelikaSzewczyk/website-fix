@@ -4,10 +4,11 @@ import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
 import BrandLogo from "../components/BrandLogo";
+import AgencyStats from "../components/agency-stats";
 
 export const metadata: Metadata = {
   title: "WebsiteFix für Agenturen — Automatische Wartungsverträge & BFSG",
-  description: "Verwandle deine Wartung in eine Profit-Maschine. White-Label Reports, BFSG-Compliance und Jira-Integration für Web-Agenturen.",
+  description: "Verwandeln Sie Ihre Wartung in eine Profit-Maschine. White-Label Reports, BFSG-Compliance und Jira-Integration für Web-Agenturen.",
 };
 
 const PLANS = [
@@ -56,11 +57,11 @@ const PLANS = [
 const FAQ = [
   {
     q: "Kann ich mein eigenes Branding nutzen?",
-    a: "Ja, ab dem Agency Core Paket kannst du Logo, Farben und Domain anpassen (White-Labeling). Deine Kunden sehen ausschließlich dein Agentur-Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool.",
+    a: "Ja, ab dem Agency Core Paket können Sie Logo, Farben und Domain anpassen (White-Labeling). Ihre Kunden sehen ausschließlich Ihr Agentur-Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool.",
   },
   {
     q: "Wie sicher sind die Daten meiner Kunden?",
-    a: "Wir hosten 100% DSGVO-konform in Deutschland. Alle Daten werden verschlüsselt übertragen und gespeichert. Du bleibst Eigentümer deiner Daten — wir verkaufen oder teilen sie nicht.",
+    a: "Wir hosten 100% DSGVO-konform in Deutschland. Alle Daten werden verschlüsselt übertragen und gespeichert. Sie bleiben Eigentümer Ihrer Daten — wir verkaufen oder teilen sie nicht.",
   },
   {
     q: "Wann wird Barrierefreiheit Pflicht?",
@@ -72,11 +73,11 @@ const FAQ = [
   },
   {
     q: "Wie läuft die Jira / Trello / Asana Integration?",
-    a: "Du verbindest dein Projekt-Management-Tool einmalig in den Einstellungen. Sobald ein Scan Probleme findet, wird automatisch ein Ticket mit allen Details (Screenshot, Code-Fix, Priorität) erstellt — ohne manuellen Aufwand.",
+    a: "Sie verbinden Ihr Projekt-Management-Tool einmalig in den Einstellungen. Sobald ein Scan Probleme findet, wird automatisch ein Ticket mit allen Details (Screenshot, Code-Fix, Priorität) erstellt — ohne manuellen Aufwand.",
   },
   {
     q: "Kann ich den Plan jederzeit kündigen?",
-    a: "Ja. Monatliche Kündigung, keine Mindestlaufzeit. Abrechnung über Stripe. Nach der Kündigung hast du noch Zugang bis zum Ende des bezahlten Zeitraums.",
+    a: "Ja. Monatliche Kündigung, keine Mindestlaufzeit. Abrechnung über Stripe. Nach der Kündigung haben Sie noch Zugang bis zum Ende des bezahlten Zeitraums.",
   },
 ];
 
@@ -121,62 +122,63 @@ export default function AgencyPage() {
       <main>
 
         {/* HERO */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "88px 24px 72px", textAlign: "center" }}>
+        <section style={{
+          maxWidth: 1100, margin: "0 auto", padding: "88px 24px 72px", textAlign: "center",
+          position: "relative",
+          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}>
+          {/* Radial fade to mask grid edges */}
           <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 28,
-            padding: "5px 14px", borderRadius: 20,
-            border: "1px solid rgba(122,166,255,0.25)",
-            background: "rgba(122,166,255,0.06)",
-            fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
-          }}>
-            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-            Exklusiv für Web-Agenturen & Freelancer
-          </div>
-
-          <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            Skaliere deine Agentur mit automatisierten Wartungsverträgen.
-          </h1>
-
-          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 40px", fontWeight: 400 }}>
-            Generiere monatlich wiederkehrende Umsätze (MRR) durch vollautomatisierte BFSG- und Sicherheits-Audits – ganz ohne manuellen Aufwand.
-          </p>
-
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <CheckoutButton
-              plan="agency_core"
-              label="Jetzt Agency-Account erstellen →"
-              style={{
-                padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
-                background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                color: "#fff", border: "none",
-                boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
-              }}
-            />
-            <Link href="#pricing" style={{
-              padding: "14px 28px", borderRadius: 10, fontSize: 15,
-              border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)",
-              textDecoration: "none",
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "radial-gradient(ellipse 80% 60% at 50% 50%, transparent 40%, #0b0c10 100%)",
+          }} />
+          <div style={{ position: "relative" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 28,
+              padding: "5px 14px", borderRadius: 20,
+              border: "1px solid rgba(122,166,255,0.25)",
+              background: "rgba(122,166,255,0.06)",
+              fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
             }}>
-              Preise ansehen
-            </Link>
-          </div>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
+              Exklusiv für Web-Agenturen &amp; Freelancer
+            </div>
 
-          <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
-            Exklusive Agency-Konditionen · Keine Mindestlaufzeit · DSGVO-konform
-          </p>
+            <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
+              Skalieren Sie Ihre Agentur mit automatisierten Wartungsumsätzen
+            </h1>
 
-          {/* Trust stats */}
-          <div style={{ marginTop: 52, display: "flex", gap: 32, justifyContent: "center", flexWrap: "wrap" }}>
-            {[
-              { num: "90 Std.", label: "Ø Zeitersparnis/Monat" },
-              { num: "+400€", label: "Ø Mehrwert pro Wartungskunde" },
-              { num: "BFSG", label: "Automatisch geprüft seit Juni 2025" },
-            ].map(s => (
-              <div key={s.label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{s.num}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{s.label}</div>
-              </div>
-            ))}
+            <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
+              Generieren Sie monatlich wiederkehrende Erlöse (MRR) durch vollautomatisierte BFSG-&amp; Sicherheits-Audits. Schützen Sie Ihre Kunden und steigern Sie Ihre Marge – ohne eine einzige Stunde Mehrarbeit.
+            </p>
+
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <CheckoutButton
+                plan="agency_core"
+                label="Jetzt Agency-Account erstellen →"
+                style={{
+                  padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
+                  background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                  color: "#fff", border: "none",
+                  boxShadow: "0 4px 32px rgba(0,123,255,0.60), 0 0 64px rgba(0,123,255,0.25)",
+                }}
+              />
+              <Link href="#pricing" style={{
+                padding: "14px 28px", borderRadius: 10, fontSize: 15,
+                border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)",
+                textDecoration: "none",
+              }}>
+                Preise ansehen
+              </Link>
+            </div>
+
+            <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
+              Exklusive Agency-Konditionen · Keine Mindestlaufzeit · DSGVO-konform
+            </p>
+
+            {/* Animated trust stats */}
+            <AgencyStats />
           </div>
         </section>
 
@@ -186,7 +188,7 @@ export default function AgencyPage() {
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px", textAlign: "center" }}>
           <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(122,166,255,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>White-Label Dashboard</p>
           <h2 style={{ fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, margin: "0 0 48px", letterSpacing: "-0.025em", color: "#fff" }}>
-            Dein Branding. Deine Kunden. Dein Dashboard.
+            Ihr Branding. Ihre Kunden. Ihr Dashboard.
           </h2>
 
           <div style={{ position: "relative", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }}>
@@ -316,7 +318,7 @@ export default function AgencyPage() {
               </div>
             </div>
             <p style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
-              White-Label Report — mit deinem Logo, deiner Farbe, deinem Namen
+              White-Label Report — mit Ihrem Logo, Ihrer Farbe, Ihrem Namen
             </p>
           </div>
         </section>
@@ -335,7 +337,7 @@ export default function AgencyPage() {
             {[
               {
                 num: "01", label: "Connect & Sync", title: "Alles in Sekunden verknüpft",
-                desc: "Verknüpfe deine Kunden-Websites und deine Workflow-Tools (Jira, Trello, Asana) in Sekunden. Kein Plugin, kein Hosting-Zugang — einfach URL eintragen und los.",
+                desc: "Verknüpfen Sie Ihre Kunden-Websites und Ihre Workflow-Tools (Jira, Trello, Asana) in Sekunden. Kein Plugin, kein Hosting-Zugang — einfach URL eintragen und los.",
                 color: "#7aa6ff",
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -347,7 +349,7 @@ export default function AgencyPage() {
               },
               {
                 num: "02", label: "Automatischer Deep-Scan", title: "KI übernimmt den Wachdienst",
-                desc: "Die KI scannt täglich oder wöchentlich auf BFSG-Konformität, Technik-Fehler und Performance. Fehler landen automatisch als Ticket — direkt wo dein Team arbeitet.",
+                desc: "Die KI scannt täglich oder wöchentlich auf BFSG-Konformität, Technik-Fehler und Performance. Fehler landen automatisch als Ticket — direkt wo Ihr Team arbeitet.",
                 color: "#8df3d3",
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -358,8 +360,8 @@ export default function AgencyPage() {
                 pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich"],
               },
               {
-                num: "03", label: "White-Label Reporting", title: "Kassierende Reports in deinem Design",
-                desc: "Kassiere monatlich für deine Wartung mit professionellen Reports in DEINEM Agentur-Design. Automatisch generiert, automatisch versendet — mit deinem Logo und deiner Farbe.",
+                num: "03", label: "White-Label Reporting", title: "Professionelle Reports in Ihrem Design",
+                desc: "Kassieren Sie monatlich für Ihre Wartung mit professionellen Reports in IHREM Agentur-Design. Automatisch generiert, automatisch versendet — mit Ihrem Logo und Ihrer Farbe.",
                 color: "#c084fc",
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -368,7 +370,7 @@ export default function AgencyPage() {
                     <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                   </svg>
                 ),
-                pills: ["Dein Logo & Farben", "KI-Zusammenfassung", "Auto-Versand"],
+                pills: ["Ihr Logo & Farben", "KI-Zusammenfassung", "Auto-Versand"],
               },
             ].map((step) => (
               <div key={step.num} style={{
@@ -435,13 +437,13 @@ export default function AgencyPage() {
 
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(192,132,252,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-              Deine Schaltzentrale
+              Ihre Schaltzentrale
             </p>
             <h2 style={{ fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em" }}>
               Alles verbunden. Nichts übersehen.
             </h2>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
-              Verbinde deine Lieblingstools mit einem Klick. Fehler landen automatisch dort, wo du arbeitest.
+              Verbinden Sie Ihre Lieblingstools mit einem Klick. Fehler landen automatisch dort, wo Sie arbeiten.
             </p>
           </div>
 
@@ -568,7 +570,7 @@ export default function AgencyPage() {
             zIndex: 1, pointerEvents: "none",
           }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "rgba(141,243,211,0.7)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-              Berechne dein zusätzliches monatliches Potenzial
+              Berechnen Sie Ihr zusätzliches monatliches Potenzial
             </p>
           </div>
           <RoiCalculator />
@@ -581,25 +583,25 @@ export default function AgencyPage() {
             Warum Agenturen Zeit verlieren.
           </h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", margin: "0 0 48px", maxWidth: 560, lineHeight: 1.7 }}>
-            Drei Situationen, die du kennst. Und die dich jeden Monat Stunden und Vertrauen kosten.
+            Drei Situationen, die Sie kennen. Und die Sie jeden Monat Stunden und Vertrauen kosten.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[
               {
                 icon: "📋",
-                title: "Manuelle Reports fressen dein Wochenende",
-                desc: "20 Kunden, 20 individuelle Reports. Recherche, Screenshots, Formatierung, versenden. Jede Stunde die du dafür ausgibst, kannst du nicht verkaufen.",
+                title: "Manuelle Reports fressen Ihr Wochenende",
+                desc: "20 Kunden, 20 individuelle Reports. Recherche, Screenshots, Formatierung, versenden. Jede Stunde, die Sie dafür aufwenden, können Sie nicht verkaufen.",
                 quote: `\u201ESamstag, 14 Uhr. Ich sitze wieder an Reports statt mit meiner Familie.\u201C`,
               },
               {
                 icon: "📞",
-                title: "Fehler bemerkst du, wenn der Kunde anruft",
-                desc: "SSL abgelaufen. Website offline. Google-Index verschwunden. Du erfährst es nicht als Erster — der Kunde schon. Das kostet Vertrauen, das du in Monaten aufgebaut hast.",
+                title: "Fehler bemerken Sie, wenn der Kunde anruft",
+                desc: "SSL abgelaufen. Website offline. Google-Index verschwunden. Sie erfahren es nicht als Erste — der Kunde schon. Das kostet Vertrauen, das Sie in Monaten aufgebaut haben.",
                 quote: `\u201EWarum habt ihr das nicht gesehen? Ihr betreut ja unsere Website.\u201C`,
               },
               {
                 icon: "⚖️",
-                title: "BFSG-Haftung: du haftest, nicht der Kunde",
+                title: "BFSG-Haftung: Sie haften, nicht der Kunde",
                 desc: "Das Barrierefreiheitsstärkungsgesetz gilt seit Juni 2025. Wer die Website wartet, trägt Mitverantwortung. Ein manuelles WCAG-Audit kostet 4–8h pro Website — unmöglich skalierbar.",
                 quote: `\u201EWir brauchen eine WCAG-konforme Website. Kannst du das garantieren?\u201C`,
               },
@@ -641,10 +643,10 @@ export default function AgencyPage() {
                 KAUFARGUMENT NR. 1 FÜR AGENTUREN
               </div>
               <h2 style={{ margin: "0 0 12px", fontSize: "clamp(28px, 3.5vw, 46px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                Dein Tool. Dein Branding. Deine Marge.
+                Ihr Tool. Ihr Branding. Ihre Marge.
               </h2>
               <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)", maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Versende professionelle PDF-Reports mit deinem Agentur-Logo und in deinen Markenfarben. WebsiteFix bleibt im Hintergrund – du bist der Experte für deine Kunden.
+                Versenden Sie professionelle PDF-Reports mit Ihrem Agentur-Logo und in Ihren Markenfarben. WebsiteFix bleibt im Hintergrund – Sie sind der Experte für Ihre Kunden.
               </p>
             </div>
 
@@ -668,7 +670,7 @@ export default function AgencyPage() {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
                     bg: "rgba(22,163,74,0.12)", border: "rgba(22,163,74,0.25)",
                     title: "Report wird automatisch versendet",
-                    desc: "Am 1. jeden Monats landet der PDF-Report direkt beim Kunden — mit deinem Absender, deinem Branding.",
+                    desc: "Am 1. jeden Monats landet der PDF-Report direkt beim Kunden — mit Ihrem Absender, Ihrem Branding.",
                   },
                 ].map(f => (
                   <div key={f.title} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -756,7 +758,7 @@ export default function AgencyPage() {
                   background: "#0b0c10", border: "1px solid rgba(122,166,255,0.3)",
                   fontSize: 11, fontWeight: 600, color: "#7aa6ff",
                 }}>
-                  ← deine Farbe & dein Logo
+                  ← Ihre Farbe & Ihr Logo
                 </div>
               </div>
             </div>
@@ -772,7 +774,7 @@ export default function AgencyPage() {
                 Gebaut für Agenturen, die skalieren.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
-                Jedes Feature ist darauf ausgelegt, deinen Workflow zu automatisieren und deine Kunden zu begeistern.
+                Jedes Feature ist darauf ausgelegt, Ihren Workflow zu automatisieren und Ihre Kunden zu begeistern.
               </p>
             </div>
 
@@ -790,7 +792,7 @@ export default function AgencyPage() {
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                   <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Neue Umsatzpotenziale</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
-                    Verwandle deine Wartungsleistungen in monatlich wiederkehrende Umsätze. Automatisierte BFSG-Audits und Sicherheits-Checks rechtfertigen höhere Wartungspauschalen – ohne zusätzlichen Aufwand.
+                    Verwandeln Sie Ihre Wartungsleistungen in monatlich wiederkehrende Umsätze. Automatisierte BFSG-Audits und Sicherheits-Checks rechtfertigen höhere Wartungspauschalen – ohne zusätzlichen Aufwand.
                   </p>
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["WCAG 2.1 AA vollständig", "Audit-Trail als Nachweis", "Automatische Meldung bei Verstoß", "BFSG Haftungsschutz-Monitor"].map(b => (
@@ -818,7 +820,7 @@ export default function AgencyPage() {
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                   <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Null manueller Aufwand</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
-                    Am 1. jeden Monats wird automatisch ein professioneller PDF-Report mit deinem Logo, deiner Farbe und einer KI-generierten Management-Zusammenfassung an jeden Kunden versendet.
+                    Am 1. jeden Monats wird automatisch ein professioneller PDF-Report mit Ihrem Logo, Ihrer Farbe und einer KI-generierten Management-Zusammenfassung an jeden Kunden versendet.
                   </p>
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Agentur-Logo & Primärfarbe", "KI-Zusammenfassung auf Agentur-Niveau", "PDF-Export + direkter E-Mail-Versand", "Kein WebsiteFix-Branding sichtbar"].map(b => (
@@ -844,7 +846,7 @@ export default function AgencyPage() {
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                   <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Kunden langfristig binden</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
-                    Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich sofort. Dein Team arbeitet immer am aktuellen Stand — ohne Copy-Paste.
+                    Befunde werden direkt als Jira-Tickets, Trello-Karten oder Asana-Tasks erstellt. Slack meldet sich sofort. Ihr Team arbeitet immer am aktuellen Stand — ohne Copy-Paste.
                   </p>
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Jira · Trello · Asana Integration", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall", "Lückenloser Audit-Trail"].map(b => (
@@ -884,7 +886,7 @@ export default function AgencyPage() {
                   <span style={{ color: "rgba(255,255,255,0.45)" }}>sondern jede einzelne Unterseite.</span>
                 </h3>
                 <p style={{ margin: "0 0 20px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 640 }}>
-                  Unser Crawler analysiert automatisch <strong style={{ color: "rgba(255,255,255,0.85)" }}>jede Unterseite</strong> der Kundendomain — nicht nur die Startseite. Die KI findet dabei ca. <strong style={{ color: "rgba(255,255,255,0.85)" }}>50% der technischen Barrieren vollautomatisch</strong>. Den Rest erledigt dein Team mit unseren präzisen, seiten-genauen Reports — mit exakten URLs, Fehlerbeschreibungen und Code-Fixes.
+                  Unser Crawler analysiert automatisch <strong style={{ color: "rgba(255,255,255,0.85)" }}>jede Unterseite</strong> der Kundendomain — nicht nur die Startseite. Die KI findet dabei ca. <strong style={{ color: "rgba(255,255,255,0.85)" }}>50% der technischen Barrieren vollautomatisch</strong>. Den Rest erledigt Ihr Team mit unseren präzisen, seiten-genauen Reports — mit exakten URLs, Fehlerbeschreibungen und Code-Fixes.
                 </p>
                 <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
                   {["Sitemap + BFS-Crawl", "Seitentyp-Klassifikation", "Aggregierte Fehler-Reports", "KI-Batch-Analyse"].map(f => (
@@ -1044,7 +1046,7 @@ export default function AgencyPage() {
             <div style={{ position: "absolute", top: "-50%", left: "-10%", width: "50%", height: "200%", background: "radial-gradient(ellipse, rgba(0,123,255,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative" }}>
               <h2 style={{ margin: "0 0 10px", fontSize: "clamp(22px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Deine erste Website<br />scannst du kostenlos.
+                Starten Sie jetzt —<br />erste Website kostenlos.
               </h2>
               <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
                 Keine Installation. Ergebnis in unter 60 Sekunden.
