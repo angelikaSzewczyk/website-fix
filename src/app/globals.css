@@ -3557,6 +3557,14 @@ html, body {
   .wf-feature-card__text { font-size: 12px; }
 }
 
+/* ===== STEPS SECTION — responsive padding (matches feature cards) ===== */
+@media (max-width: 768px) {
+  .wf-steps-section { padding: 64px 20px !important; }
+}
+@media (max-width: 480px) {
+  .wf-steps-section { padding: 48px 16px !important; }
+}
+
 /* ===== HERO SECTION — responsive padding ===== */
 .wf-hero {
   max-width: 1100px;

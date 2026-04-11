@@ -15,45 +15,50 @@ const STEPS = [
   {
     num: "01",
     label: "Schritt 01",
-    title: "Website scannen",
-    desc: "Kein Plugin, kein Hosting-Zugang nötig. Einfach deine URL eintragen und unser System analysiert deine Seite sofort.",
+    title: "Externer Deep Scan",
+    desc: "Trage deine URL ein. Unsere Engine crawlt bis zu 25 Unterseiten und identifiziert Barrierefreiheits-Fehler und technische SEO-Blocker – ohne Installation.",
     color: "#7aa6ff",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <line x1="11" y1="8" x2="11" y2="14"/>
+        <line x1="8" y1="11" x2="14" y2="11"/>
       </svg>
     ),
-    pills: ["1-Klick Setup", "Kein Plugin", "Sofort-Start"],
+    pills: ["Kein Login", "BFSG-Check", "Live-Analyse"],
   },
   {
     num: "02",
     label: "Schritt 02",
-    title: "Überwachung aktiv",
-    desc: "Unsere KI scannt deine Seite täglich auf Sicherheitslücken, Performance-Einbußen und gesetzliche Anforderungen wie das BFSG 2025.",
+    title: "Plugin-Deep-Insight",
+    desc: "Verbinde unser Read-only Plugin für eine Tiefenprüfung deiner Plugins, Themes und Datenbank-Health. Maximale Sicherheit ohne Schreibrechte.",
     color: "#8df3d3",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+        <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
+        <line x1="16" y1="8" x2="2" y2="22"/>
+        <line x1="17.5" y1="15" x2="9" y2="15"/>
       </svg>
     ),
-    pills: ["24/7 Monitoring", "Sicherheits-Check", "Täglich"],
+    pills: ["Read-only", "Plugin-Audit", "Core-Check"],
   },
   {
     num: "03",
     label: "Schritt 03",
-    title: "Bericht erhalten",
-    desc: "Du erhältst klare, verständliche Status-Berichte. Bei Problemen wirst du sofort informiert – so bleibt deine Seite immer online und sicher.",
+    title: "Reporting & Fix-Anleitungen",
+    desc: "Erhalte präzise Anleitungen zur Fehlerbehebung. Aktiviere das 24/7 Monitoring, um bei neuen Fehlern oder Gesetzesänderungen sofort alarmiert zu werden.",
     color: "#c084fc",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
         <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <polyline points="10 17 8 17 6 19"/>
+        <polyline points="14 17 16 17 18 19"/>
       </svg>
     ),
-    pills: ["Echtzeit-Alarm", "Einfache Reports", "Auto-Fix"],
+    pills: ["Echtzeit-Alarm", "Fix-Guides", "Agentur-Reports"],
   },
 ];
 
@@ -364,12 +369,12 @@ export default function Page() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
         {/* 3 STEPS */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center" }}>
+        <section className="wf-steps-section" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em", textAlign: "center" }}>
             So funktioniert es
           </p>
           <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 56px", letterSpacing: "-0.02em", textAlign: "center" }}>
-            In drei Schritten zu einer sorgenfreien Website.
+            In drei Schritten zur BFSG-konformen Website.
           </h2>
 
           <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
@@ -385,7 +390,7 @@ export default function Page() {
                 {/* Background number watermark */}
                 <div style={{
                   position: "absolute", right: 20, top: 16,
-                  fontSize: 64, fontWeight: 900, color: `${step.color}08`,
+                  fontSize: 64, fontWeight: 900, color: `${step.color}04`,
                   lineHeight: 1, userSelect: "none", pointerEvents: "none",
                   letterSpacing: "-0.04em",
                 }}>
