@@ -1110,39 +1110,53 @@ export default function AgencyPage() {
         </section>
 
         {/* CTA BANNER */}
-        <section style={{ maxWidth: 1100, margin: "0 auto 80px", padding: "60px 24px 0" }}>
-          <div style={{
-            padding: "clamp(40px, 5vw, 64px) clamp(28px, 5vw, 56px)",
-            borderRadius: 20,
-            background: "linear-gradient(135deg, #0d1520 0%, #0b0c10 50%, #0a0f1a 100%)",
-            border: "1px solid rgba(0,123,255,0.2)",
-            boxShadow: "0 0 80px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
-            display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 32,
-            position: "relative", overflow: "hidden",
-          }}>
-            <div style={{ position: "absolute", top: "-50%", left: "-10%", width: "50%", height: "200%", background: "radial-gradient(ellipse, rgba(0,123,255,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
-            <div style={{ position: "relative" }}>
-              <h2 style={{ margin: "0 0 10px", fontSize: "clamp(22px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Starten Sie jetzt —<br />erste Website kostenlos.
-              </h2>
-              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                Keine Installation. Ergebnis in unter 60 Sekunden.
-              </p>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
-              <CheckoutButton
-                plan="agency_core"
-                label="Jetzt Agency-Account erstellen →"
-                style={{
-                  padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,
-                  background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                  color: "#fff", border: "none", whiteSpace: "nowrap",
-                  boxShadow: "0 4px 24px rgba(0,123,255,0.4)",
-                }}
-              />
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
-                Agency Starter ab 99€/Monat · Jederzeit kündbar
-              </span>
+        <section style={{
+          position: "relative",
+          padding: "60px 24px 80px",
+          backgroundColor: "#0d1520",
+          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          {/* Radial mask */}
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #0d1520 100%)" }} />
+
+          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+            <div className="wf-agency-cta-banner" style={{
+              padding: "clamp(40px, 5vw, 64px) clamp(28px, 5vw, 56px)",
+              borderRadius: 20,
+              background: "linear-gradient(135deg, rgba(0,123,255,0.07) 0%, rgba(0,0,0,0.35) 100%)",
+              border: "1px solid rgba(0,123,255,0.2)",
+              boxShadow: "0 0 80px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
+              display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 32,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: "-50%", left: "-10%", width: "50%", height: "200%", background: "radial-gradient(ellipse, rgba(0,123,255,0.10) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div className="wf-agency-cta-text" style={{ position: "relative" }}>
+                <h2 style={{ margin: "0 0 10px", fontSize: "clamp(22px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
+                  Starten Sie jetzt —<br />erste Website kostenlos.
+                </h2>
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                  Keine Installation. Ergebnis in unter 60 Sekunden.
+                </p>
+              </div>
+              <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>
+                <div className="wf-agency-cta-btn">
+                  <CheckoutButton
+                    plan="agency_core"
+                    label="Jetzt Agency-Account erstellen →"
+                    style={{
+                      padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,
+                      background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                      color: "#fff", border: "none", whiteSpace: "nowrap",
+                      boxShadow: "0 4px 24px rgba(0,123,255,0.4)",
+                    }}
+                  />
+                </div>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
+                  Agency Starter ab 99€/Monat · Monatlich kündbar. Keine Mindestlaufzeit.
+                </span>
+              </div>
             </div>
           </div>
         </section>
