@@ -199,20 +199,20 @@ const PLANS = [
 
 const FAQ = [
   {
-    q: "Funktioniert WebsiteFix mit jedem WordPress-Theme?",
-    a: "Ja – WebsiteFix analysiert die fertig gerenderte Seite, unabhängig davon, mit welchem Theme oder Page-Builder sie gebaut wurde. Ob Elementor, Divi, Kadence, GeneratePress oder vollständig custom entwickelt: der Scanner liest das ausgelieferte HTML, CSS und JavaScript, genau so wie Nutzer und Google es sehen.",
+    q: "Wie hilft mir WebsiteFix konkret bei der BFSG-Pflicht 2025?",
+    a: "WebsiteFix führt kontinuierliche Audits gemäß WCAG 2.1/2.2 durch. Sie erhalten nicht nur Fehlerlisten, sondern rechtssichere Dokumentationen und Protokolle, die nachweisen, dass Sie Ihre Website aktiv barrierefrei halten – ein entscheidender Faktor für die Haftungsminimierung ab Juni 2025.",
   },
   {
-    q: "Muss ich technische Änderungen an meiner Website vornehmen?",
-    a: "Nein. WebsiteFix arbeitet rein extern – kein Plugin, kein Code-Eingriff, kein Risiko für die Stabilität deiner Seite. Du gibst deine URL ein, wir übernehmen den Rest. Deine Live-Website bleibt zu jedem Zeitpunkt vollständig unberührt.",
+    q: "Muss ich ein Plugin installieren?",
+    a: "Für den Basis-Scan genügt Ihre URL. Um jedoch tiefe Einblicke in Core-Dateien und Plugin-Konflikte zu erhalten, bieten wir unser 'Deep-Insight'-Plugin an. Dieses arbeitet im Read-only-Modus, verändert keinen Code und beeinträchtigt niemals die Performance Ihrer Live-Seite.",
   },
   {
-    q: "Ersetzt WebsiteFix eine Rechtsberatung zum BFSG?",
-    a: "WebsiteFix liefert dir eine technische Validierungsbasis nach WCAG 2.1 AA – den Nachweis, dass du konkrete Maßnahmen ergriffen hast. Für individuelle Rechtsfragen zur BFSG-Pflicht empfehlen wir ergänzend einen spezialisierten Anwalt. Unsere Dokumentation ist so aufgebaut, dass sie als Grundlage für rechtliche Prüfungen und Behördenanfragen genutzt werden kann.",
+    q: "Kann ich WebsiteFix für meine Kunden nutzen (Agenturen)?",
+    a: "Absolut. Unsere Agency-Pläne sind genau darauf ausgelegt. Sie können Berichte im White-Label-Design exportieren, eigene Dashboards für Kunden anlegen und WebsiteFix als wertvolles Maintenance-Feature in Ihre Wartungsverträge integrieren.",
   },
   {
-    q: "Wie werde ich informiert, wenn ein neues Problem gefunden wird?",
-    a: "Im Free- und Pro-Plan erhältst du sofort eine E-Mail mit einem strukturierten Bericht und konkreten Fix-Anleitungen. Ab dem Agency-Starter-Plan kannst du zusätzlich Slack, Jira oder dein eigenes Projektmanagement-Tool anbinden – so landen Probleme direkt als Tickets in deinem Workflow, ohne manuelle Zwischenschritte.",
+    q: "Was unterscheidet WebsiteFix von kostenlosen Scannern?",
+    a: "Während kostenlose Tools oft nur die Startseite oberflächlich prüfen, bietet WebsiteFix ein permanentes Monitoring des gesamten Systems – inklusive Plugin-Schwachstellen, Server-Reaktionszeiten und tiefgreifenden Barrierefreiheit-Audits auf Unterseiten-Ebene.",
   },
 ];
 
