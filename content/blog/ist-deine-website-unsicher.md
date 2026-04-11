@@ -1,6 +1,6 @@
 ---
-title: "Ist deine Website unsicher? 7 Anzeichen, dass deine Seite ein Sicherheitsproblem hat"
-description: "Viele Websites haben Sicherheitsprobleme ohne es zu merken. Diese Warnzeichen solltest du kennen."
+title: "Ist Ihre Website unsicher? 7 Anzeichen, dass Ihre Seite ein Sicherheitsproblem hat"
+description: "Viele Websites haben Sicherheitsprobleme ohne es zu merken. Diese Warnzeichen solltest Sie kennen."
 date: "2026-03-07"
 category: "compliance"
 tags: ["website sicherheit", "website unsicher", "security", "website probleme"]
@@ -19,7 +19,7 @@ Hier sind typische Warnzeichen.
 
 ## 1) Plötzlich neue unbekannte Inhalte
 
-**Problem:** Fremde Inhalte erscheinen auf deiner Website.
+**Problem:** Fremde Inhalte erscheinen auf Ihrer Website.
 
 **Fix:**  
 Website sofort prüfen und Schadcode entfernen.
@@ -82,11 +82,11 @@ Serverlogs analysieren.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - ungewöhnliches Verhalten zeigt
 - Sicherheitswarnungen erscheinen
-- oder du dir unsicher bist
+- oder Sie Ihnen unsicher bist
 
 👉 **Fix #4 – Website Problem analysieren & beheben**  
 [Zur Warteliste →](/#waitlist)

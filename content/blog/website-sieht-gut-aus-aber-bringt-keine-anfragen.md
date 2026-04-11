@@ -1,6 +1,6 @@
 ---
 title: "Website sieht gut aus, aber bringt keine Anfragen? 12 Conversion-Quick-Wins"
-description: "Du hast Besucher, aber keine Leads? Hier sind 12 schnelle UX/Trust/CTA-Fixes (ohne Relaunch), die sofort mehr Klicks bringen."
+description: "Sie haben Besucher, aber keine Leads? Hier sind 12 schnelle UX/Trust/CTA-Fixes (ohne Relaunch), die sofort mehr Klicks bringen."
 date: "2026-02-18"
 category: "compliance"
 tags: ["conversion", "cta", "ux", "leads", "trust"]
@@ -10,7 +10,7 @@ status: "published"
 Viele Websites sehen modern aus – aber sie **verkaufen nicht**.  
 Das Problem ist selten das Design. Es sind **kleine Conversion-Details**, die Vertrauen und Klicks kosten.
 
-Hier sind **12 Quick-Wins**, die du ohne Relaunch verbessern kannst.
+Hier sind **12 Quick-Wins**, die Sie ohne Relaunch verbessern kannst.
 
 ## Schnellcheck (5 Minuten)
 - Ist der **CTA** sofort sichtbar (oberhalb der Falz)?
@@ -54,7 +54,7 @@ Hier sind **12 Quick-Wins**, die du ohne Relaunch verbessern kannst.
 ## 7) Kein „Was passiert nach der Zahlung?“
 **Quick-Win**
 - Direkt unter Button:
-  - „Nach Zahlung bekommst du sofort eine Mail – einfach antworten, wir starten.“
+  - „Nach Zahlung bekommen Sie sofort eine Mail – einfach antworten, wir starten.“
 
 ## 8) Formular wirkt wie „viel Arbeit“
 **Quick-Win**
@@ -71,7 +71,7 @@ Hier sind **12 Quick-Wins**, die du ohne Relaunch verbessern kannst.
 - ETA stärker betonen: 24–72h
 - Notfall-Fix (#6) prominent
 
-## 11) Tracking fehlt → du optimierst blind
+## 11) Tracking fehlt → Sie optimierst blind
 **Quick-Win**
 - Track: Fix-Klicks, Formular, Stripe-Start, Erfolg
 - Dann optimieren nach Daten, nicht Gefühl
@@ -82,7 +82,7 @@ Hier sind **12 Quick-Wins**, die du ohne Relaunch verbessern kannst.
 - Blog-CTA je Kategorie passend (Speed → Fix #2 etc.)
 
 ## Wann lohnt sich ein Conversion-Fix?
-Wenn du Besucher hast, aber zu wenig Klicks/Anfragen:
+Wenn Sie Besucher haben, aber zu wenig Klicks/Anfragen:
 
 👉 **Fix #5 – Kleine Änderungen & Bugs (bis 60 Minuten)**  
 Wir setzen die wichtigsten Conversion-Quick-Wins direkt um.  

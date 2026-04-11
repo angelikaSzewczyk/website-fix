@@ -1,5 +1,5 @@
 ---
-title: "DNS Fehler: Warum deine Website plötzlich nicht erreichbar ist"
+title: "DNS Fehler: Warum Ihre Website plötzlich nicht erreichbar ist"
 description: "DNS-Probleme können dazu führen, dass eine Website nicht erreichbar ist. Das sind die häufigsten Ursachen."
 date: "2026-02-27"
 category: "compliance"
@@ -54,7 +54,7 @@ DNS-Propagation abwarten.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - plötzlich nicht erreichbar ist
 - DNS-Fehler zeigt

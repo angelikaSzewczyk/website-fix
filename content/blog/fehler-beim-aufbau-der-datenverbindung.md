@@ -55,7 +55,7 @@ Hosting prüfen.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - diese Fehlermeldung zeigt
 - Inhalte nicht mehr lädt

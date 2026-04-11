@@ -44,6 +44,16 @@ const nextConfig = {
         destination: '/blog/website-nicht-erreichbar-checkliste-zur-schnellen-fehlerbehebung',
         permanent: true,
       },
+      {
+        source: '/blog/website-zeigt-nur-white-screen-wie-loesen',
+        destination: '/blog/website-zeigt-nur-weisse-seite',
+        permanent: true,
+      },
+      {
+        source: '/blog/wordpress-zeigt-nur-eine-weisse-seite-so-loest-du-das-problem',
+        destination: '/blog/website-zeigt-nur-weisse-seite',
+        permanent: true,
+      },
     ]
   },
 };

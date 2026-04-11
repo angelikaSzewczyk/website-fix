@@ -1,5 +1,5 @@
 ---
-title: "Website nach Update kaputt? Warum das so oft passiert – und was du tun solltest"
+title: "Website nach Update kaputt? Warum das so oft passiert – und was Sie tun solltest"
 description: "Nach Updates treten häufig Fehler auf: White Screen, Critical Error, 500er. Das sind die Ursachen – und die Lösung."
 date: "2026-02-27"
 category: "compliance"
@@ -11,7 +11,7 @@ status: "published"
 
 Das passiert **sehr häufig** nach Updates.
 
-Hier erfährst du warum – und was jetzt wichtig ist.
+Hier erfährst Sie warum – und was jetzt wichtig ist.
 
 ## Typische Fehler nach Updates
 - White Screen
@@ -44,7 +44,7 @@ Blindes Deaktivieren kann:
 
 Besser: **Ursache finden, nicht Symptome**.
 
-## Was du jetzt tun solltest
+## Was Sie jetzt tun solltest
 1. Keine weiteren Änderungen vornehmen  
 2. Fehler analysieren  
 3. Website schnell stabilisieren  
@@ -52,7 +52,7 @@ Besser: **Ursache finden, nicht Symptome**.
 Je früher reagiert wird, desto einfacher ist der Fix.
 
 ## Wann sich ein Fix lohnt
-Wenn deine Website:
+Wenn Ihre Website:
 - plötzlich nicht mehr lädt
 - Fehler anzeigt
 - nach einem Update Probleme macht
@@ -65,4 +65,4 @@ Wenn deine Website:
 Oft innerhalb von **24 Stunden**.
 
 ### Ist meine Website danach wieder sicher?
-Ja – inklusive kurzer Erklärung, was du künftig vermeiden solltest.
+Ja – inklusive kurzer Erklärung, was Sie künftig vermeiden solltest.

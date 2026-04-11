@@ -1,5 +1,5 @@
 ---
-title: "Warum deine Website plötzlich nicht mehr funktioniert"
+title: "Warum Ihre Website plötzlich nicht mehr funktioniert"
 description: "Wenn eine Website plötzlich Fehler zeigt, stecken oft Updates, Plugins oder Serverprobleme dahinter."
 date: "2026-03-02"
 category: "compliance"
@@ -54,7 +54,7 @@ Code analysieren.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - plötzlich Fehler zeigt
 - Funktionen verliert

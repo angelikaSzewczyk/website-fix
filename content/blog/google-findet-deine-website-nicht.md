@@ -1,19 +1,19 @@
 ---
-title: "Google findet deine Website nicht? 11 Gründe + Fixes (Indexierung, Sitemap, Canonical)"
-description: "Deine Seite taucht nicht bei Google auf? Die häufigsten Ursachen: Noindex, Canonical, Sitemap, robots.txt, Weiterleitungen – plus Quick-Wins ohne Relaunch."
+title: "Google findet Ihre Website nicht? 11 Gründe + Fixes (Indexierung, Sitemap, Canonical)"
+description: "Ihre Seite taucht nicht bei Google auf? Die häufigsten Ursachen: Noindex, Canonical, Sitemap, robots.txt, Weiterleitungen – plus Quick-Wins ohne Relaunch."
 date: "2026-02-18"
 category: "compliance"
 tags: ["google", "indexierung", "search console", "sitemap", "noindex"]
 status: "published"
 ---
 
-Wenn deine Website **nicht in Google auftaucht**, ist das fast immer ein technisches Detail – kein „SEO-Problem“.  
-Mit diesen Checks findest du die Ursache oft in **10–30 Minuten**.
+Wenn Ihre Website **nicht in Google auftaucht**, ist das fast immer ein technisches Detail – kein „SEO-Problem“.  
+Mit diesen Checks finden Sie die Ursache oft in **10–30 Minuten**.
 
 ## Schnellcheck (5 Minuten)
-- Suche bei Google: `site:deinedomain.de`
-- Öffne die Google Search Console → **Indexierung** → „Seiten“
-- Prüfe: gibt es eine **Sitemap**? (z. B. `/sitemap.xml`)
+- Suchen Sie bei Google: `site:deinedomain.de`
+- Öffnen Sie die Google Search Console → **Indexierung** → „Seiten“
+- Prüfen Sie: gibt es eine **Sitemap**? (z. B. `/sitemap.xml`)
 
 ## 1) Seite ist auf „noindex“ gesetzt (Klassiker)
 **Quick-Win**
@@ -72,25 +72,25 @@ Google indexiert dann ggf. eine andere Version oder gar keine.
 - 2–4 Wochen sind normal
 - Weiter Inhalte veröffentlichen + interne Links setzen
 
-## 12) Domain-Ruf (bei gebrauchten Domains)
-Falls du eine bereits genutzte Domain übernommen hast, kann Google sie als Spam eingestuft haben.
+## 12) Domain-Rufen Sie (bei gebrauchten Domains)
+Falls Sie eine bereits genutzte Domain übernommen hast, kann Google sie als Spam eingestuft haben.
 
 **Quick-Win**
-- Suche bei Google: `site:deinedomain.de`
+- Suchen Sie bei Google: `site:deinedomain.de`
 - Wenn keine Ergebnisse kommen, obwohl die Seite läuft: Search Console → **Sicherheit und manuelle Maßnahmen** prüfen
 
 ## Wann lohnt sich ein Fix?
-Wenn du willst, dass Google deine Seite **sauber erfasst** und du wieder sichtbar wirst:
+Wenn Sie wollen, dass Google Ihre Seite **sauber erfasst** und Sie wieder sichtbar wirst:
 
-👉 **[WebsiteFix — KI-Diagnose für deine Website](/#waitlist)**
-Frühen Zugang sichern — das Tool analysiert automatisch, warum Google dich nicht findet.
+👉 **[WebsiteFix — KI-Diagnose für Ihre Website](/#waitlist)**
+Frühen Zugang sichern — das Tool analysiert automatisch, warum Google sich nicht findet.
 
 ## FAQ
 **Wie lange dauert es, bis Google indexiert?**  
 Neue Seiten: oft Tage bis Wochen. Mit sauberer Sitemap meist schneller.
 
 **Kann ich Indexierung „erzwingen”?**  
-Du kannst sie anstoßen (URL-Prüfung in der Search Console), aber technische Sperren (noindex, robots.txt) müssen zuerst weg.
+Sie können sie anstoßen (URL-Prüfung in der Search Console), aber technische Sperren (noindex, robots.txt) müssen zuerst weg.
 
 **Meine Seite ist bei Google, steht aber ganz hinten — ist das dasselbe Problem?**  
 Nein. Indexiert aber schlecht gerankt ist ein separates Thema: Dann geht es um Inhalte, Keywords und Vertrauen. Erst indexiert sein ist Schritt 1.

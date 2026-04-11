@@ -92,7 +92,7 @@ Unnötige Plugins deaktivieren und löschen.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - langsam lädt
 - Besucher schnell abspringen

@@ -72,7 +72,7 @@ Updates und Sicherheitschecks durchführen.
 
 ## Wann sich Wartung besonders lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - geschäftlich wichtig ist
 - regelmäßig Besucher hat

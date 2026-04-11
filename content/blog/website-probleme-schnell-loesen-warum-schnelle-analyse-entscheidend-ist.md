@@ -74,7 +74,7 @@ Viele Probleme lassen sich dadurch schneller beheben.
 
 ## Wann professionelle Hilfe sinnvoll ist
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - plötzlich Fehler zeigt
 - nicht mehr richtig lädt

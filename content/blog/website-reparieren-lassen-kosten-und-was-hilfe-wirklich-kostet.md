@@ -73,7 +73,7 @@ Das macht die Kosten planbarer.
 
 ## Wann sich schnelle Hilfe lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - wichtige Funktionen verloren hat
 - Besucher Probleme melden

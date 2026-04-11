@@ -55,7 +55,7 @@ Logs analysieren und Fehler beheben.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - plötzlich eine Fehlermeldung zeigt
 - nicht mehr lädt
@@ -68,7 +68,7 @@ Wenn deine Website:
 
 ### Ist ein 500-Fehler schlimm?
 
-Ja – Besucher können deine Website nicht nutzen.
+Ja – Besucher können Ihre Website nicht nutzen.
 
 ### Kann das schnell behoben werden?
 

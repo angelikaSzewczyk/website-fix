@@ -1,5 +1,5 @@
 ---
-title: "Warum deine Website Besucher hat – aber niemand anfragt"
+title: "Warum Ihre Website Besucher hat – aber niemand anfragt"
 description: "Viele Websites haben Traffic, aber keine Anfragen. Oft sind kleine UX- oder Technikprobleme der Grund."
 date: "2026-03-04"
 category: "compliance"
@@ -77,7 +77,7 @@ Diese Änderungen können die Conversion deutlich erhöhen.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - Besucher hat
 - aber keine Anfragen bringt

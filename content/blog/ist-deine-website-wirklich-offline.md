@@ -1,13 +1,13 @@
 ---
-title: "Ist deine Website wirklich offline? So prüfst du, ob deine Seite nur für dich nicht erreichbar ist"
-description: "Manchmal wirkt eine Website offline, obwohl sie nur für dich nicht lädt. So findest du schnell heraus, was wirklich passiert."
+title: "Ist Ihre Website wirklich offline? So prüfen Sie, ob Ihre Seite nur für sich nicht erreichbar ist"
+description: "Manchmal wirkt eine Website offline, obwohl sie nur für sich nicht lädt. So finden Sie schnell heraus, was wirklich passiert."
 date: "2026-02-16"
 category: "compliance"
 tags: ["website offline", "website down prüfen", "server problem", "website check"]
 status: "published"
 ---
 
-Du öffnest deine Website und sie lädt nicht.
+Sie öffnen Ihre Website und sie lädt nicht.
 
 Sofort stellt sich die Frage:
 
@@ -29,7 +29,7 @@ Seite mit Strg + F5 neu laden oder Browsercache löschen.
 
 ## 2) Internetverbindung instabil
 
-**Problem:** Deine Verbindung lädt Seiten nicht richtig.
+**Problem:** Ihre Verbindung lädt Seiten nicht richtig.
 
 **Fix:**  
 Andere Website testen oder Router kurz neu starten.
@@ -56,7 +56,7 @@ Serverstatus prüfen oder Hosting kontaktieren.
 
 ## 5) Website funktioniert nur auf bestimmten Geräten nicht
 
-**Problem:** Fehler tritt nur auf deinem Computer auf.
+**Problem:** Fehler tritt nur auf Ihrem Computer auf.
 
 **Fix:**  
 Website auf Handy oder anderem Gerät testen.
@@ -65,7 +65,7 @@ Website auf Handy oder anderem Gerät testen.
 
 ## Wie man schnell prüft, ob eine Website wirklich offline ist
 
-Du kannst z.B.:
+Sie können z.B.:
 
 - die Seite auf einem anderen Gerät öffnen
 - eine andere Internetverbindung testen
@@ -77,7 +77,7 @@ Wenn die Seite **für alle Besucher offline ist**, sollte das Problem schnell an
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - plötzlich nicht mehr erreichbar ist
 - Besucher Fehlermeldungen sehen

@@ -1,6 +1,6 @@
 ---
 title: "BFSG 2025: Was Webagenturen jetzt wissen müssen"
-description: "Das Barrierefreiheitsstärkungsgesetz ist seit Juni 2025 in Kraft. Was bedeutet das für Webagenturen und ihre Kunden — und wie schützt du sie?"
+description: "Das Barrierefreiheitsstärkungsgesetz ist seit Juni 2025 in Kraft. Was bedeutet das für Webagenturen und ihre Kunden — und wie schützt Sie sie?"
 date: "2026-04-06"
 category: "compliance"
 tags: ["BFSG", "WCAG", "Barrierefreiheit", "Webagenturen", "Recht"]
@@ -14,7 +14,7 @@ Das BFSG setzt die EU-Richtlinie 2019/882 (European Accessibility Act) in deutsc
 
 ## Welche Websites sind betroffen?
 
-Betroffen sind grundsätzlich alle **gewerblichen Anbieter**, die Verbrauchern Produkte oder Dienstleistungen anbieten — also der Großteil deiner Kundenprojekte. Ausgenommen sind nur Kleinstunternehmen mit weniger als 10 Mitarbeitern *und* weniger als 2 Mio. € Jahresumsatz.
+Betroffen sind grundsätzlich alle **gewerblichen Anbieter**, die Verbrauchern Produkte oder Dienstleistungen anbieten — also der Großteil Ihrer Kundenprojekte. Ausgenommen sind nur Kleinstunternehmen mit weniger als 10 Mitarbeitern *und* weniger als 2 Mio. € Jahresumsatz.
 
 Konkret: Online-Shops, Buchungsportale, Unternehmenswebsites, Dienstleister — all das fällt darunter. WCAG 2.1 auf Level AA ist der Maßstab.
 
@@ -36,7 +36,7 @@ Das Gute: Die meisten dieser Fehler sind schnell behebbar — wenn man weiß, wo
 
 ## Was Agenturen jetzt tun sollten
 
-Der erste Schritt ist eine **Bestandsaufnahme**: Welche Kundenprojekte sind betroffen? Ein automatischer Scan gibt dir in Minuten einen Überblick über die kritischsten Fehler — ohne stundenlange manuelle Audits.
+Der erste Schritt ist eine **Bestandsaufnahme**: Welche Kundenprojekte sind betroffen? Ein automatischer Scan gibt Ihnen in Minuten einen Überblick über die kritischsten Fehler — ohne stundenlange manuelle Audits.
 
 Danach empfiehlt sich ein strukturiertes Vorgehen:
 
@@ -44,7 +44,7 @@ Danach empfiehlt sich ein strukturiertes Vorgehen:
 2. Kunden transparent informieren und dokumentieren
 3. Barrierefreiheit als festen Teil des Entwicklungsprozesses etablieren
 
-WebsiteFix scannt jede Website automatisch auf WCAG-Verstöße — in unter 60 Sekunden. Die KI erklärt jeden Fehler auf Deutsch und zeigt dir, was zu tun ist.
+WebsiteFix scannt jede Website automatisch auf WCAG-Verstöße — in unter 60 Sekunden. Die KI erklärt jeden Fehler auf Deutsch und zeigt Ihnen, was zu tun ist.
 
 
 ---

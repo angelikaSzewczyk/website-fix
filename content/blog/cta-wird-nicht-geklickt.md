@@ -1,5 +1,5 @@
 ---
-title: "Warum deine Website Besucher hat – aber niemand auf den Button klickt"
+title: "Warum Ihre Website Besucher hat – aber niemand auf den Button klickt"
 description: "Traffic ist da, Anfragen fehlen? Oft liegt es nicht an den Besuchern, sondern an CTA, Vertrauen und Klarheit."
 date: "2026-02-27"
 category: "compliance"
@@ -7,7 +7,7 @@ tags: ["cta", "conversion", "ux", "buttons", "leads"]
 status: "published"
 ---
 
-Deine Website hat Besucher.  
+Ihre Website hat Besucher.  
 Aber **niemand klickt**.
 
 Das ist kein Traffic-Problem.  
@@ -44,7 +44,7 @@ Hier sind die häufigsten Gründe, warum Buttons ignoriert werden.
 **Fix:** Kurz, klar, auf den Punkt.
 
 ## Wann sich ein Fix lohnt
-Wenn du denkst:  
+Wenn Sie denkst:  
 „Die Website sieht gut aus – aber bringt keine Anfragen“
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  

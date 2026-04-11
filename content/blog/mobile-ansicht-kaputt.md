@@ -8,7 +8,7 @@ status: "published"
 ---
 
 Über 70 % der Nutzer kommen **mobil**.  
-Wenn deine Website dort kaputt aussieht, verlierst du sofort Vertrauen – und Anfragen.
+Wenn Ihre Website dort kaputt aussieht, verlierst Sie sofort Vertrauen – und Anfragen.
 
 ## Typische Symptome
 - Text läuft über den Rand

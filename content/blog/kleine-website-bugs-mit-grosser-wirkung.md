@@ -61,7 +61,7 @@ Hier sind die **typischsten Mini-Probleme**, die wir fast täglich sehen.
 **Fix:** Kurz prüfen, sofort besser.
 
 ## Wann sich ein Fix lohnt
-Wenn du denkst:  
+Wenn Sie denkst:  
 „Eigentlich passt alles – aber es fühlt sich nicht rund an“
 
 👉 **Fix #5 – Kleine Änderungen & Bugs**  

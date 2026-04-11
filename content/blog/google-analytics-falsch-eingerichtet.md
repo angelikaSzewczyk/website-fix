@@ -1,6 +1,6 @@
 ---
-title: "Google Analytics falsch eingerichtet? 8 häufige Fehler (und wie du sie erkennst)"
-description: "Analytics läuft, aber die Zahlen helfen dir nicht? Diese 8 typischen Tracking-Fehler sorgen für falsche Daten – inkl. schneller Fixes."
+title: "Google Analytics falsch eingerichtet? 8 häufige Fehler (und wie Sie sie erkennst)"
+description: "Analytics läuft, aber die Zahlen helfen Ihnen nicht? Diese 8 typischen Tracking-Fehler sorgen für falsche Daten – inkl. schneller Fixes."
 date: "2026-02-16"
 category: "compliance"
 tags: ["analytics", "tracking", "ga4", "conversion", "events"]
@@ -13,7 +13,7 @@ Das Problem: Tracking ist oft **halb eingerichtet**.
 Hier sind die **häufigsten Fehler**, die wir bei Kunden sehen.
 
 ## Schnellcheck (2 Minuten)
-- Siehst du Seitenaufrufe, aber keine Conversions?
+- sehen Sie Seitenaufrufe, aber keine Conversions?
 - Stimmen Besucherzahlen nicht mit Formularanfragen überein?
 - Gibt es keine Events (CTA, Kontakt, Klicks)?
 - Mehrere Tracking-Tools gleichzeitig aktiv?
@@ -55,7 +55,7 @@ Wenn ja → lies weiter.
 **Fix:** Klare KPIs & einfache Reports.
 
 ## Wann sich ein Fix lohnt
-Wenn du **Zahlen siehst**, aber **keine Entscheidungen treffen kannst**:
+Wenn Sie **Zahlen siehst**, aber **keine Entscheidungen treffen kannst**:
 👉 **Fix #4 – Tracking & Analytics einrichten**  
 [Zur Warteliste →](/#waitlist)
 
@@ -64,4 +64,4 @@ Wenn du **Zahlen siehst**, aber **keine Entscheidungen treffen kannst**:
 Für Traffic ja – für Conversions **nein**.
 
 ### Kann falsches Tracking schaden?
-Ja. Du optimierst sonst auf **falsche Daten**.
+Ja. Sie optimierst sonst auf **falsche Daten**.

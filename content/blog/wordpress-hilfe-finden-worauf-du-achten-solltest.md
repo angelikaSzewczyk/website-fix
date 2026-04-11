@@ -1,6 +1,6 @@
 ---
-title: "WordPress Hilfe finden: Worauf du achten solltest"
-description: "Wenn deine WordPress Website Probleme macht, brauchst du schnell Hilfe. Darauf solltest du achten."
+title: "WordPress Hilfe finden: Worauf Sie achten solltest"
+description: "Wenn Ihre WordPress Website Probleme macht, brauchen Sie schnell Hilfe. Darauf solltest Sie achten."
 date: "2026-03-01"
 category: "compliance"
 tags: ["wordpress hilfe", "wordpress support", "wordpress probleme", "wordpress service"]
@@ -53,7 +53,7 @@ Deshalb ist es hilfreich, wenn:
 
 Gerade bei technischen Problemen ist verständliche Kommunikation wichtig.
 
-Du solltest wissen:
+Sie solltest wissen:
 
 - was genau kaputt ist
 - wie das Problem gelöst wird
@@ -63,7 +63,7 @@ Du solltest wissen:
 
 ## Wann sich professionelle Hilfe lohnt
 
-Wenn deine WordPress Website:
+Wenn Ihre WordPress Website:
 
 - Fehler zeigt
 - sehr langsam ist

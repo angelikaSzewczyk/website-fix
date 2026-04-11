@@ -53,7 +53,7 @@ Performance optimieren.
 
 ## Wann sich ein Fix lohnt
 
-Wenn deine Website:
+Wenn Ihre Website:
 
 - auf Smartphones schlecht funktioniert
 - schwer zu bedienen ist
