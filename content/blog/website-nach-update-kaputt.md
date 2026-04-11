@@ -2,7 +2,7 @@
 title: "Website nach Update kaputt? Warum das so oft passiert – und was du tun solltest"
 description: "Nach Updates treten häufig Fehler auf: White Screen, Critical Error, 500er. Das sind die Ursachen – und die Lösung."
 date: "2026-02-27"
-category: "Technik"
+category: "compliance"
 tags: ["update", "wordpress", "critical error", "website down", "bugs"]
 status: "published"
 ---

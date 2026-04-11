@@ -2,7 +2,7 @@
 title: "Kontaktformular sendet keine E-Mails? So löst du das SMTP-Problem"
 description: "Kunden schreiben dir, aber die Anfragen kommen nie an? Meist liegt es an fehlenden SMTP-Einstellungen oder Spam-Filtern."
 date: "2026-03-16"
-category: "Anfragen"
+category: "compliance"
 tags: ["kontaktformular", "email versand", "smtp", "wordpress", "anfragen kommen nicht an"]
 status: "published"
 ---

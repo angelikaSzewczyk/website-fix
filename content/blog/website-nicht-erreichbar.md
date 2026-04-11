@@ -2,7 +2,7 @@
 title: "Website nicht erreichbar? 5-Minuten-Check & Soforthilfe"
 description: "Deine Seite lädt nicht oder zeigt einen Serverfehler? Nutze unsere Checkliste zur Selbsthilfe oder lass den Fehler sofort vom Profi beheben."
 date: "2026-03-21"
-category: "Technik"
+category: "compliance"
 tags: ["website down", "server fehler", "dns probleme", "hosting hilfe", "website retten"]
 status: "published"
 ---

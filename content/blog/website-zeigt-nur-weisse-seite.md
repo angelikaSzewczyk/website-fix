@@ -2,7 +2,7 @@
 title: "Website zeigt nur eine weiße Seite? Das kannst du jetzt tun (ohne Entwickler)"
 description: "Deine Website ist plötzlich komplett weiß? Keine Panik — deine Daten sind fast immer noch da. Hier sind die 5 häufigsten Ursachen und was du sofort tun kannst, auch ohne Technik-Kenntnisse."
 date: "2026-04-01"
-category: "Technik"
+category: "compliance"
 tags: ["weiße seite", "white screen", "wordpress fehler", "website kaputt", "website reparieren"]
 status: "published"
 ---

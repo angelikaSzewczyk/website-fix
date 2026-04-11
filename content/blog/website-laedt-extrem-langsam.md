@@ -2,7 +2,7 @@
 title: "Website lädt extrem langsam? 7 häufige Ursachen (und wie man sie behebt)"
 description: "Eine langsame Website kostet Besucher und Kunden. Diese technischen Ursachen sorgen oft für schlechte Ladezeiten."
 date: "2026-03-01"
-category: "Technik"
+category: "compliance"
 tags: ["website langsam", "pagespeed", "performance", "wordpress", "website probleme"]
 status: "published"
 ---

@@ -2,7 +2,7 @@
 title: "Warum deine Website Besucher hat – aber niemand anfragt"
 description: "Viele Websites haben Traffic, aber keine Anfragen. Oft sind kleine UX- oder Technikprobleme der Grund."
 date: "2026-03-04"
-category: "Conversion"
+category: "compliance"
 tags: ["conversion", "website anfragen", "ux", "cta", "website analyse"]
 status: "published"
 ---

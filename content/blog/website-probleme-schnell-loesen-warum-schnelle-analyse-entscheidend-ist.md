@@ -2,7 +2,7 @@
 title: "Website Probleme schnell lösen: Warum schnelle Analyse entscheidend ist"
 description: "Viele Websiteprobleme lassen sich schneller lösen, als man denkt. Entscheidend ist eine gezielte Analyse."
 date: "2026-03-08"
-category: "Technik"
+category: "compliance"
 tags: ["website probleme", "website fehler", "website analyse", "website reparieren"]
 status: "published"
 ---

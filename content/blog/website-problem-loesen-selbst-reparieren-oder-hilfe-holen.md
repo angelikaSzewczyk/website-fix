@@ -2,7 +2,7 @@
 title: "WordPress Hilfe finden: Worauf du achten solltest"
 description: "Wenn deine WordPress Website Probleme macht, brauchst du schnell Hilfe. Darauf solltest du achten."
 date: "2026-03-02"
-category: "Technik"
+category: "compliance"
 tags: ["wordpress hilfe", "wordpress support", "wordpress probleme", "wordpress service"]
 status: "published"
 ---

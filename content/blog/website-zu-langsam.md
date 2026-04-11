@@ -2,7 +2,7 @@
 title: "Website zu langsam? 10 häufige Ursachen + Quick-Wins"
 description: "Wenn deine Website langsam lädt: Die häufigsten Bremsen (Bilder, Fonts, Plugins, Cache) und schnelle Maßnahmen ohne Relaunch."
 date: "2026-02-10"
-category: "Performance"
+category: "compliance"
 tags: ["pagespeed", "ladezeit", "performance", "cache"]
 status: "published"
 ---

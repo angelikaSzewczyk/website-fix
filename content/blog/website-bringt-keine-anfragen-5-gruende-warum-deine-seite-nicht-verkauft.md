@@ -2,7 +2,7 @@
 title: "Website bringt keine Anfragen? 5 Gründe, warum du Kunden verlierst"
 description: "Besucher sind da, aber das Telefon bleibt stumm? Erfahre, warum deine Seite keine Leads generiert und wie du sie zur Anfragemaschine machst."
 date: "2026-03-21"
-category: "Marketing"
+category: "compliance"
 tags: ["conversion optimierung", "mehr anfragen", "lead generierung", "website check"]
 status: "published"
 ---

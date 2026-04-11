@@ -2,7 +2,7 @@
 title: "Google Analytics falsch eingerichtet? 8 häufige Fehler (und wie du sie erkennst)"
 description: "Analytics läuft, aber die Zahlen helfen dir nicht? Diese 8 typischen Tracking-Fehler sorgen für falsche Daten – inkl. schneller Fixes."
 date: "2026-02-16"
-category: "Tracking"
+category: "compliance"
 tags: ["analytics", "tracking", "ga4", "conversion", "events"]
 status: "published"
 ---

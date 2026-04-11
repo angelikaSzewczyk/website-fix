@@ -2,7 +2,7 @@
 title: "Website reparieren lassen: Kosten und was Hilfe wirklich kostet"
 description: "Wenn eine Website Probleme hat, stellt sich schnell die Frage nach den Kosten. Das beeinflusst den Preis für Website-Reparaturen."
 date: "2026-03-07"
-category: "Conversion"
+category: "compliance"
 tags: ["website reparieren kosten", "website reparieren", "wordpress hilfe kosten", "website service"]
 status: "published"
 ---

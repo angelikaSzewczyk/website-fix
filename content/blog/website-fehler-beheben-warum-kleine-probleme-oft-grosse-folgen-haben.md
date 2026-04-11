@@ -2,7 +2,7 @@
 title: "Website Fehler beheben: Warum kleine Probleme oft große Folgen haben"
 description: "Viele Websiteprobleme wirken klein, können aber große Auswirkungen haben. Warum schnelle Reparaturen wichtig sind."
 date: "2026-03-08"
-category: "Conversion"
+category: "compliance"
 tags: ["website fehler", "website reparieren", "website probleme", "conversion"]
 status: "published"
 ---

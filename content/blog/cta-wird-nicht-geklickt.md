@@ -2,7 +2,7 @@
 title: "Warum deine Website Besucher hat – aber niemand auf den Button klickt"
 description: "Traffic ist da, Anfragen fehlen? Oft liegt es nicht an den Besuchern, sondern an CTA, Vertrauen und Klarheit."
 date: "2026-02-27"
-category: "Conversion"
+category: "compliance"
 tags: ["cta", "conversion", "ux", "buttons", "leads"]
 status: "published"
 ---

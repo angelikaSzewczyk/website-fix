@@ -2,7 +2,7 @@
 title: "Website nicht erreichbar? Checkliste zur schnellen Fehlerbehebung"
 description: "Wenn die Website plötzlich offline ist, zählt jede Minute. Erfahre die häufigsten Gründe und wie du deine Seite schnell wieder online bringst."
 date: "2026-03-13"
-category: "Technik"
+category: "compliance"
 tags: ["website down", "offline", "server fehler", "erste hilfe"]
 status: "published"
 ---

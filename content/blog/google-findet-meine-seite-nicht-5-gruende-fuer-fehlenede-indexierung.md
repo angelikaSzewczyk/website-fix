@@ -2,7 +2,7 @@
 title: "Warum findet Google meine Homepage nicht? 6 Ursachen + einfache Lösung"
 description: "Deine Website ist online, aber Google zeigt sie nicht an? Hier sind die 6 häufigsten Ursachen – einfach erklärt, ohne Technik-Kenntnisse lösbar."
 date: "2026-03-30"
-category: "SEO"
+category: "compliance"
 tags: ["google", "indexierung", "website nicht gefunden", "seo anfänger", "search console"]
 status: "published"
 ---

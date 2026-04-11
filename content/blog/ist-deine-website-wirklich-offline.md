@@ -2,7 +2,7 @@
 title: "Ist deine Website wirklich offline? So prüfst du, ob deine Seite nur für dich nicht erreichbar ist"
 description: "Manchmal wirkt eine Website offline, obwohl sie nur für dich nicht lädt. So findest du schnell heraus, was wirklich passiert."
 date: "2026-02-16"
-category: "Technik"
+category: "compliance"
 tags: ["website offline", "website down prüfen", "server problem", "website check"]
 status: "published"
 ---

@@ -2,7 +2,7 @@
 title: "WordPress zeigt nur eine weiße Seite (WSoD)? So löst du das Problem"
 description: "Deine Website ist komplett weiß und ohne Fehlermeldung? Wir zeigen dir, wie du den 'White Screen of Death' in WordPress behebst."
 date: "2026-03-12"
-category: "Technik"
+category: "compliance"
 tags: ["wordpress", "white screen", "weisse seite", "php fehler"]
 status: "draft"
 ---

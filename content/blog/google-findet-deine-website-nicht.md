@@ -2,7 +2,7 @@
 title: "Google findet deine Website nicht? 11 Gründe + Fixes (Indexierung, Sitemap, Canonical)"
 description: "Deine Seite taucht nicht bei Google auf? Die häufigsten Ursachen: Noindex, Canonical, Sitemap, robots.txt, Weiterleitungen – plus Quick-Wins ohne Relaunch."
 date: "2026-02-18"
-category: "SEO Basics"
+category: "compliance"
 tags: ["google", "indexierung", "search console", "sitemap", "noindex"]
 status: "published"
 ---

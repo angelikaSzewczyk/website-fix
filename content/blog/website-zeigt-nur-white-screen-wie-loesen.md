@@ -2,7 +2,7 @@
 title: "WordPress zeigt nur eine weiße Seite? (White Screen of Death lösen)"
 description: "Wenn deine Website plötzlich weiß bleibt, liegt oft ein PHP-Fehler oder ein Plugin-Konflikt vor. So findest du die Ursache in 5 Minuten."
 date: "2026-03-19"
-category: "Technik"
+category: "compliance"
 tags: ["wordpress fehler", "weiße seite", "wsod", "php error", "website kaputt"]
 status: "draft"
 ---

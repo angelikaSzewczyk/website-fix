@@ -2,7 +2,7 @@
 title: "Fehler beim Aufbau der Datenbankverbindung – was bedeutet das?"
 description: "Wenn WordPress den Fehler 'Fehler beim Aufbau der Datenbankverbindung' zeigt, kann die Website nicht mehr geladen werden."
 date: "2026-02-28"
-category: "Technik"
+category: "compliance"
 tags: ["wordpress", "datenbank", "database error", "website kaputt", "server fehler"]
 status: "published"
 ---

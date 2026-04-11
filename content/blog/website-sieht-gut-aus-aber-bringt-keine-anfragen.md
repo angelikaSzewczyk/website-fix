@@ -2,7 +2,7 @@
 title: "Website sieht gut aus, aber bringt keine Anfragen? 12 Conversion-Quick-Wins"
 description: "Du hast Besucher, aber keine Leads? Hier sind 12 schnelle UX/Trust/CTA-Fixes (ohne Relaunch), die sofort mehr Klicks bringen."
 date: "2026-02-18"
-category: "Conversion"
+category: "compliance"
 tags: ["conversion", "cta", "ux", "leads", "trust"]
 status: "published"
 ---

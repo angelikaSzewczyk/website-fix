@@ -2,7 +2,7 @@
 title: "Mobile Ansicht kaputt? Die 7 häufigsten Fehler (und Lösungen)"
 description: "Warum Websites mobil schlecht aussehen: typische Layout-Fehler, zu kleine Buttons, falsche Abstände – und wie man sie schnell fixt."
 date: "2026-02-11"
-category: "Mobile"
+category: "compliance"
 tags: ["mobile", "responsive", "layout", "ux"]
 status: "published"
 ---

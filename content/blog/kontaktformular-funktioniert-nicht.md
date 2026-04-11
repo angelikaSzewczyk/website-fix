@@ -2,7 +2,7 @@
 title: "Kontaktformular sendet keine E-Mails? 9 Lösungen & Checkliste"
 description: "Dein Kontaktformular funktioniert nicht? Erfahre, warum Mails im Spam landen oder gar nicht ankommen (SMTP, SPF, Plugins) und wie du es sofort fixst."
 date: "2026-03-23"
-category: "Conversion"
+category: "compliance"
 tags: ["kontaktformular", "leads", "wordpress", "smtp", "fehlerbehebung"]
 status: "published"
 ---

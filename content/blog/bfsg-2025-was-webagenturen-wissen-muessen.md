@@ -2,7 +2,7 @@
 title: "BFSG 2025: Was Webagenturen jetzt wissen müssen"
 description: "Das Barrierefreiheitsstärkungsgesetz ist seit Juni 2025 in Kraft. Was bedeutet das für Webagenturen und ihre Kunden — und wie schützt du sie?"
 date: "2026-04-06"
-category: "BFSG & Recht"
+category: "compliance"
 tags: ["BFSG", "WCAG", "Barrierefreiheit", "Webagenturen", "Recht"]
 ---
 

@@ -2,7 +2,7 @@
 title: "Warum deine Website plötzlich nicht mehr funktioniert"
 description: "Wenn eine Website plötzlich Fehler zeigt, stecken oft Updates, Plugins oder Serverprobleme dahinter."
 date: "2026-03-02"
-category: "Technik"
+category: "compliance"
 tags: ["website kaputt", "wordpress fehler", "website probleme", "server", "update"]
 status: "published"
 ---

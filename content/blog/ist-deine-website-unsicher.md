@@ -2,7 +2,7 @@
 title: "Ist deine Website unsicher? 7 Anzeichen, dass deine Seite ein Sicherheitsproblem hat"
 description: "Viele Websites haben Sicherheitsprobleme ohne es zu merken. Diese Warnzeichen solltest du kennen."
 date: "2026-03-07"
-category: "Technik"
+category: "compliance"
 tags: ["website sicherheit", "website unsicher", "security", "website probleme"]
 status: "published"
 ---

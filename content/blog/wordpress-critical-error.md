@@ -2,7 +2,7 @@
 title: "WordPress kritischer Fehler? Was du jetzt tun kannst (ohne Entwickler)"
 description: "\"Es gab einen kritischen Fehler auf deiner Website\" — dieser Satz macht Panik. Aber deine Daten sind fast immer noch da. Hier sind die einfachsten Schritte zur Lösung."
 date: "2026-04-01"
-category: "Technik"
+category: "compliance"
 tags: ["wordpress kritischer fehler", "critical error wordpress", "es gab einen kritischen fehler", "wordpress reparieren", "website kaputt"]
 status: "published"
 ---

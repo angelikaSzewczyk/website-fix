@@ -2,7 +2,7 @@
 title: "WordPress Login funktioniert nicht? 5 Ursachen und was du sofort tun kannst"
 description: "Du kommst nicht mehr ins WordPress Backend? Kein Grund zur Panik. Hier sind die 5 häufigsten Ursachen — und was du ohne Entwickler-Wissen sofort tun kannst."
 date: "2026-04-01"
-category: "Technik"
+category: "compliance"
 tags: ["wordpress login", "wp-admin funktioniert nicht", "wordpress einloggen", "backend nicht erreichbar", "wordpress probleme"]
 status: "published"
 ---

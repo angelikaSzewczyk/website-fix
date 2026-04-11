@@ -2,7 +2,7 @@
 title: "Website zeigt Fehlermeldung 500 – was bedeutet das?"
 description: "Der Serverfehler 500 gehört zu den häufigsten Website-Problemen. Das sind die Ursachen und Lösungen."
 date: "2026-03-02"
-category: "Technik"
+category: "compliance"
 tags: ["500 error", "serverfehler", "website kaputt", "wordpress fehler", "hosting"]
 status: "published"
 ---

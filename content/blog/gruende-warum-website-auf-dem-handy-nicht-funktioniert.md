@@ -2,7 +2,7 @@
 title: "Website funktioniert auf dem Handy nicht – die häufigsten Gründe"
 description: "Viele Websites sehen auf dem Smartphone kaputt aus. Das sind die typischen Ursachen und Lösungen."
 date: "2026-03-03"
-category: "Technik"
+category: "compliance"
 tags: ["mobile website", "responsive design", "mobile fehler", "website mobil", "ux"]
 status: "published"
 ---
