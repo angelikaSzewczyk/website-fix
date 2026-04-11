@@ -199,20 +199,20 @@ const PLANS = [
 
 const FAQ = [
   {
-    q: "Für welche Websites funktioniert WebsiteFix?",
-    a: "WebsiteFix funktioniert für jede öffentlich erreichbare URL – egal ob WordPress, Shopify, Custom Code oder statische Seiten.",
+    q: "Funktioniert WebsiteFix mit jedem WordPress-Theme?",
+    a: "Ja – WebsiteFix analysiert die fertig gerenderte Seite, unabhängig davon, mit welchem Theme oder Page-Builder sie gebaut wurde. Ob Elementor, Divi, Kadence, GeneratePress oder vollständig custom entwickelt: der Scanner liest das ausgelieferte HTML, CSS und JavaScript, genau so wie Nutzer und Google es sehen.",
   },
   {
-    q: "Muss ich ein Plugin installieren oder Code ändern?",
-    a: "Nein. WebsiteFix arbeitet rein extern über Cloud-Scans. Du musst nichts installieren und gefährdest somit nicht die Stabilität deiner Seite.",
+    q: "Muss ich technische Änderungen an meiner Website vornehmen?",
+    a: "Nein. WebsiteFix arbeitet rein extern – kein Plugin, kein Code-Eingriff, kein Risiko für die Stabilität deiner Seite. Du gibst deine URL ein, wir übernehmen den Rest. Deine Live-Website bleibt zu jedem Zeitpunkt vollständig unberührt.",
   },
   {
-    q: "Wie hilft mir das Tool bei der BFSG-Pflicht 2025?",
-    a: "Wir scannen deine Seite auf die gesetzlichen Anforderungen der Barrierefreiheit (BFSG) und liefern dir eine lückenlose Dokumentation sowie konkrete Fix-Anleitungen für deine Entwickler.",
+    q: "Ersetzt WebsiteFix eine Rechtsberatung zum BFSG?",
+    a: "WebsiteFix liefert dir eine technische Validierungsbasis nach WCAG 2.1 AA – den Nachweis, dass du konkrete Maßnahmen ergriffen hast. Für individuelle Rechtsfragen zur BFSG-Pflicht empfehlen wir ergänzend einen spezialisierten Anwalt. Unsere Dokumentation ist so aufgebaut, dass sie als Grundlage für rechtliche Prüfungen und Behördenanfragen genutzt werden kann.",
   },
   {
-    q: "Was passiert, wenn ein Problem gefunden wird?",
-    a: "Du wirst sofort per E-Mail oder über deine angebundenen Tools (wie Slack) informiert. Du erhältst einen klaren Bericht, was zu tun ist, um den Fehler zu beheben.",
+    q: "Wie werde ich informiert, wenn ein neues Problem gefunden wird?",
+    a: "Im Free- und Pro-Plan erhältst du sofort eine E-Mail mit einem strukturierten Bericht und konkreten Fix-Anleitungen. Ab dem Agency-Starter-Plan kannst du zusätzlich Slack, Jira oder dein eigenes Projektmanagement-Tool anbinden – so landen Probleme direkt als Tickets in deinem Workflow, ohne manuelle Zwischenschritte.",
   },
 ];
 
@@ -1013,9 +1013,9 @@ export default function Page() {
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
             <div>
-              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Neu im Blog</p>
+              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Experten-Logbuch</p>
               <h2 style={{ margin: 0, fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
-                Bist du bereit für das BFSG 2025?
+                WordPress &amp; Barrierefreiheit: Das Experten-Logbuch
               </h2>
             </div>
             <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
@@ -1030,7 +1030,8 @@ export default function Page() {
               borderRadius: 14,
               background: "rgba(122,166,255,0.04)",
               display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap",
-            }}>
+              transition: "border-color 0.2s ease, background 0.2s ease",
+            }} className="wf-blog-card">
               <div style={{
                 width: 48, height: 48, borderRadius: 12, flexShrink: 0,
                 background: "rgba(122,166,255,0.12)", border: "1px solid rgba(122,166,255,0.2)",
@@ -1047,15 +1048,15 @@ export default function Page() {
                     background: "rgba(122,166,255,0.12)", color: "#7aa6ff",
                     border: "1px solid rgba(122,166,255,0.2)", letterSpacing: "0.05em",
                   }}>
-                    Recht & WCAG
+                    BFSG · WCAG
                   </span>
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>5 Min. Lesezeit</span>
                 </div>
                 <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.3 }}>
-                  Das BFSG 2025 – Warum Webseitenbetreiber jetzt handeln müssen
+                  Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen
                 </h3>
-                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
-                  Ab dem 28. Juni 2025 greift das Gesetz. Erfahre, was das für deine Haftung bedeutet.
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
+                  Erfahren Sie, wie Sie Ihre Kunden vor Abmahnungen schützen und die neue Gesetzgebung als Umsatz-Chance nutzen.
                 </p>
               </div>
               <span style={{ fontSize: 13, color: "#7aa6ff", fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center" }}>
@@ -1070,7 +1071,7 @@ export default function Page() {
 
         {/* CTA BANNER */}
         <section style={{ maxWidth: 1100, margin: "0 auto 80px", padding: "0 24px" }}>
-          <div style={{
+          <div className="wf-cta-box" style={{
             padding: "clamp(40px, 6vw, 72px) clamp(28px, 5vw, 64px)",
             borderRadius: 20,
             background: "linear-gradient(135deg, #0d1520 0%, #0b0c10 50%, #0a0f1a 100%)",
@@ -1083,29 +1084,30 @@ export default function Page() {
             <div style={{
               position: "absolute", top: "-50%", left: "-10%",
               width: "50%", height: "200%",
-              background: "radial-gradient(ellipse, rgba(0,123,255,0.08) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse, rgba(0,123,255,0.10) 0%, transparent 70%)",
               pointerEvents: "none",
             }} />
-            <div style={{ position: "relative" }}>
+            <div className="wf-cta-text" style={{ position: "relative" }}>
               <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Deine erste Website<br />scannst du kostenlos.
+                Bereit für den BFSG-Check?
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                Keine Installation. Ergebnis in unter 60 Sekunden.
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
+                Starten Sie Ihren ersten Deep-Scan kostenlos.<br className="hide-sm" />
+                Ergebnis in unter 60 Sekunden – ohne Installation.
               </p>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
+            <div className="wf-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
               <Link href="/scan" style={{
                 padding: "15px 36px", borderRadius: 11, fontWeight: 800, fontSize: 16,
                 background: "linear-gradient(90deg, #007BFF, #0057b8)",
                 color: "#fff", textDecoration: "none", whiteSpace: "nowrap",
-                boxShadow: "0 4px 24px rgba(0,123,255,0.4)",
+                boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
                 letterSpacing: "-0.01em",
               }}>
                 Jetzt kostenlos scannen →
               </Link>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
-                Danach: Flexibler Schutz ab 19€/Monat
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", paddingLeft: 4 }}>
+                Voller Schutz ab 39€/Monat oder im Agentur-Bundle.
               </span>
             </div>
           </div>
@@ -1119,9 +1121,11 @@ export default function Page() {
           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
             {`© ${new Date().getFullYear()} website-fix.com`}
           </span>
-          <div style={{ display: "flex", gap: 24 }}>
+          <div className="wf-footer-links">
             <Link href="/impressum" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Impressum</Link>
             <Link href="/datenschutz" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Datenschutz</Link>
+            <Link href="/agenturen" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Agentur-Programm</Link>
+            <Link href="/hilfe" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Hilfe-Center</Link>
             <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Blog</Link>
           </div>
         </div>

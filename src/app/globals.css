@@ -3742,3 +3742,40 @@ html, body {
 @media (max-width: 480px) {
   .wf-hero { padding: 48px 16px 48px; }
 }
+
+/* ===== BLOG CARD — hover lift ===== */
+.wf-blog-card:hover {
+  border-color: rgba(122,166,255,0.30) !important;
+  background: rgba(122,166,255,0.07) !important;
+}
+
+/* ===== CTA BOX — Mobile centering ===== */
+@media (max-width: 640px) {
+  .wf-cta-box {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .wf-cta-text {
+    width: 100%;
+  }
+  .wf-cta-actions {
+    width: 100%;
+    align-items: center !important;
+  }
+}
+
+/* ===== FOOTER LINKS — responsive wrapping ===== */
+.wf-footer-links {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .wf-footer-links {
+    justify-content: center;
+    gap: 14px 20px;
+  }
+}
