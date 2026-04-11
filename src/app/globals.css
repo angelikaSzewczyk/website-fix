@@ -3402,6 +3402,17 @@ html, body {
   }
 }
 
+/* Autofill override — neutralizes Chrome/Edge white autofill background */
+.wf-scan-input:-webkit-autofill,
+.wf-scan-input:-webkit-autofill:hover,
+.wf-scan-input:-webkit-autofill:focus,
+.wf-scan-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(8, 10, 20, 0.95) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* Trust chips below scan form */
 .wf-scan-chips {
   display: flex;
