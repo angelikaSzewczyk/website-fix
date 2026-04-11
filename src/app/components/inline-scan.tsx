@@ -18,7 +18,7 @@ function formatTimeRemaining(nextMs: number): string {
 }
 
 export default function InlineScan({
-  placeholder = "domain.de (z.B. https://deinewebsite.de)",
+  placeholder = "https://deine-website.de",
 }: {
   placeholder?: string;
 }) {
