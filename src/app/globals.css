@@ -3799,9 +3799,24 @@ html, body {
   }
 }
 
-/* Card transitions */
-.integ-card { transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
+/* Card base — stretch to equal height, pin button row at bottom */
+.integ-card {
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+  justify-content: space-between !important;  /* pin "Verknüpfen" row to bottom */
+}
 .integ-card:hover { transform: translateY(-3px); }
+
+/* Top row: icon stays top-aligned when text wraps to multiple lines */
+.integ-card > div:first-child {
+  align-items: flex-start !important;
+}
+
+/* Text container: prevent overflow on narrow viewports */
+.integ-card > div:first-child > div:last-child {
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
+}
 .integ-card-slack:hover  { box-shadow: 0 0 36px rgba(74,21,75,0.55);    border-color: rgba(192,132,252,0.55) !important; }
 .integ-card-jira:hover   { box-shadow: 0 0 36px rgba(37,99,235,0.45);   border-color: rgba(122,166,255,0.55) !important; }
 .integ-card-trello:hover { box-shadow: 0 0 36px rgba(0,121,191,0.45);   border-color: rgba(91,184,250,0.5)  !important; }
