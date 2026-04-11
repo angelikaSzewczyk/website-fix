@@ -599,18 +599,18 @@ export default function Page() {
           </div>
         </section>
 
-        {/* ── AGENTUR-VORTEIL ── */}
+        {/* ── RUNDUM-SCHUTZ ── */}
         <section className="wf-advantage-section">
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-                Dein Agentur-Vorteil
+                Dein Rundum-Schutz
               </p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Sichern Sie Ihren gesamten WordPress-Bestand.
+                Sorgenfreie Website, zufriedene Kunden.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Automatisierte Konformität und technische Hygiene für Agenturen und KMU.
+                Wir kümmern uns um die Technik und Gesetze, damit Sie Zeit für Ihr Business haben.
               </p>
             </div>
 
@@ -626,12 +626,12 @@ export default function Page() {
                   iconBg: "rgba(37,99,235,0.12)",
                   iconBorder: "rgba(37,99,235,0.28)",
                   iconGlow: "rgba(37,99,235,0.35)",
-                  tag: "WP-Tiefen-Audit",
+                  tag: "KI-Analyse",
                   tagColor: "#7aa6ff",
                   tagBg: "rgba(37,99,235,0.12)",
-                  title: "Deep-Check für Theme & Plugins",
-                  desc: "Automatische Analyse von WordPress-Code-Qualität, Datenbank-Leaks und bekannten Plugin-Schwachstellen (CVEs).",
-                  bullets: ["Core- & Plugin-CVE-Scan", "Analyse von Render-blocking Ressourcen", "Code-Konflikt-Warnungen"],
+                  title: "KI-Experte an Ihrer Seite",
+                  desc: "Unser System findet Sicherheitslücken und Technik-Fehler automatisch, bevor sie zum Problem werden – egal ob veraltete Plugins oder langsame Ladezeiten.",
+                  bullets: ["Täglich automatischer Scan", "Sofort-Warnung bei Gefahr", "Leicht verständliche Berichte"],
                   bulletColor: "#7aa6ff",
                 },
                 {
@@ -644,12 +644,12 @@ export default function Page() {
                   iconBg: "rgba(22,163,74,0.1)",
                   iconBorder: "rgba(22,163,74,0.28)",
                   iconGlow: "rgba(34,197,94,0.35)",
-                  tag: "BFSG 2025",
+                  tag: "BFSG",
                   tagColor: "#4ade80",
                   tagBg: "rgba(22,163,74,0.12)",
-                  title: "Haftungsrisiken minimieren",
-                  desc: "Lückenlose Dokumentation Ihrer BFSG-Konformität inkl. BITV-Check und DSGVO-Audits – exportierbar für Ihre Kunden.",
-                  bullets: ["Audit-Protokolle exportierbar", "BITV/EN 301 549 Konformitäts-Check", "Regelmäßiges Monitoring"],
+                  title: "Rechtssicherheit 2025",
+                  desc: "Ab Juni 2025 ist Barrierefreiheit Pflicht. Wir prüfen Ihre WordPress-Seite auf Konformität (BFSG/WCAG) und liefern die nötige Dokumentation für Ihre Unterlagen.",
+                  bullets: ["BFSG 2025 Überwachung", "Protokolle für das Finanzamt/Prüfer", "Keine manuelle Prüfung nötig"],
                   bulletColor: "#4ade80",
                 },
                 {
@@ -661,12 +661,12 @@ export default function Page() {
                   iconBg: "rgba(217,119,6,0.12)",
                   iconBorder: "rgba(217,119,6,0.28)",
                   iconGlow: "rgba(251,191,36,0.35)",
-                  tag: "Agentur-Flow",
+                  tag: "Setup",
                   tagColor: "#fbbf24",
                   tagBg: "rgba(217,119,6,0.12)",
-                  title: "Skalierbare Überwachung",
-                  desc: "Zentrales Monitoring ohne Plugin-Zwang, keine technischen Kenntnisse nötig. Einmal einrichten, dauerhaft geschützt.",
-                  bullets: ["Unbegrenzte Scans (Gratis: 25 Seiten)", "Alarmierung via Slack oder Mail", "Volles Dashboard"],
+                  title: "Einfachheit ohne Risiko",
+                  desc: "Kein Code-Wissen nötig. Sie tragen einfach Ihre URL ein – den Rest erledigt unsere Engine im Hintergrund. Ideal für Selbstständige und Agenturen.",
+                  bullets: ["In 1 Minute startklar", "Kein technisches Wissen nötig", "Dauerhaft aktiver Schutz"],
                   bulletColor: "#fbbf24",
                 },
               ].map(f => (
