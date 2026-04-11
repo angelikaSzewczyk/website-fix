@@ -3557,6 +3557,61 @@ html, body {
   .wf-feature-card__text { font-size: 12px; }
 }
 
+/* ===== BENEFITS SECTION ===== */
+.wf-benefits-section {
+  padding: 80px 24px;
+  /* Subtle gradient to visually separate from the steps section above */
+  background: linear-gradient(180deg, rgba(17,24,39,0) 0%, rgba(17,24,39,0.6) 40%, rgba(17,24,39,0) 100%);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.wf-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.wf-benefit-card {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.wf-benefit-card:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.14);
+}
+
+@media (max-width: 900px) {
+  .wf-benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .wf-benefits-section {
+    padding: 64px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wf-benefits-section {
+    padding: 48px 16px;
+  }
+  .wf-benefit-card {
+    padding: 22px 18px;
+  }
+}
+
 /* ===== STEPS SECTION — responsive padding (matches feature cards) ===== */
 @media (max-width: 768px) {
   .wf-steps-section { padding: 64px 20px !important; }

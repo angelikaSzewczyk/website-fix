@@ -65,58 +65,45 @@ const STEPS = [
 const BENEFITS = [
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-    ),
-    iconBg: "rgba(22,163,74,0.12)",
-    iconBorder: "rgba(22,163,74,0.25)",
-    iconColor: "#4ade80",
-    label: "Effizienz",
-    title: "Zeit & Kosten sparen",
-    desc: "Keine manuellen Updates oder teure Wartungsverträge mehr. WebsiteFix scannt und sichert deine Seite vollautomatisch – 24/7.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <polyline points="9 12 11 14 15 10"/>
       </svg>
     ),
-    iconBg: "rgba(37,99,235,0.12)",
+    iconBg: "rgba(37,99,235,0.1)",
     iconBorder: "rgba(37,99,235,0.25)",
     iconColor: "#7aa6ff",
-    label: "Rechtssicher",
-    title: "BFSG 2025 konform",
-    desc: "Wir überwachen die gesetzlichen Anforderungen des BFSG 2025 automatisch für dich und dokumentieren alles lückenlos für den Ernstfall.",
+    label: "Expertise",
+    title: "Spezialisiert auf WordPress & BFSG",
+    desc: "Wir scannen nicht alles – wir scannen WordPress besser als jeder andere. BITV, EN 301 549 und DSGVO sind unser Tagesgeschäft.",
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
       </svg>
     ),
-    iconBg: "rgba(217,119,6,0.12)",
-    iconBorder: "rgba(217,119,6,0.25)",
-    iconColor: "#fbbf24",
-    label: "Workflow",
-    title: "Sofort informiert",
-    desc: "Probleme werden sofort erkannt und landen genau dort, wo du sie brauchst (z.B. Slack oder E-Mail) – so bleibst du immer informiert.",
+    iconBg: "rgba(141,243,211,0.08)",
+    iconBorder: "rgba(141,243,211,0.2)",
+    iconColor: "#8df3d3",
+    label: "Automatisierung",
+    title: "Vollautomatisches Monitoring",
+    desc: "Einmal einrichten, nie wieder manuell prüfen. Unsere Engine arbeitet 24/7 im Hintergrund und alarmiert dich bei jedem neuen Befund.",
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <polyline points="9 13 11 15 15 11"/>
       </svg>
     ),
-    iconBg: "rgba(124,58,237,0.12)",
-    iconBorder: "rgba(124,58,237,0.25)",
-    iconColor: "#c084fc",
-    label: "Transparenz",
-    title: "Klare Auswertungen",
-    desc: "Unsere Reports zeigen dir schwarz auf weiß, dass deine Seite sicher und performant ist – in einer Sprache, die jeder versteht.",
+    iconBg: "rgba(234,179,8,0.08)",
+    iconBorder: "rgba(234,179,8,0.22)",
+    iconColor: "#EAB308",
+    label: "Haftung",
+    title: "Haftungsrisiken minimieren",
+    desc: "Wir liefern die lückenlose Dokumentation, die du für deine Kunden brauchst – revisionssicher, exportierbar, gerichtsfest.",
   },
 ];
 
@@ -435,29 +422,23 @@ export default function Page() {
         </section>
 
         {/* ── AGENTUR-VORTEILE ── */}
-        <section style={{ padding: "80px 24px" }}>
+        <section className="wf-benefits-section">
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Warum WebsiteFix?</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Sicherheit, die mitdenkt.
+              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                Warum WebsiteFix?
+              </p>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
+                Maximaler Schutz für Ihre WordPress-Projekte.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
                 Mehr Marge, weniger Risiko, glücklichere Kunden. Das ist kein Versprechen — das ist das System.
               </p>
             </div>
 
-            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+            <div className="wf-benefits-grid">
               {BENEFITS.map(b => (
-                <div key={b.label} style={{
-                  background: "rgba(255,255,255,0.04)",
-                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(234,179,8,0.15)",
-                  borderRadius: 16,
-                  padding: "28px 24px",
-                  boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
-                  display: "flex", flexDirection: "column", gap: 14,
-                }}>
+                <div key={b.label} className="wf-benefit-card">
                   <div style={{
                     width: 48, height: 48, borderRadius: 13, flexShrink: 0,
                     background: b.iconBg, border: `1px solid ${b.iconBorder}`,
@@ -466,13 +447,13 @@ export default function Page() {
                     {b.icon}
                   </div>
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: b.iconColor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: b.iconColor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
                       {b.label}
                     </div>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                    <h3 style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
                       {b.title}
                     </h3>
-                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{b.desc}</p>
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>{b.desc}</p>
                   </div>
                 </div>
               ))}
