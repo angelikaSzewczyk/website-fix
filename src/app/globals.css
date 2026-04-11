@@ -3794,6 +3794,16 @@ html, body {
   }
 }
 
+/* Flash animation — triggers on every key change (slider move) */
+@keyframes wf-roi-flash {
+  0%   { opacity: 0.4; transform: scale(0.96); filter: brightness(0.8); }
+  55%  { opacity: 1;   transform: scale(1.04); filter: brightness(1.35); }
+  100% { opacity: 1;   transform: scale(1);    filter: brightness(1); }
+}
+.wf-roi-flash {
+  animation: wf-roi-flash 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* ===== INTEGRATIONS GRID — 4-col desktop / single-col mobile ===== */
 .wf-integ-grid {
   display: grid;

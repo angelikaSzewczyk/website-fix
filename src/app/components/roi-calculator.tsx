@@ -3,25 +3,26 @@ import { useState } from "react";
 
 export default function RoiCalculator() {
   const [projects, setProjects] = useState(10);
-  const [hours, setHours] = useState(2);
-  const [rate, setRate] = useState(80);
+  const [hours,    setHours]    = useState(2);
+  const [rate,     setRate]     = useState(120);   // Marktwert professionelle WP-Agentur
 
-  const savedHours  = projects * hours;
-  const savedEuros  = savedHours * rate;
-  const planCost    = 99;                       // Agency Core Preis
-  const roi         = savedEuros - planCost;    // Netto-Ersparnis
+  const savedHours = projects * hours;
+  const savedEuros = savedHours * rate;
+  // Dynamic plan cost: ≤10 Projekte = Agency Starter 99 €, >10 = Agency Pro 199 €
+  const planCost   = projects <= 10 ? 99 : 199;
+  const planLabel  = projects <= 10 ? "Agency Starter (≤10 Projekte)" : "Agency Pro (>10 Projekte)";
+  const roi        = savedEuros - planCost;
 
   return (
     <section style={{
       padding: "80px 24px",
       borderTop: "1px solid rgba(255,255,255,0.06)",
       position: "relative",
-      /* Dezentes Grid-Muster — gleich wie Hero */
       backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
       backgroundSize: "44px 44px",
       backgroundColor: "#0d1520",
     }}>
-      {/* Radial-Fade maskiert Grid-Ränder */}
+      {/* Radial fade masks grid edges */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
         background: "radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #0d1520 100%)",
@@ -34,17 +35,16 @@ export default function RoiCalculator() {
             ROI-Kalkulator
           </p>
           <h2 style={{ margin: "0 0 12px", fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-            Berechnen Sie Ihren monatlichen Zusatzgewinn.
+            Berechnen Sie Ihr monatliches Profit-Potenzial.
           </h2>
           <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
             Passen Sie die Werte an – und sehen Sie, wie viel Zeit und Budget Sie jeden Monat zurückgewinnen.
           </p>
         </div>
 
-        {/* Two-column grid — stacks on mobile via .wf-roi-grid */}
         <div className="wf-roi-grid">
 
-          {/* ── Slider card (first = top on mobile) ── */}
+          {/* ── Slider card ── */}
           <div style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -76,9 +76,23 @@ export default function RoiCalculator() {
               onChange={setRate}
               color="#c084fc"
             />
+
+            {/* Dynamic plan badge */}
+            <div style={{
+              padding: "10px 14px", borderRadius: 8,
+              background: "rgba(122,166,255,0.06)",
+              border: "1px solid rgba(122,166,255,0.15)",
+              fontSize: 12, color: "rgba(255,255,255,0.35)",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <span>Gewählter Plan:</span>
+              <span style={{ color: "#7aa6ff", fontWeight: 600 }}>
+                {planLabel} — {planCost} €/Monat
+              </span>
+            </div>
           </div>
 
-          {/* ── Results card (second = bottom on mobile) ── */}
+          {/* ── Results card ── */}
           <div style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -94,7 +108,7 @@ export default function RoiCalculator() {
             />
             <div style={{ height: 1, background: "rgba(255,255,255,0.07)" }} />
             <ResultRow
-              label="Wert der gesparten Zeit"
+              label="Freigesetzte Kapazität (Brutto)"
               value={`${savedEuros.toLocaleString("de-DE")} €`}
               sub={`${savedHours} Std. × ${rate} €`}
               color="#7aa6ff"
@@ -102,27 +116,32 @@ export default function RoiCalculator() {
             <ResultRow
               label="WebsiteFix Agency Core"
               value={`− ${planCost} €`}
-              sub="Pro Monat"
+              sub={planLabel}
               color="#94A3B8"
             />
             <div style={{ height: 1, background: "rgba(255,255,255,0.07)" }} />
 
-            {/* NETTO-ERSPARNIS — visual highlight */}
+            {/* Deckungsbeitrag — animated on change via key */}
             <div style={{
               padding: "18px 20px",
               borderRadius: 12,
               background: roi > 0 ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
               border: `1px solid ${roi > 0 ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
-              boxShadow: roi > 0 ? "0 0 24px rgba(34,197,94,0.08)" : "none",
+              boxShadow: roi > 0 ? "0 0 28px rgba(34,197,94,0.10)" : "none",
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 6, letterSpacing: "0.08em" }}>
-                NETTO-ERSPARNIS PRO MONAT
+                ZUSÄTZLICHER DECKUNGSBEITRAG / MONAT
               </div>
-              <div style={{
-                fontSize: "clamp(32px, 5vw, 42px)", fontWeight: 800, letterSpacing: "-0.04em",
-                color: roi > 0 ? "#22C55E" : "#EF4444",
-                lineHeight: 1,
-              }}>
+              {/* key=roi triggers CSS re-animation on every value change */}
+              <div
+                key={roi}
+                className="wf-roi-flash"
+                style={{
+                  fontSize: "clamp(30px, 5vw, 42px)", fontWeight: 800, letterSpacing: "-0.04em",
+                  color: roi > 0 ? "#22C55E" : "#EF4444",
+                  lineHeight: 1,
+                }}
+              >
                 {roi > 0 ? "+" : ""}{roi.toLocaleString("de-DE")} €
               </div>
               {roi > 0 && (
@@ -141,7 +160,7 @@ export default function RoiCalculator() {
               color: "#fff",
               boxShadow: "0 4px 24px rgba(0,123,255,0.40), 0 0 40px rgba(0,123,255,0.15)",
             }}>
-              Jetzt {roi.toLocaleString("de-DE")} €/mtl. sparen →
+              Dieses Potenzial jetzt sichern →
             </a>
           </div>
 
