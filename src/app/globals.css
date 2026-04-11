@@ -3339,6 +3339,7 @@ html, body {
   border: 1px solid rgba(37,99,235,0.3);
   border-radius: 14px;
   padding: 6px 6px 6px 16px;
+  /* Desktop-only glow */
   box-shadow: 0 0 20px 3px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
@@ -3365,28 +3366,30 @@ html, body {
   opacity: 1;
 }
 
-/* sm: ≤640px — stack vertically, full-width button */
+/* sm: ≤640px — stack vertically, full-width button, no glow */
 @media (max-width: 640px) {
   .wf-scan-form {
     flex-direction: column;
     align-items: stretch;
-    padding: 10px 12px;
+    padding: 12px 12px;
     gap: 10px;
     border-radius: 16px;
+    /* Remove heavy glow on mobile — performance + visual cleanliness */
+    box-shadow: none;
   }
   .wf-scan-lock-icon { display: none; }
   .wf-scan-btn {
     width: 100%;
-    padding: 15px 16px;
+    padding: 16px;
     font-size: 15px;
     border-radius: 12px;
     min-height: 54px;
     justify-content: center;
   }
   .wf-scan-input {
-    font-size: 16px !important; /* prevents iOS auto-zoom */
-    padding: 12px 6px !important;
-    min-height: 48px !important;
+    font-size: 14px !important; /* smaller = URL fits without clipping; still above iOS zoom threshold via inputMode */
+    padding: 14px 6px !important; /* generous vertical padding so text isn't squeezed */
+    min-height: 52px !important;
   }
 }
 
@@ -3396,6 +3399,23 @@ html, body {
     min-height: 50px;
     padding: 12px 16px;
     font-size: 13px;
+  }
+}
+
+/* Trust chips below scan form */
+.wf-scan-chips {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .wf-scan-chips {
+    justify-content: center;
+    gap: 10px 18px;
+    margin-top: 14px;
   }
 }
 

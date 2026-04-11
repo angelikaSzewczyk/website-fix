@@ -18,7 +18,7 @@ function formatTimeRemaining(nextMs: number): string {
 }
 
 export default function InlineScan({
-  placeholder = "Deine Website-URL eingeben (z.B. https://deinewebsite.de)",
+  placeholder = "domain.de (z.B. https://deinewebsite.de)",
 }: {
   placeholder?: string;
 }) {
@@ -263,7 +263,7 @@ export default function InlineScan({
           </div>
 
           {/* Trust chips */}
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 10, flexWrap: "wrap" }}>
+          <div className="wf-scan-chips">
             {["Bis zu 25 Unterseiten", "BFSG-Check inkl.", "Keine Anmeldung"].map(t => (
               <span key={t} style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", gap: 5 }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
