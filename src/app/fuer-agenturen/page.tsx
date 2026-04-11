@@ -967,18 +967,8 @@ export default function AgencyPage() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" style={{
-          position: "relative",
-          padding: "80px 24px",
-          backgroundColor: "#0d1520",
-          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}>
-          {/* Radial fade */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #0d1520 100%)" }} />
-
-          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+        <section id="pricing" style={{ padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(74,222,128,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
