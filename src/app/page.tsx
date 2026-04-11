@@ -5,6 +5,7 @@ import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
+import TestimonialDots from "./components/testimonial-dots";
 
 export const metadata: Metadata = {
   title: "WebsiteFix — Das Betriebssystem für deine Website-Wartung",
@@ -958,23 +959,7 @@ export default function Page() {
           </div>{/* end wrapper */}
 
           {/* Swipe indicator — mobile only */}
-          <div className="wf-swipe-hint">
-            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-              Wischen für mehr
-            </span>
-            <div style={{ display: "flex", gap: 5 }}>
-              {[0,1,2].map(i => (
-                <div key={i} style={{
-                  width: i === 0 ? 18 : 6, height: 6, borderRadius: 3,
-                  background: i === 0 ? "rgba(122,166,255,0.6)" : "rgba(255,255,255,0.15)",
-                  transition: "width 0.3s",
-                }} />
-              ))}
-            </div>
-          </div>
+          <TestimonialDots count={3} />
 
           {/* Logo band */}
           <div style={{ marginTop: 56, paddingBottom: 64 }}>

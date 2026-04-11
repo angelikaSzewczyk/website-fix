@@ -3669,17 +3669,6 @@ html, body {
 .wf-swipe-hint { display: none; }
 
 @media (max-width: 768px) {
-  /* Wrapper: gradient fade on right = peek hint */
-  .wf-testimonial-wrapper::after {
-    content: '';
-    position: absolute;
-    right: 0; top: 0; bottom: 20px;
-    width: 48px;
-    background: linear-gradient(to left, #0b0c10 20%, transparent);
-    pointer-events: none;
-    z-index: 2;
-  }
-
   .wf-testimonial-grid {
     display: flex;
     overflow-x: auto;
