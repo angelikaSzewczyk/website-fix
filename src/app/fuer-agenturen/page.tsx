@@ -44,12 +44,12 @@ const PLANS = [
     desc: "Full White-Label für professionelle Agenturen",
     accent: "#7C3AED",
     features: [
-      { text: "Unlimitierte Projekte (∞)", highlight: true },
-      { text: "Full White-Label (Logo & Farben)", highlight: true },
-      { text: "Eigene Subdomain (portal.deine-agentur.de)", highlight: true },
-      { text: "Automatischer Report-Versand an Kunden", highlight: true },
-      { text: "Kunden-Login-Bereich", highlight: true },
-      { text: "E-Mail Absendername konfigurierbar", highlight: false },
+      { text: "Unlimitierte Projekte (∞)", highlight: true, key: false },
+      { text: "Full White-Label (Logo & Farben)", highlight: true, key: true },
+      { text: "Eigene Subdomain (portal.ihre-agentur.de)", highlight: true, key: true },
+      { text: "Automatischer Report-Versand an Kunden", highlight: true, key: false },
+      { text: "Kunden-Login-Bereich", highlight: true, key: true },
+      { text: "E-Mail Absendername konfigurierbar", highlight: false, key: false },
     ],
     cta: "Agency-Account erstellen",
     href: "/register",
@@ -967,8 +967,18 @@ export default function AgencyPage() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" style={{ background: "#0a0a0a", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <section id="pricing" style={{
+          position: "relative",
+          padding: "80px 24px",
+          backgroundColor: "#0d1520",
+          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          {/* Radial fade */}
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #0d1520 100%)" }} />
+
+          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(74,222,128,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
@@ -989,7 +999,7 @@ export default function AgencyPage() {
                   display: "flex", flexDirection: "column",
                   overflow: "hidden",
                   boxShadow: plan.recommended
-                    ? "0 8px 40px rgba(37,99,235,0.2)"
+                    ? "0 0 60px rgba(37,99,235,0.22), 0 8px 40px rgba(37,99,235,0.18), 0 0 0 1px rgba(37,99,235,0.15)"
                     : "0 2px 20px rgba(0,0,0,0.3)",
                 }}>
                   {/* Top stripe */}
@@ -1035,16 +1045,19 @@ export default function AgencyPage() {
                         <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <div style={{
                             width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                            background: f.highlight
-                              ? (plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
-                              : "rgba(255,255,255,0.07)",
+                            background: (f as {text:string;highlight:boolean;key?:boolean}).key
+                              ? "rgba(122,166,255,0.2)"
+                              : f.highlight
+                                ? (plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
+                                : "rgba(255,255,255,0.07)",
+                            border: (f as {text:string;highlight:boolean;key?:boolean}).key ? "1px solid rgba(122,166,255,0.35)" : "none",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={(f as {text:string;highlight:boolean;key?:boolean}).key ? "#a5c1ff" : f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: f.highlight ? 600 : 400, color: f.highlight ? "#fff" : "rgba(255,255,255,0.4)" }}>
+                          <span style={{ fontSize: 12, fontWeight: (f as {text:string;highlight:boolean;key?:boolean}).key ? 700 : f.highlight ? 600 : 400, color: (f as {text:string;highlight:boolean;key?:boolean}).key ? "#a5c1ff" : f.highlight ? "#fff" : "rgba(255,255,255,0.4)" }}>
                             {f.text}
                           </span>
                         </div>
