@@ -659,7 +659,7 @@ export default function AgencyPage() {
         </section>
 
         {/* WHITE-LABEL HIGHLIGHT */}
-        <section className="wf-wl-section" style={{ background: "#0d1520", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+        <section className="wf-wl-section" style={{ background: "#0d1520", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
             {/* Badge */}
@@ -748,19 +748,19 @@ export default function AgencyPage() {
                   background: "#fff", borderRadius: 14, overflow: "hidden",
                   boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)",
                 }}>
-                  <div style={{
+                  <div className="wf-wl-mockup-header" style={{
                     background: "linear-gradient(135deg, #007BFF, #0057b8)",
                     padding: "18px 22px",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#fff" }}>M</div>
+                      <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#fff", flexShrink: 0 }}>M</div>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 13, color: "#fff" }}>Muster Agentur GmbH</div>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 1 }}>Monatlicher Website-Report</div>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
+                    <div className="wf-wl-mockup-header-right" style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>April 2026</div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 1 }}>Müller & Söhne Sanitär</div>
                     </div>

@@ -3909,21 +3909,31 @@ html, body {
 
 /* ===== WHITE-LABEL SECTION — Mobile responsive ===== */
 @media (max-width: 768px) {
+  /* Section must not clip the badge tooltip */
+  .wf-wl-section {
+    overflow: visible !important;
+  }
   .wf-wl-grid {
     grid-template-columns: 1fr !important;
     gap: 36px !important;
   }
-  /* Mockup comes after features — enforce order */
+  /* Mockup: room for the top badge, full width */
   .wf-wl-mockup {
     order: 1;
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
+    padding-top: 20px;
+    box-sizing: border-box;
   }
+  /* The white report card fills container */
   .wf-wl-mockup > div:nth-child(2) {
-    /* The white report card */
     max-width: 100% !important;
     width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Hide radial glow blob — not needed on mobile */
+  .wf-wl-mockup > div:first-child {
+    display: none !important;
   }
   /* Shrink feature icons on mobile */
   .wf-wl-grid > div:first-child > div > div:first-child {
@@ -3931,9 +3941,13 @@ html, body {
     height: 32px !important;
     border-radius: 8px !important;
   }
-  /* Clip radial glow overflow */
-  .wf-wl-mockup > div:first-child {
-    display: none !important;
+  /* Mockup header: tighter text on narrow screens */
+  .wf-wl-mockup-header {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .wf-wl-mockup-header-right {
+    text-align: left !important;
   }
 }
 
