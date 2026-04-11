@@ -3908,11 +3908,6 @@ html, body {
 }
 
 /* ===== FEATURE DEEP-DIVE SECTION ===== */
-/* Grid bg disabled on mobile */
-@media (max-width: 640px) {
-  .wf-feat-section { background-image: none !important; }
-}
-
 /* 3-col → 1-col on mobile */
 .wf-feat-grid {
   display: grid;

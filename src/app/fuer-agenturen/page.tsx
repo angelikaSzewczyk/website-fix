@@ -800,21 +800,8 @@ export default function AgencyPage() {
         </section>
 
         {/* FEATURE DEEP-DIVE */}
-        <section className="wf-feat-section" style={{
-          position: "relative",
-          padding: "80px 24px",
-          backgroundColor: "#0d1520",
-          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-        }}>
-          {/* Radial mask — fades grid edges */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 100% 80% at 50% 50%, transparent 20%, #0d1520 100%)" }} />
-          {/* Top fade */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 80, pointerEvents: "none", background: "linear-gradient(to bottom, #0d1520, transparent)" }} />
-          {/* Bottom fade */}
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80, pointerEvents: "none", background: "linear-gradient(to top, #0d1520, transparent)" }} />
-
-          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+        <section className="wf-feat-section" style={{ padding: "80px 24px", background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
