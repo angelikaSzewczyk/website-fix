@@ -3779,3 +3779,25 @@ html, body {
     gap: 14px 20px;
   }
 }
+
+/* ===== WHITE-LABEL DASHBOARD MOCKUP — Mobile responsive ===== */
+
+/* On mobile: hide sidebar so report gets full width */
+@media (max-width: 600px) {
+  .wf-dashboard-sidebar {
+    display: none !important;
+  }
+  /* Report header: stack agency name + date/client vertically */
+  .wf-report-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+  .wf-report-header-right {
+    text-align: left !important;
+  }
+  /* Stats: 2×2 grid instead of 4-column row */
+  .wf-report-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

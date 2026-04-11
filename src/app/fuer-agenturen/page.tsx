@@ -186,22 +186,28 @@ export default function AgencyPage() {
 
         {/* ── WHITE-LABEL DASHBOARD PREVIEW ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px", textAlign: "center" }}>
-          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(122,166,255,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>White-Label Dashboard</p>
-          <h2 style={{ fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, margin: "0 0 48px", letterSpacing: "-0.025em", color: "#fff" }}>
-            Ihr Branding. Ihre Kunden. Ihr Dashboard.
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(122,166,255,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>White-Label Expertise</p>
+          <h2 style={{ fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, margin: "0 0 16px", letterSpacing: "-0.025em", color: "#fff" }}>
+            Ihre Agentur. Ihre Expertise. Unser System.
           </h2>
+          <p style={{ margin: "0 auto 40px", fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 560, lineHeight: 1.7 }}>
+            Exportieren Sie professionelle PDF-Reports oder geben Sie Kunden Zugang zu einem Dashboard in Ihrem Branding – ohne Hinweis auf WebsiteFix.
+          </p>
 
           <div style={{ position: "relative", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }}>
+            {/* Ambient glow behind window */}
             <div style={{
               position: "absolute", inset: "-40px -60px",
-              background: "radial-gradient(ellipse at 50% 60%, rgba(0,123,255,0.12) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse at 50% 60%, rgba(0,123,255,0.14) 0%, transparent 70%)",
               pointerEvents: "none",
             }} />
-            <div style={{
+
+            {/* Browser window */}
+            <div className="wf-dashboard-mock" style={{
               position: "relative", borderRadius: 14,
               border: "1px solid rgba(255,255,255,0.1)",
               background: "#0d0f14",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+              boxShadow: "0 32px 100px rgba(0,0,0,0.75), 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
               overflow: "hidden",
             }}>
               {/* Browser chrome */}
@@ -224,9 +230,10 @@ export default function AgencyPage() {
               </div>
 
               {/* Dashboard layout */}
-              <div style={{ display: "flex", height: 360 }}>
-                {/* Sidebar */}
-                <div style={{
+              <div style={{ display: "flex", minHeight: 360 }}>
+
+                {/* Sidebar — hidden on mobile via CSS */}
+                <div className="wf-dashboard-sidebar" style={{
                   width: 160, flexShrink: 0, background: "#0A192F",
                   borderRight: "1px solid rgba(255,255,255,0.06)",
                   padding: "16px 10px", display: "flex", flexDirection: "column", gap: 3,
@@ -246,49 +253,56 @@ export default function AgencyPage() {
                     <div key={item.label} style={{
                       padding: "7px 10px", borderRadius: 6, fontSize: 10,
                       color: item.active ? "#fff" : "rgba(255,255,255,0.3)",
-                      background: item.active ? "rgba(0,123,255,0.15)" : "transparent",
+                      background: item.active ? "rgba(0,123,255,0.22)" : "transparent",
                       borderLeft: item.active ? "2px solid #007BFF" : "2px solid transparent",
-                      fontWeight: item.active ? 600 : 400,
+                      fontWeight: item.active ? 700 : 400,
+                      boxShadow: item.active ? "inset 0 0 12px rgba(0,123,255,0.12)" : "none",
                     }}>
                       {item.label}
                     </div>
                   ))}
                 </div>
 
-                {/* Main: White-Label Report */}
-                <div style={{ flex: 1, padding: "16px", overflowY: "hidden", background: "#0d0f14" }}>
+                {/* Main: White-Label Report — full width on mobile */}
+                <div className="wf-dashboard-content" style={{ flex: 1, padding: "16px", overflowY: "hidden", background: "#0d0f14", minWidth: 0 }}>
                   <div style={{ background: "#fff", borderRadius: 10, overflow: "hidden", fontSize: 0 }}>
-                    <div style={{
+
+                    {/* Report header — stacks on mobile via CSS */}
+                    <div className="wf-report-header" style={{
                       background: "linear-gradient(135deg, #007BFF, #0057b8)",
                       padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 24, height: 24, borderRadius: 5, background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 5, background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <span style={{ fontSize: 11, fontWeight: 800, color: "#fff" }}>M</span>
                         </div>
-                        <div>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>Muster Agentur GmbH</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>Muster Agentur GmbH</div>
                           <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)" }}>Monatlicher Website-Report</div>
                         </div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
+                      <div className="wf-report-header-right" style={{ textAlign: "right", flexShrink: 0 }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: "#fff" }}>April 2026</div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)" }}>Müller & Söhne Sanitär</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap" }}>Müller &amp; Söhne Sanitär</div>
                       </div>
                     </div>
+
                     <div style={{ padding: "12px 16px" }}>
+                      {/* Management summary */}
                       <div style={{ padding: "8px 10px", borderRadius: 6, background: "rgba(0,123,255,0.06)", border: "1px solid rgba(0,123,255,0.15)", marginBottom: 10 }}>
                         <div style={{ fontSize: 7, fontWeight: 700, color: "#007BFF", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Management-Zusammenfassung</div>
                         <div style={{ fontSize: 8, color: "#444", lineHeight: 1.6 }}>
                           Im April 2026 haben wir alle vereinbarten Leistungen erbracht und den reibungslosen Betrieb Ihrer Website sichergestellt. Durch proaktive WCAG-Audits und sofortige Fehlerbehebung per KI-Assistent wurde die Rechtssicherheit Ihrer Online-Präsenz kontinuierlich gewährleistet.
                         </div>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
+
+                      {/* Stats — 2×2 on mobile via CSS */}
+                      <div className="wf-report-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
                         {[
-                          { label: "Uptime", value: "98%" },
-                          { label: "Ladezeit", value: "420ms" },
-                          { label: "Scans", value: "3" },
-                          { label: "Aktionen", value: "7" },
+                          { label: "BFSG-Check", value: "100%" },
+                          { label: "Verfügbarkeit", value: "99.9%" },
+                          { label: "Krit. Fehler", value: "0" },
+                          { label: "Optimierungen", value: "7" },
                         ].map(k => (
                           <div key={k.label} style={{ padding: "6px 8px", borderRadius: 5, border: "1px solid #e5e7eb", textAlign: "center" }}>
                             <div style={{ fontSize: 13, fontWeight: 700, color: "#007BFF" }}>{k.value}</div>
@@ -296,6 +310,8 @@ export default function AgencyPage() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Activity log */}
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden" }}>
                         {[
                           { icon: "🤖", label: "KI-Optimierungsvorschlag erstellt", date: "12.04" },
@@ -307,8 +323,8 @@ export default function AgencyPage() {
                             borderBottom: i < 2 ? "1px solid #f5f5f5" : "none",
                           }}>
                             <span style={{ fontSize: 9 }}>{a.icon}</span>
-                            <span style={{ flex: 1, fontSize: 8, color: "#333" }}>{a.label}</span>
-                            <span style={{ fontSize: 7, color: "#bbb" }}>{a.date}</span>
+                            <span style={{ flex: 1, fontSize: 8, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.label}</span>
+                            <span style={{ fontSize: 7, color: "#bbb", flexShrink: 0 }}>{a.date}</span>
                           </div>
                         ))}
                       </div>
@@ -317,6 +333,7 @@ export default function AgencyPage() {
                 </div>
               </div>
             </div>
+
             <p style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
               White-Label Report — mit Ihrem Logo, Ihrer Farbe, Ihrem Namen
             </p>
