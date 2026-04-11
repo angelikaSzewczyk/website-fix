@@ -800,8 +800,21 @@ export default function AgencyPage() {
         </section>
 
         {/* FEATURE DEEP-DIVE */}
-        <section style={{ background: "#0a0a0a", padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <section className="wf-feat-section" style={{
+          position: "relative",
+          padding: "80px 24px",
+          backgroundColor: "#0d1520",
+          backgroundImage: "linear-gradient(rgba(122,166,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(122,166,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}>
+          {/* Radial mask — fades grid edges */}
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 100% 80% at 50% 50%, transparent 20%, #0d1520 100%)" }} />
+          {/* Top fade */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 80, pointerEvents: "none", background: "linear-gradient(to bottom, #0d1520, transparent)" }} />
+          {/* Bottom fade */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80, pointerEvents: "none", background: "linear-gradient(to top, #0d1520, transparent)" }} />
+
+          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
@@ -812,9 +825,9 @@ export default function AgencyPage() {
               </p>
             </div>
 
-            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+            <div className="wf-feat-grid">
               {/* Karte 1: Profitabilität */}
-              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+              <div className="wf-feat-card wf-feat-card-blue" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -831,8 +844,8 @@ export default function AgencyPage() {
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["WCAG 2.1 AA vollständig", "Audit-Trail als Nachweis", "Automatische Meldung bei Verstoß", "BFSG Haftungsschutz-Monitor"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        {b}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {b === "BFSG Haftungsschutz-Monitor" ? <strong style={{ color: "#a5c1ff", fontWeight: 700 }}>{b}</strong> : b}
                       </li>
                     ))}
                   </ul>
@@ -840,7 +853,7 @@ export default function AgencyPage() {
               </div>
 
               {/* Karte 2: Effizienz */}
-              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+              <div className="wf-feat-card wf-feat-card-green" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(22,163,74,0.12)", border: "1px solid rgba(22,163,74,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -859,8 +872,8 @@ export default function AgencyPage() {
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Agentur-Logo & Primärfarbe", "KI-Zusammenfassung auf Agentur-Niveau", "PDF-Export + direkter E-Mail-Versand", "Kein WebsiteFix-Branding sichtbar"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        {b}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {b === "Kein WebsiteFix-Branding sichtbar" ? <strong style={{ color: "#86efac", fontWeight: 700 }}>{b}</strong> : b}
                       </li>
                     ))}
                   </ul>
@@ -868,7 +881,7 @@ export default function AgencyPage() {
               </div>
 
               {/* Karte 3: Loyalität */}
-              <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(234,179,8,0.12)", borderRadius: 16, padding: "28px 26px", boxShadow: "0 2px 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+              <div className="wf-feat-card wf-feat-card-amber" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -885,7 +898,7 @@ export default function AgencyPage() {
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
                     {["Jira · Trello · Asana Integration", "Slack-Alerts in Echtzeit", "Auto-Pilot Scan-Intervall", "Lückenloser Audit-Trail"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         {b}
                       </li>
                     ))}

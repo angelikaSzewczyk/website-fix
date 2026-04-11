@@ -3907,6 +3907,42 @@ html, body {
   }
 }
 
+/* ===== FEATURE DEEP-DIVE SECTION ===== */
+/* Grid bg disabled on mobile */
+@media (max-width: 640px) {
+  .wf-feat-section { background-image: none !important; }
+}
+
+/* 3-col → 1-col on mobile */
+.wf-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .wf-feat-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* Card base */
+.wf-feat-card {
+  border: 1px solid transparent;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+/* Per-card accent border + glow */
+.wf-feat-card-blue  { border-color: rgba(122,166,255,0.15); box-shadow: 0 4px 24px rgba(37,99,235,0.10); }
+.wf-feat-card-green { border-color: rgba(74,222,128,0.15);  box-shadow: 0 4px 24px rgba(22,163,74,0.10); }
+.wf-feat-card-amber { border-color: rgba(251,191,36,0.15);  box-shadow: 0 4px 24px rgba(217,119,6,0.10); }
+/* Hover: lift glow */
+.wf-feat-card-blue:hover  { border-color: rgba(122,166,255,0.35); box-shadow: 0 8px 36px rgba(37,99,235,0.18); }
+.wf-feat-card-green:hover { border-color: rgba(74,222,128,0.35);  box-shadow: 0 8px 36px rgba(22,163,74,0.18); }
+.wf-feat-card-amber:hover { border-color: rgba(251,191,36,0.35);  box-shadow: 0 8px 36px rgba(217,119,6,0.18); }
+
+/* Reduced checklist padding on mobile */
+@media (max-width: 640px) {
+  .wf-feat-card { padding: 20px 18px !important; }
+  .wf-feat-card ul { gap: 5px !important; }
+}
+
 /* ===== CHECKOUT BUTTON SPINNER ===== */
 @keyframes checkout-spin { to { transform: rotate(360deg); } }
 
