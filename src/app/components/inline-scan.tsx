@@ -248,7 +248,7 @@ export default function InlineScan({
           background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
           color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none",
           boxShadow: "0 6px 28px rgba(124,58,237,0.45), 0 0 0 1px rgba(139,92,246,0.3)",
-          marginBottom: 6,
+          marginBottom: 18,
           letterSpacing: "-0.1px",
           transition: "box-shadow 0.2s, transform 0.15s",
         }}>
