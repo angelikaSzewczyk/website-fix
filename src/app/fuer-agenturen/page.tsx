@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Layers, BellDot, ShieldAlert } from "lucide-react";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
+import AutoCheckout from "../components/auto-checkout";
 import BrandLogo from "../components/BrandLogo";
 import AgencyStats from "../components/agency-stats";
 
@@ -125,6 +127,10 @@ export default function AgencyPage() {
       </nav>
 
       <main>
+        {/* Auto-trigger Stripe checkout after post-login redirect (?checkout=plan) */}
+        <Suspense fallback={null}>
+          <AutoCheckout />
+        </Suspense>
 
         {/* HERO */}
         <section style={{

@@ -32,8 +32,10 @@ export default function CheckoutButton({ plan, label, style, href }: CheckoutBut
       if (data.url) {
         window.location.href = data.url;
       } else if (res.status === 401) {
-        // Not logged in → send to login with return URL
-        window.location.href = `/login?callbackUrl=${encodeURIComponent("/fuer-agenturen#pricing")}`;
+        // Not logged in → send to login, pass plan so AutoCheckout fires after login
+        const returnUrl = `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`;
+        window.location.href = `/login?callbackUrl=${encodeURIComponent(returnUrl)}`;
+
       } else {
         console.error("Checkout error:", data.error);
         setLoading(false);
