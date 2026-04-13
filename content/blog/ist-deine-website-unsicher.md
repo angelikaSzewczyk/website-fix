@@ -1,8 +1,8 @@
 ---
-title: "Ist Ihre Website unsicher? 7 Anzeichen, dass Ihre Seite ein Sicherheitsproblem hat"
+title: "Ist Ihre WordPress-Website unsicher? 7 Anzeichen, die Sie erkennen müssen"
 description: "Viele Websites haben Sicherheitsprobleme ohne es zu merken. Diese Warnzeichen solltest Sie kennen."
 date: "2026-03-07"
-category: "compliance"
+category: "wordpress"
 tags: ["website sicherheit", "website unsicher", "security", "website probleme"]
 status: "published"
 ---

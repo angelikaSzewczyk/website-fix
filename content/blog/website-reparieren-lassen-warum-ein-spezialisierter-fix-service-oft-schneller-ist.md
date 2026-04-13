@@ -1,5 +1,5 @@
 ---
-title: "Website reparieren lassen: Warum ein spezialisierter Fix-Service oft schneller ist"
+title: "WordPress reparieren lassen: Warum ein spezialisierter Fix-Service oft schneller ist"
 description: "Wenn eine Website Probleme hat, kann ein spezialisierter Fix-Service oft schneller helfen als klassische Agenturen oder Freelancer."
 date: "2026-03-06"
 category: "compliance"

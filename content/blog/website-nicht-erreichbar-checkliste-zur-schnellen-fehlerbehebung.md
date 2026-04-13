@@ -1,5 +1,5 @@
 ---
-title: "Website nicht erreichbar? Checkliste zur schnellen Fehlerbehebung"
+title: "WordPress-Website nicht erreichbar? Checkliste zur schnellen Fehlerbehebung"
 description: "Wenn die Website plötzlich offline ist, zählt jede Minute. Erfahre die häufigsten Gründe und wie Sie Ihre Seite schnell wieder online bringst."
 date: "2026-03-13"
 category: "compliance"

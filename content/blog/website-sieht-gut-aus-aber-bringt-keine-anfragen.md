@@ -1,5 +1,5 @@
 ---
-title: "Website sieht gut aus, aber bringt keine Anfragen? 12 Conversion-Quick-Wins"
+title: "WordPress-Website sieht gut aus, aber bringt keine Anfragen? 12 Conversion-Tipps"
 description: "Sie haben Besucher, aber keine Leads? Hier sind 12 schnelle UX/Trust/CTA-Fixes (ohne Relaunch), die sofort mehr Klicks bringen."
 date: "2026-02-18"
 category: "compliance"

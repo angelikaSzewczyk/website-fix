@@ -1,9 +1,9 @@
 ---
-title: "Ist Ihre Website wirklich offline? So prüfen Sie, ob Ihre Seite nur für sich nicht erreichbar ist"
+title: "Ist Ihre WordPress-Website wirklich offline? So prüfen Sie es richtig"
 description: "Manchmal wirkt eine Website offline, obwohl sie nur für sich nicht lädt. So finden Sie schnell heraus, was wirklich passiert."
 date: "2026-02-16"
 category: "compliance"
-tags: ["website offline", "website down prüfen", "server problem", "website check"]
+tags: ["wordpress", "website offline", "website down prüfen", "server problem", "website check"]
 status: "published"
 ---
 

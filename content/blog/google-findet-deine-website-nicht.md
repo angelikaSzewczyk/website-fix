@@ -1,5 +1,5 @@
 ---
-title: "Warum findet Google Ihre Homepage nicht? 7 Ursachen + Request Indexing 2026"
+title: "Warum findet Google Ihre WordPress-Seite nicht? 7 Ursachen + Request Indexing 2026"
 description: "Google indiziert Ihre Seite nicht? Die 7 häufigsten Ursachen — von noindex bis robots.txt — plus wie Sie den Request Indexing Prozess in der Search Console 2026 korrekt auslösen."
 date: "2026-04-13"
 category: "compliance"

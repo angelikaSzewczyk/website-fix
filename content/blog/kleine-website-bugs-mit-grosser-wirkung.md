@@ -1,5 +1,5 @@
 ---
-title: "Kleine Website-Bugs mit großer Wirkung: 12 typische Probleme (die fast jeder hat)"
+title: "Kleine WordPress-Bugs mit großer Wirkung: 12 typische Probleme (die fast jeder hat)"
 description: "Buttons, Abstände, Texte, Bugs – kleine Website-Probleme kosten oft mehr Anfragen als große Fehler. Das sind die häufigsten."
 date: "2026-02-16"
 category: "compliance"

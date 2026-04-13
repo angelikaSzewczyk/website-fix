@@ -1,9 +1,9 @@
 ---
-title: "DNS Fehler: Warum Ihre Website plötzlich nicht erreichbar ist"
+title: "WordPress-Website plötzlich nicht erreichbar? DNS-Fehler erkennen und lösen"
 description: "DNS-Probleme können dazu führen, dass eine Website nicht erreichbar ist. Das sind die häufigsten Ursachen."
 date: "2026-02-27"
 category: "compliance"
-tags: ["dns", "website down", "domain", "server", "hosting"]
+tags: ["wordpress", "dns", "website down", "domain", "server", "hosting"]
 status: "published"
 ---
 

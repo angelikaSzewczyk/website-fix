@@ -1,8 +1,8 @@
 ---
-title: "Wurde meine Website gehackt? 7 typische Anzeichen"
+title: "Wurde meine WordPress-Website gehackt? 7 typische Anzeichen"
 description: "Wenn eine Website gehackt wurde, zeigen sich oft bestimmte Symptome. Diese Anzeichen solltest Sie kennen."
 date: "2026-02-28"
-category: "compliance"
+category: "wordpress"
 tags: ["website gehackt", "wordpress security", "malware", "website sicherheit"]
 status: "published"
 ---

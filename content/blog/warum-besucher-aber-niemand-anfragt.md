@@ -1,5 +1,5 @@
 ---
-title: "Warum Ihre Website Besucher hat – aber niemand anfragt"
+title: "Warum Ihre WordPress-Website Besucher hat – aber niemand anfragt"
 description: "Viele Websites haben Traffic, aber keine Anfragen. Oft sind kleine UX- oder Technikprobleme der Grund."
 date: "2026-03-04"
 category: "compliance"

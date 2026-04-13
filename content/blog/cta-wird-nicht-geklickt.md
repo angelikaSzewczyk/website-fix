@@ -1,5 +1,5 @@
 ---
-title: "Warum Ihre Website Besucher hat – aber niemand auf den Button klickt"
+title: "WordPress-Website: Besucher da – aber niemand klickt auf den Button"
 description: "Traffic ist da, Anfragen fehlen? Oft liegt es nicht an den Besuchern, sondern an CTA, Vertrauen und Klarheit."
 date: "2026-02-27"
 category: "compliance"

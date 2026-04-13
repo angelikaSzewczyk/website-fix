@@ -1,9 +1,9 @@
 ---
-title: "Das unsichtbare Risiko: Warum Standard-Monitoring bei modernen JS-Websites (React/Vue) versagt"
-description: "Standard-Crawler erkennen Fehler auf React- und Vue-Websites nicht. Warum JavaScript-Rendering für zuverlässiges Monitoring unverzichtbar ist — und was Ihren Kunden das kostet."
+title: "WordPress-Agenturen mit Headless-Frontend: Warum Standard-Monitoring versagt"
+description: "WordPress als Backend, React oder Vue als Frontend – immer mehr Agenturen bauen so. Doch Standard-Crawler erkennen Fehler nicht. Was das für Ihre Kunden bedeutet – und wie WebsiteFix den WordPress-Core trotzdem zuverlässig überwacht."
 date: "2026-04-11"
 category: "agency"
-tags: ["JavaScript", "React", "Vue", "Monitoring", "Crawler", "technisches SEO", "Barrierefreiheit", "Agenturen", "agency"]
+tags: ["Headless WordPress", "React", "Vue", "WordPress Monitoring", "Crawler", "technisches SEO", "WordPress Agenturen", "agency"]
 ---
 
 > **Ein Standard-Crawler sieht Ihre React-Website wie Google im Jahr 2010:** Er sieht HTML. Kein JavaScript. Keine gerenderten Inhalte. Keine realen Fehler. Ein falsches Sicherheitsgefühl, das Ihre Kunden teuer bezahlen können.

@@ -2,7 +2,7 @@
 title: "WordPress Weiße Seite? Alle Ursachen & Fixes — auch nach Website-Umzug (2026)"
 description: "Ihre WordPress-Website zeigt nur eine weiße Seite? Schritt-für-Schritt-Fixes für Plugin-Konflikte, PHP-Fehler und die häufige weiße Seite nach einem Website-Umzug."
 date: "2026-04-13"
-category: "compliance"
+category: "wordpress"
 tags: ["weiße seite", "white screen", "wordpress fehler", "website kaputt", "website reparieren", "wsod", "php error", "wordpress umzug"]
 status: "published"
 ---

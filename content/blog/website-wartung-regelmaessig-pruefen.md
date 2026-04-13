@@ -1,9 +1,9 @@
 ---
-title: "Warum regelmäßige Website Wartung wichtig ist – und welche Probleme dadurch vermieden werden"
+title: "Warum regelmäßige WordPress-Wartung wichtig ist – und welche Probleme sie verhindert"
 description: "Viele Websiteprobleme entstehen, weil Wartung fehlt. Diese Punkte sollte jede Website regelmäßig prüfen."
 date: "2026-03-05"
 category: "compliance"
-tags: ["website wartung", "maintenance", "website probleme", "wordpress wartung"]
+tags: ["wordpress", "website wartung", "maintenance", "website probleme", "wordpress wartung"]
 status: "published"
 ---
 

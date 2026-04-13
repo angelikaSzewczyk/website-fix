@@ -1,9 +1,9 @@
 ---
-title: "WordPress Hilfe finden: Worauf Sie achten solltest"
-description: "Wenn Ihre WordPress Website Probleme macht, brauchen Sie schnell Hilfe. Darauf solltest Sie achten."
+title: "WordPress Problem selbst lösen oder Hilfe holen? So entscheiden Sie richtig"
+description: "Wann lohnt es sich, ein WordPress-Problem selbst zu lösen – und wann sollten Sie einen Spezialisten beauftragen? Eine ehrliche Entscheidungshilfe mit Checkliste."
 date: "2026-03-02"
-category: "compliance"
-tags: ["wordpress hilfe", "wordpress support", "wordpress probleme", "wordpress service"]
+category: "wordpress"
+tags: ["wordpress hilfe", "wordpress support", "wordpress selbst reparieren", "wordpress service", "wordpress probleme lösen"]
 status: "published"
 ---
 

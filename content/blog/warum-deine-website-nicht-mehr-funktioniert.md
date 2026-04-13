@@ -1,8 +1,8 @@
 ---
-title: "Warum Ihre Website plötzlich nicht mehr funktioniert"
+title: "Warum Ihre WordPress-Website plötzlich nicht mehr funktioniert"
 description: "Wenn eine Website plötzlich Fehler zeigt, stecken oft Updates, Plugins oder Serverprobleme dahinter."
 date: "2026-03-02"
-category: "compliance"
+category: "wordpress"
 tags: ["website kaputt", "wordpress fehler", "website probleme", "server", "update"]
 status: "published"
 ---

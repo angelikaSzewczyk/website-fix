@@ -1,5 +1,5 @@
 ---
-title: "Website Fehler beheben: Warum kleine Probleme oft große Folgen haben"
+title: "WordPress Fehler beheben: Warum kleine Probleme oft große Folgen haben"
 description: "Viele Websiteprobleme wirken klein, können aber große Auswirkungen haben. Warum schnelle Reparaturen wichtig sind."
 date: "2026-03-08"
 category: "compliance"

@@ -1,5 +1,5 @@
 ---
-title: "Website bringt keine Anfragen? 5 Gründe, warum Sie Kunden verlieren"
+title: "WordPress-Website bringt keine Anfragen? 5 Gründe, warum Sie Kunden verlieren"
 description: "Besucher sind da, aber das Telefon bleibt stumm? Erfahre, warum Ihre Seite keine Leads generiert und wie Sie sie zur Anfragemaschine machst."
 date: "2026-03-21"
 category: "compliance"

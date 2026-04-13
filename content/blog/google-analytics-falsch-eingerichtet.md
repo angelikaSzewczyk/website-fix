@@ -1,5 +1,5 @@
 ---
-title: "Google Analytics falsch eingerichtet? 8 häufige Fehler (und wie Sie sie erkennst)"
+title: "Google Analytics auf WordPress falsch eingerichtet? 8 häufige Fehler"
 description: "Analytics läuft, aber die Zahlen helfen Ihnen nicht? Diese 8 typischen Tracking-Fehler sorgen für falsche Daten – inkl. schneller Fixes."
 date: "2026-02-16"
 category: "compliance"

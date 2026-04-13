@@ -2,7 +2,7 @@
 title: "WordPress Kritischer Fehler? In 60 Sekunden zur Lösung (Ohne Entwickler)"
 description: "WordPress zeigt 'Es gab einen kritischen Fehler'? Ihre Daten sind sicher. Mit dieser 3-Schritte-Checkliste beheben Sie den Fehler ohne Programmierkenntnisse."
 date: "2026-04-01"
-category: "compliance"
+category: "wordpress"
 tags: ["wordpress kritischer fehler", "critical error wordpress", "website fehler beheben", "wp-admin login geht nicht", "wordpress reparieren", "es gab einen kritischen fehler"]
 status: "published"
 ---

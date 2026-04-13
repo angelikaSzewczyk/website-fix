@@ -1,5 +1,5 @@
 ---
-title: "Website Probleme schnell lösen: Warum schnelle Analyse entscheidend ist"
+title: "WordPress Probleme schnell lösen: Warum schnelle Analyse entscheidend ist"
 description: "Viele Websiteprobleme lassen sich schneller lösen, als man denkt. Entscheidend ist eine gezielte Analyse."
 date: "2026-03-08"
 category: "compliance"
