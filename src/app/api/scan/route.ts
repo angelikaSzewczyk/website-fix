@@ -160,6 +160,24 @@ function detectWordPress(html: string, headers: Headers): boolean {
   return false;
 }
 
+// ── URL Audit Filter ────────────────────────────────────────
+// URLs im Crawl registrieren, aber NICHT analysieren:
+// /feed/, /feed/atom/, .xml, .txt, .json, ?replytocom
+const SKIP_AUDIT_PATH = /\/(feed|feed\/atom|feed\/rss|rss)(\/|$)/i;
+const SKIP_AUDIT_EXT  = /\.(xml|txt|json)(\?|#|$)/i;
+
+function shouldAudit(url: string): boolean {
+  try {
+    const { pathname, searchParams } = new URL(url);
+    if (searchParams.has("replytocom"))   return false;
+    if (SKIP_AUDIT_PATH.test(pathname))   return false;
+    if (SKIP_AUDIT_EXT.test(pathname))    return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ── Alt Text Check ──────────────────────────────────────────
 function countMissingAlt(html: string): { missing: number; total: number } {
   const imgs = html.match(/<img[^>]*>/gi) ?? [];
@@ -391,11 +409,17 @@ export async function POST(req: NextRequest) {
     }
     subpageUrls = subpageUrls.slice(0, maxSubpages);
 
+    // Split: alle entdeckten URLs (für Statistik) vs. auditierbare URLs (für Analyse)
+    // Feed-, XML-, TXT-, JSON- und replytocom-URLs werden registriert aber nicht gescannt.
+    const discoveredCount = subpageUrls.length;
+    const auditableUrls   = subpageUrls.filter(shouldAudit);
+    const filteredCount   = discoveredCount - auditableUrls.length;
+
     // ── 4. UNTERSEITEN SCANNEN — in Batches von 5 ──────────
     // Batching prevents hammering the target server and avoids hitting
     // Vercel's connection limits when 30 agencies scan simultaneously.
-    const unterseiten: PageResult[] = subpageUrls.length > 0
-      ? await batchAsync(subpageUrls, 5, (u) => scanSubpage(u, targetUrl), 200)
+    const unterseiten: PageResult[] = auditableUrls.length > 0
+      ? await batchAsync(auditableUrls, 5, (u) => scanSubpage(u, targetUrl), 200)
       : [];
 
     // ── 5. CHECK 1: DUPLICATE TITLES ───────────────────────
@@ -448,7 +472,9 @@ export async function POST(req: NextRequest) {
 
     // ── Audit-Ergebnisse zusammenführen ────────────────────
     const audit = {
-      gescannteSeiten: unterseiten.length + 1,
+      gescannteSeiten:   unterseiten.length + 1,
+      entdeckteUrls:     discoveredCount,
+      gefilterteUrls:    filteredCount,  // Feeds/XML/etc. — registriert aber nicht analysiert
       unterseiten: unterseiten.map((p) => ({
         url: p.url, erreichbar: p.erreichbar, status: p.status,
         title: p.title || "(kein Title)", h1: p.h1 || "(kein H1)",
@@ -471,7 +497,7 @@ export async function POST(req: NextRequest) {
 
     const fc = scanData.formCheck as { formsCount: number; inputsWithoutLabel: number; buttonsWithoutText: number } | undefined;
 
-    const prompt = `360° Business Health Check: ${host0} | ${audit.gescannteSeiten} Seiten gescannt
+    const prompt = `360° Business Health Check: ${host0} | ${audit.gescannteSeiten} Seiten analysiert (${discoveredCount} entdeckt, ${filteredCount} gefiltert: Feeds/XML/JSON)
 
 TECHNISCH: title="${scanData.title || "fehlt"}" | meta="${scanData.metaDescription ? "ok" : "fehlt"}" | h1="${scanData.h1 ? "ok" : "fehlt"}" | https=${scanData.https} | noindex=${scanData.indexierungGesperrt} | sitemap=${scanData.sitemapVorhanden} | robots-block=${scanData.robotsBlockiertAlles}${scanData.wordpressFehler ? " | WP-FEHLER!" : ""}
 

@@ -88,6 +88,9 @@ function parseFindings(diagnose: string): Finding[] {
   return findings;
 }
 
+// ── Feed/XML filter for display ───────────────────────────────────────────────
+const FEED_URL_PATTERN = /\/(feed|feed\/atom|feed\/rss|rss)(\/|$)|\.(xml|txt|json)(\?|#|$)/i;
+
 // ── Build subpage list from real data ─────────────────────────────────────────
 function buildPages(d: StoredScan) {
   const base = (() => { try { return new URL(d.url).host; } catch { return d.url; } })();
@@ -96,7 +99,7 @@ function buildPages(d: StoredScan) {
     + (d.altMissingCount > 0 ? Math.min(d.altMissingCount, 3) : 0);
   const items = [
     { path: homePath, errors: homeErrors },
-    ...d.unterseiten.map(p => {
+    ...d.unterseiten.filter(p => !FEED_URL_PATTERN.test(p.url)).map(p => {
       let errors = p.altMissing;
       if (!p.erreichbar) errors += 3;
       if (p.noindex)     errors += 1;
@@ -352,6 +355,17 @@ function ResultsInner() {
                 <div style={{ fontSize: 12, color: critErrors === 0 ? "#22c55e" : "#ef4444", marginTop: 4, fontWeight: 500 }}>
                   {critErrors === 0 ? "Sieht gut aus!" : "Bußgeld-relevant ab 28.06.2025"}
                 </div>
+                {critErrors > 0 && (
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 5, marginTop: 10,
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
+                    background: "rgba(245,158,11,0.12)",
+                    border: "1px solid rgba(245,158,11,0.30)",
+                    color: "#f59e0b",
+                  }}>
+                    ⚠️ Bußgeld-Risiko hoch
+                  </div>
+                )}
               </div>
             </div>
 
@@ -436,7 +450,7 @@ function ResultsInner() {
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.85) 40%, rgba(11,12,16,0.98) 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 24px" }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>+ {pageItems.length - VISIBLE_PAGES} weitere Seiten analysiert</div>
-                    <Link href="/register" style={{ display: "inline-block", padding: "10px 24px", borderRadius: 10, background: "#007BFF", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.4)" }}>
+                    <Link href="/register" className="wf-cta-pulse" style={{ display: "inline-block", padding: "10px 24px", borderRadius: 10, background: "#007BFF", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.4)" }}>
                       Alle {pagesTotal} Seiten freischalten →
                     </Link>
                   </div>
@@ -780,6 +794,16 @@ function ResultsInner() {
         </footer>
 
       </main>
+
+      <style>{`
+        @keyframes wf-cta-pulse {
+          0%, 100% { box-shadow: 0 4px 16px rgba(0,123,255,0.4); }
+          50%       { box-shadow: 0 4px 28px rgba(0,123,255,0.75), 0 0 0 4px rgba(0,123,255,0.15); }
+        }
+        .wf-cta-pulse {
+          animation: wf-cta-pulse 2.2s ease-in-out infinite;
+        }
+      `}</style>
     </>
   );
 }

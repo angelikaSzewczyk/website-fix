@@ -388,7 +388,7 @@ export default function InlineScan({
             {[
               { label: "Crawl gestartet", done: true },
               { label: "Sitemap & Links analysiert", done: true },
-              { label: crawlCounter > 0 ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…` : "Unterseiten werden geprüft…", done: false, active: true },
+              { label: crawlCounter > 0 ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…` : "Prüfe Relevanz gefundener URLs…", done: false, active: true },
               { label: "KI-Diagnose wird erstellt…", done: false },
             ].map((step, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
