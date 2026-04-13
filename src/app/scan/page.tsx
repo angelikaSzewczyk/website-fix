@@ -8,12 +8,13 @@ import BrandLogo from "../components/BrandLogo";
 // ── Types ────────────────────────────────────────────────────────────────────
 type ScanPhase =
   | "idle"
-  | "step1"   // Crawl startet
-  | "step2"   // Sitemap / Link-Discovery
-  | "step3"   // Technische Barrieren (crawl counter shown here)
-  | "step4"   // KI-Diagnose
+  | "step1"         // Crawl startet
+  | "step2"         // Sitemap / Link-Discovery
+  | "step3"         // Technische Barrieren (crawl counter shown here)
+  | "step4"         // KI-Diagnose
   | "done"
-  | "error";
+  | "error"
+  | "not_wordpress"; // Seite erreichbar, aber kein WordPress erkannt
 
 type ScanResult = {
   diagnose: string;
@@ -120,6 +121,7 @@ export default function ScanPage() {
   const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextScanMs: number }>({ blocked: false, nextScanMs: 0 });
   const [timeRemaining, setTimeRemaining] = useState("");
   const [activityFeed, setActivityFeed] = useState<{ level: string; msg: string; color: string }[]>([]);
+  const [notifyNextJs, setNotifyNextJs] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -272,6 +274,10 @@ export default function ScanPage() {
         setTimeout(() => {
           router.push(`/scan/results?url=${encodeURIComponent(url)}`);
         }, 900);
+      } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
+        clearTimers();
+        apiDone.current = true;
+        setPhase("not_wordpress");
       } else {
         setErrorMsg(data.error ?? "Etwas ist schiefgelaufen.");
         setPhase("error");
@@ -296,6 +302,7 @@ export default function ScanPage() {
     setShowOverlay(false);
     setCrawlCounter(0);
     setActivityFeed([]);
+    setNotifyNextJs(false);
   }
 
   const isScanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
@@ -586,6 +593,50 @@ export default function ScanPage() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {/* ── NOT WORDPRESS ── */}
+        {phase === "not_wordpress" && (
+          <section style={{ maxWidth: 600, margin: "0 auto 48px", padding: "0 24px" }}>
+            <div style={{
+              padding: "26px 24px 22px",
+              background: "rgba(10,8,18,0.70)",
+              border: "1px solid rgba(122,166,255,0.18)",
+              borderRadius: 14,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: "60%", height: "100%", background: "radial-gradient(ellipse at 90% 30%, rgba(99,102,241,0.09) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14, position: "relative" }}>
+                <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: "rgba(99,102,241,0.10)", border: "1px solid rgba(99,102,241,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: "-0.2px", marginBottom: 4 }}>Spezialisierter WordPress-Check</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.6, maxWidth: 460 }}>
+                    WebsiteFix ist exklusiv auf WordPress-Architekturen optimiert. Die Ziel-URL nutzt eine andere Technologie (z.&nbsp;B. Next.js, React oder ein statisches CMS). Möchten Sie eine WordPress-Seite testen?
+                  </div>
+                </div>
+              </div>
+              <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 18px" }} />
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                <button onClick={reset} style={{ fontSize: 13, fontWeight: 600, color: "#fff", background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.30)", borderRadius: 8, cursor: "pointer", padding: "8px 16px" }}>
+                  Eingabe leeren →
+                </button>
+                {!notifyNextJs ? (
+                  <button onClick={() => { setNotifyNextJs(true); try { localStorage.setItem("wf_nextjs_notify", "1"); } catch {} }} style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", padding: "8px 14px" }}>
+                    Benachrichtigen, wenn Next.js Support kommt
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 12, color: "rgba(141,243,211,0.7)", display: "flex", alignItems: "center", gap: 5 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Gemerkt — wir melden uns!
+                  </span>
+                )}
+              </div>
+            </div>
           </section>
         )}
 

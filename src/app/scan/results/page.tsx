@@ -224,7 +224,11 @@ function ResultsInner() {
 
   // Findings
   const findings    = isDemo ? [] : parseFindings(scan!.diagnose);
-  const visibleFix  = isDemo ? DEMO_FIX : (findings[0] ? { ...findings[0], before: "", after: "" } : DEMO_FIX);
+  // For real scans: use first finding or null (never fall back to DEMO_FIX — that would show
+  // fake "Kontrastverhältnis" data on a real result and destroy credibility).
+  const visibleFix  = isDemo
+    ? DEMO_FIX
+    : (findings[0] ? { ...findings[0], before: "", after: "" } : null);
   const lockedCount = isDemo ? DEMO_LOCKED.length : Math.max(0, findings.length - 1);
   const lockedItems = isDemo
     ? DEMO_LOCKED
@@ -593,45 +597,51 @@ function ResultsInner() {
             <h2 style={{ margin: 0, fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>KI-generierte Code-Lösungen</h2>
           </div>
 
-          {/* Visible fix */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "rgba(239,68,68,0.04)" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>
-                {visibleFix.label.includes("KRITISCH") || visibleFix.label.includes("🔴") ? "🔴 Kritisch" : "🟡 Wichtig"}
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{visibleFix.issue}</span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: "auto", fontFamily: "monospace" }}>{displayDomain}</span>
-            </div>
-
-            {visibleFix.desc && (
-              <div style={{ padding: "20px 24px 0" }}>
-                <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>{visibleFix.desc}</p>
+          {/* Visible fix — Demo: vollständig mit Code-Panels | Real: echte AI-Daten | Null: Skeleton */}
+          {isDemo && (
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
+              <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "rgba(239,68,68,0.04)" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>🔴 Kritisch</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{DEMO_FIX.issue}</span>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: "auto", fontFamily: "monospace" }}>{displayDomain}</span>
               </div>
-            )}
-
-            {/* Code columns (demo) or text fix (real) */}
-            {isDemo ? (
+              <div style={{ padding: "20px 24px 0" }}>
+                <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>{DEMO_FIX.desc}</p>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
                   <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Vorher</span>
                   </div>
-                  <pre style={{ margin: 0, padding: "18px 18px 22px", fontSize: 12.5, lineHeight: 1.75, color: "rgba(255,255,255,0.6)", fontFamily: "'Fira Code','Cascadia Code',monospace", background: "rgba(239,68,68,0.03)", overflowX: "auto" }}>
-                    {DEMO_FIX.before}
-                  </pre>
+                  <pre style={{ margin: 0, padding: "18px 18px 22px", fontSize: 12.5, lineHeight: 1.75, color: "rgba(255,255,255,0.6)", fontFamily: "'Fira Code','Cascadia Code',monospace", background: "rgba(239,68,68,0.03)", overflowX: "auto" }}>{DEMO_FIX.before}</pre>
                 </div>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                   <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>KI-Fix</span>
                   </div>
-                  <pre style={{ margin: 0, padding: "18px 18px 22px", fontSize: 12.5, lineHeight: 1.75, color: "#8df3d3", fontFamily: "'Fira Code','Cascadia Code',monospace", background: "rgba(34,197,94,0.03)", overflowX: "auto" }}>
-                    {DEMO_FIX.after}
-                  </pre>
+                  <pre style={{ margin: 0, padding: "18px 18px 22px", fontSize: 12.5, lineHeight: 1.75, color: "#8df3d3", fontFamily: "'Fira Code','Cascadia Code',monospace", background: "rgba(34,197,94,0.03)", overflowX: "auto" }}>{DEMO_FIX.after}</pre>
                 </div>
               </div>
-            ) : (
+            </div>
+          )}
+
+          {/* Real scan — first finding aus echter KI-Diagnose */}
+          {!isDemo && visibleFix && (
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
+              <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "rgba(239,68,68,0.04)" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>
+                  {visibleFix.label.includes("🔴") ? "🔴 Kritisch" : "🟡 Wichtig"}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{visibleFix.issue}</span>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: "auto", fontFamily: "monospace" }}>{displayDomain}</span>
+              </div>
+              {visibleFix.desc && (
+                <div style={{ padding: "20px 24px 0" }}>
+                  <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>{visibleFix.desc}</p>
+                </div>
+              )}
               <div style={{ padding: "0 24px 20px" }}>
                 <div style={{ padding: "14px 18px", background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 10 }}>
                   <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>KI-Empfehlung</div>
@@ -640,8 +650,23 @@ function ResultsInner() {
                   </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Real scan — keine parsierbaren Findings: Skeleton statt Fake-Daten */}
+          {!isDemo && !visibleFix && (
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "28px 24px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Keine kritischen Code-Fehler in der KI-Analyse gefunden</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                  Die KI-Diagnose enthält keine strukturierten Befunde für diesen Bereich. Vollständige Analyse mit Agency Core verfügbar.
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Locked fixes */}
           {lockedCount > 0 && (
