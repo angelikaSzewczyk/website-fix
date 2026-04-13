@@ -6,7 +6,7 @@ import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import TestimonialDots from "./components/testimonial-dots";
-import SiteFooter from "components/SiteFooter";
+import SiteFooter from "./components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "WebsiteFix — Das Betriebssystem für deine Website-Wartung",
