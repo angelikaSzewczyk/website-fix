@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const pathname = usePathname();
+
+  const onAgencyPage = pathname === "/fuer-agenturen";
+  const onBlogPage   = pathname.startsWith("/blog");
+
+  // Preise-Link: auf /fuer-agenturen zum internen Anker, sonst zur Home-Seite mit Anker
+  const preisHref = onAgencyPage ? "#pricing" : "/#pricing";
 
   return (
     <>
@@ -36,19 +44,44 @@ export default function MobileNav() {
         aria-label="Hauptnavigation"
       >
         <div className="mobileNavInner">
-          <Link href="#pricing" className="navLink" onClick={close}
+
+          {/* Preise — immer vorhanden */}
+          <Link href={preisHref} className="navLink" onClick={close}
             style={{ fontSize: 16, fontWeight: 500 }}>
             Preise
           </Link>
-          <Link href="/fuer-agenturen" className="navLink" onClick={close}
-            style={{ fontSize: 16, fontWeight: 500 }}>
-            Für Agenturen
+
+          {/* Kontext-Link: auf /fuer-agenturen → Home, sonst → Für Agenturen */}
+          {onAgencyPage ? (
+            <Link href="/" className="navLink" onClick={close}
+              style={{ fontSize: 16, fontWeight: 500 }}>
+              Home
+            </Link>
+          ) : (
+            <Link href="/fuer-agenturen" className="navLink" onClick={close}
+              style={{ fontSize: 16, fontWeight: 500 }}>
+              Für Agenturen
+            </Link>
+          )}
+
+          {/* Blog — immer vorhanden, aktive Seite dezent markiert */}
+          <Link href="/blog" className="navLink" onClick={close}
+            style={{
+              fontSize: 16,
+              fontWeight: onBlogPage ? 700 : 500,
+              color: onBlogPage ? "rgba(255,255,255,0.45)" : undefined,
+              pointerEvents: onBlogPage ? "none" : undefined,
+            }}>
+            Blog{onBlogPage ? " ·" : ""}
           </Link>
+
+          {/* Anmelden */}
           <Link href="/login" className="navLink" onClick={close}
             style={{ fontSize: 16, fontWeight: 500 }}>
             Anmelden
           </Link>
-          {/* Primärer CTA */}
+
+          {/* Primärer CTA — immer ganz unten */}
           <Link
             href="/scan"
             onClick={close}
@@ -63,7 +96,7 @@ export default function MobileNav() {
               fontSize: 16,
               textDecoration: "none",
               boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
-              marginTop: 4,
+              marginTop: 8,
             }}
           >
             Jetzt scannen →
