@@ -372,7 +372,7 @@ export default function ScanPage() {
 
       {/* ── HERO ── */}
       <main>
-        <section style={{ maxWidth: 760, margin: "0 auto", padding: "72px 24px 56px", textAlign: "center" }}>
+        <section style={{ maxWidth: 760, margin: "0 auto", padding: "96px 24px 64px", textAlign: "center" }}>
 
           {/* Deep Scan badge */}
           <div style={{
@@ -411,39 +411,49 @@ export default function ScanPage() {
           {phase === "idle" && (
             <>
               {scanBlocked.blocked ? (
-                /* 24h limit reached — same design as home CTA box */
-                <div style={{ maxWidth: 560, margin: "0 auto 14px", position: "relative" }}>
+                /* ── 24h limit reached — Glassmorphism + Home-CTA-Glow ── */
+                <div style={{ maxWidth: 520, margin: "0 auto 14px", position: "relative" }}>
+
+                  {/* Outer ambient glow — same radial as home CTA banner */}
                   <div style={{
-                    padding: "40px 36px 32px",
-                    background: "linear-gradient(135deg, #0d1520 0%, #0b0c10 50%, #0a0f1a 100%)",
-                    border: "1px solid rgba(0,123,255,0.2)",
-                    borderRadius: 20,
-                    boxShadow: "0 0 80px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    position: "absolute", top: "50%", left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: "120%", height: "220%",
+                    background: "radial-gradient(ellipse, rgba(0,123,255,0.14) 0%, transparent 65%)",
+                    pointerEvents: "none", zIndex: 0,
+                  }} />
+
+                  {/* Glass card */}
+                  <div style={{
+                    position: "relative", zIndex: 1,
+                    padding: "44px 36px 36px",
+                    background: "rgba(13,21,32,0.72)",
+                    backdropFilter: "blur(24px)",
+                    WebkitBackdropFilter: "blur(24px)",
+                    border: "1px solid rgba(0,123,255,0.22)",
+                    borderRadius: 22,
+                    boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.5)",
                     textAlign: "center",
-                    position: "relative",
                     overflow: "hidden",
                   }}>
-                    {/* Background glow — mirrors home CTA */}
+
+                    {/* Inner top-edge highlight */}
                     <div style={{
-                      position: "absolute", top: "-40%", left: "50%",
-                      transform: "translateX(-50%)",
-                      width: "70%", height: "160%",
-                      background: "radial-gradient(ellipse, rgba(0,123,255,0.12) 0%, transparent 70%)",
+                      position: "absolute", top: 0, left: 0, right: 0, height: 1,
+                      background: "linear-gradient(90deg, transparent, rgba(0,123,255,0.4), transparent)",
                       pointerEvents: "none",
                     }} />
 
-                    {/* Icon */}
+                    {/* Icon — Sanduhr */}
                     <div style={{
-                      position: "relative",
-                      width: 52, height: 52, borderRadius: 14,
-                      margin: "0 auto 22px",
+                      width: 56, height: 56, borderRadius: 16,
+                      margin: "0 auto 24px",
                       background: "rgba(0,123,255,0.1)",
-                      border: "1px solid rgba(0,123,255,0.25)",
+                      border: "1px solid rgba(0,123,255,0.28)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: "0 0 20px rgba(0,123,255,0.15)",
+                      boxShadow: "0 0 24px rgba(0,123,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
                     }}>
-                      {/* Hourglass / Sanduhr */}
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M5 2h14"/>
                         <path d="M5 22h14"/>
                         <path d="M5 2l7 10-7 10"/>
@@ -453,30 +463,66 @@ export default function ScanPage() {
 
                     {/* Headline */}
                     <div style={{
-                      position: "relative",
-                      fontWeight: 800, fontSize: 18, color: "#fff",
-                      marginBottom: 10, letterSpacing: "-0.02em", lineHeight: 1.25,
+                      fontWeight: 800, fontSize: 19, color: "#fff",
+                      marginBottom: 10, letterSpacing: "-0.02em", lineHeight: 1.3,
                     }}>
                       Kostenloses Kontingent ausgeschöpft.
                     </div>
 
                     {/* Subtext */}
                     <p style={{
-                      position: "relative",
-                      margin: "0 auto 28px", fontSize: 14,
-                      color: "rgba(255,255,255,0.4)", lineHeight: 1.7,
-                      maxWidth: 360,
+                      margin: "0 auto 24px", fontSize: 14,
+                      color: "rgba(255,255,255,0.42)", lineHeight: 1.75,
+                      maxWidth: 340,
                     }}>
                       Dein nächster spezialisierter WordPress-Audit ist in{" "}
                       <span style={{ color: "#fff", fontWeight: 700 }}>{timeRemaining}</span>{" "}
                       verfügbar.
                     </p>
 
-                    {/* CTA button — same shadow as home page CTA */}
-                    <div style={{ position: "relative" }}>
+                    {/* Kontingent-Visual — "1 von 1 Scan verwendet" */}
+                    <div style={{
+                      margin: "0 auto 28px",
+                      maxWidth: 300,
+                      padding: "14px 16px",
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: 10,
+                    }}>
+                      <div style={{
+                        display: "flex", justifyContent: "space-between",
+                        marginBottom: 8, fontSize: 11,
+                        color: "rgba(255,255,255,0.3)",
+                        fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
+                      }}>
+                        <span>Freier Scan</span>
+                        <span style={{ color: "#7aa6ff" }}>1 / 1 verwendet</span>
+                      </div>
+                      {/* Progress bar — 100 % filled */}
+                      <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 999, overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%", width: "100%",
+                          background: "linear-gradient(90deg, #007BFF, #8df3d3)",
+                          borderRadius: 999,
+                          boxShadow: "0 0 8px rgba(0,123,255,0.6)",
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* CTA — focal point with strong glow */}
+                    <div style={{ position: "relative", display: "inline-block" }}>
+                      {/* Glow bloom behind button */}
+                      <div style={{
+                        position: "absolute", top: "50%", left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "140%", height: "300%",
+                        background: "radial-gradient(ellipse, rgba(0,123,255,0.5) 0%, transparent 65%)",
+                        pointerEvents: "none",
+                      }} />
                       <Link href="/register" style={{
+                        position: "relative",
                         display: "inline-block",
-                        padding: "14px 32px", borderRadius: 11, fontSize: 15, fontWeight: 800,
+                        padding: "15px 36px", borderRadius: 11, fontSize: 15, fontWeight: 800,
                         background: "linear-gradient(90deg, #007BFF, #0057b8)",
                         color: "#fff", textDecoration: "none",
                         boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
@@ -488,13 +534,12 @@ export default function ScanPage() {
 
                     {/* Countdown pill */}
                     <div style={{
-                      position: "relative",
                       display: "inline-flex", alignItems: "center", gap: 6,
-                      margin: "16px auto 0",
+                      margin: "18px auto 0",
                       padding: "5px 13px", borderRadius: 20,
                       background: "rgba(255,255,255,0.04)",
                       border: "1px solid rgba(255,255,255,0.08)",
-                      fontSize: 12, color: "rgba(255,255,255,0.3)",
+                      fontSize: 12, color: "rgba(255,255,255,0.28)",
                     }}>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"/>
@@ -503,14 +548,15 @@ export default function ScanPage() {
                       Freigabe in {timeRemaining}
                     </div>
 
-                    {/* Agency link */}
-                    <div style={{ position: "relative", marginTop: 16 }}>
+                    {/* Agency link — gray, hover → white via wf-footer-link */}
+                    <div style={{ marginTop: 14 }}>
                       <Link href="/fuer-agenturen#white-label" className="wf-footer-link" style={{
                         fontSize: 12, textDecoration: "none",
                       }}>
                         Sie sind eine Agentur? Jetzt White-Label-Optionen prüfen →
                       </Link>
                     </div>
+
                   </div>
                 </div>
               ) : (
