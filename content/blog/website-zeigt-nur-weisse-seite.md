@@ -1,19 +1,23 @@
 ---
-title: "Website zeigt nur eine weiße Seite? Der komplette Leitfaden zum White Screen of Death"
-description: "Ihre Website ist plötzlich weiß? Keine Panik — Ihre Daten sind fast immer noch da. Die häufigsten Ursachen, Schritt-für-Schritt-Lösungen und wann Sie den Debug-Modus brauchen."
-date: "2026-04-01"
+title: "WordPress Weiße Seite? Alle Ursachen & Fixes — auch nach Website-Umzug (2026)"
+description: "Ihre WordPress-Website zeigt nur eine weiße Seite? Schritt-für-Schritt-Fixes für Plugin-Konflikte, PHP-Fehler und die häufige weiße Seite nach einem Website-Umzug."
+date: "2026-04-13"
 category: "compliance"
-tags: ["weiße seite", "white screen", "wordpress fehler", "website kaputt", "website reparieren", "wsod", "php error"]
+tags: ["weiße seite", "white screen", "wordpress fehler", "website kaputt", "website reparieren", "wsod", "php error", "wordpress umzug"]
 status: "published"
 ---
 
-# Website zeigt nur eine weiße Seite?
+# WordPress Weiße Seite? Alle Ursachen & Fixes — auch nach Website-Umzug
 
 Sie öffnen Ihre Website — und sehen nichts. Keine Fehlermeldung. Keine Inhalte. Nur eine leere, weiße Fläche.
 
 In der Fachwelt nennt man das den **White Screen of Death (WSoD)**. Er ist besonders frustrierend, weil WordPress standardmäßig keine Fehlermeldung ausgibt — nur gähnende Leere.
 
-**Die gute Nachricht:** In den allermeisten Fällen sind Ihre Texte, Bilder und Inhalte vollständig vorhanden — nur ein einzelner technischer Fehler verhindert, dass die Seite lädt. Wie ein Sicherungskasten der ausgelöst hat, während das Haus selbst völlig in Ordnung ist.
+**Die gute Nachricht:** In den allermeisten Fällen sind Ihre Texte, Bilder und Inhalte vollständig vorhanden — nur ein einzelner technischer Fehler verhindert, dass die Seite lädt. Wie ein Sicherungskasten, der ausgelöst hat, während das Haus selbst völlig in Ordnung ist.
+
+Prüfen Sie Ihre Seite sofort kostenlos mit dem WebsiteFix-Scanner.
+
+👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
 ---
 
@@ -109,6 +113,55 @@ Jemand hat in der `functions.php` oder einer anderen Datei etwas geändert — m
 
 ---
 
+## Weiße Seite nach WordPress-Umzug — der häufig übersehene Sonderfall
+
+Die **weiße Seite nach einem Website-Umzug** ist ein eigenständiges Problem mit eigenen Ursachen. Wenn Ihre WordPress-Website nach einem Umzug auf einen neuen Server oder eine neue Domain plötzlich weiß ist, liegt das fast nie an einem Plugin-Konflikt — sondern an drei spezifischen Umzugsfehlern:
+
+### Ursache A: Falsche Datenbankverbindung nach dem Umzug
+
+Beim Umzug werden die Datenbankzugangsdaten oft nicht korrekt übertragen. WordPress kann keine Verbindung zur Datenbank herstellen — und gibt nur eine weiße Seite aus.
+
+**Fix:** Öffnen Sie `wp-config.php` via FTP und prüfen Sie:
+
+```php
+define( 'DB_NAME', 'datenbankname' );
+define( 'DB_USER', 'datenbankbenutzer' );
+define( 'DB_PASSWORD', 'passwort' );
+define( 'DB_HOST', 'localhost' );
+```
+
+Diese Werte müssen mit den Zugangsdaten des **neuen Servers** übereinstimmen — nicht des alten. Ihr Hoster gibt Ihnen die korrekten Werte im Hosting-Panel.
+
+### Ursache B: Falsche Siteurl / Home-URL in der Datenbank
+
+WordPress speichert die Basis-URL Ihrer Website direkt in der Datenbank. Nach einem Umzug auf eine neue Domain zeigen diese Einträge noch auf die alte URL — und alles bricht.
+
+**Fix:** Wenn Sie Zugriff auf phpMyAdmin haben, prüfen Sie in der Tabelle `wp_options` die Werte für `siteurl` und `home`:
+
+```sql
+SELECT * FROM wp_options WHERE option_name IN ('siteurl', 'home');
+```
+
+Beide müssen die neue Domain enthalten. Alternativ: das Plugin **Better Search Replace** nach dem Umzug ausführen und alte Domain durch neue ersetzen.
+
+### Ursache C: PHP-Version auf dem neuen Server inkompatibel
+
+Viele Hoster verwenden unterschiedliche Standard-PHP-Versionen. Wenn der neue Server PHP 8.3 verwendet, aber ein Theme oder Plugin nur mit PHP 7.4 kompatibel ist, entsteht eine weiße Seite.
+
+**Fix:** Im Hosting-Panel des neuen Servers die PHP-Version prüfen und auf **PHP 8.1 oder 8.2** setzen (aktuell empfohlen für die meisten WordPress-Setups). Danach die Website erneut aufrufen.
+
+### Wie WebsiteFix PHP-Fehler im Log findet
+
+Der Debug-Modus zeigt die exakte Fehlermeldung im Browser — aber nur, wenn Sie bereits wissen, wo die `wp-config.php` liegt und FTP-Zugang haben. WebsiteFix analysiert die technischen Signale Ihrer Website von außen und erkennt dabei auch:
+
+- HTTP 500-Fehler, die auf PHP-Probleme hinweisen
+- Falsche oder fehlende SSL-Konfiguration nach dem Umzug
+- Redirect-Schleifen durch inkompatible URL-Einstellungen
+
+So sehen Sie sofort, ob es sich um ein PHP-Problem, einen Datenbankfehler oder einen anderen Umzugsfehler handelt — ohne manuell in Log-Dateien zu suchen.
+
+---
+
 ## Debug-Modus aktivieren (wenn Sie nicht weiterkommen)
 
 Wenn Sie die Ursache nicht finden, zeigt der WordPress-Debug-Modus die echte Fehlermeldung direkt im Browser.
@@ -133,7 +186,9 @@ Jetzt zeigt die weiße Seite den genauen Pfad zum fehlerhaften Plugin oder zur f
 
 Wenn Sie alle Schritte probiert haben und immer noch eine weiße Seite sehen — oder wenn Sie Angst haben, etwas falsch zu machen — dann ist es Zeit für professionelle Hilfe.
 
-Genau dafür entsteht **WebsiteFix**: Sie geben Ihre Website-URL ein, die KI analysiert automatisch, was kaputt ist, und erklärt auf Deutsch, was zu tun ist — ohne Entwickler-Wissen, ohne Fachjargon.
+Genau dafür ist **WebsiteFix** gebaut: Sie geben Ihre Website-URL ein, die KI analysiert automatisch, was kaputt ist, und erklärt auf Deutsch, was zu tun ist — ohne Entwickler-Wissen, ohne Fachjargon.
+
+Prüfen Sie Ihre Seite sofort kostenlos mit dem WebsiteFix-Scanner.
 
 👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
 
@@ -149,6 +204,9 @@ Wenn die Ursache bekannt ist (z. B. das letzte Plugin-Update): oft unter 10 Minu
 
 **Muss ich einen Entwickler beauftragen?**
 Nicht unbedingt. Viele Fälle lassen sich mit den Schritten oben selbst lösen. Erst wenn Sie nicht weiterkommen oder das Problem nach mehreren Versuchen bleibt, lohnt sich externe Hilfe.
+
+**Warum zeigt meine Seite nach dem Umzug nur eine weiße Seite?**
+Das ist ein eigenes Problem. Die häufigsten Ursachen: falsche Datenbankzugangsdaten in der `wp-config.php`, falsche Siteurl in der Datenbank oder eine inkompatible PHP-Version auf dem neuen Server. Alle drei Punkte sind oben Schritt für Schritt erklärt.
 
 **Verliere ich meine Daten durch den Fehler?**
 In der Regel nicht. Meistens blockiert nur ein fehlerhafter Code den Zugriff auf die Datenbank. Ihre Inhalte sind fast immer noch sicher vorhanden.
