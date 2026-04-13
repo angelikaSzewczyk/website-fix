@@ -2,30 +2,36 @@ import Link from "next/link";
 import { getAllPosts } from "@/lib/blog";
 import type { Metadata } from "next";
 import BlogHeader from "../components/blog-header";
+import BlogGrid from "./BlogGrid";
 
 export const metadata: Metadata = {
   title: "Blog — WebsiteFix",
   description: "Tipps, Rechtliches und Best Practices rund um WCAG, Performance und Web-Wartung für Agenturen.",
 };
 
-const CATEGORY_COLOR: Record<string, string> = {
-  "Recht & WCAG":  "#7aa6ff",
-  "BFSG & Recht":  "#7aa6ff",
-  SEO:             "#8df3d3",
-  Speed:           "#8df3d3",
-  Performance:     "#8df3d3",
-  Sicherheit:      "#ff6b6b",
-  Conversion:      "#c084fc",
-  Mobile:          "#ffd93d",
-};
-
-function categoryColor(cat?: string) {
-  if (!cat) return "#8df3d3";
-  return CATEGORY_COLOR[cat] ?? "#8df3d3";
+function estimateReadMinutes(content: string): number {
+  // Strip markdown syntax, count words, assume 200 wpm
+  const text = content
+    .replace(/```[\s\S]*?```/g, "")   // code blocks
+    .replace(/`[^`]+`/g, "")          // inline code
+    .replace(/!\[.*?\]\(.*?\)/g, "")  // images
+    .replace(/\[.*?\]\(.*?\)/g, "$1") // links
+    .replace(/#+\s/g, "")             // headings
+    .replace(/[*_~>]/g, "");          // formatting
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
 }
 
 export default function BlogIndexPage() {
-  const posts = getAllPosts();
+  const posts = getAllPosts().map((p) => ({
+    slug: p.slug,
+    title: p.frontmatter.title,
+    description: p.frontmatter.description,
+    date: p.frontmatter.date,
+    category: p.frontmatter.category,
+    tags: p.frontmatter.tags,
+    readMinutes: estimateReadMinutes(p.content),
+  }));
 
   return (
     <>
@@ -34,7 +40,7 @@ export default function BlogIndexPage() {
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px 96px" }}>
 
         {/* Page header */}
-        <div style={{ marginBottom: 56 }}>
+        <div style={{ marginBottom: 40 }}>
           <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
             Blog
           </p>
@@ -46,100 +52,9 @@ export default function BlogIndexPage() {
           </p>
         </div>
 
-        {/* Articles grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-          gap: 12,
-        }}>
-          {posts.map((p) => {
-            const fm = p.frontmatter;
-            const color = categoryColor(fm.category);
-            const dateStr = fm.date
-              ? new Date(fm.date).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })
-              : "";
+        {/* Grid with filters — client component */}
+        <BlogGrid posts={posts} />
 
-            return (
-              <Link
-                key={p.slug}
-                href={`/blog/${p.slug}`}
-                style={{ textDecoration: "none", display: "block" }}
-              >
-                <article style={{
-                  height: "100%",
-                  padding: "28px",
-                  background: "#13151a",
-                  border: `1px solid ${color}18`,
-                  borderRadius: 14,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0,
-                  position: "relative",
-                  overflow: "hidden",
-                }}>
-                  {/* Subtle color top stripe */}
-                  <div style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: 3,
-                    background: `linear-gradient(90deg, ${color}, ${color}44)`,
-                  }} />
-
-                  {/* Category + date row */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-                    {fm.category && (
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-                        background: `${color}14`, color,
-                        border: `1px solid ${color}28`, letterSpacing: "0.05em",
-                      }}>
-                        {fm.category}
-                      </span>
-                    )}
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
-                      {dateStr}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h2 style={{
-                    margin: "0 0 12px", fontSize: 17, fontWeight: 700,
-                    color: "#fff", lineHeight: 1.35, letterSpacing: "-0.015em",
-                    flexGrow: 1,
-                  }}>
-                    {fm.title}
-                  </h2>
-
-                  {/* Excerpt */}
-                  {fm.description && (
-                    <p style={{
-                      margin: "0 0 24px", fontSize: 13.5, color: "rgba(255,255,255,0.4)",
-                      lineHeight: 1.7,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}>
-                      {fm.description}
-                    </p>
-                  )}
-
-                  {/* CTA */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-                      {fm.tags?.[0] ?? "Artikel"}
-                    </span>
-                    <span style={{ fontSize: 13, color, fontWeight: 600 }}>
-                      Jetzt lesen →
-                    </span>
-                  </div>
-                </article>
-              </Link>
-            );
-          })}
-        </div>
-
-        {posts.length === 0 && (
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>Keine Artikel vorhanden.</p>
-        )}
       </main>
 
       {/* CTA Banner */}
@@ -171,6 +86,9 @@ export default function BlogIndexPage() {
               Für Agenturen
             </Link>
           </div>
+          <p style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+            Jederzeit kündbar · Sicher bezahlen
+          </p>
         </div>
       </section>
     </>
