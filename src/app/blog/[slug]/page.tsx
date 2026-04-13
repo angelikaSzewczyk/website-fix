@@ -8,6 +8,7 @@ import html from "remark-html";
 import RelatedPosts from "@/app/components/related-posts";
 import BlogHeader from "@/app/components/blog-header";
 import BlogClientWrapper from "@/app/components/blog-client-wrapper";
+import SiteFooter from "@/app/components/SiteFooter";
 
 const getPostData = cache(async (slug: string) => {
   const filePath = path.join(process.cwd(), "content", "blog", `${slug}.md`);
@@ -142,6 +143,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <RelatedPosts slug={params.slug} lang="de" />
         </article>
       </main>
+
+      <SiteFooter />
     </>
   );
 }

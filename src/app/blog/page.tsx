@@ -3,6 +3,7 @@ import { getAllPosts } from "@/lib/blog";
 import type { Metadata } from "next";
 import BlogHeader from "../components/blog-header";
 import BlogGrid from "./BlogGrid";
+import SiteFooter from "../components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Blog — WebsiteFix",
@@ -105,6 +106,8 @@ export default function BlogIndexPage() {
           </div>
         </div>
       </section>
+
+      <SiteFooter />
     </>
   );
 }
