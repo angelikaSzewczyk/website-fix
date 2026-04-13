@@ -238,7 +238,23 @@ export default function ScanPage() {
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!url || phase !== "idle" || scanBlocked.blocked) return;
+    if (!url || phase !== "idle") return;
+
+    // Fresh localStorage check — catches stale component state (e.g. after SSR hydration)
+    try {
+      const ts = localStorage.getItem(FREE_SCAN_KEY);
+      if (ts) {
+        const elapsed = Date.now() - parseInt(ts);
+        if (elapsed < FREE_SCAN_LIMIT_MS) {
+          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
+          setScanBlocked({ blocked: true, nextScanMs: nextMs });
+          setTimeRemaining(formatTimeRemaining(nextMs));
+          return;
+        }
+      }
+    } catch { /* localStorage unavailable */ }
+
+    if (scanBlocked.blocked) return;
 
     clearTimers();
     apiDone.current = false;
@@ -266,8 +282,14 @@ export default function ScanPage() {
       apiDone.current = true;
 
       if (data.success) {
-        // Save scan timestamp to localStorage for 24h gate
-        try { localStorage.setItem(FREE_SCAN_KEY, Date.now().toString()); } catch { /* ignore */ }
+        // Save scan timestamp to localStorage for 24h gate + update in-component state
+        try {
+          const now = Date.now();
+          localStorage.setItem(FREE_SCAN_KEY, now.toString());
+          const nextMs = now + FREE_SCAN_LIMIT_MS;
+          setScanBlocked({ blocked: true, nextScanMs: nextMs });
+          setTimeRemaining(formatTimeRemaining(nextMs));
+        } catch { /* ignore */ }
 
         setPhase("done");
         // Store real scan data for the results page
@@ -299,6 +321,16 @@ export default function ScanPage() {
         setTimeout(() => {
           router.push(`/scan/results?url=${encodeURIComponent(url)}`);
         }, 900);
+      } else if (data.errorCode === "RATE_LIMITED") {
+        // Server confirmed the IP is rate-limited — sync localStorage + blocked state
+        clearTimers();
+        apiDone.current = true;
+        const now = Date.now();
+        const nextMs = data.retryAfterMs ? now + data.retryAfterMs : now + FREE_SCAN_LIMIT_MS;
+        try { localStorage.setItem(FREE_SCAN_KEY, (nextMs - FREE_SCAN_LIMIT_MS).toString()); } catch { /* ignore */ }
+        setScanBlocked({ blocked: true, nextScanMs: nextMs });
+        setTimeRemaining(formatTimeRemaining(nextMs));
+        setPhase("idle");
       } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
         clearTimers();
         apiDone.current = true;

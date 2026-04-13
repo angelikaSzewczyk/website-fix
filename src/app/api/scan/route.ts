@@ -69,21 +69,47 @@ async function saveUserScan(params: {
 }
 
 // ── Rate Limiting ───────────────────────────────────────────
-const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
+const RATE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+const MIN_GAP_MS     = 15_000;               // 15s throttle between attempts
+
+const rateLimit = new Map<string, { firstScanAt: number; lastScan: number }>();
 const globalLimit = { count: 0, resetAt: 0 };
 
-function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
+function checkRateLimit(ip: string): { allowed: boolean; errorCode?: string; reason?: string; retryAfterMs?: number } {
   const now = Date.now();
+
+  // Global 1-minute burst cap (15 req across all free users) — server health guard
   if (now > globalLimit.resetAt) { globalLimit.count = 0; globalLimit.resetAt = now + 60_000; }
   if (globalLimit.count >= 15) return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
   globalLimit.count++;
 
   const entry = rateLimit.get(ip);
-  if (!entry || now > entry.resetAt) { rateLimit.set(ip, { count: 1, resetAt: now + 3_600_000, lastScan: now }); return { allowed: true }; }
-  if (now - entry.lastScan < 15_000) return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
-  if (entry.count >= 3) return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde und versuche es erneut." };
-  entry.count++;
-  entry.lastScan = now;
+
+  // First scan from this IP — always allow, record timestamp
+  if (!entry) {
+    rateLimit.set(ip, { firstScanAt: now, lastScan: now });
+    return { allowed: true };
+  }
+
+  // Throttle: min 15s between consecutive requests
+  if (now - entry.lastScan < MIN_GAP_MS) {
+    return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
+  }
+
+  // 24h hard block: IP already used its free scan
+  const windowAge = now - entry.firstScanAt;
+  if (windowAge < RATE_WINDOW_MS) {
+    const retryAfterMs = entry.firstScanAt + RATE_WINDOW_MS - now;
+    return {
+      allowed: false,
+      errorCode: "RATE_LIMITED",
+      reason: "Kostenloses Kontingent aufgebraucht. Bitte morgen wieder versuchen oder jetzt upgraden.",
+      retryAfterMs,
+    };
+  }
+
+  // 24h window expired — reset for this IP
+  rateLimit.set(ip, { firstScanAt: now, lastScan: now });
   return { allowed: true };
 }
 
@@ -268,7 +294,12 @@ export async function POST(req: NextRequest) {
     if (!isPaid) {
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
       const limitResult = checkRateLimit(ip);
-      if (!limitResult.allowed) return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
+      if (!limitResult.allowed) {
+        return NextResponse.json(
+          { success: false, errorCode: limitResult.errorCode ?? "RATE_LIMIT", error: limitResult.reason, retryAfterMs: limitResult.retryAfterMs },
+          { status: 429 },
+        );
+      }
     }
 
     const body = await req.json();

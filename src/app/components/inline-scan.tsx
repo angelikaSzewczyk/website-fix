@@ -119,7 +119,23 @@ export default function InlineScan({
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!url || phase === "scanning" || scanBlocked.blocked) return;
+    if (!url || phase === "scanning") return;
+
+    // Fresh localStorage check — catches stale component state
+    try {
+      const ts = localStorage.getItem(FREE_SCAN_KEY);
+      if (ts) {
+        const elapsed = Date.now() - parseInt(ts);
+        if (elapsed < FREE_SCAN_LIMIT_MS) {
+          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
+          setScanBlocked({ blocked: true, nextMs });
+          setTimeRemaining(formatTimeRemaining(nextMs));
+          return;
+        }
+      }
+    } catch { /* localStorage unavailable */ }
+
+    if (scanBlocked.blocked) return;
 
     cleanup();
     setPhase("scanning");
@@ -137,8 +153,14 @@ export default function InlineScan({
       const data = await res.json();
 
       if (data.success) {
-        // Save 24h gate timestamp
-        try { localStorage.setItem(FREE_SCAN_KEY, Date.now().toString()); } catch { /* ignore */ }
+        // Save 24h gate timestamp + update in-component blocked state immediately
+        try {
+          const now = Date.now();
+          localStorage.setItem(FREE_SCAN_KEY, now.toString());
+          const nextMs = now + FREE_SCAN_LIMIT_MS;
+          setScanBlocked({ blocked: true, nextMs });
+          setTimeRemaining(formatTimeRemaining(nextMs));
+        } catch { /* ignore */ }
 
         // Store scan result for /scan/results
         try {
@@ -170,6 +192,15 @@ export default function InlineScan({
         setTimeout(() => {
           window.location.href = `/scan/results?url=${encodeURIComponent(url)}`;
         }, 600);
+      } else if (data.errorCode === "RATE_LIMITED") {
+        // Server confirmed rate limit — sync localStorage + show blocked panel
+        cleanup();
+        const now = Date.now();
+        const nextMs = data.retryAfterMs ? now + data.retryAfterMs : now + FREE_SCAN_LIMIT_MS;
+        try { localStorage.setItem(FREE_SCAN_KEY, (nextMs - FREE_SCAN_LIMIT_MS).toString()); } catch { /* ignore */ }
+        setScanBlocked({ blocked: true, nextMs });
+        setTimeRemaining(formatTimeRemaining(nextMs));
+        setPhase("idle");
       } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
         cleanup();
         setPhase("not_wordpress");
