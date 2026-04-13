@@ -64,14 +64,18 @@ export default function BlogIndexPage() {
       }}>
         <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(20px, 4vw, 28px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em" }}>
-            Deine Website jetzt prüfen?
+            Deine WordPress-Website jetzt prüfen?
           </h2>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, margin: "0 0 28px", lineHeight: 1.7 }}>
             WCAG, SEO, Performance — vollautomatisch, Ergebnis in 60 Sekunden.
           </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+
+          {/* Buttons — stacked on mobile, inline on desktop */}
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexDirection: "column", alignItems: "center" }}
+            className="blog-cta-buttons">
             <Link href="/scan" style={{
-              padding: "12px 28px", borderRadius: 10, fontWeight: 700, fontSize: 14,
+              display: "block", width: "100%", maxWidth: 320, textAlign: "center",
+              padding: "14px 28px", borderRadius: 10, fontWeight: 700, fontSize: 15,
               background: "linear-gradient(90deg, #007BFF, #0057b8)",
               color: "#fff", textDecoration: "none",
               boxShadow: "0 4px 20px rgba(0,123,255,0.35)",
@@ -79,6 +83,7 @@ export default function BlogIndexPage() {
               Jetzt kostenlos scannen →
             </Link>
             <Link href="/fuer-agenturen" style={{
+              display: "block", width: "100%", maxWidth: 320, textAlign: "center",
               padding: "12px 20px", borderRadius: 10, fontSize: 14,
               border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)",
               textDecoration: "none",
@@ -86,9 +91,18 @@ export default function BlogIndexPage() {
               Für Agenturen
             </Link>
           </div>
-          <p style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-            Jederzeit kündbar · Sicher bezahlen
-          </p>
+
+          {/* Trust-Bar */}
+          <div style={{ marginTop: 20, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            {["DSGVO-konform", "Jederzeit kündbar", "Sicherer Stripe-Checkout"].map(t => (
+              <span key={t} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                {t}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
     </>

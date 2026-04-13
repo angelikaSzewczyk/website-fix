@@ -3243,6 +3243,18 @@ footer a, nav a.footerLink {
   .text-sm-center { text-align: center !important; }
 }
 
+/* Blog CTA — desktop: buttons side by side */
+@media (min-width: 641px) {
+  .blog-cta-buttons {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  .blog-cta-buttons a {
+    width: auto !important;
+    max-width: none !important;
+  }
+}
+
 /* ===== DASHBOARD SIDEBAR LAYOUT ===== */
 @media (max-width: 768px) {
   .dashboard-sidebar  { display: none !important; }
