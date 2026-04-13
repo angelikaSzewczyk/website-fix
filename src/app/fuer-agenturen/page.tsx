@@ -1014,20 +1014,27 @@ export default function AgencyPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
                   {([
-                    { Icon: Globe,        title: "Edge Computing",      desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher" },
-                    { Icon: ShieldCheck,  title: "Maximale Sicherheit", desc: "Kein Hosting-Zugang nötig — keine Credentials Ihrer Kunden bei uns" },
-                    { Icon: Zap,          title: "Echtzeit-Scanning",   desc: "Ergebnisse in unter 60 Sekunden — ohne Wartezeiten oder Queues" },
-                    { Icon: Server,       title: "DSGVO by Design",     desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive" },
-                  ] as const).map(({ Icon, title, desc }) => (
+                    { Icon: Globe,       title: "Edge Computing",      desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher",          color: "#007BFF", glow: "rgba(0,123,255,0.15)",   border: "rgba(0,123,255,0.2)" },
+                    { Icon: ShieldCheck, title: "Maximale Sicherheit", desc: "Kein Hosting-Zugang nötig — keine Credentials Ihrer Kunden bei uns",        color: "#3dd398", glow: "rgba(61,211,152,0.12)",  border: "rgba(61,211,152,0.2)" },
+                    { Icon: Zap,         title: "Echtzeit-Scanning",   desc: "Ergebnisse in unter 60 Sekunden — ohne Wartezeiten oder Queues",             color: "#f59e0b", glow: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.2)" },
+                    { Icon: Server,      title: "DSGVO by Design",     desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive",                    color: "#818cf8", glow: "rgba(129,140,248,0.12)", border: "rgba(129,140,248,0.2)" },
+                  ] as const).map(({ Icon, title, desc, color, glow, border }) => (
                     <div key={title} style={{
                       padding: "16px 18px", borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      background: "rgba(255,255,255,0.02)",
+                      border: `1px solid ${border}`,
+                      background: glow,
                     }}>
-                      <div style={{ marginBottom: 8 }}>
-                        <Icon size={18} color="rgba(255,255,255,0.55)" strokeWidth={1.6} />
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{
+                          display: "inline-flex", alignItems: "center", justifyContent: "center",
+                          width: 34, height: 34, borderRadius: 9,
+                          background: `${color}18`,
+                          boxShadow: `0 0 12px ${color}40`,
+                        }}>
+                          <Icon size={16} color={color} strokeWidth={1.8} />
+                        </div>
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: 4 }}>{title}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{title}</div>
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{desc}</div>
                     </div>
                   ))}
