@@ -5,6 +5,17 @@ date: "2026-04-13"
 category: "compliance"
 tags: ["google", "indexierung", "search console", "sitemap", "noindex", "request indexing"]
 status: "published"
+faq:
+  - q: "Warum findet Google meine Homepage nicht, obwohl sie seit Wochen online ist?"
+    a: "Die häufigste Ursache ist ein technischer Blocker: ein aktiver Noindex-Tag, eine gesperrte robots.txt oder eine fehlende Sitemap. Mit dem WebsiteFix-Scanner finden Sie den Fehler in unter 60 Sekunden — ohne technisches Vorwissen."
+  - q: "Was bedeutet 'Google indiziert Seite nicht'?"
+    a: "Google hat die Seite besucht (gecrawlt), aber entschieden, sie nicht dauerhaft in den Suchergebnissen aufzunehmen. Mögliche Ursachen: Thin Content, Duplicate Content, aktiver Noindex-Tag oder technische Fehler bei Canonical und robots.txt."
+  - q: "Wie lange dauert es, bis Google nach dem Fix indexiert?"
+    a: "Nach einem manuellen Request Indexing in der Search Console: in der Regel 24 bis 72 Stunden. Ohne manuellen Trigger und ohne Sitemap: Tage bis Wochen."
+  - q: "Kann ich die Indexierung erzwingen?"
+    a: "Den Request Indexing Prozess können Sie über die Search Console anstoßen — aber Google entscheidet letztlich selbst. Alle technischen Blocker müssen vorher entfernt sein, sonst wird der Request erneut abgelehnt."
+  - q: "Muss ich SEO-Profi sein, um das zu lösen?"
+    a: "Nein. Die meisten Fixes sind Einstellungsänderungen, keine Programmierung. Noindex entfernen, robots.txt korrigieren, Sitemap einreichen — das ist für jeden machbar."
 ---
 
 **Warum findet Google Ihre Homepage nicht** — obwohl Ihre Website seit Wochen online ist? Das ist eine der häufigsten Fragen, die Website-Betreiber stellen. Und die Antwort ist fast immer eine von sieben klar definierten Ursachen.

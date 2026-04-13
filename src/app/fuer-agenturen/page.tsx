@@ -972,6 +972,79 @@ export default function AgencyPage() {
           </div>
         </section>
 
+        {/* TECH STACK */}
+        <section style={{ padding: "0 24px 80px" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <div style={{
+              padding: "36px 40px", borderRadius: 20,
+              border: "1px solid rgba(61,211,152,0.15)",
+              background: "rgba(0,0,0,0.30)",
+              backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+              boxShadow: "0 0 40px rgba(61,211,152,0.06), inset 0 1px 0 rgba(255,255,255,0.04)",
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, left: 0, width: "40%", height: "100%", background: "radial-gradient(ellipse at 20% 50%, rgba(61,211,152,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{ position: "relative" }}>
+
+                {/* Badge */}
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 18,
+                  padding: "5px 14px", borderRadius: 20, fontSize: 11,
+                  background: "rgba(61,211,152,0.08)", border: "1px solid rgba(61,211,152,0.22)",
+                  color: "#3dd398", fontWeight: 700, letterSpacing: "0.06em",
+                }}>
+                  ⚡ Powered by Next.js &amp; Edge Computing
+                </div>
+
+                <h3 style={{ margin: "0 0 14px", fontWeight: 800, fontSize: "clamp(18px, 2.5vw, 24px)", letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.3 }}>
+                  Keine WordPress-Abhängigkeit.<br />
+                  <span style={{ color: "#3dd398" }}>Kein Plugin. Kein Risiko. Maximale Performance.</span>
+                </h3>
+
+                <p style={{ margin: "0 0 28px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 620 }}>
+                  WebsiteFix ist eine <strong style={{ color: "rgba(255,255,255,0.8)" }}>reine SaaS-Cloud-Lösung</strong>, gebaut auf Next.js und globalen Edge-Servern —
+                  kein Plugin, das Sie bei Ihren Kunden installieren müssen, kein Zugriff auf deren Hosting-Server,
+                  keine Sicherheitslücken durch veraltete Drittanbieter-Module.
+                  Das Scanning läuft in Echtzeit auf unserer Infrastruktur — Ihre Kunden-Server werden dabei
+                  in keiner Weise belastet.
+                </p>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+                  {[
+                    { icon: "🌍", title: "Edge Computing", desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher" },
+                    { icon: "🔒", title: "Maximale Sicherheit", desc: "Kein Hosting-Zugang nötig — keine Credentials Ihrer Kunden bei uns" },
+                    { icon: "⚡", title: "Echtzeit-Scanning", desc: "Ergebnisse in unter 60 Sekunden — ohne Wartezeiten oder Queues" },
+                    { icon: "🇩🇪", title: "DSGVO by Design", desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive" },
+                  ].map(({ icon, title, desc }) => (
+                    <div key={title} style={{
+                      padding: "16px 18px", borderRadius: 12,
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "rgba(255,255,255,0.02)",
+                    }}>
+                      <div style={{ fontSize: 20, marginBottom: 6 }}>{icon}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: 4 }}>{title}</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stack Pills */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.03em" }}>
+                  {["Next.js 15", "React 19", "Edge Runtime", "Neon Serverless DB", "Vercel Edge Network", "TypeScript"].map(tag => (
+                    <span key={tag} style={{
+                      padding: "4px 10px", borderRadius: 6,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "rgba(61,211,152,0.7)", fontWeight: 600,
+                    }}>{tag}</span>
+                  ))}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PRICING */}
         <section id="pricing" style={{ padding: "80px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>

@@ -68,5 +68,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Fehlgeschlagene Abo-Erneuerung (z. B. Karte abgelaufen, Limit erschöpft).
+  // Stripe versucht es automatisch 3–4× über mehrere Tage (Smart Retries / Dunning).
+  // Erst beim finalen Fehlschlag feuert customer.subscription.deleted → Plan → free.
+  // Hier loggen wir den ersten Fehlschlag für Monitoring und optionale E-Mail.
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = invoice.customer as string;
+    if (invoice.billing_reason === "subscription_cycle") {
+      console.warn(`Abo-Zahlung fehlgeschlagen: customer=${customerId}, invoice=${invoice.id}, attempt=${invoice.attempt_count}`);
+      // TODO: Resend-E-Mail an Nutzer schicken ("Ihre Zahlung ist fehlgeschlagen")
+      // Erst nach subscription.deleted den Plan auf 'free' setzen — nicht hier.
+    }
+  }
+
   return NextResponse.json({ received: true });
 }

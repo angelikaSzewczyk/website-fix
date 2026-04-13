@@ -24,19 +24,30 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   const title = post.data.title;
   const description = post.data.description;
+  const canonical = `https://website-fix.com/blog/${params.slug}`;
   const ogUrl = new URL("https://website-fix.com/api/og");
   ogUrl.searchParams.set("title", title || "");
 
   return {
     title,
     description,
-    alternates: { canonical: `/blog/${params.slug}` },
+    alternates: { canonical },
     openGraph: {
-      title, description,
-      url: `https://website-fix.com/blog/${params.slug}`,
-      images: [{ url: ogUrl.toString() }],
+      title,
+      description,
+      url: canonical,
+      type: "article",
+      siteName: "WebsiteFix",
+      locale: "de_DE",
+      publishedTime: post.data.date ? new Date(post.data.date).toISOString() : undefined,
+      images: [{ url: ogUrl.toString(), width: 1200, height: 630, alt: title }],
     },
-    twitter: { title, description, images: [ogUrl.toString()] },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogUrl.toString()],
+    },
   };
 }
 
@@ -55,14 +66,35 @@ function extractTocAndInjectIds(contentHtml: string) {
   return { htmlWithIds, toc };
 }
 
+function buildFaqJsonLd(faq: { q: string; a: string }[], pageUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faq.map(({ q, a }) => ({
+      "@type": "Question",
+      "name": q,
+      "acceptedAnswer": { "@type": "Answer", "text": a },
+    })),
+    "url": pageUrl,
+  };
+}
+
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getPostData(params.slug);
   if (!post) notFound();
 
   const { htmlWithIds, toc } = extractTocAndInjectIds(post.contentHtml);
+  const faq: { q: string; a: string }[] | undefined = post.data.faq;
+  const pageUrl = `https://website-fix.com/blog/${params.slug}`;
 
   return (
     <>
+      {faq && faq.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqJsonLd(faq, pageUrl)) }}
+        />
+      )}
       <BlogHeader active="blog" lang="de" />
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 96px" }}>

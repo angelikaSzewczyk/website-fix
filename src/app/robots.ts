@@ -7,8 +7,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         disallow: [
-          '/api/',      // Schützt deine OG-Bild-Generierung vor Spam
-          '/admin/',    // Falls du später ein Dashboard baust
+          '/api/',        // Alle API-Routes — inkl. OG, Webhooks, Scan-Endpoints
+          '/admin/',      // Admin-Bereich
+          '/dashboard/',  // Nutzer-Dashboard (eingeloggter Bereich)
+          '/scan/',       // Scan-Ergebnisse (nutzerspezifisch)
+          '/checkout/',   // Stripe Checkout
+          '/login',       // Auth-Seiten
+          '/register',
+          '/reset-password',
+          '/forgot-password',
+          '/widget/',     // Widget-Embed (kein SEO-Wert)
         ],
       },
       {

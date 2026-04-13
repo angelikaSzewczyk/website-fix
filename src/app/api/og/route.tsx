@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
           <div style={{ display: 'flex', marginTop: 40, alignItems: 'center' }}>
             <div style={{ width: 40, height: 4, backgroundColor: '#38bdf8', marginRight: 20 }} />
-            <div style={{ color: '#94a3b8', fontSize: 24 }}>Fixpreise in 24–72h</div>
+            <div style={{ color: '#94a3b8', fontSize: 24 }}>WebsiteFix – Die Cloud-Lösung für Agenturen</div>
           </div>
         </div>
       ),
