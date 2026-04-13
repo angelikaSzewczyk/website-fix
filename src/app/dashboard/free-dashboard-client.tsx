@@ -573,6 +573,24 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           0%   { transform: scale(1); opacity: 0.55; }
           100% { transform: scale(2.4); opacity: 0; }
         }
+        @keyframes wf-gold-pulse {
+          0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.18); }
+          50%       { box-shadow: 0 0 10px rgba(251,191,36,0.35); }
+        }
+        @keyframes wf-arrow-slide {
+          0%   { transform: translateX(0); }
+          50%  { transform: translateX(3px); }
+          100% { transform: translateX(0); }
+        }
+        .wf-nav-locked { transition: opacity 0.15s; }
+        .wf-nav-locked:hover { opacity: 1 !important; background: rgba(251,191,36,0.04) !important; }
+        .wf-nav-whitelabel:hover { background: rgba(167,139,250,0.06) !important; }
+        .wf-upgrade-btn { transition: box-shadow 0.2s, transform 0.15s; }
+        .wf-upgrade-btn:hover { box-shadow: 0 6px 28px rgba(0,123,255,0.55) !important; transform: translateY(-1px); }
+        .wf-upgrade-btn:hover .wf-arrow { animation: wf-arrow-slide 0.4s ease-in-out; }
+        .wf-pro-badge { animation: wf-gold-pulse 3s ease-in-out infinite; }
+        .wf-disabled-card { transition: filter 0.3s; }
+        .wf-disabled-card:hover { filter: saturate(0.4) brightness(0.8) !important; }
       `}</style>
 
       {/* ══════════════════════════════════════════════════
@@ -594,40 +612,56 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
         {/* Nav */}
         <nav style={{ padding: "10px 8px", flex: 1 }}>
-          {nav.map(item => (
-            <Link key={item.href} href={item.href} title={item.locked ? `${item.label} — nur im Pro-Plan` : item.label} style={{
-              display: "flex", alignItems: "center", gap: 9,
-              padding: "8px 10px",
-              borderRadius: 7,
-              marginBottom: 2,
-              textDecoration: "none",
-              fontSize: 13,
-              fontWeight: item.active ? 600 : 400,
-              color: item.active ? "#fff" : item.locked ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.38)",
-              background: item.active ? D.blueBg : "transparent",
-              borderLeft: item.active ? `2px solid ${D.blue}` : "2px solid transparent",
-              opacity: item.locked ? 0.7 : 1,
-            }}>
-              <NavIco name={item.icon} c={item.active ? D.blueSoft : item.locked ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.3)"} />
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.locked && (
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 3,
-                  fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
-                  padding: "1px 6px", borderRadius: 10,
-                  background: "rgba(251,191,36,0.1)",
-                  border: "1px solid rgba(251,191,36,0.22)",
-                  color: "#FBBF24",
-                  flexShrink: 0,
+          {nav.map(item => {
+            const isWhiteLabel = item.icon === "whitelabel";
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.locked ? `${item.label} — nur im Pro-Plan verfügbar` : item.label}
+                className={item.locked ? `wf-nav-locked${isWhiteLabel ? " wf-nav-whitelabel" : ""}` : ""}
+                style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  padding: "8px 10px",
+                  borderRadius: 7,
+                  marginBottom: isWhiteLabel ? 0 : 2,
+                  marginTop: isWhiteLabel ? 8 : 0,
+                  textDecoration: "none",
+                  fontSize: 13,
+                  fontWeight: item.active ? 600 : 400,
+                  color: item.active ? "#fff" : item.locked ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.55)",
+                  background: item.active ? D.blueBg : isWhiteLabel ? "rgba(167,139,250,0.05)" : "transparent",
+                  borderLeft: item.active ? `2px solid ${D.blue}` : isWhiteLabel ? "2px solid rgba(167,139,250,0.3)" : "2px solid transparent",
+                  opacity: item.locked ? 0.82 : 1,
+                  border: isWhiteLabel ? "1px solid rgba(167,139,250,0.12)" : undefined,
                 }}>
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                  Pro
-                </span>
-              )}
-            </Link>
-          ))}
+                <NavIco
+                  name={item.icon}
+                  c={item.active ? D.blueSoft : isWhiteLabel ? "rgba(167,139,250,0.6)" : item.locked ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.42)"}
+                />
+                <span style={{ flex: 1, color: isWhiteLabel ? "rgba(167,139,250,0.8)" : undefined }}>{item.label}</span>
+                {item.locked && (
+                  <span
+                    className={isWhiteLabel ? "" : "wf-pro-badge"}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 3,
+                      fontSize: 9, fontWeight: 700, letterSpacing: "0.05em",
+                      padding: "2px 7px", borderRadius: 10,
+                      background: isWhiteLabel ? "rgba(167,139,250,0.12)" : "rgba(251,191,36,0.1)",
+                      border: `1px solid ${isWhiteLabel ? "rgba(167,139,250,0.3)" : "rgba(251,191,36,0.3)"}`,
+                      color: isWhiteLabel ? "#a78bfa" : "#FBBF24",
+                      flexShrink: 0,
+                      boxShadow: isWhiteLabel ? "0 0 8px rgba(167,139,250,0.15)" : "0 0 6px rgba(251,191,36,0.18)",
+                    }}>
+                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    {isWhiteLabel ? "Agentur" : "Pro"}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* User area + dropdown */}
@@ -1052,20 +1086,30 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {isFree && (
               <div style={{
                 marginTop: 14,
-                display: "flex", alignItems: "flex-start", gap: 10,
-                padding: "11px 14px", borderRadius: D.radiusSm,
-                background: "rgba(251,191,36,0.05)",
-                border: "1px solid rgba(251,191,36,0.18)",
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 16px", borderRadius: D.radiusSm,
+                background: "linear-gradient(135deg, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.03) 100%)",
+                border: "1px solid rgba(251,191,36,0.22)",
+                boxShadow: "0 0 0 1px rgba(251,191,36,0.06), 0 4px 16px rgba(251,191,36,0.08)",
               }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(251,191,36,0.7)", lineHeight: 1.6 }}>
-                  <strong style={{ color: "#FBBF24", fontWeight: 700 }}>Snapshot-Modus:</strong>{" "}
-                  Analyse beschränkt auf Startseite. Für vollständigen Audit aller Unterseiten{" "}
-                  <Link href="/pricing" style={{ color: "#FBBF24", textDecoration: "underline", textUnderlineOffset: 2 }}>
-                    jetzt auf Pro upgraden
-                  </Link>.
+                {/* Info orb */}
+                <div style={{
+                  flexShrink: 0,
+                  width: 28, height: 28, borderRadius: 8,
+                  background: "rgba(251,191,36,0.1)",
+                  border: "1px solid rgba(251,191,36,0.25)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(251,191,36,0.75)", lineHeight: 1.55, flex: 1 }}>
+                  <strong style={{ color: "#FBBF24", fontWeight: 700 }}>Snapshot-Modus</strong>
+                  {" · "}Analyse beschränkt auf die Startseite.{" "}
+                  <Link href="/pricing" style={{ color: "#FBBF24", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(251,191,36,0.4)", fontWeight: 600 }}>
+                    Vollständiger Unterseiten-Audit mit Pro →
+                  </Link>
                 </p>
               </div>
             )}
@@ -1253,18 +1297,29 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   disabled: false,
                 },
               ]).map(module => (
-                <div key={module.key} style={{
+                <div key={module.key} className={module.disabled ? "wf-disabled-card" : ""} style={{
                   borderRadius: D.radius,
-                  background: module.disabled ? "rgba(255,255,255,0.015)" : (module.status ? "rgba(0,123,255,0.04)" : D.card),
-                  border: `1px solid ${module.disabled ? "rgba(255,255,255,0.05)" : (module.status ? D.blueBorder : D.border)}`,
+                  background: module.disabled
+                    ? "rgba(255,255,255,0.02)"
+                    : (module.status ? "rgba(0,123,255,0.04)" : D.card),
+                  border: `1px solid ${module.disabled ? "rgba(255,255,255,0.06)" : (module.status ? D.blueBorder : D.border)}`,
                   padding: "24px 22px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 0,
-                  filter: module.disabled ? "saturate(0.25) brightness(0.7)" : "none",
+                  filter: module.disabled ? "saturate(0.18) brightness(0.65)" : "none",
                   position: "relative" as const,
                   overflow: "hidden",
                 }}>
+                  {/* Locked overlay — subtle veil with centered lock prompt */}
+                  {module.disabled && (
+                    <div style={{
+                      position: "absolute", inset: 0, zIndex: 2,
+                      background: "rgba(11,12,16,0.0)",
+                      borderRadius: D.radius,
+                      pointerEvents: "none",
+                    }} />
+                  )}
                   {/* Icon row + optional status badge */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
 
@@ -1331,10 +1386,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       <span style={{
                         display: "inline-flex", alignItems: "center", gap: 4,
                         fontSize: 10, fontWeight: 700,
-                        padding: "3px 9px", borderRadius: 20,
-                        background: module.disabled ? "rgba(255,255,255,0.05)" : D.redBg,
-                        border: `1px solid ${module.disabled ? "rgba(255,255,255,0.1)" : D.redBorder}`,
-                        color: module.disabled ? D.textMuted : D.red,
+                        padding: "3px 10px", borderRadius: 20,
+                        background: module.disabled
+                          ? "rgba(251,191,36,0.07)"
+                          : D.redBg,
+                        border: `1px solid ${module.disabled ? "rgba(251,191,36,0.2)" : D.redBorder}`,
+                        color: module.disabled ? "rgba(251,191,36,0.6)" : D.red,
                         letterSpacing: "0.03em", whiteSpace: "nowrap",
                       }}>
                         {module.disabled && (
@@ -1558,42 +1615,63 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         {isFree && (
           <div style={{
             position: "sticky", bottom: 0, zIndex: 30,
-            background: "rgba(11,12,16,0.96)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            borderTop: "1px solid rgba(0,123,255,0.2)",
-            boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
+            background: "rgba(9,10,15,0.92)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderTop: "1px solid rgba(0,123,255,0.18)",
+            boxShadow: "0 -1px 0 rgba(0,123,255,0.08), 0 -8px 32px rgba(0,0,0,0.6)",
           }}>
+            {/* Left gradient accent */}
+            <div style={{
+              position: "absolute", left: 0, top: 0, bottom: 0, width: 3,
+              background: "linear-gradient(180deg, #007BFF 0%, rgba(0,123,255,0.3) 100%)",
+              borderRadius: "0 2px 2px 0",
+            }} />
+
             <div style={{
               maxWidth: 1100, margin: "0 auto",
-              padding: "10px 24px",
+              padding: "11px 28px 11px 32px",
               display: "flex", alignItems: "center", justifyContent: "space-between",
               gap: 16, flexWrap: "wrap",
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {/* Pulse dot */}
-                <div style={{ position: "relative", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* Animated pulse dot */}
+                <div style={{ position: "relative", width: 8, height: 8, flexShrink: 0 }}>
+                  <div style={{
+                    position: "absolute", inset: 0, borderRadius: "50%",
+                    background: D.blue, opacity: 0.35,
+                    transform: "scale(2.2)",
+                    animation: "wf-ring 2.5s ease-out infinite",
+                  }} />
                   <div style={{
                     width: 8, height: 8, borderRadius: "50%",
                     background: D.blue,
-                    boxShadow: `0 0 8px ${D.blue}`,
+                    boxShadow: `0 0 10px ${D.blue}`,
+                    position: "relative",
                   }} />
                 </div>
-                <p style={{ margin: 0, fontSize: 13, color: D.textSub, lineHeight: 1.4 }}>
-                  <strong style={{ color: D.text, fontWeight: 700 }}>Sichere deine Projekte dauerhaft ab.</strong>
-                  {" "}Smart-Guard überwacht Veränderungen automatisch — rund um die Uhr.
-                </p>
+                <div>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: D.text, lineHeight: 1.3, letterSpacing: "-0.01em" }}>
+                    Sichere deine Projekte dauerhaft ab.
+                  </p>
+                  <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.3, marginTop: 1 }}>
+                    Smart-Guard überwacht Veränderungen automatisch — 24/7, ohne deinen Eingriff.
+                  </p>
+                </div>
               </div>
-              <Link href="/pricing" style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 20px", borderRadius: D.radiusSm,
-                background: D.blue, color: "#fff",
+              <Link href="/pricing" className="wf-upgrade-btn" style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "9px 22px", borderRadius: D.radiusSm,
+                background: "linear-gradient(135deg, #1a7fe8 0%, #007BFF 100%)",
+                color: "#fff",
                 fontSize: 13, fontWeight: 700, textDecoration: "none",
-                boxShadow: D.blueGlow,
+                boxShadow: "0 4px 18px rgba(0,123,255,0.4)",
                 flexShrink: 0,
                 whiteSpace: "nowrap",
+                letterSpacing: "-0.01em",
               }}>
-                Smart-Guard aktivieren →
+                Smart-Guard aktivieren
+                <span className="wf-arrow" style={{ display: "inline-block", fontWeight: 400 }}>→</span>
               </Link>
             </div>
           </div>
