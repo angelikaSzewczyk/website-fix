@@ -113,17 +113,6 @@ export function isRealWebsiteContent(
   // Zu wenig Inhalt
   if (html.length < 500) return false;
 
-  // Weiterleitung auf FREMDE Domain (typisch für ISP-Fehlerseiten).
-  // www <-> non-www auf der gleichen Domain ist erlaubt:
-  // google.com → www.google.com ✓   website-fix.com → www.website-fix.com ✓
-  // google.com → parking-provider.net ✗
-  try {
-    const finalHost    = new URL(res.url).hostname.toLowerCase();
-    const normFinal    = finalHost.replace(/^www\./, "");
-    const normOriginal = originalHost.toLowerCase().replace(/^www\./, "");
-    if (finalHost && normFinal !== normOriginal) return false;
-  } catch { /* ignore */ }
-
   // Bekannte Fehler-/Parking-Muster
   if (FAKE_PAGE_PATTERNS.some((p) => p.test(html))) return false;
 
