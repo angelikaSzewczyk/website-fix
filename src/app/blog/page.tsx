@@ -68,7 +68,7 @@ export default function BlogIndexPage() {
             Deine WordPress-Website jetzt prüfen?
           </h2>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, margin: "0 0 28px", lineHeight: 1.7 }}>
-            WCAG, SEO, Performance — vollautomatisch, Ergebnis in 60 Sekunden.
+            WordPress-Deep-Scan in unter 60 Sekunden – ohne Plugin-Installation.
           </p>
 
           {/* Buttons — stacked on mobile, inline on desktop */}
