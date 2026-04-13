@@ -49,9 +49,9 @@ const BENEFITS = [
         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
       </svg>
     ),
-    label: "Mehr Umsatz",
+    label: "Umsatz-Booster",
     title: "BFSG als neues Service-Paket",
-    desc: "Verkaufe automatisierte Compliance-Audits als Wartungspaket und fakturiere monatlich — kein Mehraufwand.",
+    desc: "Integriere Compliance-Audits in deine WordPress-Wartungsverträge.",
   },
   {
     color: "#7aa6ff",
@@ -62,9 +62,9 @@ const BENEFITS = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
     ),
-    label: "Weniger Haftung",
+    label: "Haftungs-Schutz",
     title: "BFSG 2025 automatisch im Griff",
-    desc: "Lückenloser Audit-Trail. Jede Prüfung dokumentiert. Jeder Nachweis griffbereit — für den Ernstfall.",
+    desc: "Lückenloser Nachweis der Barrierefreiheit gemäß BFSG 2025.",
   },
   {
     color: "#c084fc",
@@ -76,9 +76,9 @@ const BENEFITS = [
         <polyline points="16 7 22 7 22 13"/>
       </svg>
     ),
-    label: "Bessere Marge",
+    label: "Branding",
     title: "Reports ohne Mehrarbeit",
-    desc: "Monatliche White-Label Reports mit deinem Logo — vollautomatisch erstellt und direkt an den Kunden versendet.",
+    desc: "Sende vollautomatische PDF-Reports mit deinem Agentur-Logo an deine Kunden.",
   },
 ];
 
@@ -395,15 +395,16 @@ export default function ScanPage() {
             fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
             margin: "0 0 16px", letterSpacing: "-0.035em",
           }}>
-            Vollständige Analyse<br />
+            Vollständiger WordPress-<br />
             <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              deiner gesamten Präsenz.
+              Compliance-Audit.
             </span>
           </h1>
 
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 520, margin: "0 auto 40px" }}>
-            KI-gestützte Analyse von Barrierefreiheit, Technik und Performance –{" "}
-            <span style={{ color: "rgba(255,255,255,0.7)" }}>über alle Unterseiten hinweg.</span>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 40px" }}>
+            Prüft Plugins, Themes und Core-Strukturen auf{" "}
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>BFSG-Konformität, SEO und Performance</span>{" "}
+            — automatisiert über alle Unterseiten hinweg.
           </p>
 
           {/* ── INPUT FORM / BLOCKED STATE ── */}
@@ -437,6 +438,17 @@ export default function ScanPage() {
                     }}>
                       Unbegrenzt scannen mit Pro →
                     </Link>
+                    <div style={{ marginTop: 12 }}>
+                      <Link href="/fuer-agenturen#white-label" style={{
+                        fontSize: 12, color: "rgba(255,255,255,0.35)",
+                        textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.12)",
+                        paddingBottom: 1, transition: "color 0.15s",
+                      }}
+                        className="legal-a"
+                      >
+                        Sie sind eine Agentur? Jetzt White-Label-Optionen prüfen →
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ) : (
