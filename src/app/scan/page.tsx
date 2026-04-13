@@ -411,41 +411,103 @@ export default function ScanPage() {
           {phase === "idle" && (
             <>
               {scanBlocked.blocked ? (
-                /* 24h limit reached */
-                <div style={{ maxWidth: 580, margin: "0 auto 14px" }}>
+                /* 24h limit reached — same design as home CTA box */
+                <div style={{ maxWidth: 560, margin: "0 auto 14px", position: "relative" }}>
                   <div style={{
-                    padding: "20px 24px",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 14,
+                    padding: "40px 36px 32px",
+                    background: "linear-gradient(135deg, #0d1520 0%, #0b0c10 50%, #0a0f1a 100%)",
+                    border: "1px solid rgba(0,123,255,0.2)",
+                    borderRadius: 20,
+                    boxShadow: "0 0 80px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
                     textAlign: "center",
+                    position: "relative",
+                    overflow: "hidden",
                   }}>
-                    <div style={{ fontSize: 22, marginBottom: 10 }}>⏱</div>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: "#fff", marginBottom: 6 }}>
-                      Limit erreicht.
+                    {/* Background glow — mirrors home CTA */}
+                    <div style={{
+                      position: "absolute", top: "-40%", left: "50%",
+                      transform: "translateX(-50%)",
+                      width: "70%", height: "160%",
+                      background: "radial-gradient(ellipse, rgba(0,123,255,0.12) 0%, transparent 70%)",
+                      pointerEvents: "none",
+                    }} />
+
+                    {/* Icon */}
+                    <div style={{
+                      position: "relative",
+                      width: 52, height: 52, borderRadius: 14,
+                      margin: "0 auto 22px",
+                      background: "rgba(0,123,255,0.1)",
+                      border: "1px solid rgba(0,123,255,0.25)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 0 20px rgba(0,123,255,0.15)",
+                    }}>
+                      {/* Hourglass / Sanduhr */}
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 2h14"/>
+                        <path d="M5 22h14"/>
+                        <path d="M5 2l7 10-7 10"/>
+                        <path d="M19 2l-7 10 7 10"/>
+                      </svg>
                     </div>
-                    <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                      Dein nächster freier Deep Scan ist in{" "}
-                      <span style={{ color: "#8df3d3", fontWeight: 700 }}>{timeRemaining}</span>{" "}
+
+                    {/* Headline */}
+                    <div style={{
+                      position: "relative",
+                      fontWeight: 800, fontSize: 18, color: "#fff",
+                      marginBottom: 10, letterSpacing: "-0.02em", lineHeight: 1.25,
+                    }}>
+                      Kostenloses Kontingent ausgeschöpft.
+                    </div>
+
+                    {/* Subtext */}
+                    <p style={{
+                      position: "relative",
+                      margin: "0 auto 28px", fontSize: 14,
+                      color: "rgba(255,255,255,0.4)", lineHeight: 1.7,
+                      maxWidth: 360,
+                    }}>
+                      Dein nächster spezialisierter WordPress-Audit ist in{" "}
+                      <span style={{ color: "#fff", fontWeight: 700 }}>{timeRemaining}</span>{" "}
                       verfügbar.
                     </p>
-                    <Link href="/register" style={{
-                      display: "inline-block",
-                      padding: "10px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
-                      background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                      color: "#fff", textDecoration: "none",
-                      boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
+
+                    {/* CTA button — same shadow as home page CTA */}
+                    <div style={{ position: "relative" }}>
+                      <Link href="/register" style={{
+                        display: "inline-block",
+                        padding: "14px 32px", borderRadius: 11, fontSize: 15, fontWeight: 800,
+                        background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                        color: "#fff", textDecoration: "none",
+                        boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
+                        letterSpacing: "-0.01em",
+                      }}>
+                        Unbegrenzt scannen mit Pro →
+                      </Link>
+                    </div>
+
+                    {/* Countdown pill */}
+                    <div style={{
+                      position: "relative",
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      margin: "16px auto 0",
+                      padding: "5px 13px", borderRadius: 20,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      fontSize: 12, color: "rgba(255,255,255,0.3)",
                     }}>
-                      Unbegrenzt scannen mit Pro →
-                    </Link>
-                    <div style={{ marginTop: 12 }}>
-                      <Link href="/fuer-agenturen#white-label" style={{
-                        fontSize: 12, color: "rgba(255,255,255,0.35)",
-                        textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.12)",
-                        paddingBottom: 1, transition: "color 0.15s",
-                      }}
-                        className="legal-a"
-                      >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Freigabe in {timeRemaining}
+                    </div>
+
+                    {/* Agency link */}
+                    <div style={{ position: "relative", marginTop: 16 }}>
+                      <Link href="/fuer-agenturen#white-label" className="wf-footer-link" style={{
+                        fontSize: 12, textDecoration: "none",
+                      }}>
                         Sie sind eine Agentur? Jetzt White-Label-Optionen prüfen →
                       </Link>
                     </div>
