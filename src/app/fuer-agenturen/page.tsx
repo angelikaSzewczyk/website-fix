@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Layers, BellDot, ShieldAlert } from "lucide-react";
+import { Layers, BellDot, ShieldAlert, Globe, ShieldCheck, Zap, Server } from "lucide-react";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
@@ -996,7 +996,7 @@ export default function AgencyPage() {
                   background: "rgba(61,211,152,0.08)", border: "1px solid rgba(61,211,152,0.22)",
                   color: "#3dd398", fontWeight: 700, letterSpacing: "0.06em",
                 }}>
-                  ⚡ Powered by Next.js &amp; Edge Computing
+                  <Zap size={11} style={{ flexShrink: 0 }} /> Powered by Next.js &amp; Edge Computing
                 </div>
 
                 <h3 style={{ margin: "0 0 14px", fontWeight: 800, fontSize: "clamp(18px, 2.5vw, 24px)", letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.3 }}>
@@ -1013,18 +1013,20 @@ export default function AgencyPage() {
                 </p>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
-                  {[
-                    { icon: "🌍", title: "Edge Computing", desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher" },
-                    { icon: "🔒", title: "Maximale Sicherheit", desc: "Kein Hosting-Zugang nötig — keine Credentials Ihrer Kunden bei uns" },
-                    { icon: "⚡", title: "Echtzeit-Scanning", desc: "Ergebnisse in unter 60 Sekunden — ohne Wartezeiten oder Queues" },
-                    { icon: "🇩🇪", title: "DSGVO by Design", desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive" },
-                  ].map(({ icon, title, desc }) => (
+                  {([
+                    { Icon: Globe,        title: "Edge Computing",      desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher" },
+                    { Icon: ShieldCheck,  title: "Maximale Sicherheit", desc: "Kein Hosting-Zugang nötig — keine Credentials Ihrer Kunden bei uns" },
+                    { Icon: Zap,          title: "Echtzeit-Scanning",   desc: "Ergebnisse in unter 60 Sekunden — ohne Wartezeiten oder Queues" },
+                    { Icon: Server,       title: "DSGVO by Design",     desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive" },
+                  ] as const).map(({ Icon, title, desc }) => (
                     <div key={title} style={{
                       padding: "16px 18px", borderRadius: 12,
                       border: "1px solid rgba(255,255,255,0.06)",
                       background: "rgba(255,255,255,0.02)",
                     }}>
-                      <div style={{ fontSize: 20, marginBottom: 6 }}>{icon}</div>
+                      <div style={{ marginBottom: 8 }}>
+                        <Icon size={18} color="rgba(255,255,255,0.55)" strokeWidth={1.6} />
+                      </div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: 4 }}>{title}</div>
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{desc}</div>
                     </div>
