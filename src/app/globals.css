@@ -3792,6 +3792,30 @@ html, body {
   }
 }
 
+/* ===== SITE FOOTER — 3-column layout ===== */
+.wf-footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 40px;
+}
+
+@media (max-width: 640px) {
+  .wf-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+.wf-footer-link {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.wf-footer-link:hover {
+  color: #fff;
+}
+
 /* ===== ROI CALCULATOR — responsive 2-col grid ===== */
 .wf-roi-grid {
   display: grid;

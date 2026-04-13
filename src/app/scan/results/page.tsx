@@ -817,9 +817,7 @@ function ResultsInner() {
         </section>
 
         {/* Powered by footer */}
-        <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "20px 24px", textAlign: "center" }}>
-          <BrandLogo variant="powered-by" />
-        </footer>
+        <SiteFooter />
 
       </main>
 

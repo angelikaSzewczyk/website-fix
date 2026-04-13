@@ -875,19 +875,7 @@ export default function ScanPage() {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-            {`© ${new Date().getFullYear()} website-fix.com`}
-          </span>
-          <div style={{ display: "flex", gap: 20 }}>
-            <Link href="/" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Startseite</Link>
-            <Link href="/fuer-agenturen" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Für Agenturen</Link>
-            <Link href="/impressum" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Impressum</Link>
-            <Link href="/datenschutz" style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>Datenschutz</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {/* CSS animations */}
       <style>{`

@@ -171,16 +171,7 @@ export default function WarumFindetGoogleMeineHomepageNichtPage() {
         </section>
       </main>
 
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "32px 24px", textAlign: "center" }}>
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
-          {`© ${new Date().getFullYear()} website-fix.com · `}
-          <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Startseite</Link>
-          {" · "}
-          <Link href="/blog" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Blog</Link>
-          {" · "}
-          <Link href="/impressum" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Impressum</Link>
-        </p>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
