@@ -632,7 +632,7 @@ export default function ScanPage() {
                 </button>
                 {!notifyNextJs ? (
                   <button onClick={() => { setNotifyNextJs(true); try { localStorage.setItem("wf_nextjs_notify", "1"); } catch {} }} style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", padding: "8px 14px" }}>
-                    Benachrichtigen, wenn Next.js Support kommt
+                    Über neue Frameworks informiert werden
                   </button>
                 ) : (
                   <span style={{ fontSize: 12, color: "rgba(141,243,211,0.7)", display: "flex", alignItems: "center", gap: 5 }}>

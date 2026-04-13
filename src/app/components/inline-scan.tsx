@@ -541,7 +541,7 @@ export default function InlineScan({
                   padding: "8px 14px",
                 }}
               >
-                Benachrichtigen, wenn Next.js Support kommt
+                Über neue Frameworks informiert werden
               </button>
             ) : (
               <span style={{
