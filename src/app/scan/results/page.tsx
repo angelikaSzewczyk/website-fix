@@ -697,7 +697,7 @@ function ResultsInner() {
           {/* If scan is clean (0 findings) */}
           {!isDemo && lockedCount === 0 && findings.length === 0 && (
             <div style={{ padding: "28px 24px", background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 14, textAlign: "center" }}>
-              <div style={{ fontSize: 28, marginBottom: 10 }}>🎉</div>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>🛡️</div>
               <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Keine kritischen Fehler gefunden!</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
                 Deine Website sieht gut aus. Mit Agency Core kannst du sie dauerhaft überwachen<br />und Kunden monatliche White-Label Reports schicken.
