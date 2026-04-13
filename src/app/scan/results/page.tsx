@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
+import MobileNav from "../../components/MobileNav";
 
 // ── Real scan data shape (stored by /scan/page.tsx via sessionStorage) ────────
 type StoredScan = {
@@ -246,17 +247,19 @@ function ResultsInner() {
           <BrandLogo />
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             {!isDemo && (
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span className="hide-sm" style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {displayDomain}
               </span>
             )}
-            <Link href="/register" style={{
+            <Link href="/register" className="hide-sm" style={{
               fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
               background: "#007BFF", color: "#fff", textDecoration: "none",
               boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
             }}>
               Kostenlos starten →
             </Link>
+            {/* Burger-Menü — nur auf Mobile sichtbar */}
+            <MobileNav />
           </div>
         </div>
       </nav>

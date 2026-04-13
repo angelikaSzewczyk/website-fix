@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BrandLogo from "./BrandLogo";
 import NavAuthLink from "./nav-auth-link";
+import MobileNav from "./MobileNav";
 
 type BlogHeaderProps = {
   lang?: "de" | "en";
@@ -24,8 +25,8 @@ export default function BlogHeader({ lang = "de", active, ctaLabel }: BlogHeader
         <BrandLogo />
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Nav links */}
-          <div style={{ display: "flex", gap: 24, marginRight: 12 }}>
+          {/* Nav links — desktop only */}
+          <div className="hide-sm" style={{ display: "flex", gap: 24, marginRight: 12 }}>
             <Link href="/fuer-agenturen" style={{
               fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none",
             }}>
@@ -39,21 +40,23 @@ export default function BlogHeader({ lang = "de", active, ctaLabel }: BlogHeader
               Blog
             </Link>
           </div>
-          {/* Buttons */}
+          {/* Buttons — desktop only */}
           <NavAuthLink />
-          <Link href="/login" style={{
+          <Link href="/login" className="hide-sm" style={{
             fontSize: 13, padding: "7px 16px", borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
             textDecoration: "none",
           }}>
             Anmelden
           </Link>
-          <Link href="/scan" style={{
+          <Link href="/scan" className="hide-sm" style={{
             fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
             background: "#007BFF", color: "#fff", textDecoration: "none",
           }}>
             {cta}
           </Link>
+          {/* Burger-Menü — nur auf Mobile sichtbar */}
+          <MobileNav />
         </div>
       </div>
     </nav>

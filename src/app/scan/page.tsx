@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BrandLogo from "../components/BrandLogo";
+import MobileNav from "../components/MobileNav";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type ScanPhase =
@@ -328,20 +329,22 @@ export default function ScanPage() {
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <BrandLogo />
-          <div style={{ display: "flex", gap: 10 }}>
-            <Link href="/login" style={{
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <Link href="/login" className="hide-sm" style={{
               fontSize: 13, padding: "7px 16px", borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
               textDecoration: "none",
             }}>
               Anmelden
             </Link>
-            <Link href="/register" style={{
+            <Link href="/register" className="hide-sm" style={{
               fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
               background: "#fff", color: "#0b0c10", textDecoration: "none",
             }}>
               Account erstellen
             </Link>
+            {/* Burger-Menü — nur auf Mobile sichtbar */}
+            <MobileNav />
           </div>
         </div>
       </nav>

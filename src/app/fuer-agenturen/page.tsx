@@ -7,6 +7,7 @@ import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
 import AutoCheckout from "../components/auto-checkout";
 import BrandLogo from "../components/BrandLogo";
+import MobileNav from "../components/MobileNav";
 import AgencyStats from "../components/agency-stats";
 
 const LayersIcon = Layers;
@@ -106,7 +107,7 @@ export default function AgencyPage() {
               <Link href="/blog" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Blog</Link>
               <Link href="#pricing" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Preise</Link>
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Link href="/login" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 16px", borderRadius: 8,
                 border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
@@ -114,13 +115,15 @@ export default function AgencyPage() {
               }}>
                 Anmelden
               </Link>
-              <Link href="/register" style={{
+              <Link href="/register" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
                 background: "#007BFF", color: "#fff", textDecoration: "none",
                 boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
               }}>
                 Kostenlos starten →
               </Link>
+              {/* Burger-Menü — nur auf Mobile sichtbar */}
+              <MobileNav />
             </div>
           </div>
         </div>
