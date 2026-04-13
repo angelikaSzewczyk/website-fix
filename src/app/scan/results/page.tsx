@@ -817,10 +817,9 @@ function ResultsInner() {
           </div>
         </section>
 
-        {/* Powered by footer */}
-        <SiteFooter />
-
       </main>
+
+      <SiteFooter />
 
       <style>{`
         @keyframes wf-cta-pulse {
