@@ -350,7 +350,7 @@ export default function InlineScan({
 
           {/* Trust chips */}
           <div className="wf-scan-chips">
-            {["25 Seiten Deep Scan inkl.", "BFSG 2025 Ready", "Ohne Kreditkarte"].map(t => (
+            {["25 Seiten Deep Scan inkl.", "BFSG 2025 Ready", "DSGVO-konform"].map(t => (
               <span key={t} style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", gap: 5 }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"/>

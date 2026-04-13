@@ -29,7 +29,7 @@ export default function BlogClientWrapper({ postData }: { postData: Record<strin
         Jetzt kostenlos scannen →
       </Link>
       <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", margin: "10px 0 0" }}>
-        Kostenlos · Keine Anmeldung · Keine Kreditkarte
+        Kostenlos · Keine Anmeldung · DSGVO-konform
       </p>
     </div>
   );

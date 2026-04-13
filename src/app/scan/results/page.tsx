@@ -688,7 +688,7 @@ function ResultsInner() {
                   <Link href="/register" style={{ display: "inline-block", padding: "12px 28px", borderRadius: 10, background: "linear-gradient(90deg, #007BFF, #0057b8)", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none", boxShadow: "0 4px 20px rgba(0,123,255,0.45)" }}>
                     Vollständigen Fehler-Report &amp; Fix-Anleitungen freischalten →
                   </Link>
-                  <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Keine Kreditkarte · Sofortzugang</div>
+                  <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Jederzeit kündbar · Sicher bezahlen</div>
                 </div>
               </div>
             </div>
@@ -804,7 +804,7 @@ function ResultsInner() {
           </div>
 
           <div style={{ marginTop: 20, display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
-            {["Keine Kreditkarte nötig", "Jederzeit kündbar", "DSGVO-konform"].map(t => (
+            {["Sicherer Stripe-Checkout", "Jederzeit kündbar", "DSGVO-konform"].map(t => (
               <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 {t}

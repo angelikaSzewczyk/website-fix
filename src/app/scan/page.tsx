@@ -863,7 +863,7 @@ export default function ScanPage() {
                 Jetzt Agentur-Account erstellen →
               </Link>
               <p style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-                Keine Kreditkarte · Monatlich kündbar
+                Jederzeit kündbar · Sicher bezahlen
               </p>
             </div>
           </div>

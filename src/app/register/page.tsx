@@ -67,7 +67,7 @@ export default function RegisterPage() {
             Starte dein Agentur-Business<br />auf Autopilot.
           </h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", margin: "0 0 36px", lineHeight: 1.7 }}>
-            Kostenlos starten. Keine Kreditkarte nötig.
+            Kostenlos starten. Sicherer Stripe-Checkout.
           </p>
           {[
             "White-Label Reports ab Agency Core",
