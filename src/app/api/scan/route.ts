@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { guardRequest, isUrlAllowed, isRealWebsiteContent } from "@/lib/scan-guard";
+import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
@@ -281,6 +281,17 @@ export async function POST(req: NextRequest) {
     if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
     if (!isUrlAllowed(targetUrl)) return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
 
+    // ── Loopback check: eigene Domain sofort als Nicht-WP markieren ────────────
+    // Verhindert Self-Referential-Fetch auf Vercel und gibt sofort die korrekte Antwort.
+    const targetHostCheck = (() => { try { return new URL(targetUrl).hostname.toLowerCase(); } catch { return ""; } })();
+    const OWN_HOSTS = ["website-fix.com", "www.website-fix.com"];
+    if (OWN_HOSTS.includes(targetHostCheck)) {
+      return NextResponse.json(
+        { success: false, errorCode: "ERR_NOT_WORDPRESS", error: "Diese Website verwendet kein WordPress." },
+        { status: 422 },
+      );
+    }
+
     const scanStart = Date.now();
 
     // ── Cache check — skipped when forceRefresh=true ────────
@@ -323,10 +334,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Status-A: HTTP-Fehler (4xx/5xx) → SITE_UNREACHABLE ────────────────────
+    if (mainRes.status >= 400) {
+      return NextResponse.json(
+        { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { status: 400 },
+      );
+    }
+
     let mainHtml = "";
     try {
       mainHtml = await mainRes.text();
     } catch {
+      return NextResponse.json(
+        { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { status: 400 },
+      );
+    }
+
+    // ── Antwort zu kurz → leere Seite oder reine Redirect-Shell ───────────────
+    if (mainHtml.length < 500) {
       return NextResponse.json(
         { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
         { status: 400 },
@@ -340,9 +367,35 @@ export async function POST(req: NextRequest) {
     );
 
     const host0 = (() => { try { return new URL(targetUrl).hostname; } catch { return targetUrl; } })();
-    // isRealWebsiteContent erlaubt www <-> non-www Redirects (google.com → www.google.com)
-    // und blockiert nur echte Fremd-Redirects (ISP-Fehlerseiten, Parking-Pages).
-    if (!isRealWebsiteContent(mainRes, mainHtml, host0)) {
+
+    // ── Status-B: Seite antwortet, aber kein WordPress → ERR_NOT_WORDPRESS ────
+    // WICHTIG: Dieser Check kommt VOR dem Parking-Page-Check,
+    // damit erreichbare Nicht-WP-Seiten (Google, Shopify, Next.js) niemals
+    // SITE_UNREACHABLE erhalten.
+    scanData.istWordpress = detectWordPress(mainHtml, mainRes.headers);
+    if (!scanData.istWordpress) {
+      return NextResponse.json(
+        { success: false, errorCode: "ERR_NOT_WORDPRESS", error: "Diese Website verwendet kein WordPress." },
+        { status: 422 },
+      );
+    }
+
+    // ── ISP-Fehlerseiten / Parking-Pages (geben HTTP 200, aber kein echter Inhalt) ─
+    // Dieser Check ist nur noch für WP-Sites relevant (sehr seltener Edge-Case).
+    const PARKING_PATTERNS = [
+      /diese domain (ist|wird) (nicht|noch nicht) (erreichbar|konfiguriert)/i,
+      /domain not (found|configured|available)/i,
+      /site not found/i,
+      /this domain is for sale/i,
+      /domain parking/i,
+      /parked (domain|page|by)/i,
+      /account suspended/i,
+      /default web page/i,
+      /welcome to nginx/i,
+      /apache2? default page/i,
+      /it works!/i,
+    ];
+    if (PARKING_PATTERNS.some((p) => p.test(mainHtml))) {
       return NextResponse.json(
         { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
         { status: 400 },
@@ -361,16 +414,8 @@ export async function POST(req: NextRequest) {
     scanData.indexierungGesperrt = extractMeta(mainHtml, "robots").includes("noindex");
     const canonicalMatch = mainHtml.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
     scanData.canonical = canonicalMatch ? canonicalMatch[1] : "";
-    scanData.istWordpress = detectWordPress(mainHtml, mainRes.headers);
     scanData.formularVorhanden = mainHtml.includes("<form");
-
-    // ── Früh-Abbruch: kein WordPress erkannt ───────────────
-    if (!scanData.istWordpress) {
-      return NextResponse.json(
-        { success: false, errorCode: "ERR_NOT_WORDPRESS", error: "Diese Website verwendet kein WordPress." },
-        { status: 422 },
-      );
-    }
+    // istWordpress wurde bereits oben gesetzt und als Guard genutzt — hier nur noch dokumentieren
     const formCheck = checkFormAccessibility(mainHtml);
     scanData.formCheck = formCheck;
     const mainAlt = countMissingAlt(mainHtml);

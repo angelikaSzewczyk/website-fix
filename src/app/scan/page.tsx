@@ -122,6 +122,8 @@ export default function ScanPage() {
   const [timeRemaining, setTimeRemaining] = useState("");
   const [activityFeed, setActivityFeed] = useState<{ level: string; msg: string; color: string }[]>([]);
   const [notifyNextJs, setNotifyNextJs] = useState(false);
+  const [showSystemInput, setShowSystemInput] = useState(false);
+  const [systemInput, setSystemInput] = useState("");
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -308,6 +310,8 @@ export default function ScanPage() {
     setCrawlCounter(0);
     setActivityFeed([]);
     setNotifyNextJs(false);
+    setShowSystemInput(false);
+    setSystemInput("");
   }
 
   const isScanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
@@ -631,9 +635,41 @@ export default function ScanPage() {
                   Eingabe leeren →
                 </button>
                 {!notifyNextJs ? (
-                  <button onClick={() => { setNotifyNextJs(true); try { localStorage.setItem("wf_nextjs_notify", "1"); } catch {} }} style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", padding: "8px 14px" }}>
-                    Über neue Frameworks informiert werden
-                  </button>
+                  !showSystemInput ? (
+                    <button
+                      onClick={() => setShowSystemInput(true)}
+                      style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", padding: "8px 14px" }}
+                    >
+                      Support für mein System anfragen
+                    </button>
+                  ) : (
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                      <input
+                        type="text"
+                        placeholder="z. B. Joomla, Shopify, Next.js…"
+                        value={systemInput}
+                        onChange={(e) => setSystemInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && systemInput.trim()) {
+                            setNotifyNextJs(true);
+                            try { localStorage.setItem("wf_system_request", systemInput.trim()); } catch {}
+                          }
+                        }}
+                        autoFocus
+                        style={{ fontSize: 12, padding: "7px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 8, color: "#fff", outline: "none", width: 200 }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (!systemInput.trim()) return;
+                          setNotifyNextJs(true);
+                          try { localStorage.setItem("wf_system_request", systemInput.trim()); } catch {}
+                        }}
+                        style={{ fontSize: 12, fontWeight: 600, color: "#818cf8", background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 8, cursor: "pointer", padding: "7px 12px" }}
+                      >
+                        Absenden →
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <span style={{ fontSize: 12, color: "rgba(141,243,211,0.7)", display: "flex", alignItems: "center", gap: 5 }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

@@ -32,6 +32,8 @@ export default function InlineScan({
   const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextMs: number }>({ blocked: false, nextMs: 0 });
   const [timeRemaining, setTimeRemaining] = useState("");
   const [notifyNextJs, setNotifyNextJs] = useState(false);
+  const [showSystemInput, setShowSystemInput] = useState(false);
+  const [systemInput, setSystemInput] = useState("");
 
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activityTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -193,6 +195,8 @@ export default function InlineScan({
     setCrawlCounter(0);
     setActivityFeed([]);
     setNotifyNextJs(false);
+    setShowSystemInput(false);
+    setSystemInput("");
   }
 
   const isScanning = phase === "scanning";
@@ -527,22 +531,61 @@ export default function InlineScan({
             </button>
 
             {!notifyNextJs ? (
-              <button
-                onClick={() => {
-                  setNotifyNextJs(true);
-                  try { localStorage.setItem("wf_nextjs_notify", "1"); } catch {}
-                }}
-                style={{
-                  fontSize: 12, fontWeight: 500,
-                  color: "rgba(255,255,255,0.35)",
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 8, cursor: "pointer",
-                  padding: "8px 14px",
-                }}
-              >
-                Über neue Frameworks informiert werden
-              </button>
+              !showSystemInput ? (
+                <button
+                  onClick={() => setShowSystemInput(true)}
+                  style={{
+                    fontSize: 12, fontWeight: 500,
+                    color: "rgba(255,255,255,0.35)",
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 8, cursor: "pointer",
+                    padding: "8px 14px",
+                  }}
+                >
+                  Support für mein System anfragen
+                </button>
+              ) : (
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input
+                    type="text"
+                    placeholder="z. B. Joomla, Shopify, Next.js…"
+                    value={systemInput}
+                    onChange={(e) => setSystemInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && systemInput.trim()) {
+                        setNotifyNextJs(true);
+                        try { localStorage.setItem("wf_system_request", systemInput.trim()); } catch {}
+                      }
+                    }}
+                    autoFocus
+                    style={{
+                      fontSize: 12, padding: "7px 12px",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      borderRadius: 8, color: "#fff",
+                      outline: "none", width: 200,
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (!systemInput.trim()) return;
+                      setNotifyNextJs(true);
+                      try { localStorage.setItem("wf_system_request", systemInput.trim()); } catch {}
+                    }}
+                    style={{
+                      fontSize: 12, fontWeight: 600,
+                      color: "#818cf8",
+                      background: "rgba(99,102,241,0.12)",
+                      border: "1px solid rgba(99,102,241,0.25)",
+                      borderRadius: 8, cursor: "pointer",
+                      padding: "7px 12px",
+                    }}
+                  >
+                    Absenden →
+                  </button>
+                </div>
+              )
             ) : (
               <span style={{
                 fontSize: 12, color: "rgba(141,243,211,0.7)",
