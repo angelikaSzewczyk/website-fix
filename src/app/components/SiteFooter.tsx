@@ -20,7 +20,7 @@ export default function SiteFooter() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <BrandLogo />
             <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.6, maxWidth: 220 }}>
-              Die spezialisierte Compliance-Plattform für WordPress-Agenturen.
+              Die spezialisierte Compliance-Plattform für WordPress-Agenturen & professionelle Web-Entwicklung.
             </p>
             <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
               {`© ${year} website-fix.com`}
