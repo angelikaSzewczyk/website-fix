@@ -142,6 +142,24 @@ function extractSitemapUrls(xml: string): string[] {
     .filter((u) => !u.endsWith(".xml"));
 }
 
+// ── WordPress Detection ─────────────────────────────────────
+function detectWordPress(html: string, headers: Headers): boolean {
+  // HTML-Signale (zuverlässigste Methode)
+  if (html.includes("/wp-content/"))          return true;
+  if (html.includes("/wp-includes/"))          return true;
+  if (html.includes("wp-json"))               return true;
+  if (html.includes("wp-login.php"))           return true;
+  if (/wp-emoji-release\.min\.js/i.test(html)) return true;
+  if (/<meta[^>]+name=["']generator["'][^>]+content=["']WordPress/i.test(html)) return true;
+
+  // HTTP-Header-Signale
+  if (/wordpress/i.test(headers.get("x-powered-by") ?? "")) return true;
+  if (/wordpress/i.test(headers.get("x-generator")  ?? "")) return true;
+  if ((headers.get("link") ?? "").includes("wp-json"))       return true;
+
+  return false;
+}
+
 // ── Alt Text Check ──────────────────────────────────────────
 function countMissingAlt(html: string): { missing: number; total: number } {
   const imgs = html.match(/<img[^>]*>/gi) ?? [];
@@ -323,8 +341,16 @@ export async function POST(req: NextRequest) {
     scanData.indexierungGesperrt = extractMeta(mainHtml, "robots").includes("noindex");
     const canonicalMatch = mainHtml.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
     scanData.canonical = canonicalMatch ? canonicalMatch[1] : "";
-    scanData.istWordpress = mainHtml.includes("/wp-content/") || mainHtml.includes("/wp-includes/");
+    scanData.istWordpress = detectWordPress(mainHtml, mainRes.headers);
     scanData.formularVorhanden = mainHtml.includes("<form");
+
+    // ── Früh-Abbruch: kein WordPress erkannt ───────────────
+    if (!scanData.istWordpress) {
+      return NextResponse.json(
+        { success: false, errorCode: "ERR_NOT_WORDPRESS", error: "Diese Website verwendet kein WordPress." },
+        { status: 422 },
+      );
+    }
     const formCheck = checkFormAccessibility(mainHtml);
     scanData.formCheck = formCheck;
     const mainAlt = countMissingAlt(mainHtml);
