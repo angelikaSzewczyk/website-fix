@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InlineScan from "../components/inline-scan";
+import SiteFooter from "../components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Warum findet Google meine Homepage nicht? Jetzt kostenlos prüfen",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InlineScan from "../components/inline-scan";
+import SiteFooter from "../components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Website langsam? Ladezeit kostenlos prüfen — KI findet die Ursache",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BrandLogo from "../components/BrandLogo";
 import MobileNav from "../components/MobileNav";
+import SiteFooter from "../components/SiteFooter";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type ScanPhase =

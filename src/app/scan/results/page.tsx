@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
 import MobileNav from "../../components/MobileNav";
+import SiteFooter from "../../components/SiteFooter";
 
 // ── Real scan data shape (stored by /scan/page.tsx via sessionStorage) ────────
 type StoredScan = {
