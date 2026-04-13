@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-type ScanPhase = "idle" | "scanning" | "done" | "error";
+type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
 const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
@@ -31,6 +31,7 @@ export default function InlineScan({
   const [activityFeed, setActivityFeed] = useState<{ level: string; msg: string; color: string }[]>([]);
   const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextMs: number }>({ blocked: false, nextMs: 0 });
   const [timeRemaining, setTimeRemaining] = useState("");
+  const [notifyNextJs, setNotifyNextJs] = useState(false);
 
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activityTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -167,6 +168,9 @@ export default function InlineScan({
         setTimeout(() => {
           window.location.href = `/scan/results?url=${encodeURIComponent(url)}`;
         }, 600);
+      } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
+        cleanup();
+        setPhase("not_wordpress");
       } else {
         setError(data.error ?? "Etwas ist schiefgelaufen.");
         setPhase("error");
@@ -185,6 +189,7 @@ export default function InlineScan({
     setError("");
     setCrawlCounter(0);
     setActivityFeed([]);
+    setNotifyNextJs(false);
   }
 
   const isScanning = phase === "scanning";
@@ -449,6 +454,105 @@ export default function InlineScan({
         }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#8df3d3", boxShadow: "0 0 6px #8df3d3", flexShrink: 0 }} />
           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Scan abgeschlossen — Ergebnisse werden geladen…</span>
+        </div>
+      )}
+
+      {/* ── Not WordPress ── */}
+      {phase === "not_wordpress" && (
+        <div style={{
+          marginTop: 12,
+          padding: "26px 24px 22px",
+          background: "rgba(10,8,18,0.70)",
+          border: "1px solid rgba(122,166,255,0.18)",
+          borderRadius: 14,
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          {/* Subtle blue glow */}
+          <div style={{
+            position: "absolute", top: 0, right: 0,
+            width: "60%", height: "100%",
+            background: "radial-gradient(ellipse at 90% 30%, rgba(99,102,241,0.09) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }} />
+
+          {/* Icon + Headline */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14, position: "relative" }}>
+            <div style={{
+              flexShrink: 0,
+              width: 38, height: 38, borderRadius: 10,
+              background: "rgba(99,102,241,0.10)",
+              border: "1px solid rgba(99,102,241,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              {/* Target / Focus icon */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: "-0.2px", marginBottom: 4 }}>
+                Spezialisierter WordPress-Check
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.6, maxWidth: 460 }}>
+                WebsiteFix ist ein Hochleistungs-Tool, das exklusiv auf die Architektur, Sicherheit und Barrierefreiheit (BFSG) von WordPress-Systemen optimiert ist.
+                Die eingegebene URL verwendet ein anderes Framework (z.&nbsp;B. Next.js, React oder ein statisches CMS).
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 18px" }} />
+
+          {/* Actions row */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={reset}
+              style={{
+                fontSize: 13, fontWeight: 600,
+                color: "#fff",
+                background: "rgba(99,102,241,0.15)",
+                border: "1px solid rgba(99,102,241,0.30)",
+                borderRadius: 8, cursor: "pointer",
+                padding: "8px 16px",
+              }}
+            >
+              Möchten Sie eine WordPress-Seite testen? Eingabe leeren →
+            </button>
+
+            {!notifyNextJs ? (
+              <button
+                onClick={() => {
+                  setNotifyNextJs(true);
+                  try { localStorage.setItem("wf_nextjs_notify", "1"); } catch {}
+                }}
+                style={{
+                  fontSize: 12, fontWeight: 500,
+                  color: "rgba(255,255,255,0.35)",
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 8, cursor: "pointer",
+                  padding: "8px 14px",
+                }}
+              >
+                Benachrichtigen, wenn Next.js Support kommt
+              </button>
+            ) : (
+              <span style={{
+                fontSize: 12, color: "rgba(141,243,211,0.7)",
+                display: "flex", alignItems: "center", gap: 5,
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                  stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Gemerkt — wir melden uns!
+              </span>
+            )}
+          </div>
         </div>
       )}
 
