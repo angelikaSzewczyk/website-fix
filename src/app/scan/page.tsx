@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BrandLogo from "../components/BrandLogo";
 import MobileNav from "../components/MobileNav";
+import NavAuthLink from "../components/nav-auth-link";
 import SiteFooter from "../components/SiteFooter";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -342,30 +343,55 @@ export default function ScanPage() {
 
   return (
     <>
-      {/* ── NAV ── */}
+      {/* ── NAV — gleiche Struktur wie Home-Seite ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{
+          maxWidth: 1100, margin: "0 auto", padding: "0 24px",
+          height: 58, display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          {/* Left — Logo */}
           <BrandLogo />
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <Link href="/login" className="hide-sm" style={{
-              fontSize: 13, padding: "7px 16px", borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
-              textDecoration: "none",
-            }}>
-              Anmelden
-            </Link>
-            <Link href="/register" className="hide-sm" style={{
-              fontSize: 13, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
-              background: "#fff", color: "#0b0c10", textDecoration: "none",
-            }}>
-              Account erstellen
-            </Link>
-            {/* Burger-Menü — nur auf Mobile sichtbar */}
-            <MobileNav />
+
+          {/* Center + Right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+
+            {/* Center links — hidden on mobile */}
+            <div className="hide-sm" style={{ display: "flex", gap: 24 }}>
+              {[
+                { href: "/#pricing",       label: "Preise" },
+                { href: "/fuer-agenturen", label: "Für Agenturen" },
+                { href: "/blog",           label: "Blog" },
+              ].map(({ href, label }) => (
+                <Link key={href} href={href} style={{
+                  fontSize: 14, color: "rgba(255,255,255,0.5)",
+                  textDecoration: "none", transition: "color 0.15s",
+                }}
+                  className="wf-nav-link"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right actions */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              {/* Auth-aware: zeigt 'Dashboard →' wenn eingeloggt, 'Preise' wenn nicht */}
+              <NavAuthLink />
+              <Link href="/login" className="hide-sm" style={{
+                fontSize: 13, padding: "7px 16px", borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
+                textDecoration: "none",
+              }}>
+                Anmelden
+              </Link>
+              {/* Burger-Menü — nur auf Mobile */}
+              <MobileNav />
+            </div>
           </div>
         </div>
       </nav>

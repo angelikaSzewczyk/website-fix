@@ -3799,6 +3799,10 @@ html, body {
   gap: 40px;
 }
 
+.wf-nav-link:hover {
+  color: rgba(255,255,255,0.9) !important;
+}
+
 .wf-footer-link {
   font-size: 13px;
   color: rgba(255,255,255,0.35);
