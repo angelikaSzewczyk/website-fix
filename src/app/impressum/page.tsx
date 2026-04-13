@@ -23,7 +23,7 @@ const DIVIDER: React.CSSProperties = {
 
 export default function ImpressumPage() {
   return (
-    <LegalLayout title="Impressum" footerLink="/datenschutz" footerLabel="Datenschutz">
+    <LegalLayout title="Impressum" footerLink="/datenschutz" footerLabel="Datenschutz" extraLinks={[{ href: "/agb", label: "AGB" }]}>
 
       <p style={{ ...P, color: "rgba(255,255,255,0.35)", marginBottom: 28, fontSize: 13 }}>
         Pflichtangaben gemäß § 5 TMG

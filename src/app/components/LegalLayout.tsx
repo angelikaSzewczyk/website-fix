@@ -18,11 +18,13 @@ export default function LegalLayout({
   title,
   footerLink,
   footerLabel,
+  extraLinks,
 }: {
   children: ReactNode;
   title: string;
   footerLink: string;
   footerLabel: string;
+  extraLinks?: { href: string; label: string }[];
 }) {
   return (
     <div style={{
@@ -133,6 +135,14 @@ export default function LegalLayout({
           <Link href={footerLink} className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
             {footerLabel}
           </Link>
+          {extraLinks?.map((l) => (
+            <span key={l.href}>
+              <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
+              <Link href={l.href} className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
+                {l.label}
+              </Link>
+            </span>
+          ))}
         </p>
       </footer>
     </div>

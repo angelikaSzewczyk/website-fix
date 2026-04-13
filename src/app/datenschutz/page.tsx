@@ -59,7 +59,7 @@ function Basis({ children }: { children: React.ReactNode }) {
 
 export default function DatenschutzPage() {
   return (
-    <LegalLayout title="Datenschutzerklärung" footerLink="/impressum" footerLabel="Impressum">
+    <LegalLayout title="Datenschutzerklärung" footerLink="/impressum" footerLabel="Impressum" extraLinks={[{ href: "/agb", label: "AGB" }]}>
 
       <p style={{ ...P, color: "rgba(255,255,255,0.35)", marginBottom: 28, fontSize: 13 }}>
         Diese Datenschutzerklärung informiert dich über die Art, den Umfang und Zweck der Verarbeitung
