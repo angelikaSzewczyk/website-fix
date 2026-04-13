@@ -278,6 +278,11 @@ export default function ScanPage() {
         clearTimers();
         apiDone.current = true;
         setPhase("not_wordpress");
+      } else if (data.errorCode === "SITE_UNREACHABLE") {
+        clearTimers();
+        apiDone.current = true;
+        setErrorMsg("Diese Website konnte nicht erreicht werden. Bitte prüfe die URL auf Tippfehler.");
+        setPhase("error");
       } else {
         setErrorMsg(data.error ?? "Etwas ist schiefgelaufen.");
         setPhase("error");

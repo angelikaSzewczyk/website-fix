@@ -315,10 +315,10 @@ export async function POST(req: NextRequest) {
     // ── 1. HAUPTSEITE ───────────────────────────────────────
     const mainRes = await fetchWithTimeout(targetUrl);
 
-    // Früh-Abbruch: Seite nicht erreichbar oder kein echter Inhalt
+    // Früh-Abbruch: Seite nicht erreichbar (DNS-Fehler, Timeout, Connection refused)
     if (!mainRes) {
       return NextResponse.json(
-        { success: false, error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
         { status: 400 },
       );
     }
@@ -328,7 +328,7 @@ export async function POST(req: NextRequest) {
       mainHtml = await mainRes.text();
     } catch {
       return NextResponse.json(
-        { success: false, error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
         { status: 400 },
       );
     }
@@ -340,9 +340,11 @@ export async function POST(req: NextRequest) {
     );
 
     const host0 = (() => { try { return new URL(targetUrl).hostname; } catch { return targetUrl; } })();
+    // isRealWebsiteContent erlaubt www <-> non-www Redirects (google.com → www.google.com)
+    // und blockiert nur echte Fremd-Redirects (ISP-Fehlerseiten, Parking-Pages).
     if (!isRealWebsiteContent(mainRes, mainHtml, host0)) {
       return NextResponse.json(
-        { success: false, error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
+        { success: false, errorCode: "SITE_UNREACHABLE", error: "Website konnte nicht erreicht werden – bitte prüfe die URL." },
         { status: 400 },
       );
     }

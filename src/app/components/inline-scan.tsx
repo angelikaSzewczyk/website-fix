@@ -171,6 +171,9 @@ export default function InlineScan({
       } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
         cleanup();
         setPhase("not_wordpress");
+      } else if (data.errorCode === "SITE_UNREACHABLE") {
+        setError("Diese Website konnte nicht erreicht werden. Bitte prüfe die URL auf Tippfehler.");
+        setPhase("error");
       } else {
         setError(data.error ?? "Etwas ist schiefgelaufen.");
         setPhase("error");
