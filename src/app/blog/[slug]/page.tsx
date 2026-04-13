@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   ogUrl.searchParams.set("title", title || "");
 
   return {
-    title,
+    title: { absolute: `${title} | WebsiteFix Blog` },
     description,
     alternates: { canonical },
     openGraph: {

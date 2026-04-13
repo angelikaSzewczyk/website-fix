@@ -9,7 +9,7 @@ import TestimonialDots from "./components/testimonial-dots";
 import SiteFooter from "./components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "WebsiteFix — Das Betriebssystem für deine Website-Wartung",
+  title: { absolute: "WebsiteFix | Compliance-Plattform für WordPress-Agenturen" },
   description: "Automatisierte Überwachung, KI-gestützte Fehlerbehebung und professionelle White-Label-Reports für Web-Agenturen. WCAG, SEO, Performance & Monitoring in einem Tool.",
 };
 

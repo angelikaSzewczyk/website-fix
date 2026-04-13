@@ -16,7 +16,7 @@ const BellAlertIcon = BellDot;
 const ShieldAlertIcon = ShieldAlert;
 
 export const metadata: Metadata = {
-  title: "WebsiteFix für Agenturen — Automatische Wartungsverträge & BFSG",
+  title: { absolute: "Für Agenturen | WordPress-Haftung & BFSG 2025 lösen" },
   description: "Verwandeln Sie Ihre Wartung in eine Profit-Maschine. White-Label Reports, BFSG-Compliance und Jira-Integration für Web-Agenturen.",
 };
 

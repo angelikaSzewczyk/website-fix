@@ -6,7 +6,7 @@ import BlogGrid from "./BlogGrid";
 import SiteFooter from "../components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Blog — WebsiteFix",
+  title: { absolute: "Wissen für Web-Agenturen | Blog | WebsiteFix" },
   description: "Tipps, Rechtliches und Best Practices rund um WCAG, Performance und Web-Wartung für Agenturen.",
 };
 

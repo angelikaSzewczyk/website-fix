@@ -201,6 +201,14 @@ function ResultsInner() {
     setLoaded(true);
   }, [urlParam]);
 
+  // ── Dynamic browser-tab title once scan data is available ──
+  useEffect(() => {
+    if (!scan) return;
+    const domain = (() => { try { return new URL(scan.url).host; } catch { return scan.url; } })();
+    document.title = `✅ Audit bereit: ${domain} | WebsiteFix`;
+    return () => { document.title = "WebsiteFix | Compliance-Plattform für WordPress-Agenturen"; };
+  }, [scan]);
+
   if (!loaded) return (
     <div style={{ background: "#0b0c10", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>Lade Ergebnisse…</div>

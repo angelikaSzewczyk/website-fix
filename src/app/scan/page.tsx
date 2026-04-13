@@ -185,6 +185,26 @@ export default function ScanPage() {
     };
   }, [phase]);
 
+  // ── Dynamic browser-tab title during scan ──────────────────
+  useEffect(() => {
+    const scanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
+    if (scanning) {
+      let secs = 60;
+      document.title = `🔍 Scan läuft... (${secs}s) | WebsiteFix`;
+      const id = setInterval(() => {
+        secs = Math.max(1, secs - 1);
+        document.title = `🔍 Scan läuft... (${secs}s) | WebsiteFix`;
+      }, 1000);
+      return () => clearInterval(id);
+    }
+    if (phase === "done") {
+      const domain = (() => { try { return new URL(url).hostname; } catch { return url; } })();
+      document.title = `✅ Audit bereit: ${domain} | WebsiteFix`;
+      return;
+    }
+    document.title = "WebsiteFix | Compliance-Plattform für WordPress-Agenturen";
+  }, [phase, url]);
+
   // ── Activity Feed — fires timed messages during scan ───────
   function startActivityFeed(scanUrl: string) {
     const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();

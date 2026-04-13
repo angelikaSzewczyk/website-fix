@@ -1,5 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0D1117"/>
-  <path d="M 5,6 L 12,14 L 8,19" stroke="rgba(255,255,255,0.65)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <style>
+    .bg { fill: #0D1117; }
+    .stroke-w { stroke: rgba(255,255,255,0.75); }
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #1a1f2e; }
+      .stroke-w { stroke: rgba(255,255,255,0.9); }
+    }
+  </style>
+  <rect width="32" height="32" rx="7" class="bg"/>
+  <path d="M 5,6 L 12,14 L 8,19" class="stroke-w" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M 8,19 L 13,24 L 26,5" stroke="#F59E0B" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
