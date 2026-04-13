@@ -49,9 +49,9 @@ const BENEFITS = [
         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
       </svg>
     ),
-    label: "Umsatz-Booster",
-    title: "BFSG als neues Service-Paket",
-    desc: "Integriere Compliance-Audits in deine WordPress-Wartungsverträge.",
+    label: "Mehrwert für Kunden",
+    title: "Fertige Checkliste statt Rätselraten",
+    desc: "Nutze die Reports als fertige Checkliste für deine Website-Projekte — sofort verständlich, sofort einsetzbar.",
   },
   {
     color: "#7aa6ff",
@@ -62,9 +62,9 @@ const BENEFITS = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
     ),
-    label: "Haftungs-Schutz",
-    title: "BFSG 2025 automatisch im Griff",
-    desc: "Lückenloser Nachweis der Barrierefreiheit gemäß BFSG 2025.",
+    label: "Schutz vor Abmahnungen",
+    title: "BFSG 2025 — dokumentiert & nachweisbar",
+    desc: "Dokumentiere die Barrierefreiheit deiner Seite gemäß BFSG 2025 — lückenlos und griffbereit für den Ernstfall.",
   },
   {
     color: "#c084fc",
@@ -76,9 +76,9 @@ const BENEFITS = [
         <polyline points="16 7 22 7 22 13"/>
       </svg>
     ),
-    label: "Branding",
-    title: "Reports ohne Mehrarbeit",
-    desc: "Sende vollautomatische PDF-Reports mit deinem Agentur-Logo an deine Kunden.",
+    label: "Profi-Reports",
+    title: "Dein Logo. Dein Bericht. Ein Klick.",
+    desc: "Erstelle mit einem Klick verständliche PDF-Auswertungen mit deinem eigenen Logo — ohne Aufwand, professionell.",
   },
 ];
 
@@ -395,16 +395,16 @@ export default function ScanPage() {
             fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
             margin: "0 0 16px", letterSpacing: "-0.035em",
           }}>
-            Vollständiger WordPress-<br />
+            Der große WordPress-Check:{" "}
             <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Compliance-Audit.
+              Haftungssicher &amp; Barrierefrei.
             </span>
           </h1>
 
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 40px" }}>
-            Prüft Plugins, Themes und Core-Strukturen auf{" "}
-            <span style={{ color: "rgba(255,255,255,0.75)" }}>BFSG-Konformität, SEO und Performance</span>{" "}
-            — automatisiert über alle Unterseiten hinweg.
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px" }}>
+            Prüft Plugins, Design und Technik auf das neue{" "}
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>Barrierefreiheitsgesetz (BFSG 2025)</span>.{" "}
+            Erhalte einen klaren Bericht über den Zustand deiner Website — in 60 Sekunden und ohne Installation.
           </p>
 
           {/* ── INPUT FORM / BLOCKED STATE ── */}
@@ -475,7 +475,7 @@ export default function ScanPage() {
                       color: "rgba(255,255,255,0.42)", lineHeight: 1.75,
                       maxWidth: 340,
                     }}>
-                      Dein nächster spezialisierter WordPress-Audit ist in{" "}
+                      Dein nächster professioneller WordPress-Check ist in{" "}
                       <span style={{ color: "#fff", fontWeight: 700 }}>{timeRemaining}</span>{" "}
                       verfügbar.
                     </p>
