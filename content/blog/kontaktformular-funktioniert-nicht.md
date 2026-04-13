@@ -1,5 +1,5 @@
 ---
-title: "WordPress Kontaktformular sendet keine E-Mails? 9 Lösungen title: "Kontaktformular sendet keine E-Mails? 9 Lösungen & Checkliste" Checkliste"
+title: "WordPress Kontaktformular sendet keine E-Mails? 9 Lösungen & Checkliste"
 description: "Ihr Kontaktformular funktioniert nicht? Erfahre, warum Mails im Spam landen oder gar nicht ankommen (SMTP, SPF, Plugins) und wie Sie es sofort fixst."
 date: "2026-03-23"
 category: "wordpress"

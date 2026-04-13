@@ -1,5 +1,5 @@
 ---
-title: "WordPress-Hosting ist langsam: 7 Ursachen title: "Mein Webhosting ist langsam: 7 Ursachen & sofort-Fixes (Update 2026)" sofort-Fixes (Update 2026)"
+title: "WordPress-Hosting ist langsam: 7 Ursachen & sofort-Fixes (Update 2026)"
 description: "Webhosting zu langsam? Diese 7 Ursachen bremsen Ihre Website — von schlechtem Server über Caching-Fehler bis zu WordPress-Plugins. Mit konkreten Fixes für jede Ursache."
 date: "2026-04-13"
 category: "wordpress"
