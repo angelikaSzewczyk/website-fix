@@ -3799,13 +3799,6 @@ html, body {
   gap: 40px;
 }
 
-@media (max-width: 640px) {
-  .wf-footer-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-
 .wf-footer-link {
   font-size: 13px;
   color: rgba(255,255,255,0.35);
@@ -3814,6 +3807,43 @@ html, body {
 }
 .wf-footer-link:hover {
   color: #fff;
+}
+
+/* ── Payment badges ── */
+.wf-pay-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.35);
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  cursor: default;
+}
+.wf-pay-badge:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+.wf-pay-visa:hover   { color: #1a1f71; background: #fff; }
+.wf-pay-mc:hover .wf-mc-left   { background: #eb001b !important; opacity: 1 !important; }
+.wf-pay-mc:hover .wf-mc-right  { background: #f79e1b !important; opacity: 1 !important; }
+.wf-pay-sepa:hover   { color: #003399; background: #fff; }
+.wf-pay-apple:hover  { color: #000; background: #fff; }
+.wf-pay-gpay:hover   { background: #fff; color: #000; }
+.wf-pay-stripe:hover { color: #635bff; background: rgba(99,91,255,0.08); border-color: rgba(99,91,255,0.3); }
+
+@media (max-width: 640px) {
+  .wf-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    text-align: center;
+  }
+  .wf-footer-grid > div {
+    align-items: center;
+  }
+  .wf-footer-payments {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 }
 
 /* ===== ROI CALCULATOR — responsive 2-col grid ===== */

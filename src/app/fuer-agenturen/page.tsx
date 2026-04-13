@@ -1317,7 +1317,7 @@ export default function AgencyPage() {
                   Starten Sie jetzt —<br />erste Website kostenlos.
                 </h2>
                 <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                  Keine Installation. Ergebnis in unter 60 Sekunden.
+                  WordPress-Deep-Scan in unter 60 Sekunden – ohne Plugin-Installation.
                 </p>
               </div>
               <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>
