@@ -9,6 +9,7 @@ import AutoCheckout from "../components/auto-checkout";
 import BrandLogo from "../components/BrandLogo";
 import MobileNav from "../components/MobileNav";
 import AgencyStats from "../components/agency-stats";
+import SiteFooter from "../components/SiteFooter";
 
 const LayersIcon = Layers;
 const BellAlertIcon = BellDot;
