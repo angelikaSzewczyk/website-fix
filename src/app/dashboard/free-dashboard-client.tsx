@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
@@ -257,6 +258,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     scans, monthlyScans, scanLimit,
     fingerprint,
   } = props;
+
+  const searchParams = useSearchParams();
+  const isImpersonating = searchParams.get("impersonating") === "1";
 
   const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
@@ -583,7 +587,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
       <div style={{ flex: 1, minWidth: 0 }}>
 
         {/* Impersonation banner */}
-        {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("impersonating") === "1" && (
+        {isImpersonating && (
           <div style={{
             padding: "10px 20px", background: "rgba(245,158,11,0.12)",
             borderBottom: "1px solid rgba(245,158,11,0.3)",

@@ -572,7 +572,7 @@ export default function ScanPage() {
                         color: "rgba(255,255,255,0.3)",
                         fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
                       }}>
-                        <span>Freie Scans (pro Stunde)</span>
+                        <span>Freie Scans (pro 24 Stunden)</span>
                         <span style={{ color: "#7aa6ff" }}>2 / 2 verwendet</span>
                       </div>
                       {/* Progress bar — 100 % filled */}

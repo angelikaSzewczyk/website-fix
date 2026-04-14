@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
@@ -472,25 +473,27 @@ export default async function DashboardPage() {
           FREE / SINGLE (Smart-Guard) LAYOUT — PREMIUM DARK
           ══════════════════════════════════════════════════════════ */}
       {!isAgency && (
-        <FreeDashboardClient
-          firstName={firstName}
-          plan={plan}
-          lastScan={lastScan}
-          lastScanResult={lastScanResult}
-          issues={issues}
-          redCount={redIssues.length}
-          yellowCount={yellowIssues.length}
-          rechtIssues={rechtIssues}
-          speedIssues={speedIssues}
-          techIssues={techIssues}
-          cms={cms}
-          bfsgOk={bfsgOk}
-          speedScore={speedScore}
-          scans={scans}
-          monthlyScans={monthlyScans}
-          scanLimit={SCAN_LIMIT}
-          fingerprint={techFingerprint}
-        />
+        <Suspense>
+          <FreeDashboardClient
+            firstName={firstName}
+            plan={plan}
+            lastScan={lastScan}
+            lastScanResult={lastScanResult}
+            issues={issues}
+            redCount={redIssues.length}
+            yellowCount={yellowIssues.length}
+            rechtIssues={rechtIssues}
+            speedIssues={speedIssues}
+            techIssues={techIssues}
+            cms={cms}
+            bfsgOk={bfsgOk}
+            speedScore={speedScore}
+            scans={scans}
+            monthlyScans={monthlyScans}
+            scanLimit={SCAN_LIMIT}
+            fingerprint={techFingerprint}
+          />
+        </Suspense>
       )}
 
 {/* ══════════════════════════════════════════════════════════
