@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { LayoutDashboard, Users, Flame, Ticket, Server, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import type { AdminUser, ScanLogRow, SupportTicket, DbStats } from "./page";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -411,11 +412,11 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
   const openCount  = tickets.filter(t => t.status === "open").length;
 
   const TABS = [
-    { key: "overview",  label: "📊 Übersicht" },
-    { key: "users",     label: `👥 Users (${kpi.totalUsers})` },
-    { key: "incidents", label: `🔥 Incidents (${scanLogs.filter(l => l.status === "error").length})` },
-    { key: "support",   label: `🎫 Support${openCount > 0 ? ` (${openCount})` : ""}` },
-    { key: "infra",     label: "⚙️ Infrastruktur" },
+    { key: "overview",  label: "Übersicht",                                                              icon: <LayoutDashboard size={14} /> },
+    { key: "users",     label: `Users (${kpi.totalUsers})`,                                              icon: <Users size={14} /> },
+    { key: "incidents", label: `Incidents (${scanLogs.filter(l => l.status === "error").length})`,       icon: <Flame size={14} /> },
+    { key: "support",   label: `Support${openCount > 0 ? ` (${openCount})` : ""}`,                      icon: <Ticket size={14} /> },
+    { key: "infra",     label: "Infrastruktur",                                                          icon: <Server size={14} /> },
   ] as const;
 
   return (
@@ -440,12 +441,12 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
               {TABS.map(t => (
                 <button key={t.key} onClick={() => setTab(t.key)} style={{
                   padding: "5px 14px", borderRadius: 7, border: "none", cursor: "pointer",
-                  fontSize: 12, fontWeight: 600,
+                  fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 6,
                   background: tab === t.key ? "rgba(255,255,255,0.08)" : "transparent",
                   color: tab === t.key ? D.text : D.sub,
                   transition: "all 0.15s",
                 }}>
-                  {t.label}
+                  {t.icon}{t.label}
                 </button>
               ))}
             </div>
@@ -461,7 +462,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 opacity: refreshing ? 0.5 : 1,
               }}
             >
-              {refreshing ? "↻ Lädt…" : "↻ Refresh"}
+              <RefreshCw size={12} style={{ marginRight: 5, display: "inline" }} />{refreshing ? "Lädt…" : "Refresh"}
             </button>
             <Link href="/dashboard" style={{ fontSize: 12, color: D.muted, textDecoration: "none" }}>
               Dashboard
@@ -835,7 +836,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
 
               {tickets.length === 0 ? (
                 <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎫</div>
+                  <div style={{ marginBottom: 8, color: D.muted }}><Ticket size={32} /></div>
                   <p style={{ color: D.muted, fontSize: 13 }}>Noch keine Support-Anfragen.</p>
                 </div>
               ) : (
@@ -907,7 +908,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                           color: D.green, cursor: "pointer",
                         }}
                       >
-                        ✓ Gelöst
+                        <CheckCircle size={12} style={{ marginRight: 4, display: "inline" }} />Gelöst
                       </button>
                     )}
                     <button onClick={() => setOpenTicket(null)} style={{
@@ -959,7 +960,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       )}
                       {openTicket.metadata.lastErrorLog && (
                         <div>
-                          <div style={{ color: D.muted, marginBottom: 4 }}>⚠ Letzter Scan-Log:</div>
+                          <div style={{ color: D.muted, marginBottom: 4, display: "flex", alignItems: "center", gap: 5 }}><AlertTriangle size={12} /> Letzter Scan-Log:</div>
                           <div style={{
                             padding: "8px 10px", background: "rgba(239,68,68,0.06)",
                             border: `1px solid rgba(239,68,68,0.12)`, borderRadius: 7,
