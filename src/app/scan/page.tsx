@@ -319,6 +319,7 @@ export default function ScanPage() {
             hasSitemap:          data.scanData?.sitemapVorhanden ?? false,
             robotsBlocked:       data.scanData?.robotsBlockiertAlles ?? false,
             hasUnreachable:      (audit.unterseiten ?? []).some((p: { erreichbar: boolean }) => !p.erreichbar),
+            orphanedPagesCount:  (audit.verwaistSeiten ?? []).length,
             wpVersion:           data.scanData?.wpVersion ?? null,
             xmlRpcOpen:          data.scanData?.xmlRpcOpen ?? false,
             sitemapIndexFound:   data.scanData?.sitemapIndexFound ?? false,

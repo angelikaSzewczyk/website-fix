@@ -29,6 +29,7 @@ type StoredScan = {
   hasSitemap:           boolean;
   robotsBlocked:        boolean;
   hasUnreachable:       boolean;
+  orphanedPagesCount?:  number;
   wpVersion?:           string | null;
   xmlRpcOpen?:          boolean;
   sitemapIndexFound?:   boolean;
@@ -70,16 +71,32 @@ function computeScore(d: StoredScan): number {
   return Math.max(15, Math.round(s));
 }
 
-function computeCritical(d: StoredScan): number {
-  return d.altMissingCount
-    + (d.brokenLinksCount)
-    + (!d.hasH1 ? 1 : 0)
-    + (d.noIndex ? 1 : 0);
+// Same 13-category boolean logic as /api/scan/route.ts → issueCount
+// so public results and dashboard always show identical numbers.
+// Note: !erreichbar (homepage reachable) is always false here — we only
+// reach this page when the scan succeeded — so it contributes 0, matching
+// the route's behaviour in practice.
+function computeIssueCount(d: StoredScan): number {
+  return [
+    !d.https,
+    /* !erreichbar — always reachable when results exist, matches route */
+    !d.hasTitle,
+    !d.hasMeta,
+    !d.hasH1,
+    d.robotsBlocked,
+    !d.hasSitemap,
+    d.hasUnreachable,
+    d.duplicateTitlesCount > 0,
+    d.duplicateMetasCount  > 0,
+    d.altMissingCount      > 0,
+    d.brokenLinksCount     > 0,
+    (d.orphanedPagesCount  ?? 0) > 0,
+  ].filter(Boolean).length;
 }
 
 function liabilityLevel(score: number, crit: number): string {
-  if (score < 55 || crit > 8) return "HOCH";
-  if (score < 80 || crit > 2) return "MITTEL";
+  if (score < 55 || crit >= 6) return "HOCH";
+  if (score < 80 || crit >= 3) return "MITTEL";
   return "GERING";
 }
 
@@ -451,7 +468,7 @@ function ResultsInner() {
   const displayDomain = isDemo ? DEMO_DOMAIN : (() => { try { return new URL(scan!.url).host; } catch { return scan!.url; } })();
   const score        = isDemo ? DEMO_SCORE   : computeScore(scan!);
   const pagesTotal   = isDemo ? DEMO_PAGES   : scan!.pages;
-  const critErrors   = isDemo ? DEMO_CRIT    : computeCritical(scan!);
+  const critErrors   = isDemo ? DEMO_CRIT    : computeIssueCount(scan!);
   const liability    = isDemo ? "HOCH"       : liabilityLevel(score, critErrors);
   const liabColor    = liabilityColor(liability);
   const scoreColor   = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
@@ -1263,7 +1280,7 @@ function ResultsInner() {
                     </div>
                   </div>
                 )}
-                {/* noIndex in computeCritical() aber fehlend im Panel — Bug A Fix */}
+                {/* noIndex — shown in issues panel */}
                 {scan?.noIndex && (
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", background: "rgba(239,68,68,0.05)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.12)" }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", flexShrink: 0 }}>🔴 Kritisch</span>
