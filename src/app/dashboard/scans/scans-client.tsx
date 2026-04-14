@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import BrandLogo from "@/app/components/BrandLogo";
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 const D = {
@@ -36,17 +35,6 @@ const D = {
   radiusXs:     6,
 } as const;
 
-const SIDEBAR_W = 200;
-
-// ─── Nav icons ─────────────────────────────────────────────────────────────────
-function NavIco({ name, active }: { name: string; active: boolean }) {
-  const c = active ? "#7aa6ff" : "rgba(255,255,255,0.3)";
-  const p = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: c, strokeWidth: "1.8", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (name === "dashboard") return <svg {...p}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-  if (name === "scan")      return <svg {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
-  if (name === "reports")   return <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
-  return null;
-}
 
 // ─── Lock icon ─────────────────────────────────────────────────────────────────
 function LockIco({ size = 12, color = D.textMuted }: { size?: number; color?: string }) {
@@ -80,66 +68,11 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
 
   const limitReached = monthlyScans >= scanLimit;
 
-  const nav = [
-    { icon: "dashboard", label: "Dashboard",  href: "/dashboard",       active: false },
-    { icon: "scan",      label: "Live Scan",  href: "/dashboard/scan",  active: false },
-    { icon: "reports",   label: "Berichte",   href: "/dashboard/scans", active: true  },
-  ];
-
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: D.page, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
-      {/* ── SIDEBAR ──────────────────────────────────────── */}
-      <aside style={{
-        width: SIDEBAR_W, flexShrink: 0,
-        position: "fixed", top: 0, left: 0, bottom: 0,
-        background: D.sidebar,
-        borderRight: `1px solid ${D.sidebarBdr}`,
-        display: "flex", flexDirection: "column",
-        zIndex: 50,
-      }}>
-        <div style={{ padding: "18px 16px 16px", borderBottom: `1px solid ${D.sidebarBdr}` }}>
-          <BrandLogo href="/dashboard" />
-        </div>
-        <nav style={{ padding: "10px 8px", flex: 1 }}>
-          {nav.map(item => (
-            <Link key={item.href} href={item.href} style={{
-              display: "flex", alignItems: "center", gap: 9,
-              padding: "8px 10px", borderRadius: 7, marginBottom: 2,
-              textDecoration: "none", fontSize: 13,
-              fontWeight: item.active ? 600 : 400,
-              color: item.active ? "#fff" : "rgba(255,255,255,0.38)",
-              background: item.active ? D.blueBg : "transparent",
-              borderLeft: item.active ? `2px solid ${D.blue}` : "2px solid transparent",
-            }}>
-              <NavIco name={item.icon} active={item.active} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div style={{ padding: "10px 10px 12px", borderTop: `1px solid ${D.sidebarBdr}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 8px" }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%",
-              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft }}>
-                {firstName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {firstName}
-              </p>
-              <p style={{ margin: 0, fontSize: 10, color: D.textMuted }}>Free Plan</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── MAIN ─────────────────────────────────────────── */}
-      <main style={{ marginLeft: SIDEBAR_W, flex: 1, minWidth: 0 }}>
+      {/* ── MAIN — sidebar rendered by dashboard layout.tsx ── */}
+      <main style={{ flex: 1, minWidth: 0 }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
 
           {/* Header */}

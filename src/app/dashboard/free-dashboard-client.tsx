@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
-import BrandLogo from "@/app/components/BrandLogo";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 
@@ -225,16 +223,6 @@ function SevBadge({ sev }: { sev: "red" | "yellow" | "green" }) {
   );
 }
 
-// ─── Nav icon ─────────────────────────────────────────────────────────────────
-function NavIco({ name, c }: { name: string; c: string }) {
-  const props = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: c, strokeWidth: "1.8", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (name === "dashboard") return <svg {...props}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-  if (name === "scan")      return <svg {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
-  if (name === "reports")    return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
-  if (name === "whitelabel") return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
-  if (name === "settings")   return <svg {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
-  return null;
-}
 
 // ─── Lock icon ────────────────────────────────────────────────────────────────
 function LockIco({ size = 16, color = D.textMuted }: { size?: number; color?: string }) {
@@ -271,13 +259,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   } = props;
 
   const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
-  const [userMenuOpen, setUserMenuOpen]         = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [cancelHover, setCancelHover]           = useState(false);
   const [switchHover, setSwitchHover]           = useState(false);
   const [switching, setSwitching]               = useState(false);
   const [sessionDomain, setSessionDomain]       = useState<string | null>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
 
   async function handleProjectSwitch() {
     if (switching) return;
@@ -304,16 +290,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     }
   }, [lastScan]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   const isFree     = plan === "free";
   const planLabel  = isFree ? "Free" : "Smart-Guard";
@@ -568,15 +544,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const sitemapOk   = speedScore > 40;
   const mobileOk    = speedScore > 55;
 
-  // Sidebar nav items — locked = free-only gate
-  const nav = [
-    { icon: "dashboard",    label: "Dashboard",            href: "/dashboard",       active: true,  locked: false },
-    { icon: "scan",         label: "Live Scan",            href: "/dashboard/scan",  active: false, locked: isFree },
-    { icon: "reports",      label: "Berichte",             href: "/dashboard/scans", active: false, locked: isFree },
-    { icon: "whitelabel",   label: "White-Label & Branding", href: "/pricing",       active: false, locked: true  },
-  ];
-
-  const SIDEBAR_W = 200;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: D.page, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -609,167 +576,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         .wf-disabled-card:hover { filter: saturate(0.4) brightness(0.8) !important; }
       `}</style>
 
-      {/* ══════════════════════════════════════════════════
-          SIDEBAR
-      ══════════════════════════════════════════════════ */}
-      <aside style={{
-        width: SIDEBAR_W, flexShrink: 0,
-        position: "fixed", top: 0, left: 0, bottom: 0,
-        background: D.sidebar,
-        borderRight: `1px solid ${D.sidebarBdr}`,
-        display: "flex", flexDirection: "column",
-        zIndex: 50,
-      }}>
-
-        {/* Logo */}
-        <div style={{ padding: "18px 16px 16px", borderBottom: `1px solid ${D.sidebarBdr}` }}>
-          <BrandLogo href="/dashboard" />
-        </div>
-
-        {/* Nav */}
-        <nav style={{ padding: "10px 8px", flex: 1 }}>
-          {nav.map(item => {
-            const isWhiteLabel = item.icon === "whitelabel";
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.locked ? `${item.label} — nur im Pro-Plan verfügbar` : item.label}
-                className={item.locked ? `wf-nav-locked${isWhiteLabel ? " wf-nav-whitelabel" : ""}` : ""}
-                style={{
-                  display: "flex", alignItems: "center", gap: 9,
-                  padding: "8px 10px",
-                  borderRadius: 7,
-                  marginBottom: isWhiteLabel ? 0 : 2,
-                  marginTop: isWhiteLabel ? 8 : 0,
-                  textDecoration: "none",
-                  fontSize: 13,
-                  fontWeight: item.active ? 600 : 400,
-                  color: item.active ? "#fff" : item.locked ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.55)",
-                  background: item.active ? D.blueBg : isWhiteLabel ? "rgba(167,139,250,0.05)" : "transparent",
-                  borderLeft: item.active ? `2px solid ${D.blue}` : isWhiteLabel ? "2px solid rgba(167,139,250,0.3)" : "2px solid transparent",
-                  opacity: item.locked ? 0.82 : 1,
-                  border: isWhiteLabel ? "1px solid rgba(167,139,250,0.12)" : undefined,
-                }}>
-                <NavIco
-                  name={item.icon}
-                  c={item.active ? D.blueSoft : isWhiteLabel ? "rgba(167,139,250,0.6)" : item.locked ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.42)"}
-                />
-                <span style={{ flex: 1, color: isWhiteLabel ? "rgba(167,139,250,0.8)" : undefined }}>{item.label}</span>
-                {item.locked && (
-                  <span
-                    className={isWhiteLabel ? "" : "wf-pro-badge"}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 3,
-                      fontSize: 9, fontWeight: 700, letterSpacing: "0.05em",
-                      padding: "2px 7px", borderRadius: 10,
-                      background: isWhiteLabel ? "rgba(167,139,250,0.12)" : "rgba(251,191,36,0.1)",
-                      border: `1px solid ${isWhiteLabel ? "rgba(167,139,250,0.3)" : "rgba(251,191,36,0.3)"}`,
-                      color: isWhiteLabel ? "#a78bfa" : "#FBBF24",
-                      flexShrink: 0,
-                      boxShadow: isWhiteLabel ? "0 0 8px rgba(167,139,250,0.15)" : "0 0 6px rgba(251,191,36,0.18)",
-                    }}>
-                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    {isWhiteLabel ? "Agentur" : "Pro"}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* User area + dropdown */}
-        <div ref={userMenuRef} style={{ padding: "10px 10px 12px", borderTop: `1px solid ${D.sidebarBdr}`, position: "relative" }}>
-
-          {/* Dropdown menu — renders above the trigger */}
-          {userMenuOpen && (
-            <div style={{
-              position: "absolute", bottom: "calc(100% - 2px)", left: 10, right: 10,
-              background: "#0f1623",
-              border: `1px solid ${D.borderMid}`,
-              borderRadius: D.radiusSm,
-              boxShadow: "0 -8px 24px rgba(0,0,0,0.5)",
-              overflow: "hidden",
-              zIndex: 60,
-            }}>
-              <Link
-                href="/dashboard/settings"
-                onClick={() => setUserMenuOpen(false)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 9,
-                  padding: "9px 12px",
-                  fontSize: 13, color: D.textSub,
-                  textDecoration: "none",
-                  borderBottom: `1px solid ${D.divider}`,
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-                Einstellungen
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                style={{
-                  display: "flex", alignItems: "center", gap: 9,
-                  width: "100%", padding: "9px 12px",
-                  fontSize: 13, color: "rgba(248,113,113,0.8)",
-                  background: "none", border: "none", cursor: "pointer",
-                  textAlign: "left", fontFamily: "inherit",
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-                Abmelden
-              </button>
-            </div>
-          )}
-
-          {/* Trigger row */}
-          <button
-            onClick={() => setUserMenuOpen(o => !o)}
-            style={{
-              display: "flex", alignItems: "center", gap: 9,
-              width: "100%", padding: "7px 8px",
-              background: userMenuOpen ? "rgba(255,255,255,0.04)" : "transparent",
-              border: `1px solid ${userMenuOpen ? D.borderMid : "transparent"}`,
-              borderRadius: D.radiusXs,
-              cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-              background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft }}>
-                {firstName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: D.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {firstName}
-              </p>
-              <p style={{ margin: 0, fontSize: 10, color: D.textMuted, lineHeight: 1.3 }}>Plan: {planLabel}</p>
-            </div>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              style={{ flexShrink: 0, transform: userMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
-              <polyline points="18 15 12 9 6 15"/>
-            </svg>
-          </button>
-        </div>
-      </aside>
 
       {/* ══════════════════════════════════════════════════
-          MAIN
+          MAIN — sidebar is rendered by dashboard layout.tsx
       ══════════════════════════════════════════════════ */}
-      <div style={{ marginLeft: SIDEBAR_W, flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
 
         {/* ── TOP BAR ──────────────────────────────────── */}
         <header style={{
