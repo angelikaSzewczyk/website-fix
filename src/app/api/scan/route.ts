@@ -145,7 +145,11 @@ function extractInternalLinks(html: string, baseUrl: string): string[] {
   const urlObj = new URL(baseUrl);
   const base = `${urlObj.protocol}//${urlObj.host}`;
   const links = new Set<string>();
-  const regex = /href=["']([^"']+)["']/gi;
+  // Only match <a href> — NOT <link rel>, <meta>, or other tags.
+  // WordPress <head> emits dozens of <link href="/wp-json/..."> and
+  // <link href="/xmlrpc.php?rsd"> entries that are API/technical endpoints,
+  // not user-facing pages. Matching only <a> keeps the list clean.
+  const regex = /<a[^>]+href=["']([^"']+)["']/gi;
   let match;
   while ((match = regex.exec(html)) !== null) {
     const href = match[1].trim();
@@ -188,9 +192,10 @@ function detectWordPress(html: string, headers: Headers): boolean {
 
 // ── URL Audit Filter ────────────────────────────────────────
 // URLs im Crawl registrieren, aber NICHT analysieren:
-// /feed/, /feed/atom/, .xml, .txt, .json, ?replytocom
-const SKIP_AUDIT_PATH = /\/(feed|feed\/atom|feed\/rss|rss)(\/|$)/i;
+// /feed/, WP-JSON/REST-API, xmlrpc.php, wp-admin, .xml, .txt, .json, ?replytocom
+const SKIP_AUDIT_PATH = /\/(feed|feed\/atom|feed\/rss|rss)(\/|$)|^\/wp-json(\/|$)|^\/wp-admin(\/|$)/i;
 const SKIP_AUDIT_EXT  = /\.(xml|txt|json)(\?|#|$)/i;
+const SKIP_AUDIT_FILE = /^\/(xmlrpc\.php|wp-cron\.php|wp-login\.php|wp-activate\.php)(\/|\?|$)/i;
 
 function shouldAudit(url: string): boolean {
   try {
@@ -198,6 +203,7 @@ function shouldAudit(url: string): boolean {
     if (searchParams.has("replytocom"))   return false;
     if (SKIP_AUDIT_PATH.test(pathname))   return false;
     if (SKIP_AUDIT_EXT.test(pathname))    return false;
+    if (SKIP_AUDIT_FILE.test(pathname))   return false;
     return true;
   } catch {
     return false;
@@ -454,6 +460,10 @@ export async function POST(req: NextRequest) {
     const wpVersionMatch = mainHtml.match(/<meta[^>]+name=["']generator["'][^>]+content=["']WordPress\s+([\d.]+)/i)
       ?? mainHtml.match(/WordPress\/([\d.]+)/);
     scanData.wpVersion = wpVersionMatch?.[1] ?? null;
+
+    // ── SEO Plugin detection ────────────────────────────────────
+    scanData.hasRankMath = /rank[-_]?math/i.test(mainHtml);
+    scanData.hasYoast    = /yoast|wpseo/i.test(mainHtml);
 
     scanData.erreichbar = true;
     scanData.statusCode = mainRes.status;

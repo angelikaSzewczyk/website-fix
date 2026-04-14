@@ -32,6 +32,8 @@ type StoredScan = {
   wpVersion?:           string | null;
   xmlRpcOpen?:          boolean;
   sitemapIndexFound?:   boolean;
+  hasRankMath?:         boolean;
+  hasYoast?:            boolean;
 };
 
 // ── Rich page item used in Deep-Scan Map ─────────────────────────────────────
@@ -535,7 +537,9 @@ function ResultsInner() {
                   {pagesTotal}<span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{pagesTotal}</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Gescannte Seiten</div>
-                <div style={{ fontSize: 12, color: "#7aa6ff", marginTop: 4, fontWeight: 500 }}>Beweis: Wir waren überall</div>
+                <a href="#deep-scan-map" style={{ fontSize: 12, color: "#7aa6ff", marginTop: 4, fontWeight: 500, display: "block", textDecoration: "none" }}>
+                  Beweis: Alle {pagesTotal} Seiten ↓
+                </a>
               </div>
             </div>
 
@@ -656,6 +660,21 @@ function ResultsInner() {
                     detail: scan?.robotsBlocked ? "Disallow: / — alle Crawler gesperrt!" : "Crawler erlaubt ✓",
                     risk: scan?.robotsBlocked ? "Kritisch: Seite komplett deindexiert — kein organischer Traffic" : null,
                     riskLevel: scan?.robotsBlocked ? "crit" : null,
+                  },
+                  {
+                    label: "SEO-Plugin",
+                    ok: !!(scan?.hasRankMath || scan?.hasYoast),
+                    detail: scan?.hasRankMath
+                      ? "Rank Math erkannt — strukturierte SEO-Daten aktiv"
+                      : scan?.hasYoast
+                        ? "Yoast SEO erkannt — strukturierte SEO-Daten aktiv"
+                        : "Kein SEO-Plugin erkannt",
+                    risk: !(scan?.hasRankMath || scan?.hasYoast)
+                      ? "Schema-Markup & Sitemap-Generierung möglicherweise nicht optimiert"
+                      : (scan?.hasRankMath && scan?.hasSitemap)
+                        ? "Sitemap-Validierung erfolgreich ✓"
+                        : null,
+                    riskLevel: !(scan?.hasRankMath || scan?.hasYoast) ? "warn" : null,
                   },
                 ].map((item) => {
                   const borderColor = !item.ok ? (item.riskLevel === "crit" ? "rgba(239,68,68,0.25)" : "rgba(245,158,11,0.2)") : "rgba(34,197,94,0.15)";

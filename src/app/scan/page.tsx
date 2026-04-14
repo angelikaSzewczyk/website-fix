@@ -322,6 +322,8 @@ export default function ScanPage() {
             wpVersion:           data.scanData?.wpVersion ?? null,
             xmlRpcOpen:          data.scanData?.xmlRpcOpen ?? false,
             sitemapIndexFound:   data.scanData?.sitemapIndexFound ?? false,
+            hasRankMath:         data.scanData?.hasRankMath ?? false,
+            hasYoast:            data.scanData?.hasYoast ?? false,
           }));
         } catch { /* sessionStorage not available */ }
 
