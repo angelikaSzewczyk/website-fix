@@ -1,8 +1,8 @@
 import { createHash } from "crypto";
 import { neon } from "@neondatabase/serverless";
 
-const FREE_SCAN_LIMIT = 1;
-const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 Stunden
+const FREE_SCAN_LIMIT = 2;
+const WINDOW_MS = 60 * 60 * 1000; // 1 Stunde
 const MIN_GAP_MS = 15_000;              // 15s Mindestabstand
 
 function hashIp(ip: string): string {
@@ -68,7 +68,7 @@ export async function checkIpRateLimit(ip: string): Promise<RateLimitResult> {
     return {
       allowed: false,
       errorCode: "RATE_LIMITED",
-      reason: "Kostenloses Kontingent aufgebraucht. Bitte morgen wieder versuchen oder jetzt upgraden.",
+      reason: "Kostenloses Kontingent aufgebraucht. Bitte in einer Stunde wieder versuchen oder jetzt upgraden.",
       retryAfterMs,
     };
   }

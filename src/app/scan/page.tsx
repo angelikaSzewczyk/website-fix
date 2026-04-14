@@ -25,8 +25,8 @@ type ScanResult = {
 };
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
-const MAX_FREE_PAGES = 25;
+const FREE_SCAN_LIMIT_MS = 60 * 60 * 1000; // 1 Stunde
+const MAX_FREE_PAGES = 10;
 
 // ── Progress steps data ───────────────────────────────────────────────────────
 const STEPS: { phase: ScanPhase; label: string; sub?: string }[] = [
@@ -459,7 +459,7 @@ export default function ScanPage() {
               boxShadow: "0 0 6px #8df3d3",
               animation: "pulseDot 1.5s ease-in-out infinite",
             }} />
-            Snapshot-Analyse
+            Deep-Scan
           </div>
 
           <h1 style={{
@@ -474,7 +474,7 @@ export default function ScanPage() {
 
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px" }}>
             Prüft Barrierefreiheit (BFSG 2025), technisches SEO und Formulare.{" "}
-            <span style={{ color: "rgba(255,255,255,0.75)" }}>Kostenlose Snapshot-Analyse der Startseite</span>{" "}
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>Kostenloser Deep-Scan — 10 Seiten analysiert</span>{" "}
             — in 60 Sekunden, ohne Installation.
           </p>
 
@@ -554,7 +554,7 @@ export default function ScanPage() {
                       verfügbar.
                     </p>
 
-                    {/* Kontingent-Visual — "1 von 1 Scan verwendet" */}
+                    {/* Kontingent-Visual — "2 von 2 Scans verwendet" */}
                     <div style={{
                       margin: "0 auto 28px",
                       maxWidth: 300,
@@ -569,8 +569,8 @@ export default function ScanPage() {
                         color: "rgba(255,255,255,0.3)",
                         fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
                       }}>
-                        <span>Freier Scan</span>
-                        <span style={{ color: "#7aa6ff" }}>1 / 1 verwendet</span>
+                        <span>Freie Scans (pro Stunde)</span>
+                        <span style={{ color: "#7aa6ff" }}>2 / 2 verwendet</span>
                       </div>
                       {/* Progress bar — 100 % filled */}
                       <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 999, overflow: "hidden" }}>
@@ -713,7 +713,7 @@ export default function ScanPage() {
                   animation: "pulseDot 1.5s ease-in-out infinite",
                 }} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
-                  Snapshot-Analyse — {url}
+                  Deep-Scan — {url}
                 </span>
               </div>
 
@@ -774,7 +774,7 @@ export default function ScanPage() {
                           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
                             {/* Crawl counter shown during step3 */}
                             {step.phase === "step3" && crawlCounter > 0
-                              ? `Analysiere Seite ${crawlCounter}…`
+                              ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…`
                               : step.sub}
                           </div>
                         )}

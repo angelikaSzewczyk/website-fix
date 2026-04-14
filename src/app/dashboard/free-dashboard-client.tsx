@@ -876,16 +876,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <SectionLabel>Scan · Sichtbarkeit &amp; Performance</SectionLabel>
-              <span style={{
-                fontSize: 10, fontWeight: 600,
-                padding: "2px 9px", borderRadius: 20,
-                background: "rgba(255,255,255,0.04)", border: `1px solid ${D.borderMid}`,
-                color: D.textMuted, letterSpacing: "0.04em", whiteSpace: "nowrap",
-              }}>
-                Snapshot-Modus
-              </span>
             </div>
-            <SectionHead>Search &amp; Performance Snapshot</SectionHead>
+            <SectionHead>Search &amp; Performance</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
               {[
                 {
@@ -940,33 +932,31 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               {" "}sind im Smart-Guard Plan verfügbar.
             </p>
 
-            {/* Deep-Scan restriction hint (only for free plan) */}
+            {/* Deep-Scan info (free users get 10 pages too) */}
             {isFree && (
               <div style={{
                 marginTop: 14,
                 display: "flex", alignItems: "center", gap: 12,
                 padding: "12px 16px", borderRadius: D.radiusSm,
-                background: "linear-gradient(135deg, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.03) 100%)",
-                border: "1px solid rgba(251,191,36,0.22)",
-                boxShadow: "0 0 0 1px rgba(251,191,36,0.06), 0 4px 16px rgba(251,191,36,0.08)",
+                background: "linear-gradient(135deg, rgba(0,123,255,0.06) 0%, rgba(0,123,255,0.03) 100%)",
+                border: "1px solid rgba(0,123,255,0.18)",
               }}>
-                {/* Info orb */}
                 <div style={{
                   flexShrink: 0,
                   width: 28, height: 28, borderRadius: 8,
-                  background: "rgba(251,191,36,0.1)",
-                  border: "1px solid rgba(251,191,36,0.25)",
+                  background: "rgba(0,123,255,0.1)",
+                  border: "1px solid rgba(0,123,255,0.2)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
                 </div>
-                <p style={{ margin: 0, fontSize: 12, color: "rgba(251,191,36,0.75)", lineHeight: 1.55, flex: 1 }}>
-                  <strong style={{ color: "#FBBF24", fontWeight: 700 }}>Snapshot-Modus</strong>
-                  {" · "}Analyse beschränkt auf die Startseite.{" "}
-                  <Link href="/pricing" style={{ color: "#FBBF24", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(251,191,36,0.4)", fontWeight: 600 }}>
-                    Vollständiger Unterseiten-Audit mit Pro →
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(122,166,255,0.75)", lineHeight: 1.55, flex: 1 }}>
+                  <strong style={{ color: "#7aa6ff", fontWeight: 700 }}>Deep-Scan (10 Seiten analysiert)</strong>
+                  {" · "}Für 30+ Seiten und erweiterte Berichte{" "}
+                  <Link href="/pricing" style={{ color: "#7aa6ff", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,166,255,0.4)", fontWeight: 600 }}>
+                    Smart-Guard Plan →
                   </Link>
                 </p>
               </div>

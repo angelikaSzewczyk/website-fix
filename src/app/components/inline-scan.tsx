@@ -5,8 +5,8 @@ import { useState, useEffect, useRef } from "react";
 type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
-const MAX_FREE_PAGES = 25;
+const FREE_SCAN_LIMIT_MS = 60 * 60 * 1000; // 1 Stunde
+const MAX_FREE_PAGES = 10;
 
 function formatTimeRemaining(nextMs: number): string {
   const remaining = nextMs - Date.now();
@@ -283,8 +283,8 @@ export default function InlineScan({
 
         {/* Subline */}
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6, marginBottom: 22 }}>
-          Ihre kostenlosen Scans für heute sind aufgebraucht.<br/>
-          Möchten Sie direkt weitermachen?
+          Du hast das Limit für anonyme Scans erreicht.<br/>
+          Registriere dich kostenlos, um mehr Seiten zu prüfen.
         </div>
 
         {/* Primary CTA — optical highlight */}
