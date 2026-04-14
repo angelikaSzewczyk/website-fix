@@ -298,13 +298,18 @@ export default function ScanPage() {
           sessionStorage.setItem("wf_scan_result", JSON.stringify({
             url,
             pages:               audit.gescannteSeiten ?? 1,
-            unterseiten:         (audit.unterseiten ?? []).map((p: { url: string; erreichbar: boolean; altMissing: number; noindex: boolean }) => ({
+            entdeckteUrls:       audit.entdeckteUrls ?? 0,
+            gefilterteUrls:      audit.gefilterteUrls ?? 0,
+            skippedUrls:         (audit.uebersprungeneUrls ?? []) as string[],
+            unterseiten:         (audit.unterseiten ?? []).map((p: { url: string; erreichbar: boolean; altMissing: number; noindex: boolean; altMissingImages?: string[] }) => ({
               url: p.url, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex,
+              altMissingImages: p.altMissingImages ?? [],
             })),
             diagnose:            data.diagnose ?? "",
             https:               data.scanData?.https ?? true,
             brokenLinksCount:    audit.brokenLinks?.length ?? 0,
             altMissingCount:     audit.altTexte?.fehlend ?? 0,
+            altMissingImages:    audit.altTexte?.missingImages ?? [],
             duplicateTitlesCount: audit.duplicateTitles?.length ?? 0,
             duplicateMetasCount: audit.duplicateMetas?.length ?? 0,
             noIndex:             data.scanData?.indexierungGesperrt ?? false,
@@ -314,6 +319,9 @@ export default function ScanPage() {
             hasSitemap:          data.scanData?.sitemapVorhanden ?? false,
             robotsBlocked:       data.scanData?.robotsBlockiertAlles ?? false,
             hasUnreachable:      (audit.unterseiten ?? []).some((p: { erreichbar: boolean }) => !p.erreichbar),
+            wpVersion:           data.scanData?.wpVersion ?? null,
+            xmlRpcOpen:          data.scanData?.xmlRpcOpen ?? false,
+            sitemapIndexFound:   data.scanData?.sitemapIndexFound ?? false,
           }));
         } catch { /* sessionStorage not available */ }
 
@@ -758,7 +766,7 @@ export default function ScanPage() {
                           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
                             {/* Crawl counter shown during step3 */}
                             {step.phase === "step3" && crawlCounter > 0
-                              ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…`
+                              ? `Analysiere Seite ${crawlCounter}…`
                               : step.sub}
                           </div>
                         )}

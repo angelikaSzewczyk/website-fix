@@ -205,10 +205,25 @@ function shouldAudit(url: string): boolean {
 }
 
 // ── Alt Text Check ──────────────────────────────────────────
-function countMissingAlt(html: string): { missing: number; total: number } {
+function countMissingAlt(html: string): { missing: number; total: number; missingSrcs: string[] } {
   const imgs = html.match(/<img[^>]*>/gi) ?? [];
-  const missing = imgs.filter((tag) => !tag.match(/alt=["'][^"']+["']/i)).length;
-  return { missing, total: imgs.length };
+  const missingSrcs: string[] = [];
+  imgs.forEach((tag) => {
+    if (!tag.match(/alt=["'][^"']+["']/i)) {
+      const srcMatch = tag.match(/src=["']([^"'?#\s]+)/i);
+      if (srcMatch) {
+        const filename = srcMatch[1].split("/").pop() ?? "";
+        if (filename && !filename.startsWith("data:") && filename.length > 2) {
+          missingSrcs.push(filename);
+        }
+      }
+    }
+  });
+  return {
+    missing: imgs.filter((tag) => !tag.match(/alt=["'][^"']+["']/i)).length,
+    total:   imgs.length,
+    missingSrcs: missingSrcs.slice(0, 6),
+  };
 }
 
 // ── Form Accessibility Check ────────────────────────────────
@@ -249,10 +264,11 @@ type PageResult = {
   outgoingLinks: string[];
   altMissing: number;
   altTotal: number;
+  altMissingImages: string[];
 };
 
 async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
-  const empty: PageResult = { url, erreichbar: false, status: 0, title: "", h1: "", metaDescription: "", noindex: false, canonical: "", outgoingLinks: [], altMissing: 0, altTotal: 0 };
+  const empty: PageResult = { url, erreichbar: false, status: 0, title: "", h1: "", metaDescription: "", noindex: false, canonical: "", outgoingLinks: [], altMissing: 0, altTotal: 0, altMissingImages: [] };
   const res = await fetchWithTimeout(url, 6000);
   if (!res) return empty;
   const html = await res.text();
@@ -269,6 +285,7 @@ async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
     outgoingLinks: extractInternalLinks(html, baseUrl),
     altMissing: alt.missing,
     altTotal: alt.total,
+    altMissingImages: alt.missingSrcs,
   };
 }
 
@@ -433,6 +450,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── WP version from meta generator ─────────────────────────
+    const wpVersionMatch = mainHtml.match(/<meta[^>]+name=["']generator["'][^>]+content=["']WordPress\s+([\d.]+)/i)
+      ?? mainHtml.match(/WordPress\/([\d.]+)/);
+    scanData.wpVersion = wpVersionMatch?.[1] ?? null;
+
     scanData.erreichbar = true;
     scanData.statusCode = mainRes.status;
     scanData.https = targetUrl.startsWith("https://");
@@ -452,9 +474,16 @@ export async function POST(req: NextRequest) {
     const mainAlt = countMissingAlt(mainHtml);
     scanData.startseite_altMissing = mainAlt.missing;
     scanData.startseite_altTotal = mainAlt.total;
+    scanData.startseite_altMissingImages = mainAlt.missingSrcs;
 
-    // ── 2. ROBOTS.TXT ───────────────────────────────────────
-    const robotsRes = await fetchWithTimeout(new URL("/robots.txt", targetUrl).href, 5000);
+    // ── 2. ROBOTS.TXT + WP-SPECIFIC CHECKS (parallel) ─────────
+    const [robotsRes, xmlRpcRes, sitemapIndexRes] = await Promise.all([
+      fetchWithTimeout(new URL("/robots.txt", targetUrl).href, 5000),
+      fetchWithTimeout(new URL("/xmlrpc.php", targetUrl).href, 4000),
+      fetchWithTimeout(new URL("/sitemap_index.xml", targetUrl).href, 4000),
+    ]);
+    scanData.xmlRpcOpen = xmlRpcRes !== null && (xmlRpcRes.status === 200 || xmlRpcRes.status === 405);
+    scanData.sitemapIndexFound = !!(sitemapIndexRes?.ok);
     if (robotsRes?.ok) {
       const robotsTxt = await robotsRes.text();
       scanData.robotsTxt = robotsTxt.slice(0, 500);
@@ -553,14 +582,24 @@ export async function POST(req: NextRequest) {
       gescannteSeiten:   unterseiten.length + 1,
       entdeckteUrls:     discoveredCount,
       gefilterteUrls:    filteredCount,  // Feeds/XML/etc. — registriert aber nicht analysiert
+      uebersprungeneUrls: subpageUrls.filter(u => !shouldAudit(u)),  // Gefilterte URLs für Tabelle
       unterseiten: unterseiten.map((p) => ({
         url: p.url, erreichbar: p.erreichbar, status: p.status,
         title: p.title || "(kein Title)", h1: p.h1 || "(kein H1)",
         noindex: p.noindex, altMissing: p.altMissing,
+        altMissingImages: p.altMissingImages,
       })),
       duplicateTitles,
       duplicateMetas,
-      altTexte: { fehlend: totalAltMissing, gesamt: totalImages },
+      altTexte: {
+        fehlend: totalAltMissing,
+        gesamt:  totalImages,
+        // Up to 10 unique filenames across all pages for the "Beweis-Modus"
+        missingImages: [
+          ...(scanData.startseite_altMissingImages as string[] ?? []),
+          ...unterseiten.flatMap(p => p.altMissingImages),
+        ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 10),
+      },
       brokenLinks: brokenLinks.map((b) => ({ url: b.url, status: b.status })),
       verwaistSeiten: orphanedPages,
     };
