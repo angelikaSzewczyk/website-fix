@@ -388,14 +388,24 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
     }
   }, [openTicket, replyText]);
 
-  const closeTicket = useCallback(async (ticketId: string) => {
+  const resolveTicket = useCallback(async (ticketId: string) => {
     await fetch("/api/admin/tickets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "close", ticketId }),
+      body: JSON.stringify({ action: "resolve", ticketId }),
     });
-    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: "closed" as const } : t));
-    if (openTicket?.id === ticketId) setOpenTicket(prev => prev ? { ...prev, status: "closed" as const } : null);
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: "resolved" as const } : t));
+    if (openTicket?.id === ticketId) setOpenTicket(prev => prev ? { ...prev, status: "resolved" as const } : null);
+  }, [openTicket]);
+
+  const reopenTicket = useCallback(async (ticketId: string) => {
+    await fetch("/api/admin/tickets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reopen", ticketId }),
+    });
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: "open" as const, admin_reply: null } : t));
+    if (openTicket?.id === ticketId) setOpenTicket(prev => prev ? { ...prev, status: "open" as const, admin_reply: null } : null);
   }, [openTicket]);
 
   const openCount  = tickets.filter(t => t.status === "open").length;
@@ -809,9 +819,9 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
               {/* Stats strip */}
               <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${D.border}` }}>
                 {[
-                  { label: "Offen",      value: tickets.filter(t => t.status === "open").length,    color: D.amber },
-                  { label: "Beantwortet", value: tickets.filter(t => t.status === "replied").length, color: D.blue },
-                  { label: "Geschlossen", value: tickets.filter(t => t.status === "closed").length,  color: D.muted },
+                  { label: "Offen",      value: tickets.filter(t => t.status === "open").length,     color: D.amber },
+                  { label: "Beantwortet", value: tickets.filter(t => t.status === "replied").length,  color: D.blue },
+                  { label: "Gelöst",      value: tickets.filter(t => t.status === "resolved").length, color: D.green },
                 ].map((s, i) => (
                   <div key={s.label} style={{
                     flex: 1, padding: "10px 14px", textAlign: "center",
@@ -830,7 +840,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 </div>
               ) : (
                 tickets.map((t, i) => {
-                  const statusColor = t.status === "open" ? D.amber : t.status === "replied" ? D.blue : D.muted;
+                  const statusColor = t.status === "open" ? D.amber : t.status === "replied" ? D.blue : D.green;
                   const isActive = openTicket?.id === t.id;
                   return (
                     <div
@@ -876,16 +886,28 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {openTicket.status !== "closed" && (
+                    {openTicket.status === "resolved" ? (
                       <button
-                        onClick={() => closeTicket(openTicket.id)}
+                        onClick={() => reopenTicket(openTicket.id)}
                         style={{
                           padding: "5px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600,
                           border: `1px solid ${D.border}`, background: "transparent",
                           color: D.muted, cursor: "pointer",
                         }}
                       >
-                        Schließen
+                        Wieder öffnen
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => resolveTicket(openTicket.id)}
+                        style={{
+                          padding: "5px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600,
+                          border: `1px solid ${D.green}40`,
+                          background: D.greenBg,
+                          color: D.green, cursor: "pointer",
+                        }}
+                      >
+                        ✓ Gelöst
                       </button>
                     )}
                     <button onClick={() => setOpenTicket(null)} style={{
@@ -909,6 +931,49 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                   </p>
                 </div>
 
+                {/* Metadata strip */}
+                {openTicket.metadata && (openTicket.metadata.activeProjectUrl || openTicket.metadata.lastErrorLog || openTicket.metadata.plan) && (
+                  <div style={{
+                    padding: "12px 16px", background: "rgba(255,255,255,0.03)",
+                    border: `1px solid ${D.border}`, borderRadius: 9, marginBottom: 16,
+                    fontSize: 12,
+                  }}>
+                    <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Automatische Metadaten
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      {openTicket.metadata.activeProjectUrl && (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <span style={{ color: D.muted, flexShrink: 0 }}>🔗 Projekt</span>
+                          <a href={openTicket.metadata.activeProjectUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ color: D.blue, textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {openTicket.metadata.activeProjectUrl}
+                          </a>
+                        </div>
+                      )}
+                      {openTicket.metadata.plan && (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <span style={{ color: D.muted, flexShrink: 0 }}>📦 Plan</span>
+                          <span style={{ color: D.text }}>{openTicket.metadata.plan}</span>
+                        </div>
+                      )}
+                      {openTicket.metadata.lastErrorLog && (
+                        <div>
+                          <div style={{ color: D.muted, marginBottom: 4 }}>⚠ Letzter Scan-Log:</div>
+                          <div style={{
+                            padding: "8px 10px", background: "rgba(239,68,68,0.06)",
+                            border: `1px solid rgba(239,68,68,0.12)`, borderRadius: 7,
+                            fontSize: 11, color: "rgba(248,113,113,0.8)", lineHeight: 1.5,
+                            maxHeight: 80, overflowY: "auto", whiteSpace: "pre-wrap",
+                          }}>
+                            {openTicket.metadata.lastErrorLog}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Existing reply */}
                 {openTicket.admin_reply && (
                   <div style={{
@@ -925,7 +990,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 )}
 
                 {/* Reply box */}
-                {openTicket.status !== "closed" && (
+                {openTicket.status !== "resolved" && (
                   <div>
                     <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                       {openTicket.admin_reply ? "Neue Antwort" : "Antworten"}

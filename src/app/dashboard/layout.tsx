@@ -22,7 +22,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // Load agency primary color for CSS variable injection (agentur plan only)
   let agencyPrimary = "#8df3d3";
   let lastScanClean: boolean | null = null;
-  let monthlyScans  = 0;
+  let monthlyScans    = 0;
+  let projectUrl      = "";
+  let unreadTickets   = 0;
 
   try {
     const sql = neon(process.env.DATABASE_URL!);
@@ -37,6 +39,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         SELECT COUNT(*)::int AS cnt FROM scans
         WHERE user_id = ${session.user.id}
           AND created_at >= date_trunc('month', NOW())
+      `,
+      // Primary project URL (most recently saved)
+      sql`
+        SELECT url FROM saved_websites
+        WHERE user_id = ${session.user.id}
+        ORDER BY created_at DESC LIMIT 1
+      `,
+      // Unread support replies for this user
+      sql`
+        SELECT COUNT(*)::int AS cnt FROM support_tickets
+        WHERE user_email = ${session.user.email ?? ""}
+          AND user_read  = FALSE
+          AND status IN ('replied', 'resolved')
       `,
     ];
 
@@ -53,11 +68,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
     const scanRows    = results[0] as { issue_count: number | null }[];
     const countRows   = results[1] as { cnt: number }[];
+    const urlRows     = results[2] as { url: string }[];
+    const unreadRows  = results[3] as { cnt: number }[];
+
     if (scanRows[0]) lastScanClean = scanRows[0].issue_count === 0;
-    monthlyScans = countRows[0]?.cnt ?? 0;
+    monthlyScans  = countRows[0]?.cnt  ?? 0;
+    projectUrl    = urlRows[0]?.url    ?? "";
+    unreadTickets = unreadRows[0]?.cnt ?? 0;
 
     if (plan === "agentur") {
-      const colorRows = results[2] as { primary_color: string | null }[];
+      const colorRows = results[4] as { primary_color: string | null }[];
       if (colorRows[0]?.primary_color) agencyPrimary = colorRows[0].primary_color;
     }
   } catch { /* non-critical */ }
@@ -95,6 +115,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             plan={plan}
             monthlyScans={monthlyScans}
             scanLimit={SCAN_LIMIT}
+            projectUrl={projectUrl}
+            unreadTickets={unreadTickets}
           />
         ) : (
           <SidebarNav

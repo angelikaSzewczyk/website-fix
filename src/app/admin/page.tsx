@@ -44,10 +44,17 @@ export type SupportTicket = {
   user_email: string;
   subject: string;
   message: string;
-  status: "open" | "replied" | "closed";
+  status: "open" | "replied" | "resolved";
   admin_reply: string | null;
   replied_at: string | null;
   created_at: string;
+  user_read: boolean;
+  metadata?: {
+    activeProjectUrl?: string | null;
+    lastErrorLog?:     string | null;
+    timestamp?:        string | null;
+    plan?:             string | null;
+  } | null;
 };
 
 export type DbStats = {
