@@ -41,8 +41,8 @@ const C = {
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
 // DB plan values: "free" | "single" | "pro" (Agency Starter) | "agentur" (Agency Pro)
 function getLayout(plan: string): "free" | "single" | "agency" {
-  if (plan === "agentur" || plan === "pro") return "agency";
-  if (plan === "single")                    return "single";
+  if (["agency-pro", "agency-starter", "agentur", "pro", "agency_core", "agency_scale"].includes(plan)) return "agency";
+  if (plan === "single" || plan === "smart-guard" || plan === "freelancer") return "single";
   return "free";
 }
 

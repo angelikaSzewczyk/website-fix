@@ -30,10 +30,10 @@ const MAX_FREE_PAGES = 25;
 
 // ── Progress steps data ───────────────────────────────────────────────────────
 const STEPS: { phase: ScanPhase; label: string; sub?: string }[] = [
-  { phase: "step1", label: "Crawl startet…",              sub: "Verbinde mit Zieldomain" },
-  { phase: "step2", label: "Sitemap analysiert",           sub: "Entdecke interne Links & Unterseiten…" },
-  { phase: "step3", label: "Analysiere technische Barrieren", sub: "Prüfe Unterseiten auf Fehler…" },
-  { phase: "step4", label: "KI erstellt vollständigen Report…", sub: "Aggregiere Befunde" },
+  { phase: "step1", label: "Startseite wird geladen…",         sub: "Verbinde mit Zieldomain" },
+  { phase: "step2", label: "Meta-Daten & Links gelesen",        sub: "Titel, Description, H1 & interne Links…" },
+  { phase: "step3", label: "Barrierefreiheit & SEO geprüft",   sub: "Alt-Texte, BFSG-Konformität, robots.txt…" },
+  { phase: "step4", label: "KI erstellt Snapshot-Report…",     sub: "Befunde werden aggregiert" },
 ];
 
 const PHASE_ORDER: ScanPhase[] = ["idle","step1","step2","step3","step4","done","error"];
@@ -123,6 +123,7 @@ export default function ScanPage() {
   const [crawlCounter, setCrawlCounter] = useState(0);
   const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextScanMs: number }>({ blocked: false, nextScanMs: 0 });
   const [timeRemaining, setTimeRemaining] = useState("");
+  const [mounted, setMounted] = useState(false);
   const [activityFeed, setActivityFeed] = useState<{ level: string; msg: string; color: string }[]>([]);
   const [notifyNextJs, setNotifyNextJs] = useState(false);
   const [showSystemInput, setShowSystemInput] = useState(false);
@@ -146,6 +147,7 @@ export default function ScanPage() {
         }
       }
     } catch { /* localStorage not available */ }
+    setMounted(true);
   }, []);
 
   // ── Countdown ticker when blocked ──────────────────────────
@@ -210,12 +212,12 @@ export default function ScanPage() {
   function startActivityFeed(scanUrl: string) {
     const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
     const messages: { delay: number; level: string; msg: string; color: string }[] = [
-      { delay: 1200,  level: "INFO",     color: "#8df3d3", msg: `HTTPS-Verbindung zu ${domain} hergestellt` },
-      { delay: 3500,  level: "INFO",     color: "#8df3d3", msg: "Sitemap wird analysiert — interne Links gefunden" },
-      { delay: 6500,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Dokumentation wird erstellt — Barrierefreiheit wird vorbereitet…" },
-      { delay: 10500, level: "CRITICAL", color: "#ff6b6b", msg: `Barriere-Check: Formulare auf ${domain}/kontakt werden auf Screenreader-Tauglichkeit geprüft` },
-      { delay: 14000, level: "WARN",     color: "#fbbf24", msg: "Performance-Analyse: Ladezeit > 2.5s — Hohe Absprungrate auf mobilen Endgeräten erkannt" },
-      { delay: 19000, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — alle Befunde werden aggregiert…" },
+      { delay: 1200,  level: "INFO",     color: "#8df3d3", msg: `Startseite von ${domain} geladen` },
+      { delay: 3500,  level: "INFO",     color: "#8df3d3", msg: "Meta-Daten & interne Links analysiert" },
+      { delay: 6500,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Konformität der Startseite wird geprüft…" },
+      { delay: 10500, level: "CRITICAL", color: "#ff6b6b", msg: `Alt-Texte & Screenreader-Tauglichkeit auf ${domain} geprüft` },
+      { delay: 14000, level: "WARN",     color: "#fbbf24", msg: "Performance-Snapshot: Ladezeit & mobile Darstellung analysiert" },
+      { delay: 19000, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Snapshot-Befunde werden aggregiert…" },
     ];
     setActivityFeed([]);
     activityTimers.current.forEach(t => clearTimeout(t));
@@ -457,7 +459,7 @@ export default function ScanPage() {
               boxShadow: "0 0 6px #8df3d3",
               animation: "pulseDot 1.5s ease-in-out infinite",
             }} />
-            Deep Scan aktiv
+            Snapshot-Analyse
           </div>
 
           <h1 style={{
@@ -471,13 +473,16 @@ export default function ScanPage() {
           </h1>
 
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px" }}>
-            Prüft Plugins, Design und Technik auf das neue{" "}
-            <span style={{ color: "rgba(255,255,255,0.75)" }}>Barrierefreiheitsgesetz (BFSG 2025)</span>.{" "}
-            Erhalte einen klaren Bericht über den Zustand deiner Website — in 60 Sekunden und ohne Installation.
+            Prüft Barrierefreiheit (BFSG 2025), technisches SEO und Formulare.{" "}
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>Kostenlose Snapshot-Analyse der Startseite</span>{" "}
+            — in 60 Sekunden, ohne Installation.
           </p>
 
           {/* ── INPUT FORM / BLOCKED STATE ── */}
-          {phase === "idle" && (
+          {phase === "idle" && !mounted && (
+            <div style={{ height: 72 }} />
+          )}
+          {phase === "idle" && mounted && (
             <>
               {scanBlocked.blocked ? (
                 /* ── 24h limit reached — Glassmorphism + Home-CTA-Glow ── */
@@ -708,7 +713,7 @@ export default function ScanPage() {
                   animation: "pulseDot 1.5s ease-in-out infinite",
                 }} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
-                  Crawler aktiv — {url}
+                  Snapshot-Analyse — {url}
                 </span>
               </div>
 

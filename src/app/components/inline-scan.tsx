@@ -34,11 +34,12 @@ export default function InlineScan({
   const [notifyNextJs, setNotifyNextJs] = useState(false);
   const [showSystemInput, setShowSystemInput] = useState(false);
   const [systemInput, setSystemInput] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activityTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // ── 24h gate check ────────────────────────────────────────
+  // ── 24h gate check — runs before first paint to avoid flash ──
   useEffect(() => {
     try {
       const ts = localStorage.getItem(FREE_SCAN_KEY);
@@ -51,6 +52,7 @@ export default function InlineScan({
         }
       }
     } catch { /* localStorage unavailable */ }
+    setMounted(true);
   }, []);
 
   // ── Countdown refresh ─────────────────────────────────────
@@ -97,13 +99,13 @@ export default function InlineScan({
   function startActivityFeed(scanUrl: string) {
     const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
     const messages: { delay: number; level: string; msg: string; color: string }[] = [
-      { delay: 400,   level: "SYSTEM",   color: "#7aa6ff", msg: "WordPress-Struktur wird erkannt…" },
-      { delay: 1400,  level: "INFO",     color: "#8df3d3", msg: `HTTPS-Verbindung zu ${domain} hergestellt` },
-      { delay: 4000,  level: "INFO",     color: "#8df3d3", msg: "Sitemap analysiert — interne Links gefunden" },
-      { delay: 7200,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Dokumentation wird erstellt…" },
-      { delay: 11800, level: "CRITICAL", color: "#ff6b6b", msg: `Barriere-Check: Formulare auf ${domain} werden geprüft` },
-      { delay: 15500, level: "WARN",     color: "#fbbf24", msg: "Performance-Analyse: Ladezeit wird gemessen…" },
-      { delay: 20500, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Befunde werden aggregiert…" },
+      { delay: 400,   level: "SYSTEM",   color: "#7aa6ff", msg: "Startseite wird geladen…" },
+      { delay: 1400,  level: "INFO",     color: "#8df3d3", msg: `Verbindung zu ${domain} hergestellt` },
+      { delay: 4000,  level: "INFO",     color: "#8df3d3", msg: "Meta-Daten & Links der Startseite gelesen" },
+      { delay: 7200,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Konformität der Startseite wird geprüft…" },
+      { delay: 11800, level: "CRITICAL", color: "#ff6b6b", msg: `Alt-Texte & Screenreader-Tauglichkeit analysiert` },
+      { delay: 15500, level: "WARN",     color: "#fbbf24", msg: "Performance-Snapshot: Ladezeit wird gemessen…" },
+      { delay: 20500, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Snapshot-Befunde aggregiert…" },
     ];
     setActivityFeed([]);
     activityTimers.current.forEach(t => clearTimeout(t));
@@ -232,7 +234,8 @@ export default function InlineScan({
 
   const isScanning = phase === "scanning";
 
-  // ── 24h blocked state ─────────────────────────────────────
+  // ── 24h blocked state — nur nach mount zeigen (verhindert Flash) ──
+  if (!mounted) return <div style={{ height: 72 }} />;
   if (scanBlocked.blocked) {
     return (
       <div style={{

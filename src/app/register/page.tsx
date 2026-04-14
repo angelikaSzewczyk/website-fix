@@ -40,6 +40,28 @@ export default function RegisterPage() {
       // Auto sign-in after registration
       const signInRes = await signIn("credentials", { email, password, redirect: false });
       if (signInRes?.ok) {
+        // Anonymen Scan übertragen falls vorhanden
+        try {
+          const raw = sessionStorage.getItem("wf_scan_result");
+          if (raw) {
+            const scan = JSON.parse(raw) as {
+              url?: string; diagnose?: string;
+              issueCount?: number; techFingerprint?: unknown;
+            };
+            if (scan?.url) {
+              await fetch("/api/scan/claim", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  url: scan.url,
+                  diagnose: scan.diagnose ?? "",
+                  issueCount: scan.issueCount ?? 0,
+                  techFingerprint: scan.techFingerprint ?? null,
+                }),
+              });
+            }
+          }
+        } catch { /* non-critical */ }
         window.location.href = "/dashboard";
       } else {
         window.location.href = "/login";
