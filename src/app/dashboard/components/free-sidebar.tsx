@@ -202,7 +202,8 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           onClose={() => setHilfeOpen(false)}
           projectUrl={projectUrl}
           plan={plan}
-        />}
+        />
+      )}
 
       {/* User section — always at bottom */}
       <div ref={menuRef} style={{ padding: "10px 10px 12px", borderTop: `1px solid ${S.sidebarBdr}`, position: "relative", marginTop: "auto" }}>
