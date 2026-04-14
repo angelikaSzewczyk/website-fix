@@ -17,28 +17,37 @@ export default function RegisterPage() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    if (!res.ok) {
+      // Guard against empty / non-JSON responses (e.g. 500 with no body)
+      const text = await res.text();
+      let data: { ok?: boolean; error?: string } = {};
+      try { data = JSON.parse(text); } catch { /* ignore parse errors */ }
+
+      if (!res.ok) {
+        setError(data.error ?? "Registrierung fehlgeschlagen. Bitte versuche es erneut.");
+        return;
+      }
+
+      // Auto sign-in after registration
+      const signInRes = await signIn("credentials", { email, password, redirect: false });
+      if (signInRes?.ok) {
+        window.location.href = "/dashboard";
+      } else {
+        window.location.href = "/login";
+      }
+    } catch {
+      setError("Netzwerkfehler. Bitte prüfe deine Verbindung und versuche es erneut.");
+    } finally {
       setLoading(false);
-      setError(data.error ?? "Registrierung fehlgeschlagen.");
-      return;
-    }
-
-    // Auto sign-in after registration
-    const signInRes = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (signInRes?.ok) {
-      window.location.href = "/dashboard";
-    } else {
-      window.location.href = "/login";
     }
   }
 
