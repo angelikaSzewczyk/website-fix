@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import type { AdminUser, ScanLogRow } from "./page";
+import type { AdminUser, ScanLogRow, SupportTicket, DbStats } from "./page";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const D = {
@@ -268,18 +268,25 @@ type Props = {
   cache: { regular: number; fullsite: number };
   widgetLeads: number;
   scanLogs: ScanLogRow[];
+  tickets: SupportTicket[];
+  dbStats: DbStats;
 };
 
-export default function AdminClient({ kpi, growth, users, cache, widgetLeads, scanLogs: initialLogs }: Props) {
-  const [tab, setTab] = useState<"overview" | "users" | "incidents" | "infra">("overview");
-  const [userSearch, setUserSearch]       = useState("");
-  const [scanLogs, setScanLogs]           = useState(initialLogs);
-  const [creditsInput, setCreditsInput]   = useState<Record<string, string>>({});
+export default function AdminClient({ kpi, growth, users, cache, widgetLeads, scanLogs: initialLogs, tickets: initialTickets, dbStats }: Props) {
+  const [tab, setTab] = useState<"overview" | "users" | "incidents" | "support" | "infra">("overview");
+  const [userSearch, setUserSearch]         = useState("");
+  const [scanLogs, setScanLogs]             = useState(initialLogs);
+  const [creditsInput, setCreditsInput]     = useState<Record<string, string>>({});
   const [creditsLoading, setCreditsLoading] = useState<string | null>(null);
-  const [creditsDone, setCreditsDone]     = useState<string | null>(null);
-  const [rescanUrl, setRescanUrl]         = useState<string | null>(null);
-  const [rescanResult, setRescanResult]   = useState<string | null>(null);
-  const [refreshing, setRefreshing]       = useState(false);
+  const [creditsDone, setCreditsDone]       = useState<string | null>(null);
+  const [rescanUrl, setRescanUrl]           = useState<string | null>(null);
+  const [rescanResult, setRescanResult]     = useState<string | null>(null);
+  const [refreshing, setRefreshing]         = useState(false);
+  const [tickets, setTickets]               = useState(initialTickets);
+  const [openTicket, setOpenTicket]         = useState<SupportTicket | null>(null);
+  const [replyText, setReplyText]           = useState("");
+  const [replying, setReplying]             = useState(false);
+  const [impersonating, setImpersonating]   = useState<string | null>(null);
 
   const filteredUsers = userSearch
     ? users.filter(u =>
@@ -342,10 +349,62 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
     }
   }, []);
 
+  // ── Impersonate ───────────────────────────────────────────────────────────
+  const loginAsUser = useCallback(async (userId: string, email: string) => {
+    setImpersonating(userId);
+    try {
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json() as { token?: string; error?: string };
+      if (!data.token) { alert(data.error ?? "Fehler"); return; }
+      window.open(`/api/admin/impersonate/callback?token=${data.token}`, `_imp_${email}`);
+    } finally {
+      setImpersonating(null);
+    }
+  }, []);
+
+  // ── Ticket reply ──────────────────────────────────────────────────────────
+  const sendReply = useCallback(async () => {
+    if (!openTicket || !replyText.trim()) return;
+    setReplying(true);
+    try {
+      await fetch("/api/admin/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reply", ticketId: openTicket.id, reply: replyText }),
+      });
+      setTickets(prev => prev.map(t =>
+        t.id === openTicket.id
+          ? { ...t, status: "replied" as const, admin_reply: replyText, replied_at: new Date().toISOString() }
+          : t
+      ));
+      setOpenTicket(prev => prev ? { ...prev, status: "replied" as const, admin_reply: replyText } : null);
+      setReplyText("");
+    } finally {
+      setReplying(false);
+    }
+  }, [openTicket, replyText]);
+
+  const closeTicket = useCallback(async (ticketId: string) => {
+    await fetch("/api/admin/tickets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "close", ticketId }),
+    });
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: "closed" as const } : t));
+    if (openTicket?.id === ticketId) setOpenTicket(prev => prev ? { ...prev, status: "closed" as const } : null);
+  }, [openTicket]);
+
+  const openCount  = tickets.filter(t => t.status === "open").length;
+
   const TABS = [
     { key: "overview",  label: "📊 Übersicht" },
     { key: "users",     label: `👥 Users (${kpi.totalUsers})` },
     { key: "incidents", label: `🔥 Incidents (${scanLogs.filter(l => l.status === "error").length})` },
+    { key: "support",   label: `🎫 Support${openCount > 0 ? ` (${openCount})` : ""}` },
     { key: "infra",     label: "⚙️ Infrastruktur" },
   ] as const;
 
@@ -562,6 +621,23 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
 
                     {/* Actions */}
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {/* Login-as-User */}
+                      <button
+                        onClick={() => loginAsUser(user.id, user.email)}
+                        disabled={impersonating === user.id}
+                        title={`Als ${user.email} einloggen`}
+                        style={{
+                          padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                          border: `1px solid ${D.amber}35`,
+                          background: "transparent",
+                          color: D.amber, cursor: "pointer",
+                          opacity: impersonating === user.id ? 0.5 : 1,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {impersonating === user.id ? "…" : "👁 Login"}
+                      </button>
+
                       {/* Credits input + button */}
                       <input
                         type="number"
@@ -724,9 +800,207 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
           </>
         )}
 
+        {/* ── SUPPORT TAB ──────────────────────────────────────────────────── */}
+        {tab === "support" && (
+          <div style={{ display: "grid", gridTemplateColumns: openTicket ? "320px 1fr" : "1fr", gap: 16, alignItems: "start" }}>
+
+            {/* Ticket list */}
+            <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden" }}>
+              {/* Stats strip */}
+              <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${D.border}` }}>
+                {[
+                  { label: "Offen",      value: tickets.filter(t => t.status === "open").length,    color: D.amber },
+                  { label: "Beantwortet", value: tickets.filter(t => t.status === "replied").length, color: D.blue },
+                  { label: "Geschlossen", value: tickets.filter(t => t.status === "closed").length,  color: D.muted },
+                ].map((s, i) => (
+                  <div key={s.label} style={{
+                    flex: 1, padding: "10px 14px", textAlign: "center",
+                    borderRight: i < 2 ? `1px solid ${D.border}` : "none",
+                  }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: 10, color: D.muted, marginTop: 2 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {tickets.length === 0 ? (
+                <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎫</div>
+                  <p style={{ color: D.muted, fontSize: 13 }}>Noch keine Support-Anfragen.</p>
+                </div>
+              ) : (
+                tickets.map((t, i) => {
+                  const statusColor = t.status === "open" ? D.amber : t.status === "replied" ? D.blue : D.muted;
+                  const isActive = openTicket?.id === t.id;
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => { setOpenTicket(t); setReplyText(""); }}
+                      style={{
+                        padding: "14px 18px",
+                        borderBottom: i < tickets.length - 1 ? `1px solid ${D.border}` : "none",
+                        cursor: "pointer",
+                        background: isActive ? "rgba(79,142,247,0.06)" : "transparent",
+                        borderLeft: isActive ? `3px solid ${D.blue}` : "3px solid transparent",
+                        transition: "background 0.1s",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: D.text, flex: 1, marginRight: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {t.subject}
+                        </span>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
+                          color: statusColor, background: `${statusColor}18`, flexShrink: 0,
+                        }}>
+                          {t.status === "open" ? "OFFEN" : t.status === "replied" ? "BEANTW." : "GESCHL."}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11, color: D.muted }}>{t.user_email}</div>
+                      <div style={{ fontSize: 11, color: D.muted, marginTop: 2 }}>{fmtDateTime(t.created_at)}</div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Ticket detail */}
+            {openTicket && (
+              <div style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, padding: "24px" }}>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                  <div>
+                    <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: D.text }}>{openTicket.subject}</h3>
+                    <p style={{ margin: 0, fontSize: 12, color: D.muted }}>
+                      Von <strong style={{ color: D.sub }}>{openTicket.user_email}</strong> · {fmtDateTime(openTicket.created_at)}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {openTicket.status !== "closed" && (
+                      <button
+                        onClick={() => closeTicket(openTicket.id)}
+                        style={{
+                          padding: "5px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600,
+                          border: `1px solid ${D.border}`, background: "transparent",
+                          color: D.muted, cursor: "pointer",
+                        }}
+                      >
+                        Schließen
+                      </button>
+                    )}
+                    <button onClick={() => setOpenTicket(null)} style={{
+                      padding: "5px 10px", borderRadius: 7, fontSize: 13,
+                      border: `1px solid ${D.border}`, background: "transparent",
+                      color: D.muted, cursor: "pointer",
+                    }}>×</button>
+                  </div>
+                </div>
+
+                {/* User message */}
+                <div style={{
+                  padding: "16px 18px", background: "rgba(255,255,255,0.03)",
+                  border: `1px solid ${D.border}`, borderRadius: 10, marginBottom: 20,
+                }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Nutzer-Nachricht
+                  </p>
+                  <p style={{ margin: 0, fontSize: 13, color: D.text, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                    {openTicket.message}
+                  </p>
+                </div>
+
+                {/* Existing reply */}
+                {openTicket.admin_reply && (
+                  <div style={{
+                    padding: "16px 18px", background: "rgba(79,142,247,0.05)",
+                    border: `1px solid ${D.blue}30`, borderRadius: 10, marginBottom: 20,
+                  }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: D.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Admin-Antwort · {openTicket.replied_at ? fmtDateTime(openTicket.replied_at) : ""}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 13, color: D.text, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                      {openTicket.admin_reply}
+                    </p>
+                  </div>
+                )}
+
+                {/* Reply box */}
+                {openTicket.status !== "closed" && (
+                  <div>
+                    <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      {openTicket.admin_reply ? "Neue Antwort" : "Antworten"}
+                    </p>
+                    <textarea
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      placeholder="Deine Antwort an den Nutzer…"
+                      rows={5}
+                      style={{
+                        width: "100%", padding: "12px 14px", boxSizing: "border-box",
+                        background: "rgba(255,255,255,0.03)",
+                        border: `1px solid ${D.border}`, borderRadius: 9,
+                        color: D.text, fontSize: 13, lineHeight: 1.6,
+                        outline: "none", resize: "vertical",
+                        fontFamily: "inherit",
+                      }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+                      <button
+                        onClick={sendReply}
+                        disabled={replying || !replyText.trim()}
+                        style={{
+                          padding: "9px 20px", borderRadius: 9, fontSize: 13, fontWeight: 700,
+                          background: replyText.trim() ? D.blue : "rgba(79,142,247,0.2)",
+                          color: "#fff", border: "none", cursor: replyText.trim() ? "pointer" : "not-allowed",
+                          opacity: replying ? 0.6 : 1,
+                        }}
+                      >
+                        {replying ? "Senden…" : "Antwort senden"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── INFRA TAB ────────────────────────────────────────────────────── */}
         {tab === "infra" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+            {/* DB Stats */}
+            <div style={{ gridColumn: "1 / -1", padding: "24px", background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    Datenbank · System-Stats
+                  </p>
+                  <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: D.text }}>
+                    {dbStats.db_size}
+                    <span style={{ fontSize: 13, fontWeight: 400, color: D.muted, marginLeft: 10 }}>Gesamtgröße</span>
+                  </p>
+                </div>
+                <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, background: "rgba(34,197,94,0.1)", color: D.green, fontWeight: 700 }}>
+                  Neon · Frankfurt
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+                {dbStats.tables.map(t => (
+                  <div key={t.table_name} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "9px 13px", background: "rgba(255,255,255,0.03)",
+                    border: `1px solid ${D.border}`, borderRadius: 8,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: D.text }}>{t.table_name}</div>
+                      <div style={{ fontSize: 11, color: D.muted }}>{t.rows.toLocaleString("de-DE")} Zeilen</div>
+                    </div>
+                    <span style={{ fontSize: 11, color: D.blue, fontWeight: 600 }}>{t.size}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Cache performance */}
             <div style={{

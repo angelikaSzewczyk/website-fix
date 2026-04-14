@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import AdminClient from "./admin-client";
+// SupportTicket + DbStats types defined below — re-exported for AdminClient
 
 export const metadata: Metadata = {
   title: "Command Center — WebsiteFix Admin",
@@ -38,6 +39,22 @@ export type ScanLogRow = {
   user_email: string | null;
 };
 
+export type SupportTicket = {
+  id: string;
+  user_email: string;
+  subject: string;
+  message: string;
+  status: "open" | "replied" | "closed";
+  admin_reply: string | null;
+  replied_at: string | null;
+  created_at: string;
+};
+
+export type DbStats = {
+  db_size: string;
+  tables: { table_name: string; size: string; rows: number }[];
+};
+
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
@@ -46,7 +63,7 @@ export default async function AdminPage() {
 
   const sql = neon(process.env.DATABASE_URL!);
 
-  const [kpiRows, scanCounts, growth, users, cacheStats, widgetStats, scanLogs] =
+  const [kpiRows, scanCounts, growth, users, cacheStats, widgetStats, scanLogs, tickets, dbSizeRow, tableStats] =
     await Promise.all([
       // Plan distribution
       sql`SELECT plan, COUNT(*)::int AS cnt FROM users GROUP BY plan ORDER BY cnt DESC`,
@@ -107,6 +124,31 @@ export default async function AdminPage() {
         ORDER BY sl.created_at DESC
         LIMIT 50
       `,
+
+      // Support tickets
+      sql`
+        SELECT id::text, user_email, subject, message, status,
+               admin_reply, replied_at::text, created_at::text
+        FROM support_tickets
+        ORDER BY
+          CASE status WHEN 'open' THEN 0 WHEN 'replied' THEN 1 ELSE 2 END,
+          created_at DESC
+        LIMIT 200
+      `,
+
+      // DB size
+      sql`SELECT pg_size_pretty(pg_database_size(current_database())) AS db_size`,
+
+      // Table sizes
+      sql`
+        SELECT
+          relname AS table_name,
+          pg_size_pretty(pg_total_relation_size(relid)) AS size,
+          n_live_tup::int AS rows
+        FROM pg_stat_user_tables
+        ORDER BY pg_total_relation_size(relid) DESC
+        LIMIT 12
+      `,
     ]);
 
   // Aggregate KPI
@@ -133,6 +175,11 @@ export default async function AdminPage() {
       cache={cacheStats[0] as { regular: number; fullsite: number }}
       widgetLeads={Number((widgetStats[0] as { total: number }).total)}
       scanLogs={scanLogs as ScanLogRow[]}
+      tickets={tickets as SupportTicket[]}
+      dbStats={{
+        db_size: (dbSizeRow[0] as { db_size: string }).db_size,
+        tables: tableStats as { table_name: string; size: string; rows: number }[],
+      }}
     />
   );
 }

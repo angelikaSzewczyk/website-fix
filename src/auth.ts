@@ -36,6 +36,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return { id: user.id, name: user.name, email: user.email, image: user.image };
       },
     }),
+    // ── Admin impersonation — one-time token, 5-min TTL ──────────────────────
+    Credentials({
+      id: "impersonate",
+      name: "impersonate",
+      credentials: { token: { type: "text" } },
+      async authorize(credentials) {
+        if (!credentials?.token) return null;
+        const sql = neon(process.env.DATABASE_URL!);
+        const rows = await sql`
+          SELECT it.user_id, u.name, u.email, u.image
+          FROM impersonation_tokens it
+          JOIN users u ON u.id = it.user_id
+          WHERE it.token = ${String(credentials.token)}
+            AND it.expires_at > NOW()
+            AND it.used = false
+          LIMIT 1
+        ` as { user_id: number; name: string | null; email: string; image: string | null }[];
+        if (!rows[0]) return null;
+        await sql`UPDATE impersonation_tokens SET used = true WHERE token = ${String(credentials.token)}`;
+        return { id: String(rows[0].user_id), name: rows[0].name, email: rows[0].email, image: rows[0].image };
+      },
+    }),
   ],
   pages: {
     signIn: "/login",

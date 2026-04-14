@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
+import HilfeModal from "./hilfe-modal";
 
 // ─── Design tokens (matches free-dashboard-client) ────────────────────────────
 const S = {
@@ -51,6 +52,7 @@ interface Props {
 export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit }: Props) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen]   = useState(false);
+  const [hilfeOpen, setHilfeOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const remaining    = Math.max(0, scanLimit - monthlyScans);
@@ -159,6 +161,32 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit }
           );
         })}
       </nav>
+
+      {/* Hilfe button */}
+      <div style={{ padding: "0 8px 6px" }}>
+        <button
+          onClick={() => setHilfeOpen(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 9,
+            width: "100%", padding: "8px 10px", borderRadius: 7,
+            background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
+            cursor: "pointer", fontFamily: "inherit", fontSize: 13,
+            color: "rgba(255,255,255,0.45)",
+            transition: "background 0.12s, border-color 0.12s",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Hilfe & Support
+        </button>
+      </div>
+
+      {hilfeOpen && <HilfeModal onClose={() => setHilfeOpen(false)} />}
 
       {/* User section — always at bottom */}
       <div ref={menuRef} style={{ padding: "10px 10px 12px", borderTop: `1px solid ${S.sidebarBdr}`, position: "relative", marginTop: "auto" }}>

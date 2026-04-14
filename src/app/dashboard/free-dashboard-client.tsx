@@ -582,6 +582,25 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
       ══════════════════════════════════════════════════ */}
       <div style={{ flex: 1, minWidth: 0 }}>
 
+        {/* Impersonation banner */}
+        {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("impersonating") === "1" && (
+          <div style={{
+            padding: "10px 20px", background: "rgba(245,158,11,0.12)",
+            borderBottom: "1px solid rgba(245,158,11,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 12,
+          }}>
+            <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
+              👁 Admin-Ansicht — Du siehst das Dashboard als dieser Nutzer.
+            </span>
+            <a href="/admin" style={{
+              fontSize: 12, color: "#fbbf24", textDecoration: "underline", cursor: "pointer",
+            }}>
+              ← Zurück zum Admin
+            </a>
+          </div>
+        )}
+
         {/* ── TOP BAR ──────────────────────────────────── */}
         <header style={{
           position: "sticky", top: 0, zIndex: 40,
