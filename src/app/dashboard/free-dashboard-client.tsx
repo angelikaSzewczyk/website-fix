@@ -276,6 +276,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [cancelHover, setCancelHover]           = useState(false);
   const [switchHover, setSwitchHover]           = useState(false);
   const [switching, setSwitching]               = useState(false);
+  const [sessionDomain, setSessionDomain]       = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   async function handleProjectSwitch() {
@@ -287,6 +288,21 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     setProjectDialogOpen(false);
     window.location.href = "/dashboard/scan";
   }
+
+  // Read anonymous scan domain from sessionStorage when no DB scan exists yet
+  useEffect(() => {
+    if (!lastScan) {
+      try {
+        const raw = sessionStorage.getItem("wf_scan_result");
+        if (raw) {
+          const parsed = JSON.parse(raw) as { url?: string };
+          if (parsed?.url) {
+            setSessionDomain(parsed.url.replace(/^https?:\/\//, "").replace(/\/$/, ""));
+          }
+        }
+      } catch { /* ignore */ }
+    }
+  }, [lastScan]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -303,7 +319,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const planLabel  = isFree ? "Free" : "Smart-Guard";
   const domain     = lastScan?.url
     ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
-    : "—";
+    : sessionDomain ?? "—";
   const scanDate   = lastScan?.created_at
     ? new Date(lastScan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })
     : null;
@@ -873,6 +889,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: D.text, letterSpacing: "-0.025em" }}>
                   {domain !== "—" ? domain : "Noch keine Website gescannt"}
                 </h1>
+                {!lastScan && sessionDomain && (
+                  <p style={{ margin: "0 0 14px", fontSize: 13, color: D.amber, lineHeight: 1.6, display: "flex", alignItems: "center", gap: 6 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    Anonymer Scan erkannt — als Account-Scan speichern für dauerhaften Zugriff
+                  </p>
+                )}
                 {lastScan && (
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
                     Gescannt am {scanDate} ·{" "}
@@ -912,8 +936,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     Scan-Limit erreicht
                   </span>
                 ) : (
-                  <BtnPrimary href="/dashboard/scan">
-                    {lastScan ? "Neuen Scan starten →" : "+ Website hinzufügen"}
+                  <BtnPrimary href={
+                    !lastScan && sessionDomain
+                      ? `/dashboard/scan?url=${encodeURIComponent(sessionDomain)}`
+                      : "/dashboard/scan"
+                  }>
+                    {lastScan ? "Neuen Scan starten →" : sessionDomain ? "Jetzt als Account-Scan speichern →" : "+ Website hinzufügen"}
                   </BtnPrimary>
                 )}
                 {lastScan && (

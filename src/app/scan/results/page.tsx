@@ -209,11 +209,13 @@ const AMBER = "#c9820a";
 const AMBER_BG   = "rgba(201,130,10,0.06)";
 const AMBER_BDR  = "rgba(201,130,10,0.22)";
 
-function ProtoRow({ severity, title, detail, law }: {
+function ProtoRow({ severity, title, detail, law, isLocked = false }: {
   severity: "red" | "yellow";
   title: string;
   detail?: string;
   law?: string;
+  /** true on the anonymous results page — hides exact filenames/paths */
+  isLocked?: boolean;
 }) {
   const c  = severity === "red" ? "#ef4444" : AMBER;
   const bg = severity === "red" ? "rgba(239,68,68,0.07)" : AMBER_BG;
@@ -224,13 +226,26 @@ function ProtoRow({ severity, title, detail, law }: {
         {severity === "red" ? "✕" : "→"}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Error type always visible */}
         <div style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: "monospace", marginBottom: detail ? 3 : 0 }}>
           {title}
         </div>
+        {/* Detail: locked = blur placeholder | unlocked = real value */}
         {detail && (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "monospace", marginBottom: law ? 3 : 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {detail}
-          </div>
+          isLocked ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: law ? 3 : 0 }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontStyle: "italic", letterSpacing: "0.03em" }}>
+                Nach Registrierung sichtbar
+              </span>
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "monospace", marginBottom: law ? 3 : 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {detail}
+            </div>
+          )
         )}
         {law && (
           <div style={{ fontSize: 10, color: c, opacity: 0.7, fontWeight: 600 }}>{law}</div>
@@ -249,7 +264,11 @@ function ProtoRow({ severity, title, detail, law }: {
 }
 
 // ── Beweis-Modus: expandable panel — entry count ALWAYS equals header "N Fehler" ──
-function ProtoPanelContent({ p }: { p: PageItem }) {
+function ProtoPanelContent({ p, isLocked = false }: {
+  p: PageItem;
+  /** true = anonymous page (hides filenames, shows register CTA) */
+  isLocked?: boolean;
+}) {
   const isUnreachable = !p.erreichbar;
   const altImages     = p.altMissingImages ?? [];
   const extraAlt      = Math.max(0, p.altMissing - altImages.length);
@@ -284,7 +303,7 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
 
         {/* 1. Seite nicht erreichbar — counts as 1 */}
         {isUnreachable && (
-          <ProtoRow severity="red"
+          <ProtoRow severity="red" isLocked={isLocked}
             title="HTTP: Seite nicht erreichbar"
             detail={`GET ${p.path} → 404 Not Found / Connection Timeout`}
             law="BFSG §4 — Barrierefreie Erreichbarkeit aller Inhalte"
@@ -293,7 +312,7 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
 
         {/* 2. Kein H1 — counts as 1 */}
         {p.missingH1 && (
-          <ProtoRow severity="red"
+          <ProtoRow severity="red" isLocked={isLocked}
             title="<h1>-Tag fehlt"
             detail="Überschriften-Hierarchie fehlt — Screenreader verlieren Seitenstruktur"
             law="BFSG §3 Abs. 2 · EN 301 549 Kap. 9.1.3.1 · WCAG 1.3.1"
@@ -302,7 +321,7 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
 
         {/* 3. Kein Title — counts as 1 */}
         {p.missingTitle && (
-          <ProtoRow severity="yellow"
+          <ProtoRow severity="yellow" isLocked={isLocked}
             title="<title>-Tag fehlt"
             detail="Kein Seitentitel — erscheint namenlos in Suchergebnissen"
             law="SEO-Grundlage · BFSG §3 Abs. 2 (Identifizierbarkeit)"
@@ -311,7 +330,7 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
 
         {/* 4. Keine Meta-Description — counts as 1 */}
         {p.missingMeta && (
-          <ProtoRow severity="yellow"
+          <ProtoRow severity="yellow" isLocked={isLocked}
             title="Meta-Description fehlt"
             detail="Google wählt beliebigen Text als Snippet — CTR sinkt"
             law="SEO-Best Practice"
@@ -320,14 +339,14 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
 
         {/* 5+. Alt-missing images — each image = 1 entry */}
         {altImages.map((img, idx) => (
-          <ProtoRow key={`img-named-${idx}`} severity="red"
+          <ProtoRow key={`img-named-${idx}`} severity="red" isLocked={isLocked}
             title={`<img alt=""> fehlt`}
             detail={img}
             law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
           />
         ))}
         {Array.from({ length: extraAlt }, (_, i) => (
-          <ProtoRow key={`img-extra-${i}`} severity="red"
+          <ProtoRow key={`img-extra-${i}`} severity="red" isLocked={isLocked}
             title={`<img alt=""> fehlt`}
             detail="Dateiname nicht ermittelt"
             law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
@@ -336,7 +355,7 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
 
         {/* Last. noindex — counts as 1 */}
         {p.noindex && (
-          <ProtoRow severity="yellow"
+          <ProtoRow severity="yellow" isLocked={isLocked}
             title={`<meta name="robots" content="noindex"> aktiv`}
             detail="Seite explizit von Google-Indexierung ausgeschlossen"
             law="Kein organischer Traffic · direkter Umsatzverlust"
@@ -344,6 +363,31 @@ function ProtoPanelContent({ p }: { p: PageItem }) {
         )}
 
       </div>
+
+      {/* ── Locked CTA: only on anonymous page ── */}
+      {isLocked && (
+        <div style={{
+          marginTop: 12, padding: "10px 14px", borderRadius: 9,
+          background: "rgba(122,166,255,0.06)", border: "1px solid rgba(122,166,255,0.18)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+              Dateinamen &amp; KI-Fix nach Registrierung sichtbar
+            </span>
+          </div>
+          <Link href="/register" style={{
+            fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
+            background: "rgba(122,166,255,0.14)", color: "#7aa6ff",
+            border: "1px solid rgba(122,166,255,0.3)", textDecoration: "none", whiteSpace: "nowrap",
+          }}>
+            Kostenlos freischalten →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -941,7 +985,7 @@ function ResultsInner() {
                   </div>
 
                   {/* ── BEWEIS-MODUS: technisches Protokoll ── */}
-                  {isExpanded && <ProtoPanelContent p={p} />}
+                  {isExpanded && <ProtoPanelContent p={p} isLocked={true} />}
                 </div>
               );
             })}

@@ -313,17 +313,25 @@ type PerfData = {
   opportunities: { title: string; displayValue?: string; score: number | null }[];
 };
 
-const TABS: { key: TabType; label: string; badge?: string }[] = [
-  { key: "website",     label: "Website-Check" },
-  { key: "wcag",        label: "Barrierefreiheit" },
-  { key: "performance", label: "Performance" },
-  { key: "fullsite",    label: "Full-Site Crawl", badge: "NEU" },
+const TABS: { key: TabType; label: string; badge?: string; tier?: string }[] = [
+  { key: "website",     label: "Website-Check",  tier: "Basis" },
+  { key: "wcag",        label: "Barrierefreiheit", tier: "Spezialisiert" },
+  { key: "performance", label: "Performance",    tier: "Spezialisiert" },
+  { key: "fullsite",    label: "Full-Site Crawl", badge: "Pro" },
 ];
 
 const SCAN_STEPS: Record<TabType, string[]> = {
-  wcag:        ["Browser startet...", "Seite wird geladen...", "WCAG 2.1 Analyse läuft...", "KI erstellt Diagnose..."],
-  performance: ["PageSpeed Insights wird abgefragt...", "Core Web Vitals werden analysiert...", "KI erstellt Diagnose..."],
-  website:     ["Website wird abgerufen...", "HTML wird analysiert...", "KI erstellt Diagnose..."],
+  wcag:        ["Browser startet...", "Seite wird geladen...", "WCAG 2.1 Analyse läuft...", "Kontraste & Farben prüfen...", "KI erstellt Diagnose..."],
+  performance: ["PageSpeed Insights wird abgefragt...", "Core Web Vitals werden analysiert...", "LCP / CLS / FID messen...", "KI erstellt Diagnose..."],
+  website:     [
+    "Website wird abgerufen...",
+    "Sitemap & Robots.txt prüfen...",
+    "Alt-Texte & Bildoptimierung analysieren...",
+    "Header-Struktur (H1–H6) prüfen...",
+    "Meta-Tags & SEO-Signale auswerten...",
+    "Ladezeit & technische Parameter messen...",
+    "KI erstellt Diagnose...",
+  ],
   fullsite:    ["Website wird gecrawlt...", "Unterseiten werden analysiert...", "KI erstellt Site-Report..."],
 };
 
@@ -352,6 +360,8 @@ export default function DashboardScanClient({
   const [tab, setTab] = useState<TabType>("website");
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ScanState>("idle");
+  const [scanStep, setScanStep] = useState(0);
+  const scanStepRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [diagnose, setDiagnose] = useState("");
   const [wcagViolations, setWcagViolations] = useState<{ priority: string; help: string; nodeHtml: string }[]>([]);
   const [perfData, setPerfData] = useState<PerfData | null>(null);
@@ -372,9 +382,16 @@ export default function DashboardScanClient({
   const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
   const limitReached = monthlyScans >= scanLimit;
 
-  // Pre-fill the URL field with the active project URL on mount
+  // Pre-fill the URL field on mount — query param takes priority, then projectUrl
   useEffect(() => {
-    if (projectUrl && !url) setUrl(projectUrl);
+    const params = new URLSearchParams(window.location.search);
+    const queryUrl = params.get("url");
+    if (queryUrl) {
+      const full = queryUrl.startsWith("http") ? queryUrl : `https://${queryUrl}`;
+      setUrl(full);
+    } else if (projectUrl && !url) {
+      setUrl(projectUrl);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectUrl]);
 
@@ -399,13 +416,18 @@ export default function DashboardScanClient({
 
   // Clean up on unmount
   useEffect(() => {
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      if (scanStepRef.current) clearInterval(scanStepRef.current);
+    };
   }, []);
 
   function resetState() {
     setState("idle"); setDiagnose(""); setError("");
     setWcagViolations([]); setPerfData(null); setUrl(""); setSavedScanId(null);
     setFsProgress(null); setFsResult(null); setFromCache(false); setCachedAt(null);
+    setScanStep(0);
+    if (scanStepRef.current) clearInterval(scanStepRef.current);
   }
 
   async function handleScan(e: React.FormEvent | null, forceRefresh = false) {
@@ -418,8 +440,22 @@ export default function DashboardScanClient({
     }
 
     setState("scanning");
+    setScanStep(0);
     setDiagnose(""); setError(""); setWcagViolations([]); setPerfData(null);
     setSavedScanId(null); setFromCache(false); setCachedAt(null);
+
+    // Progressive step animation — advance every ~1.4 s, stop one before the last
+    const steps = SCAN_STEPS[tab as Exclude<TabType, "fullsite">];
+    if (scanStepRef.current) clearInterval(scanStepRef.current);
+    scanStepRef.current = setInterval(() => {
+      setScanStep(prev => {
+        if (prev >= steps.length - 2) {
+          if (scanStepRef.current) clearInterval(scanStepRef.current);
+          return steps.length - 2;
+        }
+        return prev + 1;
+      });
+    }, 1400);
 
     try {
       const endpoint = tab === "wcag" ? "/api/wcag-scan" : tab === "performance" ? "/api/performance-scan" : "/api/scan";
@@ -435,6 +471,7 @@ export default function DashboardScanClient({
         if (tab === "wcag") setWcagViolations(data.violations ?? []);
         if (tab === "performance") setPerfData({ scores: data.scores, vitals: data.vitals, opportunities: data.opportunities });
         if (data.scanId) setSavedScanId(data.scanId);
+        if (scanStepRef.current) clearInterval(scanStepRef.current);
         setState("done");
         startRedirectCountdown();
       } else {
@@ -698,14 +735,25 @@ export default function DashboardScanClient({
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
                 )}
+                {/* Tier badge — "Pro" for fullsite, or tier label for others */}
                 {t.badge && !isLocked && (
                   <span style={{
-                    fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
-                    background: isActive ? "rgba(255,255,255,0.2)" : C.blueBg,
-                    color: isActive ? "#fff" : C.blueSoft,
+                    fontSize: 9, fontWeight: 800, padding: "1px 5px", borderRadius: 4,
+                    background: isActive ? "rgba(255,255,255,0.2)" : "rgba(251,191,36,0.15)",
+                    color: isActive ? "#fff" : C.amber,
                     letterSpacing: "0.05em",
                   }}>
                     {t.badge}
+                  </span>
+                )}
+                {t.tier && !t.badge && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 4,
+                    background: isActive ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)",
+                    color: isActive ? "rgba(255,255,255,0.85)" : C.textMuted,
+                    letterSpacing: "0.04em",
+                  }}>
+                    {t.tier}
                   </span>
                 )}
               </button>
@@ -968,16 +1016,33 @@ export default function DashboardScanClient({
         </div>
       )}
 
-      {/* SCANNING STATE — regular scans */}
+      {/* SCANNING STATE — regular scans (progressive) */}
       {state === "scanning" && tab !== "fullsite" && (
         <div style={{ padding: "20px 24px", background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radiusSm, marginBottom: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {SCAN_STEPS[tab as Exclude<TabType, "fullsite">].map((step, i) => (
-              <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", color: C.textSub, fontSize: 13 }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.blue, flexShrink: 0, animation: "wf-dot-pulse 1.5s ease-in-out infinite" }} />
-                {step}
-              </div>
-            ))}
+            {SCAN_STEPS[tab as Exclude<TabType, "fullsite">].map((step, i) => {
+              const isDone    = i < scanStep;
+              const isCurrent = i === scanStep;
+              const isFuture  = i > scanStep;
+              return (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 13,
+                  color: isDone ? C.green : isCurrent ? C.text : C.textMuted,
+                  opacity: isFuture ? 0.35 : 1,
+                  transition: "opacity 0.3s, color 0.3s",
+                }}>
+                  {isDone ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : isCurrent ? (
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.blue, flexShrink: 0, animation: "wf-dot-pulse 1.5s ease-in-out infinite" }} />
+                  ) : (
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.textMuted, flexShrink: 0, opacity: 0.4 }} />
+                  )}
+                  {step}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
