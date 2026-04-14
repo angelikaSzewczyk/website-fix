@@ -139,7 +139,7 @@ export default function ReportsClient({
   const colorBg   = `${color}12`;
   const colorBdr  = `${color}28`;
   const agName    = branding.agencyName || "Meine Agentur";
-  const isAgency  = ["agentur", "agency_core", "agency_scale"].includes(plan);
+  const isAgency  = ["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"].includes(plan);
 
   const dateStr = new Date().toLocaleDateString("de-DE", {
     day: "2-digit", month: "long", year: "numeric",

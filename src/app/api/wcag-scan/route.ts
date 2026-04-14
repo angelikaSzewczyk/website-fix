@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
+import { checkIpRateLimit } from "@/lib/ip-rate-limit";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { MODELS } from "@/lib/ai-models";
@@ -14,37 +15,8 @@ const CHROMIUM_URL =
   process.env.CHROMIUM_PACK_URL ??
   "https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar";
 
-// Rate limiting — WCAG-Scan ist teurer als normaler Scan → strengere Limits
-const rateLimit = new Map<string, { count: number; resetAt: number; lastScan: number }>();
 // Globale Bremse: max 3 WCAG-Scans pro Minute (Playwright + Claude = teuer)
 const globalLimit = { count: 0, resetAt: 0 };
-
-function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
-  const now = Date.now();
-  if (now > globalLimit.resetAt) {
-    globalLimit.count = 0;
-    globalLimit.resetAt = now + 60 * 1000;
-  }
-  if (globalLimit.count >= 3) {
-    return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
-  }
-  globalLimit.count++;
-
-  const entry = rateLimit.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimit.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000, lastScan: now });
-    return { allowed: true };
-  }
-  if (now - entry.lastScan < 30 * 1000) {
-    return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (30 Sekunden)." };
-  }
-  if (entry.count >= 3) {
-    return { allowed: false, reason: "Zu viele Scans. Bitte warte eine Stunde." };
-  }
-  entry.count++;
-  entry.lastScan = now;
-  return { allowed: true };
-}
 
 const PRIORITY: Record<string, string> = {
   critical: "🔴 KRITISCH",
@@ -70,8 +42,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
     }
 
+    const now = Date.now();
+    if (now > globalLimit.resetAt) { globalLimit.count = 0; globalLimit.resetAt = now + 60_000; }
+    if (globalLimit.count >= 3) {
+      return NextResponse.json({ success: false, error: "Server ausgelastet. Bitte versuche es in einer Minute erneut." }, { status: 429 });
+    }
+    globalLimit.count++;
+
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-    const limitResult = checkRateLimit(ip);
+    const limitResult = await checkIpRateLimit(ip);
     if (!limitResult.allowed) {
       return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
     }

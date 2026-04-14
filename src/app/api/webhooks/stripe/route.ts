@@ -4,12 +4,9 @@ import { neon } from "@neondatabase/serverless";
 
 function priceIdToPlan(priceId: string | undefined): string {
   if (!priceId) return "free";
-  if (priceId === process.env.STRIPE_PRICE_FREELANCER)   return "freelancer";
-  if (priceId === process.env.STRIPE_PRICE_AGENCY_CORE)  return "agency_core";
-  if (priceId === process.env.STRIPE_PRICE_AGENCY_SCALE) return "agency_scale";
-  // Legacy
-  if (priceId === process.env.STRIPE_PRICE_AGENTUR) return "agency_core";
-  if (priceId === process.env.STRIPE_PRICE_PRO)     return "freelancer";
+  if (priceId === process.env.STRIPE_PRICE_SMART_GUARD)    return "smart-guard";
+  if (priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency-starter";
+  if (priceId === process.env.STRIPE_PRICE_AGENCY_PRO)     return "agency-pro";
   return "free";
 }
 

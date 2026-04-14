@@ -4,9 +4,11 @@ import { NextResponse } from "next/server";
 
 // Seat limits per plan (additional members, excluding owner)
 const SEAT_LIMITS: Record<string, number> = {
-  agency_core:  2,  // 3 total
-  agency_scale: 9,  // 10 total (unbegrenzte laut Roadmap → pragmatic cap)
-  agentur:      2,  // legacy alias
+  "agency-starter": 2,  // 3 total
+  "agency-pro":     9,  // 10 total
+  agency_core:      2,  // legacy
+  agency_scale:     9,  // legacy
+  agentur:          2,  // legacy
 };
 
 function getPlanSeats(plan: string): number {
@@ -14,7 +16,7 @@ function getPlanSeats(plan: string): number {
 }
 
 function isPaidAgencyPlan(plan: string): boolean {
-  return ["agency_core", "agency_scale", "agentur"].includes(plan);
+  return ["agency-pro", "agency-starter", "agency_core", "agency_scale", "agentur"].includes(plan);
 }
 
 export async function GET() {

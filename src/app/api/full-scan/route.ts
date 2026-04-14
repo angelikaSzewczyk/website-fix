@@ -16,9 +16,9 @@ const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|pdf|zip|mp4|mp3|css|js|ico|woff|w
 
 // ── Plan limits ─────────────────────────────────────────────────────────────
 function getMaxPages(plan: string): number {
-  if (plan === "agency_scale") return 150;
-  if (plan === "agency_core" || plan === "agentur") return 50;
-  if (plan === "pro" || plan === "freelancer") return 25;
+  if (plan === "agency-pro"    || plan === "agency_scale") return 150;
+  if (plan === "agency-starter"|| plan === "agency_core" || plan === "agentur") return 50;
+  if (plan === "smart-guard"   || plan === "pro" || plan === "freelancer") return 25;
   return 10;
 }
 
@@ -457,7 +457,7 @@ Erstelle vollständigen Site-Audit auf Deutsch für Agentur-Kundenbericht:
         // ── Sonnet Expert-Fix (agency plans only) ─────────────────────────
         // Runs AFTER the complete event so the UI can render immediately.
         // Sends a second SSE event with before/after code fixes for top issues.
-        const isAgencyPlan = ["agentur", "agency_core", "agency_scale"].includes(plan);
+        const isAgencyPlan = ["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"].includes(plan);
         if (isAgencyPlan && issueCount > 0 && !abortSignal?.aborted) {
           try {
             enqueue("phase", { phase: "expert", message: "KI-Experte erstellt Code-Fixes…" });

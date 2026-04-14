@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
     SELECT id, plan FROM users WHERE email = ${session.user.email}
   `) as { id: number; plan: string }[];
 
-  if (!user || !["pro", "agentur"].includes(user.plan)) {
-    return NextResponse.json({ error: "Pro oder Agentur Plan erforderlich" }, { status: 403 });
+  if (!user || !["smart-guard", "agency-starter", "agency-pro", "pro", "agentur", "agency_core", "agency_scale", "freelancer"].includes(user.plan)) {
+    return NextResponse.json({ error: "Bezahlter Plan erforderlich" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({})) as { month?: string };

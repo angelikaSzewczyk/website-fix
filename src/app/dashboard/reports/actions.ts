@@ -204,7 +204,7 @@ export async function generateMonthlyValueReport(
   if (!session?.user) return { error: "Nicht eingeloggt." };
 
   const plan = (session.user as { plan?: string }).plan;
-  if (plan !== "agentur") return { error: "Nur für den Agentur-Plan." };
+  if (!["agency-pro", "agentur"].includes(plan ?? "")) return { error: "Nur für den Agency Pro Plan." };
 
   const sql = neon(process.env.DATABASE_URL!);
 

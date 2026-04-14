@@ -24,7 +24,7 @@ export default async function LeadsPage() {
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan ?? "free";
-  if (!["agentur", "agency_core", "agency_scale"].includes(plan)) redirect("/dashboard");
+  if (!["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"].includes(plan)) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
 

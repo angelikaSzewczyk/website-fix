@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-const AGENCY_PLANS = ["agentur", "agency_core", "agency_scale"];
+const AGENCY_PLANS = ["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"];
 
 export type ActivityItem = {
   type:  "lead" | "scan" | "activity";
@@ -45,7 +45,7 @@ export default async function ReportsPage() {
   const sql  = neon(process.env.DATABASE_URL!);
   const plan = (session.user as { plan?: string }).plan ?? "free";
 
-  if (!["pro", ...AGENCY_PLANS].includes(plan)) redirect("/dashboard");
+  if (!["smart-guard", "freelancer", "pro", ...AGENCY_PLANS].includes(plan)) redirect("/dashboard");
 
   const userId   = Number(session.user.id);
   const agencyId = String(session.user.id);

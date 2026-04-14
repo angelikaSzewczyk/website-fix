@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
+import { checkIpRateLimit } from "@/lib/ip-rate-limit";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
@@ -68,50 +69,8 @@ async function saveUserScan(params: {
   }
 }
 
-// ── Rate Limiting ───────────────────────────────────────────
-const RATE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-const MIN_GAP_MS     = 15_000;               // 15s throttle between attempts
-
-const rateLimit = new Map<string, { firstScanAt: number; lastScan: number }>();
+// ── Global burst guard (in-memory, nur Serversicherheit) ────
 const globalLimit = { count: 0, resetAt: 0 };
-
-function checkRateLimit(ip: string): { allowed: boolean; errorCode?: string; reason?: string; retryAfterMs?: number } {
-  const now = Date.now();
-
-  // Global 1-minute burst cap (15 req across all free users) — server health guard
-  if (now > globalLimit.resetAt) { globalLimit.count = 0; globalLimit.resetAt = now + 60_000; }
-  if (globalLimit.count >= 15) return { allowed: false, reason: "Server ausgelastet. Bitte versuche es in einer Minute erneut." };
-  globalLimit.count++;
-
-  const entry = rateLimit.get(ip);
-
-  // First scan from this IP — always allow, record timestamp
-  if (!entry) {
-    rateLimit.set(ip, { firstScanAt: now, lastScan: now });
-    return { allowed: true };
-  }
-
-  // Throttle: min 15s between consecutive requests
-  if (now - entry.lastScan < MIN_GAP_MS) {
-    return { allowed: false, reason: "Bitte warte kurz zwischen den Scans (15 Sekunden)." };
-  }
-
-  // 24h hard block: IP already used its free scan
-  const windowAge = now - entry.firstScanAt;
-  if (windowAge < RATE_WINDOW_MS) {
-    const retryAfterMs = entry.firstScanAt + RATE_WINDOW_MS - now;
-    return {
-      allowed: false,
-      errorCode: "RATE_LIMITED",
-      reason: "Kostenloses Kontingent aufgebraucht. Bitte morgen wieder versuchen oder jetzt upgraden.",
-      retryAfterMs,
-    };
-  }
-
-  // 24h window expired — reset for this IP
-  rateLimit.set(ip, { firstScanAt: now, lastScan: now });
-  return { allowed: true };
-}
 
 // ── Fetch Helpers ───────────────────────────────────────────
 async function fetchWithTimeout(url: string, timeoutMs = 8000) {
@@ -312,11 +271,18 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
-    const isPaid = ["pro", "freelancer", "agentur", "agency_core", "agency_scale"].includes(userPlan);
+    const isPaid = ["smart-guard", "agency-starter", "agency-pro", "pro", "freelancer", "agentur", "agency_core", "agency_scale"].includes(userPlan);
 
     if (!isPaid) {
+      const now = Date.now();
+      if (now > globalLimit.resetAt) { globalLimit.count = 0; globalLimit.resetAt = now + 60_000; }
+      if (globalLimit.count >= 15) {
+        return NextResponse.json({ success: false, error: "Server ausgelastet. Bitte versuche es in einer Minute erneut." }, { status: 429 });
+      }
+      globalLimit.count++;
+
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-      const limitResult = checkRateLimit(ip);
+      const limitResult = await checkIpRateLimit(ip);
       if (!limitResult.allowed) {
         return NextResponse.json(
           { success: false, errorCode: limitResult.errorCode ?? "RATE_LIMIT", error: limitResult.reason, retryAfterMs: limitResult.retryAfterMs },
