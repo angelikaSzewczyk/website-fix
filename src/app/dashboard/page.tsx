@@ -39,10 +39,10 @@ const C = {
 } as const;
 
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
-// DB plan values: "free" | "single" | "pro" (Agency Starter) | "agentur" (Agency Pro)
+// DB plan values: "free" | "smart-guard" | "agency-starter" | "agency-pro"
 function getLayout(plan: string): "free" | "single" | "agency" {
-  if (["agency-pro", "agency-starter", "agentur", "pro", "agency_core", "agency_scale"].includes(plan)) return "agency";
-  if (plan === "single" || plan === "smart-guard" || plan === "freelancer") return "single";
+  if (plan === "agency-pro" || plan === "agency-starter") return "agency";
+  if (plan === "smart-guard") return "single";
   return "free";
 }
 
@@ -207,12 +207,11 @@ type CriticalSite = {
   alerts: { level: string; message: string }[] | null;
 };
 
-// Agency Starter = DB plan "pro" (99€)  |  Agency Pro = DB plan "agentur" (199€)
 const PLAN_BADGE = {
-  free:    { label: "Free",           color: C.textMuted, bg: "#F1F5F9", border: C.border },
-  single:  { label: "Smart-Guard",    color: "#059669",   bg: "#ECFDF5", border: "#A7F3D0" },
-  pro:     { label: "Agency Starter", color: C.blue,      bg: C.blueBg,  border: C.blueBorder },
-  agentur: { label: "Agency Pro",     color: "#7C3AED",   bg: "#F5F3FF", border: "#DDD6FE" },
+  free:              { label: "Free",           color: C.textMuted, bg: "#F1F5F9", border: C.border },
+  "smart-guard":     { label: "Smart-Guard",    color: "#059669",   bg: "#ECFDF5", border: "#A7F3D0" },
+  "agency-starter":  { label: "Agency Starter", color: C.blue,      bg: C.blueBg,  border: C.blueBorder },
+  "agency-pro":      { label: "Agency Pro",     color: "#7C3AED",   bg: "#F5F3FF", border: "#DDD6FE" },
 } as const;
 
 const DUMMY_CLIENTS = [
@@ -270,14 +269,22 @@ function ProgressBar({ plan }: { plan: string }) {
 }
 
 // ─── Agency Top Bar ─────────────────────────────────────────────────────────────
-function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit }: {
+function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, agencyName }: {
   badge: { label: string; color: string; bg: string; border: string };
   usedSlots: number; slotsLabel: string; clientSlotLimit: number;
+  logoUrl?: string | null; agencyName?: string | null;
 }) {
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 30, background: "#fff", borderBottom: `1px solid ${C.border}`, padding: "8px 28px" }}>
       <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", gap: 14 }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: C.text, whiteSpace: "nowrap" }}>Kommandozentrale</span>
+        {/* White-label logo or default brand */}
+        {logoUrl ? (
+          <img src={logoUrl} alt={agencyName ?? "Logo"} style={{ height: 28, maxWidth: 120, objectFit: "contain", flexShrink: 0 }} />
+        ) : (
+          <span style={{ fontSize: 13, fontWeight: 800, color: C.text, whiteSpace: "nowrap" }}>
+            {agencyName ?? "Kommandozentrale"}
+          </span>
+        )}
         <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
         <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
           Plan: {badge.label}
@@ -291,6 +298,12 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit }: {
             Slots: {usedSlots} / {slotsLabel}
           </span>
         </div>
+        <div style={{ flex: 1 }} />
+        {/* White-label settings link */}
+        <a href="/dashboard/branding" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, textDecoration: "none", whiteSpace: "nowrap" }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07"/></svg>
+          White-Label
+        </a>
       </div>
     </div>
   );
@@ -348,7 +361,9 @@ export default async function DashboardPage() {
   // Agency data
   let criticalSites: CriticalSite[] = [];
   let domainCount = DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0);
-  const domainLimit = plan === "agentur" ? 999 : 10;
+  const domainLimit = plan === "agency-pro" ? 999 : 10;
+  let agencyLogoUrl: string | null = null;
+  let agencyName:    string | null = null;
   if (isAgency) {
     try {
       criticalSites = await sql`
@@ -365,6 +380,14 @@ export default async function DashboardPage() {
       ` as CriticalSite[];
       domainCount = criticalSites.length;
     } catch { /* table may not exist yet */ }
+
+    try {
+      const agRows = await sql`
+        SELECT agency_name, logo_url FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1
+      ` as { agency_name: string | null; logo_url: string | null }[];
+      agencyLogoUrl = agRows[0]?.logo_url ?? null;
+      agencyName    = agRows[0]?.agency_name ?? null;
+    } catch { /* non-critical */ }
   }
 
   // Free/Single: last scan result for issue parsing + tech fingerprint
@@ -382,13 +405,16 @@ export default async function DashboardPage() {
     } catch {}
   }
 
-  // Monthly scan counter (Free only)
+  // Monthly scan counter + plan-aware limit
+  const MONTHLY_SCAN_LIMITS: Record<string, number> = {
+    "free": 3, "smart-guard": 50, "agency-starter": 250, "agency-pro": 1000,
+  };
+  const SCAN_LIMIT = MONTHLY_SCAN_LIMITS[plan] ?? 3;
   const now = new Date();
   const monthlyScans = scans.filter(s => {
     const d = new Date(s.created_at);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
-  const SCAN_LIMIT = 3;
 
   // Parse issues
   const issues: ParsedIssue[] = lastScanResult ? parseIssues(lastScanResult) : [];
@@ -404,9 +430,9 @@ export default async function DashboardPage() {
   const speedScore = Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
 
   // Agency slots: Starter = 10, Pro = unlimited
-  const clientSlotLimit = plan === "agentur" ? 999 : 10;
+  const clientSlotLimit = plan === "agency-pro" ? 999 : 10;
   const usedSlots       = DUMMY_CLIENTS.length;
-  const slotsLabel      = plan === "agentur" ? "∞" : String(clientSlotLimit);
+  const slotsLabel      = plan === "agency-pro" ? "∞" : String(clientSlotLimit);
 
   return (
     <div style={{ background: isAgency ? C.bg : "#080C14", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -440,7 +466,7 @@ export default async function DashboardPage() {
         .ar-wrap:has(.ar-cb:checked) .ar-thumb { left: 19px; }
       `}</style>
 
-      {isAgency && <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} />}
+      {isAgency && <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} logoUrl={agencyLogoUrl} agencyName={agencyName} />}
 
       {/* ══════════════════════════════════════════════════════════
           FREE / SINGLE (Smart-Guard) LAYOUT — PREMIUM DARK
@@ -468,13 +494,13 @@ export default async function DashboardPage() {
       )}
 
 {/* ══════════════════════════════════════════════════════════
-          AGENCY LAYOUT  (plan: pro = Agency Starter | agentur = Agency Pro)
+          AGENCY LAYOUT  (plan: agency-starter | agency-pro)
           ══════════════════════════════════════════════════════════ */}
       {isAgency && (()=> {
         // Agency Pro gets Indigo/Violet accent; Starter stays blue
-        const accent       = plan === "agentur" ? "#7C3AED" : C.blue;
-        const accentBg     = plan === "agentur" ? "#F5F3FF" : C.blueBg;
-        const accentBorder = plan === "agentur" ? "#DDD6FE" : C.blueBorder;
+        const accent       = plan === "agency-pro" ? "#7C3AED" : C.blue;
+        const accentBg     = plan === "agency-pro" ? "#F5F3FF" : C.blueBg;
+        const accentBorder = plan === "agency-pro" ? "#DDD6FE" : C.blueBorder;
 
         const healthScore = (status: string) =>
           status === "ok" ? 88 : status === "warning" ? 61 : 34;
@@ -500,7 +526,7 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   {/* Branding badge — differs by plan tier */}
-                  {plan === "agentur" ? (
+                  {plan === "agency-pro" ? (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", whiteSpace: "nowrap" }}>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                       Full White-Label aktiv
@@ -544,7 +570,7 @@ export default async function DashboardPage() {
                 <div style={{ padding: "14px 22px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
-                    {plan === "agentur" && (
+                    {plan === "agency-pro" && (
                       <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.04em" }}>
                         UNLIMITIERT
                       </span>

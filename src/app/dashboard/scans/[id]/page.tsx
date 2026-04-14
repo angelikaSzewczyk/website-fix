@@ -147,7 +147,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
 
   const plan = (session.user as { plan?: string }).plan;
   let agencySettings: AgencySettings | null = null;
-  if (plan === "agentur") {
+  if (plan === "agency-pro") {
     const ag = await sql`SELECT agency_name, logo_url, primary_color FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1`;
     if (ag[0]) agencySettings = ag[0] as AgencySettings;
   }
@@ -275,17 +275,17 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
           </Link>
 
           {/* PDF Export: White-Label für Agency-Pläne */}
-          {(plan === "agentur" || plan === "pro" || plan === "single") ? (
+          {(plan === "agency-pro" || plan === "agency-starter" || plan === "smart-guard") ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
-              {(plan === "agentur" || plan === "pro") && (
+              {(plan === "agency-pro" || plan === "agency-starter") && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
-                  background: plan === "agentur" ? "#F5F3FF" : "#F0FDF4",
-                  border: plan === "agentur" ? "1px solid #DDD6FE" : "1px solid #A7F3D0",
-                  color: plan === "agentur" ? "#7C3AED" : "#16A34A",
+                  background: plan === "agency-pro" ? "#F5F3FF" : "#F0FDF4",
+                  border: plan === "agency-pro" ? "1px solid #DDD6FE" : "1px solid #A7F3D0",
+                  color: plan === "agency-pro" ? "#7C3AED" : "#16A34A",
                 }}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  {plan === "agentur" ? "Full White-Label aktiv" : "Neutrales Branding aktiv"}
+                  {plan === "agency-pro" ? "Full White-Label aktiv" : "Neutrales Branding aktiv"}
                 </span>
               )}
             </div>
@@ -294,7 +294,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
           )}
 
           {/* Agency Pro: White-label notice */}
-          {plan === "agentur" && (
+          {plan === "agency-pro" && (
             <div style={{ width: "100%", marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "#F5F3FF", border: "1px solid #DDD6FE" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               <p style={{ margin: 0, fontSize: 12, color: "#5B21B6", lineHeight: 1.5 }}>

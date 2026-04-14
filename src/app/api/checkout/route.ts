@@ -3,15 +3,9 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 
 const PLAN_PRICE_MAP: Record<string, string | undefined> = {
-  "smart-guard":     process.env.STRIPE_PRICE_SMART_GUARD,
-  "agency-starter":  process.env.STRIPE_PRICE_AGENCY_STARTER,
-  "agency-pro":      process.env.STRIPE_PRICE_AGENCY_PRO,
-  // Legacy aliases (bestehende Nutzer)
-  freelancer:   process.env.STRIPE_PRICE_SMART_GUARD,
-  pro:          process.env.STRIPE_PRICE_SMART_GUARD,
-  agentur:      process.env.STRIPE_PRICE_AGENCY_PRO,
-  agency_core:  process.env.STRIPE_PRICE_AGENCY_STARTER,
-  agency_scale: process.env.STRIPE_PRICE_AGENCY_PRO,
+  "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD,
+  "agency-starter": process.env.STRIPE_PRICE_AGENCY_STARTER,
+  "agency-pro":     process.env.STRIPE_PRICE_AGENCY_PRO,
 };
 
 export async function POST(req: NextRequest) {

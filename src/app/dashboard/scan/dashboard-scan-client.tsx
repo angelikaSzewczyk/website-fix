@@ -378,7 +378,7 @@ export default function DashboardScanClient({
   const [urlFocused, setUrlFocused] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isAgencyPlan = ["agency_core", "agency_scale", "agentur", "pro", "freelancer"].includes(plan);
+  const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
   const limitReached = monthlyScans >= scanLimit;
 
   // Pre-fill the URL field on mount — query param takes priority, then projectUrl
@@ -901,7 +901,7 @@ export default function DashboardScanClient({
                 https://kundenwebsite.de
               </code>
               ). Crawler findet alle Seiten via Sitemap + interne Links.
-              {plan === "freelancer" ? " Limit: 25 Seiten." : plan === "agency_core" || plan === "agentur" ? " Limit: 50 Seiten." : " Limit: 150 Seiten."}
+              {plan === "agency-starter" ? " Limit: 50 Seiten." : " Limit: 150 Seiten."}
             </p>
           </div>
         </div>
@@ -945,7 +945,7 @@ export default function DashboardScanClient({
               <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 2, overflow: "hidden" }}>
                 <div style={{
                   height: "100%", background: C.blue, borderRadius: 2,
-                  width: `${Math.min(100, (fsProgress.found / (plan === "agency_scale" ? 150 : plan === "agency_core" || plan === "agentur" ? 50 : 25)) * 100)}%`,
+                  width: `${Math.min(100, (fsProgress.found / (plan === "agency-pro" ? 150 : plan === "agency-starter" ? 50 : 25)) * 100)}%`,
                   transition: "width 0.3s ease",
                 }} />
               </div>

@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   const plan = (session.user as { plan?: string }).plan ?? "free";
 
   // ── Agency plans → existing white-label settings ──────────────────────────
-  if (plan === "agentur") {
+  if (plan === "agency-pro") {
     const sql = neon(process.env.DATABASE_URL!);
     const [row] = await sql`
       SELECT agency_name, logo_url, primary_color

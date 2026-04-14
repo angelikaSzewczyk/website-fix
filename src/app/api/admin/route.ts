@@ -18,8 +18,7 @@ async function requireAdmin() {
 
 // ── MRR table ─────────────────────────────────────────────────────────────────
 const PLAN_MRR: Record<string, number> = {
-  free: 0, pro: 19, freelancer: 19,
-  agentur: 49, agency_core: 79, agency_scale: 149,
+  free: 0, "smart-guard": 29, "agency-starter": 79, "agency-pro": 149,
 };
 
 // ── GET — full stats ──────────────────────────────────────────────────────────

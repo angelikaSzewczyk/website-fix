@@ -6,9 +6,6 @@ import { NextResponse } from "next/server";
 const SEAT_LIMITS: Record<string, number> = {
   "agency-starter": 2,  // 3 total
   "agency-pro":     9,  // 10 total
-  agency_core:      2,  // legacy
-  agency_scale:     9,  // legacy
-  agentur:          2,  // legacy
 };
 
 function getPlanSeats(plan: string): number {
@@ -16,7 +13,7 @@ function getPlanSeats(plan: string): number {
 }
 
 function isPaidAgencyPlan(plan: string): boolean {
-  return ["agency-pro", "agency-starter", "agency_core", "agency_scale", "agentur"].includes(plan);
+  return plan === "agency-pro" || plan === "agency-starter";
 }
 
 export async function GET() {

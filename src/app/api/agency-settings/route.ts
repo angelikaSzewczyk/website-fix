@@ -7,7 +7,7 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"].includes(plan ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!["agency-pro", "agency-starter"].includes(plan ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`
@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"].includes(plan ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!["agency-pro", "agency-starter"].includes(plan ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
   const agencyName = String(body.agency_name ?? "").slice(0, 100);

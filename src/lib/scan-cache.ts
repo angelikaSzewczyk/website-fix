@@ -20,12 +20,9 @@ export type CachedScanPayload = {
 /** Result type — adds cache timestamp so callers can show "cached N hours ago". */
 export type CachedScanResult = CachedScanPayload & { cachedAt: string };
 
-/** Plans that get the shorter (12 h) cache window. */
-const AGENCY_PLANS = new Set(["agentur", "agency_core", "agency_scale"]);
-
-/** Returns the appropriate TTL in hours for a given plan. */
+/** Agency plans get a shorter (12 h) cache window so they see optimisation results faster. */
 export function cacheTtlHours(plan: string): number {
-  return AGENCY_PLANS.has(plan) ? 12 : 24;
+  return (plan === "agency-starter" || plan === "agency-pro") ? 12 : 24;
 }
 
 // ── Scan cache (POST /api/scan) ───────────────────────────────────────────────

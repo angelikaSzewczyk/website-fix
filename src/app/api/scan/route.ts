@@ -263,6 +263,22 @@ function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
   }, {} as Record<string, T[]>);
 }
 
+// ── Plan-based crawl depth ──────────────────────────────────
+function getMaxSubpages(plan: string): number {
+  if (plan === "agency-pro")      return 10000;
+  if (plan === "agency-starter")  return 2500;
+  if (plan === "smart-guard")     return 500;
+  return 10; // free / anonym
+}
+
+// ── Monthly scan limits per plan ────────────────────────────
+const MONTHLY_LIMITS: Record<string, number> = {
+  "free":            3,
+  "smart-guard":    50,
+  "agency-starter": 250,
+  "agency-pro":    1000,
+};
+
 // ── Main Handler ────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
@@ -270,10 +286,12 @@ export async function POST(req: NextRequest) {
     if (guard.blocked) return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
 
     const session = await auth();
+    const userId  = session?.user?.id as string | undefined;
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
-    const isPaid = ["smart-guard", "agency-starter", "agency-pro", "pro", "freelancer", "agentur", "agency_core", "agency_scale"].includes(userPlan);
+    const isPaid = ["smart-guard", "agency-starter", "agency-pro"].includes(userPlan);
 
-    if (!isPaid) {
+    // ── Anonymous users: IP-based rate limit ───────────────
+    if (!userId) {
       const now = Date.now();
       if (now > globalLimit.resetAt) { globalLimit.count = 0; globalLimit.resetAt = now + 60_000; }
       if (globalLimit.count >= 15) {
@@ -291,6 +309,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── Registered users: monthly scan limit ───────────────
+    if (userId) {
+      const monthlyLimit = MONTHLY_LIMITS[userPlan] ?? 3;
+      try {
+        const sql = neon(process.env.DATABASE_URL!);
+        const rows = await sql`
+          SELECT COUNT(*)::int AS cnt FROM scans
+          WHERE user_id = ${userId}
+          AND created_at >= date_trunc('month', NOW())
+        ` as { cnt: number }[];
+        const used = rows[0]?.cnt ?? 0;
+        if (used >= monthlyLimit) {
+          return NextResponse.json(
+            { success: false, errorCode: "MONTHLY_LIMIT", error: `Monatliches Scan-Kontingent (${monthlyLimit}) aufgebraucht. Bitte nächsten Monat oder nach einem Upgrade erneut versuchen.` },
+            { status: 429 },
+          );
+        }
+      } catch { /* DB check non-critical — allow scan if check fails */ }
+    }
+
     const body = await req.json();
     const { url, forceRefresh } = body as { url?: string; forceRefresh?: boolean };
     if (!url || typeof url !== "string" || !url.trim()) {
@@ -302,7 +340,6 @@ export async function POST(req: NextRequest) {
     if (!isUrlAllowed(targetUrl)) return NextResponse.json({ success: false, error: "Diese URL kann nicht gescannt werden." }, { status: 400 });
 
     // ── Loopback check: eigene Domain sofort als Nicht-WP markieren ────────────
-    // Verhindert Self-Referential-Fetch auf Vercel und gibt sofort die korrekte Antwort.
     const targetHostCheck = (() => { try { return new URL(targetUrl).hostname.toLowerCase(); } catch { return ""; } })();
     const OWN_HOSTS = ["website-fix.com", "www.website-fix.com"];
     if (OWN_HOSTS.includes(targetHostCheck)) {
@@ -320,26 +357,25 @@ export async function POST(req: NextRequest) {
       const cached = await getCachedScan(targetUrl, ttl);
       if (cached) {
         const { cachedAt, ...payload } = cached;
-        // Still save to this user's scan history even on cache hit
         let scanId: string | null = null;
-        if (session?.user?.id) {
+        if (userId) {
           const issueCount = computeIssueCount(cached.scanData);
           const fp = cached.scanData.techFingerprint;
           scanId = await saveUserScan({
-            userId: session.user.id,
+            userId,
             url: targetUrl,
             issueCount,
             diagnose: cached.diagnose,
             techFingerprint: fp,
           });
         }
-        logScan({ userId: session?.user?.id, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
+        logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
         return NextResponse.json({ success: true, fromCache: true, cachedAt, scanId, ...payload });
       }
     }
 
-    const maxSubpages = isPaid ? 30 : 10;
-    const maxBrokenLinkChecks = isPaid ? 30 : 15;
+    const maxSubpages = getMaxSubpages(userPlan);
+    const maxBrokenLinkChecks = isPaid ? 50 : 15;
 
     const scanData: Record<string, unknown> = { url: targetUrl };
 
@@ -644,15 +680,15 @@ Erstelle einen 360° Business Health Check Bericht auf Deutsch. Fokus: Umsatzver
     ].filter(Boolean).length;
 
     // Await DB write — must complete before response so the dashboard can read it
-    const savedScanId = session?.user?.id
-      ? await saveUserScan({ userId: session.user.id, url: targetUrl, issueCount, diagnose, techFingerprint })
+    const savedScanId = userId
+      ? await saveUserScan({ userId, url: targetUrl, issueCount, diagnose, techFingerprint })
       : null;
 
     // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
     await saveScanAsync(targetUrl, { scanData, diagnose });
 
-    logScan({ userId: session?.user?.id, url: targetUrl, scanType: "website", status: "success", durationMs: Date.now() - scanStart });
-    return NextResponse.json({ success: true, scanData, diagnose, scanId: savedScanId });
+    logScan({ userId, url: targetUrl, scanType: "website", status: "success", durationMs: Date.now() - scanStart });
+    return NextResponse.json({ success: true, scanData, diagnose, issueCount, scanId: savedScanId });
 
   } catch (err) {
     console.error("Scan-Fehler:", err);

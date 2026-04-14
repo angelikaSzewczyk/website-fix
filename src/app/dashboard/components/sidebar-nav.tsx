@@ -23,7 +23,7 @@ type NavItem = {
 };
 
 // Plans that get the agency nav
-const AGENCY_PLANS = ["pro", "agentur"];
+const AGENCY_PLANS = ["agency-starter", "agency-pro"];
 
 // 4-item agency nav (same for both agency tiers)
 const AGENCY_NAV_ITEMS: NavItem[] = [
@@ -42,10 +42,10 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
 ];
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  free:    { label: "Free",           color: "rgba(255,255,255,0.4)",  bg: "rgba(255,255,255,0.05)",  border: "rgba(255,255,255,0.1)" },
-  single:  { label: "Smart-Guard",    color: "#4ADE80",                bg: "rgba(74,222,128,0.1)",    border: "rgba(74,222,128,0.25)" },
-  pro:     { label: "Agency Starter", color: "#60A5FA",                bg: "rgba(96,165,250,0.1)",    border: "rgba(96,165,250,0.25)" },
-  agentur: { label: "Agency Pro",     color: "#A78BFA",                bg: "rgba(167,139,250,0.1)",   border: "rgba(167,139,250,0.25)" },
+  free:              { label: "Free",           color: "rgba(255,255,255,0.4)",  bg: "rgba(255,255,255,0.05)",  border: "rgba(255,255,255,0.1)" },
+  "smart-guard":     { label: "Smart-Guard",    color: "#4ADE80",                bg: "rgba(74,222,128,0.1)",    border: "rgba(74,222,128,0.25)" },
+  "agency-starter":  { label: "Agency Starter", color: "#60A5FA",                bg: "rgba(96,165,250,0.1)",    border: "rgba(96,165,250,0.25)" },
+  "agency-pro":      { label: "Agency Pro",     color: "#A78BFA",                bg: "rgba(167,139,250,0.1)",   border: "rgba(167,139,250,0.25)" },
 };
 
 type Props = {
@@ -135,10 +135,10 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
   const pathname  = usePathname();
   const planCfg   = PLAN_CONFIG[plan] ?? PLAN_CONFIG.free;
   const isAgency  = AGENCY_PLANS.includes(plan);
-  const isProPlan = plan === "agentur"; // Agency Pro — full white-label
+  const isProPlan = plan === "agency-pro"; // Agency Pro — full white-label
 
   // Free / Smart-Guard → slim icon sidebar
-  if (plan === "free" || plan === "single") {
+  if (plan === "free" || plan === "smart-guard") {
     return <SlimSidebar plan={plan} userName={userName} userImage={userImage} signOutButton={signOutButton} lastScanClean={lastScanClean} />;
   }
 

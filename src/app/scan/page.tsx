@@ -25,7 +25,7 @@ type ScanResult = {
 };
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 60 * 60 * 1000; // 1 Stunde
+const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 const MAX_FREE_PAGES = 10;
 
 // ── Progress steps data ───────────────────────────────────────────────────────
@@ -327,6 +327,9 @@ export default function ScanPage() {
             sitemapIndexFound:   data.scanData?.sitemapIndexFound ?? false,
             hasRankMath:         data.scanData?.hasRankMath ?? false,
             hasYoast:            data.scanData?.hasYoast ?? false,
+            // For session bridge claim after registration
+            issueCount:          data.issueCount ?? 0,
+            techFingerprint:     data.scanData?.techFingerprint ?? null,
           }));
         } catch { /* sessionStorage not available */ }
 

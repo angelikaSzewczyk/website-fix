@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 60 * 60 * 1000; // 1 Stunde
+const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 const MAX_FREE_PAGES = 10;
 
 function formatTimeRemaining(nextMs: number): string {

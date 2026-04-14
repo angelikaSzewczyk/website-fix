@@ -137,7 +137,7 @@ export default async function ActivityPage({
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!["agency-pro", "agency-starter", "agentur", "agency_core", "agency_scale"].includes(plan ?? "")) redirect("/dashboard");
+  if (!["agency-pro", "agency-starter"].includes(plan ?? "")) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
   const selectedClientId = searchParams.client ? parseInt(searchParams.client) : null;

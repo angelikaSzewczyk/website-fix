@@ -17,9 +17,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const userName  = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
 
-  const isAuditPlan = plan === "free" || plan === "single";
+  const isAuditPlan = plan === "free" || plan === "smart-guard";
 
-  // Load agency primary color for CSS variable injection (agentur plan only)
+  // Load agency primary color for CSS variable injection (agency plans)
   let agencyPrimary = "#8df3d3";
   let lastScanClean: boolean | null = null;
   let monthlyScans    = 0;
@@ -55,7 +55,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       `,
     ];
 
-    if (plan === "agentur") {
+    if (plan === "agency-pro") {
       queries.push(
         sql`
           SELECT primary_color FROM agency_settings
@@ -76,7 +76,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     projectUrl    = urlRows[0]?.url    ?? "";
     unreadTickets = unreadRows[0]?.cnt ?? 0;
 
-    if (plan === "agentur") {
+    if (plan === "agency-pro") {
       const colorRows = results[4] as { primary_color: string | null }[];
       if (colorRows[0]?.primary_color) agencyPrimary = colorRows[0].primary_color;
     }
@@ -144,11 +144,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <BrandLogo href="/dashboard" />
           <span style={{
             fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-            color: plan === "agentur" ? "#007BFF" : "#8df3d3",
-            background: plan === "agentur" ? "rgba(0,123,255,0.1)" : "rgba(141,243,211,0.08)",
-            border: `1px solid ${plan === "agentur" ? "rgba(0,123,255,0.25)" : "rgba(141,243,211,0.2)"}`,
+            color: plan === "agency-pro" ? "#007BFF" : "#8df3d3",
+            background: plan === "agency-pro" ? "rgba(0,123,255,0.1)" : "rgba(141,243,211,0.08)",
+            border: `1px solid ${plan === "agency-pro" ? "rgba(0,123,255,0.25)" : "rgba(141,243,211,0.2)"}`,
           }}>
-            {plan === "agentur" ? "Agency Pro" : "Agency Starter"}
+            {plan === "agency-pro" ? "Agency Pro" : "Agency Starter"}
           </span>
         </header>
       )}

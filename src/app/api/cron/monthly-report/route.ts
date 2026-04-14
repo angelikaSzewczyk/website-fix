@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     SELECT DISTINCT u.id, u.email, u.name, u.plan
     FROM users u
     JOIN saved_websites sw ON sw.user_id = u.id
-    WHERE u.plan IN ('pro', 'agentur')
+    WHERE u.plan IN ('smart-guard', 'agency-starter', 'agency-pro')
   `) as { id: number; email: string; name: string | null; plan: string }[];
 
   let sent = 0;
