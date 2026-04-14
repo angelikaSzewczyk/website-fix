@@ -46,6 +46,10 @@ type PageItem = {
   noindex:          boolean;
   isSkipped:        boolean;
   altMissingImages?: string[];  // Beweis-Modus: exact filenames
+  // Home-page-only flags (subpages don't carry per-page title/meta/H1 data)
+  missingTitle?: boolean;
+  missingMeta?:  boolean;
+  missingH1?:    boolean;
 };
 
 // ── Score + derived metrics ───────────────────────────────────────────────────
@@ -81,7 +85,7 @@ function liabilityLevel(score: number, crit: number): string {
 
 function liabilityColor(level: string): string {
   if (level === "HOCH")   return "#f59e0b";
-  if (level === "MITTEL") return "#fbbf24";
+  if (level === "MITTEL") return "#c9820a";
   return "#22c55e";
 }
 
@@ -126,11 +130,16 @@ function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
     {
       path: homePath, fullUrl: d.url, errors: homeErrors,
       erreichbar: true, altMissing: homeAltMissing, noindex: d.noIndex, isSkipped: false,
+      // altMissingImages for home: take first homeAltMissing entries from global list
+      altMissingImages: (d.altMissingImages ?? []).slice(0, homeAltMissing),
+      missingTitle: !d.hasTitle,
+      missingMeta:  !d.hasMeta,
+      missingH1:    !d.hasH1,
     },
     // Audited subpages (non-feed URLs)
     ...d.unterseiten.filter(p => !FEED_URL_PATTERN.test(p.url)).map(p => {
       let errors = p.altMissing;
-      if (!p.erreichbar) errors += 3;
+      if (!p.erreichbar) errors += 1;  // 1 per unreachable entry (was 3, protocol shows 1 row)
       if (p.noindex)     errors += 1;
       const path = (() => { try { return new URL(p.url).pathname || "/"; } catch { return p.url; } })();
       return { path, fullUrl: p.url, errors, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex, isSkipped: false, altMissingImages: p.altMissingImages ?? [] };
@@ -193,6 +202,151 @@ const COMPARE_ROWS = [
 ];
 
 const VISIBLE_PAGES = 8;
+
+// ── Beweis-Modus: single protocol entry row ───────────────────────────────────
+// Soft amber for "important / optimization potential" — not alarming neon yellow
+const AMBER = "#c9820a";
+const AMBER_BG   = "rgba(201,130,10,0.06)";
+const AMBER_BDR  = "rgba(201,130,10,0.22)";
+
+function ProtoRow({ severity, title, detail, law }: {
+  severity: "red" | "yellow";
+  title: string;
+  detail?: string;
+  law?: string;
+}) {
+  const c  = severity === "red" ? "#ef4444" : AMBER;
+  const bg = severity === "red" ? "rgba(239,68,68,0.07)" : AMBER_BG;
+  const bd = severity === "red" ? "rgba(239,68,68,0.22)" : AMBER_BDR;
+  return (
+    <div style={{ padding: "9px 14px", borderRadius: 9, display: "flex", alignItems: "flex-start", gap: 10, background: bg, border: `1px solid ${bd}` }}>
+      <span style={{ color: c, flexShrink: 0, marginTop: 2, fontSize: 12, fontWeight: 800 }}>
+        {severity === "red" ? "✕" : "→"}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: "monospace", marginBottom: detail ? 3 : 0 }}>
+          {title}
+        </div>
+        {detail && (
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "monospace", marginBottom: law ? 3 : 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {detail}
+          </div>
+        )}
+        {law && (
+          <div style={{ fontSize: 10, color: c, opacity: 0.7, fontWeight: 600 }}>{law}</div>
+        )}
+      </div>
+      <span style={{
+        fontSize: 10, padding: "2px 6px", borderRadius: 4, flexShrink: 0,
+        background: severity === "red" ? "rgba(239,68,68,0.12)" : "rgba(201,130,10,0.12)",
+        color: c, border: `1px solid ${c}33`, fontWeight: 800, letterSpacing: "0.05em",
+        whiteSpace: "nowrap",
+      }}>
+        {severity === "red" ? "KRITISCH" : "OPTIMIERUNG"}
+      </span>
+    </div>
+  );
+}
+
+// ── Beweis-Modus: expandable panel — entry count ALWAYS equals header "N Fehler" ──
+function ProtoPanelContent({ p }: { p: PageItem }) {
+  const isUnreachable = !p.erreichbar;
+  const altImages     = p.altMissingImages ?? [];
+  const extraAlt      = Math.max(0, p.altMissing - altImages.length);
+
+  // Summary chips: shows category breakdown so user can count to total
+  const imgCount = p.altMissing;
+  const seoCount = (p.missingTitle ? 1 : 0) + (p.missingMeta ? 1 : 0) + (p.missingH1 ? 1 : 0) + (p.noindex ? 1 : 0);
+  const reachCount = isUnreachable ? 1 : 0;
+  const chips: { label: string; color: string }[] = [];
+  if (reachCount > 0) chips.push({ label: `${reachCount} Erreichbarkeits-Fehler`, color: "#ef4444" });
+  if (imgCount  > 0) chips.push({ label: `${imgCount} Bild-Fehler`,               color: "#ef4444" });
+  if (seoCount  > 0) chips.push({ label: `${seoCount} SEO-Optimierungen`,           color: AMBER });
+
+  return (
+    <div style={{ padding: "14px 20px 16px", background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      {/* Header + breakdown chips */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.09em" }}>
+          Technisches Prüfprotokoll · {p.path}
+        </span>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {chips.map((ch, i) => (
+            <span key={i} style={{
+              fontSize: 10, padding: "2px 9px", borderRadius: 20, fontWeight: 700,
+              background: `${ch.color}12`, border: `1px solid ${ch.color}33`, color: ch.color,
+            }}>{ch.label}</span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+
+        {/* 1. Seite nicht erreichbar — counts as 1 */}
+        {isUnreachable && (
+          <ProtoRow severity="red"
+            title="HTTP: Seite nicht erreichbar"
+            detail={`GET ${p.path} → 404 Not Found / Connection Timeout`}
+            law="BFSG §4 — Barrierefreie Erreichbarkeit aller Inhalte"
+          />
+        )}
+
+        {/* 2. Kein H1 — counts as 1 */}
+        {p.missingH1 && (
+          <ProtoRow severity="red"
+            title="<h1>-Tag fehlt"
+            detail="Überschriften-Hierarchie fehlt — Screenreader verlieren Seitenstruktur"
+            law="BFSG §3 Abs. 2 · EN 301 549 Kap. 9.1.3.1 · WCAG 1.3.1"
+          />
+        )}
+
+        {/* 3. Kein Title — counts as 1 */}
+        {p.missingTitle && (
+          <ProtoRow severity="yellow"
+            title="<title>-Tag fehlt"
+            detail="Kein Seitentitel — erscheint namenlos in Suchergebnissen"
+            law="SEO-Grundlage · BFSG §3 Abs. 2 (Identifizierbarkeit)"
+          />
+        )}
+
+        {/* 4. Keine Meta-Description — counts as 1 */}
+        {p.missingMeta && (
+          <ProtoRow severity="yellow"
+            title="Meta-Description fehlt"
+            detail="Google wählt beliebigen Text als Snippet — CTR sinkt"
+            law="SEO-Best Practice"
+          />
+        )}
+
+        {/* 5+. Alt-missing images — each image = 1 entry */}
+        {altImages.map((img, idx) => (
+          <ProtoRow key={`img-named-${idx}`} severity="red"
+            title={`<img alt=""> fehlt`}
+            detail={img}
+            law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
+          />
+        ))}
+        {Array.from({ length: extraAlt }, (_, i) => (
+          <ProtoRow key={`img-extra-${i}`} severity="red"
+            title={`<img alt=""> fehlt`}
+            detail="Dateiname nicht ermittelt"
+            law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
+          />
+        ))}
+
+        {/* Last. noindex — counts as 1 */}
+        {p.noindex && (
+          <ProtoRow severity="yellow"
+            title={`<meta name="robots" content="noindex"> aktiv`}
+            detail="Seite explizit von Google-Indexierung ausgeschlossen"
+            law="Kein organischer Traffic · direkter Umsatzverlust"
+          />
+        )}
+
+      </div>
+    </div>
+  );
+}
 
 // ── Ring chart ────────────────────────────────────────────────────────────────
 function HealthRing({ score }: { score: number }) {
@@ -400,7 +554,7 @@ function ResultsInner() {
                     (scan?.brokenLinksCount ?? 0) > 0 && `BFSG §4 — ${scan!.brokenLinksCount} Broken Links: barrierefreie Erreichbarkeit verletzt`,
                     !scan?.hasTitle && "SEO-Grundlage fehlt: kein <title>-Tag auf Startseite",
                     scan?.hasUnreachable && "BFSG §4 — Unterseiten nicht erreichbar (404/Timeout)",
-                    (scan?.altMissingCount ?? 0) > 0 && `BFSG §3 Abs. 2 — ${scan!.altMissingCount}× img[alt] fehlt · EN 301 549 9.1.1.1 · Bußgeld ab 28.06.2025`,
+                    (scan?.altMissingCount ?? 0) > 0 && `BFSG §3 Abs. 2 — ${scan!.altMissingCount}× img[alt] fehlt · WCAG 1.1.1`,
                     isDemo && "BFSG §3 Abs. 2 — Formularfelder ohne label: WCAG 1.3.1",
                     isDemo && "BFSG §4 — 3 Broken Links auf Unterseiten",
                   ].filter(Boolean).map((msg, i) => (
@@ -413,11 +567,11 @@ function ResultsInner() {
                   )}
                 </div>
               </div>
-              {/* Yellow */}
-              <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Yellow / Optimization */}
+              <div style={{ padding: "20px 22px", borderRadius: 14, background: AMBER_BG, border: `1px solid ${AMBER_BDR}`, display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>🟡</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Optimierung — binnen 30 Tagen</span>
+                  <span style={{ fontSize: 18 }}>✦</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>Optimierungspotenzial</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {[
@@ -426,12 +580,12 @@ function ResultsInner() {
                     !scan?.hasSitemap && "Keine Sitemap — erschwert Indexierung",
                     (scan?.duplicateTitlesCount ?? 0) > 1 && "Doppelte Seitentitel — Keyword-Kannibalisierung",
                     (scan?.duplicateMetasCount ?? 0) > 1 && "Doppelte Meta-Descriptions — SEO-Signal verwässert",
-                    isDemo && "168 Bilder ohne Alt-Text — BFSG-Pflicht & SEO",
+                    isDemo && "168 Bilder ohne Alt-Text — WCAG-Standard",
                     isDemo && "Ladezeit > 2.5s — erhöhte Absprungrate",
                     isDemo && "9 Seiten ohne Meta-Description",
                   ].filter(Boolean).map((msg, i) => (
                     <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
-                      <span style={{ color: "#fbbf24", flexShrink: 0 }}>⚠</span>{msg as string}
+                      <span style={{ color: AMBER, flexShrink: 0 }}>→</span>{msg as string}
                     </div>
                   ))}
                 </div>
@@ -472,7 +626,7 @@ function ResultsInner() {
                   {(scan?.altMissingCount ?? 0) > 0 && (
                     <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", fontSize: 12, alignItems: "baseline" }}>
                       <span style={{ color: "#ef4444", fontWeight: 700, fontFamily: "monospace", fontSize: 11 }}>BFSG §3 Abs. 2</span>
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Fehlende Alt-Texte: i.V.m. EN 301 549 — bis 100.000 € Bußgeld ab 28.06.2025</span>
+                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Fehlende Alt-Texte: BFSG §3 Abs. 2 · EN 301 549 — Barrierefreiheits-Standard 2025</span>
                     </div>
                   )}
                   {!scan?.https && (
@@ -567,7 +721,7 @@ function ResultsInner() {
                   {critErrors === 0 ? "Keine Fehler" : "Kritische BFSG-Fehler"}
                 </div>
                 <div style={{ fontSize: 12, color: critErrors === 0 ? "#22c55e" : "#ef4444", marginTop: 4, fontWeight: 500 }}>
-                  {critErrors === 0 ? "Sieht gut aus!" : "Bußgeld-relevant ab 28.06.2025"}
+                  {critErrors === 0 ? "Sieht gut aus!" : "BFSG-Standard ab 28.06.2025"}
                 </div>
                 {critErrors > 0 && !isDemo && pagesTotal > 0 && (
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>
@@ -582,7 +736,7 @@ function ResultsInner() {
                     border: "1px solid rgba(245,158,11,0.30)",
                     color: "#f59e0b",
                   }}>
-                    ⚠️ Bußgeld-Risiko hoch
+                    ⚡ BFSG-Maßnahmen empfohlen
                   </div>
                 )}
                 {critErrors > 0 && (
@@ -787,87 +941,7 @@ function ResultsInner() {
                   </div>
 
                   {/* ── BEWEIS-MODUS: technisches Protokoll ── */}
-                  {isExpanded && (
-                    <div style={{ padding: "14px 20px 16px 20px", background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>
-                        Technisches Prüfprotokoll · {p.path}
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-
-                        {/* Nicht erreichbar */}
-                        {isUnreachable && (
-                          <div style={{ padding: "10px 14px", borderRadius: 9, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#ef4444", marginBottom: 4 }}>
-                              HTTP: Nicht erreichbar (404 / Timeout)
-                            </div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginBottom: 5 }}>
-                              GET {p.path} → Connection failed / 404 Not Found
-                            </div>
-                            <div style={{ fontSize: 11, color: "rgba(239,68,68,0.7)", fontWeight: 600 }}>
-                              Rechtsgrundlage: BFSG §4 — Barrierefreie Erreichbarkeit aller Inhalte
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Alt-Text Beweis */}
-                        {p.altMissing > 0 && (
-                          <div style={{ padding: "10px 14px", borderRadius: 9, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#ef4444", marginBottom: 6 }}>
-                              {p.altMissing}× &lt;img&gt; ohne alt-Attribut — BFSG §3 Abs. 2 · WCAG 2.1 Kriterium 1.1.1
-                            </div>
-                            {(p.altMissingImages ?? []).length > 0 && (
-                              <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 6 }}>
-                                {(p.altMissingImages ?? []).map((img, idx) => (
-                                  <div key={idx} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.45)" }}>
-                                    <span style={{ color: "rgba(239,68,68,0.6)", flexShrink: 0 }}>✕</span>
-                                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{img}</span>
-                                    <span style={{ fontSize: 10, color: "rgba(239,68,68,0.5)", fontFamily: "sans-serif", flexShrink: 0 }}>alt fehlt</span>
-                                  </div>
-                                ))}
-                                {p.altMissing > (p.altMissingImages?.length ?? 0) && (
-                                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontStyle: "italic", paddingLeft: 14 }}>
-                                    + {p.altMissing - (p.altMissingImages?.length ?? 0)} weitere Bilder ohne Alt-Text
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontWeight: 700 }}>
-                                Bußgeld-relevant ab 28.06.2025
-                              </span>
-                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", fontWeight: 600 }}>
-                                EN 301 549 Kap. 9.1.1.1
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* noindex Beweis */}
-                        {p.noindex && (
-                          <div style={{ padding: "10px 14px", borderRadius: 9, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>
-                              &lt;meta name="robots" content="noindex"&gt; gefunden
-                            </div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginBottom: 4 }}>
-                              Diese Seite ist explizit von der Google-Indexierung ausgeschlossen
-                            </div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                              Auswirkung: Kein organischer Traffic auf diesem URL — direkter Umsatzverlust
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Fallback wenn nur generische Fehler */}
-                        {!isUnreachable && p.altMissing === 0 && !p.noindex && p.errors > 0 && (
-                          <div style={{ padding: "10px 14px", borderRadius: 9, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}>
-                            <div style={{ fontSize: 12, color: "#f59e0b" }}>
-                              Weitere technische Befunde — vollständige Analyse im Pro-Bericht
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {isExpanded && <ProtoPanelContent p={p} />}
                 </div>
               );
             })}
@@ -972,7 +1046,7 @@ function ResultsInner() {
                   !scan?.hasTitle                          && "Kein Seitentitel — unsichtbar für Google",
                   scan?.hasUnreachable                     && "Unterseiten nicht erreichbar — Umsatzverlust",
                   // Alt-text is BFSG-critical → lives in RED, not yellow
-                  (scan?.altMissingCount ?? 0) > 0         && `${scan!.altMissingCount} Bilder ohne Alt-Text — BFSG §3 Abs. 2 (Bußgeld ab 28.06.2025)`,
+                  (scan?.altMissingCount ?? 0) > 0         && `${scan!.altMissingCount} Bilder ohne Alt-Text — BFSG §3 Abs. 2 · WCAG 1.1.1`,
                   isDemo                                   && "BFSG-Verstoß: Formularfelder ohne Label",
                   isDemo                                   && "Broken Links auf 3 Unterseiten",
                 ].filter(Boolean).map((msg, i) => (
@@ -985,11 +1059,11 @@ function ResultsInner() {
                 )}
               </div>
             </div>
-            {/* Yellow */}
-            <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Yellow / Optimization */}
+            <div style={{ padding: "20px 22px", borderRadius: 14, background: AMBER_BG, border: `1px solid ${AMBER_BDR}`, display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 18 }}>🟡</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Optimierung — binnen 30 Tagen</span>
+                <span style={{ fontSize: 18 }}>✦</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>Optimierungspotenzial</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {[
@@ -1003,7 +1077,7 @@ function ResultsInner() {
                   isDemo                                   && "9 Seiten ohne Meta-Description",
                 ].filter(Boolean).map((msg, i) => (
                   <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
-                    <span style={{ color: "#fbbf24", flexShrink: 0 }}>⚠</span>{msg as string}
+                    <span style={{ color: AMBER, flexShrink: 0 }}>→</span>{msg as string}
                   </div>
                 ))}
                 {/* Bug B Fix: Fallback wenn keine Optimierungen nötig */}
@@ -1088,11 +1162,19 @@ function ResultsInner() {
                 </div>
               )}
               <div style={{ padding: "0 24px 20px" }}>
-                <div style={{ padding: "14px 18px", background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 10 }}>
-                  <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>KI-Empfehlung</div>
-                  <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
-                    Registriere dich kostenlos für vollständige Code-Fixes mit exakten Zeilennummern und Copy-Paste-Lösungen.
+                <div style={{ padding: "16px 18px", background: "rgba(34,197,94,0.05)", border: "1.5px solid rgba(34,197,94,0.22)", borderRadius: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em" }}>KI-Fix verfügbar</span>
+                  </div>
+                  <p style={{ margin: "0 0 12px", fontSize: 13.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.7 }}>
+                    Lass die KI alle Befunde in fertige Code-Korrekturen übersetzen — inklusive exakter Zeilennummern und Copy-Paste-Lösungen direkt in dein CMS.
                   </p>
+                  <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.28)", textDecoration: "none" }}>
+                    Kostenlos Fixes erhalten →
+                  </Link>
                 </div>
               </div>
             </div>
@@ -1115,7 +1197,7 @@ function ResultsInner() {
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", flexShrink: 0 }}>🔴 Kritisch</span>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{scan!.altMissingCount} Bilder ohne Alt-Text (BFSG §3 Abs. 2)</div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Bußgeld-relevant ab 28.06.2025 · ⌀ {errorDensity} Fehler/Seite</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Barrierefreiheits-Standard 2025 · ⌀ {errorDensity} Befunde/Seite</div>
                     </div>
                   </div>
                 )}
@@ -1149,7 +1231,7 @@ function ResultsInner() {
                 )}
                 {!(scan?.hasH1) && (
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", background: "rgba(245,158,11,0.05)", borderRadius: 8, border: "1px solid rgba(245,158,11,0.12)" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)", flexShrink: 0 }}>🟡 Wichtig</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(201,130,10,0.12)", color: AMBER, border: "1px solid rgba(201,130,10,0.22)", flexShrink: 0 }}>✦ Optimierung</span>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Kein H1-Tag auf der Startseite</div>
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Schwaches SEO-Signal — Google kann Hauptthema nicht erkennen</div>
@@ -1157,11 +1239,19 @@ function ResultsInner() {
                   </div>
                 )}
               </div>
-              <div style={{ marginTop: 14, padding: "12px 14px", background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)", borderRadius: 8 }}>
-                <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>KI-Empfehlung</div>
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
-                  Registriere dich für vollständige KI-Code-Fixes mit exakten Zeilennummern — alle {critErrors} Verstöße, Copy-Paste-fertig.
+              <div style={{ marginTop: 14, padding: "16px 18px", background: "rgba(34,197,94,0.05)", border: "1.5px solid rgba(34,197,94,0.22)", borderRadius: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em" }}>KI-Fix verfügbar</span>
+                </div>
+                <p style={{ margin: "0 0 12px", fontSize: 13.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.7 }}>
+                  Alle {critErrors} Befunde als fertige Code-Korrekturen — Copy-Paste-bereit, mit exakten Zeilennummern für dein CMS.
                 </p>
+                <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.28)", textDecoration: "none" }}>
+                  Jetzt kostenlos starten →
+                </Link>
               </div>
             </div>
           )}

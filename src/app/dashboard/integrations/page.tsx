@@ -290,6 +290,105 @@ export default function IntegrationsPage() {
         ))}
       </div>
 
+      {/* ── Plugin Download Card ─────────────────────────────────────────── */}
+      <div style={{
+        background: C.card,
+        border: `1.5px solid ${C.greenBorder}`,
+        borderRadius: 16,
+        boxShadow: "0 2px 12px rgba(22,163,74,0.10)",
+        padding: "28px 32px",
+        marginBottom: 36,
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 24,
+        flexWrap: "wrap",
+      }}>
+        {/* Plugin icon */}
+        <div style={{
+          width: 56, height: 56, borderRadius: 14, flexShrink: 0,
+          background: C.greenBg,
+          border: `1.5px solid ${C.greenBorder}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 220 }}>
+          {/* Title row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+              WebsiteFix Connector-Plugin
+            </span>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5,
+              background: "#F0FFF4", color: "#15803D", border: "1px solid #86EFAC",
+              letterSpacing: "0.05em",
+            }}>v0.9.1 Beta</span>
+            <span style={{
+              fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 6,
+              background: C.greenBg, color: C.green, border: `1.5px solid ${C.greenBorder}`,
+              letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: 5,
+            }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              READ-ONLY SCHUTZ AKTIV
+            </span>
+          </div>
+
+          <p style={{ margin: "0 0 14px", fontSize: 13.5, color: C.textSub, lineHeight: 1.65, maxWidth: 540 }}>
+            Das Plugin verbindet deine Seite sicher mit unserem Dashboard. Korrekturen
+            (wie Alt-Texte) werden erst nach deiner Freigabe synchronisiert.
+          </p>
+
+          {/* Feature pills */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {[
+              "WordPress 5.0+",
+              "Keine Schreibrechte ohne Freigabe",
+              "AES-256 verschlüsselt",
+              "DSGVO-konform",
+            ].map(pill => (
+              <span key={pill} style={{
+                fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20,
+                background: C.divider, color: C.textSub,
+              }}>{pill}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Download section */}
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10,
+          flexShrink: 0, minWidth: 160,
+        }}>
+          <a
+            href="/plugin"
+            style={{
+              display: "inline-block",
+              padding: "11px 24px",
+              borderRadius: 10,
+              fontSize: 13.5, fontWeight: 700,
+              background: C.green, color: "#fff",
+              textDecoration: "none",
+              boxShadow: "0 3px 10px rgba(22,163,74,0.30)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Plugin herunterladen →
+          </a>
+          <span style={{ fontSize: 11, color: C.textMuted }}>
+            ZIP · ~18 KB · inkl. Anleitung
+          </span>
+        </div>
+      </div>
+
       {/* Active integrations */}
       <div style={{ marginBottom: 36 }}>
         <p style={{ margin: "0 0 16px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.12em" }}>
