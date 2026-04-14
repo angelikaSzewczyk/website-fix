@@ -534,7 +534,10 @@ function ResultsInner() {
               </div>
               <div>
                 <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff", lineHeight: 1 }}>
-                  {pagesTotal}<span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{pagesTotal}</span>
+                  {pagesTotal}
+                  {!isDemo && entdeckteUrls > pagesTotal && (
+                    <span style={{ fontSize: 15, color: "rgba(255,255,255,0.25)", fontWeight: 400 }}> /{entdeckteUrls}</span>
+                  )}
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Gescannte Seiten</div>
                 <a href="#deep-scan-map" style={{ fontSize: 12, color: "#7aa6ff", marginTop: 4, fontWeight: 500, display: "block", textDecoration: "none" }}>
@@ -1003,6 +1006,10 @@ function ResultsInner() {
                     <span style={{ color: "#fbbf24", flexShrink: 0 }}>⚠</span>{msg as string}
                   </div>
                 ))}
+                {/* Bug B Fix: Fallback wenn keine Optimierungen nötig */}
+                {!isDemo && scan?.hasMeta && scan?.hasH1 && scan?.hasSitemap && (scan?.duplicateTitlesCount ?? 0) <= 1 && (scan?.duplicateMetasCount ?? 0) <= 1 && (
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine Optimierungen erforderlich ✓</div>
+                )}
               </div>
             </div>
             {/* Green */}
@@ -1127,6 +1134,16 @@ function ResultsInner() {
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{scan!.brokenLinksCount} kaputte Links</div>
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Schlechtes Nutzererlebnis · SEO-Penalty möglich</div>
+                    </div>
+                  </div>
+                )}
+                {/* noIndex in computeCritical() aber fehlend im Panel — Bug A Fix */}
+                {scan?.noIndex && (
+                  <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", background: "rgba(239,68,68,0.05)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.12)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", flexShrink: 0 }}>🔴 Kritisch</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Startseite von Google ausgesperrt (noindex)</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>meta[robots=noindex] verhindert Indexierung — kein organischer Traffic</div>
                     </div>
                   </div>
                 )}
