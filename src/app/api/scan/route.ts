@@ -69,8 +69,8 @@ function buildIssuesJson(
   unterseiten: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number }[],
   totalAltMissing: number,
   totalImages: number,
-  duplicateTitles: string[],
-  duplicateMetas: string[],
+  duplicateTitles: { title: string; seiten: string[] }[],
+  duplicateMetas: { meta: string; seiten: string[] }[],
   brokenLinks: { url: string; status: number }[],
   orphanedPages: string[],
 ): ScanIssue[] {
@@ -104,9 +104,9 @@ function buildIssuesJson(
 
   // ── SEO-Duplikate ──
   if (duplicateTitles.length > 0)
-    issues.push({ severity: "red", title: `${duplicateTitles.length}× doppelter Title-Tag`, body: `Doppelte Titles verwirren Google. Betroffen: ${duplicateTitles.slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+    issues.push({ severity: "red", title: `${duplicateTitles.length}× doppelter Title-Tag`, body: `Doppelte Titles verwirren Google. Betroffen: ${duplicateTitles.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
   if (duplicateMetas.length > 0)
-    issues.push({ severity: "yellow", title: `${duplicateMetas.length}× doppelte Meta-Description`, body: `Betroffen: ${duplicateMetas.slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+    issues.push({ severity: "yellow", title: `${duplicateMetas.length}× doppelte Meta-Description`, body: `Betroffen: ${duplicateMetas.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
 
   // ── Broken Links / Orphans ──
   if (brokenLinks.length > 0)
@@ -461,12 +461,33 @@ export async function POST(req: NextRequest) {
         if (userId) {
           const issueCount = computeIssueCount(cached.scanData);
           const fp = cached.scanData.techFingerprint;
-          const cachedAudit = cached.scanData.audit as { gescannteSeiten?: number; unterseiten?: unknown[] } | undefined;
+          type CachedAudit = {
+            gescannteSeiten?: number;
+            unterseiten?: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number }[];
+            altTexte?: { fehlend?: number; gesamt?: number };
+            duplicateTitles?: { title: string; seiten: string[] }[];
+            duplicateMetas?: { meta: string; seiten: string[] }[];
+            brokenLinks?: { url: string; status: number }[];
+            verwaistSeiten?: string[];
+          };
+          const cachedAudit = cached.scanData.audit as CachedAudit | undefined;
+          const cachedUnterseiten = cachedAudit?.unterseiten ?? [];
+          const cachedIssuesJson = buildIssuesJson(
+            cached.scanData,
+            cachedUnterseiten,
+            cachedAudit?.altTexte?.fehlend ?? 0,
+            cachedAudit?.altTexte?.gesamt ?? 0,
+            cachedAudit?.duplicateTitles ?? [],
+            cachedAudit?.duplicateMetas ?? [],
+            cachedAudit?.brokenLinks ?? [],
+            cachedAudit?.verwaistSeiten ?? [],
+          );
           scanId = await saveUserScan({
             userId,
             url: targetUrl,
             issueCount,
             diagnose: cached.diagnose,
+            issuesJson: cachedIssuesJson,
             techFingerprint: fp,
             totalPages: cachedAudit?.gescannteSeiten ?? null,
             unterseitenJson: cachedAudit?.unterseiten ?? null,
