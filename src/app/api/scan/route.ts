@@ -717,7 +717,7 @@ export async function POST(req: NextRequest) {
 
     // ── Audit-Ergebnisse zusammenführen ────────────────────
     const audit = {
-      gescannteSeiten:   unterseiten.length + 1,
+      gescannteSeiten:   unterseiten.length,
       entdeckteUrls:     discoveredCount,
       gefilterteUrls:    filteredCount,  // Feeds/XML/etc. — registriert aber nicht analysiert
       uebersprungeneUrls: subpageUrls.filter(u => !shouldAudit(u)),  // Gefilterte URLs für Tabelle
