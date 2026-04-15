@@ -70,33 +70,141 @@ type ParsedIssue = {
   category: "recht" | "speed" | "technik";
 };
 
+function classifyCategory(text: string): ParsedIssue["category"] {
+  const t = text.toLowerCase();
+  if (/bfsg|wcag|barriere|impressum|datenschutz|cookie|dsgvo|recht|abmahn|label|aria/.test(t)) return "recht";
+  if (/speed|lcp|cls|fid|ladezeit|performance|pagespeed|core web|ladezeit/.test(t)) return "speed";
+  return "technik";
+}
+
+/**
+ * Robust parser — handles any Haiku/Sonnet output style.
+ * Matches 🔴/🟡/🟢 ANYWHERE in the line (not just at start).
+ * Extracts body from same line (after "—") or following lines.
+ */
 function parseIssues(text: string): ParsedIssue[] {
   const issues: ParsedIssue[] = [];
   let current: ParsedIssue | null = null;
+
   for (const raw of text.split("\n")) {
     const line = raw.trim();
-    if (!line || line.startsWith("# ") || line.startsWith("## ")) {
+
+    // Skip empty lines and headers — but save current issue first
+    if (!line || /^#{1,3}\s/.test(line)) {
       if (current) { issues.push(current); current = null; }
       continue;
     }
-    let sev: "red" | "yellow" | "green" | null = null;
-    if (line.startsWith("**🔴")) sev = "red";
-    else if (line.startsWith("**🟡")) sev = "yellow";
-    else if (line.startsWith("**🟢")) sev = "green";
-    if (sev) {
+
+    // Detect severity anywhere in the line
+    const hasRed    = line.includes("🔴");
+    const hasYellow = line.includes("🟡");
+    const hasGreen  = line.includes("🟢");
+
+    if (hasRed || hasYellow || hasGreen) {
       if (current) issues.push(current);
-      const title = line.replace(/\*\*/g, "").replace(/^[🔴🟡🟢]\s*/, "").trim();
-      const tl = title.toLowerCase();
-      const category: ParsedIssue["category"] =
-        /bfsg|wcag|barriere|impressum|datenschutz|cookie|dsgvo|recht|abmahn/.test(tl) ? "recht" :
-        /speed|lcp|cls|fid|ladezeit|performance|pagespeed|core web/.test(tl) ? "speed" : "technik";
-      current = { severity: sev, title, body: "", category };
-    } else if (current && !line.match(/^\d+\./) && current.body.length < 120) {
-      current.body += (current.body ? " " : "") + line;
+      const sev: ParsedIssue["severity"] = hasRed ? "red" : hasYellow ? "yellow" : "green";
+
+      // Strip markdown noise: **, *, leading bullets/dashes, emoji, keywords
+      const clean = line
+        .replace(/\*\*/g, "")
+        .replace(/^\s*[-*]\s*/, "")
+        .replace(/[🔴🟡🟢]/gu, "")
+        .replace(/^\s*(KRITISCH|WICHTIG|WARN|OK|INFO|HINWEIS)\s*/i, "")
+        .trim();
+
+      // Split on em-dash or " — " to get title vs body
+      const dashIdx = clean.search(/ [—–-]{1,2} /);
+      const title = dashIdx > 0 ? clean.slice(0, dashIdx).trim() : clean.slice(0, 80).trim();
+      const bodyInline = dashIdx > 0 ? clean.slice(dashIdx).replace(/^[\s—–-]+/, "").trim() : "";
+
+      current = {
+        severity: sev,
+        title: title || "Unbekanntes Problem",
+        body: bodyInline,
+        category: classifyCategory(title + " " + bodyInline),
+      };
+    } else if (current) {
+      // Continuation line — append to body (skip numbered-list markers)
+      if (!line.match(/^\d+\.\s/) && current.body.length < 160) {
+        current.body += (current.body ? " " : "") + line.replace(/\*\*/g, "");
+      }
     }
   }
   if (current) issues.push(current);
-  return issues.slice(0, 30);
+
+  // De-duplicate by title and drop green-only runs if reds exist
+  const seen = new Set<string>();
+  const filtered = issues.filter(i => {
+    const key = i.title.slice(0, 40).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return filtered.slice(0, 30);
+}
+
+/**
+ * Technical fallback — builds issues directly from crawler data when
+ * the AI text parsed to 0 issues but real problems exist.
+ */
+function buildTechFallback(
+  unterseiten: { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[],
+  issueCount: number | null,
+): ParsedIssue[] {
+  const issues: ParsedIssue[] = [];
+
+  const unreachable = unterseiten.filter(p => !p.erreichbar);
+  if (unreachable.length > 0) {
+    issues.push({
+      severity: "red",
+      title: `${unreachable.length} Unterseite${unreachable.length > 1 ? "n" : ""} nicht erreichbar`,
+      body: `404/5xx-Fehler auf: ${unreachable.slice(0, 3).map(p => { try { return new URL(p.url).pathname; } catch { return p.url; } }).join(", ")}`,
+      category: "technik",
+    });
+  }
+
+  const noTitle = unterseiten.filter(p => !p.title || p.title === "(kein Title)");
+  if (noTitle.length > 0) {
+    issues.push({
+      severity: "red",
+      title: `${noTitle.length} Seite${noTitle.length > 1 ? "n" : ""} ohne Title-Tag`,
+      body: "Fehlende Title-Tags schaden dem Google-Ranking direkt.",
+      category: "technik",
+    });
+  }
+
+  const totalAltMissing = unterseiten.reduce((s, p) => s + p.altMissing, 0);
+  if (totalAltMissing > 0) {
+    issues.push({
+      severity: "red",
+      title: `${totalAltMissing} Bild${totalAltMissing > 1 ? "er" : ""} ohne Alt-Text (BFSG 2025)`,
+      body: "Barrierefreiheitspflicht ab 06/2025: Alt-Texte sind für Screen-Reader zwingend erforderlich.",
+      category: "recht",
+    });
+  }
+
+  const noindex = unterseiten.filter(p => p.noindex);
+  if (noindex.length > 0) {
+    issues.push({
+      severity: "yellow",
+      title: `Noindex-Direktive auf ${noindex.length} Seite${noindex.length > 1 ? "n" : ""}`,
+      body: "Diese Seiten sind für Google unsichtbar — prüfen, ob das gewollt ist.",
+      category: "technik",
+    });
+  }
+
+  // If issue_count > 0 but we built nothing, add generic issue so user isn't misled
+  if (issues.length === 0 && (issueCount ?? 0) > 0) {
+    issues.push({
+      severity: "yellow",
+      title: `${issueCount} technische Problem${issueCount !== 1 ? "e" : ""} gefunden`,
+      body: "Starte einen neuen Scan für den vollständigen Bericht.",
+      category: "technik",
+    });
+  }
+
+  return issues;
 }
 
 // ─── Fix Guide per CMS ─────────────────────────────────────────────────────────
@@ -421,8 +529,18 @@ export default async function DashboardPage() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 
-  // Parse issues
-  const issues: ParsedIssue[] = lastScanResult ? parseIssues(lastScanResult) : [];
+  // Parse issues from AI text, with technical fallback when parser yields nothing
+  let issues: ParsedIssue[] = lastScanResult ? parseIssues(lastScanResult) : [];
+
+  // Fallback: if AI text gave 0 actionable issues but technical data shows problems,
+  // inject issues built directly from the crawler's deterministic findings.
+  const aiHasActionable = issues.filter(i => i.severity !== "green").length;
+  const unterseiten4Fallback = (lastScanUnterseiten ?? []) as { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[];
+  if (aiHasActionable === 0) {
+    const fallback = buildTechFallback(unterseiten4Fallback, lastScan?.issue_count ?? null);
+    if (fallback.length > 0) issues = fallback;
+  }
+
   const cms = lastScanResult ? detectCMS(lastScanResult, lastScan?.url) : { label: "–" };
 
   const redIssues    = issues.filter(i => i.severity === "red");

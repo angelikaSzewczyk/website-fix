@@ -638,31 +638,60 @@ export async function POST(req: NextRequest) {
 
     const fc = scanData.formCheck as { formsCount: number; inputsWithoutLabel: number; buttonsWithoutText: number } | undefined;
 
-    const prompt = `360° Business Health Check: ${host0} | ${audit.gescannteSeiten} Seiten analysiert (${discoveredCount} entdeckt, ${filteredCount} gefiltert: Feeds/XML/JSON)
+    // Build explicit issue list from technical checks for injection into prompt
+    const techIssueLines: string[] = [];
+    if (!scanData.title)           techIssueLines.push("- STARTSEITE: Title-Tag fehlt");
+    if (!scanData.metaDescription) techIssueLines.push("- STARTSEITE: Meta-Description fehlt");
+    if (!scanData.h1)              techIssueLines.push("- STARTSEITE: H1-Tag fehlt");
+    if (!scanData.https)           techIssueLines.push("- STARTSEITE: Kein HTTPS");
+    if (scanData.indexierungGesperrt) techIssueLines.push("- STARTSEITE: Noindex gesetzt — Google kann Seite nicht indexieren");
+    if (!scanData.sitemapVorhanden)   techIssueLines.push("- STARTSEITE: Sitemap.xml fehlt");
+    if (scanData.robotsBlockiertAlles) techIssueLines.push("- STARTSEITE: robots.txt blockiert alle Crawler");
+    if (totalAltMissing > 0)          techIssueLines.push(`- ${totalAltMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht!)`);
+    if ((fc?.inputsWithoutLabel ?? 0) > 0) techIssueLines.push(`- ${fc!.inputsWithoutLabel} Formularfelder ohne Label (BFSG-Verstoß)`);
+    if (duplicateTitles.length > 0)    techIssueLines.push(`- ${duplicateTitles.length} doppelte Title-Tags (SEO-Schaden)`);
+    if (duplicateMetas.length > 0)     techIssueLines.push(`- ${duplicateMetas.length} doppelte Meta-Descriptions`);
+    if (brokenLinks.length > 0)        techIssueLines.push(`- ${brokenLinks.length} Broken Links (404)`);
+    unterseiten.filter(p => !p.erreichbar).forEach(p =>
+      techIssueLines.push(`- UNTERSEITE DOWN: ${toPath(p.url)} (nicht erreichbar)`)
+    );
+    unterseiten.filter(p => !p.title || p.title === "(kein Title)").forEach(p =>
+      techIssueLines.push(`- UNTERSEITE kein Title: ${toPath(p.url)}`)
+    );
+    unterseiten.filter(p => p.noindex).forEach(p =>
+      techIssueLines.push(`- UNTERSEITE Noindex: ${toPath(p.url)}`)
+    );
+    unterseiten.filter(p => p.altMissing > 0).slice(0, 5).forEach(p =>
+      techIssueLines.push(`- UNTERSEITE Alt-Texte fehlen (${p.altMissing}x): ${toPath(p.url)}`)
+    );
 
-TECHNISCH: title="${scanData.title || "fehlt"}" | meta="${scanData.metaDescription ? "ok" : "fehlt"}" | h1="${scanData.h1 ? "ok" : "fehlt"}" | https=${scanData.https} | noindex=${scanData.indexierungGesperrt} | sitemap=${scanData.sitemapVorhanden} | robots-block=${scanData.robotsBlockiertAlles}${scanData.wordpressFehler ? " | WP-FEHLER!" : ""}
+    const prompt = `Du bist ein Website-Audit-Experte. Analysiere ${host0} (${audit.gescannteSeiten} Seiten gescannt).
 
-BFSG / BARRIEREFREIHEIT: Formulare=${fc?.formsCount ?? 0} | Eingaben ohne Label=${fc?.inputsWithoutLabel ?? 0} | Buttons ohne Text=${fc?.buttonsWithoutText ?? 0} | Alt-Texte fehlend=${totalAltMissing}/${totalImages}
+CRAWLER-BEFUNDE (diese sind FAKTEN, nicht interpretierbar):
+${techIssueLines.length > 0 ? techIssueLines.join("\n") : "- Keine kritischen technischen Probleme gefunden"}
 
-UNTERSEITEN:
-${unterseiten.map((p) => `${toPath(p.url)}: ${p.erreichbar ? "ok" : "DOWN"} | title=${p.title ? "ok" : "fehlt"} | h1=${p.h1 ? "ok" : "fehlt"} | noindex=${p.noindex} | alt-missing=${p.altMissing}`).join("\n") || "(keine)"}
+VOLLSTÄNDIGE TECHNISCHE DATEN:
+Startseite: title="${scanData.title || "FEHLT"}" | meta="${scanData.metaDescription ? "ok" : "FEHLT"}" | h1="${scanData.h1 ? "ok" : "FEHLT"}" | https=${scanData.https} | sitemap=${scanData.sitemapVorhanden}
+BFSG: Alt-Texte fehlend=${totalAltMissing}/${totalImages} | Formular-Labels fehlend=${fc?.inputsWithoutLabel ?? 0}
+Unterseiten (${unterseiten.length}):
+${unterseiten.slice(0, 10).map((p) => `  ${toPath(p.url)}: ${p.erreichbar ? "ok" : "DOWN"} | title=${p.title ? "ok" : "FEHLT"} | h1=${p.h1 ? "ok" : "FEHLT"} | noindex=${p.noindex} | alt-missing=${p.altMissing}`).join("\n") || "  (keine)"}
 
-BEFUNDE:
-- Doppelte Titles: ${duplicateTitles.length}
-- Doppelte Metas: ${duplicateMetas.length}
-- Broken Links: ${brokenLinks.length} (${brokenLinks.slice(0,3).map(b => `${toPath(b.url)} ${b.status}`).join(", ") || "keine"})
-- Verwaiste Seiten: ${orphanedPages.length}
+PFLICHT-REGELN:
+1. Jedes Crawler-Befund aus der Liste oben MUSS als eigenständige Issue erscheinen.
+2. Kein Problem ignorieren — auch "kleine" Mängel sind Issues.
+3. Verwende EXAKT dieses Format für jede Issue (eine pro Zeile):
+   🔴 KRITISCH Titel — kurze Erklärung mit Business-Bezug
+   🟡 WICHTIG Titel — kurze Erklärung mit Business-Bezug
+   🟢 OK Titel — was bereits funktioniert
+4. Schwellenwerte: DOWN/fehlend/BFSG → 🔴 | Optimierungsbedarf → 🟡 | Gut → 🟢
 
-Erstelle einen 360° Business Health Check Bericht auf Deutsch. Fokus: Umsatzverluste, Rechtspflichten, Nutzererlebnis.
+## Zusammenfassung
+(2 Sätze: konkrete Business-Auswirkung der Hauptprobleme)
 
-## Zusammenfassung (2-3 Sätze — konkrete Business-Auswirkung)
-## Befunde (schwerwiegendste zuerst)
-**[🔴 KRITISCH / 🟡 WICHTIG / 🟢 OK]** Titel — Erklärung mit Business-Bezug (max 2 Sätze, kein Fachjargon)${fc && fc.inputsWithoutLabel > 0 ? `\nHINWEIS: ${fc.inputsWithoutLabel} Formularfeld(er) ohne Label gefunden — als KRITISCH BFSG-Befund ausgeben.` : ""}
-## 🚦 Dringlichkeits-Ampel
-🔴 Kritisch (sofort handeln): Liste der kritischen Punkte
-🟡 Optimierung (binnen 30 Tagen): Liste der wichtigen Punkte
-🟢 Gut (bereits erfüllt): Was bereits funktioniert
-## Top 3 nächste Schritte`;
+## Befunde
+(Eine Issue pro Zeile, schlimmste zuerst — ALLE Crawler-Befunde müssen auftauchen)
+
+## Top 3 Sofortmaßnahmen`;
 
     // ── 10. CLAUDE DIAGNOSE — with exponential backoff ─────
     const message = await callWithRetry(() =>
