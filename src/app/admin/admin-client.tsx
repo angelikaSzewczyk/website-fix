@@ -1219,6 +1219,19 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                     {rateLimitLoading ? "Lädt…" : rateLimitRows === null ? "Laden" : "Aktualisieren"}
                   </button>
                   <button
+                    onClick={() => {
+                      try { localStorage.removeItem("wf_free_scan_ts"); } catch { /* ignore */ }
+                      setRateLimitMsg("Browser-Sperre aufgehoben — localStorage gelöscht.");
+                    }}
+                    style={{
+                      padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                      border: `1px solid ${D.amber}40`, background: D.amberBg,
+                      color: D.amber, cursor: "pointer",
+                    }}
+                  >
+                    Eigene Browser-Sperre aufheben
+                  </button>
+                  <button
                     onClick={() => { if (confirm("Wirklich ALLE Rate-Limit-Einträge löschen?")) resetRateLimit(); }}
                     disabled={rateLimitLoading || !rateLimitRows?.length}
                     style={{
@@ -1228,7 +1241,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       opacity: (!rateLimitRows?.length || rateLimitLoading) ? 0.4 : 1,
                     }}
                   >
-                    Alle löschen
+                    Alle löschen (DB)
                   </button>
                 </div>
               </div>
