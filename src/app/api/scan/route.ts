@@ -491,7 +491,7 @@ export async function POST(req: NextRequest) {
             diagnose: cached.diagnose,
             issuesJson: cachedIssuesJson,
             techFingerprint: fp,
-            totalPages: cachedAudit?.gescannteSeiten ?? null,
+            totalPages: cachedAudit?.unterseiten?.length ?? cachedAudit?.gescannteSeiten ?? null,
             unterseitenJson: cachedAudit?.unterseiten ?? null,
           });
         }
