@@ -1229,8 +1229,31 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       color: D.amber, cursor: "pointer",
                     }}
                   >
-                    Eigene Browser-Sperre aufheben
+                    localStorage löschen
                   </button>
+                  <a
+                    href="/api/admin/test-bypass?action=enable"
+                    style={{
+                      padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                      border: `1px solid ${D.green}40`, background: D.greenBg,
+                      color: D.green, cursor: "pointer", textDecoration: "none",
+                      display: "inline-flex", alignItems: "center",
+                    }}
+                    title="Setzt Cookie wf_admin_test — umgeht IP-Rate-Limit beim Scan (4h)"
+                  >
+                    Test-Modus aktivieren
+                  </a>
+                  <a
+                    href="/api/admin/test-bypass?action=disable"
+                    style={{
+                      padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 500,
+                      border: `1px solid ${D.border}`, background: "transparent",
+                      color: D.muted, cursor: "pointer", textDecoration: "none",
+                      display: "inline-flex", alignItems: "center",
+                    }}
+                  >
+                    Test-Modus deaktivieren
+                  </a>
                   <button
                     onClick={() => { if (confirm("Wirklich ALLE Rate-Limit-Einträge löschen?")) resetRateLimit(); }}
                     disabled={rateLimitLoading || !rateLimitRows?.length}

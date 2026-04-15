@@ -290,8 +290,13 @@ export async function POST(req: NextRequest) {
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
     const isPaid = ["smart-guard", "agency-starter", "agency-pro"].includes(userPlan);
 
+    // ── Admin test-bypass cookie: skips IP rate limit ──────────
+    const bypassCookie = req.cookies.get("wf_admin_test")?.value ?? "";
+    const bypassSecret = process.env.ADMIN_BYPASS_SECRET ?? "";
+    const hasAdminBypass = bypassSecret.length > 0 && bypassCookie === bypassSecret;
+
     // ── Anonymous users: IP-based rate limit ───────────────
-    if (!userId) {
+    if (!userId && !hasAdminBypass) {
       const now = Date.now();
       if (now > globalLimit.resetAt) { globalLimit.count = 0; globalLimit.resetAt = now + 60_000; }
       if (globalLimit.count >= 15) {
