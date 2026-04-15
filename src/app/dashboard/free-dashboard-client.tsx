@@ -19,6 +19,14 @@ export interface ScanBriefProp {
   created_at: string;
   issue_count: number | null;
 }
+export interface UnterseiteProp {
+  url: string;
+  erreichbar: boolean;
+  title: string;
+  noindex: boolean;
+  altMissing: number;
+  altMissingImages?: string[];
+}
 export interface FreeDashboardProps {
   firstName: string;
   plan: string;
@@ -38,6 +46,10 @@ export interface FreeDashboardProps {
   scanLimit: number;
   /** Structured tech fingerprint from the detection engine. Null for legacy scans. */
   fingerprint: TechFingerprint | null;
+  /** Total pages analyzed in the last scan (null = legacy scan without this data). */
+  totalPages: number | null;
+  /** Subpage data from the last scan. */
+  unterseiten: UnterseiteProp[] | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -257,6 +269,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     cms, bfsgOk, speedScore,
     scans, monthlyScans, scanLimit,
     fingerprint,
+    totalPages, unterseiten,
   } = props;
 
   const searchParams = useSearchParams();
@@ -735,7 +748,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 )}
                 {lastScan && (
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
-                    Gescannt am {scanDate} ·{" "}
+                    Gescannt am {scanDate}
+                    {totalPages != null && ` · ${totalPages} Seite${totalPages !== 1 ? "n" : ""} analysiert`}
+                    {" · "}
                     {redCount > 0
                       ? `${redCount} kritische Problem${redCount > 1 ? "e" : ""} gefunden`
                       : yellowCount > 0
@@ -938,8 +953,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               {" "}sind im Smart-Guard Plan verfügbar.
             </p>
 
-            {/* Deep-Scan info (free users get 10 pages too) */}
-            {isFree && (
+            {/* Deep-Scan info */}
+            {hasData && (
               <div style={{
                 marginTop: 14,
                 display: "flex", alignItems: "center", gap: 12,
@@ -959,11 +974,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </svg>
                 </div>
                 <p style={{ margin: 0, fontSize: 12, color: "rgba(122,166,255,0.75)", lineHeight: 1.55, flex: 1 }}>
-                  <strong style={{ color: "#7aa6ff", fontWeight: 700 }}>Deep-Scan (10 Seiten analysiert)</strong>
-                  {" · "}Für 30+ Seiten und erweiterte Berichte{" "}
-                  <Link href="/pricing" style={{ color: "#7aa6ff", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,166,255,0.4)", fontWeight: 600 }}>
-                    Smart-Guard Plan →
-                  </Link>
+                  <strong style={{ color: "#7aa6ff", fontWeight: 700 }}>
+                    Deep-Scan ({totalPages != null ? totalPages : "10"} Seiten analysiert)
+                  </strong>
+                  {isFree && <>{" · "}Für 30+ Seiten und erweiterte Berichte{" "}
+                    <Link href="/pricing" style={{ color: "#7aa6ff", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,166,255,0.4)", fontWeight: 600 }}>
+                      Smart-Guard Plan →
+                    </Link>
+                  </>}
                 </p>
               </div>
             )}
@@ -971,7 +989,101 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           <Divider style={{ marginBottom: 28 }} />
 
-          {/* ⑥ FINDINGS LIST */}
+          {/* ⑥ DEEP-SCAN MAP */}
+          {hasData && unterseiten && unterseiten.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <SectionLabel>Scan-Ergebnisse · Alle analysierten Seiten</SectionLabel>
+              <SectionHead>Deep-Scan Map</SectionHead>
+              <Card style={{ padding: 0, overflow: "hidden" }}>
+                {/* Startseite — vollständig sichtbar */}
+                <div style={{
+                  padding: "14px 20px",
+                  borderBottom: `1px solid ${D.divider}`,
+                  background: "rgba(0,123,255,0.04)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                      background: "rgba(0,123,255,0.1)", color: D.blueSoft,
+                      border: "1px solid rgba(0,123,255,0.2)", whiteSpace: "nowrap",
+                    }}>STARTSEITE</span>
+                    <span style={{ fontSize: 12, color: D.text, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {lastScan?.url}
+                    </span>
+                    <span style={{ marginLeft: "auto", fontSize: 11, color: D.green, fontWeight: 700, whiteSpace: "nowrap" }}>
+                      {issues.length} Problem{issues.length !== 1 ? "e" : ""}
+                    </span>
+                  </div>
+                  <p style={{ margin: "6px 0 0", fontSize: 11, color: D.textMuted }}>
+                    Vollständig analysiert · Details im Bericht unten
+                  </p>
+                </div>
+                {/* Unterseiten */}
+                {unterseiten.map((page, i) => {
+                  const pageIssues = [
+                    !page.erreichbar,
+                    !page.title || page.title === "(kein Title)",
+                    page.noindex,
+                    page.altMissing > 0,
+                  ].filter(Boolean).length;
+                  const isLast = i === unterseiten.length - 1;
+                  const shortUrl = (() => {
+                    try { return new URL(page.url).pathname || "/"; } catch { return page.url; }
+                  })();
+                  return (
+                    <div key={page.url} style={{
+                      padding: "12px 20px",
+                      borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                          background: page.erreichbar ? D.greenBg : D.redBg,
+                          color: page.erreichbar ? D.green : D.red,
+                          border: `1px solid ${page.erreichbar ? D.greenBorder : D.redBorder}`,
+                          whiteSpace: "nowrap", flexShrink: 0,
+                        }}>
+                          {page.erreichbar ? "OK" : "FEHLER"}
+                        </span>
+                        <span style={{ fontSize: 12, color: D.textSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, fontFamily: "monospace" }}>
+                          {shortUrl}
+                        </span>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
+                          color: pageIssues > 0 ? D.amber : D.textMuted,
+                        }}>
+                          {pageIssues > 0 ? `${pageIssues} Problem${pageIssues !== 1 ? "e" : ""}` : "—"}
+                        </span>
+                      </div>
+                      {/* Smart-Guard gate for subpage details */}
+                      {isFree && pageIssues > 0 && (
+                        <div style={{
+                          marginTop: 8, padding: "8px 12px", borderRadius: 6,
+                          background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)",
+                          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                        }}>
+                          <span style={{ fontSize: 11, color: "rgba(167,139,250,0.75)" }}>
+                            Detaillierte Fehleranalyse dieser Unterseite
+                          </span>
+                          <Link href="/pricing?plan=smart-guard" style={{
+                            fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 4,
+                            background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)",
+                            color: "#a78bfa", textDecoration: "none", whiteSpace: "nowrap",
+                          }}>
+                            Smart-Guard →
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </Card>
+            </div>
+          )}
+
+          <Divider style={{ marginBottom: 28 }} />
+
+          {/* ⑦ FINDINGS LIST */}
           <div style={{ marginBottom: 28 }}>
             <SectionLabel>Audit-Ergebnisse</SectionLabel>
             <SectionHead>Gefundene Probleme</SectionHead>

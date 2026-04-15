@@ -50,15 +50,19 @@ async function saveUserScan(params: {
   issueCount: number;
   diagnose: string;
   techFingerprint?: unknown;
+  totalPages?: number | null;
+  unterseitenJson?: unknown | null;
 }): Promise<string | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
     const rows = await sql`
-      INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint)
+      INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint, total_pages, unterseiten_json)
       VALUES (
         ${params.userId}, ${params.url}, 'website',
         ${params.issueCount}, ${params.diagnose},
-        ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null}
+        ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null},
+        ${params.totalPages ?? null},
+        ${params.unterseitenJson ? JSON.stringify(params.unterseitenJson) : null}
       )
       RETURNING id::text
     ` as { id: string }[];
@@ -366,12 +370,15 @@ export async function POST(req: NextRequest) {
         if (userId) {
           const issueCount = computeIssueCount(cached.scanData);
           const fp = cached.scanData.techFingerprint;
+          const cachedAudit = cached.scanData.audit as { gescannteSeiten?: number; unterseiten?: unknown[] } | undefined;
           scanId = await saveUserScan({
             userId,
             url: targetUrl,
             issueCount,
             diagnose: cached.diagnose,
             techFingerprint: fp,
+            totalPages: cachedAudit?.gescannteSeiten ?? null,
+            unterseitenJson: cachedAudit?.unterseiten ?? null,
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
@@ -686,7 +693,11 @@ Erstelle einen 360° Business Health Check Bericht auf Deutsch. Fokus: Umsatzver
 
     // Await DB write — must complete before response so the dashboard can read it
     const savedScanId = userId
-      ? await saveUserScan({ userId, url: targetUrl, issueCount, diagnose, techFingerprint })
+      ? await saveUserScan({
+          userId, url: targetUrl, issueCount, diagnose, techFingerprint,
+          totalPages: audit.gescannteSeiten,
+          unterseitenJson: audit.unterseiten,
+        })
       : null;
 
     // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes

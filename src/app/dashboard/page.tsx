@@ -391,18 +391,22 @@ export default async function DashboardPage() {
     } catch { /* non-critical */ }
   }
 
-  // Free/Single: last scan result for issue parsing + tech fingerprint
+  // Free/Single: last scan result for issue parsing + tech fingerprint + page data
   let lastScanResult: string | null = null;
   let techFingerprint: import("@/lib/tech-detector").TechFingerprint | null = null;
+  let lastScanTotalPages: number | null = null;
+  let lastScanUnterseiten: { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number; altMissingImages?: string[] }[] | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
-        SELECT result, tech_fingerprint
+        SELECT result, tech_fingerprint, total_pages, unterseiten_json
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; tech_fingerprint: unknown }[];
+      ` as { result: string | null; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown }[];
       lastScanResult = rows[0]?.result ?? null;
       techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
+      lastScanTotalPages = rows[0]?.total_pages ?? null;
+      lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;
     } catch {}
   }
 
@@ -492,6 +496,8 @@ export default async function DashboardPage() {
             monthlyScans={monthlyScans}
             scanLimit={SCAN_LIMIT}
             fingerprint={techFingerprint}
+            totalPages={lastScanTotalPages}
+            unterseiten={lastScanUnterseiten}
           />
         </Suspense>
       )}
