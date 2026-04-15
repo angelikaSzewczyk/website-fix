@@ -5,16 +5,26 @@ import { useState, useEffect, useRef } from "react";
 type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000; // 24 Stunden
+const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
 const MAX_FREE_PAGES = 10;
+
+// Timing constants for the crawl animation (total ≈ 20–22s)
+const SETUP_DELAY_MS   = 3_000;  // before first page check
+const STEP_DELAY_MS    = 1_500;  // per page
+const AI_DELAY_MS      = 1_500;  // after last page, before AI message
+// total: 3 + 10×1.5 + 1.5 = 19.5s → redirect at ~20s
+
+// Simulated page titles + issue counts
+const PAGE_TITLES  = ["Startseite", "Über uns", "Leistungen", "Kontakt", "Blog", "Datenschutz", "Impressum", "FAQ", "Preise", "Referenzen"];
+const PAGE_ISSUES  = [2, 0, 1, 0, 3, 0, 0, 1, 0, 2];
 
 function formatTimeRemaining(nextMs: number): string {
   const remaining = nextMs - Date.now();
   if (remaining <= 0) return "0h 0m";
-  const hours = Math.floor(remaining / 3_600_000);
+  const hours   = Math.floor(remaining / 3_600_000);
   const minutes = Math.floor((remaining % 3_600_000) / 60_000);
   const seconds = Math.floor((remaining % 60_000) / 1_000);
-  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0)   return `${hours}h ${minutes}m`;
   if (minutes > 0) return `${minutes}m ${seconds}s`;
   return `${seconds}s`;
 }
@@ -24,22 +34,25 @@ export default function InlineScan({
 }: {
   placeholder?: string;
 }) {
-  const [url, setUrl] = useState("");
-  const [phase, setPhase] = useState<ScanPhase>("idle");
-  const [error, setError] = useState("");
+  const [url, setUrl]                   = useState("");
+  const [phase, setPhase]               = useState<ScanPhase>("idle");
+  const [error, setError]               = useState("");
   const [crawlCounter, setCrawlCounter] = useState(0);
   const [activityFeed, setActivityFeed] = useState<{ level: string; msg: string; color: string }[]>([]);
-  const [scanBlocked, setScanBlocked] = useState<{ blocked: boolean; nextMs: number }>({ blocked: false, nextMs: 0 });
+  const [scanBlocked, setScanBlocked]   = useState<{ blocked: boolean; nextMs: number }>({ blocked: false, nextMs: 0 });
   const [timeRemaining, setTimeRemaining] = useState("");
   const [notifyNextJs, setNotifyNextJs] = useState(false);
   const [showSystemInput, setShowSystemInput] = useState(false);
-  const [systemInput, setSystemInput] = useState("");
-  const [mounted, setMounted] = useState(false);
+  const [systemInput, setSystemInput]   = useState("");
+  const [mounted, setMounted]           = useState(false);
 
-  const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const activityTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const crawlIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activityTimers    = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Stores the redirect URL when API returns before animation finishes
+  const pendingRedirectRef = useRef<string | null>(null);
+  const scanStartRef       = useRef<number>(0);
 
-  // ── 24h gate check — runs before first paint to avoid flash ──
+  // ── 24h gate check — runs before first paint ──────────────
   useEffect(() => {
     try {
       const ts = localStorage.getItem(FREE_SCAN_KEY);
@@ -55,7 +68,7 @@ export default function InlineScan({
     setMounted(true);
   }, []);
 
-  // ── Countdown refresh ─────────────────────────────────────
+  // ── Countdown refresh ──────────────────────────────────────
   useEffect(() => {
     if (!scanBlocked.blocked) return;
     const id = setInterval(() => {
@@ -70,22 +83,28 @@ export default function InlineScan({
     return () => clearInterval(id);
   }, [scanBlocked]);
 
-  // ── Crawl counter during scan ─────────────────────────────
+  // ── Crawl counter — synced to 1.5s step timing ────────────
   useEffect(() => {
     if (phase === "scanning") {
-      // Start counter after 12s (when step3 would begin)
       const startId = setTimeout(() => {
         setCrawlCounter(1);
         crawlIntervalRef.current = setInterval(() => {
           setCrawlCounter(prev => {
             if (prev >= MAX_FREE_PAGES) {
               if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
+              // Animation done — fire pending redirect if API already returned
+              if (pendingRedirectRef.current) {
+                const target = pendingRedirectRef.current;
+                pendingRedirectRef.current = null;
+                setTimeout(() => { window.location.href = target; }, 800);
+              }
               return MAX_FREE_PAGES;
             }
             return prev + 1;
           });
-        }, 400);
-      }, 12_000);
+        }, STEP_DELAY_MS);
+      }, SETUP_DELAY_MS);
+
       activityTimers.current.push(startId);
     } else {
       if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
@@ -98,15 +117,42 @@ export default function InlineScan({
 
   function startActivityFeed(scanUrl: string) {
     const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
-    const messages: { delay: number; level: string; msg: string; color: string }[] = [
-      { delay: 400,   level: "SYSTEM",   color: "#7aa6ff", msg: "Startseite wird geladen…" },
-      { delay: 1400,  level: "INFO",     color: "#8df3d3", msg: `Verbindung zu ${domain} hergestellt` },
-      { delay: 4000,  level: "INFO",     color: "#8df3d3", msg: "Meta-Daten & Links der Startseite gelesen" },
-      { delay: 7200,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Konformität der Startseite wird geprüft…" },
-      { delay: 11800, level: "CRITICAL", color: "#ff6b6b", msg: `Alt-Texte & Screenreader-Tauglichkeit analysiert` },
-      { delay: 15500, level: "WARN",     color: "#fbbf24", msg: "Performance-Snapshot: Ladezeit wird gemessen…" },
-      { delay: 20500, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Snapshot-Befunde aggregiert…" },
+
+    // Setup messages (0–2.5s)
+    const setupMessages: { delay: number; level: string; msg: string; color: string }[] = [
+      { delay: 400,   level: "SYSTEM", color: "#7aa6ff", msg: "Verbindung wird aufgebaut…" },
+      { delay: 1_400, level: "INFO",   color: "#8df3d3", msg: `${domain} — Verbindung hergestellt` },
+      { delay: 2_400, level: "INFO",   color: "#8df3d3", msg: "Sitemap & interne Links werden eingelesen…" },
     ];
+
+    // Per-page messages starting at SETUP_DELAY_MS, one every STEP_DELAY_MS
+    const pageMessages: { delay: number; level: string; msg: string; color: string }[] =
+      PAGE_TITLES.map((title, i) => {
+        const issues = PAGE_ISSUES[i];
+        const status = issues === 0
+          ? "OK"
+          : `${issues} Problem${issues > 1 ? "e" : ""} gefunden`;
+        const color  = issues === 0 ? "#8df3d3" : issues >= 3 ? "#ff6b6b" : "#fbbf24";
+        const level  = issues === 0 ? "OK"       : issues >= 3 ? "WARN"    : "INFO";
+        return {
+          delay: SETUP_DELAY_MS + i * STEP_DELAY_MS,
+          level,
+          color,
+          msg: `Prüfe URL ${i + 1}: ${title}… ${status}`,
+        };
+      });
+
+    // Final AI message
+    const aiDelay = SETUP_DELAY_MS + MAX_FREE_PAGES * STEP_DELAY_MS + AI_DELAY_MS;
+    const aiMessage = {
+      delay: aiDelay,
+      level: "AI",
+      color: "#c084fc",
+      msg: "KI-Analyse gestartet — Befunde werden aggregiert…",
+    };
+
+    const messages = [...setupMessages, ...pageMessages, aiMessage];
+
     setActivityFeed([]);
     activityTimers.current.forEach(t => clearTimeout(t));
     activityTimers.current = messages.map(({ delay, level, msg, color }) =>
@@ -117,13 +163,38 @@ export default function InlineScan({
   function cleanup() {
     if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
     activityTimers.current.forEach(t => clearTimeout(t));
+    pendingRedirectRef.current = null;
+  }
+
+  // Called when API returns successfully — delays redirect until animation is done
+  function scheduleRedirect(href: string) {
+    const elapsed  = Date.now() - scanStartRef.current;
+    const totalAnim = SETUP_DELAY_MS + MAX_FREE_PAGES * STEP_DELAY_MS + AI_DELAY_MS + 800;
+    const remaining = totalAnim - elapsed;
+
+    if (remaining <= 0) {
+      // Animation already done — redirect immediately
+      setPhase("done");
+      setTimeout(() => { window.location.href = href; }, 600);
+    } else {
+      // Store redirect URL; crawl counter effect fires it when counter hits MAX_FREE_PAGES
+      pendingRedirectRef.current = href;
+      // Fallback: guarantee redirect after totalAnim regardless
+      setTimeout(() => {
+        if (pendingRedirectRef.current === href) {
+          pendingRedirectRef.current = null;
+          setPhase("done");
+          setTimeout(() => { window.location.href = href; }, 600);
+        }
+      }, remaining + 200);
+    }
   }
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
     if (!url || phase === "scanning") return;
 
-    // Fresh localStorage check — catches stale component state
+    // Fresh localStorage check
     try {
       const ts = localStorage.getItem(FREE_SCAN_KEY);
       if (ts) {
@@ -140,6 +211,7 @@ export default function InlineScan({
     if (scanBlocked.blocked) return;
 
     cleanup();
+    scanStartRef.current = Date.now();
     setPhase("scanning");
     setError("");
     setActivityFeed([]);
@@ -147,21 +219,22 @@ export default function InlineScan({
     startActivityFeed(url);
 
     try {
-      const res = await fetch("/api/scan", {
-        method: "POST",
+      const res  = await fetch("/api/scan", {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body:    JSON.stringify({ url }),
       });
       const data = await res.json();
 
       if (data.success) {
-        // Save 24h gate timestamp + update in-component blocked state immediately
+        // Set 24h gate — BUT do NOT switch phase yet (avoids rate-limit flash during redirect)
         try {
-          const now = Date.now();
-          localStorage.setItem(FREE_SCAN_KEY, now.toString());
+          const now   = Date.now();
           const nextMs = now + FREE_SCAN_LIMIT_MS;
-          setScanBlocked({ blocked: true, nextMs });
-          setTimeRemaining(formatTimeRemaining(nextMs));
+          localStorage.setItem(FREE_SCAN_KEY, now.toString());
+          // We do NOT call setScanBlocked here — phase is still "scanning",
+          // so the blocked panel cannot render. It will show correctly after
+          // next page load / component remount.
         } catch { /* ignore */ }
 
         // Store scan result for /scan/results
@@ -189,27 +262,28 @@ export default function InlineScan({
           }));
         } catch { /* sessionStorage not available */ }
 
-        setPhase("done");
-        // Use window.location.href to bypass Next.js router cache (same fix as adc4ac9)
-        setTimeout(() => {
-          window.location.href = `/scan/results?url=${encodeURIComponent(url)}`;
-        }, 600);
+        // Delay redirect until crawl animation finishes
+        scheduleRedirect(`/scan/results?url=${encodeURIComponent(url)}`);
+
       } else if (data.errorCode === "RATE_LIMITED") {
-        // Server confirmed rate limit — sync localStorage + show blocked panel
         cleanup();
-        const now = Date.now();
+        const now   = Date.now();
         const nextMs = data.retryAfterMs ? now + data.retryAfterMs : now + FREE_SCAN_LIMIT_MS;
         try { localStorage.setItem(FREE_SCAN_KEY, (nextMs - FREE_SCAN_LIMIT_MS).toString()); } catch { /* ignore */ }
+        // Phase → idle FIRST, then set blocked — so the panel only renders in idle
+        setPhase("idle");
         setScanBlocked({ blocked: true, nextMs });
         setTimeRemaining(formatTimeRemaining(nextMs));
-        setPhase("idle");
+
       } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
         cleanup();
         setPhase("not_wordpress");
       } else if (data.errorCode === "SITE_UNREACHABLE") {
+        cleanup();
         setError("Diese Website konnte nicht erreicht werden. Bitte prüfe die URL auf Tippfehler.");
         setPhase("error");
       } else {
+        cleanup();
         setError(data.error ?? "Etwas ist schiefgelaufen.");
         setPhase("error");
       }
@@ -234,9 +308,9 @@ export default function InlineScan({
 
   const isScanning = phase === "scanning";
 
-  // ── 24h blocked state — nur nach mount zeigen (verhindert Flash) ──
+  // ── 24h blocked — only render when idle (prevents flash during active scan) ──
   if (!mounted) return <div style={{ height: 72 }} />;
-  if (scanBlocked.blocked) {
+  if (scanBlocked.blocked && phase === "idle") {
     return (
       <div style={{
         padding: "34px 28px 28px",
@@ -248,7 +322,7 @@ export default function InlineScan({
         overflow: "hidden",
         boxShadow: "0 0 60px rgba(139,92,246,0.10), inset 0 1px 0 rgba(139,92,246,0.12)",
       }}>
-        {/* Purple glow orb — top center */}
+        {/* Purple glow orb */}
         <div style={{
           position: "absolute", top: -60, left: "50%",
           transform: "translateX(-50%)",
@@ -257,7 +331,7 @@ export default function InlineScan({
           pointerEvents: "none",
         }} />
 
-        {/* Shield-Blitz Icon */}
+        {/* Shield icon */}
         <div style={{
           width: 52, height: 52, borderRadius: 14,
           background: "rgba(139,92,246,0.10)",
@@ -273,21 +347,17 @@ export default function InlineScan({
           </svg>
         </div>
 
-        {/* Headline */}
         <div style={{
           fontSize: 16, fontWeight: 800, color: "#fff",
           letterSpacing: "-0.3px", marginBottom: 8, lineHeight: 1.3,
         }}>
           Optimierung ohne Unterbrechung
         </div>
-
-        {/* Subline */}
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6, marginBottom: 22 }}>
           Du hast das Limit für anonyme Scans erreicht.<br/>
           Registriere dich kostenlos, um mehr Seiten zu prüfen.
         </div>
 
-        {/* Primary CTA — optical highlight */}
         <a href="/register" className="wf-scan-limit-cta" style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           padding: "13px 26px", borderRadius: 11,
@@ -301,7 +371,6 @@ export default function InlineScan({
           Jetzt unbegrenzt scannen &amp; absichern →
         </a>
 
-        {/* Countdown — secondary, muted */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "4px 12px", borderRadius: 20, marginBottom: 14,
@@ -320,7 +389,6 @@ export default function InlineScan({
           </span>
         </div>
 
-        {/* Secondary link */}
         <div>
           <a href="/register" style={{
             fontSize: 12, color: "rgba(167,139,250,0.6)",
@@ -342,7 +410,6 @@ export default function InlineScan({
         <form onSubmit={handleScan} style={{ position: "relative" }}>
           <label htmlFor="inline-scan-url" className="sr-only">Website-URL eingeben</label>
           <div className="wf-scan-form">
-            {/* Lock icon — hidden on mobile via CSS */}
             <svg
               className="wf-scan-lock-icon"
               width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -382,7 +449,6 @@ export default function InlineScan({
             </button>
           </div>
 
-          {/* Trust chips */}
           <div className="wf-scan-chips">
             {["25 Seiten Deep Scan inkl.", "BFSG 2025 Ready", "DSGVO-konform"].map(t => (
               <span key={t} style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", gap: 5 }}>
@@ -429,7 +495,13 @@ export default function InlineScan({
             {[
               { label: "Crawl gestartet", done: true },
               { label: "Sitemap & Links analysiert", done: true },
-              { label: crawlCounter > 0 ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…` : "Prüfe Relevanz gefundener URLs…", done: false, active: true },
+              {
+                label: crawlCounter > 0
+                  ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…`
+                  : "Prüfe Relevanz gefundener URLs…",
+                done: false,
+                active: true,
+              },
               { label: "KI-Diagnose wird erstellt…", done: false },
             ].map((step, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
@@ -457,7 +529,7 @@ export default function InlineScan({
             ))}
           </div>
 
-          {/* Activity feed */}
+          {/* Activity feed — step-by-step page checks */}
           {activityFeed.length > 0 && (
             <div style={{
               padding: "10px 18px",
@@ -467,6 +539,8 @@ export default function InlineScan({
               borderRadius: "0 0 12px 12px",
               display: "flex", flexDirection: "column", gap: 6,
               fontFamily: "monospace",
+              maxHeight: 220,
+              overflowY: "auto",
             }}>
               {activityFeed.map((entry, i) => (
                 <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start", fontSize: 10 }}>
@@ -509,7 +583,6 @@ export default function InlineScan({
           position: "relative",
           overflow: "hidden",
         }}>
-          {/* Subtle blue glow */}
           <div style={{
             position: "absolute", top: 0, right: 0,
             width: "60%", height: "100%",
@@ -517,7 +590,6 @@ export default function InlineScan({
             pointerEvents: "none",
           }} />
 
-          {/* Icon + Headline */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14, position: "relative" }}>
             <div style={{
               flexShrink: 0,
@@ -526,7 +598,6 @@ export default function InlineScan({
               border: "1px solid rgba(99,102,241,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              {/* Target / Focus icon */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -545,10 +616,8 @@ export default function InlineScan({
             </div>
           </div>
 
-          {/* Divider */}
           <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 18px" }} />
 
-          {/* Actions row */}
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
             <button
               onClick={reset}
