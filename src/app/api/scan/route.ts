@@ -455,7 +455,9 @@ export async function POST(req: NextRequest) {
     if (!forceRefresh) {
       const ttl    = cacheTtlHours(userPlan);
       const cached = await getCachedScan(targetUrl, ttl);
-      if (cached) {
+      // Treat cache as stale if it's from an old version without audit data
+      const cacheHasAudit = !!(cached?.scanData?.audit as { unterseiten?: unknown[] } | undefined)?.unterseiten?.length;
+      if (cached && cacheHasAudit) {
         const { cachedAt, ...payload } = cached;
         let scanId: string | null = null;
         if (userId) {

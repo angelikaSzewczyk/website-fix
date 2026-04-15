@@ -145,66 +145,61 @@ function parseIssues(text: string): ParsedIssue[] {
 }
 
 /**
- * Technical fallback — builds issues directly from crawler data when
- * the AI text parsed to 0 issues but real problems exist.
+ * Builds a full structured issue list directly from unterseiten_json crawler data.
+ * Used when issues_json is null (older scans) to avoid re-parsing fragile Claude text.
+ * Produces per-page issues so nothing is lost.
+ */
+function buildIssuesFromUnterseiten(
+  unterseiten: { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number }[],
+  issueCount: number | null,
+): ParsedIssue[] {
+  const issues: ParsedIssue[] = [];
+  const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
+
+  // ── Global aggregates ──
+  const totalAltMissing = unterseiten.reduce((s, p) => s + p.altMissing, 0);
+  if (totalAltMissing > 0)
+    issues.push({ severity: "red", title: `${totalAltMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: "Barrierefreiheitspflicht ab 06/2025 — Abmahnrisiko für alle betroffenen Seiten.", category: "recht" });
+
+  const unreachable = unterseiten.filter(p => !p.erreichbar);
+  if (unreachable.length > 0)
+    issues.push({ severity: "red", title: `${unreachable.length} Unterseite${unreachable.length > 1 ? "n" : ""} nicht erreichbar`, body: `404/5xx auf: ${unreachable.slice(0, 3).map(p => toPath(p.url)).join(", ")}`, category: "technik" });
+
+  const noTitle = unterseiten.filter(p => !p.title || p.title === "(kein Title)");
+  if (noTitle.length > 0)
+    issues.push({ severity: "red", title: `${noTitle.length} Seite${noTitle.length > 1 ? "n" : ""} ohne Title-Tag`, body: "Fehlende Title-Tags schaden dem Google-Ranking direkt.", category: "technik" });
+
+  const noindex = unterseiten.filter(p => p.noindex);
+  if (noindex.length > 0)
+    issues.push({ severity: "yellow", title: `Noindex auf ${noindex.length} Seite${noindex.length > 1 ? "n" : ""}`, body: `Für Google unsichtbar: ${noindex.slice(0, 3).map(p => toPath(p.url)).join(", ")}`, category: "technik" });
+
+  // ── Per-page issues ──
+  for (const p of unterseiten) {
+    const path = toPath(p.url);
+    if (!p.erreichbar) continue; // already covered in aggregate above
+    if (!p.title || p.title === "(kein Title)")
+      issues.push({ severity: "red", title: `Title-Tag fehlt: ${path}`, body: "Fehlender Title-Tag verhindert gutes Google-Ranking.", category: "technik" });
+    if (!p.h1 || p.h1 === "(kein H1)")
+      issues.push({ severity: "yellow", title: `H1 fehlt: ${path}`, body: "Fehlende H1-Überschrift schwächt das SEO-Signal.", category: "technik" });
+    if (p.altMissing > 0)
+      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text (BFSG 2025).`, category: "recht" });
+  }
+
+  // If we still have nothing but issueCount > 0, generic fallback
+  if (issues.length === 0 && (issueCount ?? 0) > 0)
+    issues.push({ severity: "yellow", title: `${issueCount} technische Problem${issueCount !== 1 ? "e" : ""} gefunden`, body: "Starte einen neuen Scan für den vollständigen Bericht.", category: "technik" });
+
+  return issues;
+}
+
+/**
+ * Minimal fallback when neither issues_json nor unterseiten_json is available.
  */
 function buildTechFallback(
   unterseiten: { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[],
   issueCount: number | null,
 ): ParsedIssue[] {
-  const issues: ParsedIssue[] = [];
-
-  const unreachable = unterseiten.filter(p => !p.erreichbar);
-  if (unreachable.length > 0) {
-    issues.push({
-      severity: "red",
-      title: `${unreachable.length} Unterseite${unreachable.length > 1 ? "n" : ""} nicht erreichbar`,
-      body: `404/5xx-Fehler auf: ${unreachable.slice(0, 3).map(p => { try { return new URL(p.url).pathname; } catch { return p.url; } }).join(", ")}`,
-      category: "technik",
-    });
-  }
-
-  const noTitle = unterseiten.filter(p => !p.title || p.title === "(kein Title)");
-  if (noTitle.length > 0) {
-    issues.push({
-      severity: "red",
-      title: `${noTitle.length} Seite${noTitle.length > 1 ? "n" : ""} ohne Title-Tag`,
-      body: "Fehlende Title-Tags schaden dem Google-Ranking direkt.",
-      category: "technik",
-    });
-  }
-
-  const totalAltMissing = unterseiten.reduce((s, p) => s + p.altMissing, 0);
-  if (totalAltMissing > 0) {
-    issues.push({
-      severity: "red",
-      title: `${totalAltMissing} Bild${totalAltMissing > 1 ? "er" : ""} ohne Alt-Text (BFSG 2025)`,
-      body: "Barrierefreiheitspflicht ab 06/2025: Alt-Texte sind für Screen-Reader zwingend erforderlich.",
-      category: "recht",
-    });
-  }
-
-  const noindex = unterseiten.filter(p => p.noindex);
-  if (noindex.length > 0) {
-    issues.push({
-      severity: "yellow",
-      title: `Noindex-Direktive auf ${noindex.length} Seite${noindex.length > 1 ? "n" : ""}`,
-      body: "Diese Seiten sind für Google unsichtbar — prüfen, ob das gewollt ist.",
-      category: "technik",
-    });
-  }
-
-  // If issue_count > 0 but we built nothing, add generic issue so user isn't misled
-  if (issues.length === 0 && (issueCount ?? 0) > 0) {
-    issues.push({
-      severity: "yellow",
-      title: `${issueCount} technische Problem${issueCount !== 1 ? "e" : ""} gefunden`,
-      body: "Starte einen neuen Scan für den vollständigen Bericht.",
-      category: "technik",
-    });
-  }
-
-  return issues;
+  return buildIssuesFromUnterseiten(unterseiten, issueCount);
 }
 
 // ─── Fix Guide per CMS ─────────────────────────────────────────────────────────
@@ -532,18 +527,25 @@ export default async function DashboardPage() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 
-  // PRIMARY: use issues_json stored during scan (ground truth, no re-parsing)
-  // FALLBACK 1: parse AI text (older scans without issues_json)
-  // FALLBACK 2: build from crawler data when parser yields nothing actionable
+  // Priority chain — stops at first source that yields actionable issues:
+  // 1. issues_json (structured, stored during scan — ground truth)
+  // 2. unterseiten_json (per-page crawler data — reliable even for older scans)
+  // 3. parseIssues(AI text) — fragile, last resort
+  const unterseiten4Issues = (lastScanUnterseiten ?? []) as { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number }[];
   let issues: ParsedIssue[];
+
   if (lastScanIssuesJson && lastScanIssuesJson.length > 0) {
+    // Ground truth from scan
     issues = lastScanIssuesJson;
+  } else if (unterseiten4Issues.length > 0) {
+    // Build from raw crawler data — no text parsing needed
+    issues = buildIssuesFromUnterseiten(unterseiten4Issues, lastScan?.issue_count ?? null);
   } else {
+    // Last resort: parse Claude text, with tech fallback if it yields nothing actionable
     issues = lastScanResult ? parseIssues(lastScanResult) : [];
     const aiHasActionable = issues.filter(i => i.severity !== "green").length;
-    const unterseiten4Fallback = (lastScanUnterseiten ?? []) as { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[];
     if (aiHasActionable === 0) {
-      const fallback = buildTechFallback(unterseiten4Fallback, lastScan?.issue_count ?? null);
+      const fallback = buildTechFallback(unterseiten4Issues, lastScan?.issue_count ?? null);
       if (fallback.length > 0) issues = fallback;
     }
   }
