@@ -647,7 +647,7 @@ function ResultsInner() {
             <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
               {!isDemo && entdeckteUrls > pagesTotal
                 ? <><span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{pagesTotal} von {entdeckteUrls}</span> Seiten analysiert (Free-Limit)</>
-                : <>{pagesTotal} {pagesTotal === 1 ? "Seite" : "Unterseiten"} analysiert</>
+                : <>{pagesTotal} {pagesTotal === 1 ? "Seite" : "Seiten"} analysiert</>
               }
               {!isDemo && gefilterteUrls > 0 && ` · ${gefilterteUrls} Feeds/XML übersprungen`}
               {!isDemo && critErrors > 0 && (
@@ -998,7 +998,7 @@ function ResultsInner() {
             <div>
               <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Deep-Scan Map</p>
               <h2 style={{ margin: "0 0 6px", fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-                {isDemo ? "Alle gefundenen Unterseiten" : `${pagesTotal} ${pagesTotal === 1 ? "Seite" : "Unterseiten"} analysiert`}
+                {isDemo ? "Alle gefundenen Unterseiten" : `${pagesTotal} ${pagesTotal === 1 ? "Seite" : "Seiten"} analysiert`}
               </h2>
               {!isDemo && (entdeckteUrls > pagesTotal || skippedCount > 0) && (
                 <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
@@ -1423,7 +1423,7 @@ function ResultsInner() {
                 <div style={{ textAlign: "center", background: "rgba(11,12,16,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "28px 36px", maxWidth: 520, width: "100%", backdropFilter: "blur(8px)" }}>
                   <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.025em" }}>{lockedCount} Befunde & Fix-Anleitungen gesperrt</div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: 20 }}>
-                    Schalte alle KI-generierten Code-Fixes<br />für <strong style={{ color: "#fff" }}>{pagesTotal} Unterseiten</strong> frei — inkl. BFSG-Dokumentation.
+                    Schalte alle KI-generierten Code-Fixes<br />für <strong style={{ color: "#fff" }}>{pagesTotal} Seiten</strong> frei — inkl. BFSG-Dokumentation.
                   </div>
                   <Link href="/register" style={{ display: "inline-block", padding: "12px 28px", borderRadius: 10, background: "linear-gradient(90deg, #007BFF, #0057b8)", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none", boxShadow: "0 4px 20px rgba(0,123,255,0.45)" }}>
                     Vollständigen Fehler-Report &amp; Fix-Anleitungen freischalten →
