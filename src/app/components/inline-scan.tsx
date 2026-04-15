@@ -6,17 +6,18 @@ type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
 
 const FREE_SCAN_KEY = "wf_free_scan_ts";
 const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
-const MAX_FREE_PAGES = 10;
 
-// Timing constants for the crawl animation (total ≈ 20–22s)
-const SETUP_DELAY_MS   = 3_000;  // before first page check
-const STEP_DELAY_MS    = 1_500;  // per page
-const AI_DELAY_MS      = 1_500;  // after last page, before AI message
-// total: 3 + 10×1.5 + 1.5 = 19.5s → redirect at ~20s
+// Timing constants for the crawl animation
+const SETUP_DELAY_MS = 3_000;  // before first page check
+const STEP_DELAY_MS  = 1_500;  // per discovered page
+const AI_DELAY_MS    = 1_500;  // after last page, before AI message
 
-// Simulated page titles + issue counts
-const PAGE_TITLES  = ["Startseite", "Über uns", "Leistungen", "Kontakt", "Blog", "Datenschutz", "Impressum", "FAQ", "Preise", "Referenzen"];
-const PAGE_ISSUES  = [2, 0, 1, 0, 3, 0, 0, 1, 0, 2];
+function getHostname(u: string): string {
+  try { return new URL(u).hostname; } catch { return u; }
+}
+function getPathname(u: string): string {
+  try { const p = new URL(u).pathname; return p === "/" ? "(Startseite)" : p; } catch { return u; }
+}
 
 function formatTimeRemaining(nextMs: number): string {
   const remaining = nextMs - Date.now();
@@ -49,8 +50,10 @@ export default function InlineScan({
   const crawlIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const activityTimers    = useRef<ReturnType<typeof setTimeout>[]>([]);
   // Stores the redirect URL when API returns before animation finishes
-  const pendingRedirectRef = useRef<string | null>(null);
-  const scanStartRef       = useRef<number>(0);
+  const pendingRedirectRef  = useRef<string | null>(null);
+  const scanStartRef        = useRef<number>(0);
+  // Real discovered page count — set once /api/scan/discover returns
+  const pageTotalRef        = useRef<number | null>(null);
 
   // ── 24h gate check — runs before first paint ──────────────
   useEffect(() => {
@@ -83,93 +86,130 @@ export default function InlineScan({
     return () => clearInterval(id);
   }, [scanBlocked]);
 
-  // ── Crawl counter — synced to 1.5s step timing ────────────
+  // ── Crawl counter — starts after SETUP_DELAY_MS, waits for real page count ──
   useEffect(() => {
-    if (phase === "scanning") {
-      const startId = setTimeout(() => {
+    if (phase !== "scanning") {
+      if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
+      if (phase === "idle") setCrawlCounter(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    // After setup delay, wait for discover to return, then count up to real page total
+    const outerTimer = setTimeout(() => {
+      if (cancelled) return;
+
+      const tryStart = () => {
+        if (cancelled) return;
+        const total = pageTotalRef.current;
+
+        if (total === null) {
+          // Discover not back yet — poll every 150ms
+          setTimeout(tryStart, 150);
+          return;
+        }
+
+        if (total === 0) {
+          // No subpages — animation is just setup + AI message; fire redirect when ready
+          const waitId = setTimeout(() => {
+            if (pendingRedirectRef.current) {
+              const target = pendingRedirectRef.current;
+              pendingRedirectRef.current = null;
+              setTimeout(() => { window.location.href = target; }, 800);
+            }
+          }, AI_DELAY_MS + 800);
+          activityTimers.current.push(waitId);
+          return;
+        }
+
         setCrawlCounter(1);
         crawlIntervalRef.current = setInterval(() => {
           setCrawlCounter(prev => {
-            if (prev >= MAX_FREE_PAGES) {
+            const max = pageTotalRef.current ?? 1;
+            if (prev >= max) {
               if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
-              // Animation done — fire pending redirect if API already returned
               if (pendingRedirectRef.current) {
                 const target = pendingRedirectRef.current;
                 pendingRedirectRef.current = null;
                 setTimeout(() => { window.location.href = target; }, 800);
               }
-              return MAX_FREE_PAGES;
+              return max;
             }
             return prev + 1;
           });
         }, STEP_DELAY_MS);
-      }, SETUP_DELAY_MS);
+      };
 
-      activityTimers.current.push(startId);
-    } else {
-      if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
-      if (phase === "idle") setCrawlCounter(0);
-    }
+      tryStart();
+    }, SETUP_DELAY_MS);
+
+    activityTimers.current.push(outerTimer);
     return () => {
+      cancelled = true;
       if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
     };
   }, [phase]);
 
-  function startActivityFeed(scanUrl: string) {
-    const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
+  function scheduleMessage(delay: number, level: string, color: string, msg: string) {
+    const t = setTimeout(() => setActivityFeed(prev => [...prev, { level, msg, color }]), delay);
+    activityTimers.current.push(t);
+  }
 
-    // Setup messages (0–2.5s)
-    const setupMessages: { delay: number; level: string; msg: string; color: string }[] = [
-      { delay: 400,   level: "SYSTEM", color: "#7aa6ff", msg: "Verbindung wird aufgebaut…" },
-      { delay: 1_400, level: "INFO",   color: "#8df3d3", msg: `${domain} — Verbindung hergestellt` },
-      { delay: 2_400, level: "INFO",   color: "#8df3d3", msg: "Sitemap & interne Links werden eingelesen…" },
-    ];
+  function startSetupMessages(scanUrl: string) {
+    const domain = getHostname(scanUrl);
+    scheduleMessage(400,   "SYSTEM", "#7aa6ff", "Verbindung wird aufgebaut…");
+    scheduleMessage(1_400, "INFO",   "#8df3d3", `${domain} — Verbindung hergestellt`);
+    scheduleMessage(2_400, "INFO",   "#8df3d3", "Sitemap & interne Links werden eingelesen…");
+  }
 
-    // Per-page messages starting at SETUP_DELAY_MS, one every STEP_DELAY_MS
-    const pageMessages: { delay: number; level: string; msg: string; color: string }[] =
-      PAGE_TITLES.map((title, i) => {
-        const issues = PAGE_ISSUES[i];
-        const status = issues === 0
-          ? "OK"
-          : `${issues} Problem${issues > 1 ? "e" : ""} gefunden`;
-        const color  = issues === 0 ? "#8df3d3" : issues >= 3 ? "#ff6b6b" : "#fbbf24";
-        const level  = issues === 0 ? "OK"       : issues >= 3 ? "WARN"    : "INFO";
-        return {
-          delay: SETUP_DELAY_MS + i * STEP_DELAY_MS,
-          level,
-          color,
-          msg: `Prüfe URL ${i + 1}: ${title}… ${status}`,
-        };
-      });
+  function startPageMessages(urls: string[]) {
+    const elapsed  = Date.now() - scanStartRef.current;
+    const baseDelay = Math.max(0, SETUP_DELAY_MS - elapsed);
 
-    // Final AI message
-    const aiDelay = SETUP_DELAY_MS + MAX_FREE_PAGES * STEP_DELAY_MS + AI_DELAY_MS;
-    const aiMessage = {
-      delay: aiDelay,
-      level: "AI",
-      color: "#c084fc",
-      msg: "KI-Analyse gestartet — Befunde werden aggregiert…",
-    };
+    if (urls.length === 0) {
+      scheduleMessage(
+        baseDelay + 300,
+        "INFO", "#8df3d3",
+        "Keine weiteren Unterseiten gefunden — Snapshot-Analyse der Startseite abgeschlossen."
+      );
+      scheduleMessage(
+        baseDelay + 300 + AI_DELAY_MS,
+        "AI", "#c084fc",
+        "KI-Analyse gestartet — Befunde werden aggregiert…"
+      );
+      return;
+    }
 
-    const messages = [...setupMessages, ...pageMessages, aiMessage];
+    urls.forEach((pageUrl, i) => {
+      scheduleMessage(
+        baseDelay + i * STEP_DELAY_MS,
+        "INFO", "#8df3d3",
+        `Prüfe URL ${i + 1}/${urls.length}: ${pageUrl}…`
+      );
+    });
 
-    setActivityFeed([]);
-    activityTimers.current.forEach(t => clearTimeout(t));
-    activityTimers.current = messages.map(({ delay, level, msg, color }) =>
-      setTimeout(() => setActivityFeed(prev => [...prev, { level, msg, color }]), delay)
+    // AI message after all pages
+    scheduleMessage(
+      baseDelay + urls.length * STEP_DELAY_MS + AI_DELAY_MS,
+      "AI", "#c084fc",
+      "KI-Analyse gestartet — Befunde werden aggregiert…"
     );
   }
 
   function cleanup() {
     if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
     activityTimers.current.forEach(t => clearTimeout(t));
+    activityTimers.current = [];
     pendingRedirectRef.current = null;
+    pageTotalRef.current = null;
   }
 
   // Called when API returns successfully — delays redirect until animation is done
   function scheduleRedirect(href: string) {
     const elapsed  = Date.now() - scanStartRef.current;
-    const totalAnim = SETUP_DELAY_MS + MAX_FREE_PAGES * STEP_DELAY_MS + AI_DELAY_MS + 800;
+    const pageCount = pageTotalRef.current ?? 10;
+    const totalAnim = SETUP_DELAY_MS + pageCount * STEP_DELAY_MS + AI_DELAY_MS + 800;
     const remaining = totalAnim - elapsed;
 
     if (remaining <= 0) {
@@ -211,12 +251,31 @@ export default function InlineScan({
     if (scanBlocked.blocked) return;
 
     cleanup();
+    pageTotalRef.current = null;  // reset discover state
     scanStartRef.current = Date.now();
     setPhase("scanning");
     setError("");
     setActivityFeed([]);
     setCrawlCounter(0);
-    startActivityFeed(url);
+    startSetupMessages(url);
+
+    // ── Parallel: discover real URLs + full scan ──────────────
+    // Discover fires first (~1-2s), populates activity feed with real URLs
+    fetch("/api/scan/discover", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    })
+      .then(r => r.json())
+      .then((d: { urls?: string[]; count?: number }) => {
+        const urls = d.urls ?? [];
+        pageTotalRef.current = urls.length;  // unblock crawl counter
+        startPageMessages(urls);
+      })
+      .catch(() => {
+        pageTotalRef.current = 0;
+        startPageMessages([]);
+      });
 
     try {
       const res  = await fetch("/api/scan", {
@@ -496,8 +555,10 @@ export default function InlineScan({
               { label: "Crawl gestartet", done: true },
               { label: "Sitemap & Links analysiert", done: true },
               {
-                label: crawlCounter > 0
-                  ? `Analysiere Seite ${crawlCounter} von ${MAX_FREE_PAGES}…`
+                label: crawlCounter > 0 && pageTotalRef.current
+                  ? `Analysiere Seite ${crawlCounter} von ${pageTotalRef.current}…`
+                  : crawlCounter > 0
+                  ? `Analysiere Seite ${crawlCounter}…`
                   : "Prüfe Relevanz gefundener URLs…",
                 done: false,
                 active: true,
