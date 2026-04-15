@@ -645,8 +645,10 @@ function ResultsInner() {
               <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{displayDomain}</span>
             </h1>
             <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
-              {pagesTotal} {pagesTotal === 1 ? "Seite" : "Unterseiten"} analysiert
-              {!isDemo && entdeckteUrls > pagesTotal && ` · von ${entdeckteUrls} entdeckten URLs`}
+              {!isDemo && entdeckteUrls > pagesTotal
+                ? <><span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{pagesTotal} von {entdeckteUrls}</span> Seiten analysiert (Free-Limit)</>
+                : <>{pagesTotal} {pagesTotal === 1 ? "Seite" : "Unterseiten"} analysiert</>
+              }
               {!isDemo && gefilterteUrls > 0 && ` · ${gefilterteUrls} Feeds/XML übersprungen`}
               {!isDemo && critErrors > 0 && (
                 <span style={{ color: "#ef4444", fontWeight: 600 }}> · {critErrors} kritische Fehler gefunden</span>

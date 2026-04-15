@@ -45,8 +45,15 @@ export default function RegisterPage() {
           const raw = sessionStorage.getItem("wf_scan_result");
           if (raw) {
             const scan = JSON.parse(raw) as {
-              url?: string; diagnose?: string;
-              issueCount?: number; techFingerprint?: unknown;
+              url?: string; diagnose?: string; issueCount?: number;
+              techFingerprint?: unknown; unterseiten?: unknown[];
+              pages?: number; altMissingCount?: number;
+              brokenLinksCount?: number; duplicateTitlesCount?: number;
+              duplicateMetasCount?: number; hasUnreachable?: boolean;
+              orphanedPagesCount?: number; noIndex?: boolean;
+              hasTitle?: boolean; hasMeta?: boolean; hasH1?: boolean;
+              hasSitemap?: boolean; robotsBlocked?: boolean; https?: boolean;
+              entdeckteUrls?: number;
             };
             if (scan?.url) {
               await fetch("/api/scan/claim", {
@@ -57,6 +64,21 @@ export default function RegisterPage() {
                   diagnose: scan.diagnose ?? "",
                   issueCount: scan.issueCount ?? 0,
                   techFingerprint: scan.techFingerprint ?? null,
+                  unterseiten: scan.unterseiten ?? [],
+                  totalPages: scan.pages ?? null,
+                  altMissingCount: scan.altMissingCount ?? 0,
+                  brokenLinksCount: scan.brokenLinksCount ?? 0,
+                  duplicateTitlesCount: scan.duplicateTitlesCount ?? 0,
+                  duplicateMetasCount: scan.duplicateMetasCount ?? 0,
+                  hasUnreachable: scan.hasUnreachable ?? false,
+                  orphanedPagesCount: scan.orphanedPagesCount ?? 0,
+                  https: scan.https ?? true,
+                  hasTitle: scan.hasTitle ?? true,
+                  hasMeta: scan.hasMeta ?? true,
+                  hasH1: scan.hasH1 ?? true,
+                  hasSitemap: scan.hasSitemap ?? true,
+                  robotsBlocked: scan.robotsBlocked ?? false,
+                  noIndex: scan.noIndex ?? false,
                 }),
               });
             }
