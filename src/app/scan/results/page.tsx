@@ -226,17 +226,20 @@ const AMBER = "#c9820a";
 const AMBER_BG   = "rgba(201,130,10,0.06)";
 const AMBER_BDR  = "rgba(201,130,10,0.22)";
 
-function ProtoRow({ severity, title, detail, law, isLocked = false }: {
+function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
   severity: "red" | "yellow";
   title: string;
   detail?: string;
   law?: string;
-  /** true on the anonymous results page — hides exact filenames/paths */
-  isLocked?: boolean;
+  /** "anon" = hide filenames | "free" = show filenames + manual hint | "paid" = show everything */
+  tier?: "anon" | "free" | "paid";
+  /** Short manual fix instruction shown to free users instead of KI-code-fix */
+  manualHint?: string;
 }) {
   const c  = severity === "red" ? "#ef4444" : AMBER;
   const bg = severity === "red" ? "rgba(239,68,68,0.07)" : AMBER_BG;
   const bd = severity === "red" ? "rgba(239,68,68,0.22)" : AMBER_BDR;
+  const showDetail = tier !== "anon";
   return (
     <div style={{ padding: "9px 14px", borderRadius: 9, display: "flex", alignItems: "flex-start", gap: 10, background: bg, border: `1px solid ${bd}` }}>
       <span style={{ color: c, flexShrink: 0, marginTop: 2, fontSize: 12, fontWeight: 800 }}>
@@ -247,9 +250,9 @@ function ProtoRow({ severity, title, detail, law, isLocked = false }: {
         <div style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: "monospace", marginBottom: detail ? 3 : 0 }}>
           {title}
         </div>
-        {/* Detail: locked = blur placeholder | unlocked = real value */}
+        {/* Detail: anon = lock placeholder | free/paid = real value */}
         {detail && (
-          isLocked ? (
+          !showDetail ? (
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: law ? 3 : 0 }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -259,10 +262,16 @@ function ProtoRow({ severity, title, detail, law, isLocked = false }: {
               </span>
             </div>
           ) : (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "monospace", marginBottom: law ? 3 : 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "monospace", marginBottom: (law || manualHint) ? 3 : 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {detail}
             </div>
           )
+        )}
+        {/* Manual hint — free users only */}
+        {showDetail && manualHint && tier === "free" && (
+          <div style={{ fontSize: 11, color: "rgba(141,243,211,0.7)", marginBottom: law ? 3 : 0, fontStyle: "italic" }}>
+            Lösungsweg: {manualHint}
+          </div>
         )}
         {law && (
           <div style={{ fontSize: 10, color: c, opacity: 0.7, fontWeight: 600 }}>{law}</div>
@@ -281,10 +290,10 @@ function ProtoRow({ severity, title, detail, law, isLocked = false }: {
 }
 
 // ── Beweis-Modus: expandable panel — entry count ALWAYS equals header "N Fehler" ──
-function ProtoPanelContent({ p, isLocked = false }: {
+function ProtoPanelContent({ p, tier = "anon" }: {
   p: PageItem;
-  /** true = anonymous page (hides filenames, shows register CTA) */
-  isLocked?: boolean;
+  /** "anon" = filenames hidden | "free" = filenames + manual hints | "paid" = everything */
+  tier?: "anon" | "free" | "paid";
 }) {
   const isUnreachable = !p.erreichbar;
   const altImages     = p.altMissingImages ?? [];
@@ -320,69 +329,76 @@ function ProtoPanelContent({ p, isLocked = false }: {
 
         {/* 1. Seite nicht erreichbar — counts as 1 */}
         {isUnreachable && (
-          <ProtoRow severity="red" isLocked={isLocked}
+          <ProtoRow severity="red" tier={tier}
             title="HTTP: Seite nicht erreichbar"
             detail={`GET ${p.path} → 404 Not Found / Connection Timeout`}
             law="BFSG §4 — Barrierefreie Erreichbarkeit aller Inhalte"
+            manualHint="Prüfe Server-Status und richte eine 301-Weiterleitung auf die korrekte URL ein"
           />
         )}
 
         {/* 2. Kein H1 — counts as 1 */}
         {p.missingH1 && (
-          <ProtoRow severity="red" isLocked={isLocked}
+          <ProtoRow severity="red" tier={tier}
             title="<h1>-Tag fehlt"
             detail="Überschriften-Hierarchie fehlt — Screenreader verlieren Seitenstruktur"
             law="BFSG §3 Abs. 2 · EN 301 549 Kap. 9.1.3.1 · WCAG 1.3.1"
+            manualHint='Füge <h1>Dein Seitenthema</h1> einmalig pro Seite in den Seiteninhalt ein'
           />
         )}
 
         {/* 3. Kein Title — counts as 1 */}
         {p.missingTitle && (
-          <ProtoRow severity="yellow" isLocked={isLocked}
+          <ProtoRow severity="yellow" tier={tier}
             title="<title>-Tag fehlt"
             detail="Kein Seitentitel — erscheint namenlos in Suchergebnissen"
             law="SEO-Grundlage · BFSG §3 Abs. 2 (Identifizierbarkeit)"
+            manualHint='Ergänze <title>Seitenname | Deine Marke</title> im WordPress-SEO-Plugin (Yoast/Rank Math)'
           />
         )}
 
         {/* 4. Keine Meta-Description — counts as 1 */}
         {p.missingMeta && (
-          <ProtoRow severity="yellow" isLocked={isLocked}
+          <ProtoRow severity="yellow" tier={tier}
             title="Meta-Description fehlt"
             detail="Google wählt beliebigen Text als Snippet — CTR sinkt"
             law="SEO-Best Practice"
+            manualHint="Öffne die Seite im Editor → SEO-Plugin → Meta-Beschreibung ausfüllen (120–160 Zeichen)"
           />
         )}
 
         {/* 5+. Alt-missing images — each image = 1 entry */}
         {altImages.map((img, idx) => (
-          <ProtoRow key={`img-named-${idx}`} severity="red" isLocked={isLocked}
+          <ProtoRow key={`img-named-${idx}`} severity="red" tier={tier}
             title={`<img alt=""> fehlt`}
             detail={img}
             law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
+            manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
           />
         ))}
         {Array.from({ length: extraAlt }, (_, i) => (
-          <ProtoRow key={`img-extra-${i}`} severity="red" isLocked={isLocked}
+          <ProtoRow key={`img-extra-${i}`} severity="red" tier={tier}
             title={`<img alt=""> fehlt`}
             detail="Dateiname nicht ermittelt"
             law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
+            manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
           />
         ))}
 
         {/* Last. noindex — counts as 1 */}
         {p.noindex && (
-          <ProtoRow severity="yellow" isLocked={isLocked}
+          <ProtoRow severity="yellow" tier={tier}
             title={`<meta name="robots" content="noindex"> aktiv`}
             detail="Seite explizit von Google-Indexierung ausgeschlossen"
             law="Kein organischer Traffic · direkter Umsatzverlust"
+            manualHint='Entferne content="noindex" im SEO-Plugin (Yoast: "Suchmaschinen-Sichtbarkeit" aktivieren)'
           />
         )}
 
       </div>
 
-      {/* ── Locked CTA: only on anonymous page ── */}
-      {isLocked && (
+      {/* ── CTA je nach Tier ── */}
+      {tier === "anon" && (
         <div style={{
           marginTop: 12, padding: "10px 14px", borderRadius: 9,
           background: "rgba(122,166,255,0.06)", border: "1px solid rgba(122,166,255,0.18)",
@@ -393,7 +409,7 @@ function ProtoPanelContent({ p, isLocked = false }: {
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
-              Dateinamen &amp; KI-Fix nach Registrierung sichtbar
+              Dateinamen &amp; Lösungsweg nach Registrierung kostenlos freischalten
             </span>
           </div>
           <Link href="/register" style={{
@@ -402,6 +418,30 @@ function ProtoPanelContent({ p, isLocked = false }: {
             border: "1px solid rgba(122,166,255,0.3)", textDecoration: "none", whiteSpace: "nowrap",
           }}>
             Kostenlos freischalten →
+          </Link>
+        </div>
+      )}
+
+      {tier === "free" && (
+        <div style={{
+          marginTop: 12, padding: "10px 14px", borderRadius: 9,
+          background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.18)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+              KI-Auto-Fix (fertiger Code, Copy-Paste-bereit) nur mit Smart-Guard
+            </span>
+          </div>
+          <Link href="/register?plan=smart-guard" style={{
+            fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
+            background: "rgba(192,132,252,0.14)", color: "#c084fc",
+            border: "1px solid rgba(192,132,252,0.3)", textDecoration: "none", whiteSpace: "nowrap",
+          }}>
+            Smart-Guard freischalten →
           </Link>
         </div>
       )}
@@ -433,13 +473,14 @@ function ResultsInner() {
   const [scan, setScan]         = useState<StoredScan | null>(null);
   const [loaded, setLoaded]     = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  // "anon" | "free" | "paid" — determines what's shown in the error panel
+  const [userTier, setUserTier] = useState<"anon" | "free" | "paid">("anon");
 
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("wf_scan_result");
       if (raw) {
         const parsed: StoredScan = JSON.parse(raw);
-        // Accept if URLs roughly match (both normalised)
         const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
         if (norm(parsed.url) === norm(urlParam) || !urlParam) {
           setScan(parsed);
@@ -448,6 +489,23 @@ function ResultsInner() {
     } catch { /* SSR / blocked */ }
     setLoaded(true);
   }, [urlParam]);
+
+  // Fetch session to determine user tier
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then(r => r.json())
+      .then(data => {
+        const plan: string = (data?.user as { plan?: string } | undefined)?.plan ?? "";
+        if (!data?.user) {
+          setUserTier("anon");
+        } else if (["smart-guard", "agency-starter", "agency-pro"].includes(plan)) {
+          setUserTier("paid");
+        } else {
+          setUserTier("free"); // logged in but free plan
+        }
+      })
+      .catch(() => setUserTier("anon"));
+  }, []);
 
   // ── Dynamic browser-tab title once scan data is available ──
   useEffect(() => {
@@ -1002,7 +1060,7 @@ function ResultsInner() {
                   </div>
 
                   {/* ── BEWEIS-MODUS: technisches Protokoll ── */}
-                  {isExpanded && <ProtoPanelContent p={p} isLocked={true} />}
+                  {isExpanded && <ProtoPanelContent p={p} tier={userTier} />}
                 </div>
               );
             })}
