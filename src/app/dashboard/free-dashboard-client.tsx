@@ -295,8 +295,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   }, [lastScan]);
 
 
-  const isFree     = plan === "free";
-  const planLabel  = isFree ? "Free" : "Smart-Guard";
+  const SMART_GUARD_PLANS = ["smart-guard", "agency-starter", "agency-pro"];
+  const isSmartGuard = SMART_GUARD_PLANS.includes(plan);
+  const isFree     = !isSmartGuard; // free = everyone without a paid plan
+  const planLabel  = isSmartGuard ? "Smart-Guard" : "Free";
   const domain     = lastScan?.url
     ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
     : sessionDomain ?? "—";
@@ -1040,65 +1042,77 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                             {issue.body}
                           </p>
 
-                          {/* Fix teaser — milchglas Smart-Guard gate */}
-                          <div style={{ position: "relative", borderRadius: D.radiusSm, overflow: "hidden" }}>
-
-                            {/* Ghost steps — blurred behind glass */}
+                          {/* Fix block — varies by plan */}
+                          {isSmartGuard ? (
+                            /* Smart-Guard: vollständige KI-Fix-Anleitung */
                             <div style={{
                               padding: "14px 18px 16px",
                               background: "rgba(255,255,255,0.02)",
                               border: `1px solid ${D.border}`,
                               borderRadius: D.radiusSm,
-                              filter: "blur(3.5px)",
-                              userSelect: "none", pointerEvents: "none",
-                              opacity: 0.5,
                             }}>
-                              <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                                So behebst du das:
+                              <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                                KI-Fix — Schritt-für-Schritt:
                               </p>
-                              {[
-                                "Öffne das CMS-Dashboard und navigiere zum betroffenen Bereich.",
-                                "Aktiviere die Einstellung und speichere die Änderungen.",
-                                "Überprüfe die Korrektur im Browser und führe eine Verifikation durch.",
-                              ].map((s, i) => (
-                                <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < 2 ? 6 : 0 }}>
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft, flexShrink: 0, lineHeight: 1.6 }}>{i + 1}.</span>
-                                  <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
-                                </div>
-                              ))}
+                              {(() => { const steps = generateFixSteps(issue).steps; return steps.length > 0
+                                ? steps.map((s: string, i: number) => (
+                                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < steps.length - 1 ? 6 : 0 }}>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft, flexShrink: 0, lineHeight: 1.6 }}>{i + 1}.</span>
+                                    <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
+                                  </div>
+                                ))
+                                : (
+                                  <p style={{ margin: 0, fontSize: 12, color: D.textMuted }}>Kein KI-Fix für diesen Befund verfügbar.</p>
+                                ); })()
+                              }
                             </div>
-
-                            {/* Frosted glass overlay */}
-                            <div style={{
-                              position: "absolute", inset: 0,
-                              background: "linear-gradient(to bottom, rgba(11,12,16,0.05) 0%, rgba(11,12,16,0.72) 55%, rgba(11,12,16,0.97) 100%)",
-                              borderRadius: D.radiusSm,
-                              display: "flex", flexDirection: "column", justifyContent: "flex-end",
-                              padding: "14px 16px",
-                            }}>
+                          ) : (
+                            /* Free: Manueller Lösungsweg + CTA nur für KI-Fix */
+                            <div>
+                              <div style={{
+                                padding: "12px 16px",
+                                background: "rgba(141,243,211,0.04)",
+                                border: "1px solid rgba(141,243,211,0.15)",
+                                borderRadius: D.radiusSm,
+                                marginBottom: 10,
+                              }}>
+                                <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                                  Manueller Lösungsweg:
+                                </p>
+                                {(() => { const steps = generateFixSteps(issue).steps; return steps.length > 0
+                                  ? steps.map((s: string, i: number) => (
+                                    <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < steps.length - 1 ? 5 : 0 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 700, color: "#8df3d3", flexShrink: 0, lineHeight: 1.6 }}>{i + 1}.</span>
+                                      <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
+                                    </div>
+                                  ))
+                                  : (
+                                    <p style={{ margin: 0, fontSize: 12, color: D.textMuted }}>Navigiere im CMS zum betroffenen Element und korrigiere es manuell.</p>
+                                  ); })()}
+                              </div>
+                              {/* KI-Auto-Fix CTA — nur für Smart-Guard */}
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <LockIco size={13} color={D.blueSoft} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: D.text }}>
-                                    Schritt-für-Schritt Lösung verfügbar
-                                  </p>
-                                  <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
-                                    Freischalten mit Smart-Guard
-                                  </p>
-                                </div>
-                                <Link href="/pricing" style={{
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span style={{ fontSize: 12, color: D.textMuted, flex: 1 }}>
+                                  KI-Auto-Fix (Copy-Paste-fertig) nur mit Smart-Guard
+                                </span>
+                                <Link href="/pricing?plan=smart-guard" style={{
                                   flexShrink: 0,
                                   display: "inline-flex", alignItems: "center", gap: 4,
-                                  padding: "7px 14px", borderRadius: D.radiusXs,
-                                  background: D.blue, color: "#fff",
+                                  padding: "6px 12px", borderRadius: D.radiusXs,
+                                  background: "rgba(192,132,252,0.12)",
+                                  border: "1px solid rgba(192,132,252,0.3)",
+                                  color: "#c084fc",
                                   fontSize: 11, fontWeight: 700, textDecoration: "none",
-                                  boxShadow: D.blueGlow, whiteSpace: "nowrap",
+                                  whiteSpace: "nowrap",
                                 }}>
-                                  Lösung freischalten →
+                                  Smart-Guard →
                                 </Link>
                               </div>
                             </div>
-                          </div>
+                          )}
 
                         </div>
                       )}
