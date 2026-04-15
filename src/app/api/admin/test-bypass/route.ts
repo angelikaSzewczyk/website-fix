@@ -24,7 +24,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "ADMIN_BYPASS_SECRET not set in env" }, { status: 500 });
   }
 
-  const res = NextResponse.redirect(new URL("/", req.url));
+  // Redirect über /scan/reset damit localStorage (wf_free_scan_ts) ebenfalls gelöscht wird
+  const target = action === "disable" ? "/" : "/scan/reset";
+  const res = NextResponse.redirect(new URL(target, req.url));
 
   if (action === "disable") {
     res.cookies.delete("wf_admin_test");
