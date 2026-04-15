@@ -526,9 +526,6 @@ function ResultsInner() {
   const displayDomain = isDemo ? DEMO_DOMAIN : (() => { try { return new URL(scan!.url).host; } catch { return scan!.url; } })();
   const score        = isDemo ? DEMO_SCORE   : computeScore(scan!);
   const pagesTotal   = isDemo ? DEMO_PAGES   : scan!.pages;
-  const critErrors   = isDemo ? DEMO_CRIT    : computeIssueCount(scan!);
-  const liability    = isDemo ? "HOCH"       : liabilityLevel(score, critErrors);
-  const liabColor    = liabilityColor(liability);
   const scoreColor   = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
   const scoreLabel   = score >= 80 ? "Gut" : score >= 55 ? "Verbesserungsbedarf" : "Kritisch";
 
@@ -538,22 +535,41 @@ function ResultsInner() {
     : buildPages(scan!);
   const pageItems = isDemo ? DEMO_PAGES_LIST : realPageItems;
 
-  // Error density: total real errors / scanned pages — used in Dringlichkeits-Ampel
+  // Total errors = sum of ALL errors across ALL pages (the real number the user sees in the map)
   const totalTableErrors = isDemo ? 0 : pageItems.filter(p => !p.isSkipped && p.errors > 0).reduce((s, p) => s + p.errors, 0);
   const errorDensity     = isDemo || pagesTotal <= 0 ? 0 : Math.round((totalTableErrors / pagesTotal) * 10) / 10;
+
+  // critErrors is the total sum — NOT a boolean type-count
+  const critErrors   = isDemo ? DEMO_CRIT : (totalTableErrors > 0 ? totalTableErrors : computeIssueCount(scan!));
+  const liability    = isDemo ? "HOCH"    : liabilityLevel(score, critErrors > 0 ? Math.min(critErrors, 13) : 0);
+  const liabColor    = liabilityColor(liability);
 
   // Context strings for discovered vs analysed
   const entdeckteUrls  = scan?.entdeckteUrls  ?? 0;
   const gefilterteUrls = scan?.gefilterteUrls ?? 0;
   const skippedCount   = (scan?.skippedUrls ?? []).length;
 
-  // Findings
-  const findings    = isDemo ? [] : parseFindings(scan!.diagnose);
-  // For real scans: use first finding or null (never fall back to DEMO_FIX — that would show
-  // fake "Kontrastverhältnis" data on a real result and destroy credibility).
+  // Findings from AI text
+  const findings = isDemo ? [] : parseFindings(scan!.diagnose);
+
+  // Build a fallback visibleFix from real page data when the AI text yields no parseable findings
+  // This ensures "Keine kritischen Fehler" never shows when errors exist
+  const fallbackFix = !isDemo && findings.length === 0 && totalTableErrors > 0 ? (() => {
+    const worstPage = pageItems.filter(p => !p.isSkipped && p.errors > 0).sort((a, b) => b.errors - a.errors)[0];
+    if (!worstPage) return null;
+    return {
+      label: "🔴 Kritisch",
+      issue: `${worstPage.errors} Fehler auf ${worstPage.path}`,
+      desc: worstPage.altMissing > 0
+        ? `${worstPage.altMissing} Bilder ohne Alt-Text — BFSG §3 Abs. 2 (Pflicht ab 06/2025). Jedes fehlende alt=""-Attribut ist ein messbarer Barrierefreiheitsverstoß.`
+        : `${worstPage.errors} technische Probleme auf dieser Unterseite gefunden.`,
+      before: "", after: "",
+    };
+  })() : null;
+
   const visibleFix  = isDemo
     ? DEMO_FIX
-    : (findings[0] ? { ...findings[0], before: "", after: "" } : null);
+    : (findings[0] ? { ...findings[0], before: "", after: "" } : fallbackFix);
   const lockedCount = isDemo ? DEMO_LOCKED.length : Math.max(0, findings.length - 1);
   const lockedItems = isDemo
     ? DEMO_LOCKED
