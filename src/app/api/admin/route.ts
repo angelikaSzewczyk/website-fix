@@ -130,10 +130,11 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json() as {
-    action: "add_credits" | "rescan";
+    action: "add_credits" | "rescan" | "reset_rate_limit" | "list_rate_limits";
     userId?: string;
     credits?: number;
     url?: string;
+    ip?: string;
   };
 
   const sql = neon(process.env.DATABASE_URL!);
@@ -160,6 +161,32 @@ export async function POST(req: NextRequest) {
     });
     const data = await res.json();
     return NextResponse.json({ ok: true, data });
+  }
+
+  // ── list_rate_limits — alle IP-Einträge anzeigen ─────────────────────────
+  if (body.action === "list_rate_limits") {
+    const rows = await sql`
+      SELECT ip_hash, first_scan_at::text, last_scan_at::text, scan_count
+      FROM free_scan_limits
+      ORDER BY last_scan_at DESC
+      LIMIT 100
+    `;
+    return NextResponse.json({ ok: true, rows });
+  }
+
+  // ── reset_rate_limit — einzelne IP oder alle zurücksetzen ─────────────────
+  if (body.action === "reset_rate_limit") {
+    if (body.ip) {
+      // Einzelnen Eintrag per IP-Hash-Präfix oder exakten Hash löschen
+      await sql`
+        DELETE FROM free_scan_limits
+        WHERE ip_hash = ${body.ip}
+      `;
+      return NextResponse.json({ ok: true, deleted: "one" });
+    }
+    // Alle löschen (nur wenn kein ip übergeben)
+    const result = await sql`DELETE FROM free_scan_limits`;
+    return NextResponse.json({ ok: true, deleted: "all", count: result.length ?? 0 });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

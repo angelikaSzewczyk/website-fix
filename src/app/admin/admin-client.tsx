@@ -289,6 +289,36 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
   const [replying, setReplying]             = useState(false);
   const [impersonating, setImpersonating]   = useState<string | null>(null);
 
+  // ── Rate Limit Tool ───────────────────────────────────────────────────────
+  const [rateLimitRows, setRateLimitRows]       = useState<{ ip_hash: string; first_scan_at: string; last_scan_at: string; scan_count: number }[] | null>(null);
+  const [rateLimitLoading, setRateLimitLoading] = useState(false);
+  const [rateLimitMsg, setRateLimitMsg]         = useState<string | null>(null);
+
+  const loadRateLimits = useCallback(async () => {
+    setRateLimitLoading(true);
+    try {
+      const res  = await fetch("/api/admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "list_rate_limits" }) });
+      const data = await res.json();
+      setRateLimitRows(data.rows ?? []);
+    } finally {
+      setRateLimitLoading(false);
+    }
+  }, []);
+
+  const resetRateLimit = useCallback(async (ipHash?: string) => {
+    setRateLimitLoading(true);
+    setRateLimitMsg(null);
+    try {
+      const body = ipHash ? { action: "reset_rate_limit", ip: ipHash } : { action: "reset_rate_limit" };
+      const res  = await fetch("/api/admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json();
+      setRateLimitMsg(data.ok ? (ipHash ? "Eintrag gelöscht." : "Alle Einträge gelöscht.") : "Fehler.");
+      await loadRateLimits();
+    } finally {
+      setRateLimitLoading(false);
+    }
+  }, [loadRateLimits]);
+
   const filteredUsers = userSearch
     ? users.filter(u =>
         u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
@@ -1159,6 +1189,108 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 ));
               })()}
               {scanLogs.length === 0 && <p style={{ color: D.muted, fontSize: 13 }}>Noch keine Logs.</p>}
+            </div>
+
+            {/* Rate Limit Manager */}
+            <div style={{
+              gridColumn: "1 / -1",
+              padding: "24px", background: D.surface,
+              border: `1px solid ${D.border}`, borderRadius: 14,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    Rate Limit Manager
+                  </p>
+                  <p style={{ margin: 0, fontSize: 12, color: D.sub }}>
+                    IP-basierte Scan-Limits einsehen und zurücksetzen (für Tests &amp; Support)
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={loadRateLimits}
+                    disabled={rateLimitLoading}
+                    style={{
+                      padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                      border: `1px solid ${D.border}`, background: "transparent",
+                      color: D.sub, cursor: "pointer", opacity: rateLimitLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {rateLimitLoading ? "Lädt…" : rateLimitRows === null ? "Laden" : "Aktualisieren"}
+                  </button>
+                  <button
+                    onClick={() => { if (confirm("Wirklich ALLE Rate-Limit-Einträge löschen?")) resetRateLimit(); }}
+                    disabled={rateLimitLoading || !rateLimitRows?.length}
+                    style={{
+                      padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 700,
+                      border: `1px solid ${D.red}40`, background: D.redBg,
+                      color: D.red, cursor: "pointer",
+                      opacity: (!rateLimitRows?.length || rateLimitLoading) ? 0.4 : 1,
+                    }}
+                  >
+                    Alle löschen
+                  </button>
+                </div>
+              </div>
+
+              {rateLimitMsg && (
+                <div style={{
+                  padding: "8px 14px", marginBottom: 12, borderRadius: 8,
+                  background: D.greenBg, border: `1px solid ${D.green}40`,
+                  color: D.green, fontSize: 12, fontWeight: 600,
+                }}>
+                  {rateLimitMsg}
+                </div>
+              )}
+
+              {rateLimitRows === null ? (
+                <p style={{ color: D.muted, fontSize: 13 }}>Klicke auf "Laden" um die aktuellen Einträge zu sehen.</p>
+              ) : rateLimitRows.length === 0 ? (
+                <p style={{ color: D.green, fontSize: 13 }}>Keine aktiven Rate-Limit-Einträge — alle können scannen.</p>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  {/* Table header */}
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "1fr 160px 160px 80px 90px",
+                    padding: "8px 12px", borderBottom: `1px solid ${D.border}`,
+                  }}>
+                    {["IP-Hash (SHA-256)", "Erster Scan", "Letzter Scan", "Anzahl", "Aktion"].map(h => (
+                      <span key={h} style={{ fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</span>
+                    ))}
+                  </div>
+                  {rateLimitRows.map((row, i) => (
+                    <div key={row.ip_hash} style={{
+                      display: "grid", gridTemplateColumns: "1fr 160px 160px 80px 90px",
+                      padding: "10px 12px", alignItems: "center",
+                      borderBottom: i < rateLimitRows.length - 1 ? `1px solid ${D.border}` : "none",
+                      background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+                    }}>
+                      <span style={{ fontSize: 11, fontFamily: "monospace", color: D.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {row.ip_hash.slice(0, 16)}…
+                      </span>
+                      <span style={{ fontSize: 12, color: D.sub }}>{fmtDateTime(row.first_scan_at)}</span>
+                      <span style={{ fontSize: 12, color: D.sub }}>{fmtDateTime(row.last_scan_at)}</span>
+                      <span style={{
+                        fontSize: 13, fontWeight: 700,
+                        color: row.scan_count >= 2 ? D.red : D.amber,
+                      }}>
+                        {row.scan_count}/2
+                      </span>
+                      <button
+                        onClick={() => resetRateLimit(row.ip_hash)}
+                        disabled={rateLimitLoading}
+                        style={{
+                          padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                          border: `1px solid ${D.red}35`, background: "transparent",
+                          color: D.red, cursor: "pointer", opacity: rateLimitLoading ? 0.5 : 1,
+                        }}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quick links */}
