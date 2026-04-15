@@ -47,8 +47,12 @@ CREATE TABLE IF NOT EXISTS scans (
   type VARCHAR(20) DEFAULT 'website',
   issue_count INTEGER,
   result TEXT,
+  issues_json JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add issues_json to existing tables (safe, idempotent)
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS issues_json JSONB;
 
 CREATE INDEX IF NOT EXISTS scans_user_id_idx ON scans(user_id);
 CREATE INDEX IF NOT EXISTS scans_created_at_idx ON scans(created_at DESC);

@@ -43,12 +43,102 @@ function computeIssueCount(sd: Record<string, unknown>): number {
   ].filter(Boolean).length;
 }
 
+// ── Structured issue type (saved as issues_json) ────────────
+export type ScanIssue = {
+  severity: "red" | "yellow" | "green";
+  title: string;
+  body: string;
+  category: "recht" | "speed" | "technik";
+  url?: string; // per-page issues carry their URL
+};
+
+function classifyIssueCategory(text: string): ScanIssue["category"] {
+  const t = text.toLowerCase();
+  if (/bfsg|wcag|barriere|impressum|datenschutz|cookie|dsgvo|label|aria|alt.?text/.test(t)) return "recht";
+  if (/speed|lcp|cls|ladezeit|pagespeed|core web/.test(t)) return "speed";
+  return "technik";
+}
+
+/**
+ * Build a deterministic, structured issues array directly from raw scan data.
+ * This is the ground truth — saved as issues_json so the dashboard never has
+ * to re-parse the AI text (which loses fidelity).
+ */
+function buildIssuesJson(
+  scanData: Record<string, unknown>,
+  unterseiten: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number }[],
+  totalAltMissing: number,
+  totalImages: number,
+  duplicateTitles: string[],
+  duplicateMetas: string[],
+  brokenLinks: { url: string; status: number }[],
+  orphanedPages: string[],
+): ScanIssue[] {
+  const issues: ScanIssue[] = [];
+  const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
+  const fc = scanData.formCheck as { inputsWithoutLabel?: number; buttonsWithoutText?: number } | undefined;
+
+  // ── Global issues ──
+  if (!scanData.https)
+    issues.push({ severity: "red", title: "Kein HTTPS", body: "Die Seite ist nicht über HTTPS erreichbar — Sicherheitsrisiko und Google-Ranking-Nachteil.", category: "technik" });
+  if (!scanData.erreichbar)
+    issues.push({ severity: "red", title: "Startseite nicht erreichbar", body: "Die Startseite gibt einen Fehler zurück (4xx/5xx).", category: "technik" });
+  if (!scanData.title)
+    issues.push({ severity: "red", title: "Title-Tag fehlt (Startseite)", body: "Fehlender Title-Tag schadet dem Google-Ranking direkt.", category: "technik" });
+  if (!scanData.metaDescription)
+    issues.push({ severity: "yellow", title: "Meta-Description fehlt (Startseite)", body: "Ohne Meta-Description zeigt Google einen zufälligen Seitenausschnitt in den Suchergebnissen.", category: "technik" });
+  if (!scanData.h1)
+    issues.push({ severity: "red", title: "H1-Tag fehlt (Startseite)", body: "Jede Seite braucht genau eine H1 — fehlt sie, verliert die Seite SEO-Gewicht.", category: "technik" });
+  if (scanData.robotsBlockiertAlles)
+    issues.push({ severity: "red", title: "robots.txt blockiert alle Crawler", body: "Google kann die gesamte Seite nicht indexieren.", category: "technik" });
+  if (scanData.indexierungGesperrt)
+    issues.push({ severity: "red", title: "Noindex auf Startseite gesetzt", body: "Die Startseite ist für Suchmaschinen unsichtbar.", category: "technik" });
+  if (!scanData.sitemapVorhanden)
+    issues.push({ severity: "yellow", title: "Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Seiten langsamer.", category: "technik" });
+
+  // ── BFSG / Accessibility ──
+  if (totalAltMissing > 0)
+    issues.push({ severity: "red", title: `${totalAltMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: `${totalAltMissing} von ${totalImages} Bildern fehlt der Alt-Text — Barrierefreiheitspflicht ab 06/2025, Abmahnrisiko.`, category: "recht" });
+  if ((fc?.inputsWithoutLabel ?? 0) > 0)
+    issues.push({ severity: "red", title: `${fc!.inputsWithoutLabel} Formularfelder ohne Label (BFSG-Verstoß)`, body: "Screen-Reader können diese Felder nicht vorlesen. BFSG §3 Abs. 2.", category: "recht" });
+
+  // ── SEO-Duplikate ──
+  if (duplicateTitles.length > 0)
+    issues.push({ severity: "red", title: `${duplicateTitles.length}× doppelter Title-Tag`, body: `Doppelte Titles verwirren Google. Betroffen: ${duplicateTitles.slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+  if (duplicateMetas.length > 0)
+    issues.push({ severity: "yellow", title: `${duplicateMetas.length}× doppelte Meta-Description`, body: `Betroffen: ${duplicateMetas.slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+
+  // ── Broken Links / Orphans ──
+  if (brokenLinks.length > 0)
+    issues.push({ severity: "red", title: `${brokenLinks.length} Broken Link${brokenLinks.length > 1 ? "s" : ""} (404)`, body: `Fehlerhafte Links: ${brokenLinks.slice(0, 3).map(b => toPath(b.url)).join(", ")}`, category: "technik" });
+  if (orphanedPages.length > 0)
+    issues.push({ severity: "yellow", title: `${orphanedPages.length} verwaiste Unterseite${orphanedPages.length > 1 ? "n" : ""}`, body: `Keine internen Links zeigen auf: ${orphanedPages.slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+
+  // ── Per-page issues ──
+  for (const p of unterseiten) {
+    const path = toPath(p.url);
+    if (!p.erreichbar)
+      issues.push({ severity: "red", title: `Unterseite nicht erreichbar: ${path}`, body: "Die Seite gibt einen 4xx/5xx-Fehler zurück.", category: "technik", url: p.url });
+    if (!p.title || p.title === "(kein Title)")
+      issues.push({ severity: "red", title: `Title-Tag fehlt: ${path}`, body: "Fehlender Title-Tag verhindert gutes Google-Ranking dieser Unterseite.", category: "technik", url: p.url });
+    if (!p.h1 || p.h1 === "(kein H1)")
+      issues.push({ severity: "yellow", title: `H1 fehlt: ${path}`, body: "Fehlende H1-Überschrift schwächt das SEO-Signal der Seite.", category: "technik", url: p.url });
+    if (p.noindex)
+      issues.push({ severity: "yellow", title: `Noindex gesetzt: ${path}`, body: "Diese Unterseite ist für Google unsichtbar — gewollt?", category: "technik", url: p.url });
+    if (p.altMissing > 0)
+      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text auf dieser Seite (BFSG 2025).`, category: "recht", url: p.url });
+  }
+
+  return issues;
+}
+
 // ── Save scan to user's history ──────────────────────────────
 async function saveUserScan(params: {
   userId: string;
   url: string;
   issueCount: number;
   diagnose: string;
+  issuesJson: ScanIssue[];
   techFingerprint?: unknown;
   totalPages?: number | null;
   unterseitenJson?: unknown | null;
@@ -56,10 +146,11 @@ async function saveUserScan(params: {
   try {
     const sql = neon(process.env.DATABASE_URL!);
     const rows = await sql`
-      INSERT INTO scans (user_id, url, type, issue_count, result, tech_fingerprint, total_pages, unterseiten_json)
+      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, tech_fingerprint, total_pages, unterseiten_json)
       VALUES (
         ${params.userId}, ${params.url}, 'website',
         ${params.issueCount}, ${params.diagnose},
+        ${JSON.stringify(params.issuesJson)},
         ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null},
         ${params.totalPages ?? null},
         ${params.unterseitenJson ? JSON.stringify(params.unterseitenJson) : null}
@@ -720,10 +811,22 @@ PFLICHT-REGELN:
       orphanedPages.length > 0,
     ].filter(Boolean).length;
 
+    // Build structured issues from raw data — this is the ground truth for the dashboard
+    const issuesJson = buildIssuesJson(
+      scanData,
+      unterseiten,
+      totalAltMissing,
+      totalImages,
+      duplicateTitles,
+      duplicateMetas,
+      brokenLinks,
+      orphanedPages,
+    );
+
     // Await DB write — must complete before response so the dashboard can read it
     const savedScanId = userId
       ? await saveUserScan({
-          userId, url: targetUrl, issueCount, diagnose, techFingerprint,
+          userId, url: targetUrl, issueCount, diagnose, issuesJson, techFingerprint,
           totalPages: audit.gescannteSeiten,
           unterseitenJson: audit.unterseiten,
         })

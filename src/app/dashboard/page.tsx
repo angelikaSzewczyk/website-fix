@@ -501,6 +501,7 @@ export default async function DashboardPage() {
 
   // Free/Single: last scan result for issue parsing + tech fingerprint + page data
   let lastScanResult: string | null = null;
+  let lastScanIssuesJson: ParsedIssue[] | null = null;
   let techFingerprint: import("@/lib/tech-detector").TechFingerprint | null = null;
   let lastScanTotalPages: number | null = null;
   let lastScanUnterseiten: { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number; altMissingImages?: string[] }[] | null = null;
@@ -508,10 +509,12 @@ export default async function DashboardPage() {
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
-        SELECT result, tech_fingerprint, total_pages, unterseiten_json
+        SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown }[];
+      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown }[];
       lastScanResult = rows[0]?.result ?? null;
+      // issues_json is the ground truth — stored during scan, no re-parsing needed
+      lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
       techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
       lastScanTotalPages = rows[0]?.total_pages ?? null;
       lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;
@@ -529,16 +532,20 @@ export default async function DashboardPage() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 
-  // Parse issues from AI text, with technical fallback when parser yields nothing
-  let issues: ParsedIssue[] = lastScanResult ? parseIssues(lastScanResult) : [];
-
-  // Fallback: if AI text gave 0 actionable issues but technical data shows problems,
-  // inject issues built directly from the crawler's deterministic findings.
-  const aiHasActionable = issues.filter(i => i.severity !== "green").length;
-  const unterseiten4Fallback = (lastScanUnterseiten ?? []) as { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[];
-  if (aiHasActionable === 0) {
-    const fallback = buildTechFallback(unterseiten4Fallback, lastScan?.issue_count ?? null);
-    if (fallback.length > 0) issues = fallback;
+  // PRIMARY: use issues_json stored during scan (ground truth, no re-parsing)
+  // FALLBACK 1: parse AI text (older scans without issues_json)
+  // FALLBACK 2: build from crawler data when parser yields nothing actionable
+  let issues: ParsedIssue[];
+  if (lastScanIssuesJson && lastScanIssuesJson.length > 0) {
+    issues = lastScanIssuesJson;
+  } else {
+    issues = lastScanResult ? parseIssues(lastScanResult) : [];
+    const aiHasActionable = issues.filter(i => i.severity !== "green").length;
+    const unterseiten4Fallback = (lastScanUnterseiten ?? []) as { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[];
+    if (aiHasActionable === 0) {
+      const fallback = buildTechFallback(unterseiten4Fallback, lastScan?.issue_count ?? null);
+      if (fallback.length > 0) issues = fallback;
+    }
   }
 
   const cms = lastScanResult ? detectCMS(lastScanResult, lastScan?.url) : { label: "–" };
