@@ -259,6 +259,167 @@ function hexToRgb(hex: string): string {
   return "255,255,255";
 }
 
+// ─── Deep-Scan Map ────────────────────────────────────────────────────────────
+function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree }: {
+  homepageUrl: string;
+  homepageIssueCount: number;
+  unterseiten: UnterseiteProp[];
+  isFree: boolean;
+}) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <SectionLabel>Scan-Ergebnisse · Alle analysierten Seiten</SectionLabel>
+      <SectionHead>Deep-Scan Map</SectionHead>
+      <Card style={{ padding: 0, overflow: "hidden" }}>
+        {/* ── Startseite ── */}
+        <div style={{
+          padding: "13px 20px",
+          borderBottom: `1px solid ${D.divider}`,
+          background: "rgba(0,123,255,0.035)",
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+            background: "rgba(0,123,255,0.12)", color: D.blueSoft,
+            border: "1px solid rgba(0,123,255,0.22)", whiteSpace: "nowrap", flexShrink: 0,
+          }}>START</span>
+          <span style={{
+            fontSize: 12, fontWeight: 600, color: D.text, fontFamily: "monospace",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+          }}>
+            {homepageUrl}
+          </span>
+          <span style={{
+            fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
+            color: homepageIssueCount > 0 ? D.red : D.green,
+            background: homepageIssueCount > 0 ? D.redBg : D.greenBg,
+            border: `1px solid ${homepageIssueCount > 0 ? D.redBorder : D.greenBorder}`,
+            padding: "2px 8px", borderRadius: 4,
+          }}>
+            {homepageIssueCount > 0 ? `${homepageIssueCount} Fehler` : "OK"}
+          </span>
+          <span style={{ fontSize: 11, color: D.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>
+            Details ↓ unten
+          </span>
+        </div>
+
+        {/* ── Unterseiten ── */}
+        {unterseiten.map((page, i) => {
+          const pageIssues = [
+            !page.erreichbar,
+            !page.title || page.title === "(kein Title)",
+            page.noindex,
+            page.altMissing > 0,
+          ].filter(Boolean).length;
+          const isLast = i === unterseiten.length - 1;
+          const isOpen = expanded === i;
+
+          // Build issue label texts for smart-guard users
+          const issueLabels: string[] = [];
+          if (!page.erreichbar)                               issueLabels.push("Seite nicht erreichbar");
+          if (!page.title || page.title === "(kein Title)")   issueLabels.push("Kein Title-Tag");
+          if (page.noindex)                                   issueLabels.push("Noindex gesetzt");
+          if (page.altMissing > 0)                            issueLabels.push(`${page.altMissing} Bild${page.altMissing !== 1 ? "er" : ""} ohne Alt-Text`);
+
+          return (
+            <div key={page.url} style={{
+              borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
+            }}>
+              {/* Main row */}
+              <div style={{
+                padding: "11px 20px",
+                display: "flex", alignItems: "center", gap: 10,
+              }}>
+                {/* Status badge */}
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                  background: pageIssues > 0 ? D.redBg : D.greenBg,
+                  color: pageIssues > 0 ? D.red : D.green,
+                  border: `1px solid ${pageIssues > 0 ? D.redBorder : D.greenBorder}`,
+                  whiteSpace: "nowrap", flexShrink: 0,
+                }}>
+                  {pageIssues > 0 ? `${pageIssues} Fehler` : "OK"}
+                </span>
+
+                {/* Full URL */}
+                <span style={{
+                  fontSize: 12, color: D.textSub, fontFamily: "monospace",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+                }}>
+                  {page.url}
+                </span>
+
+                {/* Details toggle — only if there are issues */}
+                {pageIssues > 0 && (
+                  <button
+                    onClick={() => setExpanded(isOpen ? null : i)}
+                    style={{
+                      flexShrink: 0, fontSize: 11, fontWeight: 700,
+                      padding: "3px 10px", borderRadius: 4, cursor: "pointer",
+                      background: isOpen ? "rgba(124,58,237,0.12)" : D.card,
+                      border: `1px solid ${isOpen ? "rgba(124,58,237,0.3)" : D.borderMid}`,
+                      color: isOpen ? "#a78bfa" : D.textSub,
+                    }}
+                  >
+                    {isOpen ? "Schließen ✕" : "Details →"}
+                  </button>
+                )}
+              </div>
+
+              {/* Expandable detail panel */}
+              {isOpen && pageIssues > 0 && (
+                <div style={{
+                  margin: "0 20px 12px",
+                  borderRadius: 8,
+                  border: `1px solid ${D.borderMid}`,
+                  overflow: "hidden",
+                }}>
+                  {isFree ? (
+                    /* Smart-Guard gate — only shown when user clicks Details */
+                    <div style={{
+                      padding: "16px 20px",
+                      background: "rgba(124,58,237,0.05)",
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+                    }}>
+                      <div>
+                        <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "#a78bfa" }}>
+                          {pageIssues} Problem{pageIssues !== 1 ? "e" : ""} auf dieser Seite gefunden
+                        </p>
+                        <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
+                          Schritt-für-Schritt-Lösung & KI-Auto-Fix nur im Smart-Guard Plan
+                        </p>
+                      </div>
+                      <Link href="/pricing?plan=smart-guard" style={{
+                        fontSize: 12, fontWeight: 700, padding: "7px 16px", borderRadius: 6,
+                        background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)",
+                        color: "#c4b5fd", textDecoration: "none", whiteSpace: "nowrap",
+                      }}>
+                        Smart-Guard freischalten →
+                      </Link>
+                    </div>
+                  ) : (
+                    /* Paid: show actual issue list */
+                    <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+                      {issueLabels.map(label => (
+                        <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: D.red, flexShrink: 0 }} />
+                          <span style={{ fontSize: 12, color: D.textSub }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 export default function FreeDashboardClient(props: FreeDashboardProps) {
   const {
@@ -749,7 +910,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 {lastScan && (
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
                     Gescannt am {scanDate}
-                    {totalPages != null && ` · ${totalPages} Seite${totalPages !== 1 ? "n" : ""} analysiert`}
+                    {(() => {
+                      const n = totalPages ?? (unterseiten ? unterseiten.length + 1 : null);
+                      return n != null ? ` · ${n} Seite${n !== 1 ? "n" : ""} analysiert` : "";
+                    })()}
                     {" · "}
                     {redCount > 0
                       ? `${redCount} kritische Problem${redCount > 1 ? "e" : ""} gefunden`
@@ -991,94 +1155,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑥ DEEP-SCAN MAP */}
           {hasData && unterseiten && unterseiten.length > 0 && (
-            <div style={{ marginBottom: 28 }}>
-              <SectionLabel>Scan-Ergebnisse · Alle analysierten Seiten</SectionLabel>
-              <SectionHead>Deep-Scan Map</SectionHead>
-              <Card style={{ padding: 0, overflow: "hidden" }}>
-                {/* Startseite — vollständig sichtbar */}
-                <div style={{
-                  padding: "14px 20px",
-                  borderBottom: `1px solid ${D.divider}`,
-                  background: "rgba(0,123,255,0.04)",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                      background: "rgba(0,123,255,0.1)", color: D.blueSoft,
-                      border: "1px solid rgba(0,123,255,0.2)", whiteSpace: "nowrap",
-                    }}>STARTSEITE</span>
-                    <span style={{ fontSize: 12, color: D.text, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {lastScan?.url}
-                    </span>
-                    <span style={{ marginLeft: "auto", fontSize: 11, color: D.green, fontWeight: 700, whiteSpace: "nowrap" }}>
-                      {issues.length} Problem{issues.length !== 1 ? "e" : ""}
-                    </span>
-                  </div>
-                  <p style={{ margin: "6px 0 0", fontSize: 11, color: D.textMuted }}>
-                    Vollständig analysiert · Details im Bericht unten
-                  </p>
-                </div>
-                {/* Unterseiten */}
-                {unterseiten.map((page, i) => {
-                  const pageIssues = [
-                    !page.erreichbar,
-                    !page.title || page.title === "(kein Title)",
-                    page.noindex,
-                    page.altMissing > 0,
-                  ].filter(Boolean).length;
-                  const isLast = i === unterseiten.length - 1;
-                  const shortUrl = (() => {
-                    try { return new URL(page.url).pathname || "/"; } catch { return page.url; }
-                  })();
-                  return (
-                    <div key={page.url} style={{
-                      padding: "12px 20px",
-                      borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{
-                          fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
-                          background: page.erreichbar ? D.greenBg : D.redBg,
-                          color: page.erreichbar ? D.green : D.red,
-                          border: `1px solid ${page.erreichbar ? D.greenBorder : D.redBorder}`,
-                          whiteSpace: "nowrap", flexShrink: 0,
-                        }}>
-                          {page.erreichbar ? "OK" : "FEHLER"}
-                        </span>
-                        <span style={{ fontSize: 12, color: D.textSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, fontFamily: "monospace" }}>
-                          {shortUrl}
-                        </span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
-                          color: pageIssues > 0 ? D.amber : D.textMuted,
-                        }}>
-                          {pageIssues > 0 ? `${pageIssues} Problem${pageIssues !== 1 ? "e" : ""}` : "—"}
-                        </span>
-                      </div>
-                      {/* Smart-Guard gate for subpage details */}
-                      {isFree && pageIssues > 0 && (
-                        <div style={{
-                          marginTop: 8, padding: "8px 12px", borderRadius: 6,
-                          background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)",
-                          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                        }}>
-                          <span style={{ fontSize: 11, color: "rgba(167,139,250,0.75)" }}>
-                            Detaillierte Fehleranalyse dieser Unterseite
-                          </span>
-                          <Link href="/pricing?plan=smart-guard" style={{
-                            fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 4,
-                            background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)",
-                            color: "#a78bfa", textDecoration: "none", whiteSpace: "nowrap",
-                          }}>
-                            Smart-Guard →
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </Card>
-            </div>
+            <DeepScanMap
+              homepageUrl={lastScan?.url ?? ""}
+              homepageIssueCount={issues.length}
+              unterseiten={unterseiten}
+              isFree={isFree}
+            />
           )}
 
           <Divider style={{ marginBottom: 28 }} />
