@@ -8,6 +8,7 @@ type ScanIssue = {
   body: string;
   category: "recht" | "speed" | "technik";
   url?: string;
+  count: number;
 };
 
 type Unterseite = {
@@ -31,43 +32,43 @@ function buildIssuesFromClaim(body: {
   const pages = body.unterseiten ?? [];
 
   if (body.https === false)
-    issues.push({ severity: "red", title: "Kein HTTPS", body: "Sicherheitsrisiko und Google-Ranking-Nachteil.", category: "technik" });
+    issues.push({ severity: "red", title: "Kein HTTPS", body: "Sicherheitsrisiko und Google-Ranking-Nachteil.", category: "technik", count: 1 });
   if (!body.hasTitle)
-    issues.push({ severity: "red", title: "Title-Tag fehlt (Startseite)", body: "Fehlender Title schadet dem Google-Ranking.", category: "technik" });
+    issues.push({ severity: "red", title: "Title-Tag fehlt (Startseite)", body: "Fehlender Title schadet dem Google-Ranking.", category: "technik", count: 1 });
   if (!body.hasMeta)
-    issues.push({ severity: "yellow", title: "Meta-Description fehlt (Startseite)", body: "Google zeigt zufälligen Seitenausschnitt.", category: "technik" });
+    issues.push({ severity: "yellow", title: "Meta-Description fehlt (Startseite)", body: "Google zeigt zufälligen Seitenausschnitt.", category: "technik", count: 1 });
   if (!body.hasH1)
-    issues.push({ severity: "red", title: "H1-Tag fehlt (Startseite)", body: "Fehlende H1 schwächt SEO-Signal.", category: "technik" });
+    issues.push({ severity: "red", title: "H1-Tag fehlt (Startseite)", body: "Fehlende H1 schwächt SEO-Signal.", category: "technik", count: 1 });
   if (body.robotsBlocked)
-    issues.push({ severity: "red", title: "robots.txt blockiert alle Crawler", body: "Google kann die Seite nicht indexieren.", category: "technik" });
+    issues.push({ severity: "red", title: "robots.txt blockiert alle Crawler", body: "Google kann die Seite nicht indexieren.", category: "technik", count: 1 });
   if (body.noIndex)
-    issues.push({ severity: "red", title: "Noindex auf Startseite", body: "Startseite ist für Suchmaschinen unsichtbar.", category: "technik" });
+    issues.push({ severity: "red", title: "Noindex auf Startseite", body: "Startseite ist für Suchmaschinen unsichtbar.", category: "technik", count: 1 });
   if (!body.hasSitemap)
-    issues.push({ severity: "yellow", title: "Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Seiten langsamer.", category: "technik" });
+    issues.push({ severity: "yellow", title: "Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Seiten langsamer.", category: "technik", count: 1 });
 
   const altMissing = body.altMissingCount ?? 0;
   if (altMissing > 0)
-    issues.push({ severity: "red", title: `${altMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: "Barrierefreiheitspflicht ab 06/2025 — Abmahnrisiko.", category: "recht" });
+    issues.push({ severity: "red", title: `${altMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: "Barrierefreiheitspflicht ab 06/2025 — Abmahnrisiko.", category: "recht", count: altMissing });
   if ((body.brokenLinksCount ?? 0) > 0)
-    issues.push({ severity: "red", title: `${body.brokenLinksCount} Broken Link${body.brokenLinksCount !== 1 ? "s" : ""} (404)`, body: "Fehlerhafte Links schaden UX und SEO.", category: "technik" });
+    issues.push({ severity: "red", title: `${body.brokenLinksCount} Broken Link${body.brokenLinksCount !== 1 ? "s" : ""} (404)`, body: "Fehlerhafte Links schaden UX und SEO.", category: "technik", count: body.brokenLinksCount! });
   if ((body.duplicateTitlesCount ?? 0) > 0)
-    issues.push({ severity: "red", title: `${body.duplicateTitlesCount}× doppelter Title-Tag`, body: "Doppelte Titles verwirren Google.", category: "technik" });
+    issues.push({ severity: "red", title: `${body.duplicateTitlesCount}× doppelter Title-Tag`, body: "Doppelte Titles verwirren Google.", category: "technik", count: body.duplicateTitlesCount! });
   if ((body.duplicateMetasCount ?? 0) > 0)
-    issues.push({ severity: "yellow", title: `${body.duplicateMetasCount}× doppelte Meta-Description`, body: "", category: "technik" });
+    issues.push({ severity: "yellow", title: `${body.duplicateMetasCount}× doppelte Meta-Description`, body: "", category: "technik", count: body.duplicateMetasCount! });
   if (body.hasUnreachable)
-    issues.push({ severity: "red", title: "Unterseiten nicht erreichbar (404/5xx)", body: "Fehlerhafte Unterseiten schaden UX und SEO.", category: "technik" });
+    issues.push({ severity: "red", title: "Unterseiten nicht erreichbar (404/5xx)", body: "Fehlerhafte Unterseiten schaden UX und SEO.", category: "technik", count: 1 });
   if ((body.orphanedPagesCount ?? 0) > 0)
-    issues.push({ severity: "yellow", title: `${body.orphanedPagesCount} verwaiste Unterseiten`, body: "Keine internen Links zeigen auf diese Seiten.", category: "technik" });
+    issues.push({ severity: "yellow", title: `${body.orphanedPagesCount} verwaiste Unterseiten`, body: "Keine internen Links zeigen auf diese Seiten.", category: "technik", count: body.orphanedPagesCount! });
 
   // Per-page issues
   for (const p of pages) {
     const path = toPath(p.url);
     if (!p.erreichbar)
-      issues.push({ severity: "red", title: `Unterseite nicht erreichbar: ${path}`, body: "4xx/5xx-Fehler.", category: "technik", url: p.url });
+      issues.push({ severity: "red", title: `Unterseite nicht erreichbar: ${path}`, body: "4xx/5xx-Fehler.", category: "technik", url: p.url, count: 1 });
     if (p.altMissing > 0)
-      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bilder ohne Alt-Text (BFSG 2025).`, category: "recht", url: p.url });
+      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bilder ohne Alt-Text (BFSG 2025).`, category: "recht", url: p.url, count: p.altMissing });
     if (p.noindex)
-      issues.push({ severity: "yellow", title: `Noindex: ${path}`, body: "Für Google unsichtbar.", category: "technik", url: p.url });
+      issues.push({ severity: "yellow", title: `Noindex: ${path}`, body: "Für Google unsichtbar.", category: "technik", url: p.url, count: 1 });
   }
 
   return issues;
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
         ${session.user.id},
         ${body.url},
         'website',
-        ${issuesJson.filter(i => i.severity === "red").length},
+        ${issuesJson.reduce((acc, i) => acc + i.count, 0)},
         ${body.diagnose ?? ""},
         ${JSON.stringify(issuesJson)},
         ${body.techFingerprint ? JSON.stringify(body.techFingerprint) : null},

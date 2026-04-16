@@ -12,6 +12,7 @@ export interface ParsedIssueProp {
   title: string;
   body: string;
   category: "recht" | "speed" | "technik";
+  count?: number; // actual number of errors this issue represents
 }
 export interface ScanBriefProp {
   id: string;
@@ -23,9 +24,13 @@ export interface UnterseiteProp {
   url: string;
   erreichbar: boolean;
   title: string;
+  h1?: string;
   noindex: boolean;
   altMissing: number;
   altMissingImages?: string[];
+  metaDescription?: string;
+  inputsWithoutLabel?: number;
+  buttonsWithoutText?: number;
 }
 export interface FreeDashboardProps {
   firstName: string;
@@ -307,12 +312,15 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree }: {
 
         {/* ── Unterseiten ── */}
         {unterseiten.map((page, i) => {
-          const pageIssues = [
-            !page.erreichbar,
-            !page.title || page.title === "(kein Title)",
-            page.noindex,
-            page.altMissing > 0,
-          ].filter(Boolean).length;
+          const pageIssues =
+            page.altMissing
+            + (!page.erreichbar ? 1 : 0)
+            + (page.noindex ? 1 : 0)
+            + (!page.title || page.title === "(kein Title)" ? 1 : 0)
+            + (!page.h1 || page.h1 === "(kein H1)" ? 1 : 0)
+            + (!page.metaDescription ? 1 : 0)
+            + (page.inputsWithoutLabel ?? 0)
+            + (page.buttonsWithoutText ?? 0);
           const isLast = i === unterseiten.length - 1;
           const isOpen = expanded === i;
 
@@ -432,6 +440,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     fingerprint,
     totalPages, unterseiten,
   } = props;
+
+  // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
+  const totalErrors = issues.reduce((acc, i) => acc + (i.count ?? 1), 0);
 
   const searchParams = useSearchParams();
   const isImpersonating = searchParams.get("impersonating") === "1";
@@ -915,11 +926,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       return n != null ? ` · ${n} Seite${n !== 1 ? "n" : ""} analysiert` : "";
                     })()}
                     {" · "}
-                    {redCount > 0
-                      ? `${redCount} kritische Problem${redCount > 1 ? "e" : ""} gefunden`
-                      : yellowCount > 0
-                      ? `${yellowCount} Warnung${yellowCount > 1 ? "en" : ""} gefunden`
-                      : "Keine kritischen Probleme"}
+                    {totalErrors > 0
+                      ? `${totalErrors} Fehler gefunden`
+                      : "Keine Fehler gefunden"}
                   </p>
                 )}
                 {/* Status badge */}
@@ -935,7 +944,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   <span style={{ fontSize: 11, fontWeight: 700,
                     color: redCount > 0 ? D.red : yellowCount > 0 ? D.amber : D.green,
                   }}>
-                    {redCount > 0 ? `${redCount} Kritisch` : yellowCount > 0 ? `${yellowCount} Warnungen` : "Alles in Ordnung"}
+                    {totalErrors > 0 ? `${totalErrors} Fehler` : "Alles in Ordnung"}
                   </span>
                 </div>
               </div>

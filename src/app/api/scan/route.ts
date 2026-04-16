@@ -50,6 +50,7 @@ export type ScanIssue = {
   body: string;
   category: "recht" | "speed" | "technik";
   url?: string; // per-page issues carry their URL
+  count: number; // actual number of errors this issue represents (e.g. 24 for alt-missing)
 };
 
 function classifyIssueCategory(text: string): ScanIssue["category"] {
@@ -80,57 +81,57 @@ function buildIssuesJson(
 
   // ── Global issues ──
   if (!scanData.https)
-    issues.push({ severity: "red", title: "Kein HTTPS", body: "Die Seite ist nicht über HTTPS erreichbar — Sicherheitsrisiko und Google-Ranking-Nachteil.", category: "technik" });
+    issues.push({ severity: "red", title: "Kein HTTPS", body: "Die Seite ist nicht über HTTPS erreichbar — Sicherheitsrisiko und Google-Ranking-Nachteil.", category: "technik", count: 1 });
   if (!scanData.erreichbar)
-    issues.push({ severity: "red", title: "Startseite nicht erreichbar", body: "Die Startseite gibt einen Fehler zurück (4xx/5xx).", category: "technik" });
+    issues.push({ severity: "red", title: "Startseite nicht erreichbar", body: "Die Startseite gibt einen Fehler zurück (4xx/5xx).", category: "technik", count: 1 });
   if (!scanData.title)
-    issues.push({ severity: "red", title: "Title-Tag fehlt (Startseite)", body: "Fehlender Title-Tag schadet dem Google-Ranking direkt.", category: "technik" });
+    issues.push({ severity: "red", title: "Title-Tag fehlt (Startseite)", body: "Fehlender Title-Tag schadet dem Google-Ranking direkt.", category: "technik", count: 1 });
   if (!scanData.metaDescription)
-    issues.push({ severity: "yellow", title: "Meta-Description fehlt (Startseite)", body: "Ohne Meta-Description zeigt Google einen zufälligen Seitenausschnitt in den Suchergebnissen.", category: "technik" });
+    issues.push({ severity: "yellow", title: "Meta-Description fehlt (Startseite)", body: "Ohne Meta-Description zeigt Google einen zufälligen Seitenausschnitt in den Suchergebnissen.", category: "technik", count: 1 });
   if (!scanData.h1)
-    issues.push({ severity: "red", title: "H1-Tag fehlt (Startseite)", body: "Jede Seite braucht genau eine H1 — fehlt sie, verliert die Seite SEO-Gewicht.", category: "technik" });
+    issues.push({ severity: "red", title: "H1-Tag fehlt (Startseite)", body: "Jede Seite braucht genau eine H1 — fehlt sie, verliert die Seite SEO-Gewicht.", category: "technik", count: 1 });
   if (scanData.robotsBlockiertAlles)
-    issues.push({ severity: "red", title: "robots.txt blockiert alle Crawler", body: "Google kann die gesamte Seite nicht indexieren.", category: "technik" });
+    issues.push({ severity: "red", title: "robots.txt blockiert alle Crawler", body: "Google kann die gesamte Seite nicht indexieren.", category: "technik", count: 1 });
   if (scanData.indexierungGesperrt)
-    issues.push({ severity: "red", title: "Noindex auf Startseite gesetzt", body: "Die Startseite ist für Suchmaschinen unsichtbar.", category: "technik" });
+    issues.push({ severity: "red", title: "Noindex auf Startseite gesetzt", body: "Die Startseite ist für Suchmaschinen unsichtbar.", category: "technik", count: 1 });
   if (!scanData.sitemapVorhanden)
-    issues.push({ severity: "yellow", title: "Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Seiten langsamer.", category: "technik" });
+    issues.push({ severity: "yellow", title: "Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Seiten langsamer.", category: "technik", count: 1 });
 
   // ── BFSG / Accessibility ──
   if (totalAltMissing > 0)
-    issues.push({ severity: "red", title: `${totalAltMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: `${totalAltMissing} von ${totalImages} Bildern fehlt der Alt-Text — Barrierefreiheitspflicht ab 06/2025, Abmahnrisiko.`, category: "recht" });
+    issues.push({ severity: "red", title: `${totalAltMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: `${totalAltMissing} von ${totalImages} Bildern fehlt der Alt-Text — Barrierefreiheitspflicht ab 06/2025, Abmahnrisiko.`, category: "recht", count: totalAltMissing });
   if ((fc?.inputsWithoutLabel ?? 0) > 0)
-    issues.push({ severity: "red", title: `${fc!.inputsWithoutLabel} Formularfelder ohne Label (BFSG-Verstoß)`, body: "Screen-Reader können diese Felder nicht vorlesen. BFSG §3 Abs. 2.", category: "recht" });
+    issues.push({ severity: "red", title: `${fc!.inputsWithoutLabel} Formularfelder ohne Label (BFSG-Verstoß)`, body: "Screen-Reader können diese Felder nicht vorlesen. BFSG §3 Abs. 2.", category: "recht", count: fc!.inputsWithoutLabel! });
 
   // ── SEO-Duplikate ──
   if (duplicateTitles.length > 0)
-    issues.push({ severity: "red", title: `${duplicateTitles.length}× doppelter Title-Tag`, body: `Doppelte Titles verwirren Google. Betroffen: ${duplicateTitles.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+    issues.push({ severity: "red", title: `${duplicateTitles.length}× doppelter Title-Tag`, body: `Doppelte Titles verwirren Google. Betroffen: ${duplicateTitles.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik", count: duplicateTitles.length });
   if (duplicateMetas.length > 0)
-    issues.push({ severity: "yellow", title: `${duplicateMetas.length}× doppelte Meta-Description`, body: `Betroffen: ${duplicateMetas.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+    issues.push({ severity: "yellow", title: `${duplicateMetas.length}× doppelte Meta-Description`, body: `Betroffen: ${duplicateMetas.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik", count: duplicateMetas.length });
 
   // ── Broken Links / Orphans ──
   if (brokenLinks.length > 0)
-    issues.push({ severity: "red", title: `${brokenLinks.length} Broken Link${brokenLinks.length > 1 ? "s" : ""} (404)`, body: `Fehlerhafte Links: ${brokenLinks.slice(0, 3).map(b => toPath(b.url)).join(", ")}`, category: "technik" });
+    issues.push({ severity: "red", title: `${brokenLinks.length} Broken Link${brokenLinks.length > 1 ? "s" : ""} (404)`, body: `Fehlerhafte Links: ${brokenLinks.slice(0, 3).map(b => toPath(b.url)).join(", ")}`, category: "technik", count: brokenLinks.length });
   if (orphanedPages.length > 0)
-    issues.push({ severity: "yellow", title: `${orphanedPages.length} verwaiste Unterseite${orphanedPages.length > 1 ? "n" : ""}`, body: `Keine internen Links zeigen auf: ${orphanedPages.slice(0, 3).map(toPath).join(", ")}`, category: "technik" });
+    issues.push({ severity: "yellow", title: `${orphanedPages.length} verwaiste Unterseite${orphanedPages.length > 1 ? "n" : ""}`, body: `Keine internen Links zeigen auf: ${orphanedPages.slice(0, 3).map(toPath).join(", ")}`, category: "technik", count: orphanedPages.length });
 
   // ── Per-page issues ──
   for (const p of unterseiten) {
     const path = toPath(p.url);
     if (!p.erreichbar)
-      issues.push({ severity: "red", title: `Unterseite nicht erreichbar: ${path}`, body: "Die Seite gibt einen 4xx/5xx-Fehler zurück.", category: "technik", url: p.url });
+      issues.push({ severity: "red", title: `Unterseite nicht erreichbar: ${path}`, body: "Die Seite gibt einen 4xx/5xx-Fehler zurück.", category: "technik", url: p.url, count: 1 });
     if (!p.title || p.title === "(kein Title)")
-      issues.push({ severity: "red", title: `Title-Tag fehlt: ${path}`, body: "Fehlender Title-Tag verhindert gutes Google-Ranking dieser Unterseite.", category: "technik", url: p.url });
+      issues.push({ severity: "red", title: `Title-Tag fehlt: ${path}`, body: "Fehlender Title-Tag verhindert gutes Google-Ranking dieser Unterseite.", category: "technik", url: p.url, count: 1 });
     if (!p.h1 || p.h1 === "(kein H1)")
-      issues.push({ severity: "yellow", title: `H1 fehlt: ${path}`, body: "Fehlende H1-Überschrift schwächt das SEO-Signal der Seite.", category: "technik", url: p.url });
+      issues.push({ severity: "yellow", title: `H1 fehlt: ${path}`, body: "Fehlende H1-Überschrift schwächt das SEO-Signal der Seite.", category: "technik", url: p.url, count: 1 });
     if (p.noindex)
-      issues.push({ severity: "yellow", title: `Noindex gesetzt: ${path}`, body: "Diese Unterseite ist für Google unsichtbar — gewollt?", category: "technik", url: p.url });
+      issues.push({ severity: "yellow", title: `Noindex gesetzt: ${path}`, body: "Diese Unterseite ist für Google unsichtbar — gewollt?", category: "technik", url: p.url, count: 1 });
     if (p.altMissing > 0)
-      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text auf dieser Seite (BFSG 2025).`, category: "recht", url: p.url });
+      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text auf dieser Seite (BFSG 2025).`, category: "recht", url: p.url, count: p.altMissing });
     if (!p.metaDescription)
-      issues.push({ severity: "yellow", title: `Meta-Description fehlt: ${path}`, body: "Fehlende Meta-Description — Google wählt beliebigen Text als Snippet.", category: "technik", url: p.url });
+      issues.push({ severity: "yellow", title: `Meta-Description fehlt: ${path}`, body: "Fehlende Meta-Description — Google wählt beliebigen Text als Snippet.", category: "technik", url: p.url, count: 1 });
     if ((p.inputsWithoutLabel ?? 0) > 0)
-      issues.push({ severity: "red", title: `${p.inputsWithoutLabel} Formular-Label${(p.inputsWithoutLabel ?? 0) > 1 ? "s" : ""} fehlen: ${path}`, body: "Formularfelder ohne sichtbares Label — Screen-Reader können sie nicht vorlesen (BFSG §3 Abs. 2).", category: "recht", url: p.url });
+      issues.push({ severity: "red", title: `${p.inputsWithoutLabel} Formular-Label${(p.inputsWithoutLabel ?? 0) > 1 ? "s" : ""} fehlen: ${path}`, body: "Formularfelder ohne sichtbares Label — Screen-Reader können sie nicht vorlesen (BFSG §3 Abs. 2).", category: "recht", url: p.url, count: p.inputsWithoutLabel! });
   }
 
   return issues;
@@ -848,21 +849,6 @@ PFLICHT-REGELN:
     const diagnose = message.content[0].type === "text" ? message.content[0].text : "";
 
     // ── Async DB write + cache — never blocks the response ─
-    const issueCount = [
-      !scanData.https,
-      !scanData.erreichbar,
-      !scanData.title,
-      !scanData.metaDescription,
-      !scanData.h1,
-      scanData.robotsBlockiertAlles,
-      !scanData.sitemapVorhanden,
-      unterseiten.some((p) => !p.erreichbar),
-      duplicateTitles.length > 0,
-      duplicateMetas.length > 0,
-      totalAltMissing > 0,
-      brokenLinks.length > 0,
-      orphanedPages.length > 0,
-    ].filter(Boolean).length;
 
     // Build structured issues from raw data — this is the ground truth for the dashboard
     const issuesJson = buildIssuesJson(
@@ -875,6 +861,9 @@ PFLICHT-REGELN:
       brokenLinks,
       orphanedPages,
     );
+
+    // Actual sum of all errors (e.g. 24 missing alt texts = 24, not 1)
+    const issueCount = issuesJson.reduce((acc, i) => acc + i.count, 0);
 
     // Await DB write — must complete before response so the dashboard can read it
     const savedScanId = userId
