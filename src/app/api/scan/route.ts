@@ -491,7 +491,7 @@ export async function POST(req: NextRequest) {
             diagnose: cached.diagnose,
             issuesJson: cachedIssuesJson,
             techFingerprint: fp,
-            totalPages: cachedAudit?.unterseiten?.length ?? cachedAudit?.gescannteSeiten ?? null,
+            totalPages: cachedAudit?.gescannteSeiten ?? ((cachedAudit?.unterseiten?.length ?? 0) + 1),
             unterseitenJson: cachedAudit?.unterseiten ?? null,
           });
         }
@@ -717,7 +717,7 @@ export async function POST(req: NextRequest) {
 
     // ── Audit-Ergebnisse zusammenführen ────────────────────
     const audit = {
-      gescannteSeiten:   unterseiten.length,
+      gescannteSeiten:   unterseiten.length + 1, // +1 für die Homepage, die immer gescannt wird
       entdeckteUrls:     discoveredCount,
       gefilterteUrls:    filteredCount,  // Feeds/XML/etc. — registriert aber nicht analysiert
       uebersprungeneUrls: subpageUrls.filter(u => !shouldAudit(u)),  // Gefilterte URLs für Tabelle
