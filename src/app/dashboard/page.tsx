@@ -69,6 +69,7 @@ type ParsedIssue = {
   body: string;
   category: "recht" | "speed" | "technik";
   count?: number; // actual error count (e.g. 24 for 24 missing alt texts)
+  url?: string;   // page URL for per-page issues
 };
 
 function classifyCategory(text: string): ParsedIssue["category"] {

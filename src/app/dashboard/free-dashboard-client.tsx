@@ -13,6 +13,7 @@ export interface ParsedIssueProp {
   body: string;
   category: "recht" | "speed" | "technik";
   count?: number; // actual number of errors this issue represents
+  url?: string;   // page URL for per-page issues
 }
 export interface ScanBriefProp {
   id: string;
@@ -264,14 +265,194 @@ function hexToRgb(hex: string): string {
   return "255,255,255";
 }
 
+// ─── Drawer Panel ─────────────────────────────────────────────────────────────
+function DrawerPanel({
+  pageUrl,
+  unterseiten,
+  onClose,
+}: {
+  pageUrl: string;
+  unterseiten: UnterseiteProp[];
+  onClose: () => void;
+}) {
+  const page = unterseiten.find(p => p.url === pageUrl);
+  const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
+  const path = toPath(pageUrl);
+
+  type DrawerError = { label: string; kind: "critical" | "warning"; images?: string[] };
+  const errors: DrawerError[] = [];
+  if (page) {
+    if (!page.erreichbar)
+      errors.push({ label: "Seite nicht erreichbar (4xx/5xx)", kind: "critical" });
+    if (!page.title || page.title === "(kein Title)")
+      errors.push({ label: "Title-Tag fehlt", kind: "critical" });
+    if (!page.h1 || page.h1 === "(kein H1)")
+      errors.push({ label: "H1-Überschrift fehlt", kind: "warning" });
+    if (page.noindex)
+      errors.push({ label: "Noindex gesetzt — Seite für Google unsichtbar", kind: "warning" });
+    if (!page.metaDescription)
+      errors.push({ label: "Meta-Description fehlt", kind: "warning" });
+    if (page.altMissing > 0)
+      errors.push({ label: `${page.altMissing} Bilder ohne Alt-Text (BFSG 2025)`, kind: "critical", images: page.altMissingImages ?? [] });
+    if ((page.inputsWithoutLabel ?? 0) > 0)
+      errors.push({ label: `${page.inputsWithoutLabel} Formularfelder ohne Label (BFSG)`, kind: "critical" });
+    if ((page.buttonsWithoutText ?? 0) > 0)
+      errors.push({ label: `${page.buttonsWithoutText} Buttons ohne sichtbaren Text`, kind: "critical" });
+  }
+
+  const fixSteps: Record<string, string[]> = {
+    alt:    ["Öffne im WordPress-Dashboard: Medien → Bibliothek.", "Klicke auf das betroffene Bild → fülle das Feld 'Alternativtext' aus.", "Für Bilder in Seiten: Editor öffnen → Bild anklicken → Alt-Text-Feld in der Seitenleiste.", "Tipp: Beschreibung des Bildinhalts, z.B. 'Teamfoto Büro München'."],
+    title:  ["Installiere Yoast SEO oder RankMath (kostenlos).", "Öffne die Seite im Editor → scrolle zum SEO-Plugin-Feld.", "Trage im Feld 'SEO-Titel' einen einzigartigen, 55–60 Zeichen langen Titel ein.", "Enthalte das Haupt-Keyword der Seite im Titel."],
+    h1:     ["Öffne die Seite im Gutenberg-Editor.", "Füge einen Überschrift-Block (H1) als erste Überschrift ein.", "Jede Seite braucht genau eine H1 — keine weiteren H1-Blöcke auf dieser Seite."],
+    meta:   ["SEO-Plugin öffnen (Yoast/RankMath) → Seite im Editor öffnen.", "Feld 'Meta-Beschreibung' ausfüllen: 120–155 Zeichen, einladend formuliert.", "Die Meta-Description erscheint in Google-Suchergebnissen als Vorschautext."],
+    noindex:["Öffne die Seite im Editor → SEO-Plugin-Feld unten.", "Suche die Option 'Suchmaschinen erlauben, diese Seite zu indexieren' → aktivieren.", "Falls absichtlich gesetzt: OK. Falls versehentlich: sofort korrigieren."],
+    "404":  ["Prüfe ob die Seite gelöscht oder umbenannt wurde.", "Falls gelöscht: neu erstellen oder 301-Weiterleitung setzen.", "WordPress-Plugin 'Redirection' für einfaches Weiterleitungs-Management.", "Alle internen Links auf diese URL aktualisieren."],
+    label:  ["Öffne das Formular im Editor.", "Füge für jedes <input>-Feld ein sichtbares Label hinzu (aria-label oder <label for=...>).", "In Elementor: Formular-Widget → Feld-Einstellungen → Label-Feld ausfüllen."],
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 1000, backdropFilter: "blur(2px)" }} />
+      {/* Drawer */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0,
+        width: "min(460px, 100vw)",
+        background: "#0e1117", borderLeft: `1px solid ${D.borderMid}`,
+        zIndex: 1001, overflowY: "auto", display: "flex", flexDirection: "column",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px", borderBottom: `1px solid ${D.border}`,
+          display: "flex", alignItems: "flex-start", gap: 12,
+          position: "sticky", top: 0, background: "#0e1117", zIndex: 1,
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: "0 0 3px", fontSize: 10, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Seiten-Details</p>
+            <a href={pageUrl} target="_blank" rel="noopener noreferrer" style={{
+              fontSize: 13, fontWeight: 600, color: D.blueSoft, fontFamily: "monospace",
+              textDecoration: "none", display: "flex", alignItems: "center", gap: 5, wordBreak: "break-all",
+            }}>
+              {path}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
+            <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted, wordBreak: "break-all" }}>{pageUrl}</p>
+          </div>
+          <button onClick={onClose} style={{
+            background: "none", border: `1px solid ${D.border}`, cursor: "pointer",
+            borderRadius: 6, padding: "5px 10px", color: D.textSub, fontSize: 13, flexShrink: 0,
+          }}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "16px 20px", flex: 1 }}>
+          {errors.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
+              <p style={{ fontSize: 13, color: D.green, margin: 0 }}>Keine Fehler auf dieser Seite gefunden.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {errors.map((err, i) => {
+                const fixKey = err.label.toLowerCase().includes("alt") ? "alt"
+                  : err.label.toLowerCase().includes("title") ? "title"
+                  : err.label.toLowerCase().includes("h1") ? "h1"
+                  : err.label.toLowerCase().includes("meta") ? "meta"
+                  : err.label.toLowerCase().includes("noindex") ? "noindex"
+                  : err.label.toLowerCase().includes("erreichbar") || err.label.toLowerCase().includes("404") ? "404"
+                  : err.label.toLowerCase().includes("label") || err.label.toLowerCase().includes("formular") ? "label"
+                  : null;
+                const steps = fixKey ? fixSteps[fixKey] ?? [] : [];
+                return (
+                  <DrawerErrorRow key={i} err={err} steps={steps} />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DrawerErrorRow({
+  err,
+  steps,
+}: {
+  err: { label: string; kind: "critical" | "warning"; images?: string[] };
+  steps: string[];
+}) {
+  const [fixOpen, setFixOpen] = useState(false);
+  const color = err.kind === "critical" ? D.red : D.amber;
+  const bg    = err.kind === "critical" ? D.redBg : D.amberBg;
+  const bdr   = err.kind === "critical" ? D.redBorder : D.amberBorder;
+  return (
+    <div style={{ borderRadius: D.radiusSm, background: bg, border: `1px solid ${bdr}`, overflow: "hidden" }}>
+      {/* Error row */}
+      <div style={{ padding: "11px 14px", display: "flex", alignItems: "flex-start", gap: 8 }}>
+        <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>{err.kind === "critical" ? "⛔" : "⚠️"}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: D.text, flex: 1 }}>{err.label}</span>
+        {steps.length > 0 && (
+          <button onClick={() => setFixOpen(v => !v)} style={{
+            flexShrink: 0, fontSize: 11, fontWeight: 700, padding: "3px 8px",
+            borderRadius: 4, cursor: "pointer", background: "rgba(255,255,255,0.06)",
+            border: `1px solid rgba(255,255,255,0.12)`, color: color,
+          }}>
+            {fixOpen ? "Schließen" : "Wie fixen?"}
+          </button>
+        )}
+      </div>
+      {/* Image list */}
+      {err.images && err.images.length > 0 && (
+        <div style={{ padding: "0 14px 10px" }}>
+          <p style={{ margin: "0 0 5px", fontSize: 11, color: D.textMuted }}>Betroffene Bilder ({err.images.length}):</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {err.images.slice(0, 12).map((img, j) => {
+              const imgPath = (() => { try { return new URL(img).pathname; } catch { return img; } })();
+              return (
+                <div key={j} style={{
+                  fontSize: 11, fontFamily: "monospace", color: D.textSub,
+                  background: "rgba(0,0,0,0.25)", borderRadius: 4, padding: "3px 8px", wordBreak: "break-all",
+                }}>
+                  {imgPath}
+                </div>
+              );
+            })}
+            {err.images.length > 12 && (
+              <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted }}>+{err.images.length - 12} weitere</p>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Fix steps */}
+      {fixOpen && steps.length > 0 && (
+        <div style={{ padding: "10px 14px 12px", borderTop: `1px solid rgba(255,255,255,0.06)`, background: "rgba(0,0,0,0.15)" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: color, textTransform: "uppercase", letterSpacing: "0.07em" }}>Fix-Anleitung (WordPress/Elementor):</p>
+          {steps.map((s, si) => (
+            <div key={si} style={{ display: "flex", gap: 8, marginBottom: si < steps.length - 1 ? 5 : 0 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color, flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
+              <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Deep-Scan Map ────────────────────────────────────────────────────────────
-function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree }: {
+function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onOpenDrawer, checkedUrls, onToggleChecked }: {
   homepageUrl: string;
   homepageIssueCount: number;
   unterseiten: UnterseiteProp[];
   isFree: boolean;
+  onOpenDrawer: (url: string) => void;
+  checkedUrls: Set<string>;
+  onToggleChecked: (url: string) => void;
 }) {
   const [expanded, setExpanded] = useState<number | null>(null);
+  void expanded; void setExpanded;
 
   return (
     <div style={{ marginBottom: 28 }}>
@@ -305,9 +486,18 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree }: {
           }}>
             {homepageIssueCount > 0 ? `${homepageIssueCount} Fehler` : "OK"}
           </span>
-          <span style={{ fontSize: 11, color: D.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>
-            Details ↓ unten
-          </span>
+          {homepageIssueCount > 0 && (
+            <button
+              onClick={() => onOpenDrawer(homepageUrl)}
+              style={{
+                flexShrink: 0, fontSize: 11, fontWeight: 700,
+                padding: "3px 10px", borderRadius: 4, cursor: "pointer",
+                background: D.card, border: `1px solid ${D.borderMid}`, color: D.textSub,
+              }}
+            >
+              Details →
+            </button>
+          )}
         </div>
 
         {/* ── Unterseiten ── */}
@@ -321,25 +511,32 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree }: {
             + (!page.metaDescription ? 1 : 0)
             + (page.inputsWithoutLabel ?? 0)
             + (page.buttonsWithoutText ?? 0);
-          const isLast = i === unterseiten.length - 1;
-          const isOpen = expanded === i;
-
-          // Build issue label texts for smart-guard users
-          const issueLabels: string[] = [];
-          if (!page.erreichbar)                               issueLabels.push("Seite nicht erreichbar");
-          if (!page.title || page.title === "(kein Title)")   issueLabels.push("Kein Title-Tag");
-          if (page.noindex)                                   issueLabels.push("Noindex gesetzt");
-          if (page.altMissing > 0)                            issueLabels.push(`${page.altMissing} Bild${page.altMissing !== 1 ? "er" : ""} ohne Alt-Text`);
+          const isLast    = i === unterseiten.length - 1;
+          const isChecked = checkedUrls.has(page.url);
 
           return (
             <div key={page.url} style={{
               borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
+              background: isChecked ? "rgba(74,222,128,0.04)" : "transparent",
+              opacity: isChecked ? 0.65 : 1,
+              transition: "opacity 0.2s",
             }}>
-              {/* Main row */}
-              <div style={{
-                padding: "11px 20px",
-                display: "flex", alignItems: "center", gap: 10,
-              }}>
+              <div style={{ padding: "11px 20px", display: "flex", alignItems: "center", gap: 8 }}>
+                {/* Geprüft checkbox */}
+                <button
+                  title={isChecked ? "Als offen markieren" : "Als geprüft markieren"}
+                  onClick={() => onToggleChecked(page.url)}
+                  style={{
+                    flexShrink: 0, width: 20, height: 20, borderRadius: 4,
+                    border: `1.5px solid ${isChecked ? D.greenBorder : D.border}`,
+                    background: isChecked ? D.greenBg : "transparent",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    color: D.green, fontSize: 11, fontWeight: 700,
+                  }}
+                >
+                  {isChecked ? "✓" : ""}
+                </button>
+
                 {/* Status badge */}
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
@@ -353,73 +550,38 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree }: {
 
                 {/* Full URL */}
                 <span style={{
-                  fontSize: 12, color: D.textSub, fontFamily: "monospace",
+                  fontSize: 12, color: isChecked ? D.textMuted : D.textSub, fontFamily: "monospace",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+                  textDecoration: isChecked ? "line-through" : "none",
                 }}>
                   {page.url}
                 </span>
 
-                {/* Details toggle — only if there are issues */}
+                {/* Offline badge */}
+                {!page.erreichbar && (
+                  <span style={{
+                    flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 6px",
+                    borderRadius: 4, background: "rgba(239,68,68,0.2)", color: D.red,
+                    border: `1px solid ${D.redBorder}`,
+                  }}>
+                    404/5xx
+                  </span>
+                )}
+
+                {/* Details button — opens drawer */}
                 {pageIssues > 0 && (
                   <button
-                    onClick={() => setExpanded(isOpen ? null : i)}
+                    onClick={() => onOpenDrawer(page.url)}
                     style={{
                       flexShrink: 0, fontSize: 11, fontWeight: 700,
                       padding: "3px 10px", borderRadius: 4, cursor: "pointer",
-                      background: isOpen ? "rgba(124,58,237,0.12)" : D.card,
-                      border: `1px solid ${isOpen ? "rgba(124,58,237,0.3)" : D.borderMid}`,
-                      color: isOpen ? "#a78bfa" : D.textSub,
+                      background: D.card, border: `1px solid ${D.borderMid}`, color: D.textSub,
                     }}
                   >
-                    {isOpen ? "Schließen ✕" : "Details →"}
+                    Details →
                   </button>
                 )}
               </div>
-
-              {/* Expandable detail panel */}
-              {isOpen && pageIssues > 0 && (
-                <div style={{
-                  margin: "0 20px 12px",
-                  borderRadius: 8,
-                  border: `1px solid ${D.borderMid}`,
-                  overflow: "hidden",
-                }}>
-                  {isFree ? (
-                    /* Smart-Guard gate — only shown when user clicks Details */
-                    <div style={{
-                      padding: "16px 20px",
-                      background: "rgba(124,58,237,0.05)",
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
-                    }}>
-                      <div>
-                        <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "#a78bfa" }}>
-                          {pageIssues} Problem{pageIssues !== 1 ? "e" : ""} auf dieser Seite gefunden
-                        </p>
-                        <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
-                          Schritt-für-Schritt-Lösung & KI-Auto-Fix nur im Smart-Guard Plan
-                        </p>
-                      </div>
-                      <Link href="/pricing?plan=smart-guard" style={{
-                        fontSize: 12, fontWeight: 700, padding: "7px 16px", borderRadius: 6,
-                        background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)",
-                        color: "#c4b5fd", textDecoration: "none", whiteSpace: "nowrap",
-                      }}>
-                        Smart-Guard freischalten →
-                      </Link>
-                    </div>
-                  ) : (
-                    /* Paid: show actual issue list */
-                    <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-                      {issueLabels.map(label => (
-                        <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: D.red, flexShrink: 0 }} />
-                          <span style={{ fontSize: 12, color: D.textSub }}>{label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
@@ -448,6 +610,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const isImpersonating = searchParams.get("impersonating") === "1";
 
   const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
+  const [fixOpenIdx, setFixOpenIdx]             = useState<number | null>(null);
+  const [drawerPageUrl, setDrawerPageUrl]       = useState<string | null>(null);
+  const [checkedUrls, setCheckedUrls]           = useState<Set<string>>(new Set());
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [cancelHover, setCancelHover]           = useState(false);
   const [switchHover, setSwitchHover]           = useState(false);
@@ -478,6 +643,25 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
       } catch { /* ignore */ }
     }
   }, [lastScan]);
+
+  // Persist checked URLs to localStorage (per scan)
+  const checkedKey = `wf_checked_${lastScan?.id ?? "anon"}`;
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(checkedKey);
+      if (saved) setCheckedUrls(new Set(JSON.parse(saved) as string[]));
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkedKey]);
+
+  function toggleChecked(url: string) {
+    setCheckedUrls(prev => {
+      const next = new Set(prev);
+      if (next.has(url)) next.delete(url); else next.add(url);
+      try { localStorage.setItem(checkedKey, JSON.stringify([...next])); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
 
   const SMART_GUARD_PLANS = ["smart-guard", "agency-starter", "agency-pro"];
@@ -1169,6 +1353,18 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               homepageIssueCount={issues.length}
               unterseiten={unterseiten}
               isFree={isFree}
+              onOpenDrawer={setDrawerPageUrl}
+              checkedUrls={checkedUrls}
+              onToggleChecked={toggleChecked}
+            />
+          )}
+
+          {/* Side drawer */}
+          {drawerPageUrl && unterseiten && (
+            <DrawerPanel
+              pageUrl={drawerPageUrl}
+              unterseiten={unterseiten}
+              onClose={() => setDrawerPageUrl(null)}
             />
           )}
 
@@ -1188,8 +1384,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {issues.map((issue, idx) => {
-                  const isOpen = expandedFinding === idx;
+                  const isOpen    = expandedFinding === idx;
+                  const isFixOpen = fixOpenIdx === idx;
                   const accentColor = issue.severity === "red" ? "#f87171" : issue.severity === "yellow" ? D.amber : D.green;
+                  const fixSteps  = generateFixSteps(issue).steps;
+                  // Look up image filenames for per-page alt-text issues
+                  const pageImages = issue.url
+                    ? unterseiten?.find(p => p.url === issue.url)?.altMissingImages ?? []
+                    : [];
                   return (
                     <div key={idx} style={{
                       borderRadius: D.radiusSm,
@@ -1198,125 +1400,133 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       overflow: "hidden",
                     }}>
                       {/* Row */}
-                      {(() => {
-                        const impact = getImpact(issue.category, issue.severity);
-                        return (
+                      <div style={{
+                        padding: "11px 14px 11px 18px",
+                        display: "flex", alignItems: "center", gap: 10,
+                      }}>
+                        {/* Expand chevron button */}
+                        <button
+                          onClick={() => setExpandedFinding(isOpen ? null : idx)}
+                          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
+                          aria-label="Details anzeigen"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                            stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ display: "block", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                            <polyline points="6 9 12 15 18 9"/>
+                          </svg>
+                        </button>
+
+                        <SevBadge sev={issue.severity} />
+
+                        {/* Title + URL */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>
+                            {issue.title}
+                          </p>
+                          {issue.url && (
+                            <a
+                              href={issue.url} target="_blank" rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              style={{ margin: "2px 0 0", fontSize: 11, color: D.blueSoft, fontFamily: "monospace", display: "block",
+                                textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                            >
+                              {(() => { try { return new URL(issue.url!).pathname; } catch { return issue.url; } })()}
+                              {" ↗"}
+                            </a>
+                          )}
+                          {!issue.url && (
+                            <p style={{ margin: "2px 0 0", fontSize: 11, color: getImpact(issue.category, issue.severity).color, fontWeight: 500, opacity: 0.85 }}>
+                              ↑ {getImpact(issue.category, issue.severity).label}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Category badge */}
+                        <span style={{ fontSize: 10, color: D.textMuted, flexShrink: 0,
+                          padding: "2px 7px", borderRadius: 4,
+                          background: "rgba(255,255,255,0.03)", border: `1px solid ${D.border}`,
+                          textTransform: "uppercase", letterSpacing: "0.06em",
+                        }}>
+                          {issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "Speed" : "Technik"}
+                        </span>
+
+                        {/* "Wie fixen?" button — always visible */}
+                        {fixSteps.length > 0 && (
                           <button
-                            onClick={() => setExpandedFinding(isOpen ? null : idx)}
+                            onClick={e => { e.stopPropagation(); setFixOpenIdx(isFixOpen ? null : idx); }}
                             style={{
-                              width: "100%", background: "none", border: "none", cursor: "pointer",
-                              padding: "13px 18px",
-                              display: "flex", alignItems: "center", gap: 12,
-                              textAlign: "left", fontFamily: "inherit",
+                              flexShrink: 0, fontSize: 11, fontWeight: 700,
+                              padding: "4px 10px", borderRadius: 4, cursor: "pointer",
+                              background: isFixOpen ? "rgba(141,243,211,0.1)" : "rgba(255,255,255,0.04)",
+                              border: `1px solid ${isFixOpen ? "rgba(141,243,211,0.35)" : D.border}`,
+                              color: isFixOpen ? "#8df3d3" : D.textSub,
+                              whiteSpace: "nowrap",
                             }}
                           >
-                            <SevBadge sev={issue.severity} />
-                            {/* Title + impact */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>
-                                {issue.title}
-                              </p>
-                              <p style={{ margin: "2px 0 0", fontSize: 11, color: impact.color, fontWeight: 500, opacity: 0.85 }}>
-                                ↑ {impact.label}
-                              </p>
-                            </div>
-                            <span style={{ fontSize: 10, color: D.textMuted, flexShrink: 0,
-                              padding: "2px 7px", borderRadius: 4,
-                              background: "rgba(255,255,255,0.03)", border: `1px solid ${D.border}`,
-                              textTransform: "uppercase", letterSpacing: "0.06em",
-                            }}>
-                              {issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "Speed" : "Technik"}
-                            </span>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                              stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                              style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
-                              <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+                            {isFixOpen ? "Schließen ✕" : "Wie fixen?"}
                           </button>
-                        );
-                      })()}
+                        )}
+                      </div>
 
-                      {/* Expanded body */}
+                      {/* "Wie fixen?" steps — independent of body expansion */}
+                      {isFixOpen && fixSteps.length > 0 && (
+                        <div style={{
+                          padding: "12px 18px 14px",
+                          background: "rgba(141,243,211,0.03)",
+                          borderTop: "1px solid rgba(141,243,211,0.1)",
+                        }}>
+                          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                            Fix-Anleitung (WordPress / Elementor):
+                          </p>
+                          {fixSteps.map((s: string, si: number) => (
+                            <div key={si} style={{ display: "flex", gap: 8, marginBottom: si < fixSteps.length - 1 ? 5 : 0 }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: "#8df3d3", flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
+                              <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
+                            </div>
+                          ))}
+                          {!isSmartGuard && (
+                            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 11, color: D.textMuted, flex: 1 }}>KI-Auto-Fix (Copy-Paste-fertig) nur mit Smart-Guard</span>
+                              <Link href="/pricing?plan=smart-guard" style={{
+                                flexShrink: 0, fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 4,
+                                background: "rgba(192,132,252,0.12)", border: "1px solid rgba(192,132,252,0.3)",
+                                color: "#c084fc", textDecoration: "none",
+                              }}>Smart-Guard →</Link>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Expanded body — description + image filenames */}
                       {isOpen && (
-                        <div style={{ padding: "0 18px 20px", borderTop: `1px solid ${D.divider}` }}>
-
-                          {/* Technical finding — always visible */}
-                          <p style={{ margin: "14px 0 16px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
+                        <div style={{ padding: "0 18px 16px", borderTop: `1px solid ${D.divider}` }}>
+                          <p style={{ margin: "12px 0 0", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
                             {issue.body}
                           </p>
-
-                          {/* Fix block — varies by plan */}
-                          {isSmartGuard ? (
-                            /* Smart-Guard: vollständige KI-Fix-Anleitung */
-                            <div style={{
-                              padding: "14px 18px 16px",
-                              background: "rgba(255,255,255,0.02)",
-                              border: `1px solid ${D.border}`,
-                              borderRadius: D.radiusSm,
-                            }}>
-                              <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 700, color: D.text, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                                KI-Fix — Schritt-für-Schritt:
+                          {/* Image filenames for alt-text issues */}
+                          {pageImages.length > 0 && (
+                            <div style={{ marginTop: 12 }}>
+                              <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: D.textMuted }}>
+                                Betroffene Bilder ({pageImages.length}):
                               </p>
-                              {(() => { const steps = generateFixSteps(issue).steps; return steps.length > 0
-                                ? steps.map((s: string, i: number) => (
-                                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < steps.length - 1 ? 6 : 0 }}>
-                                    <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft, flexShrink: 0, lineHeight: 1.6 }}>{i + 1}.</span>
-                                    <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
-                                  </div>
-                                ))
-                                : (
-                                  <p style={{ margin: 0, fontSize: 12, color: D.textMuted }}>Kein KI-Fix für diesen Befund verfügbar.</p>
-                                ); })()
-                              }
-                            </div>
-                          ) : (
-                            /* Free: Manueller Lösungsweg + CTA nur für KI-Fix */
-                            <div>
-                              <div style={{
-                                padding: "12px 16px",
-                                background: "rgba(141,243,211,0.04)",
-                                border: "1px solid rgba(141,243,211,0.15)",
-                                borderRadius: D.radiusSm,
-                                marginBottom: 10,
-                              }}>
-                                <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                                  Manueller Lösungsweg:
-                                </p>
-                                {(() => { const steps = generateFixSteps(issue).steps; return steps.length > 0
-                                  ? steps.map((s: string, i: number) => (
-                                    <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < steps.length - 1 ? 5 : 0 }}>
-                                      <span style={{ fontSize: 11, fontWeight: 700, color: "#8df3d3", flexShrink: 0, lineHeight: 1.6 }}>{i + 1}.</span>
-                                      <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
-                                    </div>
-                                  ))
-                                  : (
-                                    <p style={{ margin: 0, fontSize: 12, color: D.textMuted }}>Navigiere im CMS zum betroffenen Element und korrigiere es manuell.</p>
-                                  ); })()}
-                              </div>
-                              {/* KI-Auto-Fix CTA — nur für Smart-Guard */}
-                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                </svg>
-                                <span style={{ fontSize: 12, color: D.textMuted, flex: 1 }}>
-                                  KI-Auto-Fix (Copy-Paste-fertig) nur mit Smart-Guard
-                                </span>
-                                <Link href="/pricing?plan=smart-guard" style={{
-                                  flexShrink: 0,
-                                  display: "inline-flex", alignItems: "center", gap: 4,
-                                  padding: "6px 12px", borderRadius: D.radiusXs,
-                                  background: "rgba(192,132,252,0.12)",
-                                  border: "1px solid rgba(192,132,252,0.3)",
-                                  color: "#c084fc",
-                                  fontSize: 11, fontWeight: 700, textDecoration: "none",
-                                  whiteSpace: "nowrap",
-                                }}>
-                                  Smart-Guard →
-                                </Link>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                {pageImages.slice(0, 10).map((img, j) => {
+                                  const imgPath = (() => { try { return new URL(img).pathname; } catch { return img; } })();
+                                  return (
+                                    <div key={j} style={{
+                                      fontSize: 11, fontFamily: "monospace", color: D.textSub,
+                                      background: "rgba(0,0,0,0.2)", borderRadius: 4, padding: "3px 8px",
+                                      wordBreak: "break-all",
+                                    }}>{imgPath}</div>
+                                  );
+                                })}
+                                {pageImages.length > 10 && (
+                                  <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted }}>+{pageImages.length - 10} weitere</p>
+                                )}
                               </div>
                             </div>
                           )}
-
                         </div>
                       )}
                     </div>
