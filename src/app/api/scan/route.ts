@@ -542,6 +542,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Normalize targetUrl to the resolved URL after redirects ──────────────
+    // fetch() follows redirects; mainRes.url is the final URL.
+    // Example: user types "glasklar.com" → we prepend https://glasklar.com →
+    // server redirects to https://www.glasklar.com/ → all internal links use
+    // www.glasklar.com as host. Without normalization, extractInternalLinks
+    // would drop all subpages because "www.glasklar.com" !== "glasklar.com".
+    try {
+      const resolvedHost = new URL(mainRes.url).host;
+      const originalHost = new URL(targetUrl).host;
+      const stripWww = (h: string) => h.replace(/^www\./, "").toLowerCase();
+      if (stripWww(resolvedHost) === stripWww(originalHost) && resolvedHost !== originalHost) {
+        const r = new URL(mainRes.url);
+        targetUrl = `${r.protocol}//${r.host}`;
+        scanData.url = targetUrl;
+      }
+    } catch { /* keep original targetUrl */ }
+
     // ── Tech fingerprint — runs against the already-fetched HTML ─────────────
     // buildFingerprintFromRaw is synchronous; no extra HTTP request needed.
     const techFingerprint = buildFingerprintFromRaw(
