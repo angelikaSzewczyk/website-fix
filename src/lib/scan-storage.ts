@@ -22,10 +22,11 @@ export type StoredScan = {
     title:              string;            // "(kein Title)" when absent
     h1:                 string;            // "(kein H1)" when absent
     metaDescription:    string;            // "" when absent
-    inputsWithoutLabel: number;
-    buttonsWithoutText: number;
-    altMissingImages:   string[];
-    foundVia?:          string;            // URL of the page that linked here, or "sitemap"
+    inputsWithoutLabel:        number;
+    inputsWithoutLabelFields?: string[];   // placeholder/name/id of each unlabeled field
+    buttonsWithoutText:        number;
+    altMissingImages:          string[];
+    foundVia?:                 string;     // URL of the page that linked here, or "sitemap"
   }>;
   diagnose:             string;
   https:                boolean;
@@ -86,10 +87,11 @@ export type ApiScanResponse = {
         title?:             string;
         h1?:                string;
         metaDescription?:   string;
-        inputsWithoutLabel?: number;
-        buttonsWithoutText?: number;
-        altMissingImages?:  string[];
-        foundVia?:          string;
+        inputsWithoutLabel?:        number;
+        inputsWithoutLabelFields?:  string[];
+        buttonsWithoutText?:        number;
+        altMissingImages?:          string[];
+        foundVia?:                  string;
       }>;
       altTexte?: { fehlend?: number; gesamt?: number; missingImages?: string[] };
       duplicateTitles?: unknown[];
@@ -120,10 +122,11 @@ export function saveScanToStorage(url: string, data: ApiScanResponse): void {
         title:              p.title ?? "(kein Title)",
         h1:                 p.h1   ?? "(kein H1)",
         metaDescription:    p.metaDescription ?? "",
-        inputsWithoutLabel: p.inputsWithoutLabel ?? 0,
-        buttonsWithoutText: p.buttonsWithoutText ?? 0,
-        altMissingImages:   p.altMissingImages ?? [],
-        foundVia:           p.foundVia,
+        inputsWithoutLabel:        p.inputsWithoutLabel ?? 0,
+        inputsWithoutLabelFields:  p.inputsWithoutLabelFields ?? [],
+        buttonsWithoutText:        p.buttonsWithoutText ?? 0,
+        altMissingImages:          p.altMissingImages ?? [],
+        foundVia:                  p.foundVia,
       })),
       diagnose:             data.diagnose ?? "",
       https:                sd.https ?? true,

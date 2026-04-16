@@ -31,6 +31,7 @@ export interface UnterseiteProp {
   altMissingImages?: string[];
   metaDescription?: string;
   inputsWithoutLabel?: number;
+  inputsWithoutLabelFields?: string[];   // placeholder/name/id of each unlabeled field
   buttonsWithoutText?: number;
   /** Page that linked to this URL, or "sitemap" if discovered via sitemap.xml */
   foundVia?: string;
@@ -276,7 +277,7 @@ const DRAWER_FIX_STEPS: Record<string, string[]> = {
   meta:    ["SEO-Plugin (Yoast/RankMath) öffnen → Seite im Editor.", "Feld 'Meta-Beschreibung' befüllen: 120–155 Zeichen, einladend formuliert.", "Die Meta-Description erscheint als Vorschautext in Google-Suchergebnissen."],
   noindex: ["Seite im Editor öffnen → SEO-Plugin-Bereich.", "Option 'Suchmaschinen erlauben, diese Seite zu indexieren' aktivieren.", "Achtung: Nur deaktivieren wenn die Seite absichtlich versteckt werden soll."],
   "404":   ["Prüfe ob die Seite gelöscht oder umbenannt wurde.", "Seite neu erstellen oder 301-Weiterleitung zur nächstbesten Seite setzen.", "WordPress-Plugin 'Redirection' für einfaches Weiterleitungs-Management.", "Alle internen Links auf diese URL aktualisieren."],
-  label:   ["Formular im Editor öffnen.", "Für jedes Formularfeld ein sichtbares Label hinzufügen (<label for=...> oder aria-label).", "In Elementor: Formular-Widget → Feld-Einstellungen → Label-Feld befüllen."],
+  label:   ["Seite im Elementor/WordPress-Editor öffnen und das Formular suchen.", "Elementor Formular-Widget: Auf das Formular klicken → links Feld auswählen → Abschnitt 'Label' befüllen (z.B. 'Telefonnummer', 'E-Mail-Adresse').", "WPForms / Gravity Forms: Formular im Plugin-Dashboard öffnen → Feld anklicken → Feld-Label eintragen.", "Für technisch fortgeschrittene: aria-label-Attribut direkt im HTML setzen — z.B. <input aria-label=\"Telefonnummer\" ...>.", "Prüfen: Jedes Eingabefeld muss entweder ein sichtbares Label (<label for=...>) oder ein aria-label-Attribut haben.", "Tipp: Placeholder-Text allein genügt NICHT als Label — er verschwindet beim Tippen und ist für Screen-Reader unzuverlässig."],
   button:  ["Buttons im Editor öffnen.", "Sicherstellen dass jeder Button sichtbaren Text oder ein aria-label hat.", "Reine Icon-Buttons brauchen aria-label='Beschreibung der Aktion'."],
 };
 
@@ -331,12 +332,14 @@ function DrawerCard({
   kind,
   count,
   images,
+  fields,
 }: {
   fixKey: string | null;
   label: string;
   kind: "critical" | "warning";
   count?: number;
   images?: string[];
+  fields?: string[];  // field identifiers for inputsWithoutLabel
 }) {
   const [fixOpen, setFixOpen] = useState(false);
   const steps = fixKey ? DRAWER_FIX_STEPS[fixKey] ?? [] : [];
@@ -446,6 +449,33 @@ function DrawerCard({
           </ul>
         </div>
       )}
+
+      {/* Form field list */}
+      {fields && fields.length > 0 && (
+        <div style={{
+          padding: "0 16px 14px",
+          borderTop: (fixOpen || (images && images.length > 0)) ? undefined : `1px solid ${accentBdr}`,
+        }}>
+          <p style={{ margin: "10px 0 7px", fontSize: 11, fontWeight: 600, color: D.textMuted }}>
+            Betroffene Felder ({fields.length}):
+          </p>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+            {fields.map((f, j) => (
+              <li key={j} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                background: "rgba(0,0,0,0.25)", borderRadius: 5,
+                padding: "5px 10px",
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span style={{ fontSize: 12, color: D.textSub, fontFamily: "monospace" }}>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -469,7 +499,7 @@ function DrawerPanel({
   const path = toPath(pageUrl);
   const is404 = page && !page.erreichbar;
 
-  type DrawerEntry = { fixKey: string | null; label: string; kind: "critical" | "warning"; count?: number; images?: string[] };
+  type DrawerEntry = { fixKey: string | null; label: string; kind: "critical" | "warning"; count?: number; images?: string[]; fields?: string[] };
   const entries: DrawerEntry[] = [];
   if (page) {
     if (!page.title || page.title === "(kein Title)")
@@ -483,7 +513,7 @@ function DrawerPanel({
     if (page.altMissing > 0)
       entries.push({ fixKey: "alt", label: `${page.altMissing} Bilder ohne Alt-Text (BFSG 2025)`, kind: "critical", count: page.altMissing, images: page.altMissingImages ?? [] });
     if ((page.inputsWithoutLabel ?? 0) > 0)
-      entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label`, kind: "critical", count: page.inputsWithoutLabel });
+      entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label`, kind: "critical", count: page.inputsWithoutLabel, fields: page.inputsWithoutLabelFields ?? [] });
     if ((page.buttonsWithoutText ?? 0) > 0)
       entries.push({ fixKey: "button", label: `${page.buttonsWithoutText} Buttons ohne Text`, kind: "critical", count: page.buttonsWithoutText });
   }
@@ -648,7 +678,7 @@ function DrawerPanel({
                   />
                 )}
                 {entries.map((e, i) => (
-                  <DrawerCard key={i} fixKey={e.fixKey} label={e.label} kind={e.kind} count={e.count} images={e.images} />
+                  <DrawerCard key={i} fixKey={e.fixKey} label={e.label} kind={e.kind} count={e.count} images={e.images} fields={e.fields} />
                 ))}
               </div>
             )

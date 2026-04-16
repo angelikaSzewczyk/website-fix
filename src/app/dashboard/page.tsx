@@ -501,7 +501,7 @@ export default async function DashboardPage() {
   let lastScanIssuesJson: ParsedIssue[] | null = null;
   let techFingerprint: import("@/lib/tech-detector").TechFingerprint | null = null;
   let lastScanTotalPages: number | null = null;
-  let lastScanUnterseiten: { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number; altMissingImages?: string[]; metaDescription?: string; inputsWithoutLabel?: number; buttonsWithoutText?: number; foundVia?: string }[] | null = null;
+  let lastScanUnterseiten: { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number; altMissingImages?: string[]; metaDescription?: string; inputsWithoutLabel?: number; inputsWithoutLabelFields?: string[]; buttonsWithoutText?: number; foundVia?: string }[] | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {

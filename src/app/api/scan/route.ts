@@ -295,11 +295,11 @@ function countMissingAlt(html: string): { missing: number; total: number; missin
 }
 
 // ── Form Accessibility Check ────────────────────────────────
-function checkFormAccessibility(html: string): { formsCount: number; inputsWithoutLabel: number; buttonsWithoutText: number } {
+function checkFormAccessibility(html: string): { formsCount: number; inputsWithoutLabel: number; inputsWithoutLabelFields: string[]; buttonsWithoutText: number } {
   const formsCount = (html.match(/<form[^>]*>/gi) ?? []).length;
   // Inputs of interactive types that need a label
   const inputs = html.match(/<input[^>]*type=["']?(?:text|email|tel|number|search|password|url)[^>]*>/gi) ?? [];
-  const inputsWithoutLabel = inputs.filter(tag => {
+  const unlabeled = inputs.filter(tag => {
     if (/aria-label=["'][^"']+["']/i.test(tag)) return false;
     if (/aria-labelledby=["'][^"']+["']/i.test(tag)) return false;
     const idMatch = tag.match(/\sid=["']([^"']+)["']/i);
@@ -308,7 +308,20 @@ function checkFormAccessibility(html: string): { formsCount: number; inputsWitho
       if (html.includes(`for="${id}"`) || html.includes(`for='${id}'`)) return false;
     }
     return true;
-  }).length;
+  });
+  const inputsWithoutLabel = unlabeled.length;
+  // Extract the best human-readable identifier for each unlabeled field
+  const inputsWithoutLabelFields: string[] = unlabeled.map(tag => {
+    const placeholder = tag.match(/placeholder=["']([^"']{1,50})["']/i)?.[1];
+    if (placeholder) return `Feld: „${placeholder}"`;
+    const name = tag.match(/\sname=["']([^"']+)["']/i)?.[1];
+    if (name) return `Feld: ${name}`;
+    const id = tag.match(/\sid=["']([^"']+)["']/i)?.[1];
+    if (id) return `ID: ${id}`;
+    const type = tag.match(/type=["']?([a-z-]+)/i)?.[1];
+    if (type && type !== "text") return `${type.charAt(0).toUpperCase() + type.slice(1)}-Feld (kein Name)`;
+    return "Unbekanntes Eingabefeld";
+  });
   // Buttons without visible text or aria-label
   const buttons = html.match(/<button[^>]*>[\s\S]*?<\/button>/gi) ?? [];
   const buttonsWithoutText = buttons.filter(btn => {
@@ -316,7 +329,7 @@ function checkFormAccessibility(html: string): { formsCount: number; inputsWitho
     const inner = btn.replace(/<[^>]+>/g, "").trim();
     return inner.length === 0;
   }).length;
-  return { formsCount, inputsWithoutLabel, buttonsWithoutText };
+  return { formsCount, inputsWithoutLabel, inputsWithoutLabelFields, buttonsWithoutText };
 }
 
 // ── Subpage Scan ────────────────────────────────────────────
@@ -335,13 +348,14 @@ type PageResult = {
   altMissingImages: string[];
   // Form accessibility — identical check as homepage
   inputsWithoutLabel: number;
+  inputsWithoutLabelFields: string[];
   buttonsWithoutText: number;
   // Where the crawler found this URL (source page URL or "sitemap")
   foundVia?: string;
 };
 
 async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
-  const empty: PageResult = { url, erreichbar: false, status: 0, title: "", h1: "", metaDescription: "", noindex: false, canonical: "", outgoingLinks: [], altMissing: 0, altTotal: 0, altMissingImages: [], inputsWithoutLabel: 0, buttonsWithoutText: 0 };
+  const empty: PageResult = { url, erreichbar: false, status: 0, title: "", h1: "", metaDescription: "", noindex: false, canonical: "", outgoingLinks: [], altMissing: 0, altTotal: 0, altMissingImages: [], inputsWithoutLabel: 0, inputsWithoutLabelFields: [], buttonsWithoutText: 0 };
   const res = await fetchWithTimeout(url, 6000);
   if (!res) return empty;
   const html = await res.text();
@@ -361,6 +375,7 @@ async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
     altTotal: alt.total,
     altMissingImages: alt.missingSrcs,
     inputsWithoutLabel: fc.inputsWithoutLabel,
+    inputsWithoutLabelFields: fc.inputsWithoutLabelFields,
     buttonsWithoutText: fc.buttonsWithoutText,
   };
 }
@@ -769,6 +784,7 @@ export async function POST(req: NextRequest) {
         noindex: p.noindex, altMissing: p.altMissing,
         altMissingImages: p.altMissingImages,
         inputsWithoutLabel: p.inputsWithoutLabel,
+        inputsWithoutLabelFields: p.inputsWithoutLabelFields,
         buttonsWithoutText: p.buttonsWithoutText,
         foundVia: p.foundVia,
       })),
