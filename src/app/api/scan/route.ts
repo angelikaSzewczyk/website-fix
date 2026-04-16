@@ -66,7 +66,7 @@ function classifyIssueCategory(text: string): ScanIssue["category"] {
  */
 function buildIssuesJson(
   scanData: Record<string, unknown>,
-  unterseiten: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number }[],
+  unterseiten: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number; metaDescription?: string; inputsWithoutLabel?: number; buttonsWithoutText?: number }[],
   totalAltMissing: number,
   totalImages: number,
   duplicateTitles: { title: string; seiten: string[] }[],
@@ -127,6 +127,10 @@ function buildIssuesJson(
       issues.push({ severity: "yellow", title: `Noindex gesetzt: ${path}`, body: "Diese Unterseite ist für Google unsichtbar — gewollt?", category: "technik", url: p.url });
     if (p.altMissing > 0)
       issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text auf dieser Seite (BFSG 2025).`, category: "recht", url: p.url });
+    if (!p.metaDescription)
+      issues.push({ severity: "yellow", title: `Meta-Description fehlt: ${path}`, body: "Fehlende Meta-Description — Google wählt beliebigen Text als Snippet.", category: "technik", url: p.url });
+    if ((p.inputsWithoutLabel ?? 0) > 0)
+      issues.push({ severity: "red", title: `${p.inputsWithoutLabel} Formular-Label${(p.inputsWithoutLabel ?? 0) > 1 ? "s" : ""} fehlen: ${path}`, body: "Formularfelder ohne sichtbares Label — Screen-Reader können sie nicht vorlesen (BFSG §3 Abs. 2).", category: "recht", url: p.url });
   }
 
   return issues;
@@ -325,14 +329,18 @@ type PageResult = {
   altMissing: number;
   altTotal: number;
   altMissingImages: string[];
+  // Form accessibility — identical check as homepage
+  inputsWithoutLabel: number;
+  buttonsWithoutText: number;
 };
 
 async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
-  const empty: PageResult = { url, erreichbar: false, status: 0, title: "", h1: "", metaDescription: "", noindex: false, canonical: "", outgoingLinks: [], altMissing: 0, altTotal: 0, altMissingImages: [] };
+  const empty: PageResult = { url, erreichbar: false, status: 0, title: "", h1: "", metaDescription: "", noindex: false, canonical: "", outgoingLinks: [], altMissing: 0, altTotal: 0, altMissingImages: [], inputsWithoutLabel: 0, buttonsWithoutText: 0 };
   const res = await fetchWithTimeout(url, 6000);
   if (!res) return empty;
   const html = await res.text();
   const alt = countMissingAlt(html);
+  const fc  = checkFormAccessibility(html);
   return {
     url,
     erreichbar: res.ok,
@@ -346,6 +354,8 @@ async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
     altMissing: alt.missing,
     altTotal: alt.total,
     altMissingImages: alt.missingSrcs,
+    inputsWithoutLabel: fc.inputsWithoutLabel,
+    buttonsWithoutText: fc.buttonsWithoutText,
   };
 }
 
@@ -741,8 +751,11 @@ export async function POST(req: NextRequest) {
       unterseiten: unterseiten.map((p) => ({
         url: p.url, erreichbar: p.erreichbar, status: p.status,
         title: p.title || "(kein Title)", h1: p.h1 || "(kein H1)",
+        metaDescription: p.metaDescription || "",
         noindex: p.noindex, altMissing: p.altMissing,
         altMissingImages: p.altMissingImages,
+        inputsWithoutLabel: p.inputsWithoutLabel,
+        buttonsWithoutText: p.buttonsWithoutText,
       })),
       duplicateTitles,
       duplicateMetas,

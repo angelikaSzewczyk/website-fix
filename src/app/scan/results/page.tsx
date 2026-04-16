@@ -18,10 +18,12 @@ type PageItem = {
   altMissing:       number;
   noindex:          boolean;
   isSkipped:        boolean;
-  altMissingImages?: string[];  // Beweis-Modus: exact filenames
-  missingTitle?: boolean;
-  missingMeta?:  boolean;
-  missingH1?:    boolean;
+  altMissingImages?:   string[];  // Beweis-Modus: exact filenames
+  missingTitle?:       boolean;
+  missingMeta?:        boolean;
+  missingH1?:          boolean;
+  inputsWithoutLabel?: number;
+  buttonsWithoutText?: number;
 };
 
 // ── Score + derived metrics ───────────────────────────────────────────────────
@@ -103,19 +105,26 @@ function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
     ...d.unterseiten.filter(p => !FEED_URL_PATTERN.test(p.url)).map(p => {
       const noTitle = !p.title || p.title === "(kein Title)";
       const noH1    = !p.h1    || p.h1    === "(kein H1)";
+      const noMeta  = !p.metaDescription;
       let errors = p.altMissing;
-      if (!p.erreichbar) errors += 1;
-      if (p.noindex)     errors += 1;
-      if (noTitle)       errors += 1;
-      if (noH1)          errors += 1;
+      if (!p.erreichbar)          errors += 1;
+      if (p.noindex)              errors += 1;
+      if (noTitle)                errors += 1;
+      if (noH1)                   errors += 1;
+      if (noMeta)                 errors += 1;
+      errors += (p.inputsWithoutLabel ?? 0);
+      errors += (p.buttonsWithoutText ?? 0);
       const path = (() => { try { return new URL(p.url).pathname || "/"; } catch { return p.url; } })();
       return {
         path, fullUrl: p.url, errors,
         erreichbar: p.erreichbar, altMissing: p.altMissing,
         noindex: p.noindex, isSkipped: false,
-        altMissingImages: p.altMissingImages ?? [],
-        missingTitle: noTitle,
-        missingH1:    noH1,
+        altMissingImages:   p.altMissingImages ?? [],
+        missingTitle:       noTitle,
+        missingH1:          noH1,
+        missingMeta:        noMeta,
+        inputsWithoutLabel: p.inputsWithoutLabel ?? 0,
+        buttonsWithoutText: p.buttonsWithoutText ?? 0,
       };
     }),
     // Skipped URLs (feeds, xml, json) — shown with special badge
@@ -231,13 +240,15 @@ function ProtoPanelContent({ p, tier = "anon" }: {
   const extraAlt      = Math.max(0, p.altMissing - altImages.length);
 
   // Summary chips: shows category breakdown so user can count to total
-  const imgCount = p.altMissing;
-  const seoCount = (p.missingTitle ? 1 : 0) + (p.missingMeta ? 1 : 0) + (p.missingH1 ? 1 : 0) + (p.noindex ? 1 : 0);
+  const imgCount  = p.altMissing;
+  const formCount = (p.inputsWithoutLabel ?? 0) + (p.buttonsWithoutText ?? 0);
+  const seoCount  = (p.missingTitle ? 1 : 0) + (p.missingMeta ? 1 : 0) + (p.missingH1 ? 1 : 0) + (p.noindex ? 1 : 0);
   const reachCount = isUnreachable ? 1 : 0;
   const chips: { label: string; color: string }[] = [];
   if (reachCount > 0) chips.push({ label: `${reachCount} Erreichbarkeits-Fehler`, color: "#ef4444" });
-  if (imgCount  > 0) chips.push({ label: `${imgCount} Bild-Fehler`,               color: "#ef4444" });
-  if (seoCount  > 0) chips.push({ label: `${seoCount} SEO-Optimierungen`,           color: AMBER });
+  if (imgCount   > 0) chips.push({ label: `${imgCount} Bild-Fehler`,              color: "#ef4444" });
+  if (formCount  > 0) chips.push({ label: `${formCount} Formular-Fehler`,         color: "#ef4444" });
+  if (seoCount   > 0) chips.push({ label: `${seoCount} SEO-Optimierungen`,        color: AMBER });
 
   return (
     <div style={{ padding: "14px 20px 16px", background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -313,6 +324,24 @@ function ProtoPanelContent({ p, tier = "anon" }: {
             detail="Dateiname nicht ermittelt"
             law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
             manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
+          />
+        ))}
+
+        {/* Form labels — each missing label = 1 entry */}
+        {(p.inputsWithoutLabel ?? 0) > 0 && Array.from({ length: p.inputsWithoutLabel! }, (_, i) => (
+          <ProtoRow key={`label-${i}`} severity="red" tier={tier}
+            title={`<label> fehlt für Formularfeld #${i + 1}`}
+            detail="<input>-Element ohne zugeordnetes <label> oder aria-label"
+            law="BFSG §3 Abs. 2 · EN 301 549 · WCAG 1.3.1"
+            manualHint='Füge <label for="feldId">Beschreibung</label> vor dem Input ein oder setze aria-label="..."'
+          />
+        ))}
+        {(p.buttonsWithoutText ?? 0) > 0 && Array.from({ length: p.buttonsWithoutText! }, (_, i) => (
+          <ProtoRow key={`btn-${i}`} severity="red" tier={tier}
+            title={`<button> ohne sichtbaren Text #${i + 1}`}
+            detail="Button-Element ohne Beschriftung oder aria-label"
+            law="BFSG §3 Abs. 2 · WCAG 4.1.2"
+            manualHint='Füge aria-label="Aktion beschreiben" zum <button>-Tag hinzu'
           />
         ))}
 
@@ -943,8 +972,8 @@ function ResultsInner() {
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", width: 90, textAlign: "right" }}>Fehler</span>
             </div>
 
-            {/* Visible rows with expandable detail panels */}
-            {pageItems.slice(0, VISIBLE_PAGES).map((p, i) => {
+            {/* All rows with expandable detail panels */}
+            {pageItems.map((p, i) => {
               // Skipped URLs (feed/xml/json) — special gray treatment
               if (p.isSkipped) {
                 return (
@@ -1005,29 +1034,8 @@ function ResultsInner() {
               );
             })}
 
-            {/* Locked rows (blurred) — only if more ANALYZED pages exist beyond visible limit */}
-            {pagesTotal > VISIBLE_PAGES && (
-              <div style={{ position: "relative" }}>
-                {pageItems.filter(p => !p.isSkipped).slice(VISIBLE_PAGES).map((p, i) => (
-                  <div key={p.path + i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", filter: "blur(4px)", userSelect: "none" }}>
-                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>{pageBase}{p.path}</span>
-                    <div style={{ width: 120, textAlign: "center" }}><span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>████</span></div>
-                    <div style={{ width: 90, textAlign: "right" }}><span style={{ fontSize: 13, color: "rgba(255,255,255,0.2)" }}>██</span></div>
-                  </div>
-                ))}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.85) 40%, rgba(11,12,16,0.98) 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 24px" }}>
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>+ {pagesTotal - VISIBLE_PAGES} weitere Seiten analysiert</div>
-                    <Link href="/register" className="wf-cta-pulse" style={{ display: "inline-block", padding: "10px 24px", borderRadius: 10, background: "#007BFF", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.4)" }}>
-                      Alle {pagesTotal} Seiten freischalten →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Error total footer row */}
-            {!isDemo && totalTableErrors > 0 && pagesTotal <= VISIBLE_PAGES && (
+            {!isDemo && totalTableErrors > 0 && (
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>Gesamt</span>
                 <div style={{ width: 120 }} />
@@ -1038,13 +1046,11 @@ function ResultsInner() {
             )}
 
             {/* Registrierung CTA under the map */}
-            {pagesTotal <= VISIBLE_PAGES && (
-              <div style={{ padding: "14px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                <Link href="/register" style={{ fontSize: 13, color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>
-                  Kostenlos registrieren — Ergebnisse dauerhaft speichern →
-                </Link>
-              </div>
-            )}
+            <div style={{ padding: "14px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+              <Link href="/register" style={{ fontSize: 13, color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>
+                Kostenlos registrieren — Ergebnisse dauerhaft speichern →
+              </Link>
+            </div>
           </div>
         </section>
 

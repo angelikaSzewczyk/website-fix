@@ -15,13 +15,16 @@ export type StoredScan = {
   gefilterteUrls:       number;
   skippedUrls:          string[];
   unterseiten: Array<{
-    url:              string;
-    erreichbar:       boolean;
-    altMissing:       number;
-    noindex:          boolean;
-    title:            string;            // "(kein Title)" when absent
-    h1:               string;            // "(kein H1)" when absent
-    altMissingImages: string[];
+    url:                string;
+    erreichbar:         boolean;
+    altMissing:         number;
+    noindex:            boolean;
+    title:              string;            // "(kein Title)" when absent
+    h1:                 string;            // "(kein H1)" when absent
+    metaDescription:    string;            // "" when absent
+    inputsWithoutLabel: number;
+    buttonsWithoutText: number;
+    altMissingImages:   string[];
   }>;
   diagnose:             string;
   https:                boolean;
@@ -75,13 +78,16 @@ export type ApiScanResponse = {
       gefilterteUrls?: number;
       uebersprungeneUrls?: string[];
       unterseiten?: Array<{
-        url:              string;
-        erreichbar:       boolean;
-        altMissing:       number;
-        noindex:          boolean;
-        title?:           string;
-        h1?:              string;
-        altMissingImages?: string[];
+        url:                string;
+        erreichbar:         boolean;
+        altMissing:         number;
+        noindex:            boolean;
+        title?:             string;
+        h1?:                string;
+        metaDescription?:   string;
+        inputsWithoutLabel?: number;
+        buttonsWithoutText?: number;
+        altMissingImages?:  string[];
       }>;
       altTexte?: { fehlend?: number; gesamt?: number; missingImages?: string[] };
       duplicateTitles?: unknown[];
@@ -105,13 +111,16 @@ export function saveScanToStorage(url: string, data: ApiScanResponse): void {
       gefilterteUrls:       audit.gefilterteUrls ?? 0,
       skippedUrls:          (audit.uebersprungeneUrls ?? []) as string[],
       unterseiten:          (audit.unterseiten ?? []).map(p => ({
-        url:              p.url,
-        erreichbar:       p.erreichbar,
-        altMissing:       p.altMissing,
-        noindex:          p.noindex,
-        title:            p.title ?? "(kein Title)",
-        h1:               p.h1   ?? "(kein H1)",
-        altMissingImages: p.altMissingImages ?? [],
+        url:                p.url,
+        erreichbar:         p.erreichbar,
+        altMissing:         p.altMissing,
+        noindex:            p.noindex,
+        title:              p.title ?? "(kein Title)",
+        h1:                 p.h1   ?? "(kein H1)",
+        metaDescription:    p.metaDescription ?? "",
+        inputsWithoutLabel: p.inputsWithoutLabel ?? 0,
+        buttonsWithoutText: p.buttonsWithoutText ?? 0,
+        altMissingImages:   p.altMissingImages ?? [],
       })),
       diagnose:             data.diagnose ?? "",
       https:                sd.https ?? true,
