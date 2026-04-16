@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     if (!isUrlAllowed(targetUrl)) return NextResponse.json({ urls: [], count: 0 });
 
     const base = (() => { try { const u = new URL(targetUrl); return `${u.protocol}//${u.host}`; } catch { return targetUrl; } })();
-    const baseNorm = (() => { try { return normalizeUrl(new URL(targetUrl)); } catch { return targetUrl; } })();
+    let baseNorm = (() => { try { return normalizeUrl(new URL(targetUrl)); } catch { return targetUrl; } })();
 
     const collected = new Set<string>();
 
@@ -173,6 +173,19 @@ export async function POST(req: NextRequest) {
     let homeHtml = "";
 
     if (homeRes?.ok) {
+      // Normalize baseNorm to the resolved URL after redirects.
+      // Without this, typing "glasklar.com" sets baseNorm = "https://glasklar.com",
+      // but all internal links use "https://www.glasklar.com/" — so the homepage
+      // URL ends up in collected as an extra entry (9 instead of 8).
+      try {
+        const resolvedHost = new URL(homeRes.url).host;
+        const origHost     = new URL(targetUrl).host;
+        const stripWww = (h: string) => h.replace(/^www\./, "").toLowerCase();
+        if (stripWww(resolvedHost) === stripWww(origHost) && resolvedHost !== origHost) {
+          baseNorm = normalizeUrl(new URL(homeRes.url));
+        }
+      } catch { /* keep original baseNorm */ }
+
       try {
         homeHtml = await homeRes.text();
         const found = extractInternalLinks(homeHtml, targetUrl, false);

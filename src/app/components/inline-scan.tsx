@@ -301,7 +301,7 @@ export default function InlineScan({
           const audit = data.scanData?.audit ?? {};
           sessionStorage.setItem("wf_scan_result", JSON.stringify({
             url,
-            pages:                (audit.unterseiten?.length ?? 0) > 0 ? audit.unterseiten.length : (audit.gescannteSeiten ?? 1),
+            pages:                audit.gescannteSeiten ?? (audit.unterseiten?.length ?? 0) + 1,
             unterseiten:          (audit.unterseiten ?? []).map((p: { url: string; erreichbar: boolean; altMissing: number; noindex: boolean }) => ({
               url: p.url, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex,
             })),
