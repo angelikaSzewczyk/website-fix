@@ -270,8 +270,8 @@ export default function InlineScan({
       .then(r => r.json())
       .then((d: { urls?: string[]; count?: number }) => {
         const urls = d.urls ?? [];
-        pageTotalRef.current = urls.length;  // unblock crawl counter
-        startPageMessages(urls);
+        pageTotalRef.current = urls.length + 1;  // +1 for homepage
+        startPageMessages([url, ...urls]);  // homepage first
       })
       .catch(() => {
         pageTotalRef.current = 0;

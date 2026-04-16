@@ -523,15 +523,15 @@ function ResultsInner() {
   const isDemo       = !scan;
   const displayDomain = isDemo ? DEMO_DOMAIN : (() => { try { return new URL(scan!.url).host; } catch { return scan!.url; } })();
   const score        = isDemo ? DEMO_SCORE   : computeScore(scan!);
-  const pagesTotal   = isDemo ? DEMO_PAGES   : scan!.pages;
   const scoreColor   = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
   const scoreLabel   = score >= 80 ? "Gut" : score >= 55 ? "Verbesserungsbedarf" : "Kritisch";
 
-  // Pages list
+  // Pages list — must be built BEFORE pagesTotal so pagesTotal is derived from it
   const { base: pageBase, items: realPageItems } = isDemo
     ? { base: DEMO_DOMAIN, items: DEMO_PAGES_LIST }
     : buildPages(scan!);
-  const pageItems = isDemo ? DEMO_PAGES_LIST : realPageItems;
+  const pageItems  = isDemo ? DEMO_PAGES_LIST : realPageItems;
+  const pagesTotal = isDemo ? DEMO_PAGES : pageItems.filter(p => !p.isSkipped).length;
 
   // Total errors = sum of ALL errors across ALL pages (the real number the user sees in the map)
   const totalTableErrors = isDemo ? 0 : pageItems.filter(p => !p.isSkipped && p.errors > 0).reduce((s, p) => s + p.errors, 0);
