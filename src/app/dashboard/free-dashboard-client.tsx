@@ -32,6 +32,8 @@ export interface UnterseiteProp {
   metaDescription?: string;
   inputsWithoutLabel?: number;
   buttonsWithoutText?: number;
+  /** Page that linked to this URL, or "sitemap" if discovered via sitemap.xml */
+  foundVia?: string;
 }
 export interface FreeDashboardProps {
   firstName: string;
@@ -368,6 +370,46 @@ function DrawerPanel({
                   <DrawerErrorRow key={i} err={err} steps={steps} />
                 );
               })}
+
+              {/* Source URL — shown when page is unreachable so user knows which page has the dead link */}
+              {page && !page.erreichbar && page.foundVia && (
+                <div style={{
+                  borderRadius: D.radiusSm,
+                  background: "rgba(251,191,36,0.06)",
+                  border: `1px solid ${D.amberBorder}`,
+                  padding: "12px 14px",
+                }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: D.amber, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Toter Link gefunden auf:
+                  </p>
+                  {page.foundVia === "sitemap" ? (
+                    <p style={{ margin: 0, fontSize: 12, color: D.textSub }}>
+                      In der <span style={{ fontFamily: "monospace", color: D.amber }}>sitemap.xml</span> — diese URL ist in deiner Sitemap eingetragen, aber nicht erreichbar.
+                      Entferne sie aus der Sitemap oder leite sie auf eine gültige Seite weiter.
+                    </p>
+                  ) : (
+                    <>
+                      <a
+                        href={page.foundVia} target="_blank" rel="noopener noreferrer"
+                        style={{
+                          display: "flex", alignItems: "center", gap: 5,
+                          fontSize: 12, fontFamily: "monospace", color: D.amber,
+                          textDecoration: "none", wordBreak: "break-all",
+                          marginBottom: 6,
+                        }}
+                      >
+                        {(() => { try { return new URL(page.foundVia!).pathname || "/"; } catch { return page.foundVia; } })()}
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                      </a>
+                      <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
+                        Öffne diese Seite im Editor → suche den Link auf <span style={{ fontFamily: "monospace" }}>{toPath(pageUrl)}</span> → entferne oder korrigiere ihn.
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

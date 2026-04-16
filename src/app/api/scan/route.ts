@@ -333,6 +333,8 @@ type PageResult = {
   // Form accessibility — identical check as homepage
   inputsWithoutLabel: number;
   buttonsWithoutText: number;
+  // Where the crawler found this URL (source page URL or "sitemap")
+  foundVia?: string;
 };
 
 async function scanSubpage(url: string, baseUrl: string): Promise<PageResult> {
@@ -672,12 +674,18 @@ export async function POST(req: NextRequest) {
     scanData.sitemapVorhanden = !!(sitemapRes?.ok);
 
     let subpageUrls: string[] = [];
+    // sourceMap tracks the first place the crawler encountered each URL:
+    // "sitemap" if it came from sitemap.xml, otherwise the page that linked to it.
+    const sourceMap = new Map<string, string>();
     if (sitemapRes?.ok) {
       const xml = await sitemapRes.text();
-      subpageUrls = extractSitemapUrls(xml).filter((u) => u !== targetUrl && u !== targetUrl + "/");
+      const sitemapUrls = extractSitemapUrls(xml).filter((u) => u !== targetUrl && u !== targetUrl + "/");
+      sitemapUrls.forEach(u => sourceMap.set(u, "sitemap"));
+      subpageUrls = sitemapUrls;
     }
     if (mainHtml && subpageUrls.length < maxSubpages) {
       const links = extractInternalLinks(mainHtml, targetUrl).filter((u) => u !== targetUrl && u !== targetUrl.replace(/\/$/, ""));
+      links.forEach(u => { if (!sourceMap.has(u)) sourceMap.set(u, targetUrl); });
       subpageUrls = [...new Set([...subpageUrls, ...links])];
     }
     subpageUrls = subpageUrls.slice(0, maxSubpages);
@@ -694,6 +702,8 @@ export async function POST(req: NextRequest) {
     const unterseiten: PageResult[] = auditableUrls.length > 0
       ? await batchAsync(auditableUrls, 5, (u) => scanSubpage(u, targetUrl), 200)
       : [];
+    // Attach provenance — where did the crawler first find each URL?
+    unterseiten.forEach(p => { p.foundVia = sourceMap.get(p.url) ?? targetUrl; });
 
     // ── 5. CHECK 1: DUPLICATE TITLES ───────────────────────
     const allPages = [
@@ -757,6 +767,7 @@ export async function POST(req: NextRequest) {
         altMissingImages: p.altMissingImages,
         inputsWithoutLabel: p.inputsWithoutLabel,
         buttonsWithoutText: p.buttonsWithoutText,
+        foundVia: p.foundVia,
       })),
       duplicateTitles,
       duplicateMetas,

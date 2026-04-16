@@ -25,6 +25,7 @@ export type StoredScan = {
     inputsWithoutLabel: number;
     buttonsWithoutText: number;
     altMissingImages:   string[];
+    foundVia?:          string;            // URL of the page that linked here, or "sitemap"
   }>;
   diagnose:             string;
   https:                boolean;
@@ -88,6 +89,7 @@ export type ApiScanResponse = {
         inputsWithoutLabel?: number;
         buttonsWithoutText?: number;
         altMissingImages?:  string[];
+        foundVia?:          string;
       }>;
       altTexte?: { fehlend?: number; gesamt?: number; missingImages?: string[] };
       duplicateTitles?: unknown[];
@@ -121,6 +123,7 @@ export function saveScanToStorage(url: string, data: ApiScanResponse): void {
         inputsWithoutLabel: p.inputsWithoutLabel ?? 0,
         buttonsWithoutText: p.buttonsWithoutText ?? 0,
         altMissingImages:   p.altMissingImages ?? [],
+        foundVia:           p.foundVia,
       })),
       diagnose:             data.diagnose ?? "",
       https:                sd.https ?? true,
