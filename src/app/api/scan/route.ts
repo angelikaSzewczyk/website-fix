@@ -277,17 +277,20 @@ function countMissingAlt(html: string): { missing: number; total: number; missin
     if (!tag.match(/alt=["'][^"']+["']/i)) {
       const srcMatch = tag.match(/src=["']([^"'?#\s]+)/i);
       if (srcMatch) {
-        const filename = srcMatch[1].split("/").pop() ?? "";
-        if (filename && !filename.startsWith("data:") && filename.length > 2) {
-          missingSrcs.push(filename);
+        const src = srcMatch[1];
+        // Skip data URIs and very short values — not actionable for the user
+        if (!src.startsWith("data:") && src.length > 3) {
+          // Store full path (keeps directory context so users can find the file)
+          const path = (() => { try { return new URL(src).pathname; } catch { return src; } })();
+          missingSrcs.push(path);
         }
       }
     }
   });
   return {
-    missing: imgs.filter((tag) => !tag.match(/alt=["'][^"']+["']/i)).length,
-    total:   imgs.length,
-    missingSrcs: missingSrcs.slice(0, 6),
+    missing:    imgs.filter((tag) => !tag.match(/alt=["'][^"']+["']/i)).length,
+    total:      imgs.length,
+    missingSrcs, // no cap — all missing images listed
   };
 }
 
