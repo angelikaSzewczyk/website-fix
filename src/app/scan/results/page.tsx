@@ -7,35 +7,7 @@ import BrandLogo from "../../components/BrandLogo";
 import MobileNav from "../../components/MobileNav";
 import SiteFooter from "../../components/SiteFooter";
 
-// ── Real scan data shape (stored by /scan/page.tsx via sessionStorage) ────────
-type StoredScan = {
-  url:                  string;
-  pages:                number;
-  entdeckteUrls?:       number;
-  gefilterteUrls?:      number;
-  skippedUrls?:         string[];
-  unterseiten:          Array<{ url: string; erreichbar: boolean; altMissing: number; noindex: boolean; altMissingImages?: string[] }>;
-  diagnose:             string;
-  https:                boolean;
-  brokenLinksCount:     number;
-  altMissingCount:      number;
-  altMissingImages?:    string[];   // global: filenames across all pages (Beweis-Modus)
-  duplicateTitlesCount: number;
-  duplicateMetasCount:  number;
-  noIndex:              boolean;
-  hasTitle:             boolean;
-  hasMeta:              boolean;
-  hasH1:                boolean;
-  hasSitemap:           boolean;
-  robotsBlocked:        boolean;
-  hasUnreachable:       boolean;
-  orphanedPagesCount?:  number;
-  wpVersion?:           string | null;
-  xmlRpcOpen?:          boolean;
-  sitemapIndexFound?:   boolean;
-  hasRankMath?:         boolean;
-  hasYoast?:            boolean;
-};
+import { type StoredScan, saveScanToStorage, loadScanFromStorage } from "@/lib/scan-storage";
 
 // ── Rich page item used in Deep-Scan Map ─────────────────────────────────────
 type PageItem = {
@@ -47,7 +19,6 @@ type PageItem = {
   noindex:          boolean;
   isSkipped:        boolean;
   altMissingImages?: string[];  // Beweis-Modus: exact filenames
-  // Home-page-only flags (subpages don't carry per-page title/meta/H1 data)
   missingTitle?: boolean;
   missingMeta?:  boolean;
   missingH1?:    boolean;
@@ -153,13 +124,24 @@ function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
       missingMeta:  !d.hasMeta,
       missingH1:    !d.hasH1,
     },
-    // Audited subpages (non-feed URLs)
+    // Audited subpages — same error checks as homepage
     ...d.unterseiten.filter(p => !FEED_URL_PATTERN.test(p.url)).map(p => {
+      const noTitle = !p.title || p.title === "(kein Title)";
+      const noH1    = !p.h1    || p.h1    === "(kein H1)";
       let errors = p.altMissing;
-      if (!p.erreichbar) errors += 1;  // 1 per unreachable entry (was 3, protocol shows 1 row)
+      if (!p.erreichbar) errors += 1;
       if (p.noindex)     errors += 1;
+      if (noTitle)       errors += 1;
+      if (noH1)          errors += 1;
       const path = (() => { try { return new URL(p.url).pathname || "/"; } catch { return p.url; } })();
-      return { path, fullUrl: p.url, errors, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex, isSkipped: false, altMissingImages: p.altMissingImages ?? [] };
+      return {
+        path, fullUrl: p.url, errors,
+        erreichbar: p.erreichbar, altMissing: p.altMissing,
+        noindex: p.noindex, isSkipped: false,
+        altMissingImages: p.altMissingImages ?? [],
+        missingTitle: noTitle,
+        missingH1:    noH1,
+      };
     }),
     // Skipped URLs (feeds, xml, json) — shown with special badge
     ...(d.skippedUrls ?? []).map(u => {
@@ -477,17 +459,33 @@ function ResultsInner() {
   const [userTier, setUserTier] = useState<"anon" | "free" | "paid">("anon");
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("wf_scan_result");
-      if (raw) {
-        const parsed: StoredScan = JSON.parse(raw);
-        const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
-        if (norm(parsed.url) === norm(urlParam) || !urlParam) {
-          setScan(parsed);
-        }
-      }
-    } catch { /* SSR / blocked */ }
-    setLoaded(true);
+    const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
+
+    // 1. Primary path: read from sessionStorage
+    const stored = loadScanFromStorage();
+    if (stored && (!urlParam || norm(stored.url) === norm(urlParam))) {
+      setScan(stored);
+      setLoaded(true);
+      return;
+    }
+
+    // 2. Fallback: session expired or opened in new tab — try the 24h scan cache
+    if (urlParam) {
+      fetch(`/api/scan/cached?url=${encodeURIComponent(urlParam)}`)
+        .then(r => r.json())
+        .then((cached: { found: boolean; scanData?: unknown; diagnose?: string }) => {
+          if (cached.found && cached.scanData) {
+            // Re-hydrate storage from cache (read-only — no scan token consumed)
+            saveScanToStorage(urlParam, { scanData: cached.scanData as never, diagnose: cached.diagnose });
+            const reloaded = loadScanFromStorage();
+            if (reloaded) setScan(reloaded);
+          }
+        })
+        .catch(() => { /* cache miss or network error — demo mode */ })
+        .finally(() => setLoaded(true));
+    } else {
+      setLoaded(true);
+    }
   }, [urlParam]);
 
   // Fetch session to determine user tier

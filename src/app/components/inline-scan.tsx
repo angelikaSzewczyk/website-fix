@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { saveScanToStorage } from "@/lib/scan-storage";
 
 type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
 
@@ -296,30 +297,8 @@ export default function InlineScan({
           // next page load / component remount.
         } catch { /* ignore */ }
 
-        // Store scan result for /scan/results
-        try {
-          const audit = data.scanData?.audit ?? {};
-          sessionStorage.setItem("wf_scan_result", JSON.stringify({
-            url,
-            pages:                audit.gescannteSeiten ?? (audit.unterseiten?.length ?? 0) + 1,
-            unterseiten:          (audit.unterseiten ?? []).map((p: { url: string; erreichbar: boolean; altMissing: number; noindex: boolean }) => ({
-              url: p.url, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex,
-            })),
-            diagnose:             data.diagnose ?? "",
-            https:                data.scanData?.https ?? true,
-            brokenLinksCount:     audit.brokenLinks?.length ?? 0,
-            altMissingCount:      audit.altTexte?.fehlend ?? 0,
-            duplicateTitlesCount: audit.duplicateTitles?.length ?? 0,
-            duplicateMetasCount:  audit.duplicateMetas?.length ?? 0,
-            noIndex:              data.scanData?.indexierungGesperrt ?? false,
-            hasTitle:             !!data.scanData?.title,
-            hasMeta:              !!data.scanData?.metaDescription,
-            hasH1:                !!data.scanData?.h1,
-            hasSitemap:           data.scanData?.sitemapVorhanden ?? false,
-            robotsBlocked:        data.scanData?.robotsBlockiertAlles ?? false,
-            hasUnreachable:       (audit.unterseiten ?? []).some((p: { erreichbar: boolean }) => !p.erreichbar),
-          }));
-        } catch { /* sessionStorage not available */ }
+        // Store scan result for /scan/results (canonical writer)
+        saveScanToStorage(url, data);
 
         // Delay redirect until crawl animation finishes
         scheduleRedirect(`/scan/results?url=${encodeURIComponent(url)}`);

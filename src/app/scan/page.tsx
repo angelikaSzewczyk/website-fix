@@ -7,6 +7,7 @@ import BrandLogo from "../components/BrandLogo";
 import MobileNav from "../components/MobileNav";
 import NavAuthLink from "../components/nav-auth-link";
 import SiteFooter from "../components/SiteFooter";
+import { saveScanToStorage } from "@/lib/scan-storage";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type ScanPhase =
@@ -294,44 +295,8 @@ export default function ScanPage() {
         } catch { /* ignore */ }
 
         setPhase("done");
-        // Store real scan data for the results page
-        try {
-          const audit = data.scanData?.audit ?? {};
-          sessionStorage.setItem("wf_scan_result", JSON.stringify({
-            url,
-            pages:               audit.gescannteSeiten ?? 1,
-            entdeckteUrls:       audit.entdeckteUrls ?? 0,
-            gefilterteUrls:      audit.gefilterteUrls ?? 0,
-            skippedUrls:         (audit.uebersprungeneUrls ?? []) as string[],
-            unterseiten:         (audit.unterseiten ?? []).map((p: { url: string; erreichbar: boolean; altMissing: number; noindex: boolean; altMissingImages?: string[] }) => ({
-              url: p.url, erreichbar: p.erreichbar, altMissing: p.altMissing, noindex: p.noindex,
-              altMissingImages: p.altMissingImages ?? [],
-            })),
-            diagnose:            data.diagnose ?? "",
-            https:               data.scanData?.https ?? true,
-            brokenLinksCount:    audit.brokenLinks?.length ?? 0,
-            altMissingCount:     audit.altTexte?.fehlend ?? 0,
-            altMissingImages:    audit.altTexte?.missingImages ?? [],
-            duplicateTitlesCount: audit.duplicateTitles?.length ?? 0,
-            duplicateMetasCount: audit.duplicateMetas?.length ?? 0,
-            noIndex:             data.scanData?.indexierungGesperrt ?? false,
-            hasTitle:            !!data.scanData?.title,
-            hasMeta:             !!data.scanData?.metaDescription,
-            hasH1:               !!data.scanData?.h1,
-            hasSitemap:          data.scanData?.sitemapVorhanden ?? false,
-            robotsBlocked:       data.scanData?.robotsBlockiertAlles ?? false,
-            hasUnreachable:      (audit.unterseiten ?? []).some((p: { erreichbar: boolean }) => !p.erreichbar),
-            orphanedPagesCount:  (audit.verwaistSeiten ?? []).length,
-            wpVersion:           data.scanData?.wpVersion ?? null,
-            xmlRpcOpen:          data.scanData?.xmlRpcOpen ?? false,
-            sitemapIndexFound:   data.scanData?.sitemapIndexFound ?? false,
-            hasRankMath:         data.scanData?.hasRankMath ?? false,
-            hasYoast:            data.scanData?.hasYoast ?? false,
-            // For session bridge claim after registration
-            issueCount:          data.issueCount ?? 0,
-            techFingerprint:     data.scanData?.techFingerprint ?? null,
-          }));
-        } catch { /* sessionStorage not available */ }
+        // Store scan result for /scan/results (canonical writer)
+        saveScanToStorage(url, data);
 
         // Redirect to results page after a brief "done" flash
         setTimeout(() => {
