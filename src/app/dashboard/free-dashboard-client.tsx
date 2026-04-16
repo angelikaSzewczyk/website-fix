@@ -267,219 +267,395 @@ function hexToRgb(hex: string): string {
   return "255,255,255";
 }
 
+// ─── Drawer helpers ────────────────────────────────────────────────────────────
+
+const DRAWER_FIX_STEPS: Record<string, string[]> = {
+  alt:     ["Öffne WordPress-Dashboard → Medien → Bibliothek.", "Klicke auf ein Bild ohne Alt-Text → befülle das Feld 'Alternativtext' (kurze inhaltliche Beschreibung, z.B. 'Teamfoto Büro München').", "Für Bilder direkt auf Seiten: Editor öffnen → Bild anklicken → Alt-Text-Feld in der Seitenleiste.", "Dekorative Bilder dürfen ein leeres alt-Attribut (alt=\"\") erhalten."],
+  title:   ["Installiere Yoast SEO oder RankMath (kostenlos).", "Seite im Editor öffnen → scrolle zur SEO-Sektion.", "Trage einen einzigartigen SEO-Titel (55–60 Zeichen) mit dem Haupt-Keyword ein."],
+  h1:      ["Seite im Gutenberg-Editor öffnen.", "Ersten Überschrift-Block auf H1 setzen — jede Seite braucht exakt eine H1.", "Haupt-Keyword der Seite in die H1 integrieren."],
+  meta:    ["SEO-Plugin (Yoast/RankMath) öffnen → Seite im Editor.", "Feld 'Meta-Beschreibung' befüllen: 120–155 Zeichen, einladend formuliert.", "Die Meta-Description erscheint als Vorschautext in Google-Suchergebnissen."],
+  noindex: ["Seite im Editor öffnen → SEO-Plugin-Bereich.", "Option 'Suchmaschinen erlauben, diese Seite zu indexieren' aktivieren.", "Achtung: Nur deaktivieren wenn die Seite absichtlich versteckt werden soll."],
+  "404":   ["Prüfe ob die Seite gelöscht oder umbenannt wurde.", "Seite neu erstellen oder 301-Weiterleitung zur nächstbesten Seite setzen.", "WordPress-Plugin 'Redirection' für einfaches Weiterleitungs-Management.", "Alle internen Links auf diese URL aktualisieren."],
+  label:   ["Formular im Editor öffnen.", "Für jedes Formularfeld ein sichtbares Label hinzufügen (<label for=...> oder aria-label).", "In Elementor: Formular-Widget → Feld-Einstellungen → Label-Feld befüllen."],
+  button:  ["Buttons im Editor öffnen.", "Sicherstellen dass jeder Button sichtbaren Text oder ein aria-label hat.", "Reine Icon-Buttons brauchen aria-label='Beschreibung der Aktion'."],
+};
+
+// Icon SVGs für Fehlertypen
+function DrawerIcon({ type }: { type: string }) {
+  const s = { width: 16, height: 16, flexShrink: 0 as const };
+  if (type === "alt") return (
+    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+    </svg>
+  );
+  if (type === "404") return (
+    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  );
+  if (type === "title" || type === "h1") return (
+    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16M4 12h16M4 18h7"/>
+    </svg>
+  );
+  if (type === "meta") return (
+    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  );
+  if (type === "label" || type === "button") return (
+    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+  );
+  // noindex / generic warning
+  return (
+    <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  );
+}
+
+// Split a file path into [directory, filename] for highlighted display
+function splitPath(raw: string): [string, string] {
+  const p = (() => { try { return new URL(raw).pathname; } catch { return raw; } })();
+  const slash = p.lastIndexOf("/");
+  if (slash < 0) return ["", p];
+  return [p.slice(0, slash + 1), p.slice(slash + 1)];
+}
+
+// ─── Drawer Error Card ─────────────────────────────────────────────────────────
+function DrawerCard({
+  fixKey,
+  label,
+  kind,
+  count,
+  images,
+}: {
+  fixKey: string | null;
+  label: string;
+  kind: "critical" | "warning";
+  count?: number;
+  images?: string[];
+}) {
+  const [fixOpen, setFixOpen] = useState(false);
+  const steps = fixKey ? DRAWER_FIX_STEPS[fixKey] ?? [] : [];
+  const accent = kind === "critical" ? D.red : D.amber;
+  const accentBg  = kind === "critical" ? "rgba(239,68,68,0.07)"  : "rgba(251,191,36,0.07)";
+  const accentBdr = kind === "critical" ? "rgba(239,68,68,0.22)"  : "rgba(251,191,36,0.22)";
+
+  return (
+    <div style={{
+      borderRadius: 10,
+      background: accentBg,
+      border: `1px solid ${accentBdr}`,
+      overflow: "hidden",
+    }}>
+      {/* Card header */}
+      <div style={{ padding: "13px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ color: accent, flexShrink: 0, display: "flex" }}>
+          <DrawerIcon type={fixKey ?? "warning"} />
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: D.text, flex: 1, lineHeight: 1.35 }}>
+          {label}
+        </span>
+        {count !== undefined && count > 1 && (
+          <span style={{
+            flexShrink: 0, fontSize: 11, fontWeight: 700,
+            padding: "2px 8px", borderRadius: 20,
+            background: `rgba(${kind === "critical" ? "239,68,68" : "251,191,36"},0.15)`,
+            color: accent, border: `1px solid ${accentBdr}`,
+          }}>{count}×</span>
+        )}
+        {steps.length > 0 && (
+          <button
+            onClick={() => setFixOpen(v => !v)}
+            style={{
+              flexShrink: 0, fontSize: 11, fontWeight: 700,
+              padding: "4px 10px", borderRadius: 5, cursor: "pointer",
+              background: fixOpen ? `rgba(${kind === "critical" ? "239,68,68" : "251,191,36"},0.15)` : "rgba(255,255,255,0.05)",
+              border: `1px solid ${fixOpen ? accentBdr : "rgba(255,255,255,0.1)"}`,
+              color: fixOpen ? accent : D.textSub,
+              transition: "all 0.15s",
+            }}
+          >
+            {fixOpen ? "Schließen ✕" : "Anleitung ↓"}
+          </button>
+        )}
+      </div>
+
+      {/* Fix steps */}
+      {fixOpen && steps.length > 0 && (
+        <div style={{
+          padding: "12px 16px 14px",
+          borderTop: `1px solid ${accentBdr}`,
+          background: "rgba(0,0,0,0.18)",
+        }}>
+          <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: "0.09em" }}>
+            WordPress / Elementor — Schritt für Schritt:
+          </p>
+          <ol style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 6 }}>
+            {steps.map((s, si) => (
+              <li key={si} style={{ fontSize: 12, color: D.textSub, lineHeight: 1.65, paddingLeft: 2 }}>{s}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* Image filename list */}
+      {images && images.length > 0 && (
+        <div style={{
+          padding: "0 16px 14px",
+          borderTop: fixOpen ? undefined : `1px solid ${accentBdr}`,
+        }}>
+          <p style={{ margin: "10px 0 7px", fontSize: 11, fontWeight: 600, color: D.textMuted }}>
+            Betroffene Dateien ({images.length}):
+          </p>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+            {images.slice(0, 15).map((img, j) => {
+              const [dir, filename] = splitPath(img);
+              const full = (() => { try { return new URL(img).pathname; } catch { return img; } })();
+              return (
+                <li key={j} title={full} style={{
+                  display: "flex", alignItems: "baseline",
+                  background: "rgba(0,0,0,0.25)", borderRadius: 5,
+                  padding: "4px 10px", overflow: "hidden",
+                  cursor: "default",
+                }}>
+                  {dir && (
+                    <span style={{
+                      fontSize: 10, fontFamily: "monospace", color: D.textMuted,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      flexShrink: 1, minWidth: 0,
+                    }}>{dir}</span>
+                  )}
+                  <span style={{
+                    fontSize: 11, fontFamily: "monospace",
+                    color: "#fbbf24",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap", flexShrink: 0,
+                  }}>{filename}</span>
+                </li>
+              );
+            })}
+            {images.length > 15 && (
+              <li style={{ fontSize: 11, color: D.textMuted, padding: "2px 4px" }}>
+                +{images.length - 15} weitere Dateien
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Drawer Panel ─────────────────────────────────────────────────────────────
 function DrawerPanel({
   pageUrl,
   unterseiten,
   onClose,
+  isChecked,
+  onToggleChecked,
 }: {
   pageUrl: string;
   unterseiten: UnterseiteProp[];
   onClose: () => void;
+  isChecked: boolean;
+  onToggleChecked: () => void;
 }) {
   const page = unterseiten.find(p => p.url === pageUrl);
   const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
   const path = toPath(pageUrl);
+  const is404 = page && !page.erreichbar;
 
-  type DrawerError = { label: string; kind: "critical" | "warning"; images?: string[] };
-  const errors: DrawerError[] = [];
+  type DrawerEntry = { fixKey: string | null; label: string; kind: "critical" | "warning"; count?: number; images?: string[] };
+  const entries: DrawerEntry[] = [];
   if (page) {
-    if (!page.erreichbar)
-      errors.push({ label: "Seite nicht erreichbar (4xx/5xx)", kind: "critical" });
     if (!page.title || page.title === "(kein Title)")
-      errors.push({ label: "Title-Tag fehlt", kind: "critical" });
+      entries.push({ fixKey: "title", label: "Title-Tag fehlt", kind: "critical" });
     if (!page.h1 || page.h1 === "(kein H1)")
-      errors.push({ label: "H1-Überschrift fehlt", kind: "warning" });
+      entries.push({ fixKey: "h1", label: "H1-Überschrift fehlt", kind: "warning" });
     if (page.noindex)
-      errors.push({ label: "Noindex gesetzt — Seite für Google unsichtbar", kind: "warning" });
+      entries.push({ fixKey: "noindex", label: "Noindex gesetzt — Seite für Google unsichtbar", kind: "warning" });
     if (!page.metaDescription)
-      errors.push({ label: "Meta-Description fehlt", kind: "warning" });
+      entries.push({ fixKey: "meta", label: "Meta-Description fehlt", kind: "warning" });
     if (page.altMissing > 0)
-      errors.push({ label: `${page.altMissing} Bilder ohne Alt-Text (BFSG 2025)`, kind: "critical", images: page.altMissingImages ?? [] });
+      entries.push({ fixKey: "alt", label: `${page.altMissing} Bilder ohne Alt-Text (BFSG 2025)`, kind: "critical", count: page.altMissing, images: page.altMissingImages ?? [] });
     if ((page.inputsWithoutLabel ?? 0) > 0)
-      errors.push({ label: `${page.inputsWithoutLabel} Formularfelder ohne Label (BFSG)`, kind: "critical" });
+      entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label`, kind: "critical", count: page.inputsWithoutLabel });
     if ((page.buttonsWithoutText ?? 0) > 0)
-      errors.push({ label: `${page.buttonsWithoutText} Buttons ohne sichtbaren Text`, kind: "critical" });
+      entries.push({ fixKey: "button", label: `${page.buttonsWithoutText} Buttons ohne Text`, kind: "critical", count: page.buttonsWithoutText });
   }
-
-  const fixSteps: Record<string, string[]> = {
-    alt:    ["Öffne im WordPress-Dashboard: Medien → Bibliothek.", "Klicke auf das betroffene Bild → fülle das Feld 'Alternativtext' aus.", "Für Bilder in Seiten: Editor öffnen → Bild anklicken → Alt-Text-Feld in der Seitenleiste.", "Tipp: Beschreibung des Bildinhalts, z.B. 'Teamfoto Büro München'."],
-    title:  ["Installiere Yoast SEO oder RankMath (kostenlos).", "Öffne die Seite im Editor → scrolle zum SEO-Plugin-Feld.", "Trage im Feld 'SEO-Titel' einen einzigartigen, 55–60 Zeichen langen Titel ein.", "Enthalte das Haupt-Keyword der Seite im Titel."],
-    h1:     ["Öffne die Seite im Gutenberg-Editor.", "Füge einen Überschrift-Block (H1) als erste Überschrift ein.", "Jede Seite braucht genau eine H1 — keine weiteren H1-Blöcke auf dieser Seite."],
-    meta:   ["SEO-Plugin öffnen (Yoast/RankMath) → Seite im Editor öffnen.", "Feld 'Meta-Beschreibung' ausfüllen: 120–155 Zeichen, einladend formuliert.", "Die Meta-Description erscheint in Google-Suchergebnissen als Vorschautext."],
-    noindex:["Öffne die Seite im Editor → SEO-Plugin-Feld unten.", "Suche die Option 'Suchmaschinen erlauben, diese Seite zu indexieren' → aktivieren.", "Falls absichtlich gesetzt: OK. Falls versehentlich: sofort korrigieren."],
-    "404":  ["Prüfe ob die Seite gelöscht oder umbenannt wurde.", "Falls gelöscht: neu erstellen oder 301-Weiterleitung setzen.", "WordPress-Plugin 'Redirection' für einfaches Weiterleitungs-Management.", "Alle internen Links auf diese URL aktualisieren."],
-    label:  ["Öffne das Formular im Editor.", "Füge für jedes <input>-Feld ein sichtbares Label hinzu (aria-label oder <label for=...>).", "In Elementor: Formular-Widget → Feld-Einstellungen → Label-Feld ausfüllen."],
-  };
 
   return (
     <>
       {/* Backdrop */}
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 1000, backdropFilter: "blur(2px)" }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, backdropFilter: "blur(3px)" }} />
+
       {/* Drawer */}
       <div style={{
         position: "fixed", top: 0, right: 0, bottom: 0,
-        width: "min(460px, 100vw)",
-        background: "#0e1117", borderLeft: `1px solid ${D.borderMid}`,
+        width: "min(480px, 100vw)",
+        background: "#0b0e15",
+        borderLeft: `1px solid ${D.borderMid}`,
         zIndex: 1001, overflowY: "auto", display: "flex", flexDirection: "column",
+        boxShadow: "-8px 0 32px rgba(0,0,0,0.5)",
       }}>
-        {/* Header */}
+
+        {/* ── Sticky header ── */}
         <div style={{
-          padding: "16px 20px", borderBottom: `1px solid ${D.border}`,
+          padding: "16px 18px",
+          borderBottom: `1px solid ${D.border}`,
           display: "flex", alignItems: "flex-start", gap: 12,
-          position: "sticky", top: 0, background: "#0e1117", zIndex: 1,
+          position: "sticky", top: 0, background: "#0b0e15", zIndex: 2,
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: "0 0 3px", fontSize: 10, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Seiten-Details</p>
+            <p style={{ margin: "0 0 4px", fontSize: 10, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 700 }}>
+              Seiten-Details
+            </p>
             <a href={pageUrl} target="_blank" rel="noopener noreferrer" style={{
-              fontSize: 13, fontWeight: 600, color: D.blueSoft, fontFamily: "monospace",
-              textDecoration: "none", display: "flex", alignItems: "center", gap: 5, wordBreak: "break-all",
+              fontSize: 14, fontWeight: 700, color: D.blueSoft, fontFamily: "monospace",
+              textDecoration: "none", display: "flex", alignItems: "center", gap: 5,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
               {path}
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
               </svg>
             </a>
-            <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted, wordBreak: "break-all" }}>{pageUrl}</p>
+            <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageUrl}</p>
           </div>
-          <button onClick={onClose} style={{
+          <button onClick={onClose} aria-label="Schließen" style={{
             background: "none", border: `1px solid ${D.border}`, cursor: "pointer",
-            borderRadius: 6, padding: "5px 10px", color: D.textSub, fontSize: 13, flexShrink: 0,
+            borderRadius: 7, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+            color: D.textSub, fontSize: 14, flexShrink: 0,
           }}>✕</button>
         </div>
 
-        {/* Body */}
-        <div style={{ padding: "16px 20px", flex: 1 }}>
-          {errors.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <p style={{ fontSize: 13, color: D.green, margin: 0 }}>Keine Fehler auf dieser Seite gefunden.</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {errors.map((err, i) => {
-                const fixKey = err.label.toLowerCase().includes("alt") ? "alt"
-                  : err.label.toLowerCase().includes("title") ? "title"
-                  : err.label.toLowerCase().includes("h1") ? "h1"
-                  : err.label.toLowerCase().includes("meta") ? "meta"
-                  : err.label.toLowerCase().includes("noindex") ? "noindex"
-                  : err.label.toLowerCase().includes("erreichbar") || err.label.toLowerCase().includes("404") ? "404"
-                  : err.label.toLowerCase().includes("label") || err.label.toLowerCase().includes("formular") ? "label"
-                  : null;
-                const steps = fixKey ? fixSteps[fixKey] ?? [] : [];
-                return (
-                  <DrawerErrorRow key={i} err={err} steps={steps} />
-                );
-              })}
+        {/* ── Body ── */}
+        <div style={{ padding: "16px 18px 28px", flex: 1 }}>
 
-              {/* Source URL — shown when page is unreachable so user knows which page has the dead link */}
-              {page && !page.erreichbar && page.foundVia && (
-                <div style={{
-                  borderRadius: D.radiusSm,
-                  background: "rgba(251,191,36,0.06)",
-                  border: `1px solid ${D.amberBorder}`,
-                  padding: "12px 14px",
-                }}>
-                  <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: D.amber, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                    Toter Link gefunden auf:
+          {/* ① Critical 404 alert banner */}
+          {is404 && (
+            <div style={{
+              borderRadius: 8,
+              background: "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.35)",
+              padding: "12px 16px",
+              marginBottom: 14,
+              display: "flex", gap: 10,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.red, lineHeight: 1.55 }}>
+                Kritischer Fehler: Diese Unterseite wurde im Quellcode verlinkt, ist aber für Besucher nicht erreichbar.
+              </p>
+            </div>
+          )}
+
+          {/* ② "Als erledigt markieren" checkbox */}
+          <button
+            onClick={onToggleChecked}
+            style={{
+              width: "100%", marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "11px 14px", borderRadius: 8, cursor: "pointer",
+              background: isChecked ? "rgba(74,222,128,0.08)" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${isChecked ? D.greenBorder : D.border}`,
+              transition: "all 0.15s",
+            }}
+          >
+            <span style={{
+              width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+              border: `2px solid ${isChecked ? D.green : D.borderMid}`,
+              background: isChecked ? D.greenBg : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: D.green, fontSize: 12, fontWeight: 700,
+              transition: "all 0.15s",
+            }}>{isChecked ? "✓" : ""}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: isChecked ? D.green : D.textSub }}>
+              {isChecked ? "Als erledigt markiert" : "Diese Seite als erledigt markieren"}
+            </span>
+            {isChecked && (
+              <span style={{ marginLeft: "auto", fontSize: 11, color: D.textMuted, flexShrink: 0 }}>
+                In Map ✓
+              </span>
+            )}
+          </button>
+
+          {/* ③ Source URL card for 404 pages */}
+          {is404 && page.foundVia && (
+            <div style={{
+              borderRadius: 10,
+              background: "rgba(251,191,36,0.06)",
+              border: `1px solid ${D.amberBorder}`,
+              padding: "13px 16px",
+              marginBottom: 14,
+              display: "flex", flexDirection: "column", gap: 6,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.amber} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 700, color: D.amber, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Toter Link gefunden auf
+                </span>
+              </div>
+              {page.foundVia === "sitemap" ? (
+                <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>
+                  URL ist in der <span style={{ fontFamily: "monospace", color: D.amber }}>sitemap.xml</span> eingetragen, aber nicht erreichbar.
+                  Entferne den Eintrag aus der Sitemap oder richte eine 301-Weiterleitung ein.
+                </p>
+              ) : (
+                <>
+                  <a href={page.foundVia} target="_blank" rel="noopener noreferrer" style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    fontSize: 13, fontFamily: "monospace", color: D.amber, textDecoration: "none",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {(() => { try { return new URL(page.foundVia!).pathname || "/"; } catch { return page.foundVia; } })()}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </a>
+                  <p style={{ margin: 0, fontSize: 11, color: D.textMuted, lineHeight: 1.55 }}>
+                    Öffne diese Seite im CMS-Editor, suche den Link auf <span style={{ fontFamily: "monospace", color: D.textSub }}>{path}</span> und entferne oder korrigiere ihn.
                   </p>
-                  {page.foundVia === "sitemap" ? (
-                    <p style={{ margin: 0, fontSize: 12, color: D.textSub }}>
-                      In der <span style={{ fontFamily: "monospace", color: D.amber }}>sitemap.xml</span> — diese URL ist in deiner Sitemap eingetragen, aber nicht erreichbar.
-                      Entferne sie aus der Sitemap oder leite sie auf eine gültige Seite weiter.
-                    </p>
-                  ) : (
-                    <>
-                      <a
-                        href={page.foundVia} target="_blank" rel="noopener noreferrer"
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5,
-                          fontSize: 12, fontFamily: "monospace", color: D.amber,
-                          textDecoration: "none", wordBreak: "break-all",
-                          marginBottom: 6,
-                        }}
-                      >
-                        {(() => { try { return new URL(page.foundVia!).pathname || "/"; } catch { return page.foundVia; } })()}
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                        </svg>
-                      </a>
-                      <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
-                        Öffne diese Seite im Editor → suche den Link auf <span style={{ fontFamily: "monospace" }}>{toPath(pageUrl)}</span> → entferne oder korrigiere ihn.
-                      </p>
-                    </>
-                  )}
-                </div>
+                </>
               )}
             </div>
+          )}
+
+          {/* ④ Error cards */}
+          {is404 && entries.length === 0 ? null : (
+            entries.length === 0 && !is404 ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={D.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 10 }}>
+                  <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
+                </svg>
+                <p style={{ fontSize: 13, color: D.green, margin: 0 }}>Keine weiteren Fehler auf dieser Seite.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* 404 fix card shown alongside source card */}
+                {is404 && (
+                  <DrawerCard
+                    fixKey="404"
+                    label="Seite nicht erreichbar (4xx/5xx)"
+                    kind="critical"
+                  />
+                )}
+                {entries.map((e, i) => (
+                  <DrawerCard key={i} fixKey={e.fixKey} label={e.label} kind={e.kind} count={e.count} images={e.images} />
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>
     </>
-  );
-}
-
-function DrawerErrorRow({
-  err,
-  steps,
-}: {
-  err: { label: string; kind: "critical" | "warning"; images?: string[] };
-  steps: string[];
-}) {
-  const [fixOpen, setFixOpen] = useState(false);
-  const color = err.kind === "critical" ? D.red : D.amber;
-  const bg    = err.kind === "critical" ? D.redBg : D.amberBg;
-  const bdr   = err.kind === "critical" ? D.redBorder : D.amberBorder;
-  return (
-    <div style={{ borderRadius: D.radiusSm, background: bg, border: `1px solid ${bdr}`, overflow: "hidden" }}>
-      {/* Error row */}
-      <div style={{ padding: "11px 14px", display: "flex", alignItems: "flex-start", gap: 8 }}>
-        <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>{err.kind === "critical" ? "⛔" : "⚠️"}</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: D.text, flex: 1 }}>{err.label}</span>
-        {steps.length > 0 && (
-          <button onClick={() => setFixOpen(v => !v)} style={{
-            flexShrink: 0, fontSize: 11, fontWeight: 700, padding: "3px 8px",
-            borderRadius: 4, cursor: "pointer", background: "rgba(255,255,255,0.06)",
-            border: `1px solid rgba(255,255,255,0.12)`, color: color,
-          }}>
-            {fixOpen ? "Schließen" : "Wie fixen?"}
-          </button>
-        )}
-      </div>
-      {/* Image list */}
-      {err.images && err.images.length > 0 && (
-        <div style={{ padding: "0 14px 10px" }}>
-          <p style={{ margin: "0 0 5px", fontSize: 11, color: D.textMuted }}>Betroffene Bilder ({err.images.length}):</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {err.images.slice(0, 12).map((img, j) => {
-              const imgPath = (() => { try { return new URL(img).pathname; } catch { return img; } })();
-              return (
-                <div key={j} style={{
-                  fontSize: 11, fontFamily: "monospace", color: D.textSub,
-                  background: "rgba(0,0,0,0.25)", borderRadius: 4, padding: "3px 8px", wordBreak: "break-all",
-                }}>
-                  {imgPath}
-                </div>
-              );
-            })}
-            {err.images.length > 12 && (
-              <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted }}>+{err.images.length - 12} weitere</p>
-            )}
-          </div>
-        </div>
-      )}
-      {/* Fix steps */}
-      {fixOpen && steps.length > 0 && (
-        <div style={{ padding: "10px 14px 12px", borderTop: `1px solid rgba(255,255,255,0.06)`, background: "rgba(0,0,0,0.15)" }}>
-          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: color, textTransform: "uppercase", letterSpacing: "0.07em" }}>Fix-Anleitung (WordPress/Elementor):</p>
-          {steps.map((s, si) => (
-            <div key={si} style={{ display: "flex", gap: 8, marginBottom: si < steps.length - 1 ? 5 : 0 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color, flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
-              <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -1407,6 +1583,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               pageUrl={drawerPageUrl}
               unterseiten={unterseiten}
               onClose={() => setDrawerPageUrl(null)}
+              isChecked={checkedUrls.has(drawerPageUrl)}
+              onToggleChecked={() => toggleChecked(drawerPageUrl)}
             />
           )}
 
