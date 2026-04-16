@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { TechFingerprint } from "@/lib/tech-detector";
@@ -660,7 +660,7 @@ function DrawerPanel({
 }
 
 // ─── Deep-Scan Map ────────────────────────────────────────────────────────────
-function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onOpenDrawer, checkedUrls, onToggleChecked }: {
+function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onOpenDrawer, checkedUrls, onToggleChecked, highlightUrl }: {
   homepageUrl: string;
   homepageIssueCount: number;
   unterseiten: UnterseiteProp[];
@@ -668,6 +668,7 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
   onOpenDrawer: (url: string) => void;
   checkedUrls: Set<string>;
   onToggleChecked: (url: string) => void;
+  highlightUrl?: string | null;
 }) {
   const [expanded, setExpanded] = useState<number | null>(null);
   void expanded; void setExpanded;
@@ -732,12 +733,14 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
           const isLast    = i === unterseiten.length - 1;
           const isChecked = checkedUrls.has(page.url);
 
+          const isHighlighted = highlightUrl === page.url;
           return (
             <div key={page.url} style={{
               borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
-              background: isChecked ? "rgba(74,222,128,0.04)" : "transparent",
+              background: isHighlighted ? "rgba(251,191,36,0.12)" : isChecked ? "rgba(74,222,128,0.04)" : "transparent",
               opacity: isChecked ? 0.65 : 1,
-              transition: "opacity 0.2s",
+              transition: "background 0.3s, opacity 0.2s",
+              borderLeft: isHighlighted ? `3px solid ${D.amber}` : "3px solid transparent",
             }}>
               <div style={{ padding: "11px 20px", display: "flex", alignItems: "center", gap: 8 }}>
                 {/* Geprüft checkbox */}
@@ -831,7 +834,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [fixOpenIdx, setFixOpenIdx]             = useState<number | null>(null);
   const [drawerPageUrl, setDrawerPageUrl]       = useState<string | null>(null);
   const [checkedUrls, setCheckedUrls]           = useState<Set<string>>(new Set());
+  const [highlightUrl, setHighlightUrl]         = useState<string | null>(null);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const mapSectionRef = useRef<HTMLDivElement>(null);
   const [cancelHover, setCancelHover]           = useState(false);
   const [switchHover, setSwitchHover]           = useState(false);
   const [switching, setSwitching]               = useState(false);
@@ -881,6 +886,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     });
   }
 
+  function handleShowInMap(url: string) {
+    setHighlightUrl(url);
+    mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => setHighlightUrl(null), 2500);
+  }
 
   const SMART_GUARD_PLANS = ["smart-guard", "agency-starter", "agency-pro"];
   const isSmartGuard = SMART_GUARD_PLANS.includes(plan);
@@ -1566,15 +1576,18 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑥ DEEP-SCAN MAP */}
           {hasData && unterseiten && unterseiten.length > 0 && (
-            <DeepScanMap
-              homepageUrl={lastScan?.url ?? ""}
-              homepageIssueCount={issues.length}
-              unterseiten={unterseiten}
-              isFree={isFree}
-              onOpenDrawer={setDrawerPageUrl}
-              checkedUrls={checkedUrls}
-              onToggleChecked={toggleChecked}
-            />
+            <div ref={mapSectionRef}>
+              <DeepScanMap
+                homepageUrl={lastScan?.url ?? ""}
+                homepageIssueCount={issues.length}
+                unterseiten={unterseiten}
+                isFree={isFree}
+                onOpenDrawer={setDrawerPageUrl}
+                checkedUrls={checkedUrls}
+                onToggleChecked={toggleChecked}
+                highlightUrl={highlightUrl}
+              />
+            </div>
           )}
 
           {/* Side drawer */}
@@ -1602,8 +1615,32 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </p>
               </Card>
             ) : (
+              <>
+                {/* Management Summary Box */}
+                <div style={{
+                  marginBottom: 16,
+                  padding: "14px 18px",
+                  borderRadius: D.radiusSm,
+                  background: "rgba(248,113,113,0.05)",
+                  border: `1px solid rgba(248,113,113,0.18)`,
+                }}>
+                  <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 700, color: D.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Zusammenfassung
+                  </p>
+                  <p style={{ margin: 0, fontSize: 13, color: D.textSub, lineHeight: 1.65 }}>
+                    Deine Website weist aktuell{" "}
+                    <strong style={{ color: D.red }}>{redCount} kritische Fehler</strong>
+                    {yellowCount > 0 && <> und <strong style={{ color: D.amber }}>{yellowCount} Warnungen</strong></>}
+                    {" "}auf — das gefährdet Google-Rankings, verstößt gegen Barrierefreiheitspflichten und kostet aktiv Conversions.{" "}
+                    {redCount > 0 && <span style={{ color: D.textMuted }}>Priorität: kritische Fehler zuerst beheben.</span>}
+                  </p>
+                </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {issues.map((issue, idx) => {
+                {[...issues].sort((a, b) => {
+                  const order: Record<string, number> = { red: 0, yellow: 1, green: 2 };
+                  return (order[a.severity] ?? 3) - (order[b.severity] ?? 3);
+                }).map((issue, idx) => {
                   const isOpen    = expandedFinding === idx;
                   const isFixOpen = fixOpenIdx === idx;
                   const accentColor = issue.severity === "red" ? "#f87171" : issue.severity === "yellow" ? D.amber : D.green;
@@ -1645,15 +1682,30 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                             {issue.title}
                           </p>
                           {issue.url && (
-                            <a
-                              href={issue.url} target="_blank" rel="noopener noreferrer"
-                              onClick={e => e.stopPropagation()}
-                              style={{ margin: "2px 0 0", fontSize: 11, color: D.blueSoft, fontFamily: "monospace", display: "block",
-                                textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                            >
-                              {(() => { try { return new URL(issue.url!).pathname; } catch { return issue.url; } })()}
-                              {" ↗"}
-                            </a>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <a
+                                href={issue.url} target="_blank" rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                style={{ margin: "2px 0 0", fontSize: 11, color: D.blueSoft, fontFamily: "monospace",
+                                  textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                              >
+                                {(() => { try { return new URL(issue.url!).pathname; } catch { return issue.url; } })()}
+                                {" ↗"}
+                              </a>
+                              {unterseiten?.some(p => p.url === issue.url) && (
+                                <button
+                                  onClick={e => { e.stopPropagation(); handleShowInMap(issue.url!); }}
+                                  style={{
+                                    background: "none", border: "none", padding: "2px 0", cursor: "pointer",
+                                    fontSize: 11, color: D.amber, fontWeight: 600,
+                                    textDecoration: "underline", textDecorationColor: "rgba(251,191,36,0.35)",
+                                    textUnderlineOffset: 2, whiteSpace: "nowrap", fontFamily: "inherit",
+                                  }}
+                                >
+                                  In der Map anzeigen →
+                                </button>
+                              )}
+                            </div>
                           )}
                           {!issue.url && (
                             <p style={{ margin: "2px 0 0", fontSize: 11, color: getImpact(issue.category, issue.severity).color, fontWeight: 500, opacity: 0.85 }}>
@@ -1754,6 +1806,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 })}
 
               </div>
+              </>
             )}
           </div>
 
