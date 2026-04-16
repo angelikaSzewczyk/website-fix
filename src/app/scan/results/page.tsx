@@ -1083,10 +1083,10 @@ function ResultsInner() {
               );
             })}
 
-            {/* Locked rows (blurred) — only if more pages exist */}
-            {pageItems.length > VISIBLE_PAGES && (
+            {/* Locked rows (blurred) — only if more ANALYZED pages exist beyond visible limit */}
+            {pagesTotal > VISIBLE_PAGES && (
               <div style={{ position: "relative" }}>
-                {pageItems.slice(VISIBLE_PAGES).map((p, i) => (
+                {pageItems.filter(p => !p.isSkipped).slice(VISIBLE_PAGES).map((p, i) => (
                   <div key={p.path + i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", filter: "blur(4px)", userSelect: "none" }}>
                     <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>{pageBase}{p.path}</span>
                     <div style={{ width: 120, textAlign: "center" }}><span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>████</span></div>
@@ -1095,7 +1095,7 @@ function ResultsInner() {
                 ))}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 0%, rgba(11,12,16,0.85) 40%, rgba(11,12,16,0.98) 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 24px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>+ {pageItems.length - VISIBLE_PAGES} weitere Seiten analysiert</div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>+ {pagesTotal - VISIBLE_PAGES} weitere Seiten analysiert</div>
                     <Link href="/register" className="wf-cta-pulse" style={{ display: "inline-block", padding: "10px 24px", borderRadius: 10, background: "#007BFF", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,123,255,0.4)" }}>
                       Alle {pagesTotal} Seiten freischalten →
                     </Link>
@@ -1105,7 +1105,7 @@ function ResultsInner() {
             )}
 
             {/* Error total footer row */}
-            {!isDemo && totalTableErrors > 0 && pageItems.length <= VISIBLE_PAGES && (
+            {!isDemo && totalTableErrors > 0 && pagesTotal <= VISIBLE_PAGES && (
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>Gesamt</span>
                 <div style={{ width: 120 }} />
@@ -1116,7 +1116,7 @@ function ResultsInner() {
             )}
 
             {/* If fewer pages than visible limit, add CTA below */}
-            {pageItems.length <= VISIBLE_PAGES && (
+            {pagesTotal <= VISIBLE_PAGES && (
               <div style={{ padding: "14px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                 <Link href="/register" style={{ fontSize: 13, color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>
                   Mit Agency Core alle Seiten dauerhaft überwachen →
