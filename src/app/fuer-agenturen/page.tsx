@@ -16,43 +16,43 @@ const BellAlertIcon = BellDot;
 const ShieldAlertIcon = ShieldAlert;
 
 export const metadata: Metadata = {
-  title: { absolute: "Für Agenturen | WordPress-Haftung & BFSG 2025 lösen" },
-  description: "Verwandeln Sie Ihre Wartung in eine Profit-Maschine. White-Label Reports, BFSG-Compliance und Jira-Integration für Web-Agenturen.",
+  title: { absolute: "Für Agenturen | Mehr Marge mit automatisierter WordPress-Wartung" },
+  description: "Skalieren Sie Ihre Agentur mit website-fix. Smart-Fix Drawer, Lead-Magnet Widget, White-Label Reports und Workflow-Automatisierung für Web-Agenturen.",
 };
 
 const PLANS = [
   {
-    name: "Agency Starter",
-    price: "99",
+    name: "Professional",
+    price: "89",
     per: "/Monat",
-    desc: "Für Agenturen mit bis zu 10 Projekten",
+    desc: "Für wachsende Agenturen & Freelancer",
     accent: "#2563EB",
     features: [
-      { text: "10 Projekt-Slots", highlight: true },
-      { text: "Neutrales Branding", highlight: true },
-      { text: "Kunden-Management-Dashboard", highlight: true },
-      { text: "Team-Initialen in der Matrix", highlight: true },
+      { text: "10 Projekte", highlight: true },
+      { text: "Täglicher Deep-Scan", highlight: true },
+      { text: "KI-Fix-Vorschläge", highlight: true },
+      { text: "Smart-Fix Drawer (Gutenberg · Elementor · Divi)", highlight: true },
+      { text: "Monitoring & E-Mail-Alerts", highlight: false },
       { text: "PDF-Berichte & Score-Historie", highlight: false },
-      { text: "24/7 Live-Monitoring", highlight: false },
     ],
-    cta: "Agency-Account erstellen",
+    cta: "Professional starten",
     href: "/register",
     recommended: false,
     scale: false,
     enterprise: false,
   },
   {
-    name: "Agency Pro",
-    price: "199",
+    name: "Agency",
+    price: "249",
     per: "/Monat",
     desc: "Full White-Label für professionelle Agenturen",
     accent: "#7C3AED",
     features: [
-      { text: "Unlimitierte Projekte (∞)", highlight: true, key: false },
+      { text: "50 Projekte", highlight: true, key: true },
       { text: "Full White-Label (Logo & Farben)", highlight: true, key: true },
+      { text: "Lead-Magnet Widget für Neukunden-Akquise", highlight: true, key: true },
       { text: "Eigene Subdomain (portal.ihre-agentur.de)", highlight: true, key: true },
       { text: "Automatischer Report-Versand an Kunden", highlight: true, key: false },
-      { text: "Kunden-Login-Bereich", highlight: true, key: true },
       { text: "E-Mail Absendername konfigurierbar", highlight: false, key: false },
     ],
     cta: "Agency-Account erstellen",
@@ -73,8 +73,8 @@ const FAQ = [
     a: "Wir hosten 100% DSGVO-konform auf Servern in Deutschland. Alle Daten werden TLS-verschlüsselt übertragen und gespeichert. Sie erhalten DSGVO-konforme Auftragsverarbeitungsverträge (AVV) und bleiben jederzeit Eigentümer Ihrer Daten — wir verkaufen oder teilen sie nicht.",
   },
   {
-    q: "Bietet WebsiteFix Schutz vor dem BFSG 2025?",
-    a: "Ja. Unser System überwacht Ihre Projekte kontinuierlich auf WCAG 2.1-Richtlinien und liefert den notwendigen Audit-Trail für Ihre Haftungsfreistellung. Ab Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz (BFSG) für die meisten kommerziellen Websites — Agenturen, die Websites betreuen, tragen Mitverantwortung.",
+    q: "Was ist der Smart-Fix Drawer und wie hilft er meinem Team?",
+    a: "Der Smart-Fix Drawer öffnet sich per Klick auf jeden gefundenen Fehler und zeigt eine exakte Schritt-für-Schritt-Anleitung für Gutenberg, Elementor oder Divi. Ihr Junior-Team kann damit Aufgaben erledigen, die sonst Senior-Know-how erfordern — Alt-Texte setzen, Formular-Labels korrigieren, kaputte Links finden und beheben. Kein Ticket schreiben, kein Rückfragen.",
   },
   {
     q: "Für welche Website-Plattformen funktioniert das?",
@@ -161,11 +161,11 @@ export default function AgencyPage() {
             </div>
 
             <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-              Skalieren Sie Ihre Agentur mit automatisierten Wartungsumsätzen
+              Mehr Projekte. Mehr Marge. Weniger manuelle Arbeit.
             </h1>
 
             <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
-              Generieren Sie monatlich wiederkehrende Erlöse (MRR) durch vollautomatisierte BFSG-&amp; Sicherheits-Audits. Schützen Sie Ihre Kunden und steigern Sie Ihre Marge – ohne eine einzige Stunde Mehrarbeit.
+              Automatisierte WordPress-Audits, White-Label Reports und ein Smart-Fix Drawer mit Page-Builder-Anleitungen. Ihre Junioren erledigen Tasks, für die Sie sonst Senior-Know-how bräuchten — in einem Bruchteil der Zeit.
             </p>
 
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -314,7 +314,7 @@ export default function AgencyPage() {
                       {/* Stats — 2×2 on mobile via CSS */}
                       <div className="wf-report-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
                         {[
-                          { label: "BFSG-Check", value: "100%" },
+                          { label: "Website-Score", value: "100%" },
                           { label: "Verfügbarkeit", value: "99.9%" },
                           { label: "Krit. Fehler", value: "0" },
                           { label: "Optimierungen", value: "7" },
@@ -381,7 +381,7 @@ export default function AgencyPage() {
               },
               {
                 num: "02", label: "Automatischer Deep-Scan", title: "KI übernimmt den Wachdienst",
-                desc: "Die KI scannt täglich oder wöchentlich auf BFSG-Konformität, Technik-Fehler und Performance. Fehler landen automatisch als Ticket — direkt wo Ihr Team arbeitet.",
+                desc: "Die KI scannt täglich oder wöchentlich auf SEO-Qualität, Technik-Fehler und Performance. Jeder Befund landet automatisch als Ticket — direkt dort, wo Ihr Team arbeitet.",
                 color: "#8df3d3",
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -389,7 +389,7 @@ export default function AgencyPage() {
                     <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
                   </svg>
                 ),
-                pills: ["BFSG-Konformität", "Performance-Scan", "Täglich · Wöchentlich", "Haftungsschutz inklusive"],
+                pills: ["SEO & Technik-Scan", "Performance-Check", "Täglich · Wöchentlich", "Smart-Fix Anleitungen"],
               },
               {
                 num: "03", label: "White-Label Reporting", title: "Professionelle Reports in Ihrem Design",
@@ -602,12 +602,12 @@ export default function AgencyPage() {
 
         {/* PROBLEMS */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,107,107,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Das Problem</p>
+          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,107,107,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Bekannte Probleme</p>
           <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em" }}>
-            Warum Agenturen Zeit verlieren.
+            Drei Effizienz-Killer, die Ihre Marge fressen.
           </h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", margin: "0 0 48px", maxWidth: 560, lineHeight: 1.7 }}>
-            Drei Situationen, die Sie kennen. Und die Sie jeden Monat Stunden und Vertrauen kosten.
+            Situationen, die jede Agentur kennt — und die website-fix systematisch eliminiert.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {([
@@ -630,13 +630,13 @@ export default function AgencyPage() {
                 quote: `\u201EWarum habt ihr das nicht gesehen? Ihr betreut ja unsere Website.\u201C`,
               },
               {
-                IconEl: ShieldAlertIcon,
-                glow: "rgba(255,107,107,0.16)",
-                border: "rgba(255,107,107,0.25)",
-                iconColor: "#fca5a5",
-                title: "BFSG-Haftung: Sie haften, nicht der Kunde",
-                desc: "Das Barrierefreiheitsstärkungsgesetz gilt seit Juni 2025. Wer die Website wartet, trägt Mitverantwortung. Ein manuelles WCAG-Audit kostet 4–8h pro Website — unmöglich skalierbar.",
-                quote: `\u201EWir brauchen eine WCAG-konforme Website. Können Sie das garantieren?\u201C`,
+                IconEl: Zap,
+                glow: "rgba(192,132,252,0.16)",
+                border: "rgba(192,132,252,0.25)",
+                iconColor: "#c084fc",
+                title: "Jeder Fix braucht Senior-Know-how — oder?",
+                desc: "Alt-Text vergessen. Formular-Label fehlt. 404-Link tracken. Aufgaben, die einfach klingen, enden als Stunden-Tickets beim Senior-Entwickler. Mit dem Smart-Fix Drawer erledigt das Ihr Junior — in 5 Minuten, ohne Rückfragen.",
+                quote: `\u201EBis der Senior das gefixt hat, hätte ich es dreimal erklärt.\u201C`,
               },
             ] as const).map((p, i) => (
               <div key={i} className="wf-problem-card" style={{
@@ -834,15 +834,15 @@ export default function AgencyPage() {
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(37,99,235,0.12)", color: "#7aa6ff", letterSpacing: "0.06em" }}>Profitabilität</span>
                 </div>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Neue Umsatzpotenziale</h3>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Höhere Marge pro Projekt</h3>
                   <p style={{ margin: "0 0 14px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
-                    Verwandeln Sie Ihre Wartungsleistungen in monatlich wiederkehrende Umsätze. Automatisierte BFSG-Audits und Sicherheits-Checks rechtfertigen höhere Wartungspauschalen – ohne zusätzlichen Aufwand.
+                    Automatisierte Audits auf SEO, Technik und Qualität rechtfertigen höhere Wartungspauschalen — ohne Mehraufwand. Jeder Scan liefert messbare Verbesserungen, die Sie Ihren Kunden direkt präsentieren können.
                   </p>
                   <ul style={{ margin: "auto 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
-                    {["WCAG 2.1 AA vollständig", "Audit-Trail als Nachweis", "Automatische Meldung bei Verstoß", "BFSG Haftungsschutz-Monitor"].map(b => (
+                    {["SEO-Score pro Seite — Ranking-Potenzial sichtbar", "Fehler-Priorisierung nach Schweregrad", "Smart-Fix Drawer für Gutenberg, Elementor & Divi", "Junior-freundliche Fix-Anleitungen — kein Senior nötig"].map(b => (
                       <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        {b === "BFSG Haftungsschutz-Monitor" ? <strong style={{ color: "#a5c1ff", fontWeight: 700 }}>{b}</strong> : b}
+                        {b === "Junior-freundliche Fix-Anleitungen — kein Senior nötig" ? <strong style={{ color: "#a5c1ff", fontWeight: 700 }}>{b}</strong> : b}
                       </li>
                     ))}
                   </ul>
@@ -902,6 +902,115 @@ export default function AgencyPage() {
                   </ul>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── LEAD-MAGNET WIDGET ── */}
+        <section style={{ background: "#0a0f1a", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "80px 24px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+
+              {/* Left: Text */}
+              <div>
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "5px 16px", borderRadius: 20, marginBottom: 24,
+                  background: "linear-gradient(90deg, rgba(234,179,8,0.15), rgba(251,191,36,0.08))",
+                  border: "1px solid rgba(234,179,8,0.5)",
+                  boxShadow: "0 0 16px rgba(234,179,8,0.2)",
+                  fontSize: 12, color: "#FBBF24", fontWeight: 800, letterSpacing: "0.08em",
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FBBF24", boxShadow: "0 0 8px #FBBF24", flexShrink: 0 }} />
+                  ★ NUR IM AGENCY-PLAN
+                </div>
+                <h2 style={{ fontSize: "clamp(24px, 3vw, 40px)", fontWeight: 800, margin: "0 0 16px", letterSpacing: "-0.03em", lineHeight: 1.15, color: "#fff" }}>
+                  Das Lead-Magnet Widget — Neukunden auf Autopilot.
+                </h2>
+                <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, margin: "0 0 28px" }}>
+                  Binden Sie ein kleines Scan-Widget direkt in die Website Ihrer Kunden oder in Ihre eigene Agentur-Website ein. Besucher können ihre URL kostenlos scannen — und landen direkt in Ihrem Funnel.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {[
+                    { color: "#4ade80", text: "Widget läuft unter Ihrem Branding — kein Hinweis auf website-fix" },
+                    { color: "#7aa6ff", text: "Scan-Ergebnis zeigt Fehler → Ihre Agentur als Lösung" },
+                    { color: "#c084fc", text: "Leads landen automatisch in Ihrem Dashboard" },
+                    { color: "#fbbf24", text: "Einmalig einbinden, dauerhaft neue Anfragen generieren" },
+                  ].map(item => (
+                    <div key={item.text} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: Widget Mockup */}
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  position: "absolute", inset: "-40px",
+                  background: "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.10) 0%, transparent 70%)",
+                  pointerEvents: "none",
+                }} />
+                <div style={{
+                  position: "relative",
+                  background: "rgba(8,10,20,0.9)",
+                  border: "1px solid rgba(34,197,94,0.2)",
+                  borderRadius: 16,
+                  padding: "28px",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
+                }}>
+                  {/* Widget header */}
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(74,222,128,0.7)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
+                      Muster Agentur GmbH — Kostenloser Website-Check
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
+                      Wie gesund ist Ihre WordPress-Website?
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
+                      Kostenloser Scan — Ergebnis in 60 Sekunden
+                    </div>
+                  </div>
+                  {/* URL Input Mockup */}
+                  <div style={{
+                    display: "flex", gap: 8,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 10, padding: "10px 14px",
+                    marginBottom: 14,
+                    alignItems: "center",
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>https://ihre-website.de</span>
+                  </div>
+                  <div style={{
+                    background: "linear-gradient(90deg, #16a34a, #15803d)",
+                    borderRadius: 9, padding: "11px 0",
+                    textAlign: "center", fontSize: 13, fontWeight: 700, color: "#fff",
+                    boxShadow: "0 3px 14px rgba(34,197,94,0.3)",
+                  }}>
+                    Jetzt kostenlos scannen →
+                  </div>
+                  {/* Trust line */}
+                  <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
+                    Kein Login · Keine Installation · DSGVO-konform
+                  </div>
+                </div>
+                <div style={{
+                  position: "absolute", top: -12, right: 12,
+                  padding: "4px 12px", borderRadius: 20,
+                  background: "#0b0c10", border: "1px solid rgba(74,222,128,0.3)",
+                  fontSize: 11, fontWeight: 600, color: "#4ade80",
+                }}>
+                  ← Ihr Branding, Ihr Logo
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
@@ -1210,7 +1319,7 @@ export default function AgencyPage() {
                 Wissen, das Ihre Agentur weiterbringt.
               </h2>
               <p style={{ margin: "6px 0 0", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
-                Strategien zu Barrierefreiheit, Workflow-Optimierung und Haftungsschutz.
+                Strategien zu WordPress-Exzellenz, Workflow-Automatisierung und technischer Qualität.
               </p>
             </div>
             <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
@@ -1239,7 +1348,7 @@ export default function AgencyPage() {
                   Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen
                 </h3>
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1 }}>
-                  Erfahren Sie, wie Sie Ihre Kunden vor Abmahnungen schützen und die neue Gesetzgebung als Umsatz-Chance nutzen.
+                  Wie Sie das Thema Barrierefreiheit als Qualitätsmerkmal positionieren und damit Premium-Wartungspauschalen rechtfertigen.
                 </p>
                 <span style={{ fontSize: 13, color: "#7aa6ff", fontWeight: 600 }}>Jetzt lesen →</span>
               </div>
@@ -1314,10 +1423,10 @@ export default function AgencyPage() {
               <div style={{ position: "absolute", top: "-50%", left: "-10%", width: "50%", height: "200%", background: "radial-gradient(ellipse, rgba(0,123,255,0.10) 0%, transparent 70%)", pointerEvents: "none" }} />
               <div className="wf-agency-cta-text" style={{ position: "relative" }}>
                 <h2 style={{ margin: "0 0 10px", fontSize: "clamp(22px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                  Starten Sie jetzt —<br />erste Website kostenlos.
+                  Erste Website scannen — kostenlos, in 60 Sekunden.
                 </h2>
                 <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                  WordPress-Deep-Scan in unter 60 Sekunden – ohne Plugin-Installation.
+                  Kein Plugin, kein Hosting-Zugang nötig. Einfach URL eingeben und sofort sehen, wo Optimierungspotenzial liegt.
                 </p>
               </div>
               <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>

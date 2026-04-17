@@ -9,16 +9,16 @@ import TestimonialDots from "./components/testimonial-dots";
 import SiteFooter from "./components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: { absolute: "WebsiteFix | Compliance-Plattform für WordPress-Agenturen" },
-  description: "Automatisierte Überwachung, KI-gestützte Fehlerbehebung und professionelle White-Label-Reports für Web-Agenturen. WCAG, SEO, Performance & Monitoring in einem Tool.",
+  title: { absolute: "WebsiteFix | WordPress Deep-Scanner für Google-Ranking & Website-Qualität" },
+  description: "Scanne deine WordPress-Website auf SEO-Probleme, technische Fehler und Barrierefreiheit. Interaktive Site-Map + Smart-Fix Drawer mit Gutenberg-, Elementor- und Divi-Anleitungen.",
 };
 
 const STEPS = [
   {
     num: "01",
     label: "Schritt 01",
-    title: "Externer Deep Scan",
-    desc: "Trage deine URL ein. Unsere Engine crawlt bis zu 25 Unterseiten und identifiziert Barrierefreiheits-Fehler und technische SEO-Blocker – ohne Installation.",
+    title: "URL eingeben — Scan startet",
+    desc: "Trage deine URL ein. Unsere Engine crawlt alle Unterseiten automatisch und erstellt eine interaktive Map deiner Website — SEO, Technik und Zugänglichkeit auf einen Blick.",
     color: "#7aa6ff",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -28,13 +28,13 @@ const STEPS = [
         <line x1="8" y1="11" x2="14" y2="11"/>
       </svg>
     ),
-    pills: ["Kein Login", "BFSG-Check", "Live-Analyse"],
+    pills: ["Kein Login nötig", "Multi-Page-Scan", "Live-Analyse"],
   },
   {
     num: "02",
     label: "Schritt 02",
-    title: "Plugin-Deep-Insight",
-    desc: "Verbinde unser Read-only Plugin für eine Tiefenprüfung deiner Plugins, Themes und Datenbank-Health. Maximale Sicherheit ohne Schreibrechte.",
+    title: "Interaktive Map — Fehler sehen",
+    desc: "Alle gefundenen Probleme erscheinen auf einer interaktiven Site-Map. Per Klick öffnet sich der Smart-Fix Drawer mit einer Schritt-für-Schritt-Anleitung für dein Page-Builder-System.",
     color: "#8df3d3",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -43,13 +43,13 @@ const STEPS = [
         <line x1="17.5" y1="15" x2="9" y2="15"/>
       </svg>
     ),
-    pills: ["Read-only", "Plugin-Audit", "Core-Check"],
+    pills: ["Interaktive Site-Map", "Smart-Fix Drawer", "Fehler priorisiert"],
   },
   {
     num: "03",
     label: "Schritt 03",
-    title: "Reporting & Fix-Anleitungen",
-    desc: "Erhalte präzise Anleitungen zur Fehlerbehebung. Aktiviere das 24/7 Monitoring, um bei neuen Fehlern oder Gesetzesänderungen sofort alarmiert zu werden.",
+    title: "Fehler beheben — Score steigt",
+    desc: "Folge den Anleitungen für Gutenberg, Elementor oder Divi — kein Entwickler-Wissen nötig. Hake erledigte Punkte ab und beobachte, wie dein Website-Score und dein Google-Ranking steigen.",
     color: "#c084fc",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +60,7 @@ const STEPS = [
         <polyline points="14 17 16 17 18 19"/>
       </svg>
     ),
-    pills: ["Echtzeit-Alarm", "Fix-Guides", "Agentur-Reports"],
+    pills: ["Gutenberg · Elementor · Divi", "Score-Tracking", "24/7 Monitoring"],
   },
 ];
 
@@ -68,16 +68,16 @@ const BENEFITS = [
   {
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <polyline points="9 12 11 14 15 10"/>
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
       </svg>
     ),
     iconBg: "rgba(37,99,235,0.1)",
     iconBorder: "rgba(37,99,235,0.25)",
     iconColor: "#7aa6ff",
-    label: "Expertise",
-    title: "Spezialisiert auf WordPress & BFSG",
-    desc: "Wir scannen nicht alles – wir scannen WordPress besser als jeder andere. BITV, EN 301 549 und DSGVO sind unser Tagesgeschäft.",
+    label: "WordPress-Fokus",
+    title: "Spezialisiert auf WordPress-Exzellenz",
+    desc: "Wir scannen nicht alles – wir scannen WordPress tiefer als jeder andere. SEO, Technik, Plugins und Barrierefreiheit in einem Durchlauf.",
   },
   {
     icon: (
@@ -89,109 +89,87 @@ const BENEFITS = [
     iconBorder: "rgba(141,243,211,0.2)",
     iconColor: "#8df3d3",
     label: "Automatisierung",
-    title: "Vollautomatisches Monitoring",
-    desc: "Einmal einrichten, nie wieder manuell prüfen. Unsere Engine arbeitet 24/7 im Hintergrund und alarmiert dich bei jedem neuen Befund.",
+    title: "Monitoring ohne Aufwand",
+    desc: "Einmal einrichten, nie wieder manuell prüfen. Die Engine arbeitet 24/7 im Hintergrund und alarmiert dich sofort, wenn neue Fehler auftauchen.",
   },
   {
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <polyline points="9 13 11 15 15 11"/>
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     ),
     iconBg: "rgba(234,179,8,0.08)",
     iconBorder: "rgba(234,179,8,0.22)",
     iconColor: "#EAB308",
-    label: "Haftung",
-    title: "Haftungsrisiken minimieren",
-    desc: "Wir liefern die lückenlose Dokumentation, die du für deine Kunden brauchst – revisionssicher, exportierbar, gerichtsfest.",
+    label: "Sichtbarkeit",
+    title: "Google-Rankings verbessern",
+    desc: "Jeder behobene Fehler ist ein Signal an Google. Fehlende Alt-Texte, kaputte Links und Ladezeit-Probleme kosten dich Plätze in den Suchergebnissen — website-fix zeigt dir genau, wo.",
   },
 ];
 
 const PLANS = [
   {
-    name: "Free",
-    price: "0",
+    name: "Starter",
+    price: "29",
     per: "/Monat",
-    desc: "Kostenloser Quick-Check",
+    desc: "Für Einzelunternehmer & kleine Websites",
     badge: null,
     accent: "#475569",
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "25 Unterseiten Deep-Scan", highlight: false },
-      { text: "BFSG 2025 Schnelltest", highlight: false },
-      { text: "Technik- & Speed-Analyse", highlight: false },
-      { text: "Manuelle Fix-Guides", highlight: false },
+      { text: "1 Projekt", highlight: true },
+      { text: "Wöchentlicher Deep-Scan (alle Unterseiten)", highlight: true },
+      { text: "SEO, Technik & Barrierefreiheit", highlight: false },
+      { text: "Smart-Fix Drawer mit Anleitungen", highlight: true },
+      { text: "Interaktive Site-Map", highlight: false },
     ],
-    cta: "Kostenlos starten",
+    cta: "Starter wählen",
     href: "/register",
     recommended: false,
     enterprise: false,
     scale: false,
   },
   {
-    name: "Smart-Guard",
-    price: "39",
+    name: "Professional",
+    price: "89",
     per: "/Monat",
-    desc: "Smart-Protect",
-    badge: "★ BESTSELLER",
+    desc: "Für wachsende Projekte & kleine Agenturen",
+    badge: "★ EMPFOHLEN",
     accent: "#2563EB",
     accentBg: "#EFF6FF",
     accentBorder: "#BFDBFE",
     features: [
-      { text: "Alles aus Free", highlight: false },
-      { text: "24/7 BFSG-Überwachung", highlight: true },
-      { text: "Plugin-Deep-Insight (Read-only)", highlight: true },
-      { text: "Automatisierte Reports für Inhaber", highlight: true },
+      { text: "10 Projekte", highlight: true },
+      { text: "Täglicher Deep-Scan", highlight: true },
+      { text: "KI-Fix-Vorschläge", highlight: true },
+      { text: "Alle Smart-Fix Drawer Anleitungen", highlight: true },
+      { text: "Monitoring & E-Mail-Alerts", highlight: false },
     ],
-    cta: "Smart-Guard starten",
+    cta: "Professional starten",
     href: "/register",
     recommended: true,
     enterprise: false,
     scale: false,
   },
   {
-    name: "Agency Starter",
-    price: "99",
+    name: "Agency",
+    price: "249",
     per: "/Monat",
-    desc: "Agency-Scale",
+    desc: "White-Label für Agenturen mit Mandantenverwaltung",
     badge: "FÜR AGENTUREN",
     accent: "#7C3AED",
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
     features: [
-      { text: "Alles aus Smart-Guard", highlight: false },
-      { text: "Bis zu 10 Projekte", highlight: true },
-      { text: "Zentrales Agentur-Dashboard", highlight: true },
-      { text: "BFSG-Dokumentation für Kunden", highlight: true },
-      { text: "White-Label Light (Dein Logo)", highlight: true },
-    ],
-    cta: "Agency-Account erstellen",
-    href: "/register",
-    recommended: false,
-    enterprise: false,
-    scale: false,
-  },
-  {
-    name: "Agency Pro",
-    price: "199",
-    per: "/Monat",
-    desc: "Agency-Enterprise",
-    badge: "FULL WHITE-LABEL",
-    accent: "#7C3AED",
-    accentBg: "#F5F3FF",
-    accentBorder: "#DDD6FE",
-    features: [
-      { text: "Alles aus Agency Starter", highlight: false },
-      { text: "Unlimitierte Projekte (∞)", highlight: true },
+      { text: "50 Projekte", highlight: true },
       { text: "Full White-Label (Eigene Domain)", highlight: true },
-      { text: "Schnittstellen-Anbindung (Slack/Jira)", highlight: true },
+      { text: "Lead-Magnet Widget für Neukunden", highlight: true },
       { text: "Auto-Report-Versand an Endkunden", highlight: true },
+      { text: "Schnittstellen (Slack / Jira / Zapier)", highlight: false },
     ],
     cta: "Agency-Account erstellen",
-    href: "/register",
+    href: "/fuer-agenturen",
     recommended: false,
     enterprise: false,
     scale: true,
@@ -200,20 +178,24 @@ const PLANS = [
 
 const FAQ = [
   {
-    q: "Wie hilft mir WebsiteFix konkret bei der BFSG-Pflicht 2025?",
-    a: "WebsiteFix führt kontinuierliche Audits gemäß WCAG 2.1/2.2 durch. Sie erhalten nicht nur Fehlerlisten, sondern rechtssichere Dokumentationen und Protokolle, die nachweisen, dass Sie Ihre Website aktiv barrierefrei halten – ein entscheidender Faktor für die Haftungsminimierung ab Juni 2025.",
+    q: "Was genau prüft der Deep-Scan?",
+    a: "Der Scanner crawlt alle öffentlich erreichbaren Unterseiten deiner WordPress-Website und prüft jede einzeln auf: fehlende Alt-Texte, Meta-Daten, kaputte Links (404), HTTPS-Status, Formular-Zugänglichkeit und Barrierefreiheits-Verstöße (BFSG/WCAG). Alle Ergebnisse erscheinen auf einer interaktiven Site-Map.",
+  },
+  {
+    q: "Was ist der Smart-Fix Drawer und wie hilft er mir?",
+    a: "Der Smart-Fix Drawer öffnet sich per Klick auf einen gefundenen Fehler. Er zeigt dir eine Schritt-für-Schritt-Anleitung, die exakt erklärt, wo du in Gutenberg, Elementor oder Divi klicken musst, um das Problem zu beheben — kein Entwickler-Wissen nötig. In der Regel dauert ein Fix weniger als 5 Minuten.",
   },
   {
     q: "Muss ich ein Plugin installieren?",
-    a: "Für den Basis-Scan genügt Ihre URL. Um jedoch tiefe Einblicke in Core-Dateien und Plugin-Konflikte zu erhalten, bieten wir unser 'Deep-Insight'-Plugin an. Dieses arbeitet im Read-only-Modus, verändert keinen Code und beeinträchtigt niemals die Performance Ihrer Live-Seite.",
-  },
-  {
-    q: "Kann ich WebsiteFix für meine Kunden nutzen (Agenturen)?",
-    a: "Absolut. Unsere Agency-Pläne sind genau darauf ausgelegt. Sie können Berichte im White-Label-Design exportieren, eigene Dashboards für Kunden anlegen und WebsiteFix als wertvolles Maintenance-Feature in Ihre Wartungsverträge integrieren.",
+    a: "Nein. Für den kompletten Deep-Scan genügt deine URL — kein Plugin, kein Hosting-Zugang, kein Login nötig. Unser Cloud-Crawler analysiert deine Website von außen und liefert Ergebnisse in unter 60 Sekunden.",
   },
   {
     q: "Was unterscheidet WebsiteFix von kostenlosen Scannern?",
-    a: "Während kostenlose Tools oft nur die Startseite oberflächlich prüfen, bietet WebsiteFix ein permanentes Monitoring des gesamten Systems – inklusive Plugin-Schwachstellen, Server-Reaktionszeiten und tiefgreifenden Barrierefreiheit-Audits auf Unterseiten-Ebene.",
+    a: "Kostenlose Tools prüfen meist nur die Startseite und listen Fehler auf — ohne Lösungsweg. WebsiteFix crawlt alle Unterseiten, erstellt eine interaktive Map der gesamten Website und liefert für jeden Fehler eine konkrete Fix-Anleitung für dein Page-Builder-System.",
+  },
+  {
+    q: "Kann ich WebsiteFix für Kunden-Websites nutzen (Agenturen)?",
+    a: "Absolut. Im Agency-Plan verwaltest du bis zu 50 Projekte, nutzt Full White-Label mit eigenem Branding und setzt das Lead-Magnet Widget ein, um direkt auf Kunden-Websites neue Interessenten zu gewinnen.",
   },
 ];
 
@@ -274,15 +256,15 @@ export default function Page() {
             fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
           }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-            WordPress · BFSG 2025 · Deep Scan
+            WordPress · Deep Scan · Smart-Fix Drawer
           </div>
 
           <h1 style={{ fontSize: "clamp(28px, 4.5vw, 58px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-            Der 360° WordPress-Check für Agenturen &amp; Unternehmen.
+            Deine WordPress-Website. Technisch sauber. Google-sichtbar. Fehlerfrei.
           </h1>
 
-          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 40px", fontWeight: 400 }}>
-            Prüfe Barrierefreiheit (BFSG&nbsp;2025), technisches SEO und Formulare. Kostenlose Snapshot-Analyse der Startseite — vollständiger Multi-Page-Scan im bezahlten Plan.
+          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
+            Der Deep-Scanner analysiert alle Unterseiten — SEO, kaputte Links, Barrierefreiheit. Sieh alle Probleme auf einer interaktiven Map und behebe sie mit Schritt-für-Schritt-Anleitungen in Minuten.
           </p>
 
           {/* URL Input */}
@@ -293,24 +275,25 @@ export default function Page() {
           {/* ── FEATURE CARDS ── */}
           <div className="wf-feature-grid">
 
-            {/* Card 1 — BFSG 2025 & Recht */}
+            {/* Card 1 — SEO & Sichtbarkeit */}
             <div className="wf-feature-card wf-feature-card--legal">
               <div className="wf-feature-card__icon" style={{
                 background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.22)",
                 filter: "drop-shadow(0 0 6px rgba(234,179,8,0.3))",
               }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
               </div>
               <div className="wf-feature-card__body">
-                <div className="wf-feature-card__label">Barrierefreiheit</div>
-                <div className="wf-feature-card__title">BFSG 2025 &amp; Recht</div>
-                <p className="wf-feature-card__text">Vollständiger Check nach BITV/EN&nbsp;301&nbsp;549 sowie DSGVO-Konformität deiner WordPress-Instanz.</p>
+                <div className="wf-feature-card__label">SEO &amp; Ranking</div>
+                <div className="wf-feature-card__title">SEO &amp; Sichtbarkeit</div>
+                <p className="wf-feature-card__text">Alt-Texte, Meta-Daten, Duplicate Content — alles, was Google sieht (oder eben nicht). Jede fehlende Angabe kostet dich Ranking-Punkte.</p>
               </div>
             </div>
 
-            {/* Card 2 — Technik & Speed */}
+            {/* Card 2 — Technik & UX */}
             <div className="wf-feature-card wf-feature-card--speed">
               <div className="wf-feature-card__icon" style={{
                 background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.25)",
@@ -321,13 +304,13 @@ export default function Page() {
                 </svg>
               </div>
               <div className="wf-feature-card__body">
-                <div className="wf-feature-card__label">Performance</div>
-                <div className="wf-feature-card__title">Technik &amp; Speed</div>
-                <p className="wf-feature-card__text">Analyse von Render-blocking Ressourcen, DOM-Tiefe und WordPress-spezifischen Ladezeit-Fressern.</p>
+                <div className="wf-feature-card__label">Technik &amp; UX</div>
+                <div className="wf-feature-card__title">Technik &amp; UX</div>
+                <p className="wf-feature-card__text">404-Fehler, kaputte Links, HTTPS-Probleme — technische Mängel, die Besucher verlieren und Google-Rankings senken.</p>
               </div>
             </div>
 
-            {/* Card 3 — Core- & Plugin-Health */}
+            {/* Card 3 — Standards & Recht */}
             <div className="wf-feature-card wf-feature-card--security">
               <div className="wf-feature-card__icon" style={{
                 background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.22)",
@@ -339,9 +322,9 @@ export default function Page() {
                 </svg>
               </div>
               <div className="wf-feature-card__body">
-                <div className="wf-feature-card__label">Sicherheit</div>
-                <div className="wf-feature-card__title">Core- &amp; Plugin-Health</div>
-                <p className="wf-feature-card__text">Tiefenprüfung auf veraltete Plugins, bekannte Sicherheitslücken (CVE) und technische Konflikte im Code.</p>
+                <div className="wf-feature-card__label">Standards</div>
+                <div className="wf-feature-card__title">Standards &amp; Recht</div>
+                <p className="wf-feature-card__text">Barrierefreiheit (BFSG/WCAG), fehlende Formular-Labels, Zugänglichkeit — eine der drei Säulen einer gesunden WordPress-Website.</p>
               </div>
             </div>
 
@@ -357,7 +340,7 @@ export default function Page() {
             So funktioniert es
           </p>
           <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 56px", letterSpacing: "-0.02em", textAlign: "center" }}>
-            In drei Schritten zur BFSG-konformen Website.
+            In drei Schritten zur technisch perfekten Website.
           </h2>
 
           <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
@@ -425,10 +408,10 @@ export default function Page() {
                 Warum WebsiteFix?
               </p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Maximaler Schutz für Ihre WordPress-Projekte.
+                Spezialisiert auf WordPress — von SEO bis Barrierefreiheit.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Mehr Marge, weniger Risiko, glücklichere Kunden. Das ist kein Versprechen — das ist das System.
+                Kein generischer Scanner. Kein Oberflächencheck. Tiefer Einblick in jede Unterseite — mit konkreten Fix-Anleitungen für dein System.
               </p>
             </div>
 
@@ -560,7 +543,7 @@ export default function Page() {
                   fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: 600,
                 }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", flexShrink: 0, animation: "wf-pulse 2s ease-in-out infinite" }} />
-                  Scan → Ticket → Team informiert
+                  Scan → Ticket erstellt → Team benachrichtigt
                 </div>
               </div>
             </div>
@@ -571,16 +554,16 @@ export default function Page() {
                 Schnittstellen
               </p>
               <h2 style={{ margin: "0 0 16px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-                Nahtlose Anbindung an Ihr WordPress-System.
+                Gefundene Fehler landen direkt in deinem Workflow.
               </h2>
               <p style={{ margin: "0 0 28px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
-                WebsiteFix arbeitet nicht isoliert. Unsere Engine integriert sich direkt in Ihre bestehende Infrastruktur, um präzise Daten aus dem Core, den Plugins und dem Frontend zu korrelieren.
+                website-fix arbeitet nicht isoliert. Jedes gefundene Problem wird automatisch als Ticket in Jira, Trello oder Asana erstellt — oder als Slack-Alert direkt ans Team gepusht. Kein manuelles Copy-Paste, kein Übersehen.
               </p>
               <ul className="wf-integration-bullets">
                 {[
-                  "Automatisierte WordPress-Schnittstelle",
-                  "Live-Abgleich mit BFSG & WCAG Richtlinien",
-                  "Deep-Scan über Cloud-Crawler-Technologie",
+                  "Scan-Ergebnis → Jira-Ticket in Sekunden",
+                  "Automatisierter Check auf SEO- & Qualitäts-Standards",
+                  "Slack-Alert sobald ein kritischer Fehler auftaucht",
                 ].map(item => (
                   <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
@@ -600,13 +583,13 @@ export default function Page() {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-                Dein Rundum-Schutz
+                Das Herzstück
               </p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Sorgenfreie Website, zufriedene Kunden.
+                Fehler finden ist gut. Fehler beheben ist besser.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Wir kümmern uns um die Technik und Gesetze, damit Sie Zeit für Ihr Business haben.
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
+                Andere Tools geben dir eine Liste. website-fix gibt dir den Lösungsweg — Schritt für Schritt, für dein genaues Page-Builder-System.
               </p>
             </div>
 
@@ -615,37 +598,35 @@ export default function Page() {
                 {
                   icon: (
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
                     </svg>
                   ),
                   iconBg: "rgba(37,99,235,0.12)",
                   iconBorder: "rgba(37,99,235,0.28)",
                   iconGlow: "rgba(37,99,235,0.35)",
-                  tag: "KI-Analyse",
+                  tag: "Interaktive Map",
                   tagColor: "#7aa6ff",
                   tagBg: "rgba(37,99,235,0.12)",
-                  title: "KI-Experte an Ihrer Seite",
-                  desc: "Unser System findet Sicherheitslücken und Technik-Fehler automatisch, bevor sie zum Problem werden – egal ob veraltete Plugins oder langsame Ladezeiten.",
-                  bullets: ["Täglich automatischer Scan", "Sofort-Warnung bei Gefahr", "Leicht verständliche Berichte"],
+                  title: "Jede Seite auf einen Blick",
+                  desc: "Die interaktive Site-Map zeigt alle gescannten Unterseiten mit ihren Fehlern — farblich priorisiert nach Schweregrad. Kritische Probleme zuerst, damit du weißt, wo du anfangen musst.",
+                  bullets: ["Alle Unterseiten in einer Ansicht", "Farbcode: Rot · Gelb · Grün", "Klick auf Seite → Drawer öffnet sich"],
                   bulletColor: "#7aa6ff",
                 },
                 {
                   icon: (
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      <polyline points="9 12 11 14 15 10"/>
+                      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>
                     </svg>
                   ),
                   iconBg: "rgba(22,163,74,0.1)",
                   iconBorder: "rgba(22,163,74,0.28)",
                   iconGlow: "rgba(34,197,94,0.35)",
-                  tag: "BFSG",
+                  tag: "Smart-Fix Drawer",
                   tagColor: "#4ade80",
                   tagBg: "rgba(22,163,74,0.12)",
-                  title: "Rechtssicherheit 2025",
-                  desc: "Ab Juni 2025 ist Barrierefreiheit Pflicht. Wir prüfen Ihre WordPress-Seite auf Konformität (BFSG/WCAG) und liefern die nötige Dokumentation für Ihre Unterlagen.",
-                  bullets: ["BFSG 2025 Überwachung", "Protokolle für das Finanzamt/Prüfer", "Keine manuelle Prüfung nötig"],
+                  title: "Anleitungen für dein System",
+                  desc: "Per Klick öffnet sich der Smart-Fix Drawer — mit einer genauen Schritt-für-Schritt-Anleitung für Gutenberg, Elementor oder Divi. Kein Entwickler nötig, kein Ticket nötig.",
+                  bullets: ["Gutenberg — wo genau klicken", "Elementor — welches Widget, welcher Tab", "Divi — exakter Menüpfad"],
                   bulletColor: "#4ade80",
                 },
                 {
@@ -660,9 +641,9 @@ export default function Page() {
                   tag: "Setup",
                   tagColor: "#fbbf24",
                   tagBg: "rgba(217,119,6,0.12)",
-                  title: "Einfachheit ohne Risiko",
-                  desc: "Kein Code-Wissen nötig. Sie tragen einfach Ihre URL ein – den Rest erledigt unsere Engine im Hintergrund. Ideal für Selbstständige und Agenturen.",
-                  bullets: ["In 1 Minute startklar", "Kein technisches Wissen nötig", "Dauerhaft aktiver Schutz"],
+                  title: "In 60 Sekunden startklar",
+                  desc: "URL eingeben, Scan starten — fertig. Kein Plugin, kein Hosting-Zugang, kein technisches Wissen nötig. website-fix läuft vollständig in der Cloud.",
+                  bullets: ["Kein Plugin installieren", "Kein Hosting-Zugang nötig", "Ergebnis in unter 60 Sekunden"],
                   bulletColor: "#fbbf24",
                 },
               ].map(f => (
@@ -900,7 +881,7 @@ export default function Page() {
                 role: "Inhaber, Online-Shop für Bio-Feinkost",
                 plan: "Smart-Protect",
                 planColor: "#7aa6ff",
-                quote: <>Das Thema BFSG 2025 hat mir schlaflose Nächte bereitet. Mit WebsiteFix habe ich jetzt die Gewissheit, dass meine Seite <strong style={{ color: "#fff", fontStyle: "normal" }}>rechtssicherer ist – ohne dass ich selbst zum IT-Experten werden musste</strong>.</>,
+                quote: <>Endlich weiß ich, welche Fehler meine Website wirklich ausbremsen. Der Smart-Fix Drawer hat mir gezeigt, <strong style={{ color: "#fff", fontStyle: "normal" }}>wie ich in Elementor in 3 Minuten etwas fixe, wofür ich sonst einen Entwickler gebraucht hätte</strong>.</>,
               },
               {
                 initial: "J",
@@ -1027,7 +1008,7 @@ export default function Page() {
             <div>
               <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Experten-Logbuch</p>
               <h2 style={{ margin: 0, fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
-                WordPress &amp; Barrierefreiheit: Das Experten-Logbuch
+                WordPress-Wissen: Das Experten-Logbuch
               </h2>
             </div>
             <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
@@ -1068,7 +1049,7 @@ export default function Page() {
                   Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen
                 </h3>
                 <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
-                  Erfahren Sie, wie Sie Ihre Kunden vor Abmahnungen schützen und die neue Gesetzgebung als Umsatz-Chance nutzen.
+                  Wie Agenturen das Thema Barrierefreiheit als Qualitätsmerkmal positionieren und damit höhere Wartungspauschalen rechtfertigen.
                 </p>
               </div>
               <span style={{ fontSize: 13, color: "#7aa6ff", fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center" }}>
@@ -1101,11 +1082,11 @@ export default function Page() {
             }} />
             <div className="wf-cta-text" style={{ position: "relative" }}>
               <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Bereit für den BFSG-Check?
+                Starte deinen kostenlosen Website-Scan jetzt.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
-                Starten Sie Ihren ersten Deep-Scan kostenlos.<br className="hide-sm" />
-                Ergebnis in unter 60 Sekunden – ohne Installation.
+                Ergebnis in unter 60 Sekunden — ohne Installation, ohne Login.<br className="hide-sm" />
+                Sieh sofort, was deiner Website im Weg steht.
               </p>
             </div>
             <div className="wf-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
@@ -1119,7 +1100,7 @@ export default function Page() {
                 Jetzt kostenlos scannen →
               </Link>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", paddingLeft: 4 }}>
-                Voller Schutz ab 39€/Monat oder im Agentur-Bundle.
+                Voller Scan ab 29€/Monat · Monatlich kündbar · Kein Risiko.
               </span>
             </div>
           </div>
