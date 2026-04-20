@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import AdminClient from "./admin-client";
+import { PLAN_MRR } from "@/lib/plans";
 // SupportTicket + DbStats types defined below — re-exported for AdminClient
 
 export const metadata: Metadata = {
@@ -10,12 +11,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "angelika.szewczyk87@gmail.com";
-
-const PLAN_MRR: Record<string, number> = {
-  free: 0, pro: 19, freelancer: 19,
-  agentur: 49, agency_core: 79, agency_scale: 149,
-};
+// Kein Fallback — fehlt ADMIN_EMAIL, wird strikt verweigert
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
 export type AdminUser = {
   id: string;
@@ -64,7 +61,8 @@ export type DbStats = {
 
 export default async function AdminPage() {
   const session = await auth();
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  // Kein ADMIN_EMAIL gesetzt → Zugriff immer verweigert
+  if (!ADMIN_EMAIL || !session?.user?.email || session.user.email !== ADMIN_EMAIL) {
     redirect("/login");
   }
 

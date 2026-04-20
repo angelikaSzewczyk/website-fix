@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
+import { PLAN_MRR, PLAN_KEYS } from "@/lib/plans";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
@@ -16,10 +17,34 @@ async function requireAdmin() {
   return session;
 }
 
-// ── MRR table ─────────────────────────────────────────────────────────────────
-const PLAN_MRR: Record<string, number> = {
-  free: 0, "starter": 29, "smart-guard": 89, "professional": 89, "agency-starter": 249, "agency-pro": 249,
-};
+// ── Audit helper — schreibt in admin_audit_log + console ─────────────────────
+async function auditLog(
+  action: string,
+  adminEmail: string,
+  targetUserId: string | null,
+  detail: Record<string, unknown>,
+) {
+  console.info(`[ADMIN AUDIT] ${adminEmail} → ${action}`, detail);
+  try {
+    const auditSql = neon(process.env.DATABASE_URL!);
+    await auditSql`
+      CREATE TABLE IF NOT EXISTS admin_audit_log (
+        id             SERIAL PRIMARY KEY,
+        action         TEXT NOT NULL,
+        admin_email    TEXT NOT NULL,
+        target_user_id TEXT,
+        detail         JSONB,
+        created_at     TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
+    await auditSql`
+      INSERT INTO admin_audit_log (action, admin_email, target_user_id, detail)
+      VALUES (${action}, ${adminEmail}, ${targetUserId}, ${JSON.stringify(detail)})
+    `;
+  } catch (err) {
+    console.error("[ADMIN AUDIT] DB write failed:", err);
+  }
+}
 
 // ── GET — full stats ──────────────────────────────────────────────────────────
 export async function GET() {
@@ -125,20 +150,40 @@ export async function GET() {
 
 // ── POST — mutations ──────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  if (!await requireAdmin()) {
+  const session = await requireAdmin();
+  if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const adminEmail = session.user?.email ?? "unknown";
 
   const body = await req.json() as {
-    action: "add_credits" | "rescan" | "reset_rate_limit" | "list_rate_limits";
+    action: "add_credits" | "change_plan" | "rescan" | "reset_rate_limit" | "list_rate_limits";
     userId?: string;
     credits?: number;
+    plan?: string;
     url?: string;
     ip?: string;
   };
 
   const sql = neon(process.env.DATABASE_URL!);
 
+  // ── change_plan ───────────────────────────────────────────────────────────
+  if (body.action === "change_plan") {
+    if (!body.userId || !body.plan) {
+      return NextResponse.json({ error: "userId and plan required" }, { status: 400 });
+    }
+    if (!PLAN_KEYS.includes(body.plan as never)) {
+      return NextResponse.json({ error: `Invalid plan key: ${body.plan}` }, { status: 400 });
+    }
+    // Fetch previous plan for audit
+    const prev = await sql`SELECT plan FROM users WHERE id::text = ${body.userId} LIMIT 1`;
+    const prevPlan = prev[0]?.plan ?? "unknown";
+    await sql`UPDATE users SET plan = ${body.plan} WHERE id::text = ${body.userId}`;
+    await auditLog("change_plan", adminEmail, body.userId, { from: prevPlan, to: body.plan });
+    return NextResponse.json({ ok: true });
+  }
+
+  // ── add_credits ───────────────────────────────────────────────────────────
   if (body.action === "add_credits") {
     if (!body.userId || body.credits == null) {
       return NextResponse.json({ error: "userId and credits required" }, { status: 400 });
@@ -148,6 +193,7 @@ export async function POST(req: NextRequest) {
       SET bonus_scans = COALESCE(bonus_scans, 0) + ${body.credits}
       WHERE id::text = ${body.userId}
     `;
+    await auditLog("add_credits", adminEmail, body.userId, { credits: body.credits });
     return NextResponse.json({ ok: true });
   }
 

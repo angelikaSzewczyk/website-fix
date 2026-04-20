@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { LayoutDashboard, Users, Flame, Ticket, Server, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import type { AdminUser, ScanLogRow, SupportTicket, DbStats } from "./page";
+import { PLAN_MRR, PLAN_COLOR, PLAN_LABEL, PLAN_KEYS } from "@/lib/plans";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const D = {
@@ -25,13 +26,7 @@ const D = {
   violetBg: "rgba(139,92,246,0.1)",
 };
 
-const PLAN_COLOR: Record<string, string> = {
-  free: D.muted, pro: D.green, freelancer: D.green,
-  agentur: D.blue, agency_core: D.violet, agency_scale: D.amber,
-};
-const PLAN_MRR: Record<string, number> = {
-  free: 0, pro: 19, freelancer: 19, agentur: 49, agency_core: 79, agency_scale: 149,
-};
+const PAGE_SIZE = 50;
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
@@ -206,14 +201,11 @@ function DonutChart({ fresh, cached, label }: { fresh: number; cached: number; l
 
 // ── Plan breakdown bar ────────────────────────────────────────────────────────
 function PlanBar({ planCounts, totalUsers }: { planCounts: Record<string, number>; totalUsers: number }) {
-  const plans = [
-    { key: "agency_scale", label: "Scale",      color: D.amber },
-    { key: "agency_core",  label: "Core",       color: D.violet },
-    { key: "agentur",      label: "Agentur",    color: D.blue },
-    { key: "pro",          label: "Pro",        color: D.green },
-    { key: "freelancer",   label: "Freelancer", color: "#8df3d3" },
-    { key: "free",         label: "Free",       color: D.muted },
-  ];
+  const plans = PLAN_KEYS.map(key => ({
+    key,
+    label: PLAN_LABEL[key] ?? key,
+    color: PLAN_COLOR[key] ?? D.muted,
+  }));
 
   return (
     <div>
@@ -280,6 +272,10 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
   const [creditsInput, setCreditsInput]     = useState<Record<string, string>>({});
   const [creditsLoading, setCreditsLoading] = useState<string | null>(null);
   const [creditsDone, setCreditsDone]       = useState<string | null>(null);
+  const [planInput, setPlanInput]           = useState<Record<string, string>>({});
+  const [planLoading, setPlanLoading]       = useState<string | null>(null);
+  const [planDone, setPlanDone]             = useState<string | null>(null);
+  const [userPage, setUserPage]             = useState(0);
   const [rescanUrl, setRescanUrl]           = useState<string | null>(null);
   const [rescanResult, setRescanResult]     = useState<string | null>(null);
   const [refreshing, setRefreshing]         = useState(false);
@@ -325,6 +321,8 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
         (u.name ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
         u.plan.toLowerCase().includes(userSearch.toLowerCase()))
     : users;
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const pagedUsers = filteredUsers.slice(userPage * PAGE_SIZE, (userPage + 1) * PAGE_SIZE);
 
   // ── Credits ──────────────────────────────────────────────────────────────
   const addCredits = useCallback(async (userId: string) => {
@@ -344,6 +342,25 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
       setCreditsLoading(null);
     }
   }, [creditsInput]);
+
+  // ── Plan-Change ───────────────────────────────────────────────────────────
+  const changePlan = useCallback(async (userId: string) => {
+    const newPlan = planInput[userId];
+    if (!newPlan) return;
+    setPlanLoading(userId);
+    try {
+      await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "change_plan", userId, plan: newPlan }),
+      });
+      setPlanDone(userId);
+      setTimeout(() => setPlanDone(null), 2500);
+      setPlanInput(prev => ({ ...prev, [userId]: "" }));
+    } finally {
+      setPlanLoading(null);
+    }
+  }, [planInput]);
 
   // ── Re-scan ───────────────────────────────────────────────────────────────
   const rerun = useCallback(async (url: string) => {
@@ -541,24 +558,19 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 </p>
                 <PlanBar planCounts={kpi.planCounts} totalUsers={kpi.totalUsers} />
 
-                {/* Per-plan MRR */}
+                {/* Per-plan MRR — aus plans.ts, nur bezahlte Pläne */}
                 <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {[
-                    { key: "agency_scale", label: "Agency Scale",  color: D.amber },
-                    { key: "agency_core",  label: "Agency Core",   color: D.violet },
-                    { key: "agentur",      label: "Agentur",       color: D.blue },
-                    { key: "pro",          label: "Pro",           color: D.green },
-                    { key: "freelancer",   label: "Freelancer",    color: "#8df3d3" },
-                  ].map(p => {
-                    const cnt = kpi.planCounts[p.key] ?? 0;
+                  {PLAN_KEYS.filter(k => (PLAN_MRR[k] ?? 0) > 0).map(key => {
+                    const cnt = kpi.planCounts[key] ?? 0;
                     if (!cnt) return null;
+                    const color = PLAN_COLOR[key] ?? D.muted;
                     return (
-                      <div key={p.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 12, color: D.sub }}>{p.label}</span>
+                      <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: D.sub }}>{PLAN_LABEL[key] ?? key}</span>
                         <div style={{ display: "flex", gap: 12 }}>
                           <span style={{ fontSize: 12, color: D.text, fontWeight: 600 }}>{cnt}×</span>
-                          <span style={{ fontSize: 12, color: p.color, fontWeight: 700 }}>
-                            {cnt * (PLAN_MRR[p.key] ?? 0)}€
+                          <span style={{ fontSize: 12, color, fontWeight: 700 }}>
+                            {cnt * (PLAN_MRR[key] ?? 0)}€
                           </span>
                         </div>
                       </div>
@@ -584,7 +596,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 type="text"
                 placeholder="Suche nach E-Mail, Name oder Plan…"
                 value={userSearch}
-                onChange={e => setUserSearch(e.target.value)}
+                onChange={e => { setUserSearch(e.target.value); setUserPage(0); }}
                 style={{
                   flex: 1, maxWidth: 400, padding: "9px 14px",
                   background: D.surface, border: `1px solid ${D.border}`,
@@ -603,26 +615,26 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
               {/* Table header */}
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 120px 80px 60px 120px 130px",
+                gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 110px",
                 padding: "10px 20px",
                 borderBottom: `1px solid ${D.border}`,
               }}>
-                {["User / E-Mail", "Plan", "Scans", "Credits", "Angemeldet", "Aktionen"].map(h => (
+                {["User / E-Mail", "Plan", "Scans", "Credits", "Angemeldet", "Plan ändern", "Aktionen"].map(h => (
                   <span key={h} style={{ fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                     {h}
                   </span>
                 ))}
               </div>
 
-              {filteredUsers.map((user, i) => {
+              {pagedUsers.map((user, i) => {
                 const col = PLAN_COLOR[user.plan] ?? D.muted;
                 return (
                   <div key={user.id} style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 120px 80px 60px 120px 130px",
+                    gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 110px",
                     padding: "12px 20px",
                     alignItems: "center",
-                    borderBottom: i < filteredUsers.length - 1 ? `1px solid ${D.border}` : "none",
+                    borderBottom: i < pagedUsers.length - 1 ? `1px solid ${D.border}` : "none",
                   }}>
                     {/* Email + name */}
                     <div style={{ minWidth: 0 }}>
@@ -660,7 +672,44 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       {fmtDate(user.created_at)}
                     </div>
 
-                    {/* Actions */}
+                    {/* Plan ändern */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <select
+                        value={planInput[user.id] ?? ""}
+                        onChange={e => setPlanInput(prev => ({ ...prev, [user.id]: e.target.value }))}
+                        style={{
+                          flex: 1, padding: "4px 6px",
+                          background: "rgba(255,255,255,0.04)",
+                          border: `1px solid ${D.border}`,
+                          borderRadius: 6, color: D.text, fontSize: 11,
+                          outline: "none",
+                        }}
+                      >
+                        <option value="">— wählen —</option>
+                        {PLAN_KEYS.map(k => (
+                          <option key={k} value={k} style={{ background: "#0F111A" }}>
+                            {PLAN_LABEL[k] ?? k}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => changePlan(user.id)}
+                        disabled={planLoading === user.id || !planInput[user.id]}
+                        style={{
+                          padding: "4px 8px", borderRadius: 6,
+                          border: `1px solid ${D.green}40`,
+                          background: planDone === user.id ? D.greenBg : "transparent",
+                          color: planDone === user.id ? D.green : D.sub,
+                          fontSize: 11, cursor: "pointer",
+                          opacity: !planInput[user.id] ? 0.35 : 1,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {planDone === user.id ? "✓" : planLoading === user.id ? "…" : "Setzen"}
+                      </button>
+                    </div>
+
+                    {/* Aktionen */}
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       {/* Login-as-User */}
                       <button
@@ -713,6 +762,39 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 );
               })}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 14 }}>
+                <button
+                  onClick={() => setUserPage(p => Math.max(0, p - 1))}
+                  disabled={userPage === 0}
+                  style={{
+                    padding: "5px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                    border: `1px solid ${D.border}`, background: "transparent",
+                    color: userPage === 0 ? D.muted : D.sub, cursor: userPage === 0 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  ← Zurück
+                </button>
+                <span style={{ fontSize: 12, color: D.muted }}>
+                  Seite <strong style={{ color: D.text }}>{userPage + 1}</strong> von {totalPages}
+                  <span style={{ marginLeft: 8, color: D.muted }}>({filteredUsers.length} User gesamt)</span>
+                </span>
+                <button
+                  onClick={() => setUserPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={userPage >= totalPages - 1}
+                  style={{
+                    padding: "5px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                    border: `1px solid ${D.border}`, background: "transparent",
+                    color: userPage >= totalPages - 1 ? D.muted : D.sub,
+                    cursor: userPage >= totalPages - 1 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Weiter →
+                </button>
+              </div>
+            )}
           </>
         )}
 
