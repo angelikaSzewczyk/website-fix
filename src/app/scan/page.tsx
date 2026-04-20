@@ -470,16 +470,16 @@ export default function ScanPage() {
             fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
             margin: "0 0 16px", letterSpacing: "-0.035em",
           }}>
-            Der große WordPress-Check:{" "}
+            Professionelle System-Analyse:{" "}
             <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Haftungssicher &amp; Barrierefrei.
+              Sichtbarkeits-Blocker aufdecken.
             </span>
           </h1>
 
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px" }}>
-            Prüft Barrierefreiheit (BFSG 2025), technisches SEO und Formulare.{" "}
-            <span style={{ color: "rgba(255,255,255,0.75)" }}>Instant Ranking-Check — bis zu 25 Seiten analysiert</span>{" "}
-            — in 60 Sekunden, ohne Installation.
+            Analysiere Ranking-Blocker und BFSG-Konformität in Echtzeit.{" "}
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>Erhalte eine detaillierte Vorschau deines Potenzials</span>{" "}
+            — bis zu 25 Seiten, Ergebnis in 60 Sekunden.
           </p>
 
           {/* ── INPUT FORM / BLOCKED STATE ── */}
@@ -667,16 +667,16 @@ export default function ScanPage() {
                       whiteSpace: "nowrap", transition: "background 0.15s",
                       borderLeft: "1px solid rgba(255,255,255,0.08)",
                     }}>
-                      Deep-Scan starten →
+                      Analyse starten →
                     </button>
                   </div>
 
                   {/* Trust chips */}
                   <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 12, flexWrap: "wrap" }}>
                     {[
-                      "Prüft bis zu 25 Unterseiten",
+                      "Bis zu 25 Unterseiten",
                       "Inkl. BFSG-Check",
-                      "Keine Anmeldung",
+                      "Sofortergebnis",
                     ].map(t => (
                       <span key={t} style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5 }}>
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -686,6 +686,12 @@ export default function ScanPage() {
                       </span>
                     ))}
                   </div>
+
+                  {/* Pricing hint */}
+                  <p style={{ margin: "10px 0 0", fontSize: 12, color: "rgba(255,255,255,0.22)", textAlign: "center" }}>
+                    Voller Report und Smart-Fix Guides ab{" "}
+                    <span style={{ color: "rgba(255,255,255,0.45)" }}>29€/Monat</span>
+                  </p>
                 </form>
               )}
             </>
@@ -694,7 +700,7 @@ export default function ScanPage() {
 
         {/* ── LIVE PROGRESS ── */}
         {isScanning && (
-          <section style={{ maxWidth: 600, margin: "0 auto 48px", padding: "0 24px" }}>
+          <section style={{ maxWidth: 600, margin: "0 auto 48px", padding: "0 24px", animation: "wfFadeIn 0.35s ease both" }}>
             <div style={{
               background: "rgba(255,255,255,0.02)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -1000,17 +1006,17 @@ export default function ScanPage() {
                       Vollständigen Scan freischalten
                     </div>
                     <p style={{ margin: "0 0 16px", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-                      Erstelle einen kostenlosen Account, um{" "}
-                      <strong style={{ color: "#fff" }}>alle Unterseiten</strong> zu analysieren und den vollständigen Deep-Scan zu erhalten.
+                      Schalte den vollständigen Report mit{" "}
+                      <strong style={{ color: "#fff" }}>allen Unterseiten</strong>, Smart-Fix Guides und PDF-Export frei.
                     </p>
                     <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                      <Link href="/register" style={{
+                      <Link href="/pricing" style={{
                         padding: "11px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
                         background: "linear-gradient(90deg, #007BFF, #0057b8)",
                         color: "#fff", textDecoration: "none",
                         boxShadow: "0 4px 16px rgba(0,123,255,0.4)",
                       }}>
-                        Kostenlosen Account erstellen →
+                        Plan wählen &amp; freischalten →
                       </Link>
                       <button onClick={() => setShowOverlay(false)} style={{
                         padding: "11px 18px", borderRadius: 9, fontSize: 13,
@@ -1073,17 +1079,17 @@ export default function ScanPage() {
             </div>
 
             <div style={{ textAlign: "center", marginTop: 40 }}>
-              <Link href="/fuer-agenturen" style={{
+              <Link href="/pricing" style={{
                 display: "inline-block",
                 padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
                 background: "linear-gradient(90deg, #007BFF, #0057b8)",
                 color: "#fff", textDecoration: "none",
                 boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
               }}>
-                Jetzt Agentur-Account erstellen →
+                Plan wählen &amp; starten →
               </Link>
               <p style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-                Jederzeit kündbar · Sicher bezahlen
+                Ab 29€/Monat · Jederzeit kündbar
               </p>
             </div>
           </div>
@@ -1099,6 +1105,10 @@ export default function ScanPage() {
         @keyframes pulseDot {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(0.85); }
+        }
+        @keyframes wfFadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </>
