@@ -389,7 +389,7 @@ export default function InlineScan({
           fontSize: 16, fontWeight: 800, color: "#fff",
           letterSpacing: "-0.3px", marginBottom: 8, lineHeight: 1.3,
         }}>
-          Analyse-Limit erreicht
+          Gast-Limit erreicht
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6, marginBottom: 22 }}>
           Sichere dir jetzt vollen Zugriff auf alle Reports<br/>
@@ -406,7 +406,7 @@ export default function InlineScan({
           letterSpacing: "-0.1px",
           transition: "box-shadow 0.2s, transform 0.15s",
         }}>
-          Plan wählen &amp; weiter optimieren →
+          Report sichern &amp; optimieren →
         </a>
 
         <div style={{

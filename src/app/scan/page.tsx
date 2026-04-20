@@ -478,7 +478,7 @@ export default function ScanPage() {
 
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px" }}>
             Prüft Barrierefreiheit (BFSG 2025), technisches SEO und Formulare.{" "}
-            <span style={{ color: "rgba(255,255,255,0.75)" }}>Kostenloser Deep-Scan — 10 Seiten analysiert</span>{" "}
+            <span style={{ color: "rgba(255,255,255,0.75)" }}>Instant Ranking-Check — bis zu 25 Seiten analysiert</span>{" "}
             — in 60 Sekunden, ohne Installation.
           </p>
 
@@ -544,7 +544,7 @@ export default function ScanPage() {
                       fontWeight: 800, fontSize: 19, color: "#fff",
                       marginBottom: 10, letterSpacing: "-0.02em", lineHeight: 1.3,
                     }}>
-                      Analyse-Limit erreicht
+                      Gast-Limit erreicht
                     </div>
 
                     {/* Subtext */}
@@ -604,7 +604,7 @@ export default function ScanPage() {
                         boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
                         letterSpacing: "-0.01em",
                       }}>
-                        Plan wählen &amp; weiter optimieren →
+                        Report sichern &amp; optimieren →
                       </Link>
                     </div>
 
