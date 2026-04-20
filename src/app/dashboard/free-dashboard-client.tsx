@@ -228,9 +228,9 @@ function Divider({ style }: { style?: React.CSSProperties }) {
 // ─── Severity badge ───────────────────────────────────────────────────────────
 function SevBadge({ sev }: { sev: "red" | "yellow" | "green" }) {
   const map = {
-    red:    { label: "Kritisch", color: D.red,   bg: D.redBg,   border: D.redBorder   },
-    yellow: { label: "Warnung",  color: D.amber, bg: D.amberBg, border: D.amberBorder },
-    green:  { label: "Hinweis",  color: D.green, bg: D.greenBg, border: D.greenBorder },
+    red:    { label: "Blocker",      color: D.amber, bg: D.amberBg, border: D.amberBorder },
+    yellow: { label: "Optimierung",  color: D.amber, bg: D.amberBg, border: D.amberBorder },
+    green:  { label: "Hinweis",      color: D.green, bg: D.greenBg, border: D.greenBorder },
   };
   const s = map[sev];
   return (
@@ -511,11 +511,11 @@ function DrawerPanel({
     if (!page.metaDescription)
       entries.push({ fixKey: "meta", label: "Meta-Description fehlt", kind: "warning" });
     if (page.altMissing > 0)
-      entries.push({ fixKey: "alt", label: `${page.altMissing} Bilder ohne Alt-Text (BFSG 2025)`, kind: "critical", count: page.altMissing, images: page.altMissingImages ?? [] });
+      entries.push({ fixKey: "alt", label: `${page.altMissing} Bilder ohne Alt-Text — SEO-Potenzial & Auffindbarkeit`, kind: "warning", count: page.altMissing, images: page.altMissingImages ?? [] });
     if ((page.inputsWithoutLabel ?? 0) > 0)
-      entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label`, kind: "critical", count: page.inputsWithoutLabel, fields: page.inputsWithoutLabelFields ?? [] });
+      entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label — beeinträchtigt UX & Conversion`, kind: "warning", count: page.inputsWithoutLabel, fields: page.inputsWithoutLabelFields ?? [] });
     if ((page.buttonsWithoutText ?? 0) > 0)
-      entries.push({ fixKey: "button", label: `${page.buttonsWithoutText} Buttons ohne Text`, kind: "critical", count: page.buttonsWithoutText });
+      entries.push({ fixKey: "button", label: `${page.buttonsWithoutText} Buttons ohne Text — fehlende Nutzerführung`, kind: "warning", count: page.buttonsWithoutText });
   }
 
   return (
@@ -566,21 +566,21 @@ function DrawerPanel({
         {/* ── Body ── */}
         <div style={{ padding: "16px 18px 28px", flex: 1 }}>
 
-          {/* ① Critical 404 alert banner */}
+          {/* ① 404 notice banner — framed as a fixable opportunity */}
           {is404 && (
             <div style={{
               borderRadius: 8,
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.35)",
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.3)",
               padding: "12px 16px",
               marginBottom: 14,
               display: "flex", gap: 10,
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.amber} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.red, lineHeight: 1.55 }}>
-                Kritischer Fehler: Diese Unterseite wurde im Quellcode verlinkt, ist aber für Besucher nicht erreichbar.
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.amber, lineHeight: 1.55 }}>
+                Seite nicht erreichbar: Diese URL ist verlinkt, gibt aber 404 zurück — eine einfache Weiterleitung behebt das Problem.
               </p>
             </div>
           )}
@@ -673,8 +673,8 @@ function DrawerPanel({
                 {is404 && (
                   <DrawerCard
                     fixKey="404"
-                    label="Seite nicht erreichbar (4xx/5xx)"
-                    kind="critical"
+                    label="Seite nicht erreichbar — Weiterleitung einrichten"
+                    kind="warning"
                   />
                 )}
                 {entries.map((e, i) => (
@@ -728,12 +728,12 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
           </span>
           <span style={{
             fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
-            color: homepageIssueCount > 0 ? D.red : D.green,
-            background: homepageIssueCount > 0 ? D.redBg : D.greenBg,
-            border: `1px solid ${homepageIssueCount > 0 ? D.redBorder : D.greenBorder}`,
+            color: homepageIssueCount > 0 ? D.amber : D.green,
+            background: homepageIssueCount > 0 ? D.amberBg : D.greenBg,
+            border: `1px solid ${homepageIssueCount > 0 ? D.amberBorder : D.greenBorder}`,
             padding: "2px 8px", borderRadius: 4,
           }}>
-            {homepageIssueCount > 0 ? `${homepageIssueCount} Fehler` : "OK"}
+            {homepageIssueCount > 0 ? `${homepageIssueCount} Optimierungen` : "✓ Optimiert"}
           </span>
           {homepageIssueCount > 0 && (
             <button
@@ -741,10 +741,11 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
               style={{
                 flexShrink: 0, fontSize: 11, fontWeight: 700,
                 padding: "3px 10px", borderRadius: 4, cursor: "pointer",
-                background: D.card, border: `1px solid ${D.borderMid}`, color: D.textSub,
+                background: "rgba(251,191,36,0.08)", border: `1px solid rgba(251,191,36,0.28)`,
+                color: D.amber,
               }}
             >
-              Details →
+              SEO-Fix →
             </button>
           )}
         </div>
@@ -788,15 +789,15 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
                   {isChecked ? "✓" : ""}
                 </button>
 
-                {/* Status badge */}
+                {/* Status badge — amber for findable optimizations, green for clean pages */}
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
-                  background: pageIssues > 0 ? D.redBg : D.greenBg,
-                  color: pageIssues > 0 ? D.red : D.green,
-                  border: `1px solid ${pageIssues > 0 ? D.redBorder : D.greenBorder}`,
+                  background: pageIssues > 0 ? D.amberBg : D.greenBg,
+                  color: pageIssues > 0 ? D.amber : D.green,
+                  border: `1px solid ${pageIssues > 0 ? D.amberBorder : D.greenBorder}`,
                   whiteSpace: "nowrap", flexShrink: 0,
                 }}>
-                  {pageIssues > 0 ? `${pageIssues} Fehler` : "OK"}
+                  {pageIssues > 0 ? `${pageIssues} Optimierungen` : "✓ Optimiert"}
                 </span>
 
                 {/* Full URL */}
@@ -819,17 +820,18 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
                   </span>
                 )}
 
-                {/* Details button — opens drawer */}
+                {/* SEO-Fix button — opens drawer */}
                 {pageIssues > 0 && (
                   <button
                     onClick={() => onOpenDrawer(page.url)}
                     style={{
                       flexShrink: 0, fontSize: 11, fontWeight: 700,
                       padding: "3px 10px", borderRadius: 4, cursor: "pointer",
-                      background: D.card, border: `1px solid ${D.borderMid}`, color: D.textSub,
+                      background: "rgba(251,191,36,0.08)", border: `1px solid rgba(251,191,36,0.28)`,
+                      color: D.amber, transition: "background 0.15s",
                     }}
                   >
-                    Details →
+                    SEO-Fix →
                   </button>
                 )}
               </div>
@@ -1002,11 +1004,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
   // ── Impact label per category / severity ──────────────────────────────────
   function getImpact(category: string, severity: string): { label: string; color: string } {
-    if (category === "recht")                            return { label: "BFSG- & Barrierefreiheits-Risiko", color: "#f87171" };
-    if (category === "speed" && severity === "red")      return { label: "Performance- & Conversion-Risiko", color: D.amber   };
-    if (category === "speed")                            return { label: "Performance-Risiko",               color: D.amber   };
-    if (severity === "red")                              return { label: "SEO-Risiko",                       color: "#f87171" };
-    if (severity === "yellow")                           return { label: "Vertrauens-Risiko",                color: D.amber   };
+    if (category === "recht")                            return { label: "SEO- & UX-Optimierungspotenzial",  color: D.amber   };
+    if (category === "speed" && severity === "red")      return { label: "Performance- & Ranking-Boost",     color: D.amber   };
+    if (category === "speed")                            return { label: "Performance-Optimierung",          color: D.amber   };
+    if (severity === "red")                              return { label: "Sichtbarkeits-Blocker",            color: D.amber   };
+    if (severity === "yellow")                           return { label: "Ranking-Potenzial",                color: D.amber   };
     return                                                      { label: "Hinweis",                          color: D.textMuted };
   }
 
@@ -1369,24 +1371,24 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     })()}
                     {" · "}
                     {totalErrors > 0
-                      ? `${totalErrors} Fehler gefunden`
-                      : "Keine Fehler gefunden"}
+                      ? `${totalErrors} Optimierungen verfügbar`
+                      : "Alles optimiert ✓"}
                   </p>
                 )}
-                {/* Status badge */}
+                {/* Status badge — amber for opportunities, green for perfect */}
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 20,
-                  background: redCount > 0 ? D.redBg : yellowCount > 0 ? D.amberBg : D.greenBg,
-                  border: `1px solid ${redCount > 0 ? D.redBorder : yellowCount > 0 ? D.amberBorder : D.greenBorder}`,
+                  background: totalErrors > 0 ? D.amberBg : D.greenBg,
+                  border: `1px solid ${totalErrors > 0 ? D.amberBorder : D.greenBorder}`,
                 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%",
-                    background: redCount > 0 ? D.red : yellowCount > 0 ? D.amber : D.green,
+                    background: totalErrors > 0 ? D.amber : D.green,
                     flexShrink: 0,
                   }} />
                   <span style={{ fontSize: 11, fontWeight: 700,
-                    color: redCount > 0 ? D.red : yellowCount > 0 ? D.amber : D.green,
+                    color: totalErrors > 0 ? D.amber : D.green,
                   }}>
-                    {totalErrors > 0 ? `${totalErrors} Fehler` : "Alles in Ordnung"}
+                    {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert ✓"}
                   </span>
                 </div>
               </div>

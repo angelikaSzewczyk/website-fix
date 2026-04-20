@@ -161,7 +161,7 @@ const DEMO_PAGES_LIST: PageItem[] = [
 const VISIBLE_PAGES = 8;
 
 // ── Beweis-Modus: single protocol entry row ───────────────────────────────────
-// Soft amber for "important / optimization potential" — not alarming neon yellow
+// Amber-first: every finding is an optimization opportunity, not an accusation
 const AMBER = "#c9820a";
 const AMBER_BG   = "rgba(201,130,10,0.06)";
 const AMBER_BDR  = "rgba(201,130,10,0.22)";
@@ -176,9 +176,10 @@ function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
   /** Short manual fix instruction shown to free users instead of KI-code-fix */
   manualHint?: string;
 }) {
-  const c  = severity === "red" ? "#ef4444" : AMBER;
-  const bg = severity === "red" ? "rgba(239,68,68,0.07)" : AMBER_BG;
-  const bd = severity === "red" ? "rgba(239,68,68,0.22)" : AMBER_BDR;
+  // Rank-blockers use amber, not red — framing as opportunity, not alarm
+  const c  = severity === "red" ? "#f59e0b" : AMBER;
+  const bg = severity === "red" ? "rgba(245,158,11,0.07)" : AMBER_BG;
+  const bd = severity === "red" ? "rgba(245,158,11,0.22)" : AMBER_BDR;
   const showDetail = tier !== "anon";
   return (
     <div style={{ padding: "9px 14px", borderRadius: 9, display: "flex", alignItems: "flex-start", gap: 10, background: bg, border: `1px solid ${bd}` }}>
@@ -186,19 +187,19 @@ function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
         {severity === "red" ? "✕" : "→"}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Error type always visible */}
+        {/* Finding title always visible */}
         <div style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: "monospace", marginBottom: detail ? 3 : 0 }}>
           {title}
         </div>
-        {/* Detail: anon = lock placeholder | free/paid = real value */}
+        {/* Detail: anon = unlock teaser | free/paid = real value */}
         {detail && (
           !showDetail ? (
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: law ? 3 : 0 }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(122,166,255,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontStyle: "italic", letterSpacing: "0.03em" }}>
-                Nach Registrierung sichtbar
+              <span style={{ fontSize: 11, color: "rgba(122,166,255,0.5)", fontStyle: "italic", letterSpacing: "0.03em" }}>
+                Vollständige Analyse nach Freischaltung
               </span>
             </div>
           ) : (
@@ -207,10 +208,10 @@ function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
             </div>
           )
         )}
-        {/* Manual hint — free users only */}
+        {/* Fix hint — free users only */}
         {showDetail && manualHint && tier === "free" && (
           <div style={{ fontSize: 11, color: "rgba(141,243,211,0.7)", marginBottom: law ? 3 : 0, fontStyle: "italic" }}>
-            Lösungsweg: {manualHint}
+            Fix: {manualHint}
           </div>
         )}
         {law && (
@@ -219,11 +220,11 @@ function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
       </div>
       <span style={{
         fontSize: 10, padding: "2px 6px", borderRadius: 4, flexShrink: 0,
-        background: severity === "red" ? "rgba(239,68,68,0.12)" : "rgba(201,130,10,0.12)",
+        background: severity === "red" ? "rgba(245,158,11,0.12)" : "rgba(201,130,10,0.12)",
         color: c, border: `1px solid ${c}33`, fontWeight: 800, letterSpacing: "0.05em",
         whiteSpace: "nowrap",
       }}>
-        {severity === "red" ? "KRITISCH" : "OPTIMIERUNG"}
+        {severity === "red" ? "BLOCKER" : "OPTIMIERUNG"}
       </span>
     </div>
   );
@@ -245,9 +246,9 @@ function ProtoPanelContent({ p, tier = "anon" }: {
   const seoCount  = (p.missingTitle ? 1 : 0) + (p.missingMeta ? 1 : 0) + (p.missingH1 ? 1 : 0) + (p.noindex ? 1 : 0);
   const reachCount = isUnreachable ? 1 : 0;
   const chips: { label: string; color: string }[] = [];
-  if (reachCount > 0) chips.push({ label: `${reachCount} Erreichbarkeits-Fehler`, color: "#ef4444" });
-  if (imgCount   > 0) chips.push({ label: `${imgCount} Bild-Fehler`,              color: "#ef4444" });
-  if (formCount  > 0) chips.push({ label: `${formCount} Formular-Fehler`,         color: "#ef4444" });
+  if (reachCount > 0) chips.push({ label: `${reachCount} Erreichbarkeits-Problem`, color: "#f59e0b" });
+  if (imgCount   > 0) chips.push({ label: `${imgCount} Bild-Optimierungen`,       color: "#f59e0b" });
+  if (formCount  > 0) chips.push({ label: `${formCount} Formular-Optimierungen`,  color: AMBER });
   if (seoCount   > 0) chips.push({ label: `${seoCount} SEO-Optimierungen`,        color: AMBER });
 
   return (
@@ -361,23 +362,23 @@ function ProtoPanelContent({ p, tier = "anon" }: {
       {tier === "anon" && (
         <div style={{
           marginTop: 12, padding: "10px 14px", borderRadius: 9,
-          background: "rgba(122,166,255,0.06)", border: "1px solid rgba(122,166,255,0.18)",
+          background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.2)",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
-              Dateinamen &amp; Lösungsweg nach Registrierung kostenlos freischalten
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+              Vollständige Analyse + Schritt-für-Schritt SEO-Fixes kostenlos freischalten
             </span>
           </div>
           <Link href="/register" style={{
             fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
-            background: "rgba(122,166,255,0.14)", color: "#7aa6ff",
-            border: "1px solid rgba(122,166,255,0.3)", textDecoration: "none", whiteSpace: "nowrap",
+            background: "rgba(251,191,36,0.12)", color: "#FBBF24",
+            border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
           }}>
-            Kostenlos freischalten →
+            Profi-Tool freischalten →
           </Link>
         </div>
       )}
@@ -1008,10 +1009,10 @@ function ResultsInner() {
                 );
               }
 
-              // Normal rows
+              // Normal rows — amber-first: treat all findings as optimization opportunities
               const isUnreachable = !p.erreichbar;
-              const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#22c55e" : p.errors >= 4 ? "#ef4444" : "#f59e0b";
-              const statusLabel = isUnreachable ? "Nicht erreichbar" : p.errors === 0 ? "✓ Sauber" : p.errors >= 4 ? "Kritisch" : "Warnung";
+              const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#22c55e" : "#f59e0b";
+              const statusLabel = isUnreachable ? "Nicht erreichbar" : p.errors === 0 ? "✓ Optimiert" : "Optimierbar";
               const isExpanded  = expandedRow === (p.path + i);
               const canExpand   = !isDemo && p.errors > 0;
 
@@ -1026,7 +1027,7 @@ function ResultsInner() {
                     </div>
                     <div style={{ width: 120, textAlign: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                        background: isUnreachable ? "rgba(239,68,68,0.1)" : p.errors === 0 ? "rgba(34,197,94,0.1)" : p.errors >= 4 ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)",
+                        background: isUnreachable ? "rgba(239,68,68,0.1)" : p.errors === 0 ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)",
                         color: dotColor, border: `1px solid ${dotColor}33` }}>
                         {statusLabel}
                       </span>
@@ -1036,7 +1037,7 @@ function ResultsInner() {
                         onClick={() => canExpand && handleExpand(p.path + i)}
                         style={{ fontSize: 13, fontWeight: 700, color: p.errors === 0 ? "rgba(255,255,255,0.2)" : dotColor, cursor: canExpand ? "pointer" : "default", userSelect: "none",
                           textDecoration: canExpand ? "underline dotted" : "none", textUnderlineOffset: 3 }}>
-                        {p.errors === 0 ? "—" : `${p.errors} Fehler`}
+                        {p.errors === 0 ? "—" : `${p.errors} Optimierungen`}
                         {canExpand && <span style={{ fontSize: 10, marginLeft: 4, opacity: 0.6 }}>{isExpanded ? "▲" : "▼"}</span>}
                       </span>
                       {/* ── Magic pulse: gold tooltip on first expandable row ── */}
@@ -1067,15 +1068,18 @@ function ResultsInner() {
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>Gesamt</span>
                 <div style={{ width: 120 }} />
                 <div style={{ width: 90, textAlign: "right" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#ef4444" }}>{totalTableErrors} Fehler</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b" }}>{totalTableErrors} Optimierungen</span>
                 </div>
               </div>
             )}
 
-            {/* Registrierung CTA under the map */}
-            <div style={{ padding: "14px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-              <Link href="/register" style={{ fontSize: 13, color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>
-                Kostenlos registrieren — Ergebnisse dauerhaft speichern →
+            {/* Freischalt-CTA under the map */}
+            <div style={{ padding: "14px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <Link href="/register" style={{ fontSize: 13, color: "#FBBF24", textDecoration: "none", fontWeight: 700 }}>
+                Schritt-für-Schritt SEO-Fixes + vollständige Analyse freischalten →
               </Link>
             </div>
           </div>
