@@ -140,7 +140,7 @@ function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
 const DEMO_DOMAIN  = "beispiel-agentur.de";
 const DEMO_SCORE   = 64;
 const DEMO_PAGES   = 42;
-const DEMO_CRIT    = 12;
+const DEMO_CRIT    = 21; // sum of DEMO_PAGES_LIST errors: 3+5+2+4+1+3+2+1
 const DEMO_PAGES_LIST: PageItem[] = [
   { path: "/",                    fullUrl: `https://${DEMO_DOMAIN}/`,                  errors: 3, erreichbar: true, altMissing: 3, noindex: false, isSkipped: false },
   { path: "/leistungen",          fullUrl: `https://${DEMO_DOMAIN}/leistungen`,        errors: 5, erreichbar: true, altMissing: 5, noindex: false, isSkipped: false },
@@ -373,13 +373,18 @@ function ProtoPanelContent({ p, tier = "anon" }: {
               Vollständige Analyse + Schritt-für-Schritt SEO-Fixes freischalten und Sichtbarkeit steigern
             </span>
           </div>
-          <Link href="/pricing" style={{
-            fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
-            background: "rgba(251,191,36,0.12)", color: "#FBBF24",
-            border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
-          }}>
+          <a
+            href="#pricing"
+            onClick={e => { e.preventDefault(); document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }); }}
+            style={{
+              fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
+              background: "rgba(251,191,36,0.12)", color: "#FBBF24",
+              border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
+              cursor: "pointer",
+            }}
+          >
             Plan wählen →
-          </Link>
+          </a>
         </div>
       )}
 
@@ -1002,9 +1007,9 @@ function ResultsInner() {
               if (p.isSkipped) {
                 return (
                   <div key={p.path + i} className="wf-scan-row" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "11px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", opacity: 0.55 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: "rgba(255,255,255,0.2)" }} />
-                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>{pageBase}{p.path}</span>
+                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageBase}{p.path}</span>
                     </div>
                     <div className="wf-scan-status" style={{ width: 120, textAlign: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1020,7 +1025,7 @@ function ResultsInner() {
 
               // Normal rows — amber-first: treat all findings as optimization opportunities
               const isUnreachable = !p.erreichbar;
-              const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#FBBF24" : "#f59e0b";
+              const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#22c55e" : "#FBBF24";
               const statusLabel = isUnreachable ? "Nicht erreichbar" : p.errors === 0 ? "✓ Optimiert" : "Optimierbar";
               const isExpanded  = expandedRow === (p.path + i);
               const canExpand   = !isDemo && p.errors > 0;
@@ -1031,9 +1036,9 @@ function ResultsInner() {
                   style={{ animationDelay: unlocking ? `${i * 55}ms` : "0ms" }}
                 >
                   <div className="wf-scan-row" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: dotColor, boxShadow: `0 0 5px ${dotColor}` }} />
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>
+                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {pageBase}{p.path}
                       </span>
                     </div>
@@ -1145,7 +1150,7 @@ function ResultsInner() {
 
         {/* ── PRICING TIERS ── */}
         {userTier !== "paid" && (
-          <section style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 0" }}>
+          <section id="pricing" style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 0" }}>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 20, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", fontSize: 11, fontWeight: 700, color: "#FBBF24", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 14 }}>
                 Pläne & Preise
@@ -1248,7 +1253,7 @@ function ResultsInner() {
         .wf-cta-pulse {
           animation: wf-cta-pulse 2.2s ease-in-out infinite;
         }
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
           .wf-scan-header { display: none !important; }
           .wf-scan-row {
             grid-template-columns: 1fr auto !important;
