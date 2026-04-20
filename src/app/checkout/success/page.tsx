@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import BrandLogo from "../../components/BrandLogo";
+import SuccessConfetti from "./SuccessConfetti";
 
 export const metadata: Metadata = {
   title: "Zahlung erfolgreich — WebsiteFix",
@@ -31,6 +32,9 @@ export default function CheckoutSuccessPage({
 
   return (
     <>
+      {/* Confetti — plan accent color */}
+      <SuccessConfetti accent={info.accent} />
+
       {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
@@ -65,18 +69,26 @@ export default function CheckoutSuccessPage({
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 18,
             padding: "4px 14px", borderRadius: 20, fontSize: 12,
-            border: "1px solid rgba(34,197,94,0.25)", background: "rgba(34,197,94,0.08)",
-            color: "#22C55E", fontWeight: 700, letterSpacing: "0.04em",
+            border: `1px solid ${info.accentBg}`,
+            background: info.accentBg,
+            color: info.accent, fontWeight: 700, letterSpacing: "0.04em",
           }}>
             ✓ {info.label} aktiviert
           </div>
 
           <h1 style={{
-            fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, lineHeight: 1.1,
-            margin: "0 0 14px", letterSpacing: "-0.03em", color: "#fff",
+            fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 900, lineHeight: 1.1,
+            margin: "0 0 10px", letterSpacing: "-0.03em", color: "#fff",
           }}>
-            Willkommen bei WebsiteFix!
+            Willkommen im {info.label} Club!
           </h1>
+          <p style={{
+            fontSize: "clamp(15px, 2vw, 19px)", fontWeight: 700, lineHeight: 1.3,
+            margin: "0 0 16px", color: info.accent,
+            letterSpacing: "-0.01em",
+          }}>
+            Dein Sichtbarkeits-Boost startet jetzt. ⚡
+          </p>
           <p style={{
             fontSize: 16, color: "rgba(255,255,255,0.4)", lineHeight: 1.75,
             margin: "0 auto 44px", maxWidth: 440,

@@ -875,6 +875,37 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [switchHover, setSwitchHover]           = useState(false);
   const [switching, setSwitching]               = useState(false);
   const [sessionDomain, setSessionDomain]       = useState<string | null>(null);
+  const [pluginApiKey, setPluginApiKey]         = useState<string | null>(null);
+  const [pluginKeyCopied, setPluginKeyCopied]   = useState(false);
+  const [pluginKeyLoading, setPluginKeyLoading] = useState(false);
+
+  const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
+
+  // Fetch / generate plugin API key for Agency users
+  useEffect(() => {
+    if (!isAgencyPlan) return;
+    fetch("/api/user/plugin-key")
+      .then(r => r.json())
+      .then((d: { key?: string }) => { if (d.key) setPluginApiKey(d.key); })
+      .catch(() => {/* non-critical */});
+  }, [isAgencyPlan]);
+
+  async function handleRegenerateKey() {
+    setPluginKeyLoading(true);
+    try {
+      const r = await fetch("/api/user/plugin-key", { method: "POST" });
+      const d = await r.json() as { key?: string };
+      if (d.key) setPluginApiKey(d.key);
+    } catch { /* ignore */ }
+    finally { setPluginKeyLoading(false); }
+  }
+
+  function handleCopyKey() {
+    if (!pluginApiKey) return;
+    try { navigator.clipboard.writeText(pluginApiKey); } catch { /* ignore */ }
+    setPluginKeyCopied(true);
+    setTimeout(() => setPluginKeyCopied(false), 2000);
+  }
 
   async function handleProjectSwitch() {
     if (switching) return;
@@ -1340,7 +1371,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {/* Scan usage — plan-aware */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans/Monat</span>
-              {["agency-pro", "agency-starter", "smart-guard", "professional", "starter"].includes(plan) ? (
+              {/* Professional / Agency = unlimited */}
+              {["agency-pro", "agency-starter", "smart-guard", "professional"].includes(plan) ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
                   padding: "2px 9px", borderRadius: 20,
@@ -1349,6 +1381,27 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 }}>
                   Unbegrenzt
                 </span>
+              ) : isStarter ? (
+                /* Starter = 3/Monat */
+                monthlyScans >= 3 ? (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    padding: "2px 10px", borderRadius: 20,
+                    background: D.redBg, border: `1px solid ${D.redBorder}`,
+                    color: D.red,
+                  }}>
+                    Limit erreicht
+                  </span>
+                ) : (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    padding: "2px 9px", borderRadius: 20,
+                    background: D.card, border: `1px solid ${D.borderMid}`,
+                    color: D.textSub,
+                  }}>
+                    {Math.max(0, 3 - monthlyScans)} / 3
+                  </span>
+                )
               ) : monthlyScans >= scanLimit ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
@@ -2276,26 +2329,42 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     background: "rgba(0,0,0,0.3)", border: "1px solid rgba(167,139,250,0.15)",
                     marginBottom: 10,
                   }}>
-                    <code style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      wf_live_••••••••••••••••••••
+                    <code style={{ flex: 1, fontSize: 11, color: pluginApiKey ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.25)", fontFamily: "monospace", letterSpacing: "0.03em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {pluginApiKey
+                        ? pluginApiKey.slice(0, 16) + "••••••••••••••••••••••••••••••••"
+                        : "Wird geladen…"}
                     </code>
                     <button
+                      onClick={handleCopyKey}
+                      disabled={!pluginApiKey}
                       style={{
-                        background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)",
-                        borderRadius: 5, padding: "4px 10px", cursor: "pointer",
-                        fontSize: 11, fontWeight: 700, color: "#a78bfa", flexShrink: 0,
-                      }}
-                      onClick={() => {
-                        /* API key copy — will be wired to real key after plugin launch */
-                        try { navigator.clipboard.writeText("wf_live_COMINGSOON"); } catch { /**/ }
+                        background: pluginKeyCopied ? "rgba(52,211,153,0.12)" : "rgba(167,139,250,0.1)",
+                        border: `1px solid ${pluginKeyCopied ? "rgba(52,211,153,0.3)" : "rgba(167,139,250,0.25)"}`,
+                        borderRadius: 5, padding: "4px 10px", cursor: pluginApiKey ? "pointer" : "default",
+                        fontSize: 11, fontWeight: 700,
+                        color: pluginKeyCopied ? "#34d399" : "#a78bfa",
+                        flexShrink: 0, transition: "all 0.2s",
                       }}
                     >
-                      Kopieren
+                      {pluginKeyCopied ? "✓ Kopiert!" : "Kopieren"}
                     </button>
                   </div>
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
-                    Plugin-Setup wird nach Aktivierung per E-Mail zugestellt. Der Key ist für alle deine Kunden-Projekte gültig.
-                  </p>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
+                      Gültig für alle deine Kunden-Projekte.
+                    </p>
+                    <button
+                      onClick={handleRegenerateKey}
+                      disabled={pluginKeyLoading}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        fontSize: 10, color: "rgba(167,139,250,0.5)", padding: 0,
+                        textDecoration: "underline", textDecorationColor: "rgba(167,139,250,0.25)",
+                      }}
+                    >
+                      {pluginKeyLoading ? "…" : "Neu generieren"}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Download card */}

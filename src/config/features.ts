@@ -67,7 +67,7 @@ const FEATURES: Record<PlanString, PlanFeatures> = {
   starter: {
     label: "Starter",
     projects: 3,
-    monthlyScans: "unlimited",
+    monthlyScans: 3,
     crawlDepth: 50,
     smartFix: false,
     smartFixReadOnly: true,  // sees issue list, fix guide is blurred
