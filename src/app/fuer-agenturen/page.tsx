@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 const PLANS = [
   {
     name: "Professional",
+    planKey: "smart-guard",       // Stripe Plan-Key → /api/checkout
     price: "89",
     per: "/Monat",
     desc: "Für wachsende Agenturen & Freelancer",
@@ -38,11 +39,11 @@ const PLANS = [
     cta: "Professional starten",
     href: "/register",
     recommended: false,
-    scale: false,
     enterprise: false,
   },
   {
     name: "Agency",
+    planKey: "agency-starter",    // Stripe Plan-Key → /api/checkout
     price: "249",
     per: "/Monat",
     desc: "Full White-Label für professionelle Agenturen",
@@ -58,7 +59,6 @@ const PLANS = [
     cta: "Agency-Account erstellen",
     href: "/register",
     recommended: true,
-    scale: false,
     enterprise: false,
   },
 ];
@@ -170,7 +170,7 @@ export default function AgencyPage() {
 
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <CheckoutButton
-                plan="agency_core"
+                plan="agency-starter"
                 label="Jetzt Agency-Account erstellen →"
                 style={{
                   padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
@@ -733,7 +733,7 @@ export default function AgencyPage() {
                 ))}
 
                 <CheckoutButton
-                  plan="agency_core"
+                  plan="agency-starter"
                   label="Jetzt White-Label einrichten →"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 8,
@@ -1199,17 +1199,12 @@ export default function AgencyPage() {
                       <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>★ BESTSELLER</span>
                     </div>
                   )}
-                  {plan.scale && (
-                    <div style={{ background: "#7C3AED", padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>SCALE</span>
-                    </div>
-                  )}
                   {plan.enterprise && (
                     <div style={{ background: "#0F172A", padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", letterSpacing: "0.1em" }}>ENTERPRISE</span>
                     </div>
                   )}
-                  {!plan.recommended && !plan.scale && !plan.enterprise && (
+                  {!plan.recommended && !plan.enterprise && (
                     <div style={{ height: 4, background: "rgba(255,255,255,0.05)" }} />
                   )}
 
@@ -1239,7 +1234,7 @@ export default function AgencyPage() {
                             background: (f as {text:string;highlight:boolean;key?:boolean}).key
                               ? "rgba(122,166,255,0.2)"
                               : f.highlight
-                                ? (plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
+                                ? (plan.recommended ? "#2563EB" : plan.planKey === "agency-starter" ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
                                 : "rgba(255,255,255,0.07)",
                             border: (f as {text:string;highlight:boolean;key?:boolean}).key ? "1px solid rgba(122,166,255,0.35)" : "none",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -1257,16 +1252,16 @@ export default function AgencyPage() {
 
                     <div style={{ paddingBottom: 24 }}>
                       <CheckoutButton
-                        plan={plan.enterprise ? "enterprise" : plan.scale ? "agency_scale" : plan.recommended ? "agency_core" : "freelancer"}
+                        plan={plan.enterprise ? "enterprise" : plan.planKey}
                         label={plan.cta}
                         href={plan.enterprise ? plan.href : undefined}
                         style={{
                           display: "block", textAlign: "center", width: "100%",
                           padding: "13px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700,
                           textDecoration: "none",
-                          background: plan.recommended ? "#2563EB" : plan.scale ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)",
-                          color: plan.recommended || plan.scale ? "#ffffff" : "rgba(255,255,255,0.7)",
-                          border: plan.recommended || plan.scale ? "none" : "1px solid rgba(255,255,255,0.1)",
+                          background: plan.recommended ? "#2563EB" : plan.planKey === "agency-starter" ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)",
+                          color: plan.recommended || plan.planKey === "agency-starter" ? "#ffffff" : "rgba(255,255,255,0.7)",
+                          border: plan.recommended || plan.planKey === "agency-starter" ? "none" : "1px solid rgba(255,255,255,0.1)",
                           boxShadow: plan.recommended ? "0 4px 14px rgba(37,99,235,0.35)" : "none",
                         }}
                       />
@@ -1432,7 +1427,7 @@ export default function AgencyPage() {
               <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>
                 <div className="wf-agency-cta-btn">
                   <CheckoutButton
-                    plan="agency_core"
+                    plan="agency-starter"
                     label="Jetzt Agency-Account erstellen →"
                     style={{
                       padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,

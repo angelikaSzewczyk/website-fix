@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/auth";
 
+// Each key maps 1:1 to a STRIPE_PRICE_* env var — no fallbacks, no aliases.
+// If a key is missing here the request returns 400; set the env var in Vercel.
 const PLAN_PRICE_MAP: Record<string, string | undefined> = {
-  "starter":        process.env.STRIPE_PRICE_STARTER ?? process.env.STRIPE_PRICE_SMART_GUARD,
-  "professional":   process.env.STRIPE_PRICE_PROFESSIONAL ?? process.env.STRIPE_PRICE_SMART_GUARD,
-  "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD,    // legacy alias
+  "starter":        process.env.STRIPE_PRICE_STARTER,
+  "professional":   process.env.STRIPE_PRICE_PROFESSIONAL,
+  "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD,
   "agency-starter": process.env.STRIPE_PRICE_AGENCY_STARTER,
   "agency-pro":     process.env.STRIPE_PRICE_AGENCY_PRO,
-  "agency":         process.env.STRIPE_PRICE_AGENCY_STARTER, // new alias
 };
 
 export async function POST(req: NextRequest) {

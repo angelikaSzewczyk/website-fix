@@ -36,8 +36,12 @@ CREATE TABLE IF NOT EXISTS users (
   image TEXT,
   plan VARCHAR(20) DEFAULT 'free',
   stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: add stripe_subscription_id to existing deployments
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 
 -- Scan history
 CREATE TABLE IF NOT EXISTS scans (

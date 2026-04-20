@@ -2,18 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { neon } from "@neondatabase/serverless";
 
-function priceIdToPlan(priceId: string | undefined): string {
-  if (!priceId) return "free";
-  // New plan price IDs (must be set in Vercel env):
-  if (process.env.STRIPE_PRICE_STARTER      && priceId === process.env.STRIPE_PRICE_STARTER)      return "starter";
-  if (process.env.STRIPE_PRICE_PROFESSIONAL && priceId === process.env.STRIPE_PRICE_PROFESSIONAL) return "professional";
-  // Legacy / existing price IDs:
-  if (process.env.STRIPE_PRICE_SMART_GUARD  && priceId === process.env.STRIPE_PRICE_SMART_GUARD)  return "smart-guard";
+/** Returns the plan key for a Stripe price ID, or null if unknown.
+ *  null = abort the DB update — we never silently downgrade to "free" on a mystery price. */
+function priceIdToPlan(priceId: string | undefined): string | null {
+  if (!priceId) return null;
+  if (process.env.STRIPE_PRICE_STARTER        && priceId === process.env.STRIPE_PRICE_STARTER)        return "starter";
+  if (process.env.STRIPE_PRICE_PROFESSIONAL   && priceId === process.env.STRIPE_PRICE_PROFESSIONAL)   return "professional";
+  if (process.env.STRIPE_PRICE_SMART_GUARD    && priceId === process.env.STRIPE_PRICE_SMART_GUARD)    return "smart-guard";
   if (process.env.STRIPE_PRICE_AGENCY_STARTER && priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency-starter";
-  if (process.env.STRIPE_PRICE_AGENCY_PRO   && priceId === process.env.STRIPE_PRICE_AGENCY_PRO)   return "agency-pro";
-  // Unknown price ID — log and keep free to avoid silent failures
-  console.warn(`[stripe-webhook] Unknown priceId: ${priceId} — plan stays 'free'. Add ENV var if this is a new plan.`);
-  return "free";
+  if (process.env.STRIPE_PRICE_AGENCY_PRO     && priceId === process.env.STRIPE_PRICE_AGENCY_PRO)     return "agency-pro";
+  // CRITICAL: unknown price — log loudly and abort. Never fall back to "free".
+  console.error(
+    `[stripe-webhook] CRITICAL: Unknown priceId '${priceId}' — plan upgrade ABORTED.` +
+    ` Check STRIPE_PRICE_* env vars in Vercel. No DB update performed.`
+  );
+  return null;
 }
 
 export async function POST(req: NextRequest) {
@@ -40,16 +43,18 @@ export async function POST(req: NextRequest) {
     });
     const priceId = fullSession.line_items?.data?.[0]?.price?.id;
     const plan = priceIdToPlan(priceId);
+    if (!plan) return NextResponse.json({ received: true }); // unknown price — already logged
 
+    const subscriptionId = (session.subscription as string | null) ?? null;
     await sql`
       UPDATE users
       SET plan = ${plan},
           stripe_customer_id = ${session.customer as string},
-          stripe_subscription_id = ${session.subscription as string}
+          stripe_subscription_id = ${subscriptionId}
       WHERE email = ${email.toLowerCase()}
     `;
 
-    console.log(`Plan upgraded: ${email} → ${plan}`);
+    console.log(`[stripe-webhook] Plan upgraded: ${email} → ${plan} (sub: ${subscriptionId})`);
   }
 
   if (event.type === "customer.subscription.deleted") {
@@ -65,6 +70,7 @@ export async function POST(req: NextRequest) {
     if (status === "active") {
       const priceId = sub.items.data[0]?.price?.id;
       const plan = priceIdToPlan(priceId);
+      if (!plan) return NextResponse.json({ received: true }); // unknown price — already logged
       await sql`UPDATE users SET plan = ${plan} WHERE stripe_customer_id = ${customerId}`;
     } else if (status === "canceled" || status === "unpaid") {
       await sql`UPDATE users SET plan = 'free' WHERE stripe_customer_id = ${customerId}`;
