@@ -4,9 +4,15 @@ import { neon } from "@neondatabase/serverless";
 
 function priceIdToPlan(priceId: string | undefined): string {
   if (!priceId) return "free";
-  if (priceId === process.env.STRIPE_PRICE_SMART_GUARD)    return "smart-guard";
-  if (priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency-starter";
-  if (priceId === process.env.STRIPE_PRICE_AGENCY_PRO)     return "agency-pro";
+  // New plan price IDs (must be set in Vercel env):
+  if (process.env.STRIPE_PRICE_STARTER      && priceId === process.env.STRIPE_PRICE_STARTER)      return "starter";
+  if (process.env.STRIPE_PRICE_PROFESSIONAL && priceId === process.env.STRIPE_PRICE_PROFESSIONAL) return "professional";
+  // Legacy / existing price IDs:
+  if (process.env.STRIPE_PRICE_SMART_GUARD  && priceId === process.env.STRIPE_PRICE_SMART_GUARD)  return "smart-guard";
+  if (process.env.STRIPE_PRICE_AGENCY_STARTER && priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency-starter";
+  if (process.env.STRIPE_PRICE_AGENCY_PRO   && priceId === process.env.STRIPE_PRICE_AGENCY_PRO)   return "agency-pro";
+  // Unknown price ID — log and keep free to avoid silent failures
+  console.warn(`[stripe-webhook] Unknown priceId: ${priceId} — plan stays 'free'. Add ENV var if this is a new plan.`);
   return "free";
 }
 

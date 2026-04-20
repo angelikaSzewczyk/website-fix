@@ -399,9 +399,10 @@ function getMaxSubpages(plan: string): number {
 }
 
 // ── Monthly scan limits per plan ────────────────────────────
+// Matches features.ts: Starter = unlimited (999), only Free is limited (3)
 const MONTHLY_LIMITS: Record<string, number> = {
   "free":            3,
-  "starter":         3,
+  "starter":       999,
   "smart-guard":   999,
   "professional":  999,
   "agency-starter": 999,

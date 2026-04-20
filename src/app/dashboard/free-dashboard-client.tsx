@@ -1349,15 +1349,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 }}>
                   Unbegrenzt
                 </span>
-              ) : plan === "starter" ? (
-                <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: "2px 9px", borderRadius: 20,
-                  background: D.card, border: `1px solid ${D.borderMid}`,
-                  color: D.textSub,
-                }}>
-                  {Math.max(0, 3 - monthlyScans)} / 3
-                </span>
               ) : monthlyScans >= scanLimit ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,

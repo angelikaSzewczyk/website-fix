@@ -7,12 +7,18 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-const PLAN_INFO: Record<string, { label: string; accent: string; isAgency: boolean }> = {
-  freelancer:    { label: "Freelancer",    accent: "#475569", isAgency: false },
-  agency_core:   { label: "Agency Core",   accent: "#2563EB", isAgency: true },
-  agency_scale:  { label: "Agency Scale",  accent: "#7C3AED", isAgency: true },
-  agentur:       { label: "Agentur",       accent: "#2563EB", isAgency: true },
-  enterprise:    { label: "Enterprise",    accent: "#0F172A", isAgency: true },
+const PLAN_INFO: Record<string, { label: string; accent: string; accentBg: string; isAgency: boolean; isStarter: boolean }> = {
+  // Current plan tiers
+  starter:         { label: "Starter",      accent: "#60a5fa", accentBg: "rgba(96,165,250,0.1)",   isAgency: false, isStarter: true },
+  professional:    { label: "Professional", accent: "#FBBF24", accentBg: "rgba(251,191,36,0.1)",  isAgency: false, isStarter: false },
+  "smart-guard":   { label: "Professional", accent: "#FBBF24", accentBg: "rgba(251,191,36,0.1)",  isAgency: false, isStarter: false },
+  "agency-starter":{ label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
+  "agency-pro":    { label: "Agency Pro",   accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
+  agency:          { label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
+  // Legacy aliases (keep for old links)
+  freelancer:      { label: "Starter",      accent: "#60a5fa", accentBg: "rgba(96,165,250,0.1)",  isAgency: false, isStarter: true },
+  agency_core:     { label: "Professional", accent: "#FBBF24", accentBg: "rgba(251,191,36,0.1)",  isAgency: false, isStarter: false },
+  agency_scale:    { label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
 };
 
 export default function CheckoutSuccessPage({
@@ -20,8 +26,8 @@ export default function CheckoutSuccessPage({
 }: {
   searchParams: { plan?: string; session_id?: string };
 }) {
-  const plan = searchParams.plan ?? "agency_core";
-  const info = PLAN_INFO[plan] ?? PLAN_INFO.agency_core;
+  const plan = searchParams.plan ?? "professional";
+  const info = PLAN_INFO[plan] ?? PLAN_INFO["professional"];
 
   return (
     <>
@@ -75,8 +81,11 @@ export default function CheckoutSuccessPage({
             fontSize: 16, color: "rgba(255,255,255,0.4)", lineHeight: 1.75,
             margin: "0 auto 44px", maxWidth: 440,
           }}>
-            Dein Account ist sofort einsatzbereit. Richte in 2 Minuten dein White-Label ein
-            und starte direkt mit dem ersten Deep-Scan.
+            {info.isAgency
+              ? "Dein Agency-Account ist sofort einsatzbereit. Richte in 2 Minuten dein White-Label ein und starte mit dem ersten Kunden-Scan."
+              : info.isStarter
+              ? "Dein Starter-Account ist aktiv. Starte jetzt deinen ersten Deep-Scan und entdecke alle Wachstums-Bremsen deiner Website."
+              : "Dein Professional-Account ist aktiv. Alle KI-Fix-Guides und Smart-Fix-Features sind sofort freigeschaltet."}
           </p>
 
           {/* ── TWO PRIMARY CTAs ── */}
