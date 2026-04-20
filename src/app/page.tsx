@@ -586,106 +586,141 @@ export default function Page() {
                 Das Herzstück
               </p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Fehler finden ist gut. Fehler beheben ist besser.
+                Drei Stufen. Ein Ziel: Maximale Sichtbarkeit.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Andere Tools geben dir eine Liste. website-fix gibt dir den Lösungsweg — Schritt für Schritt, für dein genaues Page-Builder-System.
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 540, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
+                Von der ersten Analyse bis zur vollautomatischen Agentur-Pipeline — jede Stufe baut auf der nächsten auf.
               </p>
             </div>
 
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
               {[
+                /* ── Säule 1: Sofort-Analyse (Starter) ── */
                 {
+                  planLabel: "Starter",
+                  planColor: "#60a5fa",
+                  planBg:   "rgba(96,165,250,0.12)",
+                  planBorder:"rgba(96,165,250,0.28)",
+                  cardBorder:"rgba(96,165,250,0.18)",
+                  cardGlow:  "rgba(96,165,250,0.06)",
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
-                    </svg>
-                  ),
-                  iconBg: "rgba(37,99,235,0.12)",
-                  iconBorder: "rgba(37,99,235,0.28)",
-                  iconGlow: "rgba(37,99,235,0.35)",
-                  tag: "Interaktive Map",
-                  tagColor: "#7aa6ff",
-                  tagBg: "rgba(37,99,235,0.12)",
-                  title: "Jede Seite auf einen Blick",
-                  desc: "Die interaktive Site-Map zeigt alle gescannten Unterseiten mit ihren Fehlern — farblich priorisiert nach Schweregrad. Kritische Probleme zuerst, damit du weißt, wo du anfangen musst.",
-                  bullets: ["Alle Unterseiten in einer Ansicht", "Farbcode: Rot · Gelb · Grün", "Klick auf Seite → Drawer öffnet sich"],
-                  bulletColor: "#7aa6ff",
-                },
-                {
-                  icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>
-                    </svg>
-                  ),
-                  iconBg: "rgba(22,163,74,0.1)",
-                  iconBorder: "rgba(22,163,74,0.28)",
-                  iconGlow: "rgba(34,197,94,0.35)",
-                  tag: "Smart-Fix Drawer",
-                  tagColor: "#4ade80",
-                  tagBg: "rgba(22,163,74,0.12)",
-                  title: "Anleitungen für dein System",
-                  desc: "Per Klick öffnet sich der Smart-Fix Drawer — mit einer genauen Schritt-für-Schritt-Anleitung für Gutenberg, Elementor oder Divi. Kein Entwickler nötig, kein Ticket nötig.",
-                  bullets: ["Gutenberg — wo genau klicken", "Elementor — welches Widget, welcher Tab", "Divi — exakter Menüpfad"],
-                  bulletColor: "#4ade80",
-                },
-                {
-                  icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {/* Lightning bolt */}
                       <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                     </svg>
                   ),
-                  iconBg: "rgba(217,119,6,0.12)",
-                  iconBorder: "rgba(217,119,6,0.28)",
-                  iconGlow: "rgba(251,191,36,0.35)",
-                  tag: "Setup",
-                  tagColor: "#fbbf24",
-                  tagBg: "rgba(217,119,6,0.12)",
-                  title: "In 60 Sekunden startklar",
-                  desc: "URL eingeben, Scan starten — fertig. Kein Plugin, kein Hosting-Zugang, kein technisches Wissen nötig. website-fix läuft vollständig in der Cloud.",
-                  bullets: ["Kein Plugin installieren", "Kein Hosting-Zugang nötig", "Ergebnis in unter 60 Sekunden"],
-                  bulletColor: "#fbbf24",
+                  title: "Sofort-Analyse",
+                  desc: "In &lt; 60 Sek. zum vollständigen Ranking-Report. Identifiziere alle Wachstums-Bremsen deiner Website — ohne Installation, ohne Entwickler.",
+                  bullets: [
+                    "< 60 Sek. · bis zu 25 Unterseiten",
+                    "Interaktive Site-Map nach Schweregrad",
+                    "SEO, Technik & BFSG auf einen Blick",
+                  ],
+                },
+                /* ── Säule 2: KI-Smart-Fix (Professional) ── */
+                {
+                  planLabel: "Professional",
+                  planColor: "#FBBF24",
+                  planBg:   "rgba(251,191,36,0.12)",
+                  planBorder:"rgba(251,191,36,0.28)",
+                  cardBorder:"rgba(251,191,36,0.18)",
+                  cardGlow:  "rgba(251,191,36,0.06)",
+                  icon: (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {/* Wand / sparkle */}
+                      <path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/>
+                      <path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/>
+                      <path d="M17.8 6.2 19 5"/><path d="M3 21l9-9"/>
+                      <path d="M12.2 6.2 11 5"/>
+                    </svg>
+                  ),
+                  title: "KI-Smart-Fix",
+                  desc: "KI-gestützte Schritt-für-Schritt-Guides — priorisiert nach SEO-Impact. Copy-paste-fertiger Code direkt für Gutenberg, Elementor oder Divi.",
+                  bullets: [
+                    "Fix-Guide für dein Page-Builder-System",
+                    "KI-Auto-Fix: fertiger Code, kein Entwickler",
+                    "Priorisierung nach Google-Impact",
+                  ],
+                },
+                /* ── Säule 3: API-Automatisierung (Agency) ── */
+                {
+                  planLabel: "Agency",
+                  planColor: "#a78bfa",
+                  planBg:   "rgba(167,139,250,0.12)",
+                  planBorder:"rgba(167,139,250,0.28)",
+                  cardBorder:"rgba(167,139,250,0.18)",
+                  cardGlow:  "rgba(167,139,250,0.06)",
+                  icon: (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {/* Cloud + down-arrow */}
+                      <polyline points="8 17 12 21 16 17"/>
+                      <line x1="12" y1="12" x2="12" y2="21"/>
+                      <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>
+                    </svg>
+                  ),
+                  title: "API-Automatisierung",
+                  desc: "Exklusives WP-Plugin für Agenturen. Fixes per Klick direkt aus dem Dashboard auf alle Kunden-Seiten übertragen — ohne manuelles Copy-Paste.",
+                  bullets: [
+                    "WP-Plugin: verbinde unbegrenzte Sites",
+                    "KI-Mass-Fixer: Befehl an alle Sites",
+                    "White-Label Reports für Endkunden",
+                  ],
                 },
               ].map(f => (
                 <div key={f.title} style={{
-                  background: "rgba(8,10,20,0.7)",
+                  background: "rgba(8,10,20,0.75)",
                   backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  border: `1px solid ${f.cardBorder}`,
                   borderRadius: 20,
-                  padding: "28px 26px",
-                  boxShadow: "0 2px 20px rgba(0,0,0,0.3)",
+                  padding: "0 0 28px",
+                  boxShadow: `0 2px 32px ${f.cardGlow}, 0 2px 20px rgba(0,0,0,0.3)`,
                   display: "flex", flexDirection: "column",
+                  overflow: "hidden",
                   transition: "border-color 0.2s, box-shadow 0.2s",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                    <div style={{
-                      width: 46, height: 46, borderRadius: 12, flexShrink: 0,
-                      background: f.iconBg, border: `1px solid ${f.iconBorder}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      filter: `drop-shadow(0 0 8px ${f.iconGlow})`,
-                    }}>
-                      {f.icon}
+                  {/* Plan stripe */}
+                  <div style={{
+                    padding: "8px 26px",
+                    background: f.planBg,
+                    borderBottom: `1px solid ${f.planBorder}`,
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: f.planColor, boxShadow: `0 0 6px ${f.planColor}`, flexShrink: 0, display: "inline-block" }} />
+                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: f.planColor }}>
+                      {f.planLabel}
+                    </span>
+                  </div>
+
+                  <div style={{ padding: "24px 26px 0", flex: 1, display: "flex", flexDirection: "column" }}>
+                    {/* Icon + title */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 13, flexShrink: 0,
+                        background: f.planBg, border: `1px solid ${f.planBorder}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        filter: `drop-shadow(0 0 10px ${f.planColor}55)`,
+                      }}>
+                        {f.icon}
+                      </div>
+                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                        {f.title}
+                      </h3>
                     </div>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 5,
-                      background: f.tagBg, color: f.tagColor, letterSpacing: "0.06em",
-                      border: `1px solid ${f.iconBorder}`,
-                    }}>{f.tag}</span>
+
+                    <p style={{ margin: "0 0 20px", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, flex: 1 }}
+                      dangerouslySetInnerHTML={{ __html: f.desc }} />
+
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
+                      {f.bullets.map(b => (
+                        <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={f.planColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{f.title}</h3>
-                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>{f.desc}</p>
-                  </div>
-                  <ul style={{ margin: "18px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-                    {f.bullets.map(b => (
-                      <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={f.bulletColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               ))}
             </div>
