@@ -927,9 +927,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   }
 
   const PAID_PLANS = ["smart-guard", "professional", "starter", "agency-starter", "agency-pro"];
-  const isPaid     = PAID_PLANS.includes(plan);
-  const isSmartGuard = isPaid; // alias for legacy code references
-  const isFree     = !isPaid;
+  const isPaid           = PAID_PLANS.includes(plan);
+  const isStarter        = plan === "starter";
+  const isProfessionalPlus = ["smart-guard", "professional", "agency-starter", "agency-pro"].includes(plan);
+  const isAgency         = plan === "agency-starter" || plan === "agency-pro";
+  const isSmartGuard     = isProfessionalPlus; // alias used in drawer code — means Pro+ only
+  const isFree           = !isPaid;
   const planLabel  = plan === "agency-pro" ? "Agency Pro" : plan === "agency-starter" ? "Agency" : isPaid ? "Professional" : "Free";
   const domain     = lastScan?.url
     ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
@@ -1897,19 +1900,63 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       {isFixOpen && fixSteps.length > 0 && (
                         <div style={{
                           padding: "12px 18px 14px",
-                          background: "rgba(141,243,211,0.03)",
-                          borderTop: "1px solid rgba(141,243,211,0.1)",
+                          background: isStarter ? "rgba(251,191,36,0.02)" : "rgba(141,243,211,0.03)",
+                          borderTop: `1px solid ${isStarter ? "rgba(251,191,36,0.1)" : "rgba(141,243,211,0.1)"}`,
+                          position: "relative",
+                          overflow: "hidden",
                         }}>
-                          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                            Fix-Anleitung (WordPress / Elementor):
+                          <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: isStarter ? "#FBBF24" : "#8df3d3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                            {isStarter ? "Wachstums-Bremse — KI-Fix-Guide:" : "Fix-Anleitung (WordPress / Elementor):"}
                           </p>
-                          {fixSteps.map((s: string, si: number) => (
-                            <div key={si} style={{ display: "flex", gap: 8, marginBottom: si < fixSteps.length - 1 ? 5 : 0 }}>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: "#8df3d3", flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
-                              <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
-                            </div>
-                          ))}
-                          {!isSmartGuard && (
+
+                          {/* Steps — first 1 visible for Starter, rest blurred */}
+                          <div style={{ position: "relative" }}>
+                            {fixSteps.map((s: string, si: number) => (
+                              <div key={si} style={{
+                                display: "flex", gap: 8,
+                                marginBottom: si < fixSteps.length - 1 ? 5 : 0,
+                                filter: isStarter && si >= 1 ? "blur(3.5px)" : "none",
+                                userSelect: isStarter && si >= 1 ? "none" : "auto",
+                                transition: "filter 0.2s",
+                              }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: isStarter ? "#FBBF24" : "#8df3d3", flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
+                                <span style={{ fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>{s}</span>
+                              </div>
+                            ))}
+
+                            {/* Starter: gradient blur overlay + upgrade CTA */}
+                            {isStarter && (
+                              <div style={{
+                                position: "absolute",
+                                bottom: 0, left: 0, right: 0,
+                                height: "75%",
+                                background: "linear-gradient(to bottom, rgba(11,12,16,0) 0%, rgba(11,12,16,0.82) 55%, rgba(11,12,16,0.97) 100%)",
+                                display: "flex", flexDirection: "column",
+                                alignItems: "center", justifyContent: "flex-end",
+                                paddingBottom: 4,
+                              }}>
+                                <div style={{
+                                  textAlign: "center",
+                                  padding: "10px 16px 6px",
+                                }}>
+                                  <p style={{ margin: "0 0 8px", fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                                    🔒 Vollständige KI-Schritt-für-Schritt Lösung im Professional Plan
+                                  </p>
+                                  <Link href="/pricing?plan=professional" style={{
+                                    display: "inline-block",
+                                    padding: "7px 18px", borderRadius: 6,
+                                    background: "#FBBF24", color: "#0b0c10",
+                                    fontSize: 12, fontWeight: 800, textDecoration: "none",
+                                  }}>
+                                    Professional aktivieren →
+                                  </Link>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Free: simple Professional CTA */}
+                          {isFree && (
                             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 11, color: D.textMuted, flex: 1 }}>KI-Auto-Fix (Copy-Paste-fertig) im Professional Plan</span>
                               <Link href="/pricing?plan=professional" style={{
@@ -2200,7 +2247,186 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           <Divider style={{ marginBottom: 28 }} />
 
-          {/* ⑧ PROFESSIONELLER SERVICE */}
+          {/* ⑧ WP-PLUGIN ANBINDUNG */}
+          <div style={{ marginBottom: 28 }}>
+            <SectionLabel color={isAgency ? "#a78bfa" : D.blueSoft}>
+              {isAgency ? "Agency · Exklusiv" : "Agency Feature"}
+            </SectionLabel>
+            <SectionHead>WP-Plugin Anbindung</SectionHead>
+            <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 600 }}>
+              Installiere das White-Label Helper-Plugin auf deinen Kunden-Seiten, um Fixes direkt aus diesem Dashboard per API zu übertragen — ohne Entwickler, ohne manuelles Copy-Paste.
+            </p>
+
+            {isAgency ? (
+              /* ── Agency: full plugin area ── */
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {/* API Key card */}
+                <div style={{
+                  padding: "24px 22px", borderRadius: D.radius,
+                  background: "rgba(167,139,250,0.04)",
+                  border: "1px solid rgba(167,139,250,0.2)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 9,
+                      background: "rgba(167,139,250,0.1)",
+                      border: "1px solid rgba(167,139,250,0.25)",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                      </svg>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#a78bfa" }}>Dein Plugin API-Key</p>
+                  </div>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "10px 14px", borderRadius: 8,
+                    background: "rgba(0,0,0,0.3)", border: "1px solid rgba(167,139,250,0.15)",
+                    marginBottom: 10,
+                  }}>
+                    <code style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      wf_live_••••••••••••••••••••
+                    </code>
+                    <button
+                      style={{
+                        background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)",
+                        borderRadius: 5, padding: "4px 10px", cursor: "pointer",
+                        fontSize: 11, fontWeight: 700, color: "#a78bfa", flexShrink: 0,
+                      }}
+                      onClick={() => {
+                        /* API key copy — will be wired to real key after plugin launch */
+                        try { navigator.clipboard.writeText("wf_live_COMINGSOON"); } catch { /**/ }
+                      }}
+                    >
+                      Kopieren
+                    </button>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
+                    Plugin-Setup wird nach Aktivierung per E-Mail zugestellt. Der Key ist für alle deine Kunden-Projekte gültig.
+                  </p>
+                </div>
+
+                {/* Download card */}
+                <div style={{
+                  padding: "24px 22px", borderRadius: D.radius,
+                  background: "rgba(167,139,250,0.04)",
+                  border: "1px solid rgba(167,139,250,0.2)",
+                  display: "flex", flexDirection: "column",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 9,
+                      background: "rgba(167,139,250,0.1)",
+                      border: "1px solid rgba(167,139,250,0.25)",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#a78bfa" }}>Plugin herunterladen</p>
+                  </div>
+                  <p style={{ margin: "0 0 16px", fontSize: 12, color: D.textMuted, lineHeight: 1.7, flex: 1 }}>
+                    Lade das <strong style={{ color: "rgba(255,255,255,0.6)" }}>website-fix-helper.zip</strong> herunter, installiere es in WordPress (Plugins → Installieren → Plugin hochladen) und trage deinen API-Key ein.
+                  </p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <a
+                      href="/downloads/website-fix-helper.zip"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "9px 18px", borderRadius: 8,
+                        background: "#a78bfa", color: "#0b0c10",
+                        fontSize: 12, fontWeight: 800, textDecoration: "none",
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Plugin herunterladen (.zip)
+                    </a>
+                    <a
+                      href="https://docs.website-fix.com/plugin"
+                      target="_blank" rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "9px 18px", borderRadius: 8,
+                        background: "rgba(167,139,250,0.1)",
+                        border: "1px solid rgba(167,139,250,0.25)",
+                        color: "#a78bfa",
+                        fontSize: 12, fontWeight: 700, textDecoration: "none",
+                      }}
+                    >
+                      Dokumentation →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ── Non-Agency: upgrade teaser ── */
+              <div style={{
+                position: "relative", overflow: "hidden",
+                padding: "28px 32px", borderRadius: D.radius,
+                background: "rgba(167,139,250,0.03)",
+                border: "1px solid rgba(167,139,250,0.15)",
+                display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap",
+              }}>
+                {/* Decorative watermark */}
+                <div style={{
+                  position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)",
+                  fontSize: 80, opacity: 0.04, userSelect: "none", pointerEvents: "none",
+                  lineHeight: 1,
+                }}>
+                  🔌
+                </div>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                  background: "rgba(167,139,250,0.08)",
+                  border: "1px solid rgba(167,139,250,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.85)" }}>
+                      WP-Plugin Anbindung
+                    </p>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                      background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)",
+                      color: "#a78bfa", letterSpacing: "0.04em",
+                    }}>
+                      Agency Exklusiv
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.6, maxWidth: 420 }}>
+                    Installiere das White-Label Helper-Plugin auf Kunden-Seiten und übertrage Fixes direkt per API aus diesem Dashboard — kein manuelles Copy-Paste mehr.
+                  </p>
+                </div>
+                <Link href="/fuer-agenturen" style={{
+                  flexShrink: 0, padding: "10px 22px", borderRadius: 8,
+                  background: "rgba(167,139,250,0.12)",
+                  border: "1px solid rgba(167,139,250,0.3)",
+                  color: "#a78bfa",
+                  fontSize: 13, fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap",
+                }}>
+                  Agency anfragen →
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <Divider style={{ marginBottom: 28 }} />
+
+          {/* ⑨ PROFESSIONELLER SERVICE */}
           <div style={{ marginBottom: 40 }}>
             <SectionLabel color={D.blueSoft}>Optionaler Service</SectionLabel>
             <SectionHead>Lieber delegieren? Wir unterstützen gezielt.</SectionHead>
