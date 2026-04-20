@@ -389,14 +389,14 @@ export default function InlineScan({
           fontSize: 16, fontWeight: 800, color: "#fff",
           letterSpacing: "-0.3px", marginBottom: 8, lineHeight: 1.3,
         }}>
-          Optimierung ohne Unterbrechung
+          Analyse-Limit erreicht
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6, marginBottom: 22 }}>
-          Du hast das Limit für anonyme Scans erreicht.<br/>
-          Registriere dich kostenlos, um mehr Seiten zu prüfen.
+          Sichere dir jetzt vollen Zugriff auf alle Reports<br/>
+          und den Smart-Fix Guide.
         </div>
 
-        <a href="/register" className="wf-scan-limit-cta" style={{
+        <a href="/pricing" className="wf-scan-limit-cta" style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           padding: "13px 26px", borderRadius: 11,
           background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
@@ -406,35 +406,34 @@ export default function InlineScan({
           letterSpacing: "-0.1px",
           transition: "box-shadow 0.2s, transform 0.15s",
         }}>
-          Jetzt unbegrenzt scannen &amp; absichern →
+          Plan wählen &amp; weiter optimieren →
         </a>
 
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "4px 12px", borderRadius: 20, marginBottom: 14,
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.06)",
         }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-            stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+            stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
           <span style={{
-            fontSize: 12, color: "rgba(255,255,255,0.35)",
-            fontVariantNumeric: "tabular-nums", fontWeight: 600,
+            fontSize: 11, color: "rgba(255,255,255,0.25)",
+            fontVariantNumeric: "tabular-nums", fontWeight: 500,
           }}>
             Freigabe in {timeRemaining}
           </span>
         </div>
 
         <div>
-          <a href="/register" style={{
-            fontSize: 12, color: "rgba(167,139,250,0.6)",
-            textDecoration: "underline", textUnderlineOffset: 3,
-            textDecorationColor: "rgba(167,139,250,0.3)",
+          <a href="/login" style={{
+            fontSize: 12, color: "rgba(255,255,255,0.35)",
+            textDecoration: "none",
             cursor: "pointer",
           }}>
-            Oder die erste Website dauerhaft kostenlos verknüpfen
+            Bereits Kunde? <span style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>Hier anmelden</span>
           </a>
         </div>
       </div>

@@ -544,7 +544,7 @@ export default function ScanPage() {
                       fontWeight: 800, fontSize: 19, color: "#fff",
                       marginBottom: 10, letterSpacing: "-0.02em", lineHeight: 1.3,
                     }}>
-                      Kostenloses Kontingent ausgeschöpft.
+                      Analyse-Limit erreicht
                     </div>
 
                     {/* Subtext */}
@@ -553,9 +553,7 @@ export default function ScanPage() {
                       color: "rgba(255,255,255,0.42)", lineHeight: 1.75,
                       maxWidth: 340,
                     }}>
-                      Dein nächster professioneller WordPress-Check ist in{" "}
-                      <span style={{ color: "#fff", fontWeight: 700 }}>{timeRemaining}</span>{" "}
-                      verfügbar.
+                      Sichere dir jetzt vollen Zugriff auf alle Reports und den Smart-Fix Guide.
                     </p>
 
                     {/* Kontingent-Visual — "2 von 2 Scans verwendet" */}
@@ -573,7 +571,7 @@ export default function ScanPage() {
                         color: "rgba(255,255,255,0.3)",
                         fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
                       }}>
-                        <span>Freie Scans (pro 24 Stunden)</span>
+                        <span>Anonyme Scans (pro 24 Stunden)</span>
                         <span style={{ color: "#7aa6ff" }}>2 / 2 verwendet</span>
                       </div>
                       {/* Progress bar — 100 % filled */}
@@ -597,7 +595,7 @@ export default function ScanPage() {
                         background: "radial-gradient(ellipse, rgba(0,123,255,0.5) 0%, transparent 65%)",
                         pointerEvents: "none",
                       }} />
-                      <Link href="/register" style={{
+                      <Link href="/pricing" style={{
                         position: "relative",
                         display: "inline-block",
                         padding: "15px 36px", borderRadius: 11, fontSize: 15, fontWeight: 800,
@@ -606,7 +604,7 @@ export default function ScanPage() {
                         boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
                         letterSpacing: "-0.01em",
                       }}>
-                        Unbegrenzt scannen mit Pro →
+                        Plan wählen &amp; weiter optimieren →
                       </Link>
                     </div>
 
@@ -626,12 +624,12 @@ export default function ScanPage() {
                       Freigabe in {timeRemaining}
                     </div>
 
-                    {/* Agency link — gray, hover → white via wf-footer-link */}
+                    {/* Login link */}
                     <div style={{ marginTop: 14 }}>
-                      <Link href="/fuer-agenturen#white-label" className="wf-footer-link" style={{
-                        fontSize: 12, textDecoration: "none",
+                      <Link href="/login" className="wf-footer-link" style={{
+                        fontSize: 12, textDecoration: "none", color: "rgba(255,255,255,0.35)",
                       }}>
-                        Sie sind eine Agentur? Jetzt White-Label-Optionen prüfen →
+                        Bereits Kunde? <span style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>Hier anmelden</span>
                       </Link>
                     </div>
 
