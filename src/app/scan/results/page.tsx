@@ -410,16 +410,17 @@ function ProtoPanelContent({ p, tier = "anon" }: {
 }
 
 // ── Ring chart ────────────────────────────────────────────────────────────────
-function HealthRing({ score }: { score: number }) {
+function HealthRing({ score, displayScore }: { score: number; displayScore: number }) {
   const r = 52, circ = 2 * Math.PI * r;
   const color = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
+  const fill = (displayScore / 100) * circ;
   return (
     <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: "rotate(-90deg)" }}>
       <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="12" />
       <circle cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="12"
-        strokeDasharray={`${(score / 100) * circ} ${circ - (score / 100) * circ}`}
+        strokeDasharray={`${fill} ${circ - fill}`}
         strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 8px ${color}80)` }}
+        style={{ filter: `drop-shadow(0 0 8px ${color}80)`, transition: "stroke-dasharray 0.016s linear" }}
       />
     </svg>
   );
@@ -435,6 +436,10 @@ function ResultsInner() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   // "anon" | "free" | "paid" — determines what's shown in the error panel
   const [userTier, setUserTier] = useState<"anon" | "free" | "paid">("anon");
+  // ── Animated score counter ────────────────────────────────────────────────
+  const [displayScore, setDisplayScore] = useState(0);
+  // ── Magic pulse: first-time hint on first expandable row ─────────────────
+  const [showPulse, setShowPulse] = useState(false);
 
   useEffect(() => {
     const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
@@ -491,6 +496,28 @@ function ResultsInner() {
     return () => { document.title = "WebsiteFix | Compliance-Plattform für WordPress-Agenturen"; };
   }, [scan]);
 
+  // ── Score count-up animation (0 → real score in 1.5s) ────────────────────
+  const targetScore = !loaded ? 0 : (scan ? computeScore(scan) : DEMO_SCORE);
+  useEffect(() => {
+    if (targetScore === 0) return;
+    const startTime = Date.now();
+    const id = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const p = Math.min(elapsed / 1500, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      setDisplayScore(Math.round(targetScore * eased));
+      if (p >= 1) { setDisplayScore(targetScore); clearInterval(id); }
+    }, 16);
+    return () => clearInterval(id);
+  }, [targetScore]);
+
+  // ── Show pulse hint until user first expands a detail row ────────────────
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("wf_details_opened")) setShowPulse(true);
+    } catch { /* localStorage unavailable */ }
+  }, []);
+
   if (!loaded) return (
     <div style={{ background: "#0b0c10", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>Lade Ergebnisse…</div>
@@ -525,6 +552,17 @@ function ResultsInner() {
   const gefilterteUrls = scan?.gefilterteUrls ?? 0;
   const skippedCount   = (scan?.skippedUrls ?? []).length;
 
+  // ── Magic pulse helpers ───────────────────────────────────────────────────
+  // Index of first expandable row (first non-skipped page with errors)
+  const firstErrorIdx = pageItems.findIndex(p => !p.isSkipped && p.errors > 0 && !isDemo);
+
+  function handleExpand(key: string) {
+    setExpandedRow(prev => prev === key ? null : key);
+    if (showPulse) {
+      setShowPulse(false);
+      try { localStorage.setItem("wf_details_opened", "1"); } catch { /* ignore */ }
+    }
+  }
 
   return (
     <>
@@ -752,9 +790,9 @@ function ResultsInner() {
               boxShadow: `0 0 40px ${scoreColor}12`, minWidth: 180,
             }}>
               <div style={{ position: "relative", width: 140, height: 140 }}>
-                <HealthRing score={score} />
+                <HealthRing score={score} displayScore={displayScore} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 32, fontWeight: 800, color: scoreColor, letterSpacing: "-0.04em", lineHeight: 1 }}>{score}%</span>
+                  <span style={{ fontSize: 32, fontWeight: 800, color: scoreColor, letterSpacing: "-0.04em", lineHeight: 1 }}>{displayScore}%</span>
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>Score</span>
                 </div>
               </div>
@@ -1019,12 +1057,25 @@ function ResultsInner() {
                     </div>
                     <div style={{ width: 90, textAlign: "right" }}>
                       <span
-                        onClick={() => canExpand && setExpandedRow(isExpanded ? null : (p.path + i))}
+                        onClick={() => canExpand && handleExpand(p.path + i)}
                         style={{ fontSize: 13, fontWeight: 700, color: p.errors === 0 ? "rgba(255,255,255,0.2)" : dotColor, cursor: canExpand ? "pointer" : "default", userSelect: "none",
                           textDecoration: canExpand ? "underline dotted" : "none", textUnderlineOffset: 3 }}>
                         {p.errors === 0 ? "—" : `${p.errors} Fehler`}
                         {canExpand && <span style={{ fontSize: 10, marginLeft: 4, opacity: 0.6 }}>{isExpanded ? "▲" : "▼"}</span>}
                       </span>
+                      {/* ── Magic pulse: gold tooltip on first expandable row ── */}
+                      {canExpand && showPulse && i === firstErrorIdx && (
+                        <div className="wf-pulse-hint" style={{
+                          marginTop: 6, padding: "4px 8px", borderRadius: 5,
+                          background: "rgba(251,191,36,0.12)",
+                          border: "1px solid rgba(251,191,36,0.4)",
+                          fontSize: 10, color: "#FBBF24", fontWeight: 700,
+                          whiteSpace: "nowrap", lineHeight: 1.3,
+                          cursor: "pointer",
+                        }} onClick={() => handleExpand(p.path + i)}>
+                          ↑ Klick hier: Schritt-für-Schritt Fix
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1111,6 +1162,13 @@ function ResultsInner() {
         }
         .wf-cta-pulse {
           animation: wf-cta-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes wf-pulse-hint {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); border-color: rgba(251,191,36,0.4); }
+          50%       { box-shadow: 0 0 0 4px rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.75); }
+        }
+        .wf-pulse-hint {
+          animation: wf-pulse-hint 1.8s ease-in-out infinite;
         }
       `}</style>
     </>

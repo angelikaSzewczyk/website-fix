@@ -132,8 +132,11 @@ export default function ScanPage() {
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activityTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const apiDone = useRef(false);
+  const scanStartRef = useRef<number>(0);
+  const phaseRef = useRef<ScanPhase>("idle");
 
   // ── Check localStorage 24h gate on mount ───────────────────
   useEffect(() => {
@@ -189,6 +192,9 @@ export default function ScanPage() {
     };
   }, [phase]);
 
+  // ── Keep phaseRef in sync (avoids stale closure in polling interval) ──────
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
+
   // ── Dynamic browser-tab title during scan ──────────────────
   useEffect(() => {
     const scanning = phase === "step1" || phase === "step2" || phase === "step3" || phase === "step4";
@@ -231,6 +237,7 @@ export default function ScanPage() {
 
   function clearTimers() {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
   }
 
   function advanceToPhase(target: ScanPhase, delay: number) {
@@ -266,10 +273,39 @@ export default function ScanPage() {
     setErrorMsg("");
     setShowOverlay(false);
 
-    // Auto-advance steps while API runs
-    advanceToPhase("step2", 5000);
-    advanceToPhase("step3", 12000);
-    advanceToPhase("step4", 22000);
+    // ── Real polling: phase advancement + early-done detection ──────────────
+    // Replaces hardcoded timeouts — phases now advance relative to actual
+    // API-call start time and stop the moment the API responds.
+    const scanUrl = url; // capture at call time (url state won't change while scanning)
+    scanStartRef.current = Date.now();
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    pollIntervalRef.current = setInterval(async () => {
+      if (apiDone.current) {
+        if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
+        return;
+      }
+      const elapsed = Date.now() - scanStartRef.current;
+      const cur = phaseRef.current;
+
+      // Phase advancement — still time-based but anchored to real API call start
+      if (elapsed >= 5000  && cur === "step1") setPhase("step2");
+      if (elapsed >= 12000 && (cur === "step1" || cur === "step2")) setPhase("step3");
+      if (elapsed >= 22000 && (cur === "step1" || cur === "step2" || cur === "step3")) setPhase("step4");
+
+      // Early done detection via cache — fast sites may finish before next poll tick
+      if (elapsed >= 6000) {
+        try {
+          const r = await fetch(`/api/scan/cached?url=${encodeURIComponent(scanUrl)}`);
+          const d = await r.json() as { found: boolean };
+          if (d.found && !apiDone.current) {
+            // Scan is cached → advance to step4 to signal final-phase while
+            // the main await resolves and fires setPhase("done")
+            const c = phaseRef.current;
+            if (c === "step1" || c === "step2" || c === "step3") setPhase("step4");
+          }
+        } catch { /* ignore poll errors */ }
+      }
+    }, 2000);
 
     // Start live activity feed
     startActivityFeed(url);
@@ -334,7 +370,7 @@ export default function ScanPage() {
   }
 
   function reset() {
-    clearTimers();
+    clearTimers(); // also clears pollIntervalRef
     if (crawlIntervalRef.current) clearInterval(crawlIntervalRef.current);
     activityTimers.current.forEach(t => clearTimeout(t));
     apiDone.current = false;
