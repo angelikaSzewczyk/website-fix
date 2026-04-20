@@ -27,6 +27,8 @@ type PageItem = {
 };
 
 // ── Score + derived metrics ───────────────────────────────────────────────────
+// More errors → lower score (inversely coupled to Sichtbarkeits-Potenzial).
+// Boolean flags give a base deduction; counts give proportional penalties.
 function computeScore(d: StoredScan): number {
   let s = 100;
   if (!d.https)                    s -= 20;
@@ -35,12 +37,17 @@ function computeScore(d: StoredScan): number {
   if (!d.hasH1)                    s -= 5;
   if (d.robotsBlocked)             s -= 15;
   if (!d.hasSitemap)               s -= 4;
-  if (d.brokenLinksCount > 0)      s -= 8;
-  if (d.duplicateTitlesCount > 1)  s -= 5;
-  if (d.altMissingCount > 5)       s -= 8;
-  else if (d.altMissingCount > 0)  s -= 4;
   if (d.hasUnreachable)            s -= 8;
   if (d.noIndex)                   s -= 12;
+  // Broken links: proportional up to -20
+  if (d.brokenLinksCount > 0)
+    s -= Math.min(20, 5 + d.brokenLinksCount * 2);
+  // Duplicate titles: proportional up to -10
+  if (d.duplicateTitlesCount > 1)
+    s -= Math.min(10, d.duplicateTitlesCount * 2);
+  // Missing alt texts: tiered proportional up to -25
+  const alt = d.altMissingCount ?? 0;
+  s -= alt > 30 ? 25 : alt > 15 ? 18 : alt > 5 ? 12 : alt > 0 ? 6 : 0;
   return Math.max(15, Math.round(s));
 }
 
@@ -138,7 +145,7 @@ function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
 
 // ── Demo constants ────────────────────────────────────────────────────────────
 const DEMO_DOMAIN  = "beispiel-agentur.de";
-const DEMO_SCORE   = 64;
+const DEMO_SCORE   = 48;
 const DEMO_PAGES   = 42;
 const DEMO_CRIT    = 21; // sum of DEMO_PAGES_LIST errors: 3+5+2+4+1+3+2+1
 const DEMO_PAGES_LIST: PageItem[] = [
@@ -856,7 +863,7 @@ function ResultsInner() {
 
             {/* Sichtbarkeits-Boost */}
             {(() => {
-              const boostPotential = isDemo ? 38 : Math.min(75, Math.round(critErrors * 0.8 + (100 - score) * 0.4));
+              const boostPotential = isDemo ? 75 : Math.min(95, Math.round((100 - score) * 1.5));
               return (
                 <div style={{
                   background: "rgba(255,255,255,0.025)", border: "1px solid rgba(251,191,36,0.25)",
