@@ -1979,14 +1979,15 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                             {isStarter ? "Wachstums-Bremse — KI-Fix-Guide:" : "Fix-Anleitung (WordPress / Elementor):"}
                           </p>
 
-                          {/* Steps — first 1 visible for Starter, rest blurred */}
+                          {/* Steps — step 1 teaser for Starter, 2+ blurred at 5px */}
                           <div style={{ position: "relative" }}>
                             {fixSteps.map((s: string, si: number) => (
                               <div key={si} style={{
                                 display: "flex", gap: 8,
                                 marginBottom: si < fixSteps.length - 1 ? 5 : 0,
-                                filter: isStarter && si >= 1 ? "blur(3.5px)" : "none",
+                                filter: isStarter && si >= 1 ? "blur(5px)" : "none",
                                 userSelect: isStarter && si >= 1 ? "none" : "auto",
+                                pointerEvents: isStarter && si >= 1 ? "none" : "auto",
                                 transition: "filter 0.2s",
                               }}>
                                 <span style={{ fontSize: 11, fontWeight: 700, color: isStarter ? "#FBBF24" : "#8df3d3", flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
@@ -2168,18 +2169,67 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   display: "flex",
                   flexDirection: "column",
                   gap: 0,
-                  filter: module.disabled ? "saturate(0.18) brightness(0.65)" : "none",
                   position: "relative" as const,
                   overflow: "hidden",
                 }}>
-                  {/* Locked overlay — subtle veil with centered lock prompt */}
+                  {/* Glassmorphism lock overlay */}
                   {module.disabled && (
                     <div style={{
-                      position: "absolute", inset: 0, zIndex: 2,
-                      background: "rgba(11,12,16,0.0)",
+                      position: "absolute", inset: 0, zIndex: 10,
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                      background: "rgba(11,12,16,0.72)",
                       borderRadius: D.radius,
-                      pointerEvents: "none",
-                    }} />
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 12,
+                      cursor: "pointer",
+                    }}>
+                      {/* Lock icon */}
+                      <div style={{
+                        width: 44, height: 44, borderRadius: 12,
+                        background: module.status === "Agency"
+                          ? "rgba(167,139,250,0.15)"
+                          : "rgba(251,191,36,0.15)",
+                        border: `1px solid ${module.status === "Agency" ? "rgba(167,139,250,0.4)" : "rgba(251,191,36,0.4)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                          stroke={module.status === "Agency" ? "#a78bfa" : "#fbbf24"}
+                          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                      </div>
+                      {/* Plan label */}
+                      <div style={{
+                        fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+                        color: module.status === "Agency" ? "#a78bfa" : "#fbbf24",
+                        opacity: 0.9,
+                      }}>
+                        {module.status === "Agency" ? "Agency Feature" : "Professional Feature"}
+                      </div>
+                      {/* Upgrade CTA */}
+                      <Link
+                        href={module.status === "Agency" ? "/pricing?plan=agency-starter" : "/pricing?plan=professional"}
+                        style={{
+                          fontSize: 12, fontWeight: 600,
+                          color: module.status === "Agency" ? "#a78bfa" : "#fbbf24",
+                          background: module.status === "Agency"
+                            ? "rgba(167,139,250,0.12)"
+                            : "rgba(251,191,36,0.12)",
+                          border: `1px solid ${module.status === "Agency" ? "rgba(167,139,250,0.3)" : "rgba(251,191,36,0.3)"}`,
+                          borderRadius: 8,
+                          padding: "6px 14px",
+                          textDecoration: "none",
+                          transition: "background 0.18s",
+                        }}
+                      >
+                        {module.status === "Agency" ? "Agency freischalten →" : "Professional freischalten →"}
+                      </Link>
+                    </div>
                   )}
                   {/* Icon row + optional status badge */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
@@ -2287,7 +2337,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   {/* CTA — monitoring gets full-width prominent style */}
                   {module.status ? (
                     <Link
-                      href={module.status === "Agency" ? "/fuer-agenturen" : "/pricing"}
+                      href={module.status === "Agency" ? "/pricing?plan=agency-starter" : "/pricing?plan=professional"}
                       style={{
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         padding: "10px 18px", borderRadius: D.radiusXs,
@@ -2578,59 +2628,80 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               </div>
               </div>
             ) : (
-              /* ── Non-Agency: upgrade teaser ── */
+              /* ── Non-Agency: high-conversion upgrade card ── */
               <div style={{
                 position: "relative", overflow: "hidden",
-                padding: "28px 32px", borderRadius: D.radius,
-                background: "rgba(167,139,250,0.03)",
-                border: "1px solid rgba(167,139,250,0.15)",
-                display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap",
+                padding: "32px 36px", borderRadius: D.radius,
+                background: "linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(124,58,237,0.04) 100%)",
+                border: "1px solid rgba(167,139,250,0.22)",
               }}>
-                {/* Decorative watermark */}
+                {/* Decorative glow blob */}
                 <div style={{
-                  position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)",
-                  fontSize: 80, opacity: 0.04, userSelect: "none", pointerEvents: "none",
-                  lineHeight: 1,
-                }}>
-                  🔌
-                </div>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                  background: "rgba(167,139,250,0.08)",
-                  border: "1px solid rgba(167,139,250,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                </div>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.85)" }}>
-                      WP-Plugin Anbindung
-                    </p>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
-                      background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)",
-                      color: "#a78bfa", letterSpacing: "0.04em",
-                    }}>
-                      Agency Exklusiv
-                    </span>
+                  position: "absolute", right: -40, top: -40,
+                  width: 220, height: 220, borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)",
+                  pointerEvents: "none",
+                }} />
+                {/* Badge */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 11, flexShrink: 0,
+                    background: "rgba(167,139,250,0.12)",
+                    border: "1px solid rgba(167,139,250,0.28)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                    </svg>
                   </div>
-                  <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.6, maxWidth: 420 }}>
-                    Installiere das White-Label Helper-Plugin auf Kunden-Seiten und übertrage Fixes direkt per API aus diesem Dashboard — kein manuelles Copy-Paste mehr.
-                  </p>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                    background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)",
+                    color: "#a78bfa", letterSpacing: "0.07em", textTransform: "uppercase",
+                  }}>
+                    Agency · Exklusiv
+                  </span>
                 </div>
-                <Link href="/fuer-agenturen" style={{
-                  flexShrink: 0, padding: "10px 22px", borderRadius: 8,
-                  background: "rgba(167,139,250,0.12)",
-                  border: "1px solid rgba(167,139,250,0.3)",
-                  color: "#a78bfa",
-                  fontSize: 13, fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap",
+                {/* Headline */}
+                <h3 style={{
+                  margin: "0 0 10px", fontSize: 18, fontWeight: 800,
+                  color: "#fff", lineHeight: 1.3, maxWidth: 520,
                 }}>
-                  Agency anfragen →
-                </Link>
+                  WordPress-Vollautomatik: Fixe alle{" "}
+                  <span style={{ color: "#a78bfa" }}>
+                    {issues.length > 0 ? `${issues.length}+` : "248+"}
+                  </span>{" "}
+                  Fehler direkt aus diesem Dashboard.
+                </h3>
+                {/* Sub-copy */}
+                <p style={{ margin: "0 0 22px", fontSize: 13, color: D.textMuted, lineHeight: 1.7, maxWidth: 500 }}>
+                  Installiere das White-Label-Plugin einmalig auf Kunden-Seiten und übertrage Korrekturen per API — kein manuelles Copy-Paste, keine FTP-Zugänge, keine Fehler.
+                </p>
+                {/* Feature pills */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+                  {["Auto-Deploy via API", "White-Label ready", "Unbegrenzte Kunden-Sites", "Direkt-Push aus Dashboard"].map(pill => (
+                    <span key={pill} style={{
+                      fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
+                      background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
+                      color: "rgba(167,139,250,0.85)",
+                    }}>{pill}</span>
+                  ))}
+                </div>
+                {/* CTA */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <Link href="/pricing?plan=agency-starter" style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "11px 24px", borderRadius: 8,
+                    background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
+                    color: "#fff",
+                    fontSize: 13, fontWeight: 800, textDecoration: "none",
+                    boxShadow: "0 4px 20px rgba(124,58,237,0.35)",
+                    whiteSpace: "nowrap",
+                  }}>
+                    Auf Agency upgraden →
+                  </Link>
+                  <span style={{ fontSize: 11, color: D.textMuted }}>ab 249€/Monat · inkl. Plugin + Kunden-Matrix</span>
+                </div>
               </div>
             )}
           </div>

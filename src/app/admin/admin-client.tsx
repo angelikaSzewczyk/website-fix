@@ -1237,10 +1237,10 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { label: "Durchschn. Leads/Agentur", value: kpi.planCounts.agentur || kpi.planCounts.agency_core || kpi.planCounts.agency_scale
-                    ? Math.round(widgetLeads / Math.max(1, (kpi.planCounts.agentur ?? 0) + (kpi.planCounts.agency_core ?? 0) + (kpi.planCounts.agency_scale ?? 0)))
+                  { label: "Durchschn. Leads/Agentur", value: (kpi.planCounts["agency-starter"] ?? 0) + (kpi.planCounts["agency-pro"] ?? 0) > 0
+                    ? Math.round(widgetLeads / Math.max(1, (kpi.planCounts["agency-starter"] ?? 0) + (kpi.planCounts["agency-pro"] ?? 0)))
                     : 0 },
-                  { label: "Agency-User mit Widget", value: (kpi.planCounts.agentur ?? 0) + (kpi.planCounts.agency_core ?? 0) + (kpi.planCounts.agency_scale ?? 0) },
+                  { label: "Agency-User mit Widget", value: (kpi.planCounts["agency-starter"] ?? 0) + (kpi.planCounts["agency-pro"] ?? 0) },
                 ].map(s => (
                   <div key={s.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: D.sub }}>
                     <span>{s.label}</span>

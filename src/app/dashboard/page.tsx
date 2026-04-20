@@ -353,21 +353,27 @@ function StatusBadge({ status }: { status: "ok" | "warning" | "critical" | strin
   );
 }
 
-function ProgressBar({ plan }: { plan: string }) {
+function ProgressBar({ plan, scanCount, hasResult }: { plan: string; scanCount: number; hasResult: boolean }) {
   const badge = PLAN_BADGE[plan as keyof typeof PLAN_BADGE] ?? PLAN_BADGE.free;
+  const isPaid = plan !== "free";
+  // Steps: account created (always), first scan done, paid plan, second scan done
+  const steps = [true, scanCount > 0, isPaid, scanCount > 1];
+  const done = steps.filter(Boolean).length;
+  const pct = Math.round((done / steps.length) * 100);
+  const barColor = pct >= 75 ? C.green : pct >= 50 ? "#34D399" : C.yellow;
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 30, background: "#fff", borderBottom: `1px solid ${C.border}`, padding: "8px 28px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 14 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, whiteSpace: "nowrap", letterSpacing: "0.08em", textTransform: "uppercase" }}>Setup</span>
         <div style={{ flex: 1, height: 5, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: "35%", borderRadius: 99, background: C.yellow }} />
+          <div style={{ height: "100%", width: `${pct}%`, borderRadius: 99, background: barColor, transition: "width 0.5s ease" }} />
         </div>
-        <span style={{ fontSize: 12, fontWeight: 800, color: C.yellow, whiteSpace: "nowrap" }}>35%</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: barColor, whiteSpace: "nowrap" }}>{pct}%</span>
         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
           {badge.label}
         </span>
         {plan === "free" && (
-          <Link href="/preise" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "#FFFBEB", border: "1px solid #FDE68A", color: "#D97706" }}>
+          <Link href="/pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "#FFFBEB", border: "1px solid #FDE68A", color: "#D97706" }}>
             Upgrade →
           </Link>
         )}
@@ -468,7 +474,7 @@ export default async function DashboardPage() {
 
   // Agency data
   let criticalSites: CriticalSite[] = [];
-  let domainCount = DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0);
+  let domainCount = 0; // updated after agencyClients is built
   const domainLimit = plan === "agency-pro" ? 999 : 10;
   let agencyLogoUrl: string | null = null;
   let agencyName:    string | null = null;
@@ -567,8 +573,27 @@ export default async function DashboardPage() {
 
   // Agency slots: Starter = 10, Pro = unlimited
   const clientSlotLimit = plan === "agency-pro" ? 999 : 10;
-  const usedSlots       = DUMMY_CLIENTS.length;
   const slotsLabel      = plan === "agency-pro" ? "∞" : String(clientSlotLimit);
+
+  // Map real saved_websites → agency client row format (or fall back to demo data)
+  const AGENCY_COLORS = ["#2563EB","#16A34A","#D97706","#7C3AED","#DC2626","#0891B2","#059669","#DB2777"];
+  const isRealData = isAgency && criticalSites.length > 0;
+  const agencyClients = isRealData
+    ? criticalSites.map((site, i) => {
+        const domain = (() => { try { return new URL(site.url.startsWith("http") ? site.url : `https://${site.url}`).hostname; } catch { return site.url; } })();
+        const label  = site.name ?? domain;
+        const initials = label.replace(/https?:\/\//, "").replace(/\./g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "??";
+        const rawStatus = site.last_check_status ?? "ok";
+        const status: "ok" | "warning" | "critical" = rawStatus === "critical" || rawStatus === "error" ? "critical" : rawStatus === "warning" ? "warning" : "ok";
+        const lastScanLabel = site.last_check_at
+          ? new Date(site.last_check_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })
+          : "—";
+        return { id: site.id, name: label, contact: domain, initials, color: AGENCY_COLORS[i % AGENCY_COLORS.length], domains: [domain], status, lastScan: lastScanLabel, assignee: "–", autoReport: false, clientLogin: false };
+      })
+    : DUMMY_CLIENTS;
+
+  const usedSlots = agencyClients.length;
+  domainCount = agencyClients.reduce((s, c) => s + c.domains.length, 0);
 
   return (
     <div style={{ background: isAgency ? C.bg : "#080C14", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -582,6 +607,12 @@ export default async function DashboardPage() {
         .agency-modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .agency-modal:target { display: flex; }
         .agency-client-row:hover { background: #F8FAFC !important; }
+        /* Agency matrix responsive */
+        @media (max-width: 860px) {
+          .agency-matrix-head { display: none !important; }
+          .agency-client-row  { grid-template-columns: 1fr 1fr !important; grid-template-rows: auto auto !important; gap: 8px !important; padding: 14px 16px !important; }
+          .agency-client-row > *:nth-child(n+4) { display: none; }
+        }
         /* Professional: checkbox-based done state via :has() */
         .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
         .fix-details:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: ${C.textMuted} !important; }
@@ -688,9 +719,9 @@ export default async function DashboardPage() {
               {/* ── Stat Strip ── */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
                 {[
-                  { value: DUMMY_CLIENTS.length,                                          label: "Aktive Kunden",     color: C.blue,    icon: "👥" },
-                  { value: DUMMY_CLIENTS.reduce((s, c) => s + c.domains.length, 0),       label: "Domains gesamt",   color: C.green,   icon: "🌐" },
-                  { value: DUMMY_CLIENTS.filter(c => c.status === "critical").length,      label: "Handlungsbedarf",  color: C.red,     icon: "🔴" },
+                  { value: agencyClients.length,                                             label: "Aktive Kunden",     color: C.blue,    icon: "👥" },
+                  { value: agencyClients.reduce((s, c) => s + c.domains.length, 0),        label: "Domains gesamt",   color: C.green,   icon: "🌐" },
+                  { value: agencyClients.filter(c => c.status === "critical").length,       label: "Handlungsbedarf",  color: C.red,     icon: "🔴" },
                   { value: scans.length,                                                   label: "Scans gesamt",     color: C.textSub, icon: "📊" },
                 ].map(s => (
                   <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", boxShadow: C.shadow, display: "flex", alignItems: "center", gap: 12 }}>
@@ -716,11 +747,11 @@ export default async function DashboardPage() {
                       </span>
                     )}
                   </div>
-                  <span style={{ fontSize: 11, color: C.textMuted }}>{DUMMY_CLIENTS.length} Projekte · Demo-Daten</span>
+                  <span style={{ fontSize: 11, color: C.textMuted }}>{agencyClients.length} Projekte{!isRealData ? " · Demo-Daten" : ""}</span>
                 </div>
 
                 {/* Column headers — 7 cols */}
-                <div style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center" }}>
+                <div className="agency-matrix-head" style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center" }}>
                   {["Kunde", "Domain", "Status", "Health", "Zuständig", "Login", "Aktion"].map(h => (
                     <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
                   ))}
@@ -728,7 +759,7 @@ export default async function DashboardPage() {
 
                 {/* Rows */}
                 <div style={{ overflowX: "auto" }}>
-                {DUMMY_CLIENTS.map((client, i) => {
+                {agencyClients.map((client, i) => {
                   const score  = healthScore(client.status);
                   const isOk   = client.status === "ok";
                   const isCrit = client.status === "critical";
@@ -742,7 +773,7 @@ export default async function DashboardPage() {
                   const cbId = `ar-${client.id}`;
 
                   return (
-                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center", padding: "13px 22px", borderBottom: i < DUMMY_CLIENTS.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
+                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center", padding: "13px 22px", borderBottom: i < agencyClients.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
 
                       {/* Kunde */}
                       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
