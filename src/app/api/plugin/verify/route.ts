@@ -1,32 +1,26 @@
 /**
  * POST /api/plugin/verify
  *
- * Called by the WebsiteFix Helper WordPress plugin on each request
- * to confirm the API key is valid and the user holds an Agency plan.
+ * Called by the Website Exzellenz Connector WordPress plugin.
+ * Validates the API key and confirms Agency plan access.
  *
- * Body: { api_key: string, domain: string }
- * Response: { valid: boolean, agency_name?: string, plan?: string, features?: {...} }
- *
- * Rate-limited by IP — max 30 verifications per hour per IP.
+ * Auth: X-WF-API-KEY header OR body.api_key (header takes priority)
+ * Rate limit: 60 req / hour per IP
  */
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
 const AGENCY_PLANS = ["agency-starter", "agency-pro"];
 
-// Simple in-memory rate limit: 30 req / 60 min per IP
+// In-memory rate limit: 60 req / 60 min per IP
 const ipHits = new Map<string, { count: number; resetAt: number }>();
 function rateLimit(ip: string): boolean {
-  const now    = Date.now();
-  const window = 60 * 60 * 1000;
-  const entry  = ipHits.get(ip);
-  if (!entry || now > entry.resetAt) {
-    ipHits.set(ip, { count: 1, resetAt: now + window });
-    return true;
-  }
+  const now  = Date.now();
+  const win  = 60 * 60 * 1000;
+  const entry = ipHits.get(ip);
+  if (!entry || now > entry.resetAt) { ipHits.set(ip, { count: 1, resetAt: now + win }); return true; }
   entry.count++;
-  if (entry.count > 30) return false;
-  return true;
+  return entry.count <= 60;
 }
 
 export async function POST(req: NextRequest) {
@@ -35,23 +29,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  let body: { api_key?: string; domain?: string };
+  // X-WF-API-KEY header takes priority over body
+  const headerKey = req.headers.get("x-wf-api-key");
+  let bodyKey = "";
+  let domain  = "";
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ valid: false, error: "Invalid JSON" }, { status: 400 });
-  }
+    const body = await req.json() as { api_key?: string; domain?: string };
+    bodyKey = body.api_key ?? "";
+    domain  = body.domain ?? "";
+  } catch { /* header-only call, no body */ }
 
-  const { api_key, domain } = body;
-  if (!api_key || typeof api_key !== "string" || api_key.length < 20) {
-    return NextResponse.json({ valid: false, error: "api_key required" }, { status: 400 });
+  const api_key = (headerKey ?? bodyKey).trim();
+
+  if (!api_key || api_key.length < 20 || !api_key.startsWith("wf_live_")) {
+    return NextResponse.json({ valid: false, error: "Invalid API key format" }, { status: 401 });
   }
 
   const sql = neon(process.env.DATABASE_URL!);
 
   const rows = await sql`
     SELECT
-      u.id::text,
+      u.id::text            AS id,
       u.name,
       u.plan,
       ag.agency_name,
@@ -61,47 +59,46 @@ export async function POST(req: NextRequest) {
     LEFT JOIN agency_settings ag ON ag.user_id = u.id
     WHERE u.plugin_api_key = ${api_key}
     LIMIT 1
-  `;
+  ` as {
+    id: string; name: string | null; plan: string;
+    agency_name: string | null; primary_color: string | null; logo_url: string | null;
+  }[];
 
   if (rows.length === 0) {
-    return NextResponse.json({ valid: false, error: "Invalid API key" }, { status: 401 });
+    return NextResponse.json({ valid: false, error: "API key not found" }, { status: 401 });
   }
 
-  const user = rows[0] as {
-    id: string;
-    name: string | null;
-    plan: string;
-    agency_name: string | null;
-    primary_color: string | null;
-    logo_url: string | null;
-  };
+  const user = rows[0];
 
   if (!AGENCY_PLANS.includes(user.plan)) {
     return NextResponse.json({
       valid: false,
-      error: "Agency plan required",
+      error: `Agency plan required. Current plan: ${user.plan}`,
       plan: user.plan,
     }, { status: 403 });
   }
 
-  // Log the verification (fire-and-forget, non-blocking)
-  sql`
-    INSERT INTO plugin_verifications (user_id, domain, verified_at)
-    VALUES (${user.id}, ${domain ?? ""}, NOW())
-    ON CONFLICT DO NOTHING
-  `.catch(() => {/* table may not exist yet — ok */});
+  // Update last_seen on matching installation (fire-and-forget)
+  if (domain) {
+    sql`
+      UPDATE plugin_installations
+      SET last_seen = NOW(), active = true
+      WHERE user_id = ${user.id}::integer AND site_url = ${domain}
+    `.catch(() => {});
+  }
 
   return NextResponse.json({
     valid: true,
-    agency_id: user.id,
-    agency_name: user.agency_name ?? user.name ?? "WebsiteFix Agency",
-    plan: user.plan,
-    primary_color: user.primary_color ?? "#007BFF",
-    logo_url: user.logo_url ?? null,
+    agency_id:    user.id,
+    agency_name:  user.agency_name ?? user.name ?? "WebsiteFix Agency",
+    plan:         user.plan,
+    primary_color: user.primary_color ?? "#FBBF24",
+    logo_url:     user.logo_url ?? null,
     features: {
-      remote_fix: true,
-      bulk_scan: true,
-      white_label: true,
+      remote_fix:    true,
+      bulk_scan:     true,
+      white_label:   true,
+      ki_mass_fixer: true,
     },
   });
 }

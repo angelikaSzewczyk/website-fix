@@ -878,16 +878,26 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [pluginApiKey, setPluginApiKey]         = useState<string | null>(null);
   const [pluginKeyCopied, setPluginKeyCopied]   = useState(false);
   const [pluginKeyLoading, setPluginKeyLoading] = useState(false);
+  const [connectedSites, setConnectedSites]     = useState<{ site_url: string; site_name: string | null; last_seen: string }[]>([]);
+  const [batchFixType, setBatchFixType]         = useState("ping");
+  const [batchRunning, setBatchRunning]         = useState(false);
+  const [batchResult, setBatchResult]           = useState<{ summary: { total: number; success: number; failed: number } } | null>(null);
 
   const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
 
-  // Fetch / generate plugin API key for Agency users
+  // Fetch plugin API key + connected sites for Agency users
   useEffect(() => {
     if (!isAgencyPlan) return;
     fetch("/api/user/plugin-key")
       .then(r => r.json())
       .then((d: { key?: string }) => { if (d.key) setPluginApiKey(d.key); })
-      .catch(() => {/* non-critical */});
+      .catch(() => {});
+    fetch("/api/plugin/installations")
+      .then(r => r.json())
+      .then((d: { sites?: { site_url: string; site_name: string | null; last_seen: string }[] }) => {
+        if (d.sites) setConnectedSites(d.sites);
+      })
+      .catch(() => {});
   }, [isAgencyPlan]);
 
   async function handleRegenerateKey() {
@@ -898,6 +908,22 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
       if (d.key) setPluginApiKey(d.key);
     } catch { /* ignore */ }
     finally { setPluginKeyLoading(false); }
+  }
+
+  async function handleBatchFix() {
+    if (batchRunning) return;
+    setBatchRunning(true);
+    setBatchResult(null);
+    try {
+      const r = await fetch("/api/plugin/batch-fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fix_type: batchFixType }),
+      });
+      const d = await r.json() as { summary: { total: number; success: number; failed: number } };
+      setBatchResult(d);
+    } catch { setBatchResult({ summary: { total: 0, success: 0, failed: 1 } }); }
+    finally { setBatchRunning(false); }
   }
 
   function handleCopyKey() {
@@ -2303,6 +2329,130 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
             {isAgency ? (
               /* ── Agency: full plugin area ── */
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {/* ── KI-Mass-Fixer ── */}
+              <div style={{
+                padding: "22px 24px", borderRadius: D.radius,
+                background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.2)",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div>
+                    <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 800, color: "#a78bfa" }}>
+                      KI-Mass-Fixer
+                    </p>
+                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>
+                      Befehle an alle verbundenen WordPress-Sites gleichzeitig senden
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                    background: connectedSites.length > 0 ? "rgba(52,211,153,0.1)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${connectedSites.length > 0 ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    color: connectedSites.length > 0 ? "#34d399" : D.textMuted,
+                  }}>
+                    {connectedSites.length} Site{connectedSites.length !== 1 ? "s" : ""} verbunden
+                  </span>
+                </div>
+
+                {/* Connected sites list */}
+                {connectedSites.length > 0 ? (
+                  <div style={{
+                    marginBottom: 14, borderRadius: 8,
+                    background: "rgba(0,0,0,0.2)", border: "1px solid rgba(167,139,250,0.1)",
+                    overflow: "hidden",
+                  }}>
+                    {connectedSites.map((site, si) => (
+                      <div key={site.site_url} style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "9px 14px",
+                        borderBottom: si < connectedSites.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                      }}>
+                        <span style={{
+                          width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                          background: "#34d399",
+                        }} />
+                        <span style={{ flex: 1, fontSize: 12, color: D.textSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {site.site_name ?? site.site_url}
+                        </span>
+                        <span style={{ fontSize: 10, color: D.textMuted, flexShrink: 0 }}>
+                          {(() => {
+                            try {
+                              const d = new Date(site.last_seen);
+                              const diff = Date.now() - d.getTime();
+                              if (diff < 3600000) return "Vor " + Math.round(diff / 60000) + " Min";
+                              if (diff < 86400000) return "Vor " + Math.round(diff / 3600000) + " Std";
+                              return d.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
+                            } catch { return "—"; }
+                          })()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    marginBottom: 14, padding: "14px 16px", borderRadius: 8,
+                    background: "rgba(0,0,0,0.15)", border: "1px solid rgba(255,255,255,0.05)",
+                    textAlign: "center",
+                  }}>
+                    <p style={{ margin: 0, fontSize: 12, color: D.textMuted }}>
+                      Noch keine verbundenen Installationen. Plugin installieren → API-Key eingeben → Site erscheint hier.
+                    </p>
+                  </div>
+                )}
+
+                {/* Fix type selector + execute */}
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <select
+                    value={batchFixType}
+                    onChange={e => setBatchFixType(e.target.value)}
+                    style={{
+                      flex: 1, minWidth: 160,
+                      padding: "8px 12px", borderRadius: 7,
+                      background: "rgba(0,0,0,0.3)", border: "1px solid rgba(167,139,250,0.2)",
+                      color: D.textSub, fontSize: 12, cursor: "pointer",
+                    }}
+                  >
+                    <option value="ping">Verbindungstest (Ping)</option>
+                    <option value="set_alt_text">Alt-Texte setzen</option>
+                    <option value="set_meta_description">Meta-Descriptions setzen</option>
+                    <option value="set_title">Seitentitel (SEO) setzen</option>
+                    <option value="remove_noindex">noindex entfernen</option>
+                  </select>
+                  <button
+                    onClick={handleBatchFix}
+                    disabled={batchRunning || connectedSites.length === 0}
+                    style={{
+                      padding: "8px 20px", borderRadius: 7,
+                      background: batchRunning ? "rgba(167,139,250,0.1)" : "#a78bfa",
+                      color: batchRunning ? "#a78bfa" : "#0b0c10",
+                      border: batchRunning ? "1px solid rgba(167,139,250,0.3)" : "none",
+                      fontSize: 12, fontWeight: 800, cursor: batchRunning ? "default" : "pointer",
+                      opacity: connectedSites.length === 0 ? 0.4 : 1,
+                    }}
+                  >
+                    {batchRunning ? "Läuft…" : "An alle senden →"}
+                  </button>
+                </div>
+
+                {/* Result */}
+                {batchResult && (
+                  <div style={{
+                    marginTop: 12, padding: "10px 14px", borderRadius: 7,
+                    background: batchResult.summary.failed === 0 ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)",
+                    border: `1px solid ${batchResult.summary.failed === 0 ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}`,
+                  }}>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 700,
+                      color: batchResult.summary.failed === 0 ? "#34d399" : "#FBBF24" }}>
+                      {batchResult.summary.failed === 0
+                        ? `✓ ${batchResult.summary.success} / ${batchResult.summary.total} Sites erfolgreich`
+                        : `⚠ ${batchResult.summary.success} OK · ${batchResult.summary.failed} Fehler`}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* ── API Key + Download grid ── */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {/* API Key card */}
                 <div style={{
@@ -2425,6 +2575,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     </a>
                   </div>
                 </div>
+              </div>
               </div>
             ) : (
               /* ── Non-Agency: upgrade teaser ── */
