@@ -59,7 +59,7 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
 
   const remaining    = Math.max(0, scanLimit - monthlyScans);
   const limitReached = monthlyScans >= scanLimit;
-  const planLabel    = plan === "free" ? "Free" : "Smart-Guard";
+  const planLabel    = plan === "free" ? "Free" : plan === "starter" ? "Starter" : plan === "agency-starter" ? "Agency" : plan === "agency-pro" ? "Agency Pro" : "Professional";
 
   // Close user menu on outside click
   useEffect(() => {

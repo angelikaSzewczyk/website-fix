@@ -275,7 +275,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
           </Link>
 
           {/* PDF Export: White-Label für Agency-Pläne */}
-          {(plan === "agency-pro" || plan === "agency-starter" || plan === "smart-guard") ? (
+          {(plan === "agency-pro" || plan === "agency-starter" || plan === "smart-guard" || plan === "professional" || plan === "starter") ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <PrintButton url={scan.url} type={typeInfo.label} date={new Date(scan.created_at).toLocaleDateString("de-DE")} />
               {(plan === "agency-pro" || plan === "agency-starter") && (

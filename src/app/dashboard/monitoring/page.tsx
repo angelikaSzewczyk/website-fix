@@ -28,7 +28,7 @@ export default async function MonitoringPage() {
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan ?? "free";
-  if (!["smart-guard", "agency-starter", "agency-pro"].includes(plan)) redirect("/dashboard");
+  if (!["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(plan)) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
 

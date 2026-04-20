@@ -118,9 +118,9 @@ const PLANS = [
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "1 Projekt", highlight: true },
+      { text: "3 Projekte", highlight: true },
       { text: "Wöchentlicher Deep-Scan (alle Unterseiten)", highlight: true },
-      { text: "SEO, Technik & Barrierefreiheit", highlight: false },
+      { text: "SEO, Performance & UX-Optimierungen", highlight: false },
       { text: "Smart-Fix Drawer mit Anleitungen", highlight: true },
       { text: "Interaktive Site-Map", highlight: false },
     ],
@@ -179,7 +179,7 @@ const PLANS = [
 const FAQ = [
   {
     q: "Was genau prüft der Deep-Scan?",
-    a: "Der Scanner crawlt alle öffentlich erreichbaren Unterseiten deiner WordPress-Website und prüft jede einzeln auf: fehlende Alt-Texte, Meta-Daten, kaputte Links (404), HTTPS-Status, Formular-Zugänglichkeit und Barrierefreiheits-Verstöße (BFSG/WCAG). Alle Ergebnisse erscheinen auf einer interaktiven Site-Map.",
+    a: "Der Scanner crawlt alle öffentlich erreichbaren Unterseiten deiner WordPress-Website und prüft jede einzeln auf: fehlende Alt-Texte, Meta-Daten, kaputte Links (404), HTTPS-Status, Ladezeit und Formular-Zugänglichkeit. Alle Ergebnisse erscheinen auf einer interaktiven Site-Map mit konkreten Fix-Anleitungen.",
   },
   {
     q: "Was ist der Smart-Fix Drawer und wie hilft er mir?",

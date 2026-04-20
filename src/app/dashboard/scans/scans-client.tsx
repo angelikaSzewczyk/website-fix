@@ -157,7 +157,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
             </h2>
             <p style={{ margin: "0 auto 28px", fontSize: 14, color: D.textMuted, lineHeight: 1.75, maxWidth: 460, position: "relative", zIndex: 1 }}>
               Deine monatlichen Experten-Berichte werden hier automatisch archiviert.
-              Verfügbar im <strong style={{ color: D.text }}>Smart-Guard Plan</strong>.
+              Verfügbar im <strong style={{ color: D.text }}>Professional Plan</strong>.
             </p>
 
             {/* Feature list */}
@@ -195,7 +195,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                Smart-Guard aktivieren – Ab 39 €/Monat
+                Professional aktivieren – Ab 39 €/Monat
               </Link>
 
               {/* Beispiel-Bericht — let free users see the end product */}
@@ -218,7 +218,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
               </Link>
 
               <p style={{ margin: 0, fontSize: 12, color: D.textFaint }}>
-                Smart-Guard Plan · Jederzeit kündbar
+                Professional Plan · Jederzeit kündbar
               </p>
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
               PDF-Berichte sind gesperrt
             </h2>
             <p style={{ margin: "0 0 24px", fontSize: 14, color: D.textSub, lineHeight: 1.75, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
-              PDF-Berichte sind exklusiv für Smart-Guard Kunden. Sichere dir jetzt den vollen Zugriff auf alle Auswertungen — professionell aufbereitet, monatlich archiviert.
+              PDF-Berichte sind im Professional Plan enthalten. Sichere dir jetzt den vollen Zugriff auf alle Auswertungen — professionell aufbereitet, monatlich archiviert.
             </p>
 
             {/* Feature list */}
@@ -404,7 +404,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                Smart-Guard aktivieren – Ab 39 €/Monat
+                Professional aktivieren – Ab 39 €/Monat
               </Link>
               <button
                 onClick={() => setModalOpen(false)}

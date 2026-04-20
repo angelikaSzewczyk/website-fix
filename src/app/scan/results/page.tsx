@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
 import MobileNav from "../../components/MobileNav";
 import SiteFooter from "../../components/SiteFooter";
@@ -220,11 +220,11 @@ function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
       </div>
       <span style={{
         fontSize: 10, padding: "2px 6px", borderRadius: 4, flexShrink: 0,
-        background: severity === "red" ? "rgba(245,158,11,0.12)" : "rgba(201,130,10,0.12)",
-        color: c, border: `1px solid ${c}33`, fontWeight: 800, letterSpacing: "0.05em",
+        background: "rgba(251,191,36,0.14)",
+        color: "#FBBF24", border: "1px solid rgba(251,191,36,0.35)", fontWeight: 800, letterSpacing: "0.05em",
         whiteSpace: "nowrap",
       }}>
-        {severity === "red" ? "BLOCKER" : "OPTIMIERUNG"}
+        {severity === "red" ? "PRIO" : "OPTIMIERUNG"}
       </span>
     </div>
   );
@@ -275,7 +275,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow severity="red" tier={tier}
             title="HTTP: Seite nicht erreichbar"
             detail={`GET ${p.path} → 404 Not Found / Connection Timeout`}
-            law="BFSG §4 — Barrierefreie Erreichbarkeit aller Inhalte"
+            law="Wachstums-Bremse: verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen"
             manualHint="Prüfe Server-Status und richte eine 301-Weiterleitung auf die korrekte URL ein"
           />
         )}
@@ -285,7 +285,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow severity="red" tier={tier}
             title="<h1>-Tag fehlt"
             detail="Überschriften-Hierarchie fehlt — Screenreader verlieren Seitenstruktur"
-            law="BFSG §3 Abs. 2 · EN 301 549 Kap. 9.1.3.1 · WCAG 1.3.1"
+            law="SEO-Ranking: Seitenstruktur für Google-Crawler und Nutzer essentiell"
             manualHint='Füge <h1>Dein Seitenthema</h1> einmalig pro Seite in den Seiteninhalt ein'
           />
         )}
@@ -295,7 +295,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow severity="yellow" tier={tier}
             title="<title>-Tag fehlt"
             detail="Kein Seitentitel — erscheint namenlos in Suchergebnissen"
-            law="SEO-Grundlage · BFSG §3 Abs. 2 (Identifizierbarkeit)"
+            law="SEO-Grundlage: Seitenname fehlt in Suchergebnissen — direkter Klick-Verlust"
             manualHint='Ergänze <title>Seitenname | Deine Marke</title> im WordPress-SEO-Plugin (Yoast/Rank Math)'
           />
         )}
@@ -315,7 +315,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow key={`img-named-${idx}`} severity="red" tier={tier}
             title={`<img alt=""> fehlt`}
             detail={img}
-            law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
+            law="SEO-Potenzial: Bilder ohne Alt-Text sind für Google unsichtbar — verschenkt Bild-Ranking"
             manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
           />
         ))}
@@ -323,7 +323,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow key={`img-extra-${i}`} severity="red" tier={tier}
             title={`<img alt=""> fehlt`}
             detail="Dateiname nicht ermittelt"
-            law="Barrierefreiheits-Standard (BFSG 2025) · WCAG 1.1.1"
+            law="SEO-Potenzial: Bilder ohne Alt-Text sind für Google unsichtbar — verschenkt Bild-Ranking"
             manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
           />
         ))}
@@ -333,7 +333,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow key={`label-${i}`} severity="red" tier={tier}
             title={`<label> fehlt für Formularfeld #${i + 1}`}
             detail="<input>-Element ohne zugeordnetes <label> oder aria-label"
-            law="BFSG §3 Abs. 2 · EN 301 549 · WCAG 1.3.1"
+            law="UX-Hürde: Formularfelder ohne Label senken Conversion-Rate"
             manualHint='Füge <label for="feldId">Beschreibung</label> vor dem Input ein oder setze aria-label="..."'
           />
         ))}
@@ -341,7 +341,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           <ProtoRow key={`btn-${i}`} severity="red" tier={tier}
             title={`<button> ohne sichtbaren Text #${i + 1}`}
             detail="Button-Element ohne Beschriftung oder aria-label"
-            law="BFSG §3 Abs. 2 · WCAG 4.1.2"
+            law="UX-Hürde: Buttons ohne Text schaden Konvertierung und Nutzer-Vertrauen"
             manualHint='Füge aria-label="Aktion beschreiben" zum <button>-Tag hinzu'
           />
         ))}
@@ -394,15 +394,15 @@ function ProtoPanelContent({ p, tier = "anon" }: {
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
-              KI-Auto-Fix (fertiger Code, Copy-Paste-bereit) nur mit Smart-Guard
+              KI-Auto-Fix (fertiger Code, Copy-Paste-bereit) im Professional Plan
             </span>
           </div>
-          <Link href="/register?plan=smart-guard" style={{
+          <Link href="/register?plan=professional" style={{
             fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
-            background: "rgba(192,132,252,0.14)", color: "#c084fc",
-            border: "1px solid rgba(192,132,252,0.3)", textDecoration: "none", whiteSpace: "nowrap",
+            background: "rgba(251,191,36,0.12)", color: "#FBBF24",
+            border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
           }}>
-            Smart-Guard freischalten →
+            Professional freischalten →
           </Link>
         </div>
       )}
@@ -413,7 +413,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
 // ── Ring chart ────────────────────────────────────────────────────────────────
 function HealthRing({ score, displayScore }: { score: number; displayScore: number }) {
   const r = 52, circ = 2 * Math.PI * r;
-  const color = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
+  const color = score >= 80 ? "#FBBF24" : score >= 55 ? "#f59e0b" : "#f59e0b";
   const fill = (displayScore / 100) * circ;
   return (
     <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: "rotate(-90deg)" }}>
@@ -441,6 +441,9 @@ function ResultsInner() {
   const [displayScore, setDisplayScore] = useState(0);
   // ── Magic pulse: first-time hint on first expandable row ─────────────────
   const [showPulse, setShowPulse] = useState(false);
+  // ── Unlock animation: anon → free/paid tier transition ───────────────────
+  const [unlocking, setUnlocking] = useState(false);
+  const tierFirstLoad = useRef<"anon" | "free" | "paid" | null>(null);
 
   useEffect(() => {
     const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
@@ -480,7 +483,7 @@ function ResultsInner() {
         const plan: string = (data?.user as { plan?: string } | undefined)?.plan ?? "";
         if (!data?.user) {
           setUserTier("anon");
-        } else if (["smart-guard", "agency-starter", "agency-pro"].includes(plan)) {
+        } else if (["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(plan)) {
           setUserTier("paid");
         } else {
           setUserTier("free"); // logged in but free plan
@@ -488,6 +491,22 @@ function ResultsInner() {
       })
       .catch(() => setUserTier("anon"));
   }, []);
+
+  // ── Detect anon → logged-in transition and trigger unlock flash ───────────
+  useEffect(() => {
+    if (tierFirstLoad.current === null) {
+      // First resolution: record the tier
+      tierFirstLoad.current = userTier;
+      return;
+    }
+    // Subsequent resolution: if we went from anon → free/paid, fire unlock
+    if (tierFirstLoad.current === "anon" && userTier !== "anon") {
+      tierFirstLoad.current = userTier;
+      setUnlocking(true);
+      const t = setTimeout(() => setUnlocking(false), 2200);
+      return () => clearTimeout(t);
+    }
+  }, [userTier]);
 
   // ── Dynamic browser-tab title once scan data is available ──
   useEffect(() => {
@@ -529,7 +548,7 @@ function ResultsInner() {
   const isDemo       = !scan;
   const displayDomain = isDemo ? DEMO_DOMAIN : (() => { try { return new URL(scan!.url).host; } catch { return scan!.url; } })();
   const score        = isDemo ? DEMO_SCORE   : computeScore(scan!);
-  const scoreColor   = score >= 80 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
+  const scoreColor   = score >= 80 ? "#FBBF24" : score >= 55 ? "#f59e0b" : "#ef4444";
   const scoreLabel   = score >= 80 ? "Gut" : score >= 55 ? "Verbesserungsbedarf" : "Kritisch";
 
   // Pages list — must be built BEFORE pagesTotal so pagesTotal is derived from it
@@ -671,30 +690,30 @@ function ResultsInner() {
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {/* Red — Sichtbarkeits-Blocker */}
-              <div style={{ padding: "20px 22px", borderRadius: 14, background: critErrors > 0 && !isDemo ? "rgba(239,68,68,0.07)" : "rgba(239,68,68,0.05)", border: critErrors > 0 && !isDemo ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(239,68,68,0.2)", display: "flex", flexDirection: "column", gap: 10, boxShadow: critErrors > 0 && !isDemo ? "0 0 24px rgba(239,68,68,0.08)" : "none" }}>
+              {/* Gold — Ranking-Blocker (Wachstums-Bremsen) */}
+              <div style={{ padding: "20px 22px", borderRadius: 14, background: critErrors > 0 && !isDemo ? "rgba(251,191,36,0.07)" : "rgba(251,191,36,0.04)", border: critErrors > 0 && !isDemo ? "1px solid rgba(251,191,36,0.3)" : "1px solid rgba(251,191,36,0.15)", display: "flex", flexDirection: "column", gap: 10, boxShadow: critErrors > 0 && !isDemo ? "0 0 24px rgba(251,191,36,0.06)" : "none" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>🔴</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>Sichtbarkeits-Blocker</span>
+                  <span style={{ fontSize: 18 }}>⚡</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#FBBF24" }}>Wachstums-Bremsen</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {[
-                    !scan?.https && "Kein HTTPS: Google Chrome zeigt Sicherheitswarnung — schadet Vertrauen & Rankings",
+                    !scan?.https && "Kein HTTPS: verhindert optimale Google-Sichtbarkeit und schließt potenzielle Kunden aus",
                     scan?.robotsBlocked && "robots.txt blockiert Google: Seite wird nicht indexiert — kein organischer Traffic möglich",
                     scan?.noIndex && "noindex auf Startseite: Google schließt die Seite aktiv aus dem Index aus",
-                    (scan?.brokenLinksCount ?? 0) > 0 && `${scan!.brokenLinksCount} Broken Links: Google wertet defekte Seiten als schlechtes Qualitätssignal`,
-                    !scan?.hasTitle && "Kein <title>-Tag: fehlt als wichtigstes On-Page-SEO-Signal",
-                    scan?.hasUnreachable && "Unterseiten nicht erreichbar (404): beeinträchtigt Nutzererlebnis & Crawling",
-                    (scan?.altMissingCount ?? 0) > 0 && `${scan!.altMissingCount} Bilder ohne Alt-Text: Google kann sie nicht lesen — SEO-Potenzial verschenkt`,
-                    isDemo && "Formularfelder ohne Label: beeinträchtigt Nutzererlebnis & Barrierefreiheit",
-                    isDemo && "3 Broken Links: Google & Nutzer landen auf leeren Seiten",
+                    (scan?.brokenLinksCount ?? 0) > 0 && `${scan!.brokenLinksCount} Broken Links: Nutzer und Google landen auf leeren Seiten — direkte Ranking-Einbuße`,
+                    !scan?.hasTitle && "Kein <title>-Tag: wichtigstes On-Page-SEO-Signal fehlt — Klickrate sinkt",
+                    scan?.hasUnreachable && "Unterseiten nicht erreichbar (404): Crawling-Budget verschwendet, Nutzer verloren",
+                    (scan?.altMissingCount ?? 0) > 0 && `${scan!.altMissingCount} Bilder ohne Alt-Text: Google-Bild-Suche vollständig ausgeschlossen`,
+                    isDemo && "Formularfelder ohne Label: verhindert Conversions durch schlechte Nutzerführung",
+                    isDemo && "3 Broken Links: Nutzer und Google landen auf leeren Seiten",
                   ].filter(Boolean).map((msg, i) => (
                     <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
-                      <span style={{ color: "#ef4444", flexShrink: 0 }}>✕</span>{msg as string}
+                      <span style={{ color: "#FBBF24", flexShrink: 0, fontWeight: 700 }}>›</span>{msg as string}
                     </div>
                   ))}
                   {!isDemo && !scan?.robotsBlocked && scan?.https && !scan?.noIndex && (scan?.brokenLinksCount ?? 0) === 0 && scan?.hasTitle && !scan?.hasUnreachable && (scan?.altMissingCount ?? 0) === 0 && (
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine Sichtbarkeits-Blocker gefunden ✓</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine Wachstums-Bremsen gefunden ✓</div>
                   )}
                 </div>
               </div>
@@ -711,7 +730,7 @@ function ResultsInner() {
                     !scan?.hasSitemap && "Keine Sitemap: Google findet neue Seiten langsamer",
                     (scan?.duplicateTitlesCount ?? 0) > 1 && "Doppelte Seitentitel: Keyword-Kannibalisierung schadet Rankings",
                     (scan?.duplicateMetasCount ?? 0) > 1 && "Doppelte Meta-Descriptions: Google verwässert das Relevanz-Signal",
-                    isDemo && `168 Bilder ohne Alt-Text: Google kann sie nicht lesen — Smart-Fix verfügbar`,
+                    isDemo && `168 Bilder ohne Alt-Text: Google kann sie nicht lesen — Smart-Fix Guide im Professional Plan`,
                     isDemo && "9 Seiten ohne Meta-Description — automatisch behebbar",
                   ].filter(Boolean).map((msg, i) => (
                     <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
@@ -830,40 +849,30 @@ function ResultsInner() {
               </div>
             </div>
 
-            {/* On-Page SEO Status */}
+            {/* Sichtbarkeits-Boost */}
             {(() => {
-              const seoChecks = [
-                { ok: scan?.hasTitle  ?? isDemo, label: "Title-Tag" },
-                { ok: scan?.hasMeta   ?? isDemo, label: "Meta-Description" },
-                { ok: scan?.hasH1     ?? false,  label: "H1-Tag" },
-                { ok: scan?.hasSitemap ?? isDemo, label: "Sitemap" },
-                { ok: !(scan?.robotsBlocked ?? false) || isDemo, label: "Google-Zugang" },
-                { ok: scan?.https ?? isDemo, label: "HTTPS" },
-              ];
-              const goodCount = seoChecks.filter(c => c.ok).length;
-              const seoStatus = goodCount >= 5 ? "GUT" : goodCount >= 3 ? "MITTEL" : "SCHWACH";
-              const seoColor  = goodCount >= 5 ? "#22c55e" : goodCount >= 3 ? "#f59e0b" : "#ef4444";
+              const boostPotential = isDemo ? 38 : Math.min(75, Math.round(critErrors * 0.8 + (100 - score) * 0.4));
               return (
                 <div style={{
-                  background: "rgba(255,255,255,0.025)", border: `1px solid ${seoColor}40`,
+                  background: "rgba(255,255,255,0.025)", border: "1px solid rgba(251,191,36,0.25)",
                   borderRadius: 20, padding: "28px 28px",
                   display: "flex", flexDirection: "column", justifyContent: "space-between",
-                  boxShadow: `0 0 30px ${seoColor}10`,
+                  boxShadow: "0 0 30px rgba(251,191,36,0.06)",
                 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${seoColor}18`, border: `1px solid ${seoColor}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={seoColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
                   </div>
                   <div>
-                    <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: seoColor, lineHeight: 1 }}>{seoStatus}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>On-Page SEO Status</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 8, display: "flex", flexDirection: "column", gap: 3 }}>
-                      {seoChecks.map(c => (
-                        <span key={c.label} style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                          <span style={{ color: c.ok ? "#22c55e" : "rgba(255,255,255,0.2)", fontSize: 10 }}>{c.ok ? "✓" : "○"}</span>
-                          <span style={{ color: c.ok ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.2)" }}>{c.label}</span>
-                        </span>
-                      ))}
+                    <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.04em", color: "#FBBF24", lineHeight: 1 }}>
+                      +{boostPotential}%
                     </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Sichtbarkeits-Potenzial</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>Durch Behebung aller Optimierungen</div>
+                    {boostPotential > 0 && (
+                      <a href="#deep-scan-map" style={{ display: "inline-block", marginTop: 10, fontSize: 11, color: "#FBBF24", textDecoration: "none", fontWeight: 600 }}>
+                        → Jetzt Optimierungen ansehen
+                      </a>
+                    )}
                   </div>
                 </div>
               );
@@ -937,9 +946,9 @@ function ResultsInner() {
                     riskLevel: !(scan?.hasRankMath || scan?.hasYoast) ? "warn" : null,
                   },
                 ].map((item) => {
-                  const borderColor = !item.ok ? (item.riskLevel === "crit" ? "rgba(239,68,68,0.25)" : "rgba(245,158,11,0.2)") : "rgba(34,197,94,0.15)";
-                  const bgColor    = !item.ok ? (item.riskLevel === "crit" ? "rgba(239,68,68,0.05)" : "rgba(245,158,11,0.04)") : "rgba(34,197,94,0.03)";
-                  const dotColor   = !item.ok ? (item.riskLevel === "crit" ? "#ef4444" : "#f59e0b") : "#22c55e";
+                  const borderColor = !item.ok ? "rgba(251,191,36,0.25)" : "rgba(34,197,94,0.15)";
+                  const bgColor    = !item.ok ? "rgba(251,191,36,0.05)" : "rgba(34,197,94,0.03)";
+                  const dotColor   = !item.ok ? "#FBBF24" : "#22c55e";
                   return (
                     <div key={item.label} style={{ padding: "12px 14px", borderRadius: 10, background: bgColor, border: `1px solid ${borderColor}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
@@ -1011,13 +1020,16 @@ function ResultsInner() {
 
               // Normal rows — amber-first: treat all findings as optimization opportunities
               const isUnreachable = !p.erreichbar;
-              const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#22c55e" : "#f59e0b";
+              const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#FBBF24" : "#f59e0b";
               const statusLabel = isUnreachable ? "Nicht erreichbar" : p.errors === 0 ? "✓ Optimiert" : "Optimierbar";
               const isExpanded  = expandedRow === (p.path + i);
               const canExpand   = !isDemo && p.errors > 0;
 
               return (
-                <div key={p.path + i}>
+                <div key={p.path + i}
+                  className={unlocking ? "wf-row-unlock" : ""}
+                  style={{ animationDelay: unlocking ? `${i * 55}ms` : "0ms" }}
+                >
                   <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: dotColor, boxShadow: `0 0 5px ${dotColor}` }} />
@@ -1027,16 +1039,23 @@ function ResultsInner() {
                     </div>
                     <div style={{ width: 120, textAlign: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                        background: isUnreachable ? "rgba(239,68,68,0.1)" : p.errors === 0 ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)",
+                        background: isUnreachable ? "rgba(239,68,68,0.1)" : p.errors === 0 ? "rgba(251,191,36,0.1)" : "rgba(245,158,11,0.1)",
                         color: dotColor, border: `1px solid ${dotColor}33` }}>
                         {statusLabel}
                       </span>
                     </div>
                     <div style={{ width: 90, textAlign: "right" }}>
+                      {/* Gold ✓ checkmark flash during unlock */}
+                      {unlocking && canExpand && (
+                        <span className="wf-unlock-check" style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", display: "block", pointerEvents: "none", animationDelay: `${i * 55}ms` }}>
+                          ✓
+                        </span>
+                      )}
                       <span
                         onClick={() => canExpand && handleExpand(p.path + i)}
                         style={{ fontSize: 13, fontWeight: 700, color: p.errors === 0 ? "rgba(255,255,255,0.2)" : dotColor, cursor: canExpand ? "pointer" : "default", userSelect: "none",
-                          textDecoration: canExpand ? "underline dotted" : "none", textUnderlineOffset: 3 }}>
+                          textDecoration: canExpand ? "underline dotted" : "none", textUnderlineOffset: 3,
+                          opacity: unlocking && canExpand ? 0 : 1, transition: "opacity 0.6s ease 0.8s" }}>
                         {p.errors === 0 ? "—" : `${p.errors} Optimierungen`}
                         {canExpand && <span style={{ fontSize: 10, marginLeft: 4, opacity: 0.6 }}>{isExpanded ? "▲" : "▼"}</span>}
                       </span>
@@ -1124,6 +1143,92 @@ function ResultsInner() {
           </section>
         )}
 
+        {/* ── PRICING TIERS ── */}
+        {userTier === "anon" && (
+          <section style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 0" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 20, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", fontSize: 11, fontWeight: 700, color: "#FBBF24", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 14 }}>
+                Pläne & Preise
+              </div>
+              <h2 style={{ margin: "0 0 10px", fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>
+                Alle Optimierungen jetzt umsetzen
+              </h2>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", maxWidth: 480, marginInline: "auto" }}>
+                Schritt-für-Schritt Fixes freischalten und SEO-Ranking systematisch steigern.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+              {/* Starter */}
+              <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Starter</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+                  <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>29€</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für Einzelunternehmer & kleine Websites</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
+                  {["3 Projekte", "Wöchentlicher Deep-Scan", "Smart-Fix Anleitungen", "Score-Verlauf (7 Tage)"].map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                      <span style={{ color: "#FBBF24", fontSize: 11 }}>✓</span> {f}
+                    </div>
+                  ))}
+                </div>
+                <Link href="/register?plan=starter" style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                  Starter wählen
+                </Link>
+              </div>
+
+              {/* Professional (highlighted) */}
+              <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 0 40px rgba(251,191,36,0.08)" }}>
+                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "3px 14px", borderRadius: 20, background: "#FBBF24", color: "#000", fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                  ★ Empfohlen
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#FBBF24", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Professional</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+                  <span style={{ fontSize: 36, fontWeight: 800, color: "#FBBF24", letterSpacing: "-0.04em" }}>89€</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für wachsende Projekte & Agenturen</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
+                  {["10 Projekte", "Täglicher Deep-Scan", "Smart-Fix Drawer (vollständig)", "KI-Auto-Fix (Copy-Paste-fertig)", "24/7 Monitoring + E-Mail-Alerts", "Monatlicher PDF-Bericht"].map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+                      <span style={{ color: "#FBBF24", fontSize: 11 }}>✓</span> {f}
+                    </div>
+                  ))}
+                </div>
+                <Link href="/register?plan=professional" style={{ display: "block", textAlign: "center", padding: "11px 20px", borderRadius: 10, background: "#FBBF24", color: "#000", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
+                  Professional starten →
+                </Link>
+              </div>
+
+              {/* Agency */}
+              <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Agency</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
+                  <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>249€</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>White-Label für Agenturen mit Mandantenverwaltung</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
+                  {["Unlimited Projekte", "Full White-Label (eigene Domain)", "Lead-Magnet Widget für Neukunden", "Auto-Report an Endkunden", "Kunden-Logins + Mandantenverwaltung"].map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                      <span style={{ color: "#a78bfa", fontSize: 11 }}>✓</span> {f}
+                    </div>
+                  ))}
+                </div>
+                <Link href="/fuer-agenturen" style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                  Agency anfragen
+                </Link>
+              </div>
+            </div>
+
+            <p style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+              Keine Einrichtungsgebühr · Jederzeit kündbar · Ergebnis sofort
+            </p>
+          </section>
+        )}
+
         {/* ── RE-SCAN LINK ── */}
         <div style={{ textAlign: "center", padding: "40px 24px 72px" }}>
           <Link href="/scan" style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>
@@ -1149,6 +1254,24 @@ function ResultsInner() {
         }
         .wf-pulse-hint {
           animation: wf-pulse-hint 1.8s ease-in-out infinite;
+        }
+        @keyframes wf-row-unlock {
+          0%   { background: transparent; }
+          25%  { background: rgba(251,191,36,0.10); }
+          60%  { background: rgba(251,191,36,0.06); }
+          100% { background: transparent; }
+        }
+        .wf-row-unlock {
+          animation: wf-row-unlock 1.4s ease-out both;
+        }
+        @keyframes wf-unlock-check {
+          0%   { opacity: 0; transform: scale(0.6); }
+          20%  { opacity: 1; transform: scale(1.3); }
+          55%  { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.9); }
+        }
+        .wf-unlock-check {
+          animation: wf-unlock-check 1.2s ease-out forwards;
         }
       `}</style>
     </>

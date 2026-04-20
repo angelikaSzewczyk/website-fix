@@ -43,7 +43,9 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
   free:              { label: "Free",           color: "rgba(255,255,255,0.4)",  bg: "rgba(255,255,255,0.05)",  border: "rgba(255,255,255,0.1)" },
-  "smart-guard":     { label: "Smart-Guard",    color: "#4ADE80",                bg: "rgba(74,222,128,0.1)",    border: "rgba(74,222,128,0.25)" },
+  "smart-guard":     { label: "Professional",    color: "#FBBF24",                bg: "rgba(251,191,36,0.1)",    border: "rgba(251,191,36,0.25)" },
+  "professional":    { label: "Professional",    color: "#FBBF24",                bg: "rgba(251,191,36,0.1)",    border: "rgba(251,191,36,0.25)" },
+  "starter":         { label: "Starter",         color: "#60A5FA",                bg: "rgba(96,165,250,0.1)",    border: "rgba(96,165,250,0.25)" },
   "agency-starter":  { label: "Agency Starter", color: "#60A5FA",                bg: "rgba(96,165,250,0.1)",    border: "rgba(96,165,250,0.25)" },
   "agency-pro":      { label: "Agency Pro",     color: "#A78BFA",                bg: "rgba(167,139,250,0.1)",   border: "rgba(167,139,250,0.25)" },
 };
@@ -56,7 +58,7 @@ type Props = {
   lastScanClean?: boolean | null;
 };
 
-// ─── Slim Icon Sidebar (Free / Smart-Guard) ────────────────────────────────────
+// ─── Slim Icon Sidebar (Free / Professional) ──────────────────────────────────
 const SLIM_ITEMS = [
   { href: "/dashboard",            label: "Übersicht",    icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, exact: true },
   { href: "/dashboard/scan",       label: "Scan starten", icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
@@ -137,8 +139,8 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
   const isAgency  = AGENCY_PLANS.includes(plan);
   const isProPlan = plan === "agency-pro"; // Agency Pro — full white-label
 
-  // Free / Smart-Guard → slim icon sidebar
-  if (plan === "free" || plan === "smart-guard") {
+  // Free / Professional → slim icon sidebar
+  if (plan === "free" || plan === "smart-guard" || plan === "professional" || plan === "starter") {
     return <SlimSidebar plan={plan} userName={userName} userImage={userImage} signOutButton={signOutButton} lastScanClean={lastScanClean} />;
   }
 

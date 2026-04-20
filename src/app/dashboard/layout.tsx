@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const userName  = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
 
-  const isAuditPlan = plan === "free" || plan === "smart-guard";
+  const isAuditPlan = plan === "free" || plan === "smart-guard" || plan === "professional" || plan === "starter";
 
   // Load agency primary color for CSS variable injection (agency plans)
   let agencyPrimary = "#8df3d3";

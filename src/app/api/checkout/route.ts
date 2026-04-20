@@ -3,9 +3,12 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 
 const PLAN_PRICE_MAP: Record<string, string | undefined> = {
-  "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD,
+  "starter":        process.env.STRIPE_PRICE_STARTER ?? process.env.STRIPE_PRICE_SMART_GUARD,
+  "professional":   process.env.STRIPE_PRICE_PROFESSIONAL ?? process.env.STRIPE_PRICE_SMART_GUARD,
+  "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD,    // legacy alias
   "agency-starter": process.env.STRIPE_PRICE_AGENCY_STARTER,
   "agency-pro":     process.env.STRIPE_PRICE_AGENCY_PRO,
+  "agency":         process.env.STRIPE_PRICE_AGENCY_STARTER, // new alias
 };
 
 export async function POST(req: NextRequest) {

@@ -770,7 +770,7 @@ export default function DashboardScanClient({
               fontSize: 13, fontWeight: 700, textDecoration: "none",
               boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
             }}>
-              Smart-Guard aktivieren →
+              Professional aktivieren →
             </Link>
           </div>
         ) : (

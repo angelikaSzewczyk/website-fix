@@ -158,7 +158,7 @@ export default function FreeSettingsClient({
   const [deleting,      setDeleting]      = useState(false);
 
   const isFree     = plan === "free";
-  const planLabel  = isFree ? "Free-Plan" : "Smart-Guard";
+  const planLabel  = isFree ? "Free-Plan" : plan === "starter" ? "Starter" : plan === "agency-starter" ? "Agency" : plan === "agency-pro" ? "Agency Pro" : "Professional";
   const scansUsed  = Math.min(monthlyScans, scanLimit);
   const scanPct    = Math.round((scansUsed / scanLimit) * 100);
 

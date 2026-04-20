@@ -40,10 +40,10 @@ const C = {
 } as const;
 
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
-// DB plan values: "free" | "smart-guard" | "agency-starter" | "agency-pro"
+// DB plan values: "free" | "smart-guard" | "professional" | "starter" | "agency-starter" | "agency-pro"
 function getLayout(plan: string): "free" | "single" | "agency" {
   if (plan === "agency-pro" || plan === "agency-starter") return "agency";
-  if (plan === "smart-guard") return "single";
+  if (plan === "smart-guard" || plan === "professional" || plan === "starter") return "single";
   return "free";
 }
 
@@ -315,7 +315,9 @@ type CriticalSite = {
 
 const PLAN_BADGE = {
   free:              { label: "Free",           color: C.textMuted, bg: "#F1F5F9", border: C.border },
-  "smart-guard":     { label: "Smart-Guard",    color: "#059669",   bg: "#ECFDF5", border: "#A7F3D0" },
+  "smart-guard":     { label: "Professional",   color: "#D97706",   bg: "#FFFBEB", border: "#FDE68A" },
+  "professional":    { label: "Professional",   color: "#D97706",   bg: "#FFFBEB", border: "#FDE68A" },
+  "starter":         { label: "Starter",        color: "#2563EB",   bg: "#EFF6FF", border: "#BFDBFE" },
   "agency-starter":  { label: "Agency Starter", color: C.blue,      bg: C.blueBg,  border: C.blueBorder },
   "agency-pro":      { label: "Agency Pro",     color: "#7C3AED",   bg: "#F5F3FF", border: "#DDD6FE" },
 } as const;
@@ -520,7 +522,7 @@ export default async function DashboardPage() {
 
   // Monthly scan counter + plan-aware limit
   const MONTHLY_SCAN_LIMITS: Record<string, number> = {
-    "free": 3, "smart-guard": 50, "agency-starter": 250, "agency-pro": 1000,
+    "free": 3, "starter": 3, "smart-guard": 999, "professional": 999, "agency-starter": 999, "agency-pro": 999,
   };
   const SCAN_LIMIT = MONTHLY_SCAN_LIMITS[plan] ?? 3;
   const now = new Date();
@@ -580,7 +582,7 @@ export default async function DashboardPage() {
         .agency-modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .agency-modal:target { display: flex; }
         .agency-client-row:hover { background: #F8FAFC !important; }
-        /* Smart-Guard: checkbox-based done state via :has() */
+        /* Professional: checkbox-based done state via :has() */
         .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
         .fix-details:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: ${C.textMuted} !important; }
         /* Pulse animation for monitoring dot */
@@ -603,7 +605,7 @@ export default async function DashboardPage() {
       {isAgency && <AgencyTopBar badge={badge} usedSlots={usedSlots} slotsLabel={slotsLabel} clientSlotLimit={clientSlotLimit} logoUrl={agencyLogoUrl} agencyName={agencyName} />}
 
       {/* ══════════════════════════════════════════════════════════
-          FREE / SINGLE (Smart-Guard) LAYOUT — PREMIUM DARK
+          FREE / STARTER / PROFESSIONAL LAYOUT — PREMIUM DARK
           ══════════════════════════════════════════════════════════ */}
       {!isAgency && (
         <Suspense>

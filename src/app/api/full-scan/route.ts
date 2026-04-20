@@ -18,7 +18,8 @@ const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|pdf|zip|mp4|mp3|css|js|ico|woff|w
 function getMaxPages(plan: string): number {
   if (plan === "agency-pro")      return 150;
   if (plan === "agency-starter")  return 50;
-  if (plan === "smart-guard")     return 25;
+  if (plan === "smart-guard" || plan === "professional") return 25;
+  if (plan === "starter")         return 15;
   return 10;
 }
 

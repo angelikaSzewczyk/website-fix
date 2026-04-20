@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import WfOnboardingTour from "./components/WfOnboardingTour";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 
@@ -228,7 +229,7 @@ function Divider({ style }: { style?: React.CSSProperties }) {
 // ─── Severity badge ───────────────────────────────────────────────────────────
 function SevBadge({ sev }: { sev: "red" | "yellow" | "green" }) {
   const map = {
-    red:    { label: "Blocker",      color: D.amber, bg: D.amberBg, border: D.amberBorder },
+    red:    { label: "Prio",          color: "#FBBF24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.3)" },
     yellow: { label: "Optimierung",  color: D.amber, bg: D.amberBg, border: D.amberBorder },
     green:  { label: "Hinweis",      color: D.green, bg: D.greenBg, border: D.greenBorder },
   };
@@ -524,13 +525,14 @@ function DrawerPanel({
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, backdropFilter: "blur(3px)" }} />
 
       {/* Drawer */}
-      <div style={{
+      <div className="wf-drawer" style={{
         position: "fixed", top: 0, right: 0, bottom: 0,
         width: "min(480px, 100vw)",
         background: "#0b0e15",
         borderLeft: `1px solid ${D.borderMid}`,
         zIndex: 1001, overflowY: "auto", display: "flex", flexDirection: "column",
         boxShadow: "-8px 0 32px rgba(0,0,0,0.5)",
+        animation: "wf-drawer-slide-right 0.28s cubic-bezier(0.22,1,0.36,1) both",
       }}>
 
         {/* ── Sticky header ── */}
@@ -924,10 +926,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     setTimeout(() => setHighlightUrl(null), 2500);
   }
 
-  const SMART_GUARD_PLANS = ["smart-guard", "agency-starter", "agency-pro"];
-  const isSmartGuard = SMART_GUARD_PLANS.includes(plan);
-  const isFree     = !isSmartGuard; // free = everyone without a paid plan
-  const planLabel  = isSmartGuard ? "Smart-Guard" : "Free";
+  const PAID_PLANS = ["smart-guard", "professional", "starter", "agency-starter", "agency-pro"];
+  const isPaid     = PAID_PLANS.includes(plan);
+  const isSmartGuard = isPaid; // alias for legacy code references
+  const isFree     = !isPaid;
+  const planLabel  = plan === "agency-pro" ? "Agency Pro" : plan === "agency-starter" ? "Agency" : isPaid ? "Professional" : "Free";
   const domain     = lastScan?.url
     ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
     : sessionDomain ?? "—";
@@ -1007,7 +1010,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     if (category === "recht")                            return { label: "SEO- & UX-Optimierungspotenzial",  color: D.amber   };
     if (category === "speed" && severity === "red")      return { label: "Performance- & Ranking-Boost",     color: D.amber   };
     if (category === "speed")                            return { label: "Performance-Optimierung",          color: D.amber   };
-    if (severity === "red")                              return { label: "Sichtbarkeits-Blocker",            color: D.amber   };
+    if (severity === "red")                              return { label: "Wachstums-Bremse",                 color: "#FBBF24" };
     if (severity === "yellow")                           return { label: "Ranking-Potenzial",                color: D.amber   };
     return                                                      { label: "Hinweis",                          color: D.textMuted };
   }
@@ -1140,7 +1143,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     // Category fallbacks
     if (issue.category === 'recht') return {
       steps: [
-        'Pruefe den betroffenen Bereich auf Konformitaet mit dem BFSG (Barrierefreiheitsstaerkungsgesetz, gilt ab Juni 2025).',
+        'Optimiere den betroffenen Bereich für bessere Nutzerfreundlichkeit — das steigert Conversion-Rate und SEO-Ranking.',
         'Stelle sicher, dass alle interaktiven Elemente per Tastatur bedienbar sind.',
         'Pruefe den Farbkontrast zwischen Text und Hintergrund \u2014 Mindestkontrast ist 4,5:1 nach WCAG AA.',
         'Fuege ARIA-Labels zu Elementen ohne sichtbaren Text hinzu (z.\u00a0B. Icon-Buttons, Formularfelder).',
@@ -1209,8 +1212,32 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         .wf-pro-badge { animation: wf-gold-pulse 3s ease-in-out infinite; }
         .wf-disabled-card { transition: filter 0.3s; }
         .wf-disabled-card:hover { filter: saturate(0.4) brightness(0.8) !important; }
+        @keyframes wf-drawer-slide-right {
+          from { transform: translateX(100%); }
+          to   { transform: translateX(0); }
+        }
+        @keyframes wf-drawer-slide-up {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+        @media (max-width: 640px) {
+          .wf-drawer {
+            top: auto !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-height: 85vh;
+            border-left: none !important;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px 16px 0 0;
+            animation: wf-drawer-slide-up 0.32s cubic-bezier(0.22,1,0.36,1) both !important;
+          }
+        }
       `}</style>
 
+
+      {/* ── Onboarding Tour (new users only) ───────────── */}
+      <WfOnboardingTour />
 
       {/* ══════════════════════════════════════════════════
           MAIN — sidebar is rendered by dashboard layout.tsx
@@ -1294,23 +1321,41 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
             <div style={{ flex: 1 }} />
 
-            {/* Projekt-Slots */}
+            {/* Projekt-Slots — plan-aware */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekt-Slots</span>
+              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekte</span>
               <span style={{
                 fontSize: 11, fontWeight: 700,
                 padding: "2px 9px", borderRadius: 20,
                 background: D.card, border: `1px solid ${D.borderMid}`,
                 color: D.textSub,
               }}>
-                1 / 1
+                {plan === "agency-pro" || plan === "agency-starter" ? "Unlimited" : isPaid ? "10 Slots" : plan === "starter" ? "3 Slots" : "1 / 1"}
               </span>
             </div>
 
-            {/* Scan usage */}
+            {/* Scan usage — plan-aware */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans</span>
-              {monthlyScans >= scanLimit ? (
+              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans/Monat</span>
+              {["agency-pro", "agency-starter", "smart-guard", "professional", "starter"].includes(plan) ? (
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: "2px 9px", borderRadius: 20,
+                  background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)",
+                  color: "#FBBF24",
+                }}>
+                  Unbegrenzt
+                </span>
+              ) : plan === "starter" ? (
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: "2px 9px", borderRadius: 20,
+                  background: D.card, border: `1px solid ${D.borderMid}`,
+                  color: D.textSub,
+                }}>
+                  {Math.max(0, 3 - monthlyScans)} / 3
+                </span>
+              ) : monthlyScans >= scanLimit ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
                   padding: "2px 10px", borderRadius: 20,
@@ -1419,6 +1464,81 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
           </Card>
 
+          {/* ① TIER CONTEXT BANNERS ─────────────────────── */}
+          {/* Starter: prominent upgrade banner for Smart-Fix */}
+          {plan === "starter" && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 16,
+              padding: "18px 24px", marginBottom: 16,
+              background: "rgba(251,191,36,0.06)",
+              border: "1px solid rgba(251,191,36,0.2)",
+              borderRadius: 12,
+            }}>
+              <div style={{
+                fontSize: 22, flexShrink: 0,
+                background: "rgba(251,191,36,0.1)",
+                border: "1px solid rgba(251,191,36,0.2)",
+                borderRadius: 8, padding: "6px 10px",
+              }}>
+                🔧
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#FBBF24" }}>
+                  Smart-Fix Drawer freischalten
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                  Mit Professional erhältst du für jede Wachstums-Bremse einen Direkt-Fix Guide — Schritt für Schritt, ohne Agentur.
+                </p>
+              </div>
+              <Link href="/pricing" style={{
+                flexShrink: 0, padding: "9px 20px", borderRadius: 8,
+                background: "#FBBF24", color: "#0b0c10",
+                fontSize: 12, fontWeight: 800, textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}>
+                Upgrade auf Professional →
+              </Link>
+            </div>
+          )}
+
+          {/* Agency: Lead-Magnet Setup prompt */}
+          {(plan === "agency-starter" || plan === "agency-pro") && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 16,
+              padding: "18px 24px", marginBottom: 16,
+              background: "rgba(167,139,250,0.05)",
+              border: "1px solid rgba(167,139,250,0.18)",
+              borderRadius: 12,
+            }}>
+              <div style={{
+                fontSize: 22, flexShrink: 0,
+                background: "rgba(167,139,250,0.08)",
+                border: "1px solid rgba(167,139,250,0.2)",
+                borderRadius: 8, padding: "6px 10px",
+              }}>
+                🧲
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#a78bfa" }}>
+                  Lead-Magnet Widget — exklusiv für dein Agency-Plan
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                  Bette das Widget auf Kunden-Websites ein. Besucher starten direkt einen Scan — du erhältst sie als warme Leads.
+                </p>
+              </div>
+              <Link href="/fuer-agenturen" style={{
+                flexShrink: 0, padding: "9px 20px", borderRadius: 8,
+                background: "rgba(167,139,250,0.12)",
+                border: "1px solid rgba(167,139,250,0.3)",
+                color: "#a78bfa",
+                fontSize: 12, fontWeight: 800, textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}>
+                Widget einrichten →
+              </Link>
+            </div>
+          )}
+
           {/* ② TECH FINGERPRINT STRIP */}
           {lastScan && techChips.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
@@ -1454,14 +1574,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               <span style={{ fontSize: 18, flexShrink: 0 }}>{bfsgOk ? "✅" : "⚠️"}</span>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700,
-                  color: bfsgOk ? D.green : D.amber,
+                  color: bfsgOk ? D.green : "#FBBF24",
                 }}>
-                  BFSG-Konformität: {bfsgOk ? "Bestanden" : "Verstöße gefunden"}
+                  Nutzerfreundlichkeit: {bfsgOk ? "Sehr gut" : "Optimierungspotenzial gefunden"}
                 </p>
                 <p style={{ margin: 0, fontSize: 12, color: D.textSub, marginTop: 2 }}>
                   {bfsgOk
-                    ? "Keine kritischen Barrierefreiheits-Verstöße erkannt — Gesetzeskonformität (BFSG 2025) ist gegeben."
-                    : `${rechtIssues.length} Barrierefreiheits-Problem${rechtIssues.length !== 1 ? "e" : ""} gefunden — Prüfung empfohlen (BFSG 2025 gilt ab Juni 2025).`}
+                    ? "Alle UX-Checks bestanden — Nutzer und Google finden diese Website barrierefrei zugänglich."
+                    : `${rechtIssues.length} UX-Hürde${rechtIssues.length !== 1 ? "n" : ""} gefunden — verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen.`}
                 </p>
               </div>
               {!bfsgOk && (
@@ -1567,7 +1687,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               <Link href="/pricing" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
                 Präzise Live-Daten aus GSC &amp; PageSpeed
               </Link>
-              {" "}sind im Smart-Guard Plan verfügbar.
+              {" "}sind im Professional Plan verfügbar.
             </p>
 
             {/* Deep-Scan info */}
@@ -1596,7 +1716,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </strong>
                   {isFree && <>{" · "}Für 30+ Seiten und erweiterte Berichte{" "}
                     <Link href="/pricing" style={{ color: "#7aa6ff", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,166,255,0.4)", fontWeight: 600 }}>
-                      Smart-Guard Plan →
+                      Professional Plan →
                     </Link>
                   </>}
                 </p>
@@ -1656,15 +1776,15 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   background: "rgba(248,113,113,0.05)",
                   border: `1px solid rgba(248,113,113,0.18)`,
                 }}>
-                  <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 700, color: D.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                    Zusammenfassung
+                  <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 700, color: "#FBBF24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Optimierungs-Übersicht
                   </p>
                   <p style={{ margin: 0, fontSize: 13, color: D.textSub, lineHeight: 1.65 }}>
-                    Deine Website weist aktuell{" "}
-                    <strong style={{ color: D.red }}>{redCount} kritische Fehler</strong>
-                    {yellowCount > 0 && <> und <strong style={{ color: D.amber }}>{yellowCount} Warnungen</strong></>}
-                    {" "}auf — das gefährdet Google-Rankings, verstößt gegen Barrierefreiheitspflichten und kostet aktiv Conversions.{" "}
-                    {redCount > 0 && <span style={{ color: D.textMuted }}>Priorität: kritische Fehler zuerst beheben.</span>}
+                    Deine Website hat aktuell{" "}
+                    <strong style={{ color: "#FBBF24" }}>{redCount} Wachstums-Bremsen</strong>
+                    {yellowCount > 0 && <> und <strong style={{ color: D.amber }}>{yellowCount} Optimierungspotenziale</strong></>}
+                    {" "}— das verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen.{" "}
+                    {redCount > 0 && <span style={{ color: D.textMuted }}>Empfehlung: Wachstums-Bremsen zuerst beheben.</span>}
                   </p>
                 </div>
 
@@ -1752,7 +1872,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                           background: "rgba(255,255,255,0.03)", border: `1px solid ${D.border}`,
                           textTransform: "uppercase", letterSpacing: "0.06em",
                         }}>
-                          {issue.category === "recht" ? "BFSG" : issue.category === "speed" ? "Speed" : "Technik"}
+                          {issue.category === "recht" ? "UX" : issue.category === "speed" ? "Speed" : "SEO"}
                         </span>
 
                         {/* "Wie fixen?" button — always visible */}
@@ -1791,12 +1911,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                           ))}
                           {!isSmartGuard && (
                             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 11, color: D.textMuted, flex: 1 }}>KI-Auto-Fix (Copy-Paste-fertig) nur mit Smart-Guard</span>
-                              <Link href="/pricing?plan=smart-guard" style={{
+                              <span style={{ fontSize: 11, color: D.textMuted, flex: 1 }}>KI-Auto-Fix (Copy-Paste-fertig) im Professional Plan</span>
+                              <Link href="/pricing?plan=professional" style={{
                                 flexShrink: 0, fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 4,
-                                background: "rgba(192,132,252,0.12)", border: "1px solid rgba(192,132,252,0.3)",
-                                color: "#c084fc", textDecoration: "none",
-                              }}>Smart-Guard →</Link>
+                                background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)",
+                                color: "#FBBF24", textDecoration: "none",
+                              }}>Professional →</Link>
                             </div>
                           )}
                         </div>
@@ -1829,6 +1949,33 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                                   <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted }}>+{pageImages.length - 10} weitere</p>
                                 )}
                               </div>
+
+                              {/* Direkt-Fix Guide for images — locked to Professional */}
+                              {isSmartGuard ? (
+                                <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 8, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                                  <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700, color: "#FBBF24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                                    Direkt-Fix Guide · Elementor / Gutenberg
+                                  </p>
+                                  {[
+                                    "Elementor: Bild anklicken → rechts im Panel 'Alternativtext' ausfüllen (beschreibt das Bild für Google-Bild-Suche).",
+                                    "Gutenberg: Block auswählen → rechte Sidebar → 'Alt-Text' → aussagekräftige Beschreibung eintragen.",
+                                    "WordPress Mediathek: Medien → Bild anklicken → Feld 'Alternativtext' → Speichern.",
+                                    "Faustregel: Beschreibe das Bild in 5-10 Wörtern — vermeide Keywords-Stuffing.",
+                                  ].map((step, si) => (
+                                    <div key={si} style={{ display: "flex", gap: 8, marginBottom: si < 3 ? 5 : 0 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 700, color: "#FBBF24", flexShrink: 0, lineHeight: 1.6 }}>{si + 1}.</span>
+                                      <span style={{ fontSize: 11, color: D.textSub, lineHeight: 1.6 }}>{step}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                                  <span style={{ fontSize: 11, color: D.textMuted }}>🔒 Direkt-Fix Guide für Elementor/Gutenberg</span>
+                                  <Link href="/pricing?plan=professional" style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 4, background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)", color: "#FBBF24", textDecoration: "none", whiteSpace: "nowrap" }}>
+                                    Professional →
+                                  </Link>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1846,20 +1993,21 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ⑦ SMART-GUARD AUTOMATION MODULES */}
           <div style={{ marginBottom: 28 }}>
-            <SectionLabel color={D.blueSoft}>Smart-Guard · Automatisierung</SectionLabel>
+            <SectionLabel color={D.blueSoft}>Professional · Automatisierung</SectionLabel>
             <SectionHead>Einmal verstehen — dauerhaft überwacht.</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 580 }}>
-              Die Analyse liegt vor dir. Smart Guard läuft im Hintergrund, beobachtet jede Veränderung und meldet sich — ohne dass du selbst regelmäßig prüfen musst.
+              Die Analyse liegt vor dir. Der Professional Plan läuft im Hintergrund, beobachtet jede Veränderung und meldet sich — ohne dass du selbst regelmäßig prüfen musst.
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
               {([
                 {
                   key: "score",
                   title: "Score-Verlauf",
                   badge: "Täglich · 30 Tage",
                   desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
-                  cta: "Score-Verlauf aktivieren",
-                  status: "Wartet auf Aktivierung" as string | null,
+                  cta: "Professional aktivieren",
+                  planTag: "Professional",
+                  status: isFree ? "Professional" : null as string | null,
                   disabled: isFree,
                 },
                 {
@@ -1867,8 +2015,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   title: "24/7 Live-Monitoring",
                   badge: "Echtzeit · E-Mail-Alert",
                   desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
-                  cta: "Monitoring aktivieren",
-                  status: "Wartet auf Aktivierung" as string | null,
+                  cta: "Professional aktivieren",
+                  planTag: "Professional",
+                  status: isFree ? "Professional" : null as string | null,
                   disabled: isFree,
                 },
                 {
@@ -1877,8 +2026,19 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   badge: "Automatisch · Teilbar",
                   desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
                   cta: "Berichte aktivieren",
+                  planTag: "Professional",
                   status: null as string | null,
                   disabled: false,
+                },
+                {
+                  key: "leadmagnet",
+                  title: "Lead-Magnet Widget",
+                  badge: "Exklusiv · Agency",
+                  desc: "Bettest du das Widget auf Kunden-Websites ein, können Besucher direkt einen kostenlosen Scan starten — und landen als warme Leads in deinem Dashboard.",
+                  cta: "Agency anfragen",
+                  planTag: "Agency",
+                  status: (isFree || isSmartGuard) ? "Agency" : null as string | null,
+                  disabled: isFree || isSmartGuard,
                 },
               ]).map(module => (
                 <div key={module.key} className={module.disabled ? "wf-disabled-card" : ""} style={{
@@ -1971,19 +2131,17 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                         display: "inline-flex", alignItems: "center", gap: 4,
                         fontSize: 10, fontWeight: 700,
                         padding: "3px 10px", borderRadius: 20,
-                        background: module.disabled
-                          ? "rgba(251,191,36,0.07)"
-                          : D.redBg,
-                        border: `1px solid ${module.disabled ? "rgba(251,191,36,0.2)" : D.redBorder}`,
-                        color: module.disabled ? "rgba(251,191,36,0.6)" : D.red,
+                        background: module.status === "Agency"
+                          ? "rgba(167,139,250,0.1)"
+                          : "rgba(251,191,36,0.08)",
+                        border: `1px solid ${module.status === "Agency" ? "rgba(167,139,250,0.3)" : "rgba(251,191,36,0.25)"}`,
+                        color: module.status === "Agency" ? "#a78bfa" : "#FBBF24",
                         letterSpacing: "0.03em", whiteSpace: "nowrap",
                       }}>
-                        {module.disabled && (
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                          </svg>
-                        )}
-                        {module.status}
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        {module.status} Plan
                       </span>
                     )}
                   </div>
@@ -2011,17 +2169,20 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
                   {/* CTA — monitoring gets full-width prominent style */}
                   {module.status ? (
-                    <Link href="/pricing" style={{
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                      padding: "10px 18px", borderRadius: D.radiusXs,
-                      background: D.blue, color: "#fff",
-                      fontSize: 13, fontWeight: 700, textDecoration: "none",
-                      boxShadow: "0 4px 18px rgba(0,123,255,0.4)",
-                    }}>
+                    <Link
+                      href={module.status === "Agency" ? "/fuer-agenturen" : "/pricing"}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        padding: "10px 18px", borderRadius: D.radiusXs,
+                        background: module.status === "Agency" ? "rgba(124,58,237,0.15)" : "rgba(251,191,36,0.12)",
+                        color: module.status === "Agency" ? "#a78bfa" : "#FBBF24",
+                        border: `1px solid ${module.status === "Agency" ? "rgba(124,58,237,0.3)" : "rgba(251,191,36,0.3)"}`,
+                        fontSize: 13, fontWeight: 700, textDecoration: "none",
+                      }}>
                       {module.cta} →
                     </Link>
                   ) : (
-                    <Link href="/pricing" style={{
+                    <Link href="/dashboard/reports" style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
                       alignSelf: "flex-start",
                       padding: "8px 16px", borderRadius: D.radiusXs,
@@ -2053,8 +2214,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   color: "#7aa6ff",
                   title: "Rechtliches & DSGVO",
                   outcome: "Geprüft, dokumentiert, übergeben",
-                  desc: "Wir prüfen Cookie-Banner, Einwilligungstexte, Datenschutzerklärung und Impressum auf DSGVO- und BFSG-Konformität — und korrigieren, was technisch klar umsetzbar ist.",
-                  pills: ["DSGVO", "BFSG 2025", "WCAG 2.2"],
+                  desc: "Wir prüfen Cookie-Banner, Einwilligungstexte, Datenschutzerklärung und Impressum auf DSGVO-Konformität — und korrigieren, was technisch klar umsetzbar ist.",
+                  pills: ["DSGVO", "Cookie-Consent", "Impressum"],
                 },
                 {
                   num: "02",
@@ -2067,10 +2228,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 {
                   num: "03",
                   color: "#c084fc",
-                  title: "Mobile & Barrierefreiheit",
+                  title: "Mobile-Optimierung & UX",
                   outcome: "Gezielt behoben, getestet, übergeben",
-                  desc: "Alt-Texte, Viewport-Konfiguration, Touch-Target-Größen, Tastaturnavigation — wir setzen um, was ohne Zugriff auf das CMS-Backend nicht möglich wäre.",
-                  pills: ["Alt-Texte", "WCAG AA", "Touch-Targets"],
+                  desc: "Alt-Texte, Viewport-Konfiguration, Touch-Target-Größen, Formular-Zugänglichkeit — wir setzen um, was ohne CMS-Zugang nicht möglich wäre.",
+                  pills: ["Alt-Texte", "Responsive", "Touch-Targets"],
                 },
               ] as const).map(fix => (
                 <div key={fix.title} style={{
@@ -2162,14 +2323,13 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               fontSize: 11, fontWeight: 700, color: D.blueSoft, letterSpacing: "0.06em",
               textTransform: "uppercase",
             }}>
-              Smart-Guard
+              Professional Plan
             </div>
             <h2 style={{ margin: "0 0 12px", fontSize: 26, fontWeight: 800, color: D.text, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
-              Du weißt was zu tun ist.<br/>Wir überwachen, ob es erledigt bleibt.
+              Mehr SEO-Ranking.<br/>Weniger manuelle Arbeit.
             </h2>
             <p style={{ margin: "0 auto 28px", fontSize: 15, color: D.textSub, maxWidth: 520, lineHeight: 1.75 }}>
-              Smart-Guard scannt deine Website automatisch, überwacht Veränderungen rund um die Uhr und informiert dich sofort — ohne dass du selbst prüfen musst. Inkl. Score-Verlauf, monatlichem PDF-Bericht und unbegrenzten Scans. Für 39 €/Monat.
-              Jederzeit kündbar.
+              Der Professional Plan scannt automatisch, überwacht Veränderungen 24/7 und liefert KI-Auto-Fixes — Copy-Paste-fertig für WordPress. Inkl. Score-Verlauf, monatlichem PDF-Bericht, 10 Projekten und Smart-Fix Drawer. Für 89 €/Monat. Jederzeit kündbar.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/pricing" style={{
@@ -2178,7 +2338,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 fontSize: 14, fontWeight: 700, textDecoration: "none",
                 boxShadow: "0 4px 20px rgba(0,123,255,0.4)",
               }}>
-                Smart-Guard aktivieren →
+                Professional aktivieren →
               </Link>
               <Link href="/pricing" style={{
                 padding: "13px 24px", borderRadius: D.radiusSm,
@@ -2236,10 +2396,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
                 <div>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: D.text, lineHeight: 1.3, letterSpacing: "-0.01em" }}>
-                    Sichere deine Projekte dauerhaft ab.
+                    Mehr Rankings. Weniger manuelle Arbeit.
                   </p>
                   <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.3, marginTop: 1 }}>
-                    Smart-Guard überwacht Veränderungen automatisch — 24/7, ohne deinen Eingriff.
+                    Professional: 10 Projekte, Smart-Fix Drawer, KI-Auto-Fix, 24/7 Monitoring — ab 89€/Monat.
                   </p>
                 </div>
               </div>
@@ -2254,7 +2414,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 whiteSpace: "nowrap",
                 letterSpacing: "-0.01em",
               }}>
-                Smart-Guard aktivieren
+                Professional aktivieren
                 <span className="wf-arrow" style={{ display: "inline-block", fontWeight: 400 }}>→</span>
               </Link>
             </div>

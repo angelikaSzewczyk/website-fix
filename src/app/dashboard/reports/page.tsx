@@ -45,7 +45,7 @@ export default async function ReportsPage() {
   const sql  = neon(process.env.DATABASE_URL!);
   const plan = (session.user as { plan?: string }).plan ?? "free";
 
-  if (!["smart-guard", ...AGENCY_PLANS].includes(plan)) redirect("/dashboard");
+  if (!["smart-guard", "professional", "starter", ...AGENCY_PLANS].includes(plan)) redirect("/dashboard");
 
   const userId   = Number(session.user.id);
   const agencyId = String(session.user.id);

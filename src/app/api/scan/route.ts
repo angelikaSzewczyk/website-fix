@@ -393,16 +393,19 @@ function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
 function getMaxSubpages(plan: string): number {
   if (plan === "agency-pro")      return 10000;
   if (plan === "agency-starter")  return 2500;
-  if (plan === "smart-guard")     return 500;
+  if (plan === "smart-guard" || plan === "professional")  return 500;
+  if (plan === "starter")         return 50;
   return 10; // free / anonym
 }
 
 // ── Monthly scan limits per plan ────────────────────────────
 const MONTHLY_LIMITS: Record<string, number> = {
   "free":            3,
-  "smart-guard":    50,
-  "agency-starter": 250,
-  "agency-pro":    1000,
+  "starter":         3,
+  "smart-guard":   999,
+  "professional":  999,
+  "agency-starter": 999,
+  "agency-pro":    999,
 };
 
 // ── Main Handler ────────────────────────────────────────────
@@ -414,7 +417,7 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     const userId  = session?.user?.id as string | undefined;
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
-    const isPaid = ["smart-guard", "agency-starter", "agency-pro"].includes(userPlan);
+    const isPaid = ["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(userPlan);
 
     // ── Admin test-bypass cookie: skips IP rate limit ──────────
     const bypassCookie = req.cookies.get("wf_admin_test")?.value ?? "";
