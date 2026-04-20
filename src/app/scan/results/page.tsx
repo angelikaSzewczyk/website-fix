@@ -640,75 +640,78 @@ function ResultsInner() {
               }
               {!isDemo && gefilterteUrls > 0 && ` · ${gefilterteUrls} Feeds/XML übersprungen`}
               {!isDemo && critErrors > 0 && (
-                <span style={{ color: "#ef4444", fontWeight: 600 }}> · {critErrors} kritische Fehler gefunden</span>
+                <span style={{ color: "#f59e0b", fontWeight: 600 }}> · {critErrors} Optimierungen gefunden</span>
               )}
             </p>
           </div>
 
-          {/* ── DRINGLICHKEITS-AMPEL — ganz oben, erste Info für den Nutzer ── */}
+          {/* ── WEBSITE-OPTIMIERUNGS-REPORT ── */}
           <div style={{ marginBottom: 40 }}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° Business Health Check</p>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° Website-Optimierungs-Report</p>
                 {!isDemo && critErrors > 0 && (
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444" }}>
-                    ⚠ Sofortiger Handlungsbedarf
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", color: "#FBBF24" }}>
+                    ⚡ {critErrors} Optimierungen verfügbar
                   </span>
                 )}
               </div>
-              <h2 style={{ margin: "0 0 6px", fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>Dringlichkeits-Ampel</h2>
+              <h2 style={{ margin: "0 0 6px", fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
+                {!isDemo && critErrors > 0
+                  ? `${critErrors} Optimierungen für deine Website`
+                  : "Website-Optimierungs-Report"}
+              </h2>
               {!isDemo && critErrors > 0 && (
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
-                  Auf {pagesTotal} untersuchten {pagesTotal === 1 ? "Seite" : "Seiten"} wurden{" "}
-                  <strong style={{ color: "#ef4444" }}>{critErrors} BFSG-relevante Fehler</strong> gefunden
-                  {errorDensity > 0 ? ` — das entspricht ⌀ ${errorDensity} Fehler pro Seite` : ""}.
+                  Auf {pagesTotal} analysierten {pagesTotal === 1 ? "Seite" : "Seiten"}{" "}
+                  <strong style={{ color: "#fff" }}>{critErrors} Verbesserungsmöglichkeiten</strong> identifiziert
+                  {errorDensity > 0 ? ` — ⌀ ${errorDensity} pro Seite` : ""}.
                 </p>
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {/* Red */}
+              {/* Red — Sichtbarkeits-Blocker */}
               <div style={{ padding: "20px 22px", borderRadius: 14, background: critErrors > 0 && !isDemo ? "rgba(239,68,68,0.07)" : "rgba(239,68,68,0.05)", border: critErrors > 0 && !isDemo ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(239,68,68,0.2)", display: "flex", flexDirection: "column", gap: 10, boxShadow: critErrors > 0 && !isDemo ? "0 0 24px rgba(239,68,68,0.08)" : "none" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 18 }}>🔴</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>Kritisch — sofort handeln</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>Sichtbarkeits-Blocker</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {[
-                    !scan?.https && "DSGVO Art. 32 — Kein HTTPS: fehlende Transportverschlüsselung",
-                    scan?.robotsBlocked && "Crawler-Sperre: robots.txt Disallow: / — alle Suchmaschinen blockiert",
-                    scan?.noIndex && "SEO-Ausschluss: meta[robots=noindex] auf Startseite gesetzt",
-                    (scan?.brokenLinksCount ?? 0) > 0 && `BFSG §4 — ${scan!.brokenLinksCount} Broken Links: barrierefreie Erreichbarkeit verletzt`,
-                    !scan?.hasTitle && "SEO-Grundlage fehlt: kein <title>-Tag auf Startseite",
-                    scan?.hasUnreachable && "BFSG §4 — Unterseiten nicht erreichbar (404/Timeout)",
-                    (scan?.altMissingCount ?? 0) > 0 && `BFSG §3 Abs. 2 — ${scan!.altMissingCount}× img[alt] fehlt · WCAG 1.1.1`,
-                    isDemo && "BFSG §3 Abs. 2 — Formularfelder ohne label: WCAG 1.3.1",
-                    isDemo && "BFSG §4 — 3 Broken Links auf Unterseiten",
+                    !scan?.https && "Kein HTTPS: Google Chrome zeigt Sicherheitswarnung — schadet Vertrauen & Rankings",
+                    scan?.robotsBlocked && "robots.txt blockiert Google: Seite wird nicht indexiert — kein organischer Traffic möglich",
+                    scan?.noIndex && "noindex auf Startseite: Google schließt die Seite aktiv aus dem Index aus",
+                    (scan?.brokenLinksCount ?? 0) > 0 && `${scan!.brokenLinksCount} Broken Links: Google wertet defekte Seiten als schlechtes Qualitätssignal`,
+                    !scan?.hasTitle && "Kein <title>-Tag: fehlt als wichtigstes On-Page-SEO-Signal",
+                    scan?.hasUnreachable && "Unterseiten nicht erreichbar (404): beeinträchtigt Nutzererlebnis & Crawling",
+                    (scan?.altMissingCount ?? 0) > 0 && `${scan!.altMissingCount} Bilder ohne Alt-Text: Google kann sie nicht lesen — SEO-Potenzial verschenkt`,
+                    isDemo && "Formularfelder ohne Label: beeinträchtigt Nutzererlebnis & Barrierefreiheit",
+                    isDemo && "3 Broken Links: Google & Nutzer landen auf leeren Seiten",
                   ].filter(Boolean).map((msg, i) => (
                     <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
                       <span style={{ color: "#ef4444", flexShrink: 0 }}>✕</span>{msg as string}
                     </div>
                   ))}
                   {!isDemo && !scan?.robotsBlocked && scan?.https && !scan?.noIndex && (scan?.brokenLinksCount ?? 0) === 0 && scan?.hasTitle && !scan?.hasUnreachable && (scan?.altMissingCount ?? 0) === 0 && (
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine kritischen Fehler gefunden ✓</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine Sichtbarkeits-Blocker gefunden ✓</div>
                   )}
                 </div>
               </div>
-              {/* Yellow / Optimization */}
+              {/* Yellow — SEO & UX-Optimierungen */}
               <div style={{ padding: "20px 22px", borderRadius: 14, background: AMBER_BG, border: `1px solid ${AMBER_BDR}`, display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 18 }}>✦</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>Optimierungspotenzial</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>SEO & UX-Optimierungen</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {[
-                    !scan?.hasMeta && "Fehlende Meta-Description — schlechte CTR in Google",
-                    !scan?.hasH1 && "Kein H1-Tag — schwaches SEO-Signal",
-                    !scan?.hasSitemap && "Keine Sitemap — erschwert Indexierung",
-                    (scan?.duplicateTitlesCount ?? 0) > 1 && "Doppelte Seitentitel — Keyword-Kannibalisierung",
-                    (scan?.duplicateMetasCount ?? 0) > 1 && "Doppelte Meta-Descriptions — SEO-Signal verwässert",
-                    isDemo && "168 Bilder ohne Alt-Text — WCAG-Standard",
-                    isDemo && "Ladezeit > 2.5s — erhöhte Absprungrate",
-                    isDemo && "9 Seiten ohne Meta-Description",
+                    !scan?.hasMeta && "Meta-Description fehlt: Klickrate in Google-Suchergebnissen leidet",
+                    !scan?.hasH1 && "Kein H1-Tag: Google fehlt die Haupt-Überschrift als Relevanz-Signal",
+                    !scan?.hasSitemap && "Keine Sitemap: Google findet neue Seiten langsamer",
+                    (scan?.duplicateTitlesCount ?? 0) > 1 && "Doppelte Seitentitel: Keyword-Kannibalisierung schadet Rankings",
+                    (scan?.duplicateMetasCount ?? 0) > 1 && "Doppelte Meta-Descriptions: Google verwässert das Relevanz-Signal",
+                    isDemo && `168 Bilder ohne Alt-Text: Google kann sie nicht lesen — Smart-Fix verfügbar`,
+                    isDemo && "9 Seiten ohne Meta-Description — automatisch behebbar",
                   ].filter(Boolean).map((msg, i) => (
                     <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
                       <span style={{ color: AMBER, flexShrink: 0 }}>→</span>{msg as string}
@@ -716,19 +719,20 @@ function ResultsInner() {
                   ))}
                 </div>
               </div>
-              {/* Green */}
+              {/* Green — Bereits optimiert */}
               <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 18 }}>🟢</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>Gut — bereits erfüllt</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>Bereits optimiert ✓</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {[
-                    (scan?.https ?? isDemo) && "HTTPS aktiv — sichere Verbindung",
-                    (scan?.hasTitle ?? isDemo) && "Seitentitel vorhanden",
-                    (scan?.hasSitemap ?? isDemo) && "Sitemap gefunden",
-                    (scan?.hasMeta ?? isDemo) && "Meta-Description gesetzt",
-                    isDemo && "Startseite erreichbar",
+                    (scan?.https ?? isDemo) && "HTTPS aktiv — verschlüsselte Verbindung",
+                    (scan?.hasTitle ?? isDemo) && "Title-Tag vorhanden — Google-Ranking-Grundlage",
+                    (scan?.hasSitemap ?? isDemo) && "Sitemap gefunden — Indexierung optimiert",
+                    (scan?.hasMeta ?? isDemo) && "Meta-Description gesetzt — bessere Klickrate",
+                    (scan?.hasH1 ?? false) && "H1-Überschrift vorhanden — klares Relevanz-Signal",
+                    (scan ? !scan.robotsBlocked : isDemo) && "Google-Zugang erlaubt — vollständige Indexierung",
                   ].filter(Boolean).map((msg, i) => (
                     <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
                       <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span>{msg as string}
@@ -737,45 +741,6 @@ function ResultsInner() {
                 </div>
               </div>
             </div>
-
-            {/* ── Rechtliches Risiko-Assessment ── */}
-            {!isDemo && critErrors > 0 && (
-              <div style={{ marginTop: 14, padding: "14px 18px", borderRadius: 12, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.18)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 14 }}>⚖️</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>Rechtliches Risiko-Assessment</span>
-                  <span style={{ marginLeft: "auto", fontSize: 10, padding: "2px 10px", borderRadius: 20, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", fontWeight: 800, letterSpacing: "0.06em" }}>
-                    HOCH
-                  </span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {(scan?.altMissingCount ?? 0) > 0 && (
-                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", fontSize: 12, alignItems: "baseline" }}>
-                      <span style={{ color: "#ef4444", fontWeight: 700, fontFamily: "monospace", fontSize: 11 }}>BFSG §3 Abs. 2</span>
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Fehlende Alt-Texte: BFSG §3 Abs. 2 · EN 301 549 — Barrierefreiheits-Standard 2025</span>
-                    </div>
-                  )}
-                  {!scan?.https && (
-                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", fontSize: 12, alignItems: "baseline" }}>
-                      <span style={{ color: "#f59e0b", fontWeight: 700, fontFamily: "monospace", fontSize: 11 }}>DSGVO Art. 32</span>
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Fehlende Transportverschlüsselung — technische Schutzmaßnahmen unzureichend</span>
-                    </div>
-                  )}
-                  {(scan?.brokenLinksCount ?? 0) > 0 && (
-                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", fontSize: 12, alignItems: "baseline" }}>
-                      <span style={{ color: "#f59e0b", fontWeight: 700, fontFamily: "monospace", fontSize: 11 }}>BFSG §4</span>
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>{scan!.brokenLinksCount} defekte Links — Zugänglichkeitsgebot: alle Inhalte müssen erreichbar sein</span>
-                    </div>
-                  )}
-                  {scan?.robotsBlocked && (
-                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", fontSize: 12, alignItems: "baseline" }}>
-                      <span style={{ color: "#f59e0b", fontWeight: 700, fontFamily: "monospace", fontSize: 11 }}>SEO-Schaden</span>
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>robots.txt Disallow: / — vollständige Deindexierung, kein organischer Traffic</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* ── Dashboard-Metriken ── */}
@@ -826,71 +791,82 @@ function ResultsInner() {
               </div>
             </div>
 
-            {/* Critical errors */}
+            {/* Sichtbarkeits-Blocker */}
             <div style={{
               background: "rgba(255,255,255,0.025)",
-              border: critErrors === 0 ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(239,68,68,0.25)",
+              border: critErrors === 0 ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(245,158,11,0.25)",
               borderRadius: 20, padding: "28px 28px",
               display: "flex", flexDirection: "column", justifyContent: "space-between",
-              boxShadow: critErrors === 0 ? "0 0 30px rgba(34,197,94,0.06)" : "0 0 30px rgba(239,68,68,0.06)",
+              boxShadow: critErrors === 0 ? "0 0 30px rgba(34,197,94,0.06)" : "0 0 30px rgba(245,158,11,0.06)",
             }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: critErrors === 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", border: critErrors === 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={critErrors === 0 ? "#22c55e" : "#ef4444"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: critErrors === 0 ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)", border: critErrors === 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(245,158,11,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={critErrors === 0 ? "#22c55e" : "#f59e0b"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="11" y1="16" x2="11.01" y2="16"/></svg>
               </div>
               <div>
                 <a href="#deep-scan-map" style={{ textDecoration: "none" }}>
-                  <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: critErrors === 0 ? "#22c55e" : "#ef4444", lineHeight: 1, cursor: critErrors > 0 ? "pointer" : "default" }}>
+                  <div style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: critErrors === 0 ? "#22c55e" : "#f59e0b", lineHeight: 1, cursor: critErrors > 0 ? "pointer" : "default" }}>
                     {critErrors}
                   </div>
                 </a>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>
-                  {critErrors === 0 ? "Keine Fehler" : "Kritische BFSG-Fehler"}
+                  {critErrors === 0 ? "Alles sauber" : "Sichtbarkeits-Blocker"}
                 </div>
-                <div style={{ fontSize: 12, color: critErrors === 0 ? "#22c55e" : "#ef4444", marginTop: 4, fontWeight: 500 }}>
-                  {critErrors === 0 ? "Sieht gut aus!" : "BFSG-Standard ab 28.06.2025"}
+                <div style={{ fontSize: 12, color: critErrors === 0 ? "#22c55e" : "#f59e0b", marginTop: 4, fontWeight: 500 }}>
+                  {critErrors === 0 ? "Top Google-Sichtbarkeit ✓" : "Direkt wirksam auf Google-Ranking"}
                 </div>
                 {critErrors > 0 && !isDemo && pagesTotal > 0 && (
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>
-                    ⌀ {errorDensity} Fehler / Seite
-                  </div>
-                )}
-                {critErrors > 0 && (
-                  <div style={{
-                    display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8,
-                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
-                    background: "rgba(245,158,11,0.12)",
-                    border: "1px solid rgba(245,158,11,0.30)",
-                    color: "#f59e0b",
-                  }}>
-                    ⚡ BFSG-Maßnahmen empfohlen
+                    ⌀ {errorDensity} Optimierungen / Seite
                   </div>
                 )}
                 {critErrors > 0 && (
                   <div style={{ marginTop: 8 }}>
                     <a href="#deep-scan-map" style={{ fontSize: 11, color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>
-                      → Details in Tabelle ansehen
+                      → Schritt-für-Schritt Fixes ansehen
                     </a>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Liability */}
-            <div style={{
-              background: "rgba(255,255,255,0.025)", border: `1px solid ${liabColor}40`,
-              borderRadius: 20, padding: "28px 28px",
-              display: "flex", flexDirection: "column", justifyContent: "space-between",
-              boxShadow: `0 0 30px ${liabColor}10`,
-            }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: `${liabColor}18`, border: `1px solid ${liabColor}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={liabColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: liabColor, lineHeight: 1 }}>{liability}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Potenzielle Haftung</div>
-                <div style={{ fontSize: 12, color: liabColor, marginTop: 4, fontWeight: 500 }}>BFSG §3 Abs. 2</div>
-              </div>
-            </div>
+            {/* On-Page SEO Status */}
+            {(() => {
+              const seoChecks = [
+                { ok: scan?.hasTitle  ?? isDemo, label: "Title-Tag" },
+                { ok: scan?.hasMeta   ?? isDemo, label: "Meta-Description" },
+                { ok: scan?.hasH1     ?? false,  label: "H1-Tag" },
+                { ok: scan?.hasSitemap ?? isDemo, label: "Sitemap" },
+                { ok: !(scan?.robotsBlocked ?? false) || isDemo, label: "Google-Zugang" },
+                { ok: scan?.https ?? isDemo, label: "HTTPS" },
+              ];
+              const goodCount = seoChecks.filter(c => c.ok).length;
+              const seoStatus = goodCount >= 5 ? "GUT" : goodCount >= 3 ? "MITTEL" : "SCHWACH";
+              const seoColor  = goodCount >= 5 ? "#22c55e" : goodCount >= 3 ? "#f59e0b" : "#ef4444";
+              return (
+                <div style={{
+                  background: "rgba(255,255,255,0.025)", border: `1px solid ${seoColor}40`,
+                  borderRadius: 20, padding: "28px 28px",
+                  display: "flex", flexDirection: "column", justifyContent: "space-between",
+                  boxShadow: `0 0 30px ${seoColor}10`,
+                }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${seoColor}18`, border: `1px solid ${seoColor}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={seoColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: seoColor, lineHeight: 1 }}>{seoStatus}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>On-Page SEO Status</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 8, display: "flex", flexDirection: "column", gap: 3 }}>
+                      {seoChecks.map(c => (
+                        <span key={c.label} style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                          <span style={{ color: c.ok ? "#22c55e" : "rgba(255,255,255,0.2)", fontSize: 10 }}>{c.ok ? "✓" : "○"}</span>
+                          <span style={{ color: c.ok ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.2)" }}>{c.label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
         </section>
@@ -1073,7 +1049,7 @@ function ResultsInner() {
                           whiteSpace: "nowrap", lineHeight: 1.3,
                           cursor: "pointer",
                         }} onClick={() => handleExpand(p.path + i)}>
-                          ↑ Klick hier: Schritt-für-Schritt Fix
+                          ↑ Klick hier: Dein Schritt-für-Schritt SEO-Fix
                         </div>
                       )}
                     </div>
@@ -1105,7 +1081,7 @@ function ResultsInner() {
           </div>
         </section>
 
-        {/* ── BFSG-READY BADGE ── */}
+        {/* ── WEBSITE-EXZELLENZ BADGE ── */}
         {!isDemo && critErrors === 0 && score >= 80 && (
           <section style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 0" }}>
             <div style={{
@@ -1126,10 +1102,10 @@ function ResultsInner() {
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e", marginBottom: 2 }}>
-                  BFSG-Ready ✓
+                  Website-Exzellenz ✓
                 </div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
-                  Diese Seite erfüllt die technischen Kriterien des Barrierefreiheitsstärkungsgesetzes.
+                  Keine Sichtbarkeits-Blocker gefunden — diese Website ist für Google und Nutzer optimal aufgestellt.
                 </div>
               </div>
               <div style={{
@@ -1138,7 +1114,7 @@ function ResultsInner() {
                 background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
                 color: "#22c55e", letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
-                Konform
+                Top Score
               </div>
             </div>
           </section>
