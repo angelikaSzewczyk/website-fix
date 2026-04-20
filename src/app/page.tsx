@@ -187,11 +187,11 @@ const FAQ = [
   },
   {
     q: "Muss ich ein Plugin installieren?",
-    a: "Nein. Für den kompletten Deep-Scan genügt deine URL — kein Plugin, kein Hosting-Zugang, kein Login nötig. Unser Cloud-Crawler analysiert deine Website von außen und liefert Ergebnisse in unter 60 Sekunden.",
+    a: "Für den Scan nicht. Deine URL genügt — kein Hosting-Zugang, kein Login nötig. Unser Cloud-Crawler analysiert deine Website von außen und liefert Ergebnisse in unter 60 Sekunden. Das optionale Agency-Plugin hilft dir aber, Fixes per API direkt auf deine Kunden-Seiten zu übertragen — ohne manuelles Copy-Paste.",
   },
   {
     q: "Was unterscheidet WebsiteFix von kostenlosen Scannern?",
-    a: "Kostenlose Tools prüfen meist nur die Startseite und listen Fehler auf — ohne Lösungsweg. WebsiteFix crawlt alle Unterseiten, erstellt eine interaktive Map der gesamten Website und liefert für jeden Fehler eine konkrete Fix-Anleitung für dein Page-Builder-System.",
+    a: "WebsiteFix ist kein oberflächlicher Scanner, sondern eine KI-gestützte Workflow-Lösung für Agenturen und Profis. Während kostenlose Tools nur die Startseite prüfen und rohe Fehlerlisten ausgeben, crawlt WebsiteFix alle Unterseiten, erstellt eine interaktive Site-Map und liefert für jeden Befund eine konkrete, page-builder-spezifische Fix-Anleitung — direkt umsetzbar, kein Entwickler-Wissen nötig.",
   },
   {
     q: "Kann ich WebsiteFix für Kunden-Websites nutzen (Agenturen)?",
@@ -879,17 +879,17 @@ export default function Page() {
                 gradient: "linear-gradient(135deg,#2563EB,#7C3AED)",
                 name: "Michael R.",
                 role: "Inhaber, Online-Shop für Bio-Feinkost",
-                plan: "Smart-Protect",
-                planColor: "#7aa6ff",
-                quote: <>Endlich weiß ich, welche Fehler meine Website wirklich ausbremsen. Der Smart-Fix Drawer hat mir gezeigt, <strong style={{ color: "#fff", fontStyle: "normal" }}>wie ich in Elementor in 3 Minuten etwas fixe, wofür ich sonst einen Entwickler gebraucht hätte</strong>.</>,
+                plan: "Professional",
+                planColor: "#FBBF24",
+                quote: <>Die Investition hat sich nach dem ersten Fix amortisiert. Der Smart-Fix Drawer hat mir gezeigt, <strong style={{ color: "#fff", fontStyle: "normal" }}>wie ich in Elementor in 3 Minuten etwas fixe, wofür ich sonst einen Entwickler gebraucht hätte</strong>.</>,
               },
               {
                 initial: "J",
                 gradient: "linear-gradient(135deg,#059669,#0891B2)",
                 name: "Julia S.",
                 role: "Marketing-Leitung, Mittelstands-GmbH",
-                plan: "Agency-Scale",
-                planColor: "#c084fc",
+                plan: "Agency",
+                planColor: "#a78bfa",
                 quote: <>Endlich ein Tool ohne komplizierte Installation. <strong style={{ color: "#fff", fontStyle: "normal" }}>URL eingegeben, Scan läuft</strong> – und die automatisierten Reports geben mir das Gefühl, dass technisch alles perfekt ist.</>,
               },
               {
@@ -897,8 +897,8 @@ export default function Page() {
                 gradient: "linear-gradient(135deg,#D97706,#DC2626)",
                 name: "Dr. Thomas W.",
                 role: "Betreiber einer Gemeinschaftspraxis",
-                plan: "Smart-Protect",
-                planColor: "#7aa6ff",
+                plan: "Starter",
+                planColor: "#60a5fa",
                 quote: <>Früher habe ich Stunden damit verbracht, Fehler zu suchen. <strong style={{ color: "#fff", fontStyle: "normal" }}>WebsiteFix findet sie sofort und informiert mich per E-Mail</strong>. Absolute Empfehlung für jeden, der sich auf sein Kerngeschäft konzentrieren will.</>,
               },
             ].map(t => (
@@ -1082,11 +1082,11 @@ export default function Page() {
             }} />
             <div className="wf-cta-text" style={{ position: "relative" }}>
               <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Starte deinen kostenlosen Website-Scan jetzt.
+                Analysiere deine Website-Exzellenz jetzt.
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
                 Ergebnis in unter 60 Sekunden — ohne Installation, ohne Login.<br className="hide-sm" />
-                Sieh sofort, was deiner Website im Weg steht.
+                Sieh sofort, welche Optimierungen deiner Website im Weg stehen.
               </p>
             </div>
             <div className="wf-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
@@ -1097,10 +1097,10 @@ export default function Page() {
                 boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
                 letterSpacing: "-0.01em",
               }}>
-                Jetzt kostenlos scannen →
+                Ranking-Check starten →
               </Link>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", paddingLeft: 4 }}>
-                Voller Scan ab 29€/Monat · Monatlich kündbar · Kein Risiko.
+                Ergebnis in unter 60 Sekunden. Voller Funktionsumfang ab 29€/Monat.
               </span>
             </div>
           </div>

@@ -990,7 +990,7 @@ function ResultsInner() {
 
           <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
             {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+            <div className="wf-scan-header" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Seite</span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", width: 120, textAlign: "center" }}>Status</span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", width: 90, textAlign: "right" }}>Fehler</span>
@@ -1001,17 +1001,17 @@ function ResultsInner() {
               // Skipped URLs (feed/xml/json) — special gray treatment
               if (p.isSkipped) {
                 return (
-                  <div key={p.path + i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "11px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", opacity: 0.55 }}>
+                  <div key={p.path + i} className="wf-scan-row" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "11px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", opacity: 0.55 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: "rgba(255,255,255,0.2)" }} />
                       <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>{pageBase}{p.path}</span>
                     </div>
-                    <div style={{ width: 120, textAlign: "center" }}>
+                    <div className="wf-scan-status" style={{ width: 120, textAlign: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>
                         Übersprungen
                       </span>
                     </div>
-                    <div style={{ width: 90, textAlign: "right" }}>
+                    <div className="wf-scan-errors" style={{ width: 90, textAlign: "right" }}>
                       <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>—</span>
                     </div>
                   </div>
@@ -1030,21 +1030,21 @@ function ResultsInner() {
                   className={unlocking ? "wf-row-unlock" : ""}
                   style={{ animationDelay: unlocking ? `${i * 55}ms` : "0ms" }}
                 >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center" }}>
+                  <div className="wf-scan-row" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: dotColor, boxShadow: `0 0 5px ${dotColor}` }} />
                       <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "monospace" }}>
                         {pageBase}{p.path}
                       </span>
                     </div>
-                    <div style={{ width: 120, textAlign: "center" }}>
+                    <div className="wf-scan-status" style={{ width: 120, textAlign: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
                         background: isUnreachable ? "rgba(239,68,68,0.1)" : p.errors === 0 ? "rgba(251,191,36,0.1)" : "rgba(245,158,11,0.1)",
                         color: dotColor, border: `1px solid ${dotColor}33` }}>
                         {statusLabel}
                       </span>
                     </div>
-                    <div style={{ width: 90, textAlign: "right" }}>
+                    <div className="wf-scan-errors" style={{ width: 90, textAlign: "right" }}>
                       {/* Gold ✓ checkmark flash during unlock */}
                       {unlocking && canExpand && (
                         <span className="wf-unlock-check" style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", display: "block", pointerEvents: "none", animationDelay: `${i * 55}ms` }}>
@@ -1247,6 +1247,17 @@ function ResultsInner() {
         }
         .wf-cta-pulse {
           animation: wf-cta-pulse 2.2s ease-in-out infinite;
+        }
+        @media (max-width: 600px) {
+          .wf-scan-header { display: none !important; }
+          .wf-scan-row {
+            grid-template-columns: 1fr auto !important;
+            row-gap: 8px !important;
+            padding: 12px 14px !important;
+          }
+          .wf-scan-row > div:first-child { grid-column: 1 / 3; }
+          .wf-scan-status { width: auto !important; text-align: left !important; justify-self: start; }
+          .wf-scan-errors { width: auto !important; text-align: right !important; }
         }
         @keyframes wf-pulse-hint {
           0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); border-color: rgba(251,191,36,0.4); }
