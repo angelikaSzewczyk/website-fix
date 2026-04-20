@@ -721,7 +721,7 @@ export default function DashboardScanClient({
         {/* Scan-limit indicator */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 500 }}>Gratis-Scans diesen Monat:</span>
+            <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 500 }}>Scans diesen Monat:</span>
             <span style={{
               fontSize: 11, fontWeight: 700,
               padding: "2px 9px", borderRadius: 20,
@@ -761,7 +761,7 @@ export default function DashboardScanClient({
                 Scan-Limit für diesen Monat erreicht
               </p>
               <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
-                Du hast {scanLimit} von {scanLimit} Gratis-Scans verbraucht. Nächste Scans sind ab dem 1. des nächsten Monats wieder verfügbar — oder jetzt upgraden für unlimitierte Scans.
+                Du hast {scanLimit} von {scanLimit} Scans dieses Monats verbraucht. Ab dem 1. des nächsten Monats steht das Kontingent wieder zur Verfügung — oder jetzt auf Professional upgraden für unlimitierte Scans.
               </p>
             </div>
             <Link href="/pricing" style={{

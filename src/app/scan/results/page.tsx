@@ -370,15 +370,15 @@ function ProtoPanelContent({ p, tier = "anon" }: {
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-              Vollständige Analyse + Schritt-für-Schritt SEO-Fixes kostenlos freischalten
+              Vollständige Analyse + Schritt-für-Schritt SEO-Fixes freischalten und Sichtbarkeit steigern
             </span>
           </div>
-          <Link href="/register" style={{
+          <Link href="/pricing" style={{
             fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
             background: "rgba(251,191,36,0.12)", color: "#FBBF24",
             border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
           }}>
-            Profi-Tool freischalten →
+            Plan wählen →
           </Link>
         </div>
       )}
@@ -600,12 +600,12 @@ function ResultsInner() {
                 {displayDomain}
               </span>
             )}
-            <Link href="/register" className="hide-sm" style={{
+            <Link href="/pricing" className="hide-sm" style={{
               fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
               background: "#007BFF", color: "#fff", textDecoration: "none",
               boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
             }}>
-              Kostenlos starten →
+              Jetzt optimieren →
             </Link>
             {/* Burger-Menü — nur auf Mobile sichtbar */}
             <MobileNav />
@@ -1144,7 +1144,7 @@ function ResultsInner() {
         )}
 
         {/* ── PRICING TIERS ── */}
-        {userTier === "anon" && (
+        {userTier !== "paid" && (
           <section style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px 0" }}>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 20, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", fontSize: 11, fontWeight: 700, color: "#FBBF24", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 14 }}>

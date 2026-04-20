@@ -116,12 +116,12 @@ export default function AgencyPage() {
               }}>
                 Anmelden
               </Link>
-              <Link href="/register" className="hide-sm" style={{
+              <Link href="/pricing" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
                 background: "#007BFF", color: "#fff", textDecoration: "none",
                 boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
               }}>
-                Kostenlos starten →
+                Jetzt optimieren →
               </Link>
               {/* Burger-Menü — nur auf Mobile sichtbar */}
               <MobileNav />

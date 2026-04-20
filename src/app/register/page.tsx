@@ -120,7 +120,7 @@ export default function RegisterPage() {
             Starte dein Agentur-Business<br />auf Autopilot.
           </h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", margin: "0 0 36px", lineHeight: 1.7 }}>
-            Kostenlos starten. Sicherer Stripe-Checkout.
+            Plan wählen. Sicherer Stripe-Checkout.
           </p>
           {[
             "White-Label Reports ab Agency Core",
@@ -163,7 +163,7 @@ export default function RegisterPage() {
             Account erstellen
           </h1>
           <p style={{ fontSize: 14, color: "#64748B", margin: "0 0 32px", lineHeight: 1.6 }}>
-            Kostenlos starten — kein Plan nötig.
+            Account erstellen — Plan direkt im nächsten Schritt wählen.
           </p>
 
           {/* Google */}

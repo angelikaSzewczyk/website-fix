@@ -110,7 +110,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
                 </svg>
               )}
               <span style={{ fontSize: 12, fontWeight: 700, color: limitReached ? D.red : D.blueSoft, whiteSpace: "nowrap" }}>
-                Gratis-Scans: {monthlyScans} / {scanLimit}
+                Scans: {monthlyScans} / {scanLimit}
                 {limitReached && " (Limit erreicht)"}
               </span>
             </div>

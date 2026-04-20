@@ -1390,7 +1390,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 background: D.card, border: `1px solid ${D.borderMid}`,
                 color: D.textSub,
               }}>
-                {plan === "agency-pro" || plan === "agency-starter" ? "Unlimited" : isPaid ? "10 Slots" : plan === "starter" ? "3 Slots" : "1 / 1"}
+                {plan === "agency-pro" || plan === "agency-starter" ? "Unlimited" : plan === "starter" ? "3 Slots" : isProfessionalPlus ? "10 Slots" : "1 / 1"}
               </span>
             </div>
 

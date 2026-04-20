@@ -669,7 +669,7 @@ export default function ScanPage() {
                       whiteSpace: "nowrap", transition: "background 0.15s",
                       borderLeft: "1px solid rgba(255,255,255,0.08)",
                     }}>
-                      Einmaligen Gratis-Deep-Scan starten →
+                      Deep-Scan starten →
                     </button>
                   </div>
 
