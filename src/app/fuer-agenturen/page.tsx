@@ -171,7 +171,7 @@ export default function AgencyPage() {
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <CheckoutButton
                 plan="agency-starter"
-                label="Jetzt Agency-Account erstellen →"
+                label="Agentur-Power freischalten →"
                 style={{
                   padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
                   background: "linear-gradient(90deg, #007BFF, #0057b8)",
@@ -369,7 +369,7 @@ export default function AgencyPage() {
             {[
               {
                 num: "01", label: "Connect & Sync", title: "Alles in Sekunden verknüpft",
-                desc: "Verknüpfen Sie Ihre Kunden-Websites und Ihre Workflow-Tools (Jira, Trello, Asana) in Sekunden. Kein Plugin, kein Hosting-Zugang — einfach URL eintragen und los.",
+                desc: "Verknüpfen Sie Ihre Kunden-Websites und Ihre Workflow-Tools (Jira, Trello, Asana) in Sekunden. Erst-Analyse ohne Zugriff — Fixes via Agency-Plugin direkt in WordPress.",
                 color: "#7aa6ff",
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -734,7 +734,7 @@ export default function AgencyPage() {
 
                 <CheckoutButton
                   plan="agency-starter"
-                  label="Jetzt White-Label einrichten →"
+                  label="Agentur-Power freischalten →"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 8,
                     padding: "12px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
@@ -1099,35 +1099,53 @@ export default function AgencyPage() {
               <div style={{ position: "absolute", top: 0, left: 0, width: "40%", height: "100%", background: "radial-gradient(ellipse at 20% 50%, rgba(61,211,152,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
               <div style={{ position: "relative" }}>
 
-                {/* Badge */}
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 18,
-                  padding: "5px 14px", borderRadius: 20, fontSize: 11,
-                  background: "rgba(61,211,152,0.08)", border: "1px solid rgba(61,211,152,0.22)",
-                  color: "#3dd398", fontWeight: 700, letterSpacing: "0.06em",
-                }}>
-                  <Zap size={11} style={{ flexShrink: 0 }} /> Powered by Next.js &amp; Edge Computing
+                {/* Badges */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 7,
+                    padding: "5px 14px", borderRadius: 20, fontSize: 11,
+                    background: "rgba(61,211,152,0.08)", border: "1px solid rgba(61,211,152,0.22)",
+                    color: "#3dd398", fontWeight: 700, letterSpacing: "0.06em",
+                  }}>
+                    <Zap size={11} style={{ flexShrink: 0 }} /> Cloud-Analyse · Edge Computing
+                  </div>
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 7,
+                    padding: "5px 14px", borderRadius: 20, fontSize: 11,
+                    background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.28)",
+                    color: "#818cf8", fontWeight: 700, letterSpacing: "0.06em",
+                  }}>
+                    {/* WordPress "W" Icon */}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                      <circle cx="12" cy="12" r="11" stroke="#818cf8" strokeWidth="1.8"/>
+                      <path d="M3 12c0 3.8 2.2 7.1 5.4 8.7L3.8 9.2A9 9 0 0 0 3 12z" fill="#818cf8"/>
+                      <path d="M17.7 11.6c0-1.2-.4-2-.8-2.6-.5-.8-1-1.5-1-2.3 0-.9.7-1.7 1.7-1.7h.1A9 9 0 0 0 12 3a9 9 0 0 0-7.6 4.2h.5c1.1 0 2.8-.1 2.8-.1.6 0 .6.8 0 .9 0 0-.6.1-1.2.1l3.8 11.3 2.3-6.8-1.6-4.5c-.6 0-1.1-.1-1.1-.1-.6 0-.5-.9 0-.9 0 0 1.7.1 2.8.1 1.1 0 2.8-.1 2.8-.1.6 0 .6.8 0 .9 0 0-.6.1-1.2.1l3.7 11.1.9-3.1c.5-1.5.8-2.6.8-3.5z" fill="#818cf8"/>
+                      <path d="m13.1 12.9-3.1 9A9 9 0 0 0 12 21a9 9 0 0 0 5.4-1.8l-.1-.2-4.2-8.1z" fill="#818cf8"/>
+                      <path d="M19.8 7.8a9 9 0 0 1 .2 2 8.2 8.2 0 0 1-.7 3.3l-2.9 8.4A9 9 0 0 0 19.8 7.8z" fill="#818cf8"/>
+                    </svg>
+                    WordPress · Native Integration
+                  </div>
                 </div>
 
-                <h3 style={{ margin: "0 0 14px", fontWeight: 800, fontSize: "clamp(18px, 2.5vw, 24px)", letterSpacing: "-0.025em", color: "#fff", lineHeight: 1.3 }}>
-                  Keine WordPress-Abhängigkeit.<br />
-                  <span style={{ color: "#3dd398" }}>Kein Plugin. Kein Risiko. Maximale Performance.</span>
+                <h3 style={{ margin: "0 0 14px", fontWeight: 800, fontSize: "clamp(20px, 2.8vw, 28px)", letterSpacing: "-0.03em", color: "#fff", lineHeight: 1.2 }}>
+                  Analyse in der Cloud.{" "}
+                  <span style={{ color: "#3dd398" }}>Heilung im Backend.</span>
                 </h3>
 
                 <p style={{ margin: "0 0 28px", fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, maxWidth: 620 }}>
-                  WebsiteFix ist eine <strong style={{ color: "rgba(255,255,255,0.8)" }}>reine SaaS-Cloud-Lösung</strong>, gebaut auf Next.js und globalen Edge-Servern —
-                  kein Plugin, das Sie bei Ihren Kunden installieren müssen, kein Zugriff auf deren Hosting-Server,
-                  keine Sicherheitslücken durch veraltete Drittanbieter-Module.
-                  Das Scanning läuft in Echtzeit auf unserer Infrastruktur — Ihre Kunden-Server werden dabei
-                  in keiner Weise belastet.
+                  Scanne Kundenprojekte in Sekunden{" "}
+                  <strong style={{ color: "rgba(255,255,255,0.8)" }}>ohne Hosting-Zugriff</strong>.
+                  {" "}Nutze den exklusiven Agency-Auto-Fixer, um hunderte Fehler{" "}
+                  <strong style={{ color: "rgba(255,255,255,0.8)" }}>vollautomatisch direkt in WordPress</strong>{" "}
+                  zu beheben.
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 20 }}>
                   {([
-                    { Icon: Globe,       title: "Edge Computing",      desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher",          color: "#007BFF", glow: "rgba(0,123,255,0.15)",   border: "rgba(0,123,255,0.2)" },
-                    { Icon: ShieldCheck, title: "Maximale Sicherheit", desc: "Kein Hosting-Zugang nötig — keine Credentials Ihrer Kunden bei uns",        color: "#3dd398", glow: "rgba(61,211,152,0.12)",  border: "rgba(61,211,152,0.2)" },
-                    { Icon: Zap,         title: "Echtzeit-Scanning",   desc: "Ergebnisse in unter 60 Sekunden — ohne Wartezeiten oder Queues",             color: "#f59e0b", glow: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.2)" },
-                    { Icon: Server,      title: "DSGVO by Design",     desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive",                    color: "#818cf8", glow: "rgba(129,140,248,0.12)", border: "rgba(129,140,248,0.2)" },
+                    { Icon: Globe,       title: "Edge Computing",        desc: "Scans laufen auf globalen Edge-Nodes — latenzarm, ausfallsicher",     color: "#007BFF", glow: "rgba(0,123,255,0.10)",   border: "rgba(0,123,255,0.18)" },
+                    { Icon: ShieldCheck, title: "Maximale Sicherheit",   desc: "Kein Hosting-Zugang nötig — keine Credentials deiner Kunden bei uns", color: "#3dd398", glow: "rgba(61,211,152,0.08)",  border: "rgba(61,211,152,0.18)" },
+                    { Icon: Zap,         title: "Vom Scanner zum Fixer", desc: "Agency-Plugin übernimmt Alt-Texte, Metadaten & SEO-Blocker per API — du berechnest die Leistung", color: "#f59e0b", glow: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.2)" },
+                    { Icon: Server,      title: "DSGVO by Design",       desc: "Server in Deutschland, TLS-verschlüsselt, AVV inklusive",              color: "#818cf8", glow: "rgba(129,140,248,0.10)", border: "rgba(129,140,248,0.2)" },
                   ] as const).map(({ Icon, title, desc, color, glow, border }) => (
                     <div key={title} style={{
                       padding: "16px 18px", borderRadius: 12,
@@ -1150,14 +1168,64 @@ export default function AgencyPage() {
                   ))}
                 </div>
 
+                {/* Zeit-Hebel — Full-width highlight card */}
+                <div style={{
+                  padding: "20px 24px", borderRadius: 12, marginBottom: 20,
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.07) 0%, rgba(245,158,11,0.03) 100%)",
+                  border: "1px solid rgba(245,158,11,0.22)",
+                  display: "grid", gridTemplateColumns: "auto 1fr", gap: 16, alignItems: "flex-start",
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                    background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Zap size={18} color="#f59e0b" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
+                      Vom Scanner zum Fixer — Der Zeit-Hebel
+                    </div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
+                      Warum händisch korrigieren, wenn man skalieren kann? Unser Agency-Plugin übernimmt die Drecksarbeit.
+                      Alt-Texte, Metadaten und SEO-Blocker werden per API-Befehl aus deinem Dashboard korrigiert.{" "}
+                      <strong style={{ color: "rgba(255,255,255,0.7)" }}>Du berechnest die Leistung, wir liefern die Technik.</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hybrid-Freiheit — Einwandvorbehandlung */}
+                <div style={{
+                  padding: "16px 20px", borderRadius: 10, marginBottom: 24,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  display: "flex", gap: 12, alignItems: "flex-start",
+                }}>
+                  <div style={{
+                    width: 6, flexShrink: 0, alignSelf: "stretch",
+                    borderRadius: 3, background: "rgba(61,211,152,0.4)", marginTop: 2,
+                  }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "#3dd398", marginBottom: 5, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                      Maximale Freiheit: Kein Zwang.
+                    </div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.75 }}>
+                      Für den Erst-Check brauchst du keinen Zugriff und keine Installation.
+                      Das Plugin ist dein optionaler Turbo für die Umsetzung.{" "}
+                      <strong style={{ color: "rgba(255,255,255,0.6)" }}>Professionell, schlank, sicher.</strong>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Stack Pills */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.03em" }}>
-                  {["Next.js 15", "React 19", "Edge Runtime", "Neon Serverless DB", "Vercel Edge Network", "TypeScript"].map(tag => (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11 }}>
+                  {["Next.js 15", "React 19", "Edge Runtime", "Neon Serverless DB", "Vercel Edge Network", "WordPress Plugin", "TypeScript"].map(tag => (
                     <span key={tag} style={{
                       padding: "4px 10px", borderRadius: 6,
                       background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      color: "rgba(61,211,152,0.7)", fontWeight: 600,
+                      border: `1px solid ${tag === "WordPress Plugin" ? "rgba(129,140,248,0.22)" : "rgba(255,255,255,0.08)"}`,
+                      color: tag === "WordPress Plugin" ? "rgba(129,140,248,0.85)" : "rgba(61,211,152,0.7)",
+                      fontWeight: 600,
                     }}>{tag}</span>
                   ))}
                 </div>
@@ -1421,14 +1489,14 @@ export default function AgencyPage() {
                   Erste Website scannen — kostenlos, in 60 Sekunden.
                 </h2>
                 <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                  Kein Plugin, kein Hosting-Zugang nötig. Einfach URL eingeben und sofort sehen, wo Optimierungspotenzial liegt.
+                  Erst-Analyse ohne Zugriff — dann Fixes via Agency-Plugin vollautomatisch direkt in WordPress einpflegen.
                 </p>
               </div>
               <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>
                 <div className="wf-agency-cta-btn">
                   <CheckoutButton
                     plan="agency-starter"
-                    label="Jetzt Agency-Account erstellen →"
+                    label="Agentur-Power freischalten →"
                     style={{
                       padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,
                       background: "linear-gradient(90deg, #007BFF, #0057b8)",
