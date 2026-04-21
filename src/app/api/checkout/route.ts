@@ -7,7 +7,6 @@ const PLAN_PRICE_MAP: Record<string, string | undefined> = {
   "professional":   process.env.STRIPE_PRICE_PROFESSIONAL ?? process.env.STRIPE_PRICE_SMART_GUARD,
   "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD   ?? process.env.STRIPE_PRICE_PROFESSIONAL,
   "agency-starter": process.env.STRIPE_PRICE_AGENCY_STARTER ?? process.env.STRIPE_PRICE_AGENCY,
-  "agency-pro":     process.env.STRIPE_PRICE_AGENCY_PRO    ?? process.env.STRIPE_PRICE_AGENCY,
 };
 
 export async function POST(req: NextRequest) {

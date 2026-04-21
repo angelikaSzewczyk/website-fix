@@ -9,8 +9,7 @@ export type PlanKey =
   | "starter"
   | "smart-guard"
   | "professional"
-  | "agency-starter"
-  | "agency-pro";
+  | "agency-starter";
 
 export interface PlanDef {
   /** UI-Label für Badges und Dropdowns */
@@ -22,12 +21,11 @@ export interface PlanDef {
 }
 
 export const PLANS: Record<PlanKey, PlanDef> = {
-  "free":           { label: "Free",          mrr: 0,   color: "#6b7280" },
-  "starter":        { label: "Starter",        mrr: 29,  color: "#60a5fa" },
-  "smart-guard":    { label: "Professional",   mrr: 89,  color: "#fbbf24" },
-  "professional":   { label: "Professional",   mrr: 89,  color: "#fbbf24" },
-  "agency-starter": { label: "Agency",         mrr: 249, color: "#a78bfa" },
-  "agency-pro":     { label: "Agency Pro",     mrr: 249, color: "#a78bfa" },
+  "free":           { label: "Free",         mrr: 0,   color: "#6b7280" },
+  "starter":        { label: "Starter",      mrr: 29,  color: "#60a5fa" },
+  "smart-guard":    { label: "Professional", mrr: 89,  color: "#fbbf24" },
+  "professional":   { label: "Professional", mrr: 89,  color: "#fbbf24" },
+  "agency-starter": { label: "Agency",       mrr: 249, color: "#a78bfa" },
 };
 
 export const PLAN_KEYS = Object.keys(PLANS) as PlanKey[];
