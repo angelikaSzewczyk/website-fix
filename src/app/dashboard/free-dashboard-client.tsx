@@ -1017,28 +1017,81 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const yellowTotal = issues.filter(i => i.severity === "yellow").reduce((s, i) => s + (i.count ?? 1), 0);
   const greenTotal  = issues.filter(i => i.severity === "green").reduce((s, i) => s + (i.count ?? 1), 0);
 
-  // Consolidated issues — group by title+severity to avoid 7× "Alt-Attribut fehlt" spam
-  type ConsolidatedIssue = ParsedIssueProp & { totalCount: number; affectedUrls: string[]; allImages: string[] };
+  // ── Title normalisation helpers ────────────────────────────────────────────
+  // Many issues arrive as "BFSG-Verstoß: Fehlendes Alt-Attribut auf /seite1"
+  // Strip the URL suffix so we can group them, and replace scary BFSG language.
+  function normaliseTitleKey(raw: string): string {
+    return raw
+      .replace(/\s+auf\s+(https?:\/\/\S+|\/\S+|\S+\.(html|php|aspx))\s*$/i, "")
+      .replace(/\s+\(https?:\/\/\S+\)\s*$/, "")
+      .replace(/^BFSG-Verstoß:\s*/i, "")
+      .replace(/^Barrierefreiheit:\s*/i, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function friendlyTitle(raw: string): string {
+    // Strip URL suffix first
+    const stripped = raw
+      .replace(/\s+auf\s+(https?:\/\/\S+|\/\S+|\S+\.(html|php|aspx))\s*$/i, "")
+      .replace(/\s+\(https?:\/\/\S+\)\s*$/, "")
+      .trim();
+
+    // Replace BFSG-Verstoß prefix with a helpful category label
+    return stripped
+      .replace(/^BFSG-Verstoß:\s*fehlendes?\s+alt-attribut$/i,  "Barrierefreiheit: Bilder-Beschreibung fehlt")
+      .replace(/^BFSG-Verstoß:\s*fehlendes?\s+alt-text(e)?\s*$/i, "Barrierefreiheit: Bilder-Beschreibung fehlt")
+      .replace(/^BFSG-Verstoß:\s*/i,                             "Barrierefreiheit: ")
+      .replace(/^Fehlendes?\s+alt-attribut$/i,                   "Barrierefreiheit: Bilder-Beschreibung fehlt")
+      .replace(/^Fehlendes?\s+alt-text(e)?\s*$/i,               "Barrierefreiheit: Bilder-Beschreibung fehlt");
+  }
+
+  // Extract URL from title suffix "… auf /seite" if issue.url is absent
+  function extractUrlFromTitle(raw: string): string | null {
+    const m = raw.match(/\s+auf\s+(https?:\/\/\S+|\/\S+)\s*$/i);
+    if (m) {
+      const u = m[1];
+      // Prepend domain if only a path
+      if (u.startsWith("/") && lastScan?.url) {
+        try {
+          const base = new URL(lastScan.url);
+          return base.origin + u;
+        } catch { return null; }
+      }
+      return u;
+    }
+    return null;
+  }
+
+  // Consolidated issues — group by normalised title+severity
+  // Handles "BFSG-Verstoß: … auf /seite1", "BFSG-Verstoß: … auf /seite2" → 1 entry
+  type ConsolidatedIssue = ParsedIssueProp & {
+    displayTitle: string;
+    totalCount: number;
+    affectedUrls: string[];
+    allImages: string[];
+  };
   const consolidatedIssues: ConsolidatedIssue[] = (() => {
     const map = new Map<string, ConsolidatedIssue>();
     for (const issue of issues) {
-      const key = `${issue.severity}||${issue.title}`;
+      const key = `${issue.severity}||${normaliseTitleKey(issue.title)}`;
+      // Collect URL — from issue.url or extracted from title
+      const url = issue.url ?? extractUrlFromTitle(issue.title) ?? null;
+      const imgs = url
+        ? unterseiten?.find(p => p.url === url)?.altMissingImages ?? []
+        : [];
+
       if (map.has(key)) {
         const ex = map.get(key)!;
         ex.totalCount += issue.count ?? 1;
-        if (issue.url) ex.affectedUrls.push(issue.url);
-        const imgs = issue.url
-          ? unterseiten?.find(p => p.url === issue.url)?.altMissingImages ?? []
-          : [];
+        if (url && !ex.affectedUrls.includes(url)) ex.affectedUrls.push(url);
         ex.allImages.push(...imgs);
       } else {
-        const imgs = issue.url
-          ? unterseiten?.find(p => p.url === issue.url)?.altMissingImages ?? []
-          : [];
         map.set(key, {
           ...issue,
+          displayTitle: friendlyTitle(issue.title),
           totalCount: issue.count ?? 1,
-          affectedUrls: issue.url ? [issue.url] : [],
+          affectedUrls: url ? [url] : [],
           allImages: imgs,
         });
       }
@@ -2175,7 +2228,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                         {/* Title + location info */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>
-                            {issue.title}
+                            {issue.displayTitle}
                           </p>
                           {/* Consolidated: multiple pages → "X Unterseiten betroffen" */}
                           {issue.affectedUrls.length > 1 ? (
