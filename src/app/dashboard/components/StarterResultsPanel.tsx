@@ -26,16 +26,31 @@ interface Props {
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
 
 function getLabel(sev: IssueProp["severity"]) {
-  return sev === "red" ? "Kritisch" : sev === "yellow" ? "Warnung" : "Hinweis";
+  return sev === "red" ? "Prio" : sev === "yellow" ? "Hinweis" : "Hinweis";
 }
 function getColor(sev: IssueProp["severity"]) {
-  return sev === "red" ? "#f87171" : sev === "yellow" ? "#fbbf24" : "#4ade80";
+  return sev === "red" ? "#c07070" : sev === "yellow" ? "#fbbf24" : "#4ade80";
 }
 function getBg(sev: IssueProp["severity"]) {
-  return sev === "red" ? "rgba(239,68,68,0.08)" : sev === "yellow" ? "rgba(251,191,36,0.08)" : "rgba(74,222,128,0.08)";
+  return sev === "red" ? "rgba(160,80,80,0.07)" : sev === "yellow" ? "rgba(251,191,36,0.08)" : "rgba(74,222,128,0.08)";
 }
 function getBorder(sev: IssueProp["severity"]) {
-  return sev === "red" ? "rgba(239,68,68,0.22)" : sev === "yellow" ? "rgba(251,191,36,0.22)" : "rgba(74,222,128,0.22)";
+  return sev === "red" ? "rgba(160,80,80,0.18)" : sev === "yellow" ? "rgba(251,191,36,0.22)" : "rgba(74,222,128,0.22)";
+}
+
+// Contextual tool label for bulk issues (Sammelfehler)
+function getAffectedTool(issue: IssueProp): string {
+  const t = (issue.title + " " + issue.body).toLowerCase();
+  if (/alt.?text|alternativtext/.test(t))  return "Medienbibliothek (Alt-Texte)";
+  if (/meta.?desc|snippet/.test(t))        return "SEO-Plugin (Meta-Descriptions)";
+  if (/h1|hauptüberschrift/.test(t))       return "Seiten-Editor (Überschriften)";
+  if (/sitemap/.test(t))                   return "Yoast SEO (Sitemap)";
+  if (/cookie|consent/.test(t))            return "Cookie-Plugin";
+  if (/404|broken|kaputt/.test(t))         return "Weiterleitungs-Manager";
+  if (/label|formular/.test(t))            return "Kontaktformular-Plugin";
+  if (/lcp|cls|vitals|ladezeit/.test(t))   return "Caching- & Bild-Optimierung";
+  if (/ssl|https/.test(t))                 return "Hosting-Panel (SSL)";
+  return "Website-Inhalt";
 }
 
 // Fix steps per issue title keyword
@@ -80,7 +95,7 @@ function ScoreRing({ score, label, color, delay = 0 }: { score: number; label: s
   const circumference = 2 * Math.PI * R;
   const offset = circumference - (displayed / 100) * circumference;
 
-  const grade = displayed >= 80 ? "Sehr gut" : displayed >= 60 ? "Gut" : displayed >= 40 ? "Mittel" : "Kritisch";
+  const grade = displayed >= 80 ? "Sehr gut" : displayed >= 60 ? "Gut" : displayed >= 40 ? "OK" : "Potenzial";
 
   return (
     <div style={{ textAlign: "center", padding: "8px 0" }}>
@@ -167,11 +182,10 @@ function AccordionItem({
         </span>
         {issue.count != null && issue.count > 1 && (
           <span style={{
-            flexShrink: 0, fontSize: 10, fontWeight: 700,
-            padding: "2px 7px", borderRadius: 10,
-            background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)",
+            flexShrink: 0, fontSize: 10, fontWeight: 400,
+            color: "rgba(255,255,255,0.22)",
           }}>
-            ×{issue.count}
+            {issue.count}×
           </span>
         )}
         {/* Chevron */}
@@ -567,9 +581,9 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
         {/* Rings */}
         <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 20 }}>
-          <ScoreRing score={seoScore}  label="SEO"      color={seoScore  >= 70 ? "#4ade80" : seoScore  >= 45 ? "#fbbf24" : "#f87171"} delay={0}   />
-          <ScoreRing score={techScore} label="Technik"  color={techScore >= 70 ? "#4ade80" : techScore >= 45 ? "#fbbf24" : "#f87171"} delay={180} />
-          <ScoreRing score={secScore}  label="Sicherheit" color={secScore >= 70 ? "#4ade80" : secScore >= 45 ? "#fbbf24" : "#f87171"} delay={360} />
+          <ScoreRing score={seoScore}  label="SEO"        color={seoScore  >= 70 ? "#4ade80" : seoScore  >= 40 ? "#fbbf24" : "#c07070"} delay={0}   />
+          <ScoreRing score={techScore} label="Technik"    color={techScore >= 70 ? "#4ade80" : techScore >= 40 ? "#fbbf24" : "#c07070"} delay={180} />
+          <ScoreRing score={secScore}  label="Sicherheit" color={secScore  >= 70 ? "#4ade80" : secScore  >= 40 ? "#fbbf24" : "#c07070"} delay={360} />
         </div>
       </div>
 
@@ -602,7 +616,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     <div style={{
                       width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      background: `rgba(${c === "#f87171" ? "239,68,68" : c === "#fbbf24" ? "251,191,36" : "74,222,128"},0.15)`,
+                      background: `rgba(${c === "#c07070" ? "160,80,80" : c === "#fbbf24" ? "251,191,36" : "74,222,128"},0.15)`,
                       border: `1.5px solid ${getBorder(issue.severity)}`,
                       fontSize: 11, fontWeight: 900, color: c,
                     }}>
@@ -618,8 +632,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                           {getLabel(issue.severity)}
                         </span>
                         {issue.count != null && issue.count > 1 && (
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>
-                            {issue.count}× betroffen
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", fontWeight: 400 }}>
+                            Betrifft: {getAffectedTool(issue)}
                           </span>
                         )}
                       </div>
@@ -674,8 +688,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           {/* Filter legend */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
-              { sev: "red" as const,    label: `${issues.filter(i=>i.severity==="red").length} Kritisch` },
-              { sev: "yellow" as const, label: `${issues.filter(i=>i.severity==="yellow").length} Warnungen` },
+              { sev: "red" as const,    label: `${issues.filter(i=>i.severity==="red").length} Handlungsbedarf` },
+              { sev: "yellow" as const, label: `${issues.filter(i=>i.severity==="yellow").length} Hinweise` },
               { sev: "green" as const,  label: `${issues.filter(i=>i.severity==="green").length} Hinweise` },
             ].map(f => (
               <span key={f.sev} style={{

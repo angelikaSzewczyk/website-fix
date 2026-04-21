@@ -93,9 +93,9 @@ const D = {
   blueGlow:     "0 2px 14px rgba(0,123,255,0.35)",
 
   // Functional
-  red:          "#f87171",
-  redBg:        "rgba(239,68,68,0.1)",
-  redBorder:    "rgba(239,68,68,0.25)",
+  red:          "#c07070",
+  redBg:        "rgba(160,80,80,0.08)",
+  redBorder:    "rgba(160,80,80,0.18)",
   amber:        "#fbbf24",
   amberBg:      "rgba(251,191,36,0.1)",
   amberBorder:  "rgba(251,191,36,0.25)",
@@ -1834,9 +1834,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </div>
                 ))
               ) : [
-                { label: "Kritisch",   count: redCount,   color: "#f87171", bg: D.redBg,   border: D.redBorder,   icon: "⛔" },
-                { label: "Warnungen",  count: yellowCount, color: D.amber,   bg: D.amberBg, border: D.amberBorder, icon: "⚠️" },
-                { label: "Hinweise",   count: greenCount,  color: D.green,   bg: D.greenBg, border: D.greenBorder, icon: "✓"  },
+                { label: "Handlungsbedarf", count: redCount,    color: D.red,   bg: D.redBg,   border: D.redBorder   },
+                { label: "Optimierungen",   count: yellowCount, color: D.amber, bg: D.amberBg, border: D.amberBorder },
+                { label: "Hinweise",        count: greenCount,  color: D.green, bg: D.greenBg, border: D.greenBorder },
               ].map(s => (
                 <div key={s.label} style={{
                   padding: "20px 22px",
@@ -2040,7 +2040,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 }).map((issue, idx) => {
                   const isOpen    = expandedFinding === idx;
                   const isFixOpen = fixOpenIdx === idx;
-                  const accentColor = issue.severity === "red" ? "#f87171" : issue.severity === "yellow" ? D.amber : D.green;
+                  const accentColor = issue.severity === "red" ? D.red : issue.severity === "yellow" ? D.amber : D.green;
                   const fixSteps  = generateFixSteps(issue).steps;
                   // Look up image filenames for per-page alt-text issues
                   const pageImages = issue.url
