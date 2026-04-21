@@ -882,6 +882,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [batchFixType, setBatchFixType]         = useState("ping");
   const [batchRunning, setBatchRunning]         = useState(false);
   const [batchResult, setBatchResult]           = useState<{ summary: { total: number; success: number; failed: number } } | null>(null);
+  const [quickStartUrl, setQuickStartUrl]       = useState("");
+  const [showLimitModal, setShowLimitModal]     = useState(false);
 
   const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
 
@@ -1464,34 +1466,78 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         {/* ── PAGE CONTENT ─────────────────────────────── */}
         <main style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
 
-          {/* ① PAID-PLAN EMPTY STATE — shown only when plan is active but no scan yet */}
+          {/* ① QUICK-START GUIDE — shown when plan is active but no scan yet */}
           {!lastScan && plan !== "free" && (
             <div style={{
-              background: "linear-gradient(135deg, #0f2442 0%, #0a1a35 100%)",
-              border: "1px solid rgba(37,99,235,0.35)",
-              borderRadius: 16, padding: "32px 36px", marginBottom: 16,
-              display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24,
+              background: "linear-gradient(160deg, #0d1f3c 0%, #091528 100%)",
+              border: "1px solid rgba(37,99,235,0.3)",
+              borderRadius: 18, padding: "40px 40px 32px", marginBottom: 16,
+              textAlign: "center",
             }}>
-              <div>
-                <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  Plan aktiv — nächster Schritt
-                </p>
-                <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>
-                  Ersten Website-Scan jetzt starten
-                </h2>
-                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: 480 }}>
-                  Dein Plan ist aktiv. Gib deine Website-URL ein und sieh in Sekunden, welche Fehler behoben werden können.
-                </p>
+              <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                Quick-Start Guide — Schritt 1 von 1
+              </p>
+              <h2 style={{ margin: "0 0 10px", fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>
+                URL eingeben für deinen ersten Deep-Scan
+              </h2>
+              <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
+                Kein Plugin nötig. Kein Hosting-Zugang. Einfach die Domain eingeben — fertig.
+              </p>
+
+              {/* URL Input */}
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  const url = quickStartUrl.trim();
+                  if (!url) return;
+                  const full = url.startsWith("http") ? url : `https://${url}`;
+                  window.location.href = `/dashboard/scan?url=${encodeURIComponent(full)}`;
+                }}
+                style={{ display: "flex", gap: 10, maxWidth: 540, margin: "0 auto 20px", flexWrap: "wrap" }}
+              >
+                <input
+                  type="text"
+                  value={quickStartUrl}
+                  onChange={e => setQuickStartUrl(e.target.value)}
+                  placeholder="https://deine-website.de"
+                  style={{
+                    flex: 1, minWidth: 200,
+                    padding: "13px 18px", borderRadius: 10, fontSize: 15,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1.5px solid rgba(37,99,235,0.4)",
+                    color: "#fff", outline: "none", fontFamily: "inherit",
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.8)"; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+                  onBlur={e  => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.4)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+                />
+                <button type="submit" style={{
+                  padding: "13px 24px", borderRadius: 10, fontSize: 14, fontWeight: 800,
+                  background: "#2563EB", color: "#fff", border: "none", cursor: "pointer",
+                  boxShadow: "0 4px 20px rgba(37,99,235,0.5)", whiteSpace: "nowrap",
+                  fontFamily: "inherit",
+                }}>
+                  Deep-Scan starten →
+                </button>
+              </form>
+
+              {/* Badges */}
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                {[
+                  { icon: "📄", text: "25 Seiten inkl." },
+                  { icon: "🔍", text: "SEO-Audit" },
+                  { icon: "📱", text: "Mobile-Check" },
+                  { icon: "⚡", text: "< 60 Sekunden" },
+                ].map(b => (
+                  <div key={b.text} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.55)",
+                  }}>
+                    <span>{b.icon}</span>{b.text}
+                  </div>
+                ))}
               </div>
-              <a href="/dashboard/scan" style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "14px 28px", borderRadius: 10, flexShrink: 0,
-                background: "#2563EB", color: "#fff", fontWeight: 700, fontSize: 15,
-                textDecoration: "none", boxShadow: "0 4px 20px rgba(37,99,235,0.45)",
-                whiteSpace: "nowrap",
-              }}>
-                Website-URL eingeben →
-              </a>
             </div>
           )}
 
@@ -1543,15 +1589,18 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 {monthlyScans >= scanLimit ? (
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "9px 20px", borderRadius: D.radiusSm,
-                    background: D.redBg, border: `1px solid ${D.redBorder}`,
-                    color: D.red, fontSize: 13, fontWeight: 700,
-                  }}>
+                  <button
+                    onClick={() => setShowLimitModal(true)}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "9px 20px", borderRadius: D.radiusSm,
+                      background: D.redBg, border: `1px solid ${D.redBorder}`,
+                      color: D.red, fontSize: 13, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>
                     <LockIco size={13} color={D.red} />
-                    Scan-Limit erreicht
-                  </span>
+                    Scan-Limit erreicht — Upgrade
+                  </button>
                 ) : (
                   <BtnPrimary href={
                     !lastScan && sessionDomain
@@ -1703,8 +1752,34 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {/* ④ SUMMARY CARDS */}
           <div style={{ marginBottom: 28 }}>
+            {/* Skeleton-Loader wenn noch kein Scan */}
+            <style>{`
+              @keyframes wf-shimmer {
+                0%   { background-position: -400px 0; }
+                100% { background-position: 400px 0; }
+              }
+              .wf-skeleton {
+                background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+                background-size: 800px 100%;
+                animation: wf-shimmer 1.6s infinite;
+              }
+            `}</style>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {[
+              {!lastScan ? (
+                // Skeleton cards
+                [0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    borderRadius: D.radiusSm, padding: "20px 22px",
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    minHeight: 90,
+                  }}>
+                    <div className="wf-skeleton" style={{ height: 10, width: 60, borderRadius: 4, marginBottom: 16 }} />
+                    <div className="wf-skeleton" style={{ height: 28, width: 40, borderRadius: 6, marginBottom: 10 }} />
+                    <div className="wf-skeleton" style={{ height: 8, width: 80, borderRadius: 4 }} />
+                  </div>
+                ))
+              ) : [
                 { label: "Kritisch",   count: redCount,   color: "#f87171", bg: D.redBg,   border: D.redBorder,   icon: "⛔" },
                 { label: "Warnungen",  count: yellowCount, color: D.amber,   bg: D.amberBg, border: D.amberBorder, icon: "⚠️" },
                 { label: "Hinweise",   count: greenCount,  color: D.green,   bg: D.greenBg, border: D.greenBorder, icon: "✓"  },
@@ -3053,6 +3128,71 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 }}
               >
                 {switching ? "Wird gelöscht..." : "Wechseln & Daten löschen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SCAN-LIMIT UPGRADE MODAL ─────────────────────────────────── */}
+      {showLimitModal && (
+        <div
+          onClick={() => setShowLimitModal(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#0f1623", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 18, padding: "36px 32px", maxWidth: 440, width: "100%",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+              textAlign: "center",
+            }}
+          >
+            {/* Icon */}
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", margin: "0 auto 20px",
+              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+
+            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#f87171", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+              Scan-Limit erreicht
+            </p>
+            <h2 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.025em" }}>
+              Alle {scanLimit} Scans diesen Monat aufgebraucht
+            </h2>
+            <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
+              Mit dem <strong style={{ color: "#FBBF24" }}>Professional-Plan</strong> bekommst du unbegrenzte Scans,
+              KI-gestützte Fix-Anleitungen und Monitoring rund um die Uhr.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <a href="/fuer-agenturen#pricing" style={{
+                display: "block", padding: "13px 24px", borderRadius: 10,
+                background: "#FBBF24", color: "#0b0c10", fontWeight: 800, fontSize: 14,
+                textDecoration: "none", boxShadow: "0 4px 16px rgba(251,191,36,0.3)",
+              }}>
+                Jetzt auf Professional upgraden →
+              </a>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                style={{
+                  padding: "10px", background: "none", border: "none",
+                  color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Schließen
               </button>
             </div>
           </div>

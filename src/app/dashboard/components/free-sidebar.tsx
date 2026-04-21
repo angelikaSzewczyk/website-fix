@@ -89,11 +89,31 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.18); }
           50%       { box-shadow: 0 0 10px rgba(251,191,36,0.35); }
         }
+        @keyframes wf-green-glow {
+          0%, 100% { box-shadow: 0 0 4px rgba(34,197,94,0.5); }
+          50%       { box-shadow: 0 0 8px rgba(34,197,94,0.9); }
+        }
         .wf-sidebar-link { transition: background 0.12s, color 0.12s; }
         .wf-sidebar-link:hover { background: rgba(255,255,255,0.04) !important; }
         .wf-sidebar-link.active { background: ${S.blueBg} !important; }
+        .wf-nav-whitelabel { position: relative; }
         .wf-nav-whitelabel:hover { background: rgba(167,139,250,0.06) !important; }
+        .wf-nav-whitelabel:hover .wf-wl-tooltip { opacity: 1; pointer-events: auto; transform: translateX(0); }
+        .wf-wl-tooltip {
+          position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%) translateX(-4px);
+          background: #0f1623; border: 1px solid rgba(167,139,250,0.3);
+          color: rgba(255,255,255,0.75); font-size: 11px; font-weight: 500;
+          padding: 6px 10px; border-radius: 7px; white-space: nowrap;
+          opacity: 0; pointer-events: none;
+          transition: opacity 0.15s, transform 0.15s;
+          z-index: 100; line-height: 1.4;
+        }
+        .wf-wl-tooltip::before {
+          content: ""; position: absolute; right: 100%; top: 50%; transform: translateY(-50%);
+          border: 5px solid transparent; border-right-color: rgba(167,139,250,0.3);
+        }
         .wf-pro-badge { animation: wf-gold-pulse 3s ease-in-out infinite; }
+        .wf-plan-dot  { animation: wf-green-glow 2s ease-in-out infinite; }
       `}</style>
 
       {/* Logo */}
@@ -113,9 +133,9 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               className={`wf-sidebar-link${active ? " active" : ""}${isWL ? " wf-nav-whitelabel" : ""}`}
               style={{
                 display: "flex", alignItems: "center", gap: 9,
-                padding: "8px 10px", borderRadius: 7,
-                marginBottom: isWL ? 0 : 2,
-                marginTop:    isWL ? 8 : 0,
+                padding: "7px 10px", borderRadius: 7,
+                marginBottom: isWL ? 0 : 1,
+                marginTop:    isWL ? 6 : 0,
                 textDecoration: "none", fontSize: 13,
                 fontWeight: active ? 600 : 400,
                 color: active ? S.text : item.locked ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.55)",
@@ -128,6 +148,13 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               <span style={{ flex: 1, color: isWL ? "rgba(167,139,250,0.8)" : undefined }}>
                 {item.label}
               </span>
+              {/* Tooltip für White-Label — erscheint beim Hover über die gesamte Row */}
+              {isWL && (
+                <span className="wf-wl-tooltip">
+                  Ab Agency-Plan verfügbar<br/>
+                  <span style={{ color: "#a78bfa", fontWeight: 700 }}>Jetzt upgraden →</span>
+                </span>
+              )}
 
               {/* Scan counter badge for Live Scan */}
               {item.icon === "scan" && !item.locked && (
@@ -267,7 +294,12 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
             <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: S.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {firstName}
             </p>
-            <p style={{ margin: 0, fontSize: 10, color: S.textMuted, lineHeight: 1.3 }}>
+            <p style={{ margin: 0, fontSize: 10, color: S.textMuted, lineHeight: 1.3, display: "flex", alignItems: "center", gap: 5 }}>
+              <span className="wf-plan-dot" style={{
+                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                background: plan !== "free" ? "#22C55E" : "#6b7280",
+                display: "inline-block",
+              }} />
               Plan: {planLabel}
             </p>
           </div>
