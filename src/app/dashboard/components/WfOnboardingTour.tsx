@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Search, BarChart2, FileText, Check, Clock, ArrowRight, ChevronLeft } from "lucide-react";
 
 const ONBOARDING_KEY = "wf_onboarding_done";
 
@@ -9,17 +10,17 @@ type Phase = "welcome" | "tour" | null;
 
 const TOUR_STEPS = [
   {
-    emoji: "🔍",
+    icon: <Search size={20} strokeWidth={1.8} />,
     title: "Schritt 1 — Scan starten",
     body: "Gib hier die URL deiner Website ein. Wir prüfen bis zu 25 Seiten auf SEO- und Technik-Fehler — in unter 60 Sekunden.",
   },
   {
-    emoji: "📊",
+    icon: <BarChart2 size={20} strokeWidth={1.8} />,
     title: "Schritt 2 — Ergebnisse lesen",
     body: "Hier erscheinen gleich deine Ergebnisse. Wir kategorisieren in Kritisch, Warnungen und Optimierungen — mit direkten Fix-Anleitungen.",
   },
   {
-    emoji: "📄",
+    icon: <FileText size={20} strokeWidth={1.8} />,
     title: "Schritt 3 — Berichte exportieren",
     body: "Deine fertigen Berichte kannst du jederzeit hier exportieren und als PDF an Kunden weitergeben.",
   },
@@ -143,7 +144,7 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
               border: "1px solid rgba(34,197,94,0.22)",
               color: "#22C55E", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
             }}>
-              ✓ {planLabel}-Plan aktiv
+              <Check size={11} strokeWidth={3} /> {planLabel}-Plan aktiv
             </span>
           </div>
 
@@ -189,15 +190,9 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
                   border: `1.5px solid ${item.done ? "rgba(34,197,94,0.35)" : "rgba(251,191,36,0.32)"}`,
                 }}>
                   {item.done ? (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22C55E"
-                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
+                    <Check size={11} strokeWidth={3} color="#22C55E" />
                   ) : (
-                    <div style={{
-                      width: 7, height: 7, borderRadius: "50%", background: "#FBBF24",
-                      animation: "wf-ob-pulse 1.6s ease-in-out infinite",
-                    }} />
+                    <Clock size={11} strokeWidth={2.5} color="#FBBF24" />
                   )}
                 </div>
 
@@ -213,7 +208,7 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
 
                 {/* Status tag */}
                 {item.done ? (
-                  <span style={{ fontSize: 11, color: "#22C55E", fontWeight: 700 }}>✓</span>
+                  <Check size={13} strokeWidth={2.5} color="#22C55E" />
                 ) : (
                   <span style={{
                     fontSize: 9, color: "#FBBF24", fontWeight: 700,
@@ -242,7 +237,9 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
               transition: "box-shadow 0.2s",
             }}
           >
-            Ersten Scan starten →
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              Ersten Scan starten <ArrowRight size={15} strokeWidth={2.5} />
+            </span>
           </button>
 
           {/* Secondary actions */}
@@ -318,12 +315,13 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
         {/* Content */}
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 24 }}>
           <div style={{
-            fontSize: 24, lineHeight: 1,
             background: "rgba(251,191,36,0.1)",
             border: "1px solid rgba(251,191,36,0.2)",
             borderRadius: 10, padding: "10px 12px", flexShrink: 0,
+            color: "#FBBF24",
+            display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            {current.emoji}
+            {current.icon}
           </div>
           <div>
             <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
@@ -346,22 +344,28 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
           <div style={{ display: "flex", gap: 8 }}>
             {tourStep > 0 && (
               <button onClick={() => setTourStep(s => s - 1)} style={{
-                padding: "8px 18px", borderRadius: 8,
+                padding: "8px 16px", borderRadius: 8,
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.1)",
                 color: "rgba(255,255,255,0.65)",
                 fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 6,
               }}>
-                ← Zurück
+                <ChevronLeft size={14} strokeWidth={2} /> Zurück
               </button>
             )}
             <button onClick={advanceTour} style={{
-              padding: "8px 22px", borderRadius: 8,
+              padding: "8px 20px", borderRadius: 8,
               background: "#FBBF24", border: "none",
               color: "#0b0c10", fontSize: 13, fontWeight: 800,
               cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", gap: 6,
             }}>
-              {isLast ? "Los geht's ✓" : "Weiter →"}
+              {isLast ? (
+                <><Check size={14} strokeWidth={2.5} /> Los geht&apos;s</>
+              ) : (
+                <>Weiter <ArrowRight size={14} strokeWidth={2.5} /></>
+              )}
             </button>
           </div>
         </div>
