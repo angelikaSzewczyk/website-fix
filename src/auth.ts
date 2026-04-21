@@ -85,8 +85,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 20px;color:#111">
                   <h1 style="font-size:24px;margin-bottom:8px">Willkommen, ${user.name?.split(" ")[0] ?? ""}!</h1>
                   <p style="color:#555;line-height:1.6">Dein WebsiteFix-Account ist bereit. Du kannst jetzt Websites scannen — kostenlos, ohne Plugin, ohne Entwickler.</p>
-                  <a href="${process.env.NEXTAUTH_URL}/dashboard/scan" style="display:inline-block;margin:24px 0;padding:14px 28px;background:linear-gradient(90deg,#8df3d3,#7aa6ff);color:#0b0c10;text-decoration:none;border-radius:10px;font-weight:700">
-                    Ersten Scan starten →
+                  <a href="${process.env.NEXTAUTH_URL}/fuer-agenturen#pricing" style="display:inline-block;margin:24px 0;padding:14px 28px;background:linear-gradient(90deg,#8df3d3,#7aa6ff);color:#0b0c10;text-decoration:none;border-radius:10px;font-weight:700">
+                    Plan auswählen →
                   </a>
                   <p style="color:#999;font-size:13px">Bei Fragen: support@website-fix.com</p>
                 </div>

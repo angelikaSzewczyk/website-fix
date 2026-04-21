@@ -174,10 +174,11 @@ function RegisterContent() {
 
   async function handleGoogle() {
     setLoading(true);
-    // Always go to checkout after Google sign-in — never to free dashboard
+    // Hash-Fragmente (#...) sind in HTTP-Redirects nicht erlaubt → NextAuth rejectet sie
+    // Stattdessen: AutoCheckout liest ?checkout= param auf /fuer-agenturen
     const callbackUrl = isPaidPlan
-      ? `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`
-      : "/fuer-agenturen#pricing";
+      ? `/fuer-agenturen?checkout=${encodeURIComponent(plan)}`
+      : "/fuer-agenturen";
     await signIn("google", { callbackUrl });
   }
 
