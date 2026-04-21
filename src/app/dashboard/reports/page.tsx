@@ -9,7 +9,17 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-const AGENCY_PLANS = ["agency-pro", "agency-starter"];
+// Valid plans — no "business" / "freelancer" legacy aliases
+const ALLOWED_PLANS  = ["starter", "professional", "smart-guard", "agency-starter", "agency-pro"];
+const AGENCY_PLANS   = ["agency-starter", "agency-pro"];
+
+export type ScanHistoryItem = {
+  id:          string;
+  url:         string;
+  created_at:  string;
+  issue_count: number | null;
+  type:        string;
+};
 
 export type ActivityItem = {
   type:  "lead" | "scan" | "activity";
@@ -27,13 +37,13 @@ export type ReportBranding = {
 };
 
 export type ReportKPIs = {
-  leadsThisMonth:    number;
-  leadsTotal:        number;
-  scansThisMonth:    number;
-  avgResponseMs:     number | null;
-  monitoredSites:    number;
-  uptimePct:         number | null;
-  widgetViews:       number;
+  leadsThisMonth: number;
+  leadsTotal:     number;
+  scansThisMonth: number;
+  avgResponseMs:  number | null;
+  monitoredSites: number;
+  uptimePct:      number | null;
+  widgetViews:    number;
 };
 
 export type SavedSite = { id: string; name: string | null; url: string };
@@ -43,29 +53,47 @@ export default async function ReportsPage() {
   if (!session?.user?.email) redirect("/login");
 
   const sql  = neon(process.env.DATABASE_URL!);
-  const plan = (session.user as { plan?: string }).plan ?? "free";
 
-  if (!["smart-guard", "professional", "starter", ...AGENCY_PLANS].includes(plan)) redirect("/dashboard");
+  // Always read plan fresh from DB (JWT can be stale after plan change)
+  let plan = "starter";
+  try {
+    const r = await sql`SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1`;
+    plan = (r[0]?.plan as string) ?? (session.user as { plan?: string }).plan ?? "starter";
+  } catch {
+    plan = (session.user as { plan?: string }).plan ?? "starter";
+  }
+
+  if (!ALLOWED_PLANS.includes(plan)) redirect("/dashboard");
 
   const userId   = Number(session.user.id);
   const agencyId = String(session.user.id);
+  const isAgency = AGENCY_PLANS.includes(plan);
 
   const now        = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const monthLabel = now.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
 
-  const isAgency = AGENCY_PLANS.includes(plan);
-
+  // ── Queries — split by plan to avoid unnecessary DB load ────────────────────
   const [
+    scanHistory,
     brandingRows,
-    leadStats,
-    recentLeads,
     scanStats,
     siteRows,
+    leadStats,
+    recentLeads,
     activityRows,
   ] = await Promise.all([
 
-    // Branding
+    // Scan archive — all plans (starter: 5, professional: 10, agency: 10)
+    sql`
+      SELECT id::text, url, created_at::text, issue_count, COALESCE(type,'website') AS type
+      FROM scans
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+      LIMIT ${isAgency || plan !== "starter" ? 10 : 5}
+    `,
+
+    // Agency branding / accent color
     sql`
       SELECT
         COALESCE(primary_color, '#2563EB') AS primary_color,
@@ -77,66 +105,60 @@ export default async function ReportsPage() {
       LIMIT 1
     `,
 
-    // Lead KPIs (agency only)
-    isAgency
-      ? sql`
-          SELECT
-            COUNT(*)         FILTER (WHERE created_at >= ${monthStart})::int AS leads_this_month,
-            COUNT(*)::int                                                     AS leads_total
-          FROM widget_leads
-          WHERE agency_user_id = ${agencyId}
-        `
-      : Promise.resolve([{ leads_this_month: 0, leads_total: 0 }]),
-
-    // Recent leads for activity feed (agency only)
-    isAgency
-      ? sql`
-          SELECT
-            visitor_email, scanned_url,
-            COALESCE(score, 0)::int AS score,
-            created_at::text
-          FROM widget_leads
-          WHERE agency_user_id = ${agencyId}
-          ORDER BY created_at DESC
-          LIMIT 6
-        `
-      : Promise.resolve([]),
-
     // Scan KPIs from scan_log
     sql`
       SELECT
-        COUNT(*) FILTER (WHERE created_at >= ${monthStart})::int          AS scans_this_month,
+        COUNT(*) FILTER (WHERE created_at >= ${monthStart})::int AS scans_this_month,
         AVG(duration_ms) FILTER (WHERE created_at >= ${monthStart}
-          AND status = 'success' AND duration_ms IS NOT NULL)::int        AS avg_ms
+          AND status = 'success' AND duration_ms IS NOT NULL)::int AS avg_ms
       FROM scan_log
       WHERE user_id = ${userId}
     `,
 
-    // Monitored websites + uptime from last_check_status
+    // Monitored sites
     sql`
-      SELECT
-        id::text, name, url, last_check_status
+      SELECT id::text, name, url, last_check_status
       FROM saved_websites
       WHERE user_id = ${userId}
       ORDER BY name ASC NULLS LAST, url ASC
     `,
 
-    // Recent activity_logs
+    // Lead stats — agency only
+    isAgency
+      ? sql`
+          SELECT
+            COUNT(*) FILTER (WHERE created_at >= ${monthStart})::int AS leads_this_month,
+            COUNT(*)::int                                              AS leads_total
+          FROM widget_leads
+          WHERE agency_user_id = ${agencyId}
+        `
+      : Promise.resolve([{ leads_this_month: 0, leads_total: 0 }]),
+
+    // Recent leads — agency only
+    isAgency
+      ? sql`
+          SELECT visitor_email, scanned_url, COALESCE(score,0)::int AS score, created_at::text
+          FROM widget_leads
+          WHERE agency_user_id = ${agencyId}
+          ORDER BY created_at DESC LIMIT 6
+        `
+      : Promise.resolve([]),
+
+    // Activity logs — agency only
     isAgency
       ? sql`
           SELECT event_type, metadata, created_at::text
           FROM activity_logs
           WHERE agency_id = ${userId}
-          ORDER BY created_at DESC
-          LIMIT 5
+          ORDER BY created_at DESC LIMIT 5
         `
       : Promise.resolve([]),
   ]);
 
-  // ── Compute KPIs ─────────────────────────────────────────────────────────────
-  const br  = (brandingRows[0] ?? {}) as { primary_color: string; agency_name: string; logo_url: string; widget_views: number };
-  const ls  = (leadStats[0]   ?? {}) as { leads_this_month: number; leads_total: number };
-  const ss  = (scanStats[0]   ?? {}) as { scans_this_month: number; avg_ms: number | null };
+  // ── Assemble ────────────────────────────────────────────────────────────────
+  const br = (brandingRows[0] ?? {}) as { primary_color: string; agency_name: string; logo_url: string; widget_views: number };
+  const ls = (leadStats[0]   ?? {}) as { leads_this_month: number; leads_total: number };
+  const ss = (scanStats[0]   ?? {}) as { scans_this_month: number; avg_ms: number | null };
 
   const sites     = siteRows as { id: string; name: string | null; url: string; last_check_status: string | null }[];
   const okSites   = sites.filter(s => s.last_check_status === "ok").length;
@@ -158,50 +180,33 @@ export default async function ReportsPage() {
     widgetViews:    br.widget_views ?? 0,
   };
 
-  // ── Build unified activity feed ───────────────────────────────────────────────
   const EVENT_META: Record<string, { icon: string; label: string; color: string }> = {
-    ai_fix_generated:    { icon: "🤖", label: "KI-Optimierungsvorschlag",  color: "#7C3AED" },
-    jira_ticket_created: { icon: "📋", label: "Entwickler-Ticket erstellt", color: "#0369A1" },
-    scan_completed:      { icon: "🔍", label: "Audit abgeschlossen",        color: "#2563EB" },
-    alert_sent:          { icon: "🚨", label: "Monitoring-Alert",            color: "#DC2626" },
+    ai_fix_generated:    { icon: "🤖", label: "KI-Optimierungsvorschlag",   color: "#7C3AED" },
+    jira_ticket_created: { icon: "📋", label: "Entwickler-Ticket erstellt",  color: "#0369A1" },
+    scan_completed:      { icon: "🔍", label: "Audit abgeschlossen",         color: "#2563EB" },
+    alert_sent:          { icon: "🚨", label: "Monitoring-Alert",             color: "#DC2626" },
   };
 
   const activities: ActivityItem[] = [
-    // From widget_leads
     ...(recentLeads as { visitor_email: string; scanned_url: string; score: number; created_at: string }[]).map(l => {
       const domain = (() => { try { return new URL(l.scanned_url).hostname; } catch { return l.scanned_url; } })();
-      return {
-        type:  "lead" as const,
-        icon:  "🎯",
-        label: `Neuer Lead: ${l.visitor_email}`,
-        sub:   `${domain} · Score ${l.score}%`,
-        date:  l.created_at,
-        color: "#16A34A",
-      };
+      return { type: "lead" as const, icon: "🎯", label: `Neuer Lead: ${l.visitor_email}`, sub: `${domain} · Score ${l.score}%`, date: l.created_at, color: "#16A34A" };
     }),
-    // From activity_logs
     ...(activityRows as { event_type: string; metadata: Record<string, string>; created_at: string }[]).map(a => {
       const meta = EVENT_META[a.event_type] ?? { icon: "•", label: a.event_type, color: "#6B7280" };
       const m    = (a.metadata as Record<string, string>) ?? {};
       const sub  = m.jira_key ? `Ticket ${m.jira_key}` : m.alert_type ? m.alert_type.replace(/_/g, " ") : "";
-      return {
-        type:  "activity" as const,
-        icon:  meta.icon,
-        label: meta.label,
-        sub,
-        date:  a.created_at,
-        color: meta.color,
-      };
+      return { type: "activity" as const, icon: meta.icon, label: meta.label, sub, date: a.created_at, color: meta.color };
     }),
-  ]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 10);
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10);
 
+  const history = (scanHistory as ScanHistoryItem[]);
   const savedSites: SavedSite[] = sites.map(s => ({ id: s.id, name: s.name, url: s.url }));
 
   return (
     <ReportsClient
       plan={plan}
+      scanHistory={history}
       branding={branding}
       kpis={kpis}
       activities={activities}

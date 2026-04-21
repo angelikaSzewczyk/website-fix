@@ -1,165 +1,247 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import ValueReportClient from "./value-report-client";
-import type { ReportBranding, ReportKPIs, ActivityItem, SavedSite } from "./page";
+import type { ReportBranding, ReportKPIs, ActivityItem, SavedSite, ScanHistoryItem } from "./page";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const C = {
-  bg:         "#F8FAFC",
-  card:       "#FFFFFF",
-  border:     "#E5E7EB",
-  divider:    "#F3F4F6",
-  shadow:     "0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)",
-  shadowMd:   "0 2px 16px rgba(0,0,0,0.08)",
-  text:       "#0D1321",
-  textSub:    "#374151",
-  textMuted:  "#6B7280",
-  green:      "#15803D",
-  greenBg:    "#F0FDF4",
-  greenBdr:   "#BBF7D0",
-  amber:      "#B45309",
-  amberBg:    "#FFFBEB",
-  amberBdr:   "#FDE68A",
-  red:        "#B91C1C",
-  redBg:      "#FEF2F2",
-  redBdr:     "#FECACA",
+// ── Design tokens: DARK (Starter / Professional) ──────────────────────────────
+const D = {
+  page:       "#0b0c10",
+  card:       "rgba(255,255,255,0.03)",
+  cardSolid:  "#0f1623",
+  border:     "rgba(255,255,255,0.07)",
+  borderMid:  "rgba(255,255,255,0.12)",
+  text:       "#ffffff",
+  textSub:    "rgba(255,255,255,0.55)",
+  textMuted:  "rgba(255,255,255,0.28)",
+  blue:       "#7aa6ff",
+  blueBg:     "rgba(0,123,255,0.08)",
+  blueBdr:    "rgba(0,123,255,0.25)",
+  green:      "#4ade80",
+  greenBg:    "rgba(74,222,128,0.08)",
+  greenBdr:   "rgba(74,222,128,0.22)",
+  amber:      "#fbbf24",
+  amberBg:    "rgba(251,191,36,0.08)",
+  amberBdr:   "rgba(251,191,36,0.22)",
+  red:        "#c07070",
+  redBg:      "rgba(160,80,80,0.08)",
+  redBdr:     "rgba(160,80,80,0.18)",
 };
 
-// ── AI Summary template ───────────────────────────────────────────────────────
-function buildSummary(
-  monthLabel: string,
-  kpis: ReportKPIs,
-  agencyName: string,
-): string {
-  const parts: string[] = [];
-  if (kpis.scansThisMonth > 0)
-    parts.push(`${kpis.scansThisMonth} automatisierte Website-Audit${kpis.scansThisMonth > 1 ? "s" : ""}`);
-  if (kpis.leadsThisMonth > 0)
-    parts.push(`${kpis.leadsThisMonth} qualifizierte${kpis.leadsThisMonth > 1 ? " Leads" : "n Lead"} über das Widget generiert`);
-  if (kpis.monitoredSites > 0)
-    parts.push(`${kpis.monitoredSites} Website${kpis.monitoredSites > 1 ? "s" : ""} rund um die Uhr überwacht`);
+// ── Design tokens: LIGHT (Agency) ─────────────────────────────────────────────
+const L = {
+  bg:       "#F8FAFC",
+  card:     "#FFFFFF",
+  border:   "#E5E7EB",
+  divider:  "#F3F4F6",
+  shadow:   "0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)",
+  shadowMd: "0 2px 16px rgba(0,0,0,0.08)",
+  text:     "#0D1321",
+  textSub:  "#374151",
+  textMuted:"#6B7280",
+  green:    "#15803D", greenBg: "#F0FDF4", greenBdr: "#BBF7D0",
+  amber:    "#B45309", amberBg: "#FFFBEB", amberBdr: "#FDE68A",
+  red:      "#B91C1C", redBg:   "#FEF2F2", redBdr:   "#FECACA",
+};
 
-  const intro = parts.length > 0
-    ? `Im ${monthLabel} haben wir ${parts.join(", ")}.`
-    : `Im ${monthLabel} liefen alle Systeme stabil.`;
-
-  const perf = kpis.avgResponseMs
-    ? ` Durchschnittliche Antwortzeit: ${kpis.avgResponseMs} ms.`
-    : "";
-
-  const uptime = kpis.uptimePct !== null
-    ? ` Uptime über alle überwachten Seiten: ${kpis.uptimePct}%.`
-    : "";
-
-  const closing = agencyName
-    ? ` ${agencyName} stellt sicher, dass Ihre Online-Präsenz jederzeit performant und sicher bleibt.`
-    : " Alle Systeme laufen stabil und innerhalb der vereinbarten Performance-Ziele.";
-
-  return intro + perf + uptime + closing;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function healthScore(issueCount: number | null): number {
+  if (issueCount == null) return 0;
+  return Math.max(0, Math.min(100, 100 - issueCount * 2));
 }
 
-// ── Components ────────────────────────────────────────────────────────────────
-function KpiCard({
-  label, value, sub, color, bg, border,
-}: {
-  label: string; value: string; sub: string;
-  color: string; bg: string; border: string;
-}) {
-  return (
-    <div style={{
-      padding: "18px 20px", borderRadius: 12,
-      border: `1px solid ${border}`, background: bg,
-      textAlign: "center" as const,
-    }}>
-      <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: "-0.03em", lineHeight: 1 }}>
-        {value}
-      </div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.textSub, marginTop: 6 }}>{label}</div>
-      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{sub}</div>
-    </div>
-  );
+function scoreColor(score: number): string {
+  return score >= 70 ? D.green : score >= 40 ? D.amber : D.red;
 }
 
-function ActivityRow({ item, last }: { item: ActivityItem; last: boolean }) {
-  const dateStr = new Date(item.date).toLocaleDateString("de-DE", {
-    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
-  });
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function hostname(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
+}
+
+// ── ① STARTER: Scan-Archiv ────────────────────────────────────────────────────
+function StarterView({ scans }: { scans: ScanHistoryItem[] }) {
+  function handlePrint(scan: ScanHistoryItem) {
+    window.location.href = `/dashboard/scans/${scan.id}`;
+  }
 
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 14,
-      padding: "12px 20px",
-      borderBottom: last ? "none" : `1px solid ${C.divider}`,
-    }}>
-      <div style={{
-        width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-        background: `${item.color}12`,
-        border: `1px solid ${item.color}28`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 15,
-      }}>
-        {item.icon}
+    <main style={{ maxWidth: 820, margin: "0 auto", padding: "40px 24px 80px" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: 32 }}>
+        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          Berichte
+        </p>
+        <h1 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
+          Scan-Archiv
+        </h1>
+        <p style={{ margin: 0, fontSize: 14, color: D.textSub }}>
+          Deine letzten Scans und Fokus-Berichte als PDF abrufen.
+        </p>
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {item.label}
+
+      {/* Scan list */}
+      {scans.length === 0 ? (
+        <div style={{
+          padding: "40px 32px", borderRadius: 16,
+          border: `1px dashed ${D.border}`, textAlign: "center",
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+          <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: D.text }}>
+            Noch keine Scans vorhanden
+          </p>
+          <p style={{ margin: "0 0 20px", fontSize: 13, color: D.textSub }}>
+            Starte deinen ersten Scan, um hier einen Bericht zu sehen.
+          </p>
+          <Link href="/dashboard/scan" style={{
+            display: "inline-flex", alignItems: "center", gap: 7,
+            padding: "10px 20px", borderRadius: 9,
+            background: D.blueBg, border: `1px solid ${D.blueBdr}`,
+            color: D.blue, fontSize: 13, fontWeight: 700, textDecoration: "none",
+          }}>
+            Ersten Scan starten →
+          </Link>
         </div>
-        {item.sub && (
-          <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {item.sub}
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {scans.map((scan, i) => {
+            const score = healthScore(scan.issue_count);
+            const sc    = scoreColor(score);
+            const issues = scan.issue_count ?? 0;
+            return (
+              <div key={scan.id} style={{
+                display: "flex", alignItems: "center", gap: 16,
+                padding: "18px 22px", borderRadius: 14,
+                background: D.card, border: `1px solid ${D.border}`,
+                transition: "border-color 0.15s",
+              }}>
+                {/* Rank */}
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(255,255,255,0.04)", border: `1px solid ${D.border}`,
+                  fontSize: 12, fontWeight: 700, color: D.textMuted,
+                }}>
+                  {i + 1}
+                </div>
+
+                {/* URL + date */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {hostname(scan.url)}
+                  </div>
+                  <div style={{ fontSize: 11, color: D.textMuted, marginTop: 2 }}>
+                    {fmtDate(scan.created_at)} · {scan.type === "fullsite" ? "Full-Site Crawl" : "Website-Check"}
+                  </div>
+                </div>
+
+                {/* Issue count badge */}
+                <div style={{ textAlign: "center", minWidth: 70 }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: sc, lineHeight: 1 }}>
+                    {issues}
+                  </div>
+                  <div style={{ fontSize: 10, color: D.textMuted, marginTop: 2 }}>
+                    {issues === 1 ? "Optimierung" : "Optimierungen"}
+                  </div>
+                </div>
+
+                {/* Score mini ring */}
+                <div style={{
+                  width: 44, height: 44, flexShrink: 0, position: "relative",
+                }}>
+                  <svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: "rotate(-90deg)" }}>
+                    <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                    <circle cx="22" cy="22" r="18" fill="none" stroke={sc} strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(score / 100) * 2 * Math.PI * 18} ${2 * Math.PI * 18}`}
+                    />
+                  </svg>
+                  <div style={{
+                    position: "absolute", inset: 0, display: "flex",
+                    alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 800, color: sc,
+                  }}>
+                    {score}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <button
+                  onClick={() => handlePrint(scan)}
+                  title="Bericht öffnen"
+                  style={{
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6,
+                    padding: "7px 14px", borderRadius: 8,
+                    background: D.blueBg, border: `1px solid ${D.blueBdr}`,
+                    color: D.blue, fontSize: 12, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Bericht
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Upsell */}
+      <div style={{
+        marginTop: 32, padding: "22px 24px", borderRadius: 14,
+        background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)",
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+            background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
+          }}>⚡</div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: D.text }}>
+              Vorher-Nachher Trend-Analyse
+            </p>
+            <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
+              Mit Professional siehst du, ob deine SEO-Scores und Issue-Zahlen sich Monat für Monat verbessern — inklusive KI-Empfehlungen als PDF-Anhang.
+            </p>
+            <Link href="/fuer-agenturen#pricing" style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 16px", borderRadius: 8, textDecoration: "none",
+              fontSize: 12, fontWeight: 700,
+              background: D.amberBg, border: `1px solid ${D.amberBdr}`, color: D.amber,
+            }}>
+              Auf Professional upgraden →
+            </Link>
           </div>
-        )}
+        </div>
       </div>
-      <div style={{ fontSize: 11, color: C.textMuted, flexShrink: 0 }}>{dateStr}</div>
-    </div>
+    </main>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-export default function ReportsClient({
-  plan,
-  branding,
-  kpis,
-  activities,
-  monthLabel,
-  savedSites,
-}: {
-  plan:       string;
-  branding:   ReportBranding;
-  kpis:       ReportKPIs;
-  activities: ActivityItem[];
-  monthLabel: string;
-  agencyId:   string;
-  savedSites: SavedSite[];
-}) {
+// ── ② PROFESSIONAL: Analyse-Zentrale ─────────────────────────────────────────
+function ProfessionalView({ scans, kpis, monthLabel }: { scans: ScanHistoryItem[]; kpis: ReportKPIs; monthLabel: string }) {
   const [printing, setPrinting] = useState(false);
 
-  const color     = branding.primaryColor;
-  const colorBg   = `${color}12`;
-  const colorBdr  = `${color}28`;
-  const agName    = branding.agencyName || "Meine Agentur";
-  const isAgency  = plan === "agency-pro" || plan === "agency-starter";
+  const latest = scans[0] ?? null;
+  const prev   = scans[1] ?? null;
 
-  const dateStr = new Date().toLocaleDateString("de-DE", {
-    day: "2-digit", month: "long", year: "numeric",
-  });
-
-  // KPI grid data
-  const uptimeVal  = kpis.uptimePct !== null ? `${kpis.uptimePct}%` : "—";
-  const uptimeColor = kpis.uptimePct === null ? C.textMuted
-    : kpis.uptimePct >= 99 ? C.green : kpis.uptimePct >= 95 ? C.amber : C.red;
-  const uptimeBg    = kpis.uptimePct === null ? C.divider
-    : kpis.uptimePct >= 99 ? C.greenBg : kpis.uptimePct >= 95 ? C.amberBg : C.redBg;
-  const uptimeBdr   = kpis.uptimePct === null ? C.border
-    : kpis.uptimePct >= 99 ? C.greenBdr : kpis.uptimePct >= 95 ? C.amberBdr : C.redBdr;
-
-  const msVal  = kpis.avgResponseMs ? `${kpis.avgResponseMs} ms` : "—";
-  const msBg   = !kpis.avgResponseMs ? C.divider : kpis.avgResponseMs < 500 ? C.greenBg : kpis.avgResponseMs < 1500 ? C.amberBg : C.redBg;
-  const msColor = !kpis.avgResponseMs ? C.textMuted : kpis.avgResponseMs < 500 ? C.green : kpis.avgResponseMs < 1500 ? C.amber : C.red;
-  const msBdr   = !kpis.avgResponseMs ? C.border : kpis.avgResponseMs < 500 ? C.greenBdr : kpis.avgResponseMs < 1500 ? C.amberBdr : C.redBdr;
-
-  const aiSummary = buildSummary(monthLabel, kpis, branding.agencyName);
+  const latestScore = healthScore(latest?.issue_count ?? null);
+  const prevScore   = healthScore(prev?.issue_count   ?? null);
+  const scoreDelta  = prev ? latestScore - prevScore : null;
+  const issueDelta  = (prev && latest)
+    ? (latest.issue_count ?? 0) - (prev.issue_count ?? 0)
+    : null;
 
   function handlePrint() {
     setPrinting(true);
@@ -168,43 +250,38 @@ export default function ReportsClient({
 
   return (
     <>
-      {/* Print-only report isolation */}
       <style>{`
         @media print {
           body > * { display: none !important; }
-          #wf-report-print { display: block !important; }
+          #wf-pro-print { display: block !important; }
         }
-        @media screen {
-          #wf-report-print { display: none; }
-        }
+        @media screen { #wf-pro-print { display: none; } }
+        @keyframes wf-rpt-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
       `}</style>
 
-      {/* ── Screen view ── */}
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <main style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 80px" }}>
 
-        {/* Page header row */}
+        {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 5px", color: C.text, letterSpacing: "-0.02em" }}>
-              Berichte
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+              Berichte · Professional
+            </p>
+            <h1 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
+              Analyse-Zentrale
             </h1>
-            <p style={{ fontSize: 14, color: C.textMuted, margin: 0 }}>
-              White-Label Monatsbericht · {monthLabel}
+            <p style={{ margin: 0, fontSize: 14, color: D.textSub }}>
+              Trend-Analyse · {monthLabel}
             </p>
           </div>
-          <button
-            onClick={handlePrint}
-            disabled={printing}
-            style={{
-              display: "flex", alignItems: "center", gap: 7,
-              padding: "9px 18px", borderRadius: 9,
-              border: `1px solid ${C.border}`, background: C.card,
-              cursor: printing ? "default" : "pointer",
-              color: C.textSub, fontSize: 13, fontWeight: 600,
-              boxShadow: C.shadow,
-              opacity: printing ? 0.5 : 1,
-            }}
-          >
+          <button onClick={handlePrint} disabled={printing} style={{
+            display: "flex", alignItems: "center", gap: 7,
+            padding: "9px 18px", borderRadius: 9,
+            border: `1px solid ${D.blueBdr}`, background: D.blueBg,
+            cursor: printing ? "default" : "pointer",
+            color: D.blue, fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+            opacity: printing ? 0.5 : 1,
+          }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -214,41 +291,383 @@ export default function ReportsClient({
           </button>
         </div>
 
+        {/* ── TREND COMPARISON ── */}
+        {latest && prev ? (
+          <div style={{
+            display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 0,
+            background: D.card, border: `1px solid ${D.border}`, borderRadius: 16,
+            overflow: "hidden", marginBottom: 24,
+            animation: "wf-rpt-in 0.35s ease both",
+          }}>
+            {/* Previous scan */}
+            <div style={{ padding: "28px 24px" }}>
+              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Vorheriger Scan
+              </p>
+              <p style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 600, color: D.textSub }}>
+                {fmtDate(prev.created_at)}
+              </p>
+              <div style={{ fontSize: 36, fontWeight: 900, color: scoreColor(prevScore), letterSpacing: "-0.03em", lineHeight: 1 }}>
+                {prevScore}
+              </div>
+              <div style={{ fontSize: 11, color: D.textMuted, marginTop: 4 }}>Health-Score /100</div>
+              <div style={{ marginTop: 12, fontSize: 13, color: D.textSub }}>
+                <strong style={{ color: D.text }}>{prev.issue_count ?? 0}</strong> Optimierungen
+              </div>
+            </div>
+
+            {/* Delta column */}
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              padding: "0 24px",
+              borderLeft: `1px solid ${D.border}`, borderRight: `1px solid ${D.border}`,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10, textAlign: "center" }}>
+                Trend
+              </div>
+              {/* Score delta */}
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "12px 18px", borderRadius: 12,
+                background: scoreDelta! > 0 ? D.greenBg : scoreDelta! < 0 ? D.redBg : D.card,
+                border: `1px solid ${scoreDelta! > 0 ? D.greenBdr : scoreDelta! < 0 ? D.redBdr : D.border}`,
+              }}>
+                <div style={{ fontSize: 22, lineHeight: 1 }}>
+                  {scoreDelta! > 0 ? "↑" : scoreDelta! < 0 ? "↓" : "→"}
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: scoreDelta! > 0 ? D.green : scoreDelta! < 0 ? D.red : D.textMuted }}>
+                  {scoreDelta! > 0 ? "+" : ""}{scoreDelta}
+                </div>
+                <div style={{ fontSize: 9, color: D.textMuted, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Score
+                </div>
+              </div>
+              {/* Issue delta */}
+              {issueDelta !== null && (
+                <div style={{ marginTop: 10, textAlign: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: issueDelta <= 0 ? D.green : D.red }}>
+                    {issueDelta <= 0 ? "↓" : "↑"} {Math.abs(issueDelta)} Issues
+                  </span>
+                  <div style={{ fontSize: 10, color: D.textMuted }}>
+                    {issueDelta <= 0 ? "weniger als vorher" : "mehr als vorher"}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Latest scan */}
+            <div style={{ padding: "28px 24px" }}>
+              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Aktueller Scan
+              </p>
+              <p style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 600, color: D.textSub }}>
+                {fmtDate(latest.created_at)}
+              </p>
+              <div style={{ fontSize: 36, fontWeight: 900, color: scoreColor(latestScore), letterSpacing: "-0.03em", lineHeight: 1 }}>
+                {latestScore}
+              </div>
+              <div style={{ fontSize: 11, color: D.textMuted, marginTop: 4 }}>Health-Score /100</div>
+              <div style={{ marginTop: 12, fontSize: 13, color: D.textSub }}>
+                <strong style={{ color: D.text }}>{latest.issue_count ?? 0}</strong> Optimierungen
+              </div>
+              <Link href={`/dashboard/scans/${latest.id}`} style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                marginTop: 14, padding: "6px 12px", borderRadius: 7, textDecoration: "none",
+                fontSize: 11, fontWeight: 700,
+                background: D.blueBg, border: `1px solid ${D.blueBdr}`, color: D.blue,
+              }}>
+                Detailbericht öffnen →
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            padding: "32px 24px", borderRadius: 16, textAlign: "center",
+            background: D.card, border: `1px solid ${D.border}`, marginBottom: 24,
+          }}>
+            <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: D.text }}>
+              Noch kein Vorher-Nachher möglich
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: D.textSub }}>
+              Du brauchst mindestens 2 Scans für eine Trend-Analyse.{" "}
+              <Link href="/dashboard/scan" style={{ color: D.blue }}>Jetzt scannen →</Link>
+            </p>
+          </div>
+        )}
+
+        {/* ── KPI STRIP ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 24, animation: "wf-rpt-in 0.4s 0.1s ease both" }}>
+          {[
+            { label: "Scans diesen Monat", value: String(kpis.scansThisMonth), color: D.blue, bg: D.blueBg, bdr: D.blueBdr },
+            { label: "Uptime", value: kpis.uptimePct !== null ? `${kpis.uptimePct}%` : "—", color: kpis.uptimePct && kpis.uptimePct >= 99 ? D.green : D.amber, bg: D.amberBg, bdr: D.amberBdr },
+            { label: "Ø Ladezeit", value: kpis.avgResponseMs ? `${kpis.avgResponseMs} ms` : "—", color: kpis.avgResponseMs && kpis.avgResponseMs < 500 ? D.green : D.amber, bg: D.amberBg, bdr: D.amberBdr },
+          ].map(k => (
+            <div key={k.label} style={{ padding: "18px 20px", borderRadius: 12, background: k.bg, border: `1px solid ${k.bdr}`, textAlign: "center" as const }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: k.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{k.value}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: D.textSub, marginTop: 6 }}>{k.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── SCAN HISTORY ── */}
+        <div style={{ animation: "wf-rpt-in 0.45s 0.15s ease both" }}>
+          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            Scan-Verlauf
+          </p>
+          <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 14, overflow: "hidden" }}>
+            {scans.length === 0 ? (
+              <div style={{ padding: "28px 24px", textAlign: "center" }}>
+                <p style={{ margin: 0, fontSize: 13, color: D.textSub }}>
+                  Noch keine Scans — <Link href="/dashboard/scan" style={{ color: D.blue }}>Scan starten</Link>
+                </p>
+              </div>
+            ) : scans.map((scan, i) => {
+              const sc = healthScore(scan.issue_count);
+              const col = scoreColor(sc);
+              return (
+                <div key={scan.id} style={{
+                  display: "flex", alignItems: "center", gap: 14, padding: "13px 20px",
+                  borderBottom: i < scans.length - 1 ? `1px solid ${D.border}` : "none",
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {hostname(scan.url)}
+                    </div>
+                    <div style={{ fontSize: 11, color: D.textMuted, marginTop: 2 }}>
+                      {fmtDate(scan.created_at)} · {scan.type === "fullsite" ? "Full-Site" : "Website-Check"}
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 8,
+                    background: col === D.green ? D.greenBg : col === D.amber ? D.amberBg : D.redBg,
+                    border: `1px solid ${col === D.green ? D.greenBdr : col === D.amber ? D.amberBdr : D.redBdr}`,
+                    color: col,
+                  }}>
+                    {scan.issue_count ?? "?"} Issues
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: col, minWidth: 28, textAlign: "right" as const }}>
+                    {sc}
+                  </span>
+                  <Link href={`/dashboard/scans/${scan.id}`} style={{
+                    fontSize: 11, fontWeight: 700, color: D.blue, textDecoration: "none",
+                    padding: "5px 10px", borderRadius: 7,
+                    background: D.blueBg, border: `1px solid ${D.blueBdr}`,
+                  }}>
+                    Details
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Print-only view */}
+        <div id="wf-pro-print" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: "#fff", color: "#111", padding: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #e5e7eb", paddingBottom: 14, marginBottom: 24 }}>
+            <span style={{ fontWeight: 800, fontSize: 18 }}>Website<span style={{ color: "#F59E0B" }}>Fix</span> · Analyse-Bericht</span>
+            <span style={{ fontSize: 12, color: "#6b7280" }}>{monthLabel}</span>
+          </div>
+          {latest && (
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Letzter Scan: {hostname(latest.url)}</p>
+              <p style={{ fontSize: 13, color: "#374151" }}>Datum: {fmtDate(latest.created_at)}</p>
+              <p style={{ fontSize: 13, color: "#374151" }}>Optimierungen: {latest.issue_count ?? "?"}</p>
+              <p style={{ fontSize: 13, color: "#374151" }}>Health-Score: {latestScore}/100</p>
+              {scoreDelta !== null && (
+                <p style={{ fontSize: 13, color: scoreDelta > 0 ? "#15803d" : "#b91c1c" }}>
+                  Score-Veränderung: {scoreDelta > 0 ? "+" : ""}{scoreDelta} Punkte gegenüber Vormonat
+                </p>
+              )}
+            </div>
+          )}
+          <div style={{ marginTop: 24, borderTop: "1px solid #e5e7eb", paddingTop: 14, fontSize: 11, color: "#9ca3af" }}>
+            Erstellt am {new Date().toLocaleDateString("de-DE")} · Powered by WebsiteFix
+          </div>
+        </div>
+
+      </main>
+    </>
+  );
+}
+
+// ── ③ AGENCY: Kunden-Kommandozentrale ─────────────────────────────────────────
+function AgencyView({
+  plan, branding, kpis, activities, monthLabel, savedSites,
+}: {
+  plan: string;
+  branding: ReportBranding;
+  kpis: ReportKPIs;
+  activities: ActivityItem[];
+  monthLabel: string;
+  savedSites: SavedSite[];
+}) {
+  const [printing, setPrinting]           = useState(false);
+  const [autoReport, setAutoReport]       = useState(false);
+  const [clientEmail, setClientEmail]     = useState("");
+  const [autoSaved, setAutoSaved]         = useState(false);
+
+  const color    = branding.primaryColor;
+  const colorBg  = `${color}12`;
+  const colorBdr = `${color}28`;
+  const agName   = branding.agencyName || "Meine Agentur";
+
+  const dateStr = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
+
+  const uptimeVal   = kpis.uptimePct !== null ? `${kpis.uptimePct}%` : "—";
+  const uptimeColor = kpis.uptimePct === null ? L.textMuted : kpis.uptimePct >= 99 ? L.green : kpis.uptimePct >= 95 ? L.amber : L.red;
+  const uptimeBg    = kpis.uptimePct === null ? L.divider  : kpis.uptimePct >= 99 ? L.greenBg : kpis.uptimePct >= 95 ? L.amberBg : L.redBg;
+  const uptimeBdr   = kpis.uptimePct === null ? L.border   : kpis.uptimePct >= 99 ? L.greenBdr : kpis.uptimePct >= 95 ? L.amberBdr : L.redBdr;
+  const msVal       = kpis.avgResponseMs ? `${kpis.avgResponseMs} ms` : "—";
+  const msBg        = !kpis.avgResponseMs ? L.divider : kpis.avgResponseMs < 500 ? L.greenBg : kpis.avgResponseMs < 1500 ? L.amberBg : L.redBg;
+  const msColor     = !kpis.avgResponseMs ? L.textMuted : kpis.avgResponseMs < 500 ? L.green : kpis.avgResponseMs < 1500 ? L.amber : L.red;
+  const msBdr       = !kpis.avgResponseMs ? L.border : kpis.avgResponseMs < 500 ? L.greenBdr : kpis.avgResponseMs < 1500 ? L.amberBdr : L.redBdr;
+
+  function handlePrint() {
+    setPrinting(true);
+    setTimeout(() => { window.print(); setPrinting(false); }, 100);
+  }
+
+  function handleAutoSave() {
+    setAutoSaved(true);
+    setTimeout(() => setAutoSaved(false), 2500);
+  }
+
+  const aiSummary = (() => {
+    const parts: string[] = [];
+    if (kpis.scansThisMonth > 0) parts.push(`${kpis.scansThisMonth} automatisierte Website-Audit${kpis.scansThisMonth > 1 ? "s" : ""}`);
+    if (kpis.leadsThisMonth > 0) parts.push(`${kpis.leadsThisMonth} qualifizierte${kpis.leadsThisMonth > 1 ? " Leads" : "n Lead"} generiert`);
+    if (kpis.monitoredSites > 0) parts.push(`${kpis.monitoredSites} Website${kpis.monitoredSites > 1 ? "s" : ""} überwacht`);
+    const intro   = parts.length > 0 ? `Im ${monthLabel} haben wir ${parts.join(", ")}.` : `Im ${monthLabel} liefen alle Systeme stabil.`;
+    const uptime  = kpis.uptimePct !== null ? ` Uptime: ${kpis.uptimePct}%.` : "";
+    const closing = agName ? ` ${agName} stellt sicher, dass Ihre Online-Präsenz jederzeit performant und sicher bleibt.` : "";
+    return intro + uptime + closing;
+  })();
+
+  return (
+    <>
+      <style>{`
+        @media print {
+          body > * { display: none !important; }
+          #wf-agency-print { display: block !important; }
+        }
+        @media screen { #wf-agency-print { display: none; } }
+      `}</style>
+
+      <main style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px 80px" }}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: L.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+              Berichte · {plan === "agency-pro" ? "Agency Pro" : "Agency"}
+            </p>
+            <h1 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: L.text, letterSpacing: "-0.02em" }}>
+              Kunden-Kommandozentrale
+            </h1>
+            <p style={{ margin: 0, fontSize: 14, color: L.textMuted }}>White-Label Monatsbericht · {monthLabel}</p>
+          </div>
+          <button onClick={handlePrint} disabled={printing} style={{
+            display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
+            borderRadius: 9, border: `1px solid ${L.border}`, background: L.card,
+            cursor: printing ? "default" : "pointer", color: L.textSub,
+            fontSize: 13, fontWeight: 600, boxShadow: L.shadow,
+            opacity: printing ? 0.5 : 1, fontFamily: "inherit",
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            {printing ? "Vorbereitung…" : "Als PDF speichern"}
+          </button>
+        </div>
+
+        {/* ── AUTO-SEND CARD ── */}
+        <div style={{
+          padding: "22px 24px", borderRadius: 14,
+          background: L.card, border: `1px solid ${L.border}`,
+          boxShadow: L.shadow, marginBottom: 24,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div>
+              <p style={{ margin: "0 0 3px", fontSize: 14, fontWeight: 700, color: L.text }}>
+                Automatischer Monats-Report
+              </p>
+              <p style={{ margin: 0, fontSize: 12, color: L.textMuted }}>
+                Bericht wird am 1. jeden Monats automatisch per E-Mail versendet.
+              </p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                onClick={() => setAutoReport(v => !v)}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, border: "none",
+                  background: autoReport ? color : "#D1D5DB",
+                  cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0,
+                }}
+              >
+                <div style={{
+                  position: "absolute", top: 3, left: autoReport ? 23 : 3,
+                  width: 18, height: 18, borderRadius: "50%",
+                  background: "#fff", transition: "left 0.2s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }} />
+              </button>
+              <span style={{ fontSize: 12, fontWeight: 600, color: autoReport ? L.text : L.textMuted }}>
+                {autoReport ? "Aktiv" : "Inaktiv"}
+              </span>
+            </div>
+          </div>
+          {autoReport && (
+            <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input
+                type="email"
+                placeholder="kunde@firma.de"
+                value={clientEmail}
+                onChange={e => setClientEmail(e.target.value)}
+                style={{
+                  flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: 8,
+                  border: `1px solid ${L.border}`, fontSize: 13, color: L.text,
+                  background: L.bg, fontFamily: "inherit", outline: "none",
+                }}
+              />
+              <button
+                onClick={handleAutoSave}
+                style={{
+                  padding: "8px 18px", borderRadius: 8,
+                  background: color, border: "none",
+                  color: "#fff", fontSize: 13, fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                {autoSaved ? "✓ Gespeichert" : "Speichern"}
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* ── WHITE-LABEL REPORT CARD ── */}
         <div id="wf-report-card" style={{
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          borderRadius: 16,
-          boxShadow: C.shadowMd,
-          overflow: "hidden",
-          marginBottom: 32,
+          background: L.card, border: `1px solid ${L.border}`,
+          borderRadius: 16, boxShadow: L.shadowMd, overflow: "hidden", marginBottom: 32,
         }}>
-
-          {/* ── HEADER BANNER ── */}
+          {/* Header banner */}
           <div style={{
             background: `linear-gradient(135deg, ${color}, ${color}cc)`,
             padding: "26px 28px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             position: "relative", overflow: "hidden",
           }}>
-            {/* Geometric accent */}
-            <div style={{
-              position: "absolute", right: -40, top: -40,
-              width: 140, height: 140, borderRadius: "50%",
-              background: "rgba(255,255,255,0.07)", pointerEvents: "none",
-            }} />
+            <div style={{ position: "absolute", right: -40, top: -40, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
               {branding.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={branding.logoUrl} alt={agName}
+                <img src={branding.logoUrl} alt={agName}
                   style={{ height: 38, maxWidth: 110, objectFit: "contain", filter: "brightness(0) invert(1)" }}
-                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
               ) : (
                 <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: "rgba(0,0,0,0.2)",
+                  width: 40, height: 40, borderRadius: 10, background: "rgba(0,0,0,0.2)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 18, fontWeight: 800, color: "#fff",
                 }}>
@@ -256,12 +675,8 @@ export default function ReportsClient({
                 </div>
               )}
               <div>
-                <div style={{ fontWeight: 700, fontSize: 16, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.25)" }}>
-                  {agName}
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.68)", marginTop: 2 }}>
-                  Monatlicher Website-Report
-                </div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.25)" }}>{agName}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.68)", marginTop: 2 }}>Monatlicher Website-Report</div>
               </div>
             </div>
             <div style={{ textAlign: "right" as const, position: "relative" }}>
@@ -271,103 +686,95 @@ export default function ReportsClient({
           </div>
 
           <div style={{ padding: "28px 28px" }}>
-
-            {/* ── KI SUMMARY ── */}
-            <div style={{
-              padding: "18px 20px", borderRadius: 12,
-              background: colorBg, border: `1px solid ${colorBdr}`,
-              marginBottom: 24,
-            }}>
-              <div style={{
-                fontSize: 10, fontWeight: 700, color, letterSpacing: "0.08em",
-                textTransform: "uppercase" as const, marginBottom: 10,
-                display: "flex", alignItems: "center", gap: 6,
-              }}>
-                <span>🤖</span> KI-Monatszusammenfassung
+            {/* KI Summary */}
+            <div style={{ padding: "18px 20px", borderRadius: 12, background: colorBg, border: `1px solid ${colorBdr}`, marginBottom: 24 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 10 }}>
+                🤖 KI-Monatszusammenfassung
               </div>
-              <p style={{ margin: 0, fontSize: 14, color: C.textSub, lineHeight: 1.8 }}>
-                {aiSummary}
-              </p>
+              <p style={{ margin: 0, fontSize: 14, color: L.textSub, lineHeight: 1.8 }}>{aiSummary}</p>
             </div>
 
-            {/* ── KPI GRID ── */}
+            {/* KPI grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 24 }}>
-              <KpiCard
-                label="Uptime"
-                value={uptimeVal}
-                sub={kpis.monitoredSites > 0 ? `${kpis.monitoredSites} Sites` : "Kein Monitoring"}
-                color={uptimeColor}
-                bg={uptimeBg}
-                border={uptimeBdr}
-              />
-              <KpiCard
-                label="Ø Ladezeit"
-                value={msVal}
-                sub="Response Time"
-                color={msColor}
-                bg={msBg}
-                border={msBdr}
-              />
-              <KpiCard
-                label="Scans"
-                value={String(kpis.scansThisMonth)}
-                sub="diesen Monat"
-                color={color}
-                bg={colorBg}
-                border={colorBdr}
-              />
-              <KpiCard
-                label={isAgency ? "Widget-Leads" : "Aktionen"}
-                value={isAgency ? String(kpis.leadsThisMonth) : "—"}
-                sub={isAgency ? `${kpis.leadsTotal} gesamt` : "kein Widget"}
-                color={isAgency ? C.green : C.textMuted}
-                bg={isAgency ? C.greenBg : C.divider}
-                border={isAgency ? C.greenBdr : C.border}
-              />
+              {[
+                { label: "Uptime",       value: uptimeVal,                      sub: kpis.monitoredSites > 0 ? `${kpis.monitoredSites} Sites` : "Kein Monitoring", color: uptimeColor, bg: uptimeBg, bdr: uptimeBdr },
+                { label: "Ø Ladezeit",   value: msVal,                          sub: "Response Time",        color: msColor,    bg: msBg,    bdr: msBdr    },
+                { label: "Scans",        value: String(kpis.scansThisMonth),    sub: "diesen Monat",         color,             bg: colorBg, bdr: colorBdr },
+                { label: "Widget-Leads", value: String(kpis.leadsThisMonth),    sub: `${kpis.leadsTotal} gesamt`, color: L.green, bg: L.greenBg, bdr: L.greenBdr },
+              ].map(k => (
+                <div key={k.label} style={{ padding: "18px 20px", borderRadius: 12, border: `1px solid ${k.bdr}`, background: k.bg, textAlign: "center" as const }}>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: k.color, letterSpacing: "-0.03em", lineHeight: 1 }}>{k.value}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: L.textSub, marginTop: 6 }}>{k.label}</div>
+                  <div style={{ fontSize: 11, color: L.textMuted, marginTop: 3 }}>{k.sub}</div>
+                </div>
+              ))}
             </div>
 
-            {/* ── ACTIVITY LIST ── */}
-            {activities.length > 0 ? (
-              <div>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, color: C.textMuted,
-                  textTransform: "uppercase" as const, letterSpacing: "0.08em",
-                  marginBottom: 12,
-                }}>
-                  Letzte Ereignisse
+            {/* Activity / Client-Projekte */}
+            {savedSites.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: L.textMuted, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 12 }}>
+                  Projekte / Kunden
                 </div>
-                <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
-                  {activities.map((item, i) => (
-                    <ActivityRow key={i} item={item} last={i === activities.length - 1} />
+                <div style={{ border: `1px solid ${L.border}`, borderRadius: 12, overflow: "hidden" }}>
+                  {savedSites.map((s, i) => (
+                    <div key={s.id} style={{
+                      display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                      borderBottom: i < savedSites.length - 1 ? `1px solid ${L.divider}` : "none",
+                    }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                        background: colorBg, border: `1px solid ${colorBdr}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, fontWeight: 800, color,
+                      }}>
+                        {(s.name || hostname(s.url)).charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: L.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {s.name || hostname(s.url)}
+                        </div>
+                        <div style={{ fontSize: 11, color: L.textMuted, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.url}</div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-            ) : (
-              <div style={{
-                padding: "28px 20px", borderRadius: 12,
-                border: `1px dashed ${C.border}`, textAlign: "center" as const,
-              }}>
-                <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>
-                  Noch keine Aktivitäten diesen Monat — starte einen Scan oder binde das Widget ein.
-                </p>
+            )}
+
+            {/* Activity feed */}
+            {activities.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: L.textMuted, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 12 }}>
+                  Letzte Ereignisse
+                </div>
+                <div style={{ border: `1px solid ${L.border}`, borderRadius: 12, overflow: "hidden" }}>
+                  {activities.map((item, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                      borderBottom: i < activities.length - 1 ? `1px solid ${L.divider}` : "none",
+                    }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: `${item.color}12`, border: `1px solid ${item.color}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>
+                        {item.icon}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: L.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</div>
+                        {item.sub && <div style={{ fontSize: 11, color: L.textMuted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.sub}</div>}
+                      </div>
+                      <div style={{ fontSize: 11, color: L.textMuted, flexShrink: 0 }}>
+                        {new Date(item.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* ── FOOTER ── */}
-            <div style={{
-              marginTop: 24, paddingTop: 16,
-              borderTop: `1px solid ${C.border}`,
-              display: "flex", justifyContent: "space-between",
-              alignItems: "center", gap: 12, flexWrap: "wrap",
-            }}>
-              <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.6 }}>
-                Bericht erstellt am {dateStr} · Powered by WebsiteFix
-              </div>
+            {/* Footer */}
+            <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${L.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 11, color: L.textMuted }}>Bericht erstellt am {dateStr} · Powered by WebsiteFix</div>
               {branding.agencyName && (
-                <div style={{
-                  fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6,
-                  background: colorBg, color, border: `1px solid ${colorBdr}`,
-                }}>
+                <div style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: colorBg, color, border: `1px solid ${colorBdr}` }}>
                   {branding.agencyName}
                 </div>
               )}
@@ -375,146 +782,99 @@ export default function ReportsClient({
           </div>
         </div>
 
-        {/* ── CUSTOM REPORT GENERATOR (Agency only) ── */}
-        {isAgency && savedSites.length > 0 && (
-          <div>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8,
-              marginBottom: 16,
-            }}>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                Value Report Generator
-              </p>
-              <span style={{
-                fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
-                background: `${color}12`, color, border: `1px solid ${colorBdr}`,
-              }}>
-                Agentur-Feature
-              </span>
-            </div>
-            <ValueReportClient websites={savedSites} />
-          </div>
-        )}
-
-        {isAgency && savedSites.length === 0 && (
-          <div style={{
-            padding: "22px 24px", borderRadius: 12,
-            border: `1px dashed ${C.border}`,
-            background: C.card,
-          }}>
-            <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: C.text }}>
+        {/* ── VALUE REPORT GENERATOR ── */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: L.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Value Report Generator
             </p>
-            <p style={{ margin: "0 0 14px", fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>
-              Speichere Kunden-Websites im Monitoring, um individuelle White-Label Reports pro Kunde zu generieren.
-            </p>
-            <a href="/dashboard/monitoring" style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "8px 18px", borderRadius: 8, textDecoration: "none",
-              fontSize: 13, fontWeight: 700,
-              background: color, color: "#fff",
-            }}>
-              Monitoring einrichten →
-            </a>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: colorBg, color, border: `1px solid ${colorBdr}` }}>
+              Agentur-Feature
+            </span>
           </div>
-        )}
+          {savedSites.length > 0 ? (
+            <ValueReportClient websites={savedSites} />
+          ) : (
+            <div style={{ padding: "22px 24px", borderRadius: 12, border: `1px dashed ${L.border}`, background: L.card }}>
+              <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: L.text }}>Kunden-Websites einrichten</p>
+              <p style={{ margin: "0 0 14px", fontSize: 13, color: L.textMuted, lineHeight: 1.6 }}>
+                Speichere Kunden-Websites im Monitoring, um individuelle White-Label Reports pro Kunde zu erstellen.
+              </p>
+              <a href="/dashboard/monitoring" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 700, background: color, color: "#fff" }}>
+                Monitoring einrichten →
+              </a>
+            </div>
+          )}
+        </div>
+
       </main>
 
-      {/* ── PRINT-ONLY VIEW (exact copy of report card) ── */}
-      <div id="wf-report-print" style={{
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        padding: "0", background: "#fff", color: C.text,
-      }}>
-        {/* Print header */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingBottom: 14, marginBottom: 24,
-          borderBottom: "2px solid #E5E7EB",
-        }}>
+      {/* Print-only */}
+      <div id="wf-agency-print" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: "#fff", color: L.text, padding: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #E5E7EB", paddingBottom: 14, marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={{ background: "#0D1117", borderRadius: 7, padding: 3 }}>
               <path d="M 4,5 L 13,14 L 7,20" stroke="rgba(255,255,255,0.7)" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M 7,20 L 13,25 L 24,6" stroke="#F59E0B" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span style={{ fontWeight: 300, fontSize: 15, color: C.text }}>
-              Website<span style={{ color: "#F59E0B", fontWeight: 800 }}>Fix</span>
-            </span>
+            <span style={{ fontWeight: 300, fontSize: 15, color: L.text }}>Website<span style={{ color: "#F59E0B", fontWeight: 800 }}>Fix</span></span>
           </div>
-          <div style={{ textAlign: "right" as const, fontSize: 11, color: C.textMuted }}>
+          <div style={{ textAlign: "right" as const, fontSize: 11, color: L.textMuted }}>
             <div style={{ fontWeight: 600 }}>Website-Report {monthLabel}</div>
             <div>{dateStr}</div>
           </div>
         </div>
-
-        {/* Agency banner */}
-        <div style={{
-          background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-          borderRadius: 12, padding: "20px 24px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: 24,
-        }}>
+        <div style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)`, borderRadius: 12, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 18, color: "#fff" }}>{agName}</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{monthLabel}</div>
         </div>
-
-        {/* Summary */}
-        <div style={{
-          padding: "16px 18px", borderRadius: 10,
-          background: colorBg, border: `1px solid ${colorBdr}`,
-          marginBottom: 20,
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 8 }}>
-            KI-Monatszusammenfassung
-          </div>
-          <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.8 }}>{aiSummary}</p>
+        <div style={{ padding: "16px 18px", borderRadius: 10, background: colorBg, border: `1px solid ${colorBdr}`, marginBottom: 20 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 8 }}>KI-Monatszusammenfassung</div>
+          <p style={{ margin: 0, fontSize: 12, color: L.textSub, lineHeight: 1.8 }}>{aiSummary}</p>
         </div>
-
-        {/* KPIs */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
           {[
-            { label: "Uptime",     value: uptimeVal,                          sub: `${kpis.monitoredSites} Sites` },
-            { label: "Ladezeit",   value: msVal,                              sub: "Response Time" },
-            { label: "Scans",      value: String(kpis.scansThisMonth),        sub: "diesen Monat" },
-            { label: "Leads",      value: String(kpis.leadsThisMonth),        sub: `${kpis.leadsTotal} gesamt` },
+            { label: "Uptime", value: uptimeVal, sub: `${kpis.monitoredSites} Sites` },
+            { label: "Ladezeit", value: msVal, sub: "Response Time" },
+            { label: "Scans", value: String(kpis.scansThisMonth), sub: "diesen Monat" },
+            { label: "Leads", value: String(kpis.leadsThisMonth), sub: `${kpis.leadsTotal} gesamt` },
           ].map(k => (
-            <div key={k.label} style={{
-              padding: "12px 14px", borderRadius: 8,
-              border: "1px solid #E5E7EB", textAlign: "center" as const,
-            }}>
+            <div key={k.label} style={{ padding: "12px 14px", borderRadius: 8, border: "1px solid #E5E7EB", textAlign: "center" as const }}>
               <div style={{ fontSize: 20, fontWeight: 800, color, letterSpacing: "-0.02em" }}>{k.value}</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.textSub, marginTop: 4 }}>{k.label}</div>
-              <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>{k.sub}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: L.textSub, marginTop: 4 }}>{k.label}</div>
+              <div style={{ fontSize: 9, color: L.textMuted, marginTop: 2 }}>{k.sub}</div>
             </div>
           ))}
         </div>
-
-        {/* Activity list */}
-        {activities.length > 0 && (
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 8 }}>
-              Letzte Ereignisse
-            </div>
-            <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
-              {activities.map((item, i) => (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "9px 16px",
-                  borderBottom: i < activities.length - 1 ? "1px solid #F3F4F6" : "none",
-                }}>
-                  <span style={{ fontSize: 13, flexShrink: 0 }}>{item.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{item.label}</div>
-                    {item.sub && <div style={{ fontSize: 10, color: C.textMuted }}>{item.sub}</div>}
-                  </div>
-                  <div style={{ fontSize: 10, color: C.textMuted }}>
-                    {new Date(item.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
+}
+
+// ── Main export: plan-based router ────────────────────────────────────────────
+export default function ReportsClient({
+  plan,
+  scanHistory,
+  branding,
+  kpis,
+  activities,
+  monthLabel,
+  savedSites,
+}: {
+  plan:        string;
+  scanHistory: ScanHistoryItem[];
+  branding:    ReportBranding;
+  kpis:        ReportKPIs;
+  activities:  ActivityItem[];
+  monthLabel:  string;
+  agencyId:    string;
+  savedSites:  SavedSite[];
+}) {
+  const isAgency       = plan === "agency-starter" || plan === "agency-pro";
+  const isProfessional = plan === "professional" || plan === "smart-guard";
+  // starter (and any unknown) → StarterView
+
+  if (isAgency) return <AgencyView plan={plan} branding={branding} kpis={kpis} activities={activities} monthLabel={monthLabel} savedSites={savedSites} />;
+  if (isProfessional) return <ProfessionalView scans={scanHistory} kpis={kpis} monthLabel={monthLabel} />;
+  return <StarterView scans={scanHistory} />;
 }
