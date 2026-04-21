@@ -862,8 +862,18 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
   const totalErrors = issues.reduce((acc, i) => acc + (i.count ?? 1), 0);
 
-  const searchParams = useSearchParams();
+  const searchParams    = useSearchParams();
   const isImpersonating = searchParams.get("impersonating") === "1";
+  const isNewScan       = searchParams.get("newScan") === "true";
+
+  // Remove ?newScan=true from URL immediately so a refresh doesn't re-trigger focus mode
+  useEffect(() => {
+    if (isNewScan && typeof window !== "undefined") {
+      const clean = window.location.pathname + (isImpersonating ? "?impersonating=1" : "");
+      window.history.replaceState({}, "", clean);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
   const [fixOpenIdx, setFixOpenIdx]             = useState<number | null>(null);
@@ -1471,8 +1481,46 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         {/* ── PAGE CONTENT ─────────────────────────────── */}
         <main style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
 
+          {/* ── NEW-SCAN SUCCESS BANNER ─────────────────── */}
+          {isNewScan && lastScan && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "16px 22px", borderRadius: 12, marginBottom: 24,
+              background: "rgba(34,197,94,0.08)",
+              border: "1px solid rgba(34,197,94,0.22)",
+              animation: "wf-fadein 0.4s ease both",
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22C55E"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#22C55E" }}>
+                  Scan für {domain} erfolgreich abgeschlossen
+                </p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+                  Deine Ergebnisse wurden gespeichert — Score-Übersicht und Prioritäten findest du direkt unten.
+                </p>
+              </div>
+              <Link href={`/dashboard/scans/${lastScan.id}`} style={{
+                flexShrink: 0, fontSize: 12, fontWeight: 700,
+                padding: "6px 14px", borderRadius: 7,
+                background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+                color: "#22C55E", textDecoration: "none",
+              }}>
+                Vollbericht →
+              </Link>
+            </div>
+          )}
+
           {/* ① QUICK-START GUIDE — shown when plan is active but no scan yet */}
-          {!lastScan && plan !== "free" && (
+          {!lastScan && !isNewScan && plan !== "free" && (
             <div style={{
               background: "linear-gradient(160deg, #0d1f3c 0%, #091528 100%)",
               border: "1px solid rgba(37,99,235,0.3)",
@@ -1698,7 +1746,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           )}
 
           {/* ② TECH FINGERPRINT STRIP */}
-          {lastScan && techChips.length > 0 && (
+          {!isNewScan && lastScan && techChips.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
               {techChips.map(item => (
                 <div key={item.label} style={{
@@ -1722,7 +1770,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           )}
 
           {/* ③ BFSG / COMPLIANCE BANNER */}
-          {lastScan && (
+          {!isNewScan && lastScan && (
             <div style={{
               display: "flex", alignItems: "center", gap: 14,
               padding: "14px 20px", borderRadius: D.radiusSm, marginBottom: 28,
@@ -1755,7 +1803,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
           )}
 
-          {/* ④ SUMMARY CARDS */}
+          {/* ④ SUMMARY CARDS — hidden in focus mode after fresh scan */}
+          {!isNewScan && (
           <div style={{ marginBottom: 28 }}>
             {/* Skeleton-Loader wenn noch kein Scan */}
             <style>{`
@@ -1811,8 +1860,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               ))}
             </div>
           </div>
+          )}
 
-          <Divider style={{ marginBottom: 28 }} />
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
           {/* ④b STARTER RESULTS PANEL — Score rings, Top-Priorities, Accordion, Export */}
           <StarterResultsPanel
@@ -1824,8 +1874,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             lastScan={!!lastScan}
           />
 
-          {/* ⑤ PERFORMANCE SNAPSHOT */}
-          <div style={{ marginBottom: 28 }}>
+          {/* ⑤ PERFORMANCE SNAPSHOT — hidden in focus mode */}
+          {!isNewScan && <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <SectionLabel>Scan · Sichtbarkeit &amp; Performance</SectionLabel>
             </div>
@@ -1916,12 +1966,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </p>
               </div>
             )}
-          </div>
+          </div>}
 
-          <Divider style={{ marginBottom: 28 }} />
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑥ DEEP-SCAN MAP */}
-          {hasData && unterseiten && unterseiten.length > 0 && (
+          {/* ⑥ DEEP-SCAN MAP — hidden in focus mode */}
+          {!isNewScan && hasData && unterseiten && unterseiten.length > 0 && (
             <div ref={mapSectionRef}>
               <DeepScanMap
                 homepageUrl={lastScan?.url ?? ""}
@@ -1937,7 +1987,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           )}
 
           {/* Side drawer */}
-          {drawerPageUrl && unterseiten && (
+          {!isNewScan && drawerPageUrl && unterseiten && (
             <DrawerPanel
               pageUrl={drawerPageUrl}
               unterseiten={unterseiten}
@@ -1947,10 +1997,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             />
           )}
 
-          <Divider style={{ marginBottom: 28 }} />
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑦ FINDINGS LIST */}
-          <div style={{ marginBottom: 28 }}>
+          {/* ⑦ FINDINGS LIST — hidden in focus mode */}
+          {!isNewScan && <div style={{ marginBottom: 28 }}>
             <SectionLabel>Audit-Ergebnisse</SectionLabel>
             <SectionHead>Gefundene Probleme</SectionHead>
 
@@ -2226,12 +2276,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               </div>
               </>
             )}
-          </div>
+          </div>}
 
-          <Divider style={{ marginBottom: 28 }} />
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑦ SMART-GUARD AUTOMATION MODULES */}
-          <div style={{ marginBottom: 28 }}>
+          {/* ⑦ SMART-GUARD AUTOMATION MODULES — hidden in focus mode */}
+          {!isNewScan && <div style={{ marginBottom: 28 }}>
             <SectionLabel color={D.blueSoft}>Professional · Automatisierung</SectionLabel>
             <SectionHead>Einmal verstehen — dauerhaft überwacht.</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 580 }}>
@@ -2484,12 +2534,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
 
-          <Divider style={{ marginBottom: 28 }} />
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑧ WP-PLUGIN ANBINDUNG */}
-          <div style={{ marginBottom: 28 }}>
+          {/* ⑧ WP-PLUGIN ANBINDUNG — hidden in focus mode */}
+          {!isNewScan && <div style={{ marginBottom: 28 }}>
             <SectionLabel color={isAgency ? "#a78bfa" : D.blueSoft}>
               {isAgency ? "Agency · Exklusiv" : "Agency Feature"}
             </SectionLabel>
@@ -2825,12 +2875,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
-          <Divider style={{ marginBottom: 28 }} />
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑨ PROFESSIONELLER SERVICE */}
-          <div style={{ marginBottom: 40 }}>
+          {/* ⑨ PROFESSIONELLER SERVICE — hidden in focus mode */}
+          {!isNewScan && <div style={{ marginBottom: 40 }}>
             <SectionLabel color={D.blueSoft}>Optionaler Service</SectionLabel>
             <SectionHead>Lieber delegieren? Wir unterstützen gezielt.</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 620 }}>
@@ -2935,10 +2985,10 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
 
-          {/* ⑨ UPGRADE CTA */}
-          <div style={{
+          {/* ⑨ UPGRADE CTA — hidden in focus mode */}
+          {!isNewScan && <div style={{
             padding: "40px 40px",
             borderRadius: D.radius,
             background: "rgba(0,123,255,0.06)",
@@ -2980,7 +3030,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <p style={{ marginTop: 16, fontSize: 12, color: D.textFaint }}>
               Keine Installation · Ergebnis sofort · Jederzeit kündbar
             </p>
-          </div>
+          </div>}
 
         </main>
 
