@@ -142,25 +142,13 @@ function RegisterContent() {
           }
         } catch { /* non-critical */ }
 
-        // Always go to Stripe checkout — no free dashboard access
+        // Harter Redirect zur GET-Checkout-Route (Session-Cookie wird automatisch mitgeschickt)
+        // Kein POST-Fetch nötig — vermeidet Race Conditions mit Session-Initialisierung
         if (isPaidPlan) {
-          try {
-            const checkoutRes = await fetch("/api/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ plan }),
-            });
-            const checkoutData = await checkoutRes.json();
-            if (checkoutData.url) {
-              window.location.href = checkoutData.url;
-              return;
-            }
-          } catch { /* fall through */ }
-          // Fallback: pricing page with auto-checkout trigger
-          window.location.href = `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`;
+          window.location.href = `/api/checkout?plan=${encodeURIComponent(plan)}`;
         } else {
-          // No plan or unknown plan → send to pricing, never to dashboard
-          window.location.href = "/fuer-agenturen#pricing";
+          // Kein Plan → zur Preisseite, nie zum Dashboard
+          window.location.href = "/fuer-agenturen";
         }
       } else {
         window.location.href = "/login";

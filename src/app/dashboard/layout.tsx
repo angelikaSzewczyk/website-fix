@@ -13,7 +13,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const plan      = (session.user as { plan?: string }).plan ?? "free";
+  // ── PAYMENT GATE: Immer frische DB-Abfrage — JWT kann nach Stripe-Webhook veraltet sein ──
+  let plan = "free";
+  try {
+    const sqlGate = neon(process.env.DATABASE_URL!);
+    const planRow = await sqlGate`SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1`;
+    plan = (planRow[0]?.plan as string) ?? "free";
+  } catch {
+    // DB-Fehler: JWT-Wert als Fallback
+    plan = (session.user as { plan?: string }).plan ?? "free";
+  }
+
+  if (plan === "free") redirect("/fuer-agenturen");
+
   const userName  = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
 
