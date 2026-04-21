@@ -10,6 +10,7 @@ function priceIdToPlan(priceId: string | undefined): string | null {
   if (process.env.STRIPE_PRICE_PROFESSIONAL   && priceId === process.env.STRIPE_PRICE_PROFESSIONAL)   return "professional";
   if (process.env.STRIPE_PRICE_SMART_GUARD    && priceId === process.env.STRIPE_PRICE_SMART_GUARD)    return "smart-guard";
   if (process.env.STRIPE_PRICE_AGENCY_STARTER && priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency-starter";
+  if (process.env.STRIPE_PRICE_AGENCY        && priceId === process.env.STRIPE_PRICE_AGENCY)          return "agency-starter"; // alias
   if (process.env.STRIPE_PRICE_AGENCY_PRO     && priceId === process.env.STRIPE_PRICE_AGENCY_PRO)     return "agency-pro";
   // CRITICAL: unknown price — log loudly and abort. Never fall back to "free".
   console.error(
