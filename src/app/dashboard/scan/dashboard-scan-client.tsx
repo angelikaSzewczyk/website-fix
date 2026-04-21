@@ -376,6 +376,7 @@ export default function DashboardScanClient({
   const [fsResult, setFsResult] = useState<FullSiteResult | null>(null);
 
   const [urlFocused, setUrlFocused] = useState(false);
+  const [urlHint, setUrlHint]       = useState<"https" | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
@@ -596,10 +597,51 @@ export default function DashboardScanClient({
       ? "Audit aktualisieren"
       : "Live-Check starten";
 
+  // URL auto-correction on blur
+  function handleUrlBlur() {
+    setUrlFocused(false);
+    if (!url) return;
+    const trimmed = url.trim();
+    if (trimmed && !trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      setUrl(`https://${trimmed}`);
+      setUrlHint("https");
+      setTimeout(() => setUrlHint(null), 3000);
+    }
+  }
+
+  const TAB_HINTS: Partial<Record<TabType, string>> = {
+    wcag:        "Prüft Kontraste, ARIA-Labels, Tastatur-Navigation und Formular-Zugänglichkeit nach WCAG 2.1.",
+    performance: "Misst LCP, CLS und Server-Response-Time — die drei wichtigsten Google Core Web Vitals.",
+    fullsite:    "Crawlt alle Unterseiten via Sitemap und interne Links. Aggregierte Fehler-Übersicht für die gesamte Domain.",
+  };
+
+  const hasValidUrl = url.trim().length > 0 && state !== "scanning";
+
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#0b0c10", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <style>{`@keyframes wf-spin{to{transform:rotate(360deg)}} @keyframes wf-dot-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+      <style>{`
+        @keyframes wf-spin        { to { transform: rotate(360deg); } }
+        @keyframes wf-dot-pulse   { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes wf-btn-glow    {
+          0%,100% { box-shadow: 0 4px 20px rgba(0,123,255,0.45); }
+          50%     { box-shadow: 0 4px 36px rgba(0,123,255,0.75), 0 0 0 4px rgba(0,123,255,0.12); }
+        }
+        @keyframes wf-radar-sweep { to { transform: rotate(360deg); } }
+        @keyframes wf-radar-ping  {
+          0%   { transform: scale(0.95); opacity: 0.5; }
+          60%  { transform: scale(1.5);  opacity: 0.15; }
+          100% { transform: scale(1.8);  opacity: 0; }
+        }
+        @keyframes wf-radar-blip  {
+          0%,100% { opacity: 0; transform: scale(0.6); }
+          50%     { opacity: 1; transform: scale(1); }
+        }
+        @keyframes wf-hint-in {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
       {/* ── MAIN CONTENT — sidebar rendered by dashboard layout.tsx ── */}
       <main style={{ flex: 1, minWidth: 0, maxWidth: "none" }}>
@@ -700,6 +742,25 @@ export default function DashboardScanClient({
           })}
         </div>
 
+        {/* Tab description — expert hint */}
+        {TAB_HINTS[tab] && (
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 8,
+            padding: "10px 14px", borderRadius: C.radiusSm, marginBottom: 18,
+            background: "rgba(0,123,255,0.05)",
+            border: `1px solid rgba(0,123,255,0.14)`,
+            animation: "wf-hint-in 0.2s ease both",
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blueSoft}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
+              {TAB_HINTS[tab]}
+            </p>
+          </div>
+        )}
+
         {/* Device toggle (performance only) */}
         {tab === "performance" && (
           <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
@@ -710,9 +771,13 @@ export default function DashboardScanClient({
                 background: device === d ? C.blueBg : "transparent",
                 color: device === d ? C.blueSoft : C.textMuted,
                 fontSize: 12, cursor: "pointer", fontWeight: device === d ? 700 : 400,
-                fontFamily: "inherit",
+                fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6,
               }}>
-                {d === "mobile" ? "📱 Mobile" : "🖥 Desktop"}
+                {d === "mobile" ? (
+                  <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Mobile</>
+                ) : (
+                  <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Desktop</>
+                )}
               </button>
             ))}
           </div>
@@ -774,38 +839,56 @@ export default function DashboardScanClient({
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleScan} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
-            <input
-              id="dashboard-scan-url"
-              type="text" value={url} onChange={e => setUrl(e.target.value)}
-              placeholder="https://kunden-website.de"
-              disabled={state === "scanning"}
-              onFocus={() => setUrlFocused(true)}
-              onBlur={() => setUrlFocused(false)}
-              style={{
-                flex: 1, minWidth: 280,
-                background: "rgba(255,255,255,0.04)",
-                border: `1px solid ${urlFocused ? C.blue : C.borderMid}`,
-                borderRadius: C.radiusSm,
-                padding: "12px 16px",
-                color: C.text, fontSize: 14, outline: "none",
-                boxShadow: urlFocused ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
-                transition: "border-color 0.15s, box-shadow 0.15s",
-              }}
-            />
-            <button type="submit" disabled={state === "scanning" || !url} style={{
-              padding: "12px 28px", borderRadius: C.radiusSm, border: "none",
-              background: !url || state === "scanning" ? "rgba(255,255,255,0.06)" : C.blue,
-              color: !url || state === "scanning" ? C.textMuted : "#fff",
-              fontWeight: 700, fontSize: 14,
-              cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
-              boxShadow: !url || state === "scanning" ? "none" : "0 4px 20px rgba(0,123,255,0.4)",
-              transition: "background 0.15s, box-shadow 0.15s",
-              fontFamily: "inherit",
-            }}>
-              {buttonLabel}
-            </button>
+          <form onSubmit={handleScan} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
+              <input
+                id="dashboard-scan-url"
+                type="text" value={url}
+                onChange={e => { setUrl(e.target.value); setUrlHint(null); }}
+                placeholder="https://kunden-website.de"
+                disabled={state === "scanning"}
+                onFocus={() => setUrlFocused(true)}
+                onBlur={handleUrlBlur}
+                style={{
+                  flex: 1, minWidth: 280,
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${urlFocused ? C.blue : C.borderMid}`,
+                  borderRadius: C.radiusSm,
+                  padding: "12px 16px",
+                  color: C.text, fontSize: 14, outline: "none",
+                  boxShadow: urlFocused ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
+                  transition: "border-color 0.15s, box-shadow 0.15s",
+                }}
+              />
+              <button type="submit" disabled={state === "scanning" || !url} style={{
+                padding: "12px 28px", borderRadius: C.radiusSm, border: "none",
+                background: !url || state === "scanning" ? "rgba(255,255,255,0.06)" : C.blue,
+                color: !url || state === "scanning" ? C.textMuted : "#fff",
+                fontWeight: 700, fontSize: 14,
+                cursor: !url || state === "scanning" ? "not-allowed" : "pointer",
+                animation: hasValidUrl ? "wf-btn-glow 2s ease-in-out infinite" : "none",
+                boxShadow: hasValidUrl ? "0 4px 20px rgba(0,123,255,0.45)" : "none",
+                transition: "background 0.15s",
+                fontFamily: "inherit",
+              }}>
+                {buttonLabel}
+              </button>
+            </div>
+            {/* Soft URL hint */}
+            {urlHint === "https" && (
+              <p style={{
+                margin: 0, fontSize: 11,
+                color: C.amber,
+                display: "flex", alignItems: "center", gap: 5,
+                animation: "wf-hint-in 0.2s ease both",
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/>
+                </svg>
+                https:// wurde automatisch ergänzt
+              </p>
+            )}
           </form>
         )}
 
@@ -955,30 +1038,99 @@ export default function DashboardScanClient({
         </div>
       )}
 
-      {/* SCANNING STATE — regular scans (progressive) */}
+      {/* SCANNING STATE — radar animation + progressive steps */}
       {state === "scanning" && tab !== "fullsite" && (
-        <div style={{ padding: "20px 24px", background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radiusSm, marginBottom: 24 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{
+          padding: "32px 28px", background: C.card, border: `1px solid ${C.border}`,
+          borderRadius: C.radius, marginBottom: 24,
+          display: "flex", alignItems: "center", gap: 36, flexWrap: "wrap",
+        }}>
+          {/* ── Radar ── */}
+          <div style={{ position: "relative", width: 120, height: 120, flexShrink: 0, margin: "0 auto" }}>
+            {/* Concentric rings */}
+            {[120, 80, 44].map((size, ri) => (
+              <div key={ri} style={{
+                position: "absolute",
+                top: "50%", left: "50%",
+                width: size, height: size,
+                borderRadius: "50%",
+                border: `1px solid rgba(0,123,255,${0.18 - ri * 0.04})`,
+                transform: "translate(-50%,-50%)",
+              }} />
+            ))}
+            {/* Ping ring */}
+            <div style={{
+              position: "absolute", top: "50%", left: "50%",
+              width: 120, height: 120, borderRadius: "50%",
+              border: "1px solid rgba(0,123,255,0.35)",
+              transform: "translate(-50%,-50%)",
+              animation: "wf-radar-ping 2.2s ease-out infinite",
+            }} />
+            {/* Sweep sector — conic gradient rotating */}
+            <div style={{
+              position: "absolute", top: "50%", left: "50%",
+              width: 120, height: 120, borderRadius: "50%",
+              background: "conic-gradient(from 0deg, rgba(0,123,255,0.0) 0deg, rgba(0,123,255,0.28) 70deg, rgba(0,123,255,0.0) 90deg)",
+              transform: "translate(-50%,-50%)",
+              animation: "wf-radar-sweep 2s linear infinite",
+            }} />
+            {/* Center dot */}
+            <div style={{
+              position: "absolute", top: "50%", left: "50%",
+              width: 6, height: 6, borderRadius: "50%",
+              background: C.blue,
+              transform: "translate(-50%,-50%)",
+              boxShadow: `0 0 8px ${C.blue}`,
+            }} />
+            {/* Blip dots at random positions */}
+            {[
+              { top: "22%", left: "60%", delay: "0.4s" },
+              { top: "58%", left: "75%", delay: "1.1s" },
+              { top: "70%", left: "32%", delay: "0.8s" },
+              { top: "35%", left: "25%", delay: "1.6s" },
+            ].map((blip, i) => (
+              <div key={i} style={{
+                position: "absolute",
+                top: blip.top, left: blip.left,
+                width: 4, height: 4, borderRadius: "50%",
+                background: "#4ade80",
+                boxShadow: "0 0 6px #4ade80",
+                animation: `wf-radar-blip 2.2s ease-in-out ${blip.delay} infinite`,
+              }} />
+            ))}
+          </div>
+
+          {/* ── Steps list ── */}
+          <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 9 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Analyse läuft
+            </p>
             {SCAN_STEPS[tab as Exclude<TabType, "fullsite">].map((step, i) => {
               const isDone    = i < scanStep;
               const isCurrent = i === scanStep;
               const isFuture  = i > scanStep;
               return (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 13,
+                <div key={i} style={{
+                  display: "flex", gap: 10, alignItems: "center", fontSize: 12,
                   color: isDone ? C.green : isCurrent ? C.text : C.textMuted,
-                  opacity: isFuture ? 0.35 : 1,
-                  transition: "opacity 0.3s, color 0.3s",
+                  opacity: isFuture ? 0.3 : 1,
+                  transition: "opacity 0.35s, color 0.35s",
                 }}>
                   {isDone ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={C.green}
+                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
                   ) : isCurrent ? (
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.blue, flexShrink: 0, animation: "wf-dot-pulse 1.5s ease-in-out infinite" }} />
+                    <span style={{
+                      width: 5, height: 5, borderRadius: "50%", background: C.blue, flexShrink: 0,
+                      animation: "wf-dot-pulse 1.2s ease-in-out infinite",
+                      boxShadow: `0 0 6px ${C.blue}`,
+                    }} />
                   ) : (
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.textMuted, flexShrink: 0, opacity: 0.4 }} />
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: C.textMuted, flexShrink: 0, opacity: 0.3 }} />
                   )}
-                  {step}
+                  <span style={{ fontWeight: isCurrent ? 600 : 400 }}>{step}</span>
                 </div>
               );
             })}
