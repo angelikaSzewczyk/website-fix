@@ -188,7 +188,7 @@ function AccordionItem({
             {issue.body}
           </p>
           {/* Quick fix */}
-          <div style={{
+          <div className="wf-quick-fix" style={{
             padding: "10px 14px", borderRadius: 8, marginBottom: 14,
             background: "rgba(0,123,255,0.05)", border: "1px solid rgba(0,123,255,0.14)",
             display: "flex", gap: 10, alignItems: "flex-start",
@@ -317,8 +317,9 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
+  const [showPdfHint, setShowPdfHint]   = useState(false);
   const [openItems, setOpenItems]       = useState<Set<number>>(new Set());
-  void openItems; void setOpenItems;    // used by AccordionItem internally
+  void openItems; void setOpenItems;
 
   if (!lastScan || issues.length === 0) return null;
 
@@ -327,8 +328,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   const techScore = clamp(speedScore, 10, 98);
   const secScore  = clamp(100 - redCount * 20 - (yellowCount > 5 ? 10 : 0), 15, 97);
 
-  // ── Top 3 priorities (sorted: red → yellow → green, then by count desc) ──
-  const sorted  = [...issues].sort((a, b) => {
+  // ── Sorted issues ─────────────────────────────────────────────────────────
+  const sorted = [...issues].sort((a, b) => {
     const sevOrd = { red: 0, yellow: 1, green: 2 };
     const sd = sevOrd[a.severity] - sevOrd[b.severity];
     if (sd !== 0) return sd;
@@ -336,12 +337,19 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   });
   const top3 = sorted.slice(0, 3);
 
-  // ── PDF export ────────────────────────────────────────────────────────────
+  // ── PDF export with hint toast ────────────────────────────────────────────
   function handleExportPDF() {
-    window.print();
+    setShowPdfHint(true);
+    // Give user time to read the hint, then open print dialog
+    setTimeout(() => {
+      window.print();
+      // Hide hint after dialog closes
+      setTimeout(() => setShowPdfHint(false), 800);
+    }, 1200);
   }
 
   const isStarter = plan === "starter";
+  const printDate = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
 
   return (
     <>
@@ -353,14 +361,153 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @media print {
-          .wf-no-print { display: none !important; }
-          body { background: #fff !important; color: #000 !important; }
+        @keyframes wf-pdf-hint-in {
+          from { opacity: 0; transform: translateY(12px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        /* ── Print styles ────────────────────────────── */
+        @media print {
+          /* Hide all UI chrome */
+          .wf-no-print,
+          .dashboard-sidebar,
+          header,
+          nav { display: none !important; }
+
+          /* Force white background, black text */
+          html, body {
+            background: #ffffff !important;
+            color: #111111 !important;
+            font-size: 12pt;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          /* Remove dashboard content offset */
+          .dashboard-content {
+            margin-left: 0 !important;
+            padding-top: 0 !important;
+          }
+
+          /* Hide everything except the results panel */
+          body > * > * { display: none !important; }
+          .wf-print-root { display: block !important; }
+
+          /* Score rings: keep colors */
+          .wf-score-ring svg {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          /* Page break before accordion */
+          .wf-print-accordion {
+            break-before: page;
+            page-break-before: always;
+          }
+
+          /* No break inside quick-fix boxes and priority cards */
+          .wf-quick-fix,
+          .wf-priority-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          /* Quick-fix boxes: readable on white */
+          .wf-quick-fix {
+            background: #eef3ff !important;
+            border-color: #bcd0ff !important;
+            color: #1e3a8a !important;
+          }
+
+          /* Severity badges in print */
+          .wf-badge-red    { background: #fee2e2 !important; color: #b91c1c !important; border-color: #fca5a5 !important; }
+          .wf-badge-yellow { background: #fef9c3 !important; color: #92400e !important; border-color: #fde68a !important; }
+          .wf-badge-green  { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
+
+          /* Cards: subtle border on white */
+          .wf-print-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Print header: show only in print */
+          .wf-print-header { display: flex !important; }
+
+          /* Page margins */
+          @page {
+            margin: 18mm 16mm;
+            size: A4 portrait;
+          }
+        }
+
+        /* Print header hidden on screen */
+        .wf-print-header { display: none; }
       `}</style>
 
+      {/* ── Print-only header ── */}
+      <div className="wf-print-header" style={{
+        alignItems: "center", justifyContent: "space-between",
+        marginBottom: 24, paddingBottom: 14,
+        borderBottom: "2px solid #e2e8f0",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Logo mark */}
+          <div style={{
+            width: 28, height: 28, borderRadius: 6,
+            background: "#007BFF",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: "11pt", fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>
+              WebsiteFix
+            </p>
+            <p style={{ margin: 0, fontSize: "8pt", color: "#64748b" }}>
+              Analyzed by WebsiteFix.io
+            </p>
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <p style={{ margin: 0, fontSize: "8pt", color: "#64748b" }}>Website-Analyse Report</p>
+          <p style={{ margin: 0, fontSize: "8pt", color: "#94a3b8" }}>{printDate}</p>
+        </div>
+      </div>
+
+      {/* ── PDF Hint Toast ─────────────────────────────────────────────────── */}
+      {showPdfHint && (
+        <div className="wf-no-print" style={{
+          position: "fixed", bottom: 32, left: "50%", transform: "translateX(-50%)",
+          zIndex: 1200,
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "14px 20px", borderRadius: 12,
+          background: "#0f1623", border: "1px solid rgba(0,123,255,0.35)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.7)",
+          animation: "wf-pdf-hint-in 0.3s cubic-bezier(0.22,1,0.36,1) both",
+          whiteSpace: "nowrap",
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <p style={{ margin: 0, fontSize: 13, color: "#fff", fontWeight: 600 }}>
+            Tipp: Wähle als Ziel{" "}
+            <strong style={{ color: "#7aa6ff" }}>&quot;Als PDF speichern&quot;</strong>
+            {" "}im Druckdialog
+          </p>
+        </div>
+      )}
+
+      {/* ── All content wrapped for print targeting ─────────────────────── */}
+      <div className="wf-print-root">
+
       {/* ① SCORE RINGS ─────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="wf-print-card" style={{
         marginBottom: 28,
         background: "rgba(255,255,255,0.02)",
         border: "1px solid rgba(255,255,255,0.07)",
@@ -418,7 +565,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
         </div>
 
         {/* Rings */}
-        <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 20 }}>
+        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 20 }}>
           <ScoreRing score={seoScore}  label="SEO"      color={seoScore  >= 70 ? "#4ade80" : seoScore  >= 45 ? "#fbbf24" : "#f87171"} delay={0}   />
           <ScoreRing score={techScore} label="Technik"  color={techScore >= 70 ? "#4ade80" : techScore >= 45 ? "#fbbf24" : "#f87171"} delay={180} />
           <ScoreRing score={secScore}  label="Sicherheit" color={secScore >= 70 ? "#4ade80" : secScore >= 45 ? "#fbbf24" : "#f87171"} delay={360} />
@@ -442,7 +589,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               const c = getColor(issue.severity);
               const fix = quickFix(issue);
               return (
-                <div key={i} style={{
+                <div key={i} className="wf-priority-card" style={{
                   padding: "18px 20px",
                   background: getBg(issue.severity),
                   border: `1px solid ${getBorder(issue.severity)}`,
@@ -510,7 +657,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
       )}
 
       {/* ③ ALLE PROBLEME — Accordion ─────────────────────────────────────── */}
-      <div style={{
+      <div className="wf-print-accordion" style={{
         marginBottom: 28,
         animation: "wf-sr-fadein 0.5s 0.2s ease both",
       }}>
@@ -555,6 +702,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           ))}
         </div>
       </div>
+
+      </div>{/* end wf-print-root */}
     </>
   );
 }
