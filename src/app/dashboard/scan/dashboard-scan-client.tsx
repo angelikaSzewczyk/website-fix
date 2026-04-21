@@ -379,8 +379,17 @@ export default function DashboardScanClient({
   const [urlHint, setUrlHint]       = useState<"https" | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
-  const limitReached = monthlyScans >= scanLimit;
+  const isAgencyPlan      = plan === "agency-starter" || plan === "agency-pro";
+  const isFullsiteEnabled = plan !== "free"; // starter, professional, agency all have fullsite
+  const limitReached      = monthlyScans >= scanLimit;
+
+  // Page limit per plan for full-site crawl
+  const fullsitePageLimit =
+    plan === "starter"                                        ? 25
+    : plan === "professional" || plan === "smart-guard"       ? 100
+    : plan === "agency-starter"                               ? 150
+    : plan === "agency-pro"                                   ? 500
+    : 0;
 
   // Pre-fill the URL field on mount — query param takes priority, then projectUrl
   useEffect(() => {
@@ -693,7 +702,7 @@ export default function DashboardScanClient({
         }}>
           {TABS.map(t => {
             const isActive = tab === t.key;
-            const isLocked = t.key === "fullsite" && !isAgencyPlan;
+            const isLocked = t.key === "fullsite" && !isFullsiteEnabled;
             return (
               <button key={t.key}
                 onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); setFsProgress(null); setFsResult(null); }}
@@ -936,8 +945,8 @@ export default function DashboardScanClient({
         </div>
       )}
 
-      {/* FULL-SITE: upgrade prompt for free users */}
-      {tab === "fullsite" && !isAgencyPlan && (
+      {/* FULL-SITE: upgrade prompt — only for free users */}
+      {tab === "fullsite" && !isFullsiteEnabled && (
         <div style={{
           padding: "24px 28px",
           background: "rgba(0,123,255,0.05)",
@@ -949,12 +958,12 @@ export default function DashboardScanClient({
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
-              Full-Site Crawl — ab Freelancer Plan
+              Full-Site Crawl — ab Starter Plan
             </p>
           </div>
           <p style={{ margin: "0 0 18px", fontSize: 13, color: C.textSub, lineHeight: 1.7 }}>
             Analysiere deine gesamte Website automatisch — alle Unterseiten, aggregierte Fehler, Seitentyp-Auswertung.
-            Verfügbar ab dem Freelancer-Plan (25 Seiten) bis Agency Scale (150 Seiten).
+            Verfügbar ab dem Starter-Plan (25 Seiten) bis Agency Scale (500 Seiten).
           </p>
           <a href="/fuer-agenturen#pricing" style={{
             display: "inline-flex", alignItems: "center", gap: 5,
@@ -967,13 +976,16 @@ export default function DashboardScanClient({
         </div>
       )}
 
-      {/* FULL-SITE: info banner for paid users */}
-      {tab === "fullsite" && isAgencyPlan && state === "idle" && (
+      {/* FULL-SITE: info banner for all paid users */}
+      {tab === "fullsite" && isFullsiteEnabled && state === "idle" && (
         <div style={{
           padding: "14px 18px", background: C.blueBg, border: `1px solid ${C.blueBorder}`,
           borderRadius: C.radiusSm, marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10,
         }}>
-          <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>🕷</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blueSoft}
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/>
+          </svg>
           <div>
             <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: C.text }}>
               Full-Site Crawl — crawlt alle Unterseiten automatisch
@@ -983,8 +995,10 @@ export default function DashboardScanClient({
               <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 5px", borderRadius: 4, fontSize: 11 }}>
                 https://kundenwebsite.de
               </code>
-              ). Crawler findet alle Seiten via Sitemap + interne Links.
-              {plan === "agency-starter" ? " Limit: 50 Seiten." : " Limit: 150 Seiten."}
+              ). Crawler findet alle Seiten via Sitemap + interne Links.{" "}
+              <strong style={{ color: C.blueSoft }}>
+                Dein Plan erlaubt Scans bis zu {fullsitePageLimit} Seiten.
+              </strong>
             </p>
           </div>
         </div>
@@ -1028,7 +1042,7 @@ export default function DashboardScanClient({
               <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 2, overflow: "hidden" }}>
                 <div style={{
                   height: "100%", background: C.blue, borderRadius: 2,
-                  width: `${Math.min(100, (fsProgress.found / (plan === "agency-pro" ? 150 : plan === "agency-starter" ? 50 : 25)) * 100)}%`,
+                  width: `${Math.min(100, (fsProgress.found / fullsitePageLimit) * 100)}%`,
                   transition: "width 0.3s ease",
                 }} />
               </div>
