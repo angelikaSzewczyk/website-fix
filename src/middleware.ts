@@ -9,9 +9,17 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard/scan", req.url));
   }
 
-  // /dashboard/* schützen
+  // /dashboard/* schützen — Login-Pflicht
   if (pathname.startsWith("/dashboard") && !req.auth?.user) {
     return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  // /dashboard/* — Plan-Schranke: Free-User haben keinen Zugang
+  if (pathname.startsWith("/dashboard") && req.auth?.user) {
+    const userPlan = (req.auth.user as { plan?: string }).plan ?? "free";
+    if (userPlan === "free") {
+      return NextResponse.redirect(new URL("/fuer-agenturen#pricing", req.url));
+    }
   }
 
   // /admin/* — strenger Guard: ADMIN_EMAIL muss in env gesetzt sein

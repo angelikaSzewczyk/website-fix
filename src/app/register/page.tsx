@@ -12,55 +12,51 @@ const PLAN_CONTENT: Record<string, {
   bullets: string[];
 }> = {
   starter: {
-    headline: <>Sichere deine Website ab.<br />Jetzt.</>,
+    headline: <>Deine Website.<br />Sicher &amp; Fehlerfrei.</>,
     sub: "Konto erstellen. Sicher per Stripe bezahlen. Sofort aktiv.",
     bullets: [
-      "SEO-Fehler automatisch erkannt & gelistet",
-      "Tote Links & fehlende Alt-Texte sofort sichtbar",
-      "3 Website-Scans pro Monat inklusive",
-      "Sofortiger Zugriff nach Stripe-Zahlung",
+      "Voller SEO-Audit (25 Seiten)",
+      "Kritische Fehler-Analyse",
+      "Sofort-Check für Google-Ranking",
     ],
   },
   "smart-guard": {
-    headline: <>Smart-Fix & Speed.<br />Automatisch.</>,
+    headline: <>KI-Power für<br />deine Website.</>,
     sub: "KI-gestützte Korrekturen. Kein manueller Aufwand.",
     bullets: [
-      "Automatische Fix-Vorschläge mit KI",
-      "Performance & Core Web Vitals optimiert",
+      "Alle Smart-Fix Anleitungen",
+      "KI-gestützte Fehlerbehebung",
       "Unbegrenzte Scans inklusive",
-      "BFSG 2025 automatisch überwacht",
     ],
   },
   professional: {
-    headline: <>Smart-Fix & Speed.<br />Automatisch.</>,
+    headline: <>KI-Power für<br />deine Website.</>,
     sub: "KI-gestützte Korrekturen. Kein manueller Aufwand.",
     bullets: [
-      "Automatische Fix-Vorschläge mit KI",
-      "Performance & Core Web Vitals optimiert",
+      "Alle Smart-Fix Anleitungen",
+      "KI-gestützte Fehlerbehebung",
       "Unbegrenzte Scans inklusive",
-      "BFSG 2025 automatisch überwacht",
     ],
   },
   "agency-starter": {
-    headline: <>Starte dein Agentur-Business<br />auf Autopilot.</>,
-    sub: "Plan wählen. Sicherer Stripe-Checkout.",
+    headline: <>Der<br />Agentur-Autopilot.</>,
+    sub: "Konto erstellen. Direkt zu Stripe. Sofort loslegen.",
     bullets: [
-      "White-Label Reports ab Agency Core",
-      "BFSG 2025 automatisch überwacht",
-      "Jira · Trello · Asana direkt verbunden",
-      "ROI ab dem ersten Monat",
+      "Alle Agency-Features & Plugin",
+      "White-Label Berichte",
+      "Mass-Fix für alle Kunden-Sites",
     ],
   },
 };
 
+// Fallback: kein Plan in URL → zur Preisseite schicken (kein Free-Zugang)
 const DEFAULT_CONTENT = {
-  headline: <>Starte dein Agentur-Business<br />auf Autopilot.</>,
-  sub: "Plan wählen. Sicherer Stripe-Checkout.",
+  headline: <>Plan wählen &amp;<br />loslegen.</>,
+  sub: "Wähle deinen Plan und starte direkt.",
   bullets: [
-    "White-Label Reports ab Agency Core",
-    "BFSG 2025 automatisch überwacht",
-    "Jira · Trello · Asana direkt verbunden",
-    "ROI ab dem ersten Monat",
+    "Starter ab 29 €/Monat",
+    "Professional ab 89 €/Monat",
+    "Agency ab 249 €/Monat",
   ],
 };
 
@@ -146,7 +142,7 @@ function RegisterContent() {
           }
         } catch { /* non-critical */ }
 
-        // Paid plan → go directly to Stripe checkout
+        // Always go to Stripe checkout — no free dashboard access
         if (isPaidPlan) {
           try {
             const checkoutRes = await fetch("/api/checkout", {
@@ -159,11 +155,12 @@ function RegisterContent() {
               window.location.href = checkoutData.url;
               return;
             }
-          } catch { /* fall through to pricing page */ }
+          } catch { /* fall through */ }
           // Fallback: pricing page with auto-checkout trigger
           window.location.href = `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`;
         } else {
-          window.location.href = "/dashboard";
+          // No plan or unknown plan → send to pricing, never to dashboard
+          window.location.href = "/fuer-agenturen#pricing";
         }
       } else {
         window.location.href = "/login";
@@ -177,9 +174,10 @@ function RegisterContent() {
 
   async function handleGoogle() {
     setLoading(true);
+    // Always go to checkout after Google sign-in — never to free dashboard
     const callbackUrl = isPaidPlan
       ? `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`
-      : "/dashboard";
+      : "/fuer-agenturen#pricing";
     await signIn("google", { callbackUrl });
   }
 
