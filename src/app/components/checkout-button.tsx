@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 interface CheckoutButtonProps {
-  plan: string;       // "starter" | "smart-guard" | "professional" | "agency-starter" | "agency-pro"
+  plan: string;       // "starter" | "smart-guard" | "professional" | "agency-starter"
   label: string;
   style?: React.CSSProperties;
   href?: string;      // fallback for enterprise (mailto)
@@ -10,6 +10,7 @@ interface CheckoutButtonProps {
 
 export default function CheckoutButton({ plan, label, style, href }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
 
   // Enterprise uses a mailto link
   if (href) {
@@ -22,6 +23,7 @@ export default function CheckoutButton({ plan, label, style, href }: CheckoutBut
 
   async function handleClick() {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -35,17 +37,29 @@ export default function CheckoutButton({ plan, label, style, href }: CheckoutBut
         // Not logged in → send to login, pass plan so AutoCheckout fires after login
         const returnUrl = `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`;
         window.location.href = `/login?callbackUrl=${encodeURIComponent(returnUrl)}`;
-
       } else {
         console.error("Checkout error:", data.error);
+        setError(data.error ?? "Fehler beim Checkout. Bitte erneut versuchen.");
         setLoading(false);
       }
-    } catch {
+    } catch (err) {
+      console.error("Checkout fetch error:", err);
+      setError("Verbindungsfehler. Bitte Seite neu laden.");
       setLoading(false);
     }
   }
 
   return (
+    <>
+    {error && (
+      <div style={{
+        fontSize: 12, color: "#EF4444", marginBottom: 8,
+        background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+        borderRadius: 6, padding: "6px 10px",
+      }}>
+        ⚠ {error}
+      </div>
+    )}
     <button
       onClick={handleClick}
       disabled={loading}
@@ -74,5 +88,6 @@ export default function CheckoutButton({ plan, label, style, href }: CheckoutBut
       )}
       {loading ? "Weiterleiten…" : label}
     </button>
+    </>
   );
 }
