@@ -1299,7 +1299,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
 
       {/* ── Onboarding Tour (new users only) ───────────── */}
-      <WfOnboardingTour />
+      <WfOnboardingTour
+        firstName={firstName}
+        plan={plan}
+        scansCount={scans.length}
+      />
 
       {/* ══════════════════════════════════════════════════
           MAIN — sidebar is rendered by dashboard layout.tsx
