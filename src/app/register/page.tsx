@@ -2,13 +2,75 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import BrandLogo from "../components/BrandLogo";
-import type { Metadata } from "next";
 
-// Note: metadata not exported from client components — set in layout or use generateMetadata workaround
-// Title is handled via head tag approach below
+// ─── Plan-specific left-panel content ────────────────────────────────────────
+const PLAN_CONTENT: Record<string, {
+  headline: React.ReactNode;
+  sub: string;
+  bullets: string[];
+}> = {
+  starter: {
+    headline: <>Sichere deine Website ab.<br />Jetzt.</>,
+    sub: "Konto erstellen. Sicher per Stripe bezahlen. Sofort aktiv.",
+    bullets: [
+      "SEO-Fehler automatisch erkannt & gelistet",
+      "Tote Links & fehlende Alt-Texte sofort sichtbar",
+      "3 Website-Scans pro Monat inklusive",
+      "Sofortiger Zugriff nach Stripe-Zahlung",
+    ],
+  },
+  "smart-guard": {
+    headline: <>Smart-Fix & Speed.<br />Automatisch.</>,
+    sub: "KI-gestützte Korrekturen. Kein manueller Aufwand.",
+    bullets: [
+      "Automatische Fix-Vorschläge mit KI",
+      "Performance & Core Web Vitals optimiert",
+      "Unbegrenzte Scans inklusive",
+      "BFSG 2025 automatisch überwacht",
+    ],
+  },
+  professional: {
+    headline: <>Smart-Fix & Speed.<br />Automatisch.</>,
+    sub: "KI-gestützte Korrekturen. Kein manueller Aufwand.",
+    bullets: [
+      "Automatische Fix-Vorschläge mit KI",
+      "Performance & Core Web Vitals optimiert",
+      "Unbegrenzte Scans inklusive",
+      "BFSG 2025 automatisch überwacht",
+    ],
+  },
+  "agency-starter": {
+    headline: <>Starte dein Agentur-Business<br />auf Autopilot.</>,
+    sub: "Plan wählen. Sicherer Stripe-Checkout.",
+    bullets: [
+      "White-Label Reports ab Agency Core",
+      "BFSG 2025 automatisch überwacht",
+      "Jira · Trello · Asana direkt verbunden",
+      "ROI ab dem ersten Monat",
+    ],
+  },
+};
+
+const DEFAULT_CONTENT = {
+  headline: <>Starte dein Agentur-Business<br />auf Autopilot.</>,
+  sub: "Plan wählen. Sicherer Stripe-Checkout.",
+  bullets: [
+    "White-Label Reports ab Agency Core",
+    "BFSG 2025 automatisch überwacht",
+    "Jira · Trello · Asana direkt verbunden",
+    "ROI ab dem ersten Monat",
+  ],
+};
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const plan = searchParams.get("plan") ?? "";
+
+  const content = PLAN_CONTENT[plan] ?? DEFAULT_CONTENT;
+  const isPaidPlan = plan && plan !== "free";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +89,6 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, email, password }),
       });
 
-      // Guard against empty / non-JSON responses (e.g. 500 with no body)
       const text = await res.text();
       let data: { ok?: boolean; error?: string } = {};
       try { data = JSON.parse(text); } catch { /* ignore parse errors */ }
@@ -84,7 +145,26 @@ export default function RegisterPage() {
             }
           }
         } catch { /* non-critical */ }
-        window.location.href = "/dashboard";
+
+        // Paid plan → go directly to Stripe checkout
+        if (isPaidPlan) {
+          try {
+            const checkoutRes = await fetch("/api/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ plan }),
+            });
+            const checkoutData = await checkoutRes.json();
+            if (checkoutData.url) {
+              window.location.href = checkoutData.url;
+              return;
+            }
+          } catch { /* fall through to pricing page */ }
+          // Fallback: pricing page with auto-checkout trigger
+          window.location.href = `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`;
+        } else {
+          window.location.href = "/dashboard";
+        }
       } else {
         window.location.href = "/login";
       }
@@ -97,7 +177,10 @@ export default function RegisterPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    await signIn("google", { callbackUrl: "/dashboard" });
+    const callbackUrl = isPaidPlan
+      ? `/fuer-agenturen?checkout=${encodeURIComponent(plan)}#pricing`
+      : "/dashboard";
+    await signIn("google", { callbackUrl });
   }
 
   return (
@@ -116,18 +199,25 @@ export default function RegisterPage() {
         <BrandLogo size="lg" />
 
         <div>
+          {isPaidPlan && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "4px 10px", borderRadius: 20, marginBottom: 16,
+              background: "rgba(37,99,235,0.15)", border: "1px solid rgba(37,99,235,0.3)",
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60a5fa", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#60a5fa", letterSpacing: "0.05em" }}>
+                STRIPE-CHECKOUT IM NÄCHSTEN SCHRITT
+              </span>
+            </div>
+          )}
           <h2 style={{ fontSize: "clamp(22px, 2.5vw, 30px)", fontWeight: 800, color: "#fff", margin: "0 0 12px", letterSpacing: "-0.03em", lineHeight: 1.2 }}>
-            Starte dein Agentur-Business<br />auf Autopilot.
+            {content.headline}
           </h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", margin: "0 0 36px", lineHeight: 1.7 }}>
-            Plan wählen. Sicherer Stripe-Checkout.
+            {content.sub}
           </p>
-          {[
-            "White-Label Reports ab Agency Core",
-            "BFSG 2025 automatisch überwacht",
-            "Jira · Trello · Asana direkt verbunden",
-            "ROI ab dem ersten Monat",
-          ].map(item => (
+          {content.bullets.map(item => (
             <div key={item} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 12 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: "#22C55E", flexShrink: 0, marginTop: 2 }}>✓</span>
               <span style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{item}</span>
@@ -163,7 +253,9 @@ export default function RegisterPage() {
             Account erstellen
           </h1>
           <p style={{ fontSize: 14, color: "#64748B", margin: "0 0 32px", lineHeight: 1.6 }}>
-            Account erstellen — Plan direkt im nächsten Schritt wählen.
+            {isPaidPlan
+              ? "Konto erstellen — du wirst direkt zum sicheren Stripe-Checkout weitergeleitet."
+              : "Account erstellen — Plan direkt im nächsten Schritt wählen."}
           </p>
 
           {/* Google */}
@@ -217,7 +309,9 @@ export default function RegisterPage() {
               color: "#fff", border: "none", cursor: loading ? "not-allowed" : "pointer",
               boxShadow: "0 4px 14px rgba(37,99,235,0.25)",
             }}>
-              {loading ? "Bitte warten…" : "Account erstellen →"}
+              {loading
+                ? (isPaidPlan ? "Weiterleiten zu Stripe…" : "Bitte warten…")
+                : (isPaidPlan ? "Konto erstellen & bezahlen →" : "Account erstellen →")}
             </button>
 
             <p style={{ fontSize: 11, color: "#94A3B8", textAlign: "center", lineHeight: 1.5 }}>

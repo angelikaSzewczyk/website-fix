@@ -1464,7 +1464,38 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         {/* ── PAGE CONTENT ─────────────────────────────── */}
         <main style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
 
-          {/* ① AUDIT HERO CARD */}
+          {/* ① PAID-PLAN EMPTY STATE — shown only when plan is active but no scan yet */}
+          {!lastScan && plan !== "free" && (
+            <div style={{
+              background: "linear-gradient(135deg, #0f2442 0%, #0a1a35 100%)",
+              border: "1px solid rgba(37,99,235,0.35)",
+              borderRadius: 16, padding: "32px 36px", marginBottom: 16,
+              display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24,
+            }}>
+              <div>
+                <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  Plan aktiv — nächster Schritt
+                </p>
+                <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>
+                  Ersten Website-Scan jetzt starten
+                </h2>
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: 480 }}>
+                  Dein Plan ist aktiv. Gib deine Website-URL ein und sieh in Sekunden, welche Fehler behoben werden können.
+                </p>
+              </div>
+              <a href="/dashboard/scan" style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "14px 28px", borderRadius: 10, flexShrink: 0,
+                background: "#2563EB", color: "#fff", fontWeight: 700, fontSize: 15,
+                textDecoration: "none", boxShadow: "0 4px 20px rgba(37,99,235,0.45)",
+                whiteSpace: "nowrap",
+              }}>
+                Website-URL eingeben →
+              </a>
+            </div>
+          )}
+
+          {/* ② AUDIT HERO CARD */}
           <Card style={{ padding: "28px 32px", marginBottom: 12 }} accent="#007BFF">
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
               <div>
