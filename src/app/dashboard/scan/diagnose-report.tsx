@@ -523,11 +523,19 @@ export default function DiagnoseReport({
   const cms        = detectCMS(diagnose, url);
   const isWordPress = cms.label === "WordPress";
   const allIssues  = sections.flatMap(s => s.issues);
-  const score      = calcScore(allIssues);
   const critCount  = allIssues.filter(i => i.severity === "critical").length;
   const warnCount  = allIssues.filter(i => i.severity === "warning").length;
   const goodCount  = allIssues.filter(i => i.severity === "good").length;
   const issueCount = issueCountProp ?? (critCount + warnCount);
+
+  // If the AI text has no emoji-formatted issues but the DB says there ARE issues,
+  // derive a fallback score from the DB count — never falsely show 100/green.
+  const hasDbIssues = (issueCountProp ?? 0) > 0;
+  const score = allIssues.length > 0
+    ? calcScore(allIssues)
+    : hasDbIssues
+      ? Math.max(5, Math.min(62, 100 - (issueCountProp! * 2)))
+      : 100;
 
   const summarySection = sections.find(s =>
     !s.heading || /zusammenfassung|summary/i.test(s.heading)

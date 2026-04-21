@@ -70,8 +70,8 @@ function quickFix(issue: IssueProp): string {
 }
 
 // ─── Animated circular score ring ─────────────────────────────────────────────
-function ScoreRing({ score, label, color, delay = 0 }: { score: number; label: string; color: string; delay?: number }) {
-  const [displayed, setDisplayed] = useState(0);
+function ScoreRing({ score, label, delay = 0 }: { score: number; label: string; color?: string; delay?: number }) {
+  const [displayed, setDisplayed] = useState<number | null>(null); // null = not yet started
   const started = useRef(false);
 
   useEffect(() => {
@@ -93,9 +93,34 @@ function ScoreRing({ score, label, color, delay = 0 }: { score: number; label: s
 
   const R = 42;
   const circumference = 2 * Math.PI * R;
-  const offset = circumference - (displayed / 100) * circumference;
+  const d = displayed ?? 0;
+  const offset = circumference - (d / 100) * circumference;
 
-  const grade = displayed >= 80 ? "Sehr gut" : displayed >= 60 ? "Gut" : displayed >= 40 ? "OK" : "Potenzial";
+  // Derive color from the currently DISPLAYED value, not the final score.
+  // This prevents the ring from glowing green while still showing "0".
+  const liveColor = d >= 70 ? "#4ade80" : d >= 40 ? "#fbbf24" : "#c07070";
+  const grade = d >= 80 ? "Sehr gut" : d >= 60 ? "Gut" : d >= 40 ? "OK" : "Potenzial";
+
+  // While animation hasn't started, show a neutral skeleton ring
+  if (displayed === null) {
+    return (
+      <div style={{ textAlign: "center", padding: "8px 0" }}>
+        <div style={{ position: "relative", width: 106, height: 106, margin: "0 auto 10px" }}>
+          <svg width="106" height="106" viewBox="0 0 106 106" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx="53" cy="53" r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+          </svg>
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 1,
+          }}>
+            <span style={{ fontSize: 24, fontWeight: 900, color: "rgba(255,255,255,0.15)", lineHeight: 1 }}>—</span>
+          </div>
+        </div>
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)" }}>{label}</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ textAlign: "center", padding: "8px 0" }}>
@@ -107,12 +132,12 @@ function ScoreRing({ score, label, color, delay = 0 }: { score: number; label: s
           <circle
             cx="53" cy="53" r={R}
             fill="none"
-            stroke={color}
+            stroke={liveColor}
             strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            style={{ filter: `drop-shadow(0 0 6px ${color}80)`, transition: "stroke-dashoffset 0.05s linear" }}
+            style={{ filter: `drop-shadow(0 0 6px ${liveColor}80)`, transition: "stroke-dashoffset 0.05s linear" }}
           />
         </svg>
         <div style={{
@@ -122,9 +147,9 @@ function ScoreRing({ score, label, color, delay = 0 }: { score: number; label: s
           gap: 1,
         }}>
           <span style={{ fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-            {displayed}
+            {d}
           </span>
-          <span style={{ fontSize: 9, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: liveColor, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             {grade}
           </span>
         </div>
@@ -596,9 +621,9 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
         {/* Rings */}
         <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 20 }}>
-          <ScoreRing score={seoScore}  label="SEO"        color={seoScore  >= 70 ? "#4ade80" : seoScore  >= 40 ? "#fbbf24" : "#c07070"} delay={0}   />
-          <ScoreRing score={techScore} label="Technik"    color={techScore >= 70 ? "#4ade80" : techScore >= 40 ? "#fbbf24" : "#c07070"} delay={180} />
-          <ScoreRing score={secScore}  label="Sicherheit" color={secScore  >= 70 ? "#4ade80" : secScore  >= 40 ? "#fbbf24" : "#c07070"} delay={360} />
+          <ScoreRing score={seoScore}  label="SEO"        delay={0}   />
+          <ScoreRing score={techScore} label="Technik"    delay={180} />
+          <ScoreRing score={secScore}  label="Sicherheit" delay={360} />
         </div>
       </div>
 
