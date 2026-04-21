@@ -69,6 +69,47 @@ function quickFix(issue: IssueProp): string {
   return "Betroffenen Bereich im CMS-Backend öffnen und gemäß Fehlerbeschreibung beheben.";
 }
 
+// ─── Score-Breakdown helpers ──────────────────────────────────────────────────
+interface Deduction { label: string; pts: number; sortedIdx: number; }
+
+function getSeoDeductions(sorted: IssueProp[]): Deduction[] {
+  const out: Deduction[] = [];
+  sorted.forEach((issue, idx) => {
+    if (out.length >= 3) return;
+    const t = (issue.title + " " + issue.body).toLowerCase();
+    let pts = 0;
+    if (/title.?tag|kein.*title|ohne.*title/i.test(t))          pts = 14;
+    else if (/meta.?desc|snippet/i.test(t))                     pts = 8;
+    else if (/\bh1\b|hauptüberschrift/i.test(t))                pts = 8;
+    else if (/sitemap/i.test(t))                                 pts = 6;
+    else if (/noindex|ausgeschlossen/i.test(t))                  pts = 5;
+    else if (issue.severity === "red" && /seo|index/i.test(t))  pts = 5;
+    if (pts > 0) out.push({ label: issue.title, pts, sortedIdx: idx });
+  });
+  return out;
+}
+
+function getSecDeductions(sorted: IssueProp[]): Deduction[] {
+  const out: Deduction[] = [];
+  sorted.forEach((issue, idx) => {
+    if (out.length >= 3) return;
+    const t = (issue.title + " " + issue.body).toLowerCase();
+    let pts = 0;
+    if (/ssl|https/i.test(t))                                      pts = 50;
+    else if (/cookie|consent|dsgvo|datenschutz/i.test(t))         pts = 30;
+    else if (/bfsg|barriere|alt.?text|alternativtext/i.test(t) && issue.severity === "red") pts = 20;
+    else if (/formular|label/i.test(t))                            pts = 15;
+    else if (issue.severity === "red")                             pts = 20;
+    if (pts > 0) out.push({ label: issue.title, pts, sortedIdx: idx });
+  });
+  return out;
+}
+
+function scrollToIssue(sortedIdx: number) {
+  const el = document.getElementById(`wf-issue-${sortedIdx}`);
+  if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.click(); }
+}
+
 // ─── Animated circular score ring ─────────────────────────────────────────────
 function ScoreRing({ score, label, delay = 0 }: { score: number; label: string; color?: string; delay?: number }) {
   const [displayed, setDisplayed] = useState<number | null>(null); // null = not yet started
@@ -178,7 +219,7 @@ function AccordionItem({
   const fix    = quickFix(issue);
 
   return (
-    <div style={{
+    <div id={`wf-issue-${index}`} style={{
       borderBottom: "1px solid rgba(255,255,255,0.05)",
       background: open ? "rgba(255,255,255,0.02)" : "transparent",
       transition: "background 0.15s",
@@ -619,11 +660,104 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           </div>
         </div>
 
-        {/* Rings */}
-        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 20 }}>
-          <ScoreRing score={seoScore}  label="SEO"        delay={0}   />
-          <ScoreRing score={techScore} label="Technik"    delay={180} />
-          <ScoreRing score={secScore}  label="Sicherheit" delay={360} />
+        {/* ── Kritisch-Warnung ─────────────────────────────────────────────── */}
+        {(seoScore <= 20 || secScore <= 20) && (
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 12,
+            padding: "12px 16px", borderRadius: 10, marginBottom: 20,
+            background: "rgba(160,80,80,0.12)", border: "1px solid rgba(160,80,80,0.28)",
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c07070"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p style={{ margin: 0, fontSize: 13, color: "#c07070", lineHeight: 1.55 }}>
+              <strong>Kritische Lücken erkannt.</strong> Deine Website weist schwerwiegende Probleme auf, die
+              Nutzervertrauen und Rankings gefährden. Sieh dir die Aufschlüsselung unten an.
+            </p>
+          </div>
+        )}
+
+        {/* Rings + Breakdown ──────────────────────────────────────────────── */}
+        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24 }}>
+
+          {/* SEO */}
+          {(() => {
+            const deductions = getSeoDeductions(sorted);
+            return (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 140px", minWidth: 140 }}>
+                <ScoreRing score={seoScore} label="SEO" delay={0} />
+                {seoScore < 50 && (
+                  <p style={{ margin: "6px 0 8px", fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>
+                    Zeigt, wie gut Suchmaschinen deine Inhalte lesen und ranken können.
+                  </p>
+                )}
+                {deductions.length > 0 && (
+                  <div style={{ width: "100%", maxWidth: 200 }}>
+                    <p style={{ margin: "0 0 5px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>
+                      Score-Abzüge
+                    </p>
+                    {deductions.map((d, i) => (
+                      <button key={i} onClick={() => scrollToIssue(d.sortedIdx)} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        width: "100%", gap: 6, padding: "4px 8px", marginBottom: 3,
+                        background: "rgba(192,112,112,0.07)", border: "1px solid rgba(192,112,112,0.15)",
+                        borderRadius: 6, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                      }}>
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", flex: 1, lineHeight: 1.4 }}>{d.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#c07070", flexShrink: 0 }}>−{d.pts}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Technik */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 140px", minWidth: 140 }}>
+            <ScoreRing score={techScore} label="Technik" delay={180} />
+            {techScore < 50 && (
+              <p style={{ margin: "6px 0 0", fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>
+                Ladezeit, Core Web Vitals und technische Stabilität deiner Seite.
+              </p>
+            )}
+          </div>
+
+          {/* Sicherheit */}
+          {(() => {
+            const deductions = getSecDeductions(sorted);
+            return (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 140px", minWidth: 140 }}>
+                <ScoreRing score={secScore} label="Sicherheit" delay={360} />
+                {secScore < 50 && (
+                  <p style={{ margin: "6px 0 8px", fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>
+                    Bewertet Schutz gegen Angriffe, Datenverlust und rechtliche Verstöße.
+                  </p>
+                )}
+                {deductions.length > 0 && (
+                  <div style={{ width: "100%", maxWidth: 200 }}>
+                    <p style={{ margin: "0 0 5px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>
+                      Score-Abzüge
+                    </p>
+                    {deductions.map((d, i) => (
+                      <button key={i} onClick={() => scrollToIssue(d.sortedIdx)} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        width: "100%", gap: 6, padding: "4px 8px", marginBottom: 3,
+                        background: "rgba(192,112,112,0.07)", border: "1px solid rgba(192,112,112,0.15)",
+                        borderRadius: 6, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                      }}>
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", flex: 1, lineHeight: 1.4 }}>{d.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#c07070", flexShrink: 0 }}>−{d.pts}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
         </div>
       </div>
 
