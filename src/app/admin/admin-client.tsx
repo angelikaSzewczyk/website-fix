@@ -615,7 +615,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
               {/* Table header */}
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 110px",
+                gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 210px",
                 padding: "10px 20px",
                 borderBottom: `1px solid ${D.border}`,
               }}>
@@ -631,7 +631,7 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 return (
                   <div key={user.id} style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 110px",
+                    gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 210px",
                     padding: "12px 20px",
                     alignItems: "center",
                     borderBottom: i < pagedUsers.length - 1 ? `1px solid ${D.border}` : "none",
@@ -710,53 +710,55 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                     </div>
 
                     {/* Aktionen */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      {/* Login-as-User */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      {/* Zeile 1: Login-as-User */}
                       <button
                         onClick={() => loginAsUser(user.id, user.email)}
                         disabled={impersonating === user.id}
-                        title={`Als ${user.email} einloggen`}
+                        title={`Als ${user.email} einloggen — siehst sein Dashboard`}
                         style={{
-                          padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                          padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
                           border: `1px solid ${D.amber}35`,
-                          background: "transparent",
+                          background: "rgba(245,158,11,0.06)",
                           color: D.amber, cursor: "pointer",
                           opacity: impersonating === user.id ? 0.5 : 1,
-                          whiteSpace: "nowrap",
+                          whiteSpace: "nowrap", textAlign: "left",
                         }}
                       >
-                        {impersonating === user.id ? "…" : "👁 Login"}
+                        {impersonating === user.id ? "…" : "👁 Als User einloggen"}
                       </button>
-
-                      {/* Credits input + button */}
-                      <input
-                        type="number"
-                        min="1" max="999"
-                        placeholder="+N"
-                        value={creditsInput[user.id] ?? ""}
-                        onChange={e => setCreditsInput(prev => ({ ...prev, [user.id]: e.target.value }))}
-                        style={{
-                          width: 40, padding: "4px 6px",
-                          background: "rgba(255,255,255,0.04)",
-                          border: `1px solid ${D.border}`,
-                          borderRadius: 6, color: D.text, fontSize: 11,
-                          outline: "none",
-                        }}
-                      />
-                      <button
-                        onClick={() => addCredits(user.id)}
-                        disabled={creditsLoading === user.id || !creditsInput[user.id]}
-                        style={{
-                          padding: "4px 8px", borderRadius: 6,
-                          border: `1px solid ${D.border}`,
-                          background: creditsDone === user.id ? D.greenBg : "transparent",
-                          color: creditsDone === user.id ? D.green : D.sub,
-                          fontSize: 11, cursor: "pointer",
-                          opacity: (!creditsInput[user.id]) ? 0.4 : 1,
-                        }}
-                      >
-                        {creditsDone === user.id ? "✓" : creditsLoading === user.id ? "…" : "Add"}
-                      </button>
+                      {/* Zeile 2: Credits gutschreiben */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <input
+                          type="number"
+                          min="1" max="999"
+                          placeholder="Anzahl"
+                          value={creditsInput[user.id] ?? ""}
+                          onChange={e => setCreditsInput(prev => ({ ...prev, [user.id]: e.target.value }))}
+                          style={{
+                            flex: 1, minWidth: 0, padding: "4px 6px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${D.border}`,
+                            borderRadius: 6, color: D.text, fontSize: 11,
+                            outline: "none",
+                          }}
+                        />
+                        <button
+                          onClick={() => addCredits(user.id)}
+                          disabled={creditsLoading === user.id || !creditsInput[user.id]}
+                          title="Bonus-Scans gutschreiben"
+                          style={{
+                            padding: "4px 10px", borderRadius: 6,
+                            border: `1px solid ${D.border}`,
+                            background: creditsDone === user.id ? D.greenBg : "rgba(255,255,255,0.04)",
+                            color: creditsDone === user.id ? D.green : D.sub,
+                            fontSize: 11, cursor: "pointer", whiteSpace: "nowrap",
+                            opacity: (!creditsInput[user.id]) ? 0.4 : 1,
+                          }}
+                        >
+                          {creditsDone === user.id ? "✓ Gut" : creditsLoading === user.id ? "…" : "+ Credits"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
