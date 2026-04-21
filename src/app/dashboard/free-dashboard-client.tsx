@@ -1010,7 +1010,41 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const scanDate   = lastScan?.created_at
     ? new Date(lastScan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })
     : null;
-  const greenCount = issues.filter(i => i.severity === "green").length;
+  const greenCount  = issues.filter(i => i.severity === "green").length;
+
+  // Total affected elements per severity (sum of count, not category count)
+  const redTotal    = issues.filter(i => i.severity === "red").reduce((s, i) => s + (i.count ?? 1), 0);
+  const yellowTotal = issues.filter(i => i.severity === "yellow").reduce((s, i) => s + (i.count ?? 1), 0);
+  const greenTotal  = issues.filter(i => i.severity === "green").reduce((s, i) => s + (i.count ?? 1), 0);
+
+  // Consolidated issues — group by title+severity to avoid 7× "Alt-Attribut fehlt" spam
+  type ConsolidatedIssue = ParsedIssueProp & { totalCount: number; affectedUrls: string[]; allImages: string[] };
+  const consolidatedIssues: ConsolidatedIssue[] = (() => {
+    const map = new Map<string, ConsolidatedIssue>();
+    for (const issue of issues) {
+      const key = `${issue.severity}||${issue.title}`;
+      if (map.has(key)) {
+        const ex = map.get(key)!;
+        ex.totalCount += issue.count ?? 1;
+        if (issue.url) ex.affectedUrls.push(issue.url);
+        const imgs = issue.url
+          ? unterseiten?.find(p => p.url === issue.url)?.altMissingImages ?? []
+          : [];
+        ex.allImages.push(...imgs);
+      } else {
+        const imgs = issue.url
+          ? unterseiten?.find(p => p.url === issue.url)?.altMissingImages ?? []
+          : [];
+        map.set(key, {
+          ...issue,
+          totalCount: issue.count ?? 1,
+          affectedUrls: issue.url ? [issue.url] : [],
+          allImages: imgs,
+        });
+      }
+    }
+    return Array.from(map.values());
+  })();
 
   // ── Tech chip building ─────────────────────────────────────────────────────
   // Prefer the structured fingerprint (real HTML signals). Falls back to
@@ -1834,28 +1868,33 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </div>
                 ))
               ) : [
-                { label: "Handlungsbedarf", count: redCount,    color: D.red,   bg: D.redBg,   border: D.redBorder   },
-                { label: "Optimierungen",   count: yellowCount, color: D.amber, bg: D.amberBg, border: D.amberBorder },
-                { label: "Hinweise",        count: greenCount,  color: D.green, bg: D.greenBg, border: D.greenBorder },
+                { label: "Handlungsbedarf", total: redTotal,    cats: redCount,    color: D.red,   bg: D.redBg,   border: D.redBorder   },
+                { label: "Optimierungen",   total: yellowTotal, cats: yellowCount, color: D.amber, bg: D.amberBg, border: D.amberBorder },
+                { label: "Hinweise",        total: greenTotal,  cats: greenCount,  color: D.green, bg: D.greenBg, border: D.greenBorder },
               ].map(s => (
                 <div key={s.label} style={{
                   padding: "20px 22px",
                   borderRadius: D.radius,
-                  background: s.count > 0 ? s.bg : D.card,
-                  border: `1px solid ${s.count > 0 ? s.border : D.border}`,
+                  background: s.total > 0 ? s.bg : D.card,
+                  border: `1px solid ${s.total > 0 ? s.border : D.border}`,
                 }}>
                   <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700,
-                    color: s.count > 0 ? s.color : D.textMuted,
+                    color: s.total > 0 ? s.color : D.textMuted,
                     textTransform: "uppercase", letterSpacing: "0.07em",
                   }}>
                     {s.label}
                   </p>
-                  <p style={{ margin: 0, fontSize: 32, fontWeight: 900,
-                    color: s.count > 0 ? s.color : D.textFaint,
+                  <p style={{ margin: "0 0 4px", fontSize: 32, fontWeight: 900,
+                    color: s.total > 0 ? s.color : D.textFaint,
                     letterSpacing: "-0.03em", lineHeight: 1.1,
                   }}>
-                    {s.count}
+                    {s.total}
                   </p>
+                  {s.cats > 0 && (
+                    <p style={{ margin: 0, fontSize: 11, color: D.textMuted, fontWeight: 400 }}>
+                      In {s.cats} {s.cats === 1 ? "Kategorie" : "Kategorien"}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -2088,15 +2127,16 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </p>
                   <p style={{ margin: 0, fontSize: 13, color: D.textSub, lineHeight: 1.65 }}>
                     Deine Website hat aktuell{" "}
-                    <strong style={{ color: "#FBBF24" }}>{redCount} Wachstums-Bremsen</strong>
-                    {yellowCount > 0 && <> und <strong style={{ color: D.amber }}>{yellowCount} Optimierungspotenziale</strong></>}
+                    <strong style={{ color: "#FBBF24" }}>{redTotal} Wachstums-Bremsen</strong>
+                    {" "}in{" "}{redCount} {redCount === 1 ? "Kategorie" : "Kategorien"}
+                    {yellowTotal > 0 && <> und <strong style={{ color: D.amber }}>{yellowTotal} Optimierungen</strong></>}
                     {" "}— das verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen.{" "}
                     {redCount > 0 && <span style={{ color: D.textMuted }}>Empfehlung: Wachstums-Bremsen zuerst beheben.</span>}
                   </p>
                 </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[...issues].sort((a, b) => {
+                {[...consolidatedIssues].sort((a, b) => {
                   const order: Record<string, number> = { red: 0, yellow: 1, green: 2 };
                   return (order[a.severity] ?? 3) - (order[b.severity] ?? 3);
                 }).map((issue, idx) => {
@@ -2104,10 +2144,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   const isFixOpen = fixOpenIdx === idx;
                   const accentColor = issue.severity === "red" ? D.red : issue.severity === "yellow" ? D.amber : D.green;
                   const fixSteps  = generateFixSteps(issue).steps;
-                  // Look up image filenames for per-page alt-text issues
-                  const pageImages = issue.url
-                    ? unterseiten?.find(p => p.url === issue.url)?.altMissingImages ?? []
-                    : [];
+                  const pageImages = issue.allImages;
                   return (
                     <div key={idx} style={{
                       borderRadius: D.radiusSm,
@@ -2135,25 +2172,34 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
                         <SevBadge sev={issue.severity} />
 
-                        {/* Title + URL */}
+                        {/* Title + location info */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.text, lineHeight: 1.3 }}>
                             {issue.title}
                           </p>
-                          {issue.url && (
+                          {/* Consolidated: multiple pages → "X Unterseiten betroffen" */}
+                          {issue.affectedUrls.length > 1 ? (
+                            <p style={{ margin: "2px 0 0", fontSize: 11, color: D.textMuted, fontWeight: 400 }}>
+                              Betrifft{" "}
+                              <span style={{ color: D.textSub, fontWeight: 600 }}>
+                                {issue.affectedUrls.length} Unterseiten
+                              </span>
+                              {" "}— Details im Aufklappen
+                            </p>
+                          ) : issue.affectedUrls.length === 1 ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                               <a
-                                href={issue.url} target="_blank" rel="noopener noreferrer"
+                                href={issue.affectedUrls[0]} target="_blank" rel="noopener noreferrer"
                                 onClick={e => e.stopPropagation()}
                                 style={{ margin: "2px 0 0", fontSize: 11, color: D.blueSoft, fontFamily: "monospace",
                                   textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                               >
-                                {(() => { try { return new URL(issue.url!).pathname; } catch { return issue.url; } })()}
+                                {(() => { try { return new URL(issue.affectedUrls[0]).pathname; } catch { return issue.affectedUrls[0]; } })()}
                                 {" ↗"}
                               </a>
-                              {unterseiten?.some(p => p.url === issue.url) && (
+                              {unterseiten?.some(p => p.url === issue.affectedUrls[0]) && (
                                 <button
-                                  onClick={e => { e.stopPropagation(); handleShowInMap(issue.url!); }}
+                                  onClick={e => { e.stopPropagation(); handleShowInMap(issue.affectedUrls[0]); }}
                                   style={{
                                     background: "none", border: "none", padding: "2px 0", cursor: "pointer",
                                     fontSize: 11, color: D.amber, fontWeight: 600,
@@ -2165,8 +2211,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                                 </button>
                               )}
                             </div>
-                          )}
-                          {!issue.url && (
+                          ) : (
                             <p style={{ margin: "2px 0 0", fontSize: 11, color: getImpact(issue.category, issue.severity).color, fontWeight: 500, opacity: 0.85 }}>
                               ↑ {getImpact(issue.category, issue.severity).label}
                             </p>
@@ -2274,12 +2319,39 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                         </div>
                       )}
 
-                      {/* Expanded body — description + image filenames */}
+                      {/* Expanded body — description + affected URLs + image filenames */}
                       {isOpen && (
                         <div style={{ padding: "0 18px 16px", borderTop: `1px solid ${D.divider}` }}>
                           <p style={{ margin: "12px 0 0", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
                             {issue.body}
                           </p>
+
+                          {/* Consolidated: list of affected subpages */}
+                          {issue.affectedUrls.length > 1 && (
+                            <div style={{ marginTop: 12 }}>
+                              <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: D.textMuted }}>
+                                Betroffene Unterseiten ({issue.affectedUrls.length}):
+                              </p>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                {issue.affectedUrls.slice(0, 8).map((u, j) => (
+                                  <a key={j} href={u} target="_blank" rel="noopener noreferrer"
+                                    style={{
+                                      fontSize: 11, fontFamily: "monospace", color: D.blueSoft,
+                                      background: "rgba(0,0,0,0.2)", borderRadius: 4, padding: "3px 8px",
+                                      wordBreak: "break-all", textDecoration: "none",
+                                    }}>
+                                    {(() => { try { return new URL(u).pathname; } catch { return u; } })()} ↗
+                                  </a>
+                                ))}
+                                {issue.affectedUrls.length > 8 && (
+                                  <p style={{ margin: "3px 0 0", fontSize: 11, color: D.textMuted }}>
+                                    +{issue.affectedUrls.length - 8} weitere Unterseiten
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Image filenames for alt-text issues */}
                           {pageImages.length > 0 && (
                             <div style={{ marginTop: 12 }}>
