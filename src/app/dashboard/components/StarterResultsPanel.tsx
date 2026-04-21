@@ -206,13 +206,15 @@ function ScoreRing({ score, label, delay = 0 }: { score: number; label: string; 
 function AccordionItem({
   issue,
   index,
+  defaultOpen = false,
   onAutoFix,
 }: {
   issue: IssueProp;
   index: number;
+  defaultOpen?: boolean;
   onAutoFix: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const color  = getColor(issue.severity);
   const bg     = getBg(issue.severity);
   const border = getBorder(issue.severity);
@@ -416,7 +418,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
     if (sd !== 0) return sd;
     return (b.count ?? 1) - (a.count ?? 1);
   });
-  const top3 = sorted.slice(0, 3);
+  const redIssues    = sorted.filter(i => i.severity === "red");
+  const yellowIssues = sorted.filter(i => i.severity === "yellow");
 
   // ── PDF export with hint toast ────────────────────────────────────────────
   function handleExportPDF() {
@@ -761,135 +764,98 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
         </div>
       </div>
 
-      {/* ② TOP 3 PRIORITÄTEN ─────────────────────────────────────────────── */}
-      {top3.length > 0 && (
-        <div style={{
-          marginBottom: 28,
-          animation: "wf-sr-fadein 0.45s 0.1s ease both",
-        }}>
-          <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            Sofort-Maßnahmen
-          </p>
-          <h2 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-            Top-Prioritäten
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {top3.map((issue, i) => {
-              const c = getColor(issue.severity);
-              const fix = quickFix(issue);
-              return (
-                <div key={i} className="wf-priority-card" style={{
-                  padding: "18px 20px",
-                  background: getBg(issue.severity),
-                  border: `1px solid ${getBorder(issue.severity)}`,
-                  borderLeft: `3px solid ${c}`,
-                  borderRadius: 12,
-                }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
-                    {/* Rank */}
-                    <div style={{
-                      width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      background: `rgba(${c === "#c07070" ? "160,80,80" : c === "#fbbf24" ? "251,191,36" : "74,222,128"},0.15)`,
-                      border: `1.5px solid ${getBorder(issue.severity)}`,
-                      fontSize: 11, fontWeight: 900, color: c,
-                    }}>
-                      {i + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 10,
-                          background: getBg(issue.severity), border: `1px solid ${getBorder(issue.severity)}`,
-                          color: c, letterSpacing: "0.06em", textTransform: "uppercase" as const,
-                        }}>
-                          {getLabel(issue.severity)}
-                        </span>
-                        {issue.count != null && issue.count > 1 && (
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", fontWeight: 400 }}>
-                            Betrifft: {getAffectedTool(issue)}
-                          </span>
-                        )}
-                      </div>
-                      <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
-                        {issue.title}
-                      </p>
-                      <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>
-                        {fix}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Auto-Fix CTA */}
-                  <div className="wf-no-print" style={{ paddingLeft: 38 }}>
-                    <button
-                      onClick={() => setShowUpgrade(true)}
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 6,
-                        padding: "5px 14px", borderRadius: 7,
-                        background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.2)",
-                        color: "rgba(251,191,36,0.5)", fontSize: 11, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                      </svg>
-                      Auto-Fix via Plugin {isStarter ? "— Professional" : ""}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ③ ALLE PROBLEME — Accordion ─────────────────────────────────────── */}
+      {/* ② AUFGABEN-LISTE ─────────────────────────────────────────────────── */}
       <div className="wf-print-accordion" style={{
         marginBottom: 28,
-        animation: "wf-sr-fadein 0.5s 0.2s ease both",
+        animation: "wf-sr-fadein 0.45s 0.1s ease both",
       }}>
+        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
           <div>
             <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              Vollständige Analyse
+              Ebene 2
             </p>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-              Alle Optimierungen ({issues.length})
+              Deine Optimierungs-Aufgaben
             </h2>
           </div>
-          {/* Filter legend */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[
-              { sev: "red" as const,    label: `${issues.filter(i=>i.severity==="red").length} Handlungsbedarf` },
-              { sev: "yellow" as const, label: `${issues.filter(i=>i.severity==="yellow").length} Hinweise` },
-              { sev: "green" as const,  label: `${issues.filter(i=>i.severity==="green").length} Hinweise` },
-            ].map(f => (
-              <span key={f.sev} style={{
-                fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10,
-                background: getBg(f.sev), border: `1px solid ${getBorder(f.sev)}`, color: getColor(f.sev),
-              }}>
-                {f.label}
+          <div className="wf-no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {redIssues.length > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: getBg("red"), border: `1px solid ${getBorder("red")}`, color: getColor("red") }}>
+                {redIssues.length} Handlungsbedarf
               </span>
-            ))}
+            )}
+            {yellowIssues.length > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: getBg("yellow"), border: `1px solid ${getBorder("yellow")}`, color: getColor("yellow") }}>
+                {yellowIssues.length} Optimierungshinweise
+              </span>
+            )}
           </div>
         </div>
 
-        <div style={{
-          background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 12, overflow: "hidden",
-        }}>
-          {sorted.map((issue, i) => (
-            <AccordionItem
-              key={i}
-              issue={issue}
-              index={i}
-              onAutoFix={() => setShowUpgrade(true)}
-            />
-          ))}
-        </div>
+        {/* ── Gruppe: Handlungsbedarf (rot) ─────────────────────────────── */}
+        {redIssues.length > 0 ? (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#c07070", flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#c07070", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Handlungsbedarf — {redIssues.length} {redIssues.length === 1 ? "Aufgabe" : "Aufgaben"}
+              </p>
+            </div>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(192,112,112,0.15)", borderRadius: 12, overflow: "hidden" }}>
+              {redIssues.map((issue, i) => (
+                <AccordionItem
+                  key={`red-${i}`}
+                  issue={issue}
+                  index={sorted.indexOf(issue)}
+                  defaultOpen={i === 0}
+                  onAutoFix={() => setShowUpgrade(true)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", marginBottom: 16, borderRadius: 10, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.18)" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <p style={{ margin: 0, fontSize: 13, color: "#4ade80", fontWeight: 600 }}>
+              Handlungsbedarf: Alle Pflicht-Einstellungen korrekt konfiguriert.
+            </p>
+          </div>
+        )}
+
+        {/* ── Gruppe: Optimierungshinweise (gelb) ──────────────────────── */}
+        {yellowIssues.length > 0 ? (
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Optimierungshinweise — {yellowIssues.length} {yellowIssues.length === 1 ? "Aufgabe" : "Aufgaben"}
+              </p>
+            </div>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, overflow: "hidden" }}>
+              {yellowIssues.map((issue, i) => (
+                <AccordionItem
+                  key={`yellow-${i}`}
+                  issue={issue}
+                  index={sorted.indexOf(issue)}
+                  defaultOpen={redIssues.length === 0 && i === 0}
+                  onAutoFix={() => setShowUpgrade(true)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", marginBottom: 8, borderRadius: 10, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.18)" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <p style={{ margin: 0, fontSize: 13, color: "#4ade80", fontWeight: 600 }}>
+              Optimierungshinweise: Keine Verbesserungspotenziale gefunden.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ④ FOCUS-MODE BACK BUTTON ──────────────────────────────────────────── */}
