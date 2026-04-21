@@ -410,7 +410,7 @@ export default function DashboardScanClient({
       setRedirectCountdown(prev => {
         if (prev === null || prev <= 1) {
           if (countdownRef.current) clearInterval(countdownRef.current);
-          window.location.href = "/dashboard";
+          window.location.href = "/dashboard?newScan=true";
           return null;
         }
         return prev - 1;
@@ -923,7 +923,7 @@ export default function DashboardScanClient({
             </p>
           </div>
           <button
-            onClick={() => { window.location.href = "/dashboard"; }}
+            onClick={() => { window.location.href = "/dashboard?newScan=true"; }}
             style={{
               flexShrink: 0, padding: "8px 18px", borderRadius: C.radiusSm,
               background: C.green, border: "none", color: "#0b0c10",

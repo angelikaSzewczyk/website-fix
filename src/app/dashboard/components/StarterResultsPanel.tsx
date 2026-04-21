@@ -445,6 +445,21 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
             border: 1px solid #e2e8f0 !important;
           }
 
+          /* Force ALL dark containers to white */
+          .wf-print-root,
+          .wf-print-root * {
+            background-color: transparent !important;
+            color: #111111 !important;
+            border-color: #d1d5db !important;
+            box-shadow: none !important;
+          }
+          .wf-print-root [style*="background"] {
+            background: transparent !important;
+          }
+          .wf-score-ring text {
+            fill: #111111 !important;
+          }
+
           /* Print header: show only in print */
           .wf-print-header { display: flex !important; }
 

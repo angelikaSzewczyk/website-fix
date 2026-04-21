@@ -1979,7 +1979,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 tip?: { text: string; cta?: { label: string; href: string } };
               }> => {
                 const scanUrl = lastScan?.url ?? "";
-                const psUrl = scanUrl ? `https://pagespeed.web.dev/report?url=${encodeURIComponent(scanUrl)}` : "https://pagespeed.web.dev/";
+                const psUrl = scanUrl ? `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(scanUrl)}` : "https://pagespeed.web.dev/";
                 return [
                   {
                     label: "Indexierte URLs",

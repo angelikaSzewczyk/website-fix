@@ -158,38 +158,71 @@ function buildIssuesFromUnterseiten(
   const issues: ParsedIssue[] = [];
   const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
 
-  // ── Global aggregates ──
+  // ── Consolidated aggregates — one entry per problem type with real count ──
+  // Alt-text: single aggregated entry (count = total missing images)
   const totalAltMissing = unterseiten.reduce((s, p) => s + p.altMissing, 0);
   if (totalAltMissing > 0)
-    issues.push({ severity: "red", title: `${totalAltMissing} Bilder ohne Alt-Text (BFSG 2025 Pflicht)`, body: "Barrierefreiheitspflicht ab 06/2025 — Abmahnrisiko für alle betroffenen Seiten.", category: "recht" });
+    issues.push({
+      severity: "red",
+      title: "Bilder ohne Alt-Text",
+      body: `${totalAltMissing} Bilder ohne Beschreibung — schaden Barrierefreiheit und Google-Bild-Suche.`,
+      category: "recht",
+      count: totalAltMissing,
+    });
 
+  // Unreachable pages
   const unreachable = unterseiten.filter(p => !p.erreichbar);
   if (unreachable.length > 0)
-    issues.push({ severity: "red", title: `${unreachable.length} Unterseite${unreachable.length > 1 ? "n" : ""} nicht erreichbar`, body: `404/5xx auf: ${unreachable.slice(0, 3).map(p => toPath(p.url)).join(", ")}`, category: "technik" });
+    issues.push({
+      severity: "red",
+      title: "Unterseiten nicht erreichbar",
+      body: `404/5xx auf: ${unreachable.slice(0, 3).map(p => toPath(p.url)).join(", ")}${unreachable.length > 3 ? ` (+${unreachable.length - 3} weitere)` : ""}.`,
+      category: "technik",
+      count: unreachable.length,
+    });
 
+  // Missing title tags
   const noTitle = unterseiten.filter(p => !p.title || p.title === "(kein Title)");
   if (noTitle.length > 0)
-    issues.push({ severity: "red", title: `${noTitle.length} Seite${noTitle.length > 1 ? "n" : ""} ohne Title-Tag`, body: "Fehlende Title-Tags schaden dem Google-Ranking direkt.", category: "technik" });
+    issues.push({
+      severity: "red",
+      title: "Seiten ohne Title-Tag",
+      body: `${noTitle.length} Seite${noTitle.length > 1 ? "n" : ""} ohne Title — schaden Google-Ranking direkt.`,
+      category: "technik",
+      count: noTitle.length,
+    });
 
+  // Missing H1
+  const noH1 = unterseiten.filter(p => !p.h1 || p.h1 === "(kein H1)");
+  if (noH1.length > 0)
+    issues.push({
+      severity: "yellow",
+      title: "Seiten ohne H1-Überschrift",
+      body: `${noH1.length} Seite${noH1.length > 1 ? "n" : ""} ohne H1 — schwächt das SEO-Signal.`,
+      category: "technik",
+      count: noH1.length,
+    });
+
+  // Noindex
   const noindex = unterseiten.filter(p => p.noindex);
   if (noindex.length > 0)
-    issues.push({ severity: "yellow", title: `Noindex auf ${noindex.length} Seite${noindex.length > 1 ? "n" : ""}`, body: `Für Google unsichtbar: ${noindex.slice(0, 3).map(p => toPath(p.url)).join(", ")}`, category: "technik" });
+    issues.push({
+      severity: "yellow",
+      title: "Seiten von Google ausgeschlossen",
+      body: `Noindex aktiv auf ${noindex.length} Seite${noindex.length > 1 ? "n" : ""}: ${noindex.slice(0, 3).map(p => toPath(p.url)).join(", ")}.`,
+      category: "technik",
+      count: noindex.length,
+    });
 
-  // ── Per-page issues ──
-  for (const p of unterseiten) {
-    const path = toPath(p.url);
-    if (!p.erreichbar) continue; // already covered in aggregate above
-    if (!p.title || p.title === "(kein Title)")
-      issues.push({ severity: "red", title: `Title-Tag fehlt: ${path}`, body: "Fehlender Title-Tag verhindert gutes Google-Ranking.", category: "technik" });
-    if (!p.h1 || p.h1 === "(kein H1)")
-      issues.push({ severity: "yellow", title: `H1 fehlt: ${path}`, body: "Fehlende H1-Überschrift schwächt das SEO-Signal.", category: "technik" });
-    if (p.altMissing > 0)
-      issues.push({ severity: "red", title: `${p.altMissing}× Alt-Text fehlt: ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text (BFSG 2025).`, category: "recht" });
-  }
-
-  // If we still have nothing but issueCount > 0, generic fallback
+  // Generic fallback when no other data
   if (issues.length === 0 && (issueCount ?? 0) > 0)
-    issues.push({ severity: "yellow", title: `${issueCount} technische Problem${issueCount !== 1 ? "e" : ""} gefunden`, body: "Starte einen neuen Scan für den vollständigen Bericht.", category: "technik" });
+    issues.push({
+      severity: "yellow",
+      title: "Technische Probleme gefunden",
+      body: "Starte einen neuen Scan für den vollständigen Bericht.",
+      category: "technik",
+      count: issueCount ?? 1,
+    });
 
   return issues;
 }
