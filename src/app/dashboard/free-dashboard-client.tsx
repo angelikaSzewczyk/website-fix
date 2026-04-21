@@ -346,8 +346,8 @@ function DrawerCard({
   const [fixOpen, setFixOpen] = useState(false);
   const steps = fixKey ? DRAWER_FIX_STEPS[fixKey] ?? [] : [];
   const accent = kind === "critical" ? D.red : D.amber;
-  const accentBg  = kind === "critical" ? "rgba(239,68,68,0.07)"  : "rgba(251,191,36,0.07)";
-  const accentBdr = kind === "critical" ? "rgba(239,68,68,0.22)"  : "rgba(251,191,36,0.22)";
+  const accentBg  = kind === "critical" ? "rgba(160,80,80,0.07)"  : "rgba(251,191,36,0.07)";
+  const accentBdr = kind === "critical" ? "rgba(160,80,80,0.20)"  : "rgba(251,191,36,0.22)";
 
   return (
     <div style={{
@@ -368,7 +368,7 @@ function DrawerCard({
           <span style={{
             flexShrink: 0, fontSize: 11, fontWeight: 700,
             padding: "2px 8px", borderRadius: 20,
-            background: `rgba(${kind === "critical" ? "239,68,68" : "251,191,36"},0.15)`,
+            background: `rgba(${kind === "critical" ? "160,80,80" : "251,191,36"},0.12)`,
             color: accent, border: `1px solid ${accentBdr}`,
           }}>{count}×</span>
         )}
@@ -378,7 +378,7 @@ function DrawerCard({
             style={{
               flexShrink: 0, fontSize: 11, fontWeight: 700,
               padding: "4px 10px", borderRadius: 5, cursor: "pointer",
-              background: fixOpen ? `rgba(${kind === "critical" ? "239,68,68" : "251,191,36"},0.15)` : "rgba(255,255,255,0.05)",
+              background: fixOpen ? `rgba(${kind === "critical" ? "160,80,80" : "251,191,36"},0.12)` : "rgba(255,255,255,0.05)",
               border: `1px solid ${fixOpen ? accentBdr : "rgba(255,255,255,0.1)"}`,
               color: fixOpen ? accent : D.textSub,
               transition: "all 0.15s",
@@ -816,7 +816,7 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
                 {!page.erreichbar && (
                   <span style={{
                     flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 6px",
-                    borderRadius: 4, background: "rgba(239,68,68,0.2)", color: D.red,
+                    borderRadius: 4, background: D.redBg, color: D.red,
                     border: `1px solid ${D.redBorder}`,
                   }}>
                     404/5xx
@@ -1047,7 +1047,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     // SSL is always shown
     const sslDisplay = fp.ssl.value.startsWith("SSL aktiv") ? "Aktiv"
       : fp.ssl.value === "Kein SSL / HTTP" ? "Kein SSL" : fp.ssl.value;
-    chips.push({ label: "SSL", value: sslDisplay, color: sslDisplay === "Aktiv" ? "#4ade80" : "#f87171" });
+    chips.push({ label: "SSL", value: sslDisplay, color: sslDisplay === "Aktiv" ? "#4ade80" : D.red });
 
     // Tracking: tagManager wins, then analytics, then any tracker
     const tm = pick(fp.tagManager);
@@ -1882,32 +1882,54 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
             <SectionHead>Search &amp; Performance</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-              {[
-                {
-                  label: "Indexierte URLs",
-                  value: hasData ? `${indexedUrls}` : "—",
-                  sub: hasData ? "Im Google Index" : "Noch kein Scan",
-                  color: hasData ? D.blueSoft : D.textFaint,
-                },
-                {
-                  label: "Sitemap",
-                  value: hasData ? (sitemapOk ? "/sitemap.xml" : "Fehlt") : "—",
-                  sub: hasData ? (sitemapOk ? "Status: 200 OK" : "Nicht eingereicht") : "Noch kein Scan",
-                  color: hasData ? (sitemapOk ? D.green : D.red) : D.textFaint,
-                },
-                {
-                  label: "Core Web Vitals",
-                  value: hasData ? `LCP ${(lcpMs / 1000).toFixed(1)}s` : "—",
-                  sub: hasData ? `CLS ${cls.toFixed(2)}` : "Noch kein Scan",
-                  color: hasData ? (lcpMs < 2500 ? D.green : D.amber) : D.textFaint,
-                },
-                {
-                  label: "Mobil",
-                  value: hasData ? (mobileOk ? "Bestanden" : "Fehlgeschlagen") : "—",
-                  sub: hasData ? "Viewport & Responsive" : "Noch kein Scan",
-                  color: hasData ? (mobileOk ? D.green : D.red) : D.textFaint,
-                },
-              ].map(tile => (
+              {((): Array<{
+                label: string; value: string; sub: string; color: string;
+                tip?: { text: string; cta?: { label: string; href: string } };
+              }> => {
+                const scanUrl = lastScan?.url ?? "";
+                const psUrl = scanUrl ? `https://pagespeed.web.dev/report?url=${encodeURIComponent(scanUrl)}` : "https://pagespeed.web.dev/";
+                return [
+                  {
+                    label: "Indexierte URLs",
+                    value: hasData ? `${indexedUrls}` : "—",
+                    sub: hasData ? "Im Google Index" : "Noch kein Scan",
+                    color: hasData ? D.blueSoft : D.textFaint,
+                    tip: hasData && indexedUrls === 0 ? {
+                      text: "Deine Seite ist noch nicht bei Google registriert.",
+                      cta: { label: "Search Console öffnen", href: "https://search.google.com/search-console" },
+                    } : undefined,
+                  },
+                  {
+                    label: "Sitemap",
+                    value: hasData ? (sitemapOk ? "/sitemap.xml" : "Fehlt") : "—",
+                    sub: hasData ? (sitemapOk ? "Status: 200 OK" : "Nicht eingereicht") : "Noch kein Scan",
+                    color: hasData ? (sitemapOk ? D.green : D.red) : D.textFaint,
+                    tip: hasData && !sitemapOk ? {
+                      text: "Erstelle eine sitemap.xml mit Yoast SEO oder RankMath.",
+                      cta: { label: "Anleitung ansehen", href: "/blog/google-findet-deine-website-nicht" },
+                    } : undefined,
+                  },
+                  {
+                    label: "Core Web Vitals",
+                    value: hasData ? `LCP ${(lcpMs / 1000).toFixed(1)}s` : "—",
+                    sub: hasData ? `CLS ${cls.toFixed(2)}` : "Noch kein Scan",
+                    color: hasData ? (lcpMs < 2500 ? D.green : D.amber) : D.textFaint,
+                    tip: hasData && lcpMs >= 2500 ? {
+                      text: "Bilder komprimieren & Caching-Plugin aktivieren senkt LCP spürbar.",
+                      cta: { label: "PageSpeed Details", href: psUrl },
+                    } : undefined,
+                  },
+                  {
+                    label: "Mobil",
+                    value: hasData ? (mobileOk ? "Bestanden" : "Fehlgeschlagen") : "—",
+                    sub: hasData ? "Viewport & Responsive" : "Noch kein Scan",
+                    color: hasData ? (mobileOk ? D.green : D.red) : D.textFaint,
+                    tip: hasData && !mobileOk ? {
+                      text: "Schriftgrößen ≥ 16px und genug Abstand zwischen Buttons auf Smartphones.",
+                    } : undefined,
+                  },
+                ];
+              })().map(tile => (
                 <div key={tile.label} style={{
                   padding: "16px 16px",
                   borderRadius: D.radiusSm,
@@ -1923,6 +1945,46 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     {tile.value}
                   </p>
                   <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>{tile.sub}</p>
+
+                  {/* Action-Guide Tip — only when a value needs improvement */}
+                  {tile.tip && (
+                    <div style={{
+                      marginTop: 10,
+                      padding: "8px 10px",
+                      borderRadius: 7,
+                      background: "rgba(251,191,36,0.05)",
+                      border: "1px solid rgba(251,191,36,0.16)",
+                    }}>
+                      <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                        {/* Lightbulb icon */}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24"
+                          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ flexShrink: 0, marginTop: 1 }}>
+                          <path d="M9 18h6"/><path d="M10 22h4"/>
+                          <path d="M12 2a7 7 0 0 1 7 7c0 3.5-2 5.5-2.5 7h-9C7 14.5 5 12.5 5 9a7 7 0 0 1 7-7z"/>
+                        </svg>
+                        <p style={{ margin: 0, fontSize: 11, color: "rgba(251,191,36,0.75)", lineHeight: 1.5 }}>
+                          {tile.tip.text}
+                        </p>
+                      </div>
+                      {tile.tip.cta && (
+                        <a
+                          href={tile.tip.cta.href}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{
+                            display: "inline-block", marginTop: 7,
+                            fontSize: 10, fontWeight: 700,
+                            color: "#fbbf24", textDecoration: "none",
+                            padding: "3px 8px", borderRadius: 5,
+                            background: "rgba(251,191,36,0.08)",
+                            border: "1px solid rgba(251,191,36,0.2)",
+                          }}
+                        >
+                          {tile.tip.cta.label} →
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -3131,7 +3193,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {/* Icon */}
             <div style={{
               width: 44, height: 44, borderRadius: 11,
-              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)",
+              background: D.redBg, border: `1px solid ${D.redBorder}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               marginBottom: 24,
             }}>
@@ -3223,15 +3285,15 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             {/* Icon */}
             <div style={{
               width: 56, height: 56, borderRadius: "50%", margin: "0 auto 20px",
-              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
+              background: D.redBg, border: `1px solid ${D.redBorder}`,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={D.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>
 
-            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#f87171", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: D.red, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Scan-Limit erreicht
             </p>
             <h2 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.025em" }}>
