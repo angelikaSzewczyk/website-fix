@@ -119,6 +119,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         background: "#0A192F",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         overflowY: "auto",
+        overflowX: "hidden",
         zIndex: 40,
       }}>
         {isAuditPlan ? (
