@@ -9,21 +9,10 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard/scan", req.url));
   }
 
-  // /dashboard/* — Login-Pflicht
+  // /dashboard/* — nur Login-Pflicht (eingeloggt oder nicht?)
+  // Plan-Prüfung erfolgt im Dashboard-Layout via frischer DB-Abfrage (nicht JWT)
   if (pathname.startsWith("/dashboard") && !req.auth?.user) {
     return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // /dashboard/* — Plan-Schranke ist im Dashboard-Layout implementiert (frische DB-Abfrage),
-  // NICHT hier in der Middleware (JWT-Token kann nach Stripe-Webhook veraltet sein).
-  // Ausnahme: ?session_id= = User kommt direkt von Stripe-Checkout-Erfolg
-  if (pathname.startsWith("/dashboard") && req.auth?.user) {
-    const hasSessionId = req.nextUrl.searchParams.has("session_id");
-    const userPlan = (req.auth.user as { plan?: string }).plan ?? "free";
-    // Nur blocken wenn kein aktiver Checkout gerade abgeschlossen wurde
-    if (userPlan === "free" && !hasSessionId) {
-      return NextResponse.redirect(new URL("/fuer-agenturen", req.url));
-    }
   }
 
   // /admin/* — strenger Guard: ADMIN_EMAIL muss in env gesetzt sein
