@@ -1872,6 +1872,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             speedScore={speedScore}
             plan={plan}
             lastScan={!!lastScan}
+            focusMode={isNewScan}
           />
 
           {/* ⑤ PERFORMANCE SNAPSHOT — hidden in focus mode */}

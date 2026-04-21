@@ -13,12 +13,13 @@ export interface IssueProp {
 }
 
 interface Props {
-  issues:     IssueProp[];
-  redCount:   number;
+  issues:      IssueProp[];
+  redCount:    number;
   yellowCount: number;
-  speedScore: number;
-  plan:       string;
-  lastScan:   boolean; // true = scan data is present
+  speedScore:  number;
+  plan:        string;
+  lastScan:    boolean; // true = scan data is present
+  focusMode?:  boolean; // true = came from fresh scan redirect
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -314,7 +315,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan }: Props) {
+export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
   const [showPdfHint, setShowPdfHint]   = useState(false);
@@ -702,6 +703,48 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           ))}
         </div>
       </div>
+
+      {/* ④ FOCUS-MODE BACK BUTTON ──────────────────────────────────────────── */}
+      {focusMode && (
+        <div className="wf-no-print" style={{
+          marginTop: 8, marginBottom: 32,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+          animation: "wf-sr-fadein 0.55s 0.3s ease both",
+        }}>
+          <button
+            onClick={() => { window.location.href = "/dashboard"; }}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 10,
+              padding: "14px 32px", borderRadius: 12,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              color: "#fff",
+              fontSize: 14, fontWeight: 700, cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "background 0.18s, border-color 0.18s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.14)";
+            }}
+          >
+            {/* Left arrow */}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Zurück zur vollständigen Übersicht
+          </button>
+          <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
+            Zeigt alle Dashboard-Bereiche: Performance, Seiten-Map, Findings
+          </p>
+        </div>
+      )}
 
       </div>{/* end wf-print-root */}
     </>
