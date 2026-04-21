@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import WfOnboardingTour from "./components/WfOnboardingTour";
+import StarterResultsPanel from "./components/StarterResultsPanel";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 
@@ -1812,6 +1813,16 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           </div>
 
           <Divider style={{ marginBottom: 28 }} />
+
+          {/* ④b STARTER RESULTS PANEL — Score rings, Top-Priorities, Accordion, Export */}
+          <StarterResultsPanel
+            issues={issues}
+            redCount={redCount}
+            yellowCount={yellowCount}
+            speedScore={speedScore}
+            plan={plan}
+            lastScan={!!lastScan}
+          />
 
           {/* ⑤ PERFORMANCE SNAPSHOT */}
           <div style={{ marginBottom: 28 }}>
