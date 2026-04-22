@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 type AgencySettings = {
   agency_name: string;
+  agency_website: string;
   logo_url: string;
   primary_color: string;
   subdomain?: string;
@@ -168,7 +169,7 @@ function Toggle({ checked, onChange, id }: { checked: boolean; onChange: (v: boo
   );
 }
 
-export default function SettingsClient({ initial }: { initial: AgencySettings }) {
+export default function SettingsClient({ initial, plan }: { initial: AgencySettings; plan: string }) {
   const [settings, setSettings]   = useState<AgencySettings>(initial);
   const [members,  setMembers]    = useState<TeamMember[]>([]);
   const [scanInterval, setScanInterval] = useState<ScanInterval>("wöchentlich");
@@ -246,10 +247,16 @@ export default function SettingsClient({ initial }: { initial: AgencySettings })
           borderRadius: 16, padding: "28px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>White-Label Center</h2>
-            <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>
-              FULL WHITE-LABEL AKTIV
-            </span>
+            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Branding-Center</h2>
+            {plan === "agency-pro" || plan === "agency-starter" ? (
+              <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>
+                FULL WHITE-LABEL AKTIV
+              </span>
+            ) : (
+              <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: "rgba(141,243,211,0.12)", color: "#8df3d3", border: "1px solid rgba(141,243,211,0.3)", letterSpacing: "0.04em" }}>
+                PROFESSIONAL
+              </span>
+            )}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -265,52 +272,105 @@ export default function SettingsClient({ initial }: { initial: AgencySettings })
               />
             </div>
 
-            {/* Logo URL */}
+            {/* Agency website */}
             <div>
-              <label style={label}>Logo-URL</label>
+              <label style={label}>Agentur-Website</label>
               <input
                 style={input}
-                placeholder="https://deine-agentur.de/logo.png"
-                value={settings.logo_url}
-                onChange={e => setSettings(s => ({ ...s, logo_url: e.target.value }))}
+                placeholder="https://deine-agentur.de"
+                value={settings.agency_website}
+                onChange={e => setSettings(s => ({ ...s, agency_website: e.target.value }))}
               />
+            </div>
+
+            {/* Logo upload */}
+            <div>
+              <label style={label}>Agentur-Logo</label>
+              {settings.logo_url && (
+                <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={settings.logo_url}
+                    alt="Logo"
+                    style={{ height: 36, maxWidth: 140, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.06)", padding: "4px 8px" }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <button
+                    onClick={() => setSettings(s => ({ ...s, logo_url: "" }))}
+                    style={{ fontSize: 12, color: "rgba(255,107,107,0.7)", background: "none", border: "none", cursor: "pointer" }}
+                  >
+                    Entfernen
+                  </button>
+                </div>
+              )}
+              <label style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "9px 16px", borderRadius: 10, cursor: "pointer",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
+                fontSize: 13, color: "rgba(255,255,255,0.6)",
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Logo hochladen
+                <input
+                  type="file"
+                  accept="image/png,image/svg+xml,image/webp,image/jpeg"
+                  style={{ display: "none" }}
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                      setSettings(s => ({ ...s, logo_url: ev.target?.result as string }));
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
               <p style={{ margin: "6px 0 0", fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: 1.5 }}>
-                Öffentlich erreichbare URL (PNG, SVG oder WebP). Die Vorschau aktualisiert sich live →
+                PNG, SVG, WebP oder JPEG. Die Vorschau aktualisiert sich live →
               </p>
             </div>
 
-            {/* Subdomain */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+            {/* Subdomain — agency-only */}
+            {(plan === "agency-pro" || plan === "agency-starter") && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden" }}>
+                  <span style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", fontSize: 13, color: "rgba(255,255,255,0.3)", borderRight: "1px solid rgba(255,255,255,0.12)", whiteSpace: "nowrap" }}>portal.</span>
+                  <input
+                    style={{ ...input, borderRadius: 0, border: "none", flex: 1 }}
+                    placeholder="deine-agentur.de"
+                    value={settings.subdomain ?? ""}
+                    onChange={e => setSettings(s => ({ ...s, subdomain: e.target.value }))}
+                  />
+                </div>
+                <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Kunden öffnen ihr Portal unter portal.deine-agentur.de (DNS-Eintrag erforderlich)</p>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden" }}>
-                <span style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", fontSize: 13, color: "rgba(255,255,255,0.3)", borderRight: "1px solid rgba(255,255,255,0.12)", whiteSpace: "nowrap" }}>portal.</span>
-                <input
-                  style={{ ...input, borderRadius: 0, border: "none", flex: 1 }}
-                  placeholder="deine-agentur.de"
-                  value={settings.subdomain ?? ""}
-                  onChange={e => setSettings(s => ({ ...s, subdomain: e.target.value }))}
-                />
-              </div>
-              <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Kunden öffnen ihr Portal unter portal.deine-agentur.de (DNS-Eintrag erforderlich)</p>
-            </div>
+            )}
 
-            {/* Report sender name */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <label style={{ ...label, marginBottom: 0 }}>E-Mail Absendername</label>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+            {/* Report sender name — agency-only */}
+            {(plan === "agency-pro" || plan === "agency-starter") && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <label style={{ ...label, marginBottom: 0 }}>E-Mail Absendername</label>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+                </div>
+                <input
+                  style={input}
+                  placeholder="z.B. Julia von Digitalagentur Schmidt"
+                  value={settings.report_sender ?? ""}
+                  onChange={e => setSettings(s => ({ ...s, report_sender: e.target.value }))}
+                />
+                <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Automatische Berichte werden im Namen dieser Person versendet.</p>
               </div>
-              <input
-                style={input}
-                placeholder="z.B. Julia von Digitalagentur Schmidt"
-                value={settings.report_sender ?? ""}
-                onChange={e => setSettings(s => ({ ...s, report_sender: e.target.value }))}
-              />
-              <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Automatische Berichte werden im Namen dieser Person versendet.</p>
-            </div>
+            )}
 
             {/* Color picker */}
             <div>

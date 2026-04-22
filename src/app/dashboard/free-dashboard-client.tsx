@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import WfOnboardingTour from "./components/WfOnboardingTour";
+import WfProGuidedTour from "./components/WfProGuidedTour";
 import StarterResultsPanel from "./components/StarterResultsPanel";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
@@ -940,6 +941,21 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Professional welcome banner — shown once after upgrade
+  const isPro = plan === "professional" || plan === "smart-guard";
+  const [showProWelcome, setShowProWelcome] = useState(false);
+  useEffect(() => {
+    if (!isPro) return;
+    const key = "wf_pro_welcome_seen_v1";
+    if (!localStorage.getItem(key)) {
+      setShowProWelcome(true);
+    }
+  }, [isPro]);
+  function dismissProWelcome() {
+    localStorage.setItem("wf_pro_welcome_seen_v1", "1");
+    setShowProWelcome(false);
+  }
+
   const [expandedFinding, setExpandedFinding]   = useState<number | null>(null);
   const [fixOpenIdx, setFixOpenIdx]             = useState<number | null>(null);
   const [drawerPageUrl, setDrawerPageUrl]       = useState<string | null>(null);
@@ -1484,6 +1500,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         scansCount={scans.length}
       />
 
+      {/* ── Pro Guided Tour (after first scan, Pro+ only) ─ */}
+      <WfProGuidedTour
+        plan={plan}
+        scansCount={scans.length}
+      />
+
       {/* ══════════════════════════════════════════════════
           MAIN — sidebar is rendered by dashboard layout.tsx
       ══════════════════════════════════════════════════ */}
@@ -1648,6 +1670,45 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
         {/* ── PAGE CONTENT ─────────────────────────────── */}
         <main style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
+
+          {/* ── PROFESSIONAL WELCOME BANNER (once after upgrade) ──────────── */}
+          {showProWelcome && (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14,
+              padding: "14px 20px", borderRadius: 12, marginBottom: 20,
+              background: "linear-gradient(135deg, rgba(5,46,22,0.7) 0%, rgba(6,78,59,0.5) 100%)",
+              border: "1px solid rgba(16,185,129,0.3)",
+              animation: "wf-sr-fadein 0.4s ease both",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                  background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
+                    Willkommen im Professional-Bereich, {firstName}.
+                  </p>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
+                    Dein White-Label-Branding ist aktiv — richte dein Logo und deine Farben in den{" "}
+                    <a href="/dashboard/settings" style={{ color: "#10B981", textDecoration: "none", fontWeight: 600 }}>Einstellungen</a> ein.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={dismissProWelcome}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", fontSize: 18, lineHeight: 1, flexShrink: 0 }}
+                aria-label="Schließen"
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           {/* ── NEW-SCAN SUCCESS BANNER ─────────────────── */}
           {isNewScan && lastScan && (
@@ -2058,6 +2119,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             plan={plan}
             lastScan={!!lastScan}
             focusMode={isNewScan}
+            scanId={lastScan?.id}
           />
 
           {/* ─── EBENE 3: DEEP-SCAN MAP ─────────────────────────────────────── */}

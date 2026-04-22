@@ -3281,6 +3281,27 @@ footer a, nav a.footerLink {
     print-color-adjust: exact !important;
   }
 
+  /* ─── 12b. EXECUTIVE SUMMARY — hide edit UI, show print box ────────────── */
+  .wf-exec-summary-edit  { display: none !important; }
+  .wf-exec-summary-print {
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ─── 12c. AGENCY FOOTER ────────────────────────────────────────────────── */
+  .wf-agency-footer {
+    display: flex !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ─── 12d. SCORE RINGS — agency primary color override ─────────────────── */
+  .wf-score-progress {
+    stroke: var(--agency-primary, #8df3d3) !important;
+    filter: none !important;
+  }
+
   /* ─── 13. SHOW PRINT-ONLY HEADER + HIDE INTERACTIVE ELEMENTS ───────────── */
   .wf-print-header { display: flex !important; }
   .print-only      { display: block !important; }

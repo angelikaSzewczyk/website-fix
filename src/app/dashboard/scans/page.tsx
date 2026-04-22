@@ -40,11 +40,15 @@ function countIssues(issuesJson: string | null): { red: number; yellow: number }
   } catch { return { red: 0, yellow: 0 }; }
 }
 
+const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
+
 export default async function ScansPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const firstName = session.user.name?.split(" ")[0] ?? "User";
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
+  const isPro = PRO_PLANS.includes(plan);
 
   let scans: ScanRow[] = [];
   let monthlyScans = 0;
@@ -54,12 +58,21 @@ export default async function ScansPage() {
 
     const [scanRows, countRow] = await Promise.all([
       sql`
-        SELECT id::text, url, created_at::text, issue_count, issues_json::text AS issues_json
+        SELECT
+          id::text, url, created_at::text, issue_count,
+          issues_json::text AS issues_json,
+          share_token::text AS share_token,
+          view_count, download_count,
+          last_viewed_at::text AS last_viewed_at
         FROM scans
         WHERE user_id = ${session.user.id}
         ORDER BY created_at DESC
         LIMIT 20
-      ` as unknown as Promise<{ id: string; url: string; created_at: string; issue_count: number | null; issues_json: string | null }[]>,
+      ` as unknown as Promise<{
+        id: string; url: string; created_at: string; issue_count: number | null;
+        issues_json: string | null; share_token: string | null;
+        view_count: number; download_count: number; last_viewed_at: string | null;
+      }[]>,
       sql`
         SELECT COUNT(*)::int AS cnt
         FROM scans
@@ -68,7 +81,6 @@ export default async function ScansPage() {
       ` as unknown as Promise<{ cnt: number }[]>,
     ]);
 
-    // Derive red/yellow counts live from issues_json — overrides stale issue_count
     scans = scanRows.map(row => {
       const { red, yellow } = countIssues(row.issues_json);
       return {
@@ -78,6 +90,10 @@ export default async function ScansPage() {
         issue_count: row.issue_count,
         red_count: red,
         yellow_count: yellow,
+        share_token: row.share_token,
+        view_count: row.view_count ?? 0,
+        download_count: row.download_count ?? 0,
+        last_viewed_at: row.last_viewed_at ?? null,
       };
     });
 
@@ -90,6 +106,8 @@ export default async function ScansPage() {
       monthlyScans={monthlyScans}
       scanLimit={SCAN_LIMIT}
       scans={scans}
+      plan={plan}
+      isPro={isPro}
     />
   );
 }

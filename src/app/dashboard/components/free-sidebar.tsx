@@ -60,6 +60,11 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
   const remaining    = Math.max(0, scanLimit - monthlyScans);
   const limitReached = monthlyScans >= scanLimit;
   const planLabel    = plan === "free" ? "Free" : plan === "starter" ? "Starter" : plan === "agency-starter" ? "Agency" : plan === "agency-pro" ? "Agency Pro" : "Professional";
+  const isPro        = plan === "professional" || plan === "smart-guard";
+  // Use CSS variable for accent so it picks up the user's agency color
+  const accent       = isPro ? "var(--agency-primary, #10B981)" : S.blue;
+  const accentBg     = isPro ? "var(--agency-primary-bg, rgba(16,185,129,0.08))" : S.blueBg;
+  const accentBorder = isPro ? "var(--agency-primary-border, rgba(16,185,129,0.25))" : S.blueBorder;
 
   // Close user menu on outside click
   useEffect(() => {
@@ -97,7 +102,7 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
         }
         .wf-sidebar-link { transition: background 0.12s, color 0.12s; }
         .wf-sidebar-link:hover { background: rgba(255,255,255,0.04) !important; }
-        .wf-sidebar-link.active { background: ${S.blueBg} !important; }
+        .wf-sidebar-link.active { background: ${isPro ? "var(--agency-primary-bg, rgba(16,185,129,0.08))" : S.blueBg} !important; }
         .wf-nav-whitelabel { position: relative; }
         .wf-nav-whitelabel:hover { background: rgba(167,139,250,0.06) !important; }
         .wf-nav-whitelabel:hover .wf-wl-tooltip { opacity: 1; pointer-events: auto; transform: translateX(0); }
@@ -141,12 +146,12 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
                 textDecoration: "none", fontSize: 13,
                 fontWeight: active ? 600 : 400,
                 color: active ? S.text : item.locked ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.55)",
-                background: active ? S.blueBg : isWL ? "rgba(167,139,250,0.05)" : "transparent",
-                borderLeft: active ? `2px solid ${S.blue}` : isWL ? "2px solid rgba(167,139,250,0.3)" : "2px solid transparent",
+                background: active ? accentBg : isWL ? "rgba(167,139,250,0.05)" : "transparent",
+                borderLeft: active ? `2px solid ${accent}` : isWL ? "2px solid rgba(167,139,250,0.3)" : "2px solid transparent",
                 opacity: item.locked ? 0.82 : 1,
                 border: isWL ? "1px solid rgba(167,139,250,0.12)" : undefined,
               }}>
-              <NavIco name={item.icon} color={active ? S.blueSoft : isWL ? "rgba(167,139,250,0.6)" : item.locked ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.42)"} />
+              <NavIco name={item.icon} color={active ? (isPro ? accent : S.blueSoft) : isWL ? "rgba(167,139,250,0.6)" : item.locked ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.42)"} />
               <span style={{ flex: 1, color: isWL ? "rgba(167,139,250,0.8)" : undefined }}>
                 {item.label}
               </span>
@@ -285,10 +290,11 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
         }}>
           <div style={{
             width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-            background: S.blueBg, border: `1px solid ${S.blueBorder}`,
+            background: isPro ? accentBg : S.blueBg,
+            border: `1px solid ${isPro ? accentBorder : S.blueBorder}`,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: S.blueSoft }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: isPro ? accent : S.blueSoft }}>
               {firstName.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -296,14 +302,30 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
             <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: S.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {firstName}
             </p>
-            <p style={{ margin: 0, fontSize: 10, color: S.textMuted, lineHeight: 1.3, display: "flex", alignItems: "center", gap: 5 }}>
-              <span className="wf-plan-dot" style={{
-                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
-                background: plan !== "free" ? "#22C55E" : "#6b7280",
-                display: "inline-block",
-              }} />
-              Plan: {planLabel}
-            </p>
+            {isPro ? (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
+                padding: "2px 8px", borderRadius: 10, marginTop: 3,
+                background: "rgba(5,46,22,0.85)",
+                color: "#FBBF24",
+                border: "1px solid rgba(16,185,129,0.35)",
+              }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                </svg>
+                PROFESSIONAL
+              </span>
+            ) : (
+              <p style={{ margin: 0, fontSize: 10, color: S.textMuted, lineHeight: 1.3, display: "flex", alignItems: "center", gap: 5 }}>
+                <span className="wf-plan-dot" style={{
+                  width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                  background: plan !== "free" ? "#22C55E" : "#6b7280",
+                  display: "inline-block",
+                }} />
+                Plan: {planLabel}
+              </p>
+            )}
           </div>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={S.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             style={{ flexShrink: 0, transform: menuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>

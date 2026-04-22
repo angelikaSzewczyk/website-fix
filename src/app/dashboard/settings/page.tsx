@@ -18,21 +18,26 @@ export default async function SettingsPage() {
 
   const plan = (session.user as { plan?: string }).plan ?? "free";
 
-  // ── Agency plans → existing white-label settings ──────────────────────────
-  if (plan === "agency-pro") {
+  // ── Agency / Professional plans → white-label / branding settings ─────────
+  const BRANDING_PLANS = ["agency-pro", "agency-starter", "professional", "smart-guard", "starter"];
+  if (BRANDING_PLANS.includes(plan)) {
     const sql = neon(process.env.DATABASE_URL!);
     const [row] = await sql`
-      SELECT agency_name, logo_url, primary_color
+      SELECT agency_name, agency_website, logo_url, primary_color
       FROM agency_settings
       WHERE user_id = ${session.user.id}
       LIMIT 1
-    ` as { agency_name: string | null; logo_url: string | null; primary_color: string | null }[];
+    ` as { agency_name: string | null; agency_website: string | null; logo_url: string | null; primary_color: string | null }[];
 
-    return <SettingsClient initial={{
-      agency_name:   row?.agency_name   ?? "",
-      logo_url:      row?.logo_url      ?? "",
-      primary_color: row?.primary_color ?? "#8df3d3",
-    }} />;
+    return <SettingsClient
+      plan={plan}
+      initial={{
+        agency_name:    row?.agency_name    ?? "",
+        agency_website: row?.agency_website ?? "",
+        logo_url:       row?.logo_url       ?? "",
+        primary_color:  row?.primary_color  ?? "#8df3d3",
+      }}
+    />;
   }
 
   // ── Free / single plans → new settings page ───────────────────────────────

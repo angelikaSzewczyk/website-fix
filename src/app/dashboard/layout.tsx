@@ -67,7 +67,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       `,
     ];
 
-    if (plan === "agency-pro") {
+    const BRANDING_PLANS = ["agency-pro", "agency-starter", "professional", "smart-guard", "starter"];
+    if (BRANDING_PLANS.includes(plan)) {
       queries.push(
         sql`
           SELECT primary_color FROM agency_settings
@@ -88,7 +89,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     projectUrl    = urlRows[0]?.url    ?? "";
     unreadTickets = unreadRows[0]?.cnt ?? 0;
 
-    if (plan === "agency-pro") {
+    if (BRANDING_PLANS.includes(plan)) {
       const colorRows = results[4] as { primary_color: string | null }[];
       if (colorRows[0]?.primary_color) agencyPrimary = colorRows[0].primary_color;
     }
@@ -104,7 +105,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
       {/* CSS custom properties — available throughout the dashboard */}
       <style>{`
-        :root { --agency-primary: ${safeColor}; --agency-primary-bg: ${safeColor}18; --agency-primary-border: ${safeColor}35; }
+        :root {
+          --agency-primary: ${safeColor};
+          --agency-primary-bg: ${safeColor}18;
+          --agency-primary-border: ${safeColor}35;
+          --pro-accent: ${ ["professional", "smart-guard"].includes(plan) ? safeColor : safeColor };
+        }
         @media (max-width: 768px) {
           .dashboard-sidebar { display: none !important; }
           .dashboard-mobile-bar { display: flex !important; }

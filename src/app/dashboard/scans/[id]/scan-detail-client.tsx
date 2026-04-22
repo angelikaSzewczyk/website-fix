@@ -12,9 +12,10 @@ interface Props {
   redCount: number;
   yellowCount: number;
   speedScore: number;
+  scanId: string;
 }
 
-export default function ScanDetailClient({ url, createdAt, plan, issues, redCount, yellowCount, speedScore }: Props) {
+export default function ScanDetailClient({ url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId }: Props) {
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
     day: "2-digit", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
@@ -45,7 +46,7 @@ export default function ScanDetailClient({ url, createdAt, plan, issues, redCoun
             }}>
               Neuer Scan →
             </Link>
-            <PrintButton url={url} type="Website-Check" date={date} />
+            <PrintButton url={url} type="Website-Check" date={date} scanId={scanId} plan={plan} />
           </div>
         </div>
 
@@ -68,6 +69,7 @@ export default function ScanDetailClient({ url, createdAt, plan, issues, redCoun
           speedScore={speedScore}
           plan={plan}
           lastScan={true}
+          scanId={scanId}
         />
       </div>
     </div>

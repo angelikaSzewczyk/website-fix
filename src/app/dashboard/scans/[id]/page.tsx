@@ -113,6 +113,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
       redCount={redCount}
       yellowCount={yellowCount}
       speedScore={speedScore}
+      scanId={scan.id}
     />
   );
 }

@@ -20,6 +20,7 @@ interface Props {
   plan:        string;
   lastScan:    boolean; // true = scan data is present
   focusMode?:  boolean; // true = came from fresh scan redirect
+  scanId?:     string;  // present when viewing a saved scan — enables executive summary
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -222,6 +223,7 @@ function ScoreRing({ score, label, delay = 0 }: { score: number; label: string; 
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
+            className="wf-score-progress"
             style={{ filter: `drop-shadow(0 0 6px ${liveColor}80)`, transition: "stroke-dashoffset 0.05s linear" }}
           />
         </svg>
@@ -470,13 +472,43 @@ function SkeletonRing({ label }: { label: string }) {
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode }: Props) {
+const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
+
+export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
   const [showPdfHint, setShowPdfHint]   = useState(false);
   const [showDetails, setShowDetails]   = useState(false);
   const [openItems, setOpenItems]       = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
+
+  // ── Executive Summary (Professional+) ────────────────────────────────────
+  const isPro = PRO_PLANS.includes(plan);
+  const [execSummary, setExecSummary]   = useState("");
+  const [saveStatus,  setSaveStatus]    = useState<"idle" | "saving" | "saved">("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isPro || !scanId) return;
+    fetch(`/api/executive-summary?scanId=${scanId}`)
+      .then(r => r.json())
+      .then(d => setExecSummary(d.executive_summary ?? ""));
+  }, [isPro, scanId]);
+
+  function handleSummaryChange(value: string) {
+    setExecSummary(value);
+    setSaveStatus("saving");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      await fetch(`/api/executive-summary?scanId=${scanId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ executive_summary: value }),
+      });
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    }, 800);
+  }
 
   if (!lastScan) return null;
 
@@ -550,6 +582,18 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
     }, 1200);
   }
 
+  // ── Agency branding (Professional+) ──────────────────────────────────────
+  type AgencyBranding = { agency_name: string; agency_website: string; logo_url: string; primary_color: string };
+  const [agencyBranding, setAgencyBranding] = useState<AgencyBranding | null>(null);
+  useEffect(() => {
+    if (!isPro) return;
+    fetch("/api/agency-settings")
+      .then(r => r.json())
+      .then(d => { if (d && !d.error) setAgencyBranding(d as AgencyBranding); });
+  }, [isPro]);
+  const agencyColor       = agencyBranding?.primary_color ?? "#8df3d3";
+  const hasAgencyBranding = isPro && !!(agencyBranding?.agency_name || agencyBranding?.logo_url);
+
   const isStarter = plan === "starter";
   const printDate = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -570,32 +614,61 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
         /* Print header hidden on screen — globals.css handles all @media print rules */
         .wf-print-header { display: none; }
+        /* Executive summary print box hidden on screen */
+        .wf-exec-summary-print { display: none; }
+        /* Agency footer hidden on screen */
+        .wf-agency-footer { display: none; }
+
+        @media print {
+          :root { --agency-primary: ${agencyColor}; }
+          .wf-score-progress {
+            stroke: var(--agency-primary) !important;
+            filter: none !important;
+          }
+        }
       `}</style>
 
-      {/* ── Print-only header ── */}
+      {/* ── Print-only header — agency branding or WebsiteFix fallback ── */}
       <div className="wf-print-header" style={{
         alignItems: "center", justifyContent: "space-between",
         marginBottom: 24, paddingBottom: 14,
-        borderBottom: "2px solid #e2e8f0",
+        borderBottom: `2px solid ${hasAgencyBranding ? agencyColor : "#e2e8f0"}`,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Logo mark */}
-          <div style={{
-            width: 28, height: 28, borderRadius: 6,
-            background: "#007BFF",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"
-              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {hasAgencyBranding ? (
+            agencyBranding?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={agencyBranding.logo_url} alt="" style={{ height: 36, maxWidth: 140, objectFit: "contain" }} />
+            ) : (
+              <div style={{
+                width: 36, height: 36, borderRadius: 8,
+                background: agencyColor,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 16, fontWeight: 800, color: "#0b0c10",
+              }}>
+                {(agencyBranding?.agency_name ?? "A").charAt(0).toUpperCase()}
+              </div>
+            )
+          ) : (
+            <div style={{
+              width: 28, height: 28, borderRadius: 6,
+              background: "#007BFF",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+          )}
           <div>
             <p style={{ margin: 0, fontSize: "11pt", fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>
-              WebsiteFix
+              {hasAgencyBranding ? agencyBranding?.agency_name : "WebsiteFix"}
             </p>
             <p style={{ margin: 0, fontSize: "8pt", color: "#64748b" }}>
-              Analyzed by WebsiteFix.io
+              {hasAgencyBranding && agencyBranding?.agency_website
+                ? agencyBranding.agency_website.replace(/^https?:\/\//, "")
+                : "Analyzed by WebsiteFix.io"}
             </p>
           </div>
         </div>
@@ -633,6 +706,93 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
       {/* ── All content wrapped for print targeting ─────────────────────── */}
       <div className="wf-print-root">
+
+      {/* ── EXECUTIVE SUMMARY — Edit UI (Professional+, screen only) ───────── */}
+      {isPro && scanId && (
+        <div className="wf-no-print wf-exec-summary-edit" style={{
+          marginBottom: 24,
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(141,243,211,0.15)",
+          borderRadius: 16,
+          padding: "22px 26px",
+          animation: "wf-sr-fadein 0.4s ease both",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8df3d3"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#8df3d3" }}>Experten-Fazit</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(141,243,211,0.1)", color: "#8df3d3", border: "1px solid rgba(141,243,211,0.25)", letterSpacing: "0.04em" }}>
+                PROFESSIONAL
+              </span>
+            </div>
+            <span style={{ fontSize: 11, color: saveStatus === "saved" ? "#4ade80" : saveStatus === "saving" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.2)" }}>
+              {saveStatus === "saving" ? "Speichert…" : saveStatus === "saved" ? "✓ Gespeichert" : "Auto-Save aktiv"}
+            </span>
+          </div>
+
+          {/* Smart template buttons */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            {([
+              {
+                label: "Dringlich",
+                icon: "⚠️",
+                text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung.",
+              },
+              {
+                label: "Technisch",
+                icon: "🔧",
+                text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden.",
+              },
+              {
+                label: "Kompakt",
+                icon: "📋",
+                text: "Kurzfazit: Website-Analyse abgeschlossen. Handlungsbedarf und Optimierungshinweise identifiziert. Nächste Schritte: Prioritäten gemeinsam besprechen und Maßnahmenplan erstellen.",
+              },
+            ] as { label: string; icon: string; text: string }[]).map(tpl => (
+              <button
+                key={tpl.label}
+                onClick={() => handleSummaryChange(tpl.text)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.55)", cursor: "pointer", fontFamily: "inherit",
+                  transition: "background 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(141,243,211,0.08)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(141,243,211,0.25)";
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)";
+                }}
+              >
+                {tpl.icon} {tpl.label}
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            value={execSummary}
+            onChange={e => handleSummaryChange(e.target.value)}
+            placeholder="Schreibe hier ein kurzes Fazit für deinen Kunden (z.B. Prioritäten, nächste Schritte)..."
+            rows={4}
+            style={{
+              width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 13,
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fff", outline: "none", resize: "vertical", lineHeight: 1.65,
+              fontFamily: "inherit", boxSizing: "border-box",
+            }}
+          />
+          <p style={{ margin: "6px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>
+            Dieser Text erscheint nach den Score-Ringen im PDF — sichtbar nur für dich und deine Kunden.
+          </p>
+        </div>
+      )}
 
       {/* ① SCORE RINGS ─────────────────────────────────────────────────────── */}
       <div className="wf-print-card" style={{
@@ -672,23 +832,44 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               </svg>
               Bericht speichern
             </button>
-            <button
-              onClick={() => setShowWLModal(true)}
-              title="Ab Professional verfügbar"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 7,
-                padding: "8px 16px", borderRadius: 8,
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              White-Label PDF
-            </button>
+            {isPro ? (
+              <button
+                onClick={handleExportPDF}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "8px 16px", borderRadius: 8,
+                  background: "rgba(141,243,211,0.06)", border: "1px solid rgba(141,243,211,0.22)",
+                  color: "#8df3d3", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                White-Label PDF
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowWLModal(true)}
+                title="Ab Professional verfügbar"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "8px 16px", borderRadius: 8,
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                White-Label PDF
+              </button>
+            )}
           </div>
         </div>
 
@@ -867,6 +1048,33 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
         })()}
       </div>
 
+      {/* ── EXECUTIVE SUMMARY — Print box (after score rings, page 1) ───────── */}
+      {isPro && scanId && execSummary.trim() && (
+        <div className="wf-exec-summary-print wf-print-card" style={{
+          marginBottom: 24,
+          background: "#f8fafc",
+          borderLeft: `4px solid ${agencyColor}`,
+          borderRadius: 10,
+          padding: "16px 20px",
+          breakInside: "avoid",
+          printColorAdjust: "exact",
+          WebkitPrintColorAdjust: "exact",
+        } as React.CSSProperties}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={agencyColor}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            <span style={{ fontSize: "10pt", fontWeight: 700, color: "#334155", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+              Experten-Fazit
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: "10pt", color: "#334155", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
+            {execSummary}
+          </p>
+        </div>
+      )}
+
       {/* ② AUFGABEN-LISTE ─────────────────────────────────────────────────── */}
       <div id="wf-aufgaben" className="wf-print-accordion" style={{
         marginBottom: 28,
@@ -1012,6 +1220,24 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           </p>
         </div>
       )}
+
+      {/* ── Agency footer (print only) ───────────────────────────────────── */}
+      <div className="wf-agency-footer" style={{
+        marginTop: 32, paddingTop: 14,
+        borderTop: `1px solid ${hasAgencyBranding ? agencyColor + "60" : "#e2e8f0"}`,
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <p style={{ margin: 0, fontSize: "8pt", color: "#64748b", lineHeight: 1.5 }}>
+          {hasAgencyBranding
+            ? `Dieser Bericht wurde exklusiv von ${agencyBranding?.agency_name ?? ""} erstellt.`
+            : "Dieser Bericht wurde mit WebsiteFix.io erstellt."}
+        </p>
+        {hasAgencyBranding && agencyBranding?.agency_website && (
+          <p style={{ margin: 0, fontSize: "8pt", color: "#94a3b8" }}>
+            {agencyBranding.agency_website.replace(/^https?:\/\//, "")}
+          </p>
+        )}
+      </div>
 
       </div>{/* end wf-print-root */}
     </>
