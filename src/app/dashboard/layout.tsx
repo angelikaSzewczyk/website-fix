@@ -6,6 +6,7 @@ import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
+import { normalizePlan } from "@/lib/plans";
 
 const SCAN_LIMIT = 3;
 
@@ -14,23 +15,24 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (!session?.user) redirect("/login");
 
   // ── PAYMENT GATE: Immer frische DB-Abfrage — JWT kann nach Stripe-Webhook veraltet sein ──
-  let plan = "free";
+  let rawPlan = "starter";
   try {
     const sqlGate = neon(process.env.DATABASE_URL!);
     const planRow = await sqlGate`SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1`;
-    plan = (planRow[0]?.plan as string) ?? "free";
+    rawPlan = (planRow[0]?.plan as string) ?? "starter";
   } catch {
-    // DB-Fehler: JWT-Wert als Fallback
-    plan = (session.user as { plan?: string }).plan ?? "free";
+    rawPlan = (session.user as { plan?: string }).plan ?? "starter";
   }
 
-  if (plan === "free") redirect("/fuer-agenturen");
+  const plan = normalizePlan(rawPlan);
+  if (!plan) redirect("/fuer-agenturen");
 
   const userName  = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
 
-  const isAuditPlan = plan === "free" || plan === "smart-guard" || plan === "professional" || plan === "starter";
-  const isPro       = plan === "professional" || plan === "smart-guard";
+  // starter → FreeSidebar dark UI; professional + agency → FreeSidebar with Pro stripe (or SidebarNav)
+  const isAuditPlan = plan === "starter" || plan === "professional";
+  const isPro       = plan === "professional" || plan === "agency";
 
   // Load agency primary color for CSS variable injection (agency plans)
   let agencyPrimary = "#8df3d3";
@@ -68,7 +70,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       `,
     ];
 
-    const BRANDING_PLANS = ["agency-pro", "agency-starter", "professional", "smart-guard", "starter"];
+    const BRANDING_PLANS = ["agency", "professional", "starter"];
     if (BRANDING_PLANS.includes(plan)) {
       queries.push(
         sql`
@@ -175,11 +177,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <BrandLogo href="/dashboard" />
           <span style={{
             fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-            color: plan === "agency-pro" ? "#007BFF" : "#8df3d3",
-            background: plan === "agency-pro" ? "rgba(0,123,255,0.1)" : "rgba(141,243,211,0.08)",
-            border: `1px solid ${plan === "agency-pro" ? "rgba(0,123,255,0.25)" : "rgba(141,243,211,0.2)"}`,
+            color: "#a78bfa",
+            background: "rgba(167,139,250,0.1)",
+            border: "1px solid rgba(167,139,250,0.25)",
           }}>
-            {plan === "agency-pro" ? "Agency Pro" : "Agency Starter"}
+            Agency
           </span>
         </header>
       )}

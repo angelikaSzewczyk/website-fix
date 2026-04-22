@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   if (!user?.id) {
     return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
   }
-  if (!AGENCY_PLANS.includes(user.plan ?? "free")) {
+  if (!AGENCY_PLANS.includes(user.plan ?? "starter")) {
     return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
   }
 

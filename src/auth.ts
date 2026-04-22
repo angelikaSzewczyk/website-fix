@@ -69,7 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           const sql = neon(process.env.DATABASE_URL!);
           const rows = await sql`SELECT plan, created_at FROM users WHERE id = ${user.id}`;
-          token.plan = (rows[0]?.plan as string) ?? "free";
+          token.plan = (rows[0]?.plan as string) ?? "starter";
 
           // Welcome-Mail nur beim ersten Login (Account gerade erstellt)
           const createdAt = rows[0]?.created_at as string | undefined;
@@ -94,7 +94,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }).catch(() => {/* E-Mail-Fehler nicht blockieren */});
           }
         } catch {
-          token.plan = "free";
+          token.plan = "starter";
         }
       }
       return token;
@@ -102,7 +102,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session({ session, token }) {
       if (token) {
         session.user.id = token.userId as string;
-        (session.user as { plan?: string }).plan = (token.plan as string) ?? "free";
+        (session.user as { plan?: string }).plan = (token.plan as string) ?? "starter";
       }
       return session;
     },

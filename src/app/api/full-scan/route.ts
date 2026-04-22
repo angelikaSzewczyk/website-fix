@@ -206,7 +206,7 @@ export async function GET(req: NextRequest) {
     return new Response("Nicht angemeldet", { status: 401 });
   }
 
-  const plan = ((session.user as Record<string, unknown>).plan as string | undefined) ?? "free";
+  const plan = ((session.user as Record<string, unknown>).plan as string | undefined) ?? "starter";
   const maxPages = getMaxPages(plan);
 
   let host: string;

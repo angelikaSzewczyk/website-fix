@@ -40,11 +40,10 @@ const C = {
 } as const;
 
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
-// DB plan values: "free" | "smart-guard" | "professional" | "starter" | "agency-starter" | "agency-pro"
-function getLayout(plan: string): "free" | "single" | "agency" {
-  if (plan === "agency-pro" || plan === "agency-starter") return "agency";
-  if (plan === "smart-guard" || plan === "professional" || plan === "starter") return "single";
-  return "free";
+// Canonical plans: starter | professional | agency (+ legacy aliases)
+function getLayout(plan: string): "single" | "agency" {
+  if (plan === "agency" || plan === "agency-starter" || plan === "agency-pro") return "agency";
+  return "single"; // starter, professional (+ legacy smart-guard)
 }
 
 // ─── CMS Detection ──────────────────────────────────────────────────────────────
@@ -347,12 +346,12 @@ type CriticalSite = {
 };
 
 const PLAN_BADGE = {
-  free:              { label: "Free",           color: C.textMuted, bg: "#F1F5F9", border: C.border },
-  "smart-guard":     { label: "Professional",   color: "#D97706",   bg: "#FFFBEB", border: "#FDE68A" },
-  "professional":    { label: "Professional",   color: "#D97706",   bg: "#FFFBEB", border: "#FDE68A" },
-  "starter":         { label: "Starter",        color: "#2563EB",   bg: "#EFF6FF", border: "#BFDBFE" },
-  "agency-starter":  { label: "Agency Starter", color: C.blue,      bg: C.blueBg,  border: C.blueBorder },
-  "agency-pro":      { label: "Agency Pro",     color: "#7C3AED",   bg: "#F5F3FF", border: "#DDD6FE" },
+  "starter":       { label: "Starter",      color: "#2563EB", bg: "#EFF6FF",             border: "#BFDBFE" },
+  "professional":  { label: "Professional", color: "#10B981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)" },
+  "smart-guard":   { label: "Professional", color: "#10B981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)" },
+  "agency":        { label: "Agency",       color: "#7C3AED", bg: "#F5F3FF",             border: "#DDD6FE" },
+  "agency-starter":{ label: "Agency",       color: "#7C3AED", bg: "#F5F3FF",             border: "#DDD6FE" },
+  "agency-pro":    { label: "Agency",       color: "#7C3AED", bg: "#F5F3FF",             border: "#DDD6FE" },
 } as const;
 
 const DUMMY_CLIENTS = [
@@ -387,10 +386,10 @@ function StatusBadge({ status }: { status: "ok" | "warning" | "critical" | strin
 }
 
 function ProgressBar({ plan, scanCount, hasResult }: { plan: string; scanCount: number; hasResult: boolean }) {
-  const badge = PLAN_BADGE[plan as keyof typeof PLAN_BADGE] ?? PLAN_BADGE.free;
-  const isPaid = plan !== "free";
-  // Steps: account created (always), first scan done, paid plan, second scan done
-  const steps = [true, scanCount > 0, isPaid, scanCount > 1];
+  const badge = PLAN_BADGE[plan as keyof typeof PLAN_BADGE] ?? PLAN_BADGE["starter"];
+  const isPro = plan === "professional" || plan === "smart-guard" || plan === "agency" || plan === "agency-starter" || plan === "agency-pro";
+  // Steps: account created (always), first scan done, Pro/Agency plan, second scan done
+  const steps = [true, scanCount > 0, isPro, scanCount > 1];
   const done = steps.filter(Boolean).length;
   const pct = Math.round((done / steps.length) * 100);
   const barColor = pct >= 75 ? C.green : pct >= 50 ? "#34D399" : C.yellow;
@@ -405,9 +404,9 @@ function ProgressBar({ plan, scanCount, hasResult }: { plan: string; scanCount: 
         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
           {badge.label}
         </span>
-        {plan === "free" && (
-          <Link href="/pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "#FFFBEB", border: "1px solid #FDE68A", color: "#D97706" }}>
-            Upgrade →
+        {!isPro && (
+          <Link href="/fuer-agenturen#pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", color: "#10B981" }}>
+            Auf Professional upgraden →
           </Link>
         )}
       </div>
@@ -491,13 +490,12 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/login");
 
   const sql       = neon(process.env.DATABASE_URL!);
-  const plan      = ((session.user as { plan?: string }).plan ?? "free") as keyof typeof PLAN_BADGE;
-  const badge     = PLAN_BADGE[plan] ?? PLAN_BADGE.free;
+  const plan      = ((session.user as { plan?: string }).plan ?? "starter") as keyof typeof PLAN_BADGE;
+  const badge     = PLAN_BADGE[plan] ?? PLAN_BADGE["starter"];
   const firstName = session.user.name?.split(" ")[0] ?? "Dashboard";
   const layout    = getLayout(plan);
   const isAgency  = layout === "agency";
-  const isSingle  = layout === "single";   // Smart-Guard plan
-  const isFree    = layout === "free";
+  const isSingle  = layout === "single";
 
   const scans = await sql`
     SELECT id, url, type, created_at, issue_count
@@ -508,7 +506,7 @@ export default async function DashboardPage() {
   // Agency data
   let criticalSites: CriticalSite[] = [];
   let domainCount = 0; // updated after agencyClients is built
-  const domainLimit = plan === "agency-pro" ? 999 : 10;
+  const domainLimit = plan === "agency" || plan === "agency-pro" ? 999 : 10;
   let agencyLogoUrl: string | null = null;
   let agencyName:    string | null = null;
   if (isAgency) {
@@ -563,7 +561,7 @@ export default async function DashboardPage() {
 
   // Monthly scan counter + plan-aware limit
   const MONTHLY_SCAN_LIMITS: Record<string, number> = {
-    "free": 3, "starter": 3, "smart-guard": 999, "professional": 999, "agency-starter": 999, "agency-pro": 999,
+    "starter": 3, "professional": 999, "smart-guard": 999, "agency": 999, "agency-starter": 999, "agency-pro": 999,
   };
   const SCAN_LIMIT = MONTHLY_SCAN_LIMITS[plan] ?? 3;
   const now = new Date();
@@ -608,8 +606,8 @@ export default async function DashboardPage() {
   const speedScore = lastScanSpeedScore ?? Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
 
   // Agency slots: Starter = 10, Pro = unlimited
-  const clientSlotLimit = plan === "agency-pro" ? 999 : 10;
-  const slotsLabel      = plan === "agency-pro" ? "∞" : String(clientSlotLimit);
+  const clientSlotLimit = plan === "agency" || plan === "agency-pro" ? 999 : 10;
+  const slotsLabel      = plan === "agency" || plan === "agency-pro" ? "∞" : String(clientSlotLimit);
 
   // Map real saved_websites → agency client row format (or fall back to demo data)
   const AGENCY_COLORS = ["#2563EB","#16A34A","#D97706","#7C3AED","#DC2626","#0891B2","#059669","#DB2777"];
@@ -704,10 +702,10 @@ export default async function DashboardPage() {
           AGENCY LAYOUT  (plan: agency-starter | agency-pro)
           ══════════════════════════════════════════════════════════ */}
       {isAgency && (()=> {
-        // Agency Pro gets Indigo/Violet accent; Starter stays blue
-        const accent       = plan === "agency-pro" ? "#7C3AED" : C.blue;
-        const accentBg     = plan === "agency-pro" ? "#F5F3FF" : C.blueBg;
-        const accentBorder = plan === "agency-pro" ? "#DDD6FE" : C.blueBorder;
+        // Agency always gets Violet accent
+        const accent       = "#7C3AED";
+        const accentBg     = "#F5F3FF";
+        const accentBorder = "#DDD6FE";
 
         const healthScore = (status: string) =>
           status === "ok" ? 88 : status === "warning" ? 61 : 34;
@@ -732,18 +730,11 @@ export default async function DashboardPage() {
                       Slots: {usedSlots} / {slotsLabel}
                     </span>
                   </div>
-                  {/* Branding badge — differs by plan tier */}
-                  {plan === "agency-pro" ? (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", whiteSpace: "nowrap" }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      Full White-Label aktiv
-                    </span>
-                  ) : (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F0FDF4", border: "1px solid #A7F3D0", color: "#16A34A", whiteSpace: "nowrap" }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      Neutrales Branding aktiv
-                    </span>
-                  )}
+                  {/* Branding badge */}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", whiteSpace: "nowrap" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    White-Label aktiv
+                  </span>
                   {/* CTA */}
                   <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 2px 12px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -777,11 +768,9 @@ export default async function DashboardPage() {
                 <div style={{ padding: "14px 22px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
-                    {plan === "agency-pro" && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.04em" }}>
-                        UNLIMITIERT
-                      </span>
-                    )}
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.04em" }}>
+                      UNLIMITIERT
+                    </span>
                   </div>
                   <span style={{ fontSize: 11, color: C.textMuted }}>{agencyClients.length} Projekte{!isRealData ? " · Demo-Daten" : ""}</span>
                 </div>

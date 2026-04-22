@@ -157,8 +157,7 @@ export default function FreeSettingsClient({
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting,      setDeleting]      = useState(false);
 
-  const isFree     = plan === "free";
-  const planLabel  = isFree ? "Free-Plan" : plan === "starter" ? "Starter" : plan === "agency-starter" ? "Agency" : plan === "agency-pro" ? "Agency Pro" : "Professional";
+  const planLabel  = plan === "starter" ? "Starter" : plan === "agency" || plan === "agency-starter" || plan === "agency-pro" ? "Agency" : "Professional";
   const scansUsed  = Math.min(monthlyScans, scanLimit);
   const scanPct    = Math.round((scansUsed / scanLimit) * 100);
 
@@ -384,33 +383,32 @@ export default function FreeSettingsClient({
             </p>
           </div>
 
-          {/* Upsell info box */}
-          {isFree && (
+          {/* Upsell info box — shown for Starter users */}
+          {plan === "starter" && (
             <div style={{
               padding: "14px 16px",
-              background: D.blueBg,
-              border: `1px solid ${D.blueBorder}`,
+              background: "rgba(16,185,129,0.06)",
+              border: "1px solid rgba(16,185,129,0.22)",
               borderRadius: D.radiusSm,
               display: "flex", alignItems: "flex-start", gap: 12,
             }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={D.blueSoft} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
               <div>
                 <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: D.text }}>
-                  Du nutzt den Free-Plan.
+                  Du nutzt den Starter-Plan.
                 </p>
                 <p style={{ margin: "0 0 10px", fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>
-                  Upgrade für automatische PDF-Berichte, Full-Site Crawls und priorisierten Support.
+                  Upgrade auf Professional für automatische PDF-Berichte, Full-Site Crawls und White-Label-Berichte.
                 </p>
-                <Link href="/pricing" style={{
+                <Link href="/fuer-agenturen#pricing" style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "7px 16px", borderRadius: D.radiusXs,
-                  background: D.blue, color: "#fff",
+                  background: "#10B981", color: "#fff",
                   fontSize: 12, fontWeight: 700, textDecoration: "none",
-                  boxShadow: D.blueGlow,
                 }}>
-                  Pläne ansehen →
+                  Auf Professional upgraden →
                 </Link>
               </div>
             </div>

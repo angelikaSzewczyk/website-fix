@@ -8,9 +8,9 @@ function priceIdToPlan(priceId: string | undefined): string | null {
   if (!priceId) return null;
   if (process.env.STRIPE_PRICE_STARTER        && priceId === process.env.STRIPE_PRICE_STARTER)        return "starter";
   if (process.env.STRIPE_PRICE_PROFESSIONAL   && priceId === process.env.STRIPE_PRICE_PROFESSIONAL)   return "professional";
-  if (process.env.STRIPE_PRICE_SMART_GUARD    && priceId === process.env.STRIPE_PRICE_SMART_GUARD)    return "smart-guard";
-  if (process.env.STRIPE_PRICE_AGENCY_STARTER && priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency-starter";
-  if (process.env.STRIPE_PRICE_AGENCY        && priceId === process.env.STRIPE_PRICE_AGENCY)          return "agency-starter"; // alias
+  if (process.env.STRIPE_PRICE_SMART_GUARD    && priceId === process.env.STRIPE_PRICE_SMART_GUARD)    return "professional"; // legacy alias
+  if (process.env.STRIPE_PRICE_AGENCY         && priceId === process.env.STRIPE_PRICE_AGENCY)         return "agency";
+  if (process.env.STRIPE_PRICE_AGENCY_STARTER && priceId === process.env.STRIPE_PRICE_AGENCY_STARTER) return "agency"; // legacy alias
   // CRITICAL: unknown price — log loudly and abort. Never fall back to "free".
   console.error(
     `[stripe-webhook] CRITICAL: Unknown priceId '${priceId}' — plan upgrade ABORTED.` +
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object as Stripe.Subscription;
     const customerId = sub.customer as string;
-    await sql`UPDATE users SET plan = 'free' WHERE stripe_customer_id = ${customerId}`;
+    await sql`UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}`;
   }
 
   if (event.type === "customer.subscription.updated") {
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       if (!plan) return NextResponse.json({ received: true }); // unknown price — already logged
       await sql`UPDATE users SET plan = ${plan} WHERE stripe_customer_id = ${customerId}`;
     } else if (status === "canceled" || status === "unpaid") {
-      await sql`UPDATE users SET plan = 'free' WHERE stripe_customer_id = ${customerId}`;
+      await sql`UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}`;
     }
   }
 

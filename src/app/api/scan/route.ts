@@ -410,10 +410,10 @@ function getMaxSubpages(plan: string): number {
 // ── Monthly scan limits per plan ────────────────────────────
 // Matches features.ts: Starter = 3/month, Professional/Agency = unlimited
 const MONTHLY_LIMITS: Record<string, number> = {
-  "free":            3,
   "starter":         3,
-  "smart-guard":   999,
   "professional":  999,
+  "smart-guard":   999,
+  "agency":        999,
   "agency-starter": 999,
   "agency-pro":    999,
 };
@@ -426,7 +426,7 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     const userId  = session?.user?.id as string | undefined;
-    const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
+    const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "starter";
     const isPaid = ["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(userPlan);
 
     // ── Admin test-bypass cookie: skips IP rate limit ──────────

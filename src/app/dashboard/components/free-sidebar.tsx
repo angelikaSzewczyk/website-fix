@@ -149,8 +149,8 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
 
   const remaining    = Math.max(0, scanLimit - monthlyScans);
   const limitReached = monthlyScans >= scanLimit;
-  const planLabel    = plan === "free" ? "Free" : plan === "starter" ? "Starter" : plan === "agency-starter" ? "Agency" : plan === "agency-pro" ? "Agency Pro" : "Professional";
-  const isPro        = plan === "professional" || plan === "smart-guard";
+  const planLabel    = plan === "starter" ? "Starter" : plan === "agency" || plan === "agency-starter" || plan === "agency-pro" ? "Agency" : "Professional";
+  const isPro        = plan === "professional" || plan === "smart-guard" || plan === "agency" || plan === "agency-starter" || plan === "agency-pro";
   // Use CSS variable for accent so it picks up the user's agency color
   const accent       = isPro ? "var(--agency-primary, #10B981)" : S.blue;
   const accentBg     = isPro ? "var(--agency-primary-bg, rgba(16,185,129,0.08))" : S.blueBg;
@@ -438,7 +438,7 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               <p style={{ margin: 0, fontSize: 10, color: S.textMuted, lineHeight: 1.3, display: "flex", alignItems: "center", gap: 5 }}>
                 <span className="wf-plan-dot" style={{
                   width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
-                  background: plan !== "free" ? "#22C55E" : "#6b7280",
+                  background: "#22C55E",
                   display: "inline-block",
                 }} />
                 Plan: {planLabel}

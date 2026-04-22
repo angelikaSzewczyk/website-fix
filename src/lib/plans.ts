@@ -1,46 +1,44 @@
 /**
  * SINGLE SOURCE OF TRUTH für alle WebsiteFix-Pläne.
- * Importiert in: admin/page.tsx, admin/admin-client.tsx, api/admin/route.ts, middleware.ts
- * Niemals Preise oder Plan-Keys an anderer Stelle hardcoden.
+ * 3 kanonische Pläne: starter | professional | agency
+ * Legacy DB-Werte (smart-guard, agency-starter, agency-pro) werden via normalizePlan gemappt.
  */
 
-export type PlanKey =
-  | "free"
-  | "starter"
-  | "smart-guard"
-  | "professional"
-  | "agency-starter";
+export type PlanKey = "starter" | "professional" | "agency";
 
 export interface PlanDef {
-  /** UI-Label für Badges und Dropdowns */
   label: string;
-  /** Monatlicher Preis in EUR (0 = kostenlos) */
   mrr: number;
-  /** Hex-Farbe für Badges und Charts */
   color: string;
 }
 
 export const PLANS: Record<PlanKey, PlanDef> = {
-  "free":           { label: "Free",         mrr: 0,   color: "#6b7280" },
-  "starter":        { label: "Starter",      mrr: 29,  color: "#60a5fa" },
-  "smart-guard":    { label: "Professional", mrr: 89,  color: "#fbbf24" },
-  "professional":   { label: "Professional", mrr: 89,  color: "#fbbf24" },
-  "agency-starter": { label: "Agency",       mrr: 249, color: "#a78bfa" },
+  "starter":      { label: "Starter",      mrr: 29,  color: "#60a5fa" },
+  "professional": { label: "Professional", mrr: 89,  color: "#10B981" },
+  "agency":       { label: "Agency",       mrr: 249, color: "#a78bfa" },
 };
 
 export const PLAN_KEYS = Object.keys(PLANS) as PlanKey[];
 
-/** MRR-Lookup: { "starter": 29, "smart-guard": 89, … } */
 export const PLAN_MRR: Record<string, number> = Object.fromEntries(
   Object.entries(PLANS).map(([k, v]) => [k, v.mrr]),
 );
 
-/** Farb-Lookup: { "starter": "#60a5fa", … } */
 export const PLAN_COLOR: Record<string, string> = Object.fromEntries(
   Object.entries(PLANS).map(([k, v]) => [k, v.color]),
 );
 
-/** Label-Lookup: { "smart-guard": "Professional", … } */
 export const PLAN_LABEL: Record<string, string> = Object.fromEntries(
   Object.entries(PLANS).map(([k, v]) => [k, v.label]),
 );
+
+/**
+ * Maps any DB plan string (including legacy values) to a canonical PlanKey.
+ * Returns null for "free" or unknown values → caller should redirect to /fuer-agenturen.
+ */
+export function normalizePlan(plan: string | null | undefined): PlanKey | null {
+  if (plan === "starter") return "starter";
+  if (plan === "professional" || plan === "smart-guard") return "professional";
+  if (plan === "agency" || plan === "agency-starter" || plan === "agency-pro") return "agency";
+  return null;
+}

@@ -23,7 +23,7 @@ type NavItem = {
 };
 
 // Plans that get the agency nav
-const AGENCY_PLANS = ["agency-starter", "agency-pro"];
+const AGENCY_PLANS = ["agency", "agency-starter", "agency-pro"];
 
 // 4-item agency nav (same for both agency tiers)
 const AGENCY_NAV_ITEMS: NavItem[] = [
@@ -42,12 +42,12 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
 ];
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  free:              { label: "Free",           color: "rgba(255,255,255,0.4)",  bg: "rgba(255,255,255,0.05)",  border: "rgba(255,255,255,0.1)" },
-  "smart-guard":     { label: "Professional",    color: "#FBBF24",                bg: "rgba(251,191,36,0.1)",    border: "rgba(251,191,36,0.25)" },
-  "professional":    { label: "Professional",    color: "#FBBF24",                bg: "rgba(251,191,36,0.1)",    border: "rgba(251,191,36,0.25)" },
-  "starter":         { label: "Starter",         color: "#60A5FA",                bg: "rgba(96,165,250,0.1)",    border: "rgba(96,165,250,0.25)" },
-  "agency-starter":  { label: "Agency Starter", color: "#60A5FA",                bg: "rgba(96,165,250,0.1)",    border: "rgba(96,165,250,0.25)" },
-  "agency-pro":      { label: "Agency Pro",     color: "#A78BFA",                bg: "rgba(167,139,250,0.1)",   border: "rgba(167,139,250,0.25)" },
+  "starter":       { label: "Starter",      color: "#60A5FA", bg: "rgba(96,165,250,0.1)",   border: "rgba(96,165,250,0.25)" },
+  "professional":  { label: "Professional", color: "#10B981", bg: "rgba(16,185,129,0.1)",   border: "rgba(16,185,129,0.25)" },
+  "smart-guard":   { label: "Professional", color: "#10B981", bg: "rgba(16,185,129,0.1)",   border: "rgba(16,185,129,0.25)" },
+  "agency":        { label: "Agency",       color: "#A78BFA", bg: "rgba(167,139,250,0.1)",  border: "rgba(167,139,250,0.25)" },
+  "agency-starter":{ label: "Agency",       color: "#A78BFA", bg: "rgba(167,139,250,0.1)",  border: "rgba(167,139,250,0.25)" },
+  "agency-pro":    { label: "Agency",       color: "#A78BFA", bg: "rgba(167,139,250,0.1)",  border: "rgba(167,139,250,0.25)" },
 };
 
 type Props = {
@@ -109,15 +109,6 @@ function SlimSidebar({ plan, userName, userImage, signOutButton, lastScanClean }
         })}
       </nav>
 
-      {/* Scan counter for free */}
-      {plan === "free" && (
-        <div style={{ marginBottom: 12, flexShrink: 0 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-        </div>
-      )}
-
       {/* User avatar */}
       <div style={{ flexShrink: 0 }}>
         {userImage ? (
@@ -135,12 +126,12 @@ function SlimSidebar({ plan, userName, userImage, signOutButton, lastScanClean }
 
 export default function SidebarNav({ plan, userName, userImage, signOutButton, lastScanClean }: Props) {
   const pathname  = usePathname();
-  const planCfg   = PLAN_CONFIG[plan] ?? PLAN_CONFIG.free;
+  const planCfg   = PLAN_CONFIG[plan] ?? PLAN_CONFIG["starter"];
   const isAgency  = AGENCY_PLANS.includes(plan);
-  const isProPlan = plan === "agency-pro"; // Agency Pro — full white-label
+  const isProPlan = isAgency; // all agency plans get white-label branding
 
-  // Free / Professional → slim icon sidebar
-  if (plan === "free" || plan === "smart-guard" || plan === "professional" || plan === "starter") {
+  // Starter / Professional → slim icon sidebar (layout uses FreeSidebar, but keep as fallback)
+  if (!isAgency) {
     return <SlimSidebar plan={plan} userName={userName} userImage={userImage} signOutButton={signOutButton} lastScanClean={lastScanClean} />;
   }
 

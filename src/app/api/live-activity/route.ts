@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
+const PRO_PLANS = ["professional", "smart-guard", "agency", "agency-starter", "agency-pro"];
 
 export async function GET() {
   const session = await auth();

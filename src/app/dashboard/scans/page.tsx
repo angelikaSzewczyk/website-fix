@@ -40,7 +40,7 @@ function countIssues(issuesJson: string | null): { red: number; yellow: number }
   } catch { return { red: 0, yellow: 0 }; }
 }
 
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
+const PRO_PLANS = ["professional", "smart-guard", "agency", "agency-starter", "agency-pro"];
 
 export default async function ScansPage() {
   const session = await auth();

@@ -1749,7 +1749,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           )}
 
           {/* ① QUICK-START GUIDE — shown when plan is active but no scan yet */}
-          {!lastScan && !isNewScan && plan !== "free" && (
+          {!lastScan && !isNewScan && (
             <div style={{
               background: "linear-gradient(160deg, #0d1f3c 0%, #091528 100%)",
               border: "1px solid rgba(37,99,235,0.3)",

@@ -20,7 +20,7 @@ export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const plan = (session.user as { plan?: string }).plan ?? "free";
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
   if (!isPaidAgencyPlan(plan)) return NextResponse.json({ error: "Upgrade erforderlich." }, { status: 403 });
 
   const sql = neon(process.env.DATABASE_URL!);
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const plan = (session.user as { plan?: string }).plan ?? "free";
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
   if (!isPaidAgencyPlan(plan)) return NextResponse.json({ error: "Upgrade erforderlich." }, { status: 403 });
 
   const sql = neon(process.env.DATABASE_URL!);

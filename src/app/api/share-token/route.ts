@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
+const PRO_PLANS = ["professional", "smart-guard", "agency", "agency-starter", "agency-pro"];
 
 export async function POST(req: Request) {
   const session = await auth();

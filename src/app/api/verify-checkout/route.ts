@@ -29,16 +29,16 @@ export async function POST(req: NextRequest) {
 
     // Nur bezahlte Sessions akzeptieren
     if (checkoutSession.payment_status !== "paid") {
-      return NextResponse.json({ plan: "free", paid: false });
+      return NextResponse.json({ plan: "starter", paid: false });
     }
 
     const priceId = checkoutSession.line_items?.data?.[0]?.price?.id;
     const PRICE_TO_PLAN: Record<string, string> = {
       [process.env.STRIPE_PRICE_STARTER        ?? ""]: "starter",
       [process.env.STRIPE_PRICE_PROFESSIONAL   ?? ""]: "professional",
-      [process.env.STRIPE_PRICE_SMART_GUARD    ?? ""]: "smart-guard",
-      [process.env.STRIPE_PRICE_AGENCY_STARTER ?? ""]: "agency-starter",
-      [process.env.STRIPE_PRICE_AGENCY         ?? ""]: "agency-starter",
+      [process.env.STRIPE_PRICE_SMART_GUARD    ?? ""]: "professional", // legacy alias
+      [process.env.STRIPE_PRICE_AGENCY         ?? ""]: "agency",
+      [process.env.STRIPE_PRICE_AGENCY_STARTER ?? ""]: "agency",      // legacy alias
     };
 
     const plan = priceId ? PRICE_TO_PLAN[priceId] : undefined;

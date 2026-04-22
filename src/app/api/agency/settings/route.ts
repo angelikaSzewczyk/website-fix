@@ -7,7 +7,7 @@ const AGENCY_PLANS = ["agency-starter", "agency-pro"];
 export async function GET() {
   const session = await auth();
   const userId  = session?.user?.id as string | undefined;
-  const plan    = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
+  const plan    = (session?.user as { plan?: string } | undefined)?.plan ?? "starter";
 
   if (!userId || !AGENCY_PLANS.includes(plan)) {
     return NextResponse.json({ error: "Nicht berechtigt." }, { status: 403 });
@@ -35,7 +35,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth();
   const userId  = session?.user?.id as string | undefined;
-  const plan    = (session?.user as { plan?: string } | undefined)?.plan ?? "free";
+  const plan    = (session?.user as { plan?: string } | undefined)?.plan ?? "starter";
 
   if (!userId || !AGENCY_PLANS.includes(plan)) {
     return NextResponse.json({ error: "Nicht berechtigt." }, { status: 403 });
