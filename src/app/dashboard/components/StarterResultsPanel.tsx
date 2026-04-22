@@ -72,6 +72,14 @@ function quickFix(issue: IssueProp): string {
 // ─── Score-Breakdown helpers ──────────────────────────────────────────────────
 interface Deduction { label: string; pts: number; sortedIdx: number; }
 
+// Replaces "BFSG-Verstoß:" prefix with friendly wording — never accuse, always advise.
+function friendlyLabel(raw: string): string {
+  return raw
+    .replace(/^BFSG-Verstoß:\s*/i, "Barrierefreiheit: ")
+    .replace(/^Barrierefreiheit:\s+Bilder-Beschreibung fehlt$/i, "Barrierefreiheit: Bilder ohne Beschreibung")
+    .replace(/^Fehlendes?\s+Alt-Attribut$/i, "Barrierefreiheit: Bilder ohne Beschreibung");
+}
+
 function getSeoDeductions(sorted: IssueProp[]): Deduction[] {
   const out: Deduction[] = [];
   sorted.forEach((issue, idx) => {
@@ -84,7 +92,7 @@ function getSeoDeductions(sorted: IssueProp[]): Deduction[] {
     else if (/sitemap/i.test(t))                                 pts = 6;
     else if (/noindex|ausgeschlossen/i.test(t))                  pts = 5;
     else if (issue.severity === "red" && /seo|index/i.test(t))  pts = 5;
-    if (pts > 0) out.push({ label: issue.title, pts, sortedIdx: idx });
+    if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
 }
@@ -100,7 +108,24 @@ function getSecDeductions(sorted: IssueProp[]): Deduction[] {
     else if (/bfsg|barriere|alt.?text|alternativtext/i.test(t) && issue.severity === "red") pts = 20;
     else if (/formular|label/i.test(t))                            pts = 15;
     else if (issue.severity === "red")                             pts = 20;
-    if (pts > 0) out.push({ label: issue.title, pts, sortedIdx: idx });
+    if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
+  });
+  return out;
+}
+
+function getTechDeductions(sorted: IssueProp[]): Deduction[] {
+  const out: Deduction[] = [];
+  sorted.forEach((issue, idx) => {
+    if (out.length >= 3) return;
+    const t = (issue.title + " " + issue.body).toLowerCase();
+    let pts = 0;
+    if (/lcp|ladezeit|pagespeed|performance|core web/i.test(t)) pts = 15;
+    else if (/cls|layout.?shift/i.test(t))                      pts = 10;
+    else if (/caching|cache/i.test(t))                          pts = 8;
+    else if (/bild|image|kompri/i.test(t))                      pts = 8;
+    else if (issue.category === "speed" && issue.severity === "red") pts = 15;
+    else if (issue.category === "speed")                         pts = 8;
+    if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
 }
@@ -428,6 +453,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
   const [showPdfHint, setShowPdfHint]   = useState(false);
+  const [showDetails, setShowDetails]   = useState(false);
   const [openItems, setOpenItems]       = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
 
@@ -734,86 +760,140 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           </div>
         )}
 
-        {/* Rings + Breakdown ──────────────────────────────────────────────── */}
-        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24 }}>
-
-          {/* SEO */}
-          {(() => {
-            const deductions = getSeoDeductions(sorted);
-            return (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 140px", minWidth: 140 }}>
-                <ScoreRing score={seoScore} label="SEO" delay={0} />
-                {seoScore < 50 && (
-                  <p style={{ margin: "6px 0 8px", fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>
-                    Zeigt, wie gut Suchmaschinen deine Inhalte lesen und ranken können.
-                  </p>
-                )}
-                {deductions.length > 0 && (
-                  <div style={{ width: "100%", maxWidth: 200 }}>
-                    <p style={{ margin: "0 0 5px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>
-                      Score-Abzüge
-                    </p>
-                    {deductions.map((d, i) => (
-                      <button key={i} onClick={() => scrollToIssue(d.sortedIdx)} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        width: "100%", gap: 6, padding: "4px 8px", marginBottom: 3,
-                        background: "rgba(192,112,112,0.07)", border: "1px solid rgba(192,112,112,0.15)",
-                        borderRadius: 6, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                      }}>
-                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", flex: 1, lineHeight: 1.4 }}>{d.label}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#c07070", flexShrink: 0 }}>−{d.pts}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Technik */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 140px", minWidth: 140 }}>
-            <ScoreRing score={techScore} label="Technik" delay={180} />
-            {techScore < 50 && (
-              <p style={{ margin: "6px 0 0", fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>
-                Ladezeit, Core Web Vitals und technische Stabilität deiner Seite.
-              </p>
-            )}
+        {/* ── Rings row — clean, no inline clutter ────────────────────────── */}
+        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24, marginBottom: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 120px", minWidth: 120 }}>
+            <ScoreRing score={seoScore} label="SEO" delay={0} />
           </div>
-
-          {/* Sicherheit */}
-          {(() => {
-            const deductions = getSecDeductions(sorted);
-            return (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 140px", minWidth: 140 }}>
-                <ScoreRing score={secScore} label="Sicherheit" delay={360} />
-                {secScore < 50 && (
-                  <p style={{ margin: "6px 0 8px", fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", maxWidth: 160, lineHeight: 1.5 }}>
-                    Bewertet Schutz gegen Angriffe, Datenverlust und rechtliche Verstöße.
-                  </p>
-                )}
-                {deductions.length > 0 && (
-                  <div style={{ width: "100%", maxWidth: 200 }}>
-                    <p style={{ margin: "0 0 5px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>
-                      Score-Abzüge
-                    </p>
-                    {deductions.map((d, i) => (
-                      <button key={i} onClick={() => scrollToIssue(d.sortedIdx)} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        width: "100%", gap: 6, padding: "4px 8px", marginBottom: 3,
-                        background: "rgba(192,112,112,0.07)", border: "1px solid rgba(192,112,112,0.15)",
-                        borderRadius: 6, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                      }}>
-                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", flex: 1, lineHeight: 1.4 }}>{d.label}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#c07070", flexShrink: 0 }}>−{d.pts}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 120px", minWidth: 120 }}>
+            <ScoreRing score={techScore} label="Technik" delay={180} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 120px", minWidth: 120 }}>
+            <ScoreRing score={secScore} label="Sicherheit" delay={360} />
+          </div>
         </div>
+
+        {/* ── Toggle button ────────────────────────────────────────────────── */}
+        <div className="wf-no-print" style={{ display: "flex", justifyContent: "center", marginBottom: showDetails ? 16 : 0 }}>
+          <button
+            onClick={() => setShowDetails(v => !v)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "5px 14px", borderRadius: 20,
+              background: "none", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600,
+              cursor: "pointer", fontFamily: "inherit",
+              transition: "border-color 0.15s, color 0.15s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)";
+            }}
+          >
+            Analyse-Details {showDetails ? "ausblenden" : "einblenden"}
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: "transform 0.2s", transform: showDetails ? "rotate(180deg)" : "none" }}>
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* ── Slide-down details card ──────────────────────────────────────── */}
+        {showDetails && (() => {
+          const seoDed   = getSeoDeductions(sorted);
+          const techDed  = getTechDeductions(sorted);
+          const secDed   = getSecDeductions(sorted);
+
+          type Col = {
+            heading: string;
+            score: number;
+            desc: string;
+            deductions: Deduction[];
+          };
+          const cols: Col[] = [
+            { heading: "SEO",        score: seoScore,  desc: "Sichtbarkeit in Suchmaschinen", deductions: seoDed },
+            { heading: "Technik",    score: techScore, desc: "Ladezeit & Core Web Vitals",   deductions: techDed },
+            { heading: "Sicherheit", score: secScore,  desc: "Datenschutz & SSL",             deductions: secDed },
+          ];
+
+          const positives: Record<string, string[]> = {
+            SEO:        ["Title-Tag vorhanden", "Meta-Description gesetzt", "H1-Überschrift korrekt", "Sitemap eingereicht"],
+            Technik:    ["Schnelle Ladezeit", "Core Web Vitals bestanden", "Caching aktiv"],
+            Sicherheit: ["SSL-Zertifikat aktiv", "HTTPS erzwungen", "Cookie-Banner vorhanden"],
+          };
+
+          return (
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
+              borderRadius: 12, overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.07)",
+              animation: "wf-sr-fadein 0.22s ease both",
+            }}>
+              {cols.map((col, ci) => (
+                <div key={col.heading} style={{
+                  padding: "16px 18px",
+                  background: ci === 1 ? "rgba(255,255,255,0.025)" : "rgba(255,255,255,0.015)",
+                  borderLeft: ci > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                }}>
+                  {/* Column header */}
+                  <div style={{ marginBottom: 10 }}>
+                    <p style={{ margin: "0 0 1px", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                      {col.heading}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
+                      {col.desc}
+                    </p>
+                  </div>
+
+                  {/* Deductions list */}
+                  {col.deductions.length > 0 ? (
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                      {col.deductions.map((d, i) => (
+                        <li key={i}>
+                          <button
+                            onClick={() => scrollToIssue(d.sortedIdx)}
+                            style={{
+                              display: "flex", alignItems: "flex-start", gap: 6, width: "100%",
+                              background: "none", border: "none", cursor: "pointer",
+                              padding: 0, fontFamily: "inherit", textAlign: "left",
+                            }}
+                            title="Zur Aufgabe springen"
+                          >
+                            <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1.4, marginTop: 0 }}>❌</span>
+                            <span style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
+                              {d.label}
+                            </span>
+                            <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#c07070", marginLeft: 4, lineHeight: 1.4 }}>
+                              −{d.pts}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : col.score >= 90 ? (
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                      {positives[col.heading].slice(0, 3).map(p => (
+                        <li key={p} style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                          <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1.4 }}>✅</span>
+                          <span style={{ fontSize: 11, color: "rgba(74,222,128,0.7)", lineHeight: 1.4 }}>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+                      Keine spezifischen Abzüge erkannt.
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ② AUFGABEN-LISTE ─────────────────────────────────────────────────── */}
