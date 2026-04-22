@@ -3144,7 +3144,7 @@ footer a, nav a.footerLink {
 }
 
 @media print {
-  /* ── White page base — must come before isolation rules ── */
+  /* ─── 1. WHITE BASE ─────────────────────────────────────────────────────── */
   html, body {
     background: #ffffff !important;
     color: #111111 !important;
@@ -3152,43 +3152,121 @@ footer a, nav a.footerLink {
     line-height: 1.5 !important;
     color-scheme: light !important;
   }
-  main { padding: 0 !important; max-width: 100% !important; }
+  @page { margin: 18mm 16mm; size: A4 portrait; }
 
-  /* ── Hide interactive chrome ── */
+  /* ─── 2. NUCLEAR BACKGROUND STRIP ─────────────────────────────────────── */
+  /* Strips ALL dark backgrounds (incl. inline style="background:…") */
+  * {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: #111111 !important;
+    border-color: #d1d5db !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* ─── 3. LAYOUT CHROME — HIDE ──────────────────────────────────────────── */
   .no-print, .wf-no-print { display: none !important; }
-  .print-only { display: block !important; }
-  nav, header, aside { display: none !important; }
+  nav, header, aside,
+  .dashboard-sidebar, .dashboard-mobile-bar { display: none !important; }
+  /* Sidebar offset: reset left margin so content fills full width */
+  .dashboard-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+  /* Layout flex container: become simple block */
+  .dashboard-content, [style*="display: flex"][style*="minHeight"] {
+    display: block !important;
+    min-height: 0 !important;
+  }
 
-  /* ── Visibility isolation for StarterResultsPanel (.wf-print-root class) ── */
-  body:has(.wf-print-root) * { visibility: hidden; }
-  body:has(.wf-print-root) .wf-print-root,
-  body:has(.wf-print-root) .wf-print-root * { visibility: visible; }
-  body:has(.wf-print-root) .wf-print-root {
-    position: fixed; inset: 0;
-    background: #ffffff !important;
-    padding: 20px 24px !important;
-    overflow: visible;
-    font-size: 11pt !important;
+  /* ─── 4. PRINT ROOT — FLOW NORMALLY (NO FIXED/ABSOLUTE) ────────────────── */
+  .wf-print-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
-  /* All dark inline backgrounds inside print root → transparent */
-  body:has(.wf-print-root) .wf-print-root [style*="background"] {
-    background: transparent !important;
-  }
-  /* Restore colored rings and severity badges */
-  body:has(.wf-print-root) .wf-score-ring svg,
-  body:has(.wf-print-root) .wf-badge-red,
-  body:has(.wf-print-root) .wf-badge-yellow,
-  body:has(.wf-print-root) .wf-badge-green {
+
+  /* ─── 5. TYPOGRAPHY INSIDE PRINT ROOT ──────────────────────────────────── */
+  .wf-print-root p, .wf-print-root span, .wf-print-root h1,
+  .wf-print-root h2, .wf-print-root h3, .wf-print-root li,
+  .wf-print-root button { color: #111111 !important; }
+
+  /* ─── 6. SCORE RINGS — PRESERVE SVG COLORS ──────────────────────────────── */
+  .wf-score-ring svg {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  /* Always show analysis-details card in print (regardless of toggle state) */
-  body:has(.wf-print-root) .wf-analysis-details {
-    display: grid !important;
-    visibility: visible !important;
+  .wf-score-ring text { fill: #111111 !important; }
+
+  /* ─── 7. SEVERITY BADGES — COLOR ON WHITE ──────────────────────────────── */
+  .wf-badge-red {
+    background-color: #fee2e2 !important; color: #b91c1c !important;
+    border: 1px solid #fca5a5 !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  .wf-badge-yellow {
+    background-color: #fef9c3 !important; color: #92400e !important;
+    border: 1px solid #fde68a !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  .wf-badge-green {
+    background-color: #dcfce7 !important; color: #166534 !important;
+    border: 1px solid #86efac !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
   }
 
-  /* ── Visibility isolation for DiagnoseReport (#wf-print-root ID) ── */
+  /* ─── 8. QUICK-FIX BOXES ───────────────────────────────────────────────── */
+  .wf-quick-fix {
+    background-color: #eef3ff !important;
+    border: 1px solid #bcd0ff !important;
+    color: #1e3a8a !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+
+  /* ─── 9. CARD BORDERS (sections + accordion) ──────────────────────────── */
+  .wf-print-card {
+    border: 1px solid #d1d5db !important;
+    margin-bottom: 16pt !important;
+  }
+
+  /* Section dividers → plain 1px black rule */
+  .wf-print-root hr,
+  .wf-print-root [class*="divider"] {
+    border: none !important;
+    border-top: 1px solid #000000 !important;
+    height: 0 !important;
+  }
+
+  /* ─── 10. ANALYSIS DETAILS — ALWAYS VISIBLE IN PRINT ───────────────────── */
+  .wf-analysis-details {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* ─── 11. PAGE BREAKS ────────────────────────────────────────────────────── */
+  .wf-print-accordion {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+  .wf-quick-fix,
+  .wf-priority-card,
+  .wf-print-card,
+  #wf-aufgaben > div { break-inside: avoid !important; page-break-inside: avoid !important; }
+  .wf-print-card { break-inside: avoid !important; }
+
+  /* ─── 12. SHOW PRINT-ONLY HEADER + HIDE INTERACTIVE ELEMENTS ───────────── */
+  .wf-print-header { display: flex !important; }
+  .print-only      { display: block !important; }
+  main { padding: 0 !important; max-width: 100% !important; }
+
+  /* ─── 13. DIAGNOSE-REPORT (#wf-print-root ID) — kept for backwards compat ── */
   body:has(#wf-print-root) * { visibility: hidden; }
   body:has(#wf-print-root) #wf-print-root,
   body:has(#wf-print-root) #wf-print-root * { visibility: visible; }
@@ -3200,33 +3278,9 @@ footer a, nav a.footerLink {
     font-size: 11pt !important;
   }
 
-  /* ── Widget report page: print as dark-on-white ── */
+  /* ─── 14. WIDGET REPORT ─────────────────────────────────────────────────── */
   body:has(.wf-widget-report) * { color: #0D1321 !important; background: transparent !important; }
   body:has(.wf-widget-report) .wf-widget-report { padding: 0 !important; }
-
-  /* ── Show print-only header ── */
-  .wf-print-header { display: flex !important; }
-
-  /* ── Prevent cards from splitting across pages ── */
-  .wf-issue-card, .wf-print-card {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    orphans: 3;
-    widows: 3;
-  }
-  .wf-score-hero {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-
-  /* ── Remove glassmorphism ── */
-  [style*="backdropFilter"], [style*="backdrop-filter"] {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  /* ── Page size ── */
-  @page { margin: 18mm 16mm; size: A4 portrait; }
 }
 
 @media screen {
