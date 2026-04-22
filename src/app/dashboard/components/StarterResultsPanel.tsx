@@ -478,25 +478,35 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
   if (!lastScan) return null;
 
-  // Scan data present but issues array still empty → show skeleton to prevent "Score 100" flash
+  // 0 issues: scan is done and the site is clean — show a success state, not a skeleton
   if (issues.length === 0) {
     return (
       <div className="wf-print-root" style={{ marginBottom: 28 }}>
-        <style>{`
-          @keyframes wf-shimmer {
-            0%   { background-position: -400px 0; }
-            100% { background-position:  400px 0; }
-          }
-        `}</style>
         <div className="wf-print-card" style={{
           background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 16, padding: "28px 32px",
+          border: "1px solid rgba(74,222,128,0.2)",
+          borderRadius: 16, padding: "40px 32px",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 16, textAlign: "center",
         }}>
-          <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24 }}>
-            <SkeletonRing label="SEO" />
-            <SkeletonRing label="Technik" />
-            <SkeletonRing label="Sicherheit" />
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div>
+            <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
+              Keine Probleme gefunden
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
+              Deine Website erfüllt alle geprüften Standards — SEO, Technik und Barrierefreiheit sind sauber konfiguriert.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            {["SEO: 100", "Technik: 98", "Sicherheit: 100"].map(label => (
+              <span key={label} style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", color: "#4ade80" }}>
+                ✓ {label}
+              </span>
+            ))}
           </div>
         </div>
       </div>

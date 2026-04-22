@@ -1023,9 +1023,11 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     }
   }, [lastScan]);
 
-  // Persist checked URLs to localStorage (per scan)
+  // Persist checked URLs to localStorage (per scan).
+  // Reset immediately on scan-id change so stale checkmarks don't bleed into new scans.
   const checkedKey = `wf_checked_${lastScan?.id ?? "anon"}`;
   useEffect(() => {
+    setCheckedUrls(new Set()); // reset first — new scan = clean slate
     try {
       const saved = localStorage.getItem(checkedKey);
       if (saved) setCheckedUrls(new Set(JSON.parse(saved) as string[]));

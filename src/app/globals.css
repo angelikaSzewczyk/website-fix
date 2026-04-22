@@ -3344,6 +3344,22 @@ footer a, nav a.footerLink {
   .dashboard-mobile-bar { display: flex !important; }
 }
 
+/* ===== ANALYSE-DETAILS CARD — RESPONSIVE GRID ===== */
+/* On mobile the 3-column analysis-details card collapses to a single column.
+   !important is needed to override the inline gridTemplateColumns style. */
+@media (max-width: 640px) {
+  .wf-analysis-details {
+    grid-template-columns: 1fr !important;
+  }
+  .wf-analysis-details > div {
+    border-left: none !important;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .wf-analysis-details > div:first-child {
+    border-top: none;
+  }
+}
+
 /* ===== MARKETING PAGE — MOBILE GRID STACKING ===== */
 /* All .mkt-grid containers collapse to single column on mobile */
 @media (max-width: 768px) {
