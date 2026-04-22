@@ -542,93 +542,37 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ── Print styles ────────────────────────────── */
+        /* ── Print styles (isolation handled by globals.css body:has(.wf-print-root)) ── */
         @media print {
-          /* Hide all UI chrome */
-          .wf-no-print,
-          .dashboard-sidebar,
-          header,
-          nav { display: none !important; }
-
-          /* Force white background, black text */
-          html, body {
-            background: #ffffff !important;
-            color: #111111 !important;
-            font-size: 12pt;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-
-          /* Remove dashboard content offset */
-          .dashboard-content {
-            margin-left: 0 !important;
-            padding-top: 0 !important;
-          }
-
-          /* Hide everything except the results panel */
-          body > * > * { display: none !important; }
-          .wf-print-root { display: block !important; }
-
-          /* Score rings: keep colors */
+          /* Score rings: preserve SVG stroke colors */
           .wf-score-ring svg {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
+          .wf-score-ring text { fill: #111111 !important; }
+
+          /* Severity badge colors in print */
+          .wf-badge-red    { background: #fee2e2 !important; color: #b91c1c !important; border-color: #fca5a5 !important;
+                             -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .wf-badge-yellow { background: #fef9c3 !important; color: #92400e !important; border-color: #fde68a !important;
+                             -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .wf-badge-green  { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important;
+                             -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+          /* Quick-fix boxes readable on white */
+          .wf-quick-fix {
+            background: #eef3ff !important; border-color: #bcd0ff !important; color: #1e3a8a !important;
+            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+          }
+
+          /* Subtle card borders */
+          .wf-print-card { border: 1px solid #d1d5db !important; }
 
           /* Page break before accordion */
-          .wf-print-accordion {
-            break-before: page;
-            page-break-before: always;
-          }
+          .wf-print-accordion { break-before: page; page-break-before: always; }
 
-          /* No break inside quick-fix boxes and priority cards */
-          .wf-quick-fix,
-          .wf-priority-card {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          /* Quick-fix boxes: readable on white */
-          .wf-quick-fix {
-            background: #eef3ff !important;
-            border-color: #bcd0ff !important;
-            color: #1e3a8a !important;
-          }
-
-          /* Severity badges in print */
-          .wf-badge-red    { background: #fee2e2 !important; color: #b91c1c !important; border-color: #fca5a5 !important; }
-          .wf-badge-yellow { background: #fef9c3 !important; color: #92400e !important; border-color: #fde68a !important; }
-          .wf-badge-green  { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
-
-          /* Cards: subtle border on white */
-          .wf-print-card {
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-          }
-
-          /* Force ALL dark containers to white */
-          .wf-print-root,
-          .wf-print-root * {
-            background-color: transparent !important;
-            color: #111111 !important;
-            border-color: #d1d5db !important;
-            box-shadow: none !important;
-          }
-          .wf-print-root [style*="background"] {
-            background: transparent !important;
-          }
-          .wf-score-ring text {
-            fill: #111111 !important;
-          }
-
-          /* Print header: show only in print */
-          .wf-print-header { display: flex !important; }
-
-          /* Page margins */
-          @page {
-            margin: 18mm 16mm;
-            size: A4 portrait;
-          }
+          /* No break inside issue cards */
+          .wf-quick-fix, .wf-priority-card { break-inside: avoid; page-break-inside: avoid; }
         }
 
         /* Print header hidden on screen */
@@ -817,8 +761,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           </button>
         </div>
 
-        {/* ── Slide-down details card ──────────────────────────────────────── */}
-        {showDetails && (() => {
+        {/* ── Slide-down details card — always in DOM, CSS-hidden on screen when closed ── */}
+        {(() => {
           const seoDed   = getSeoDeductions(sorted);
           const techDed  = getTechDeductions(sorted);
           const secDed   = getSecDeductions(sorted);
@@ -842,11 +786,12 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           };
 
           return (
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
+            <div className="wf-analysis-details" style={{
+              display: showDetails ? "grid" : "none",
+              gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
               borderRadius: 12, overflow: "hidden",
               border: "1px solid rgba(255,255,255,0.07)",
-              animation: "wf-sr-fadein 0.22s ease both",
+              animation: showDetails ? "wf-sr-fadein 0.22s ease both" : "none",
             }}>
               {cols.map((col, ci) => (
                 <div key={col.heading} style={{

@@ -3144,25 +3144,51 @@ footer a, nav a.footerLink {
 }
 
 @media print {
-  /* ── Force background colors and images to print ── */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-
-  .no-print { display: none !important; }
-  .print-only { display: block !important; }
-  nav, header, aside { display: none !important; }
-  body {
-    background: #fff !important;
-    color: #0D1321 !important;
+  /* ── White page base — must come before isolation rules ── */
+  html, body {
+    background: #ffffff !important;
+    color: #111111 !important;
     font-size: 11pt !important;
     line-height: 1.5 !important;
+    color-scheme: light !important;
   }
   main { padding: 0 !important; max-width: 100% !important; }
 
-  /* ── Dashboard DiagnoseReport isolation ── */
+  /* ── Hide interactive chrome ── */
+  .no-print, .wf-no-print { display: none !important; }
+  .print-only { display: block !important; }
+  nav, header, aside { display: none !important; }
+
+  /* ── Visibility isolation for StarterResultsPanel (.wf-print-root class) ── */
+  body:has(.wf-print-root) * { visibility: hidden; }
+  body:has(.wf-print-root) .wf-print-root,
+  body:has(.wf-print-root) .wf-print-root * { visibility: visible; }
+  body:has(.wf-print-root) .wf-print-root {
+    position: fixed; inset: 0;
+    background: #ffffff !important;
+    padding: 20px 24px !important;
+    overflow: visible;
+    font-size: 11pt !important;
+  }
+  /* All dark inline backgrounds inside print root → transparent */
+  body:has(.wf-print-root) .wf-print-root [style*="background"] {
+    background: transparent !important;
+  }
+  /* Restore colored rings and severity badges */
+  body:has(.wf-print-root) .wf-score-ring svg,
+  body:has(.wf-print-root) .wf-badge-red,
+  body:has(.wf-print-root) .wf-badge-yellow,
+  body:has(.wf-print-root) .wf-badge-green {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Always show analysis-details card in print (regardless of toggle state) */
+  body:has(.wf-print-root) .wf-analysis-details {
+    display: grid !important;
+    visibility: visible !important;
+  }
+
+  /* ── Visibility isolation for DiagnoseReport (#wf-print-root ID) ── */
   body:has(#wf-print-root) * { visibility: hidden; }
   body:has(#wf-print-root) #wf-print-root,
   body:has(#wf-print-root) #wf-print-root * { visibility: visible; }
@@ -3178,12 +3204,11 @@ footer a, nav a.footerLink {
   body:has(.wf-widget-report) * { color: #0D1321 !important; background: transparent !important; }
   body:has(.wf-widget-report) .wf-widget-report { padding: 0 !important; }
 
-  /* ── Show print-only header, hide interactive elements ── */
+  /* ── Show print-only header ── */
   .wf-print-header { display: flex !important; }
-  .wf-no-print { display: none !important; }
 
   /* ── Prevent cards from splitting across pages ── */
-  .wf-issue-card {
+  .wf-issue-card, .wf-print-card {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     orphans: 3;
@@ -3194,11 +3219,14 @@ footer a, nav a.footerLink {
     page-break-inside: avoid !important;
   }
 
-  /* ── Widget glassmorphism cards — flatten for print ── */
+  /* ── Remove glassmorphism ── */
   [style*="backdropFilter"], [style*="backdrop-filter"] {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  /* ── Page size ── */
+  @page { margin: 18mm 16mm; size: A4 portrait; }
 }
 
 @media screen {
