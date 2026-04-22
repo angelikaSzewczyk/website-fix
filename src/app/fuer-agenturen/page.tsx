@@ -22,28 +22,48 @@ export const metadata: Metadata = {
 
 const PLANS = [
   {
-    name: "Professional",
-    planKey: "smart-guard",       // Stripe Plan-Key → /api/checkout
-    price: "89",
+    name: "Starter",
+    planKey: "starter",
+    price: "29",
     per: "/Monat",
-    desc: "Für wachsende Agenturen & Freelancer",
-    accent: "#2563EB",
+    desc: "Für erste Schritte & Einzelprojekte",
+    accent: "#60a5fa",
     features: [
-      { text: "10 Projekte", highlight: true },
-      { text: "Täglicher Deep-Scan", highlight: true },
-      { text: "KI-Fix-Vorschläge", highlight: true },
-      { text: "Smart-Fix Drawer (Gutenberg · Elementor · Divi)", highlight: true },
-      { text: "Monitoring & E-Mail-Alerts", highlight: false },
-      { text: "PDF-Berichte & Score-Historie", highlight: false },
+      { text: "3 Scans / Monat", highlight: true },
+      { text: "SEO, Technik & Sicherheits-Check", highlight: true },
+      { text: "PDF-Export (Standard)", highlight: false },
+      { text: "Kein White-Label", highlight: false, locked: true },
+      { text: "Kein Client Tracking", highlight: false, locked: true },
+      { text: "Kein Executive Summary", highlight: false, locked: true },
     ],
-    cta: "Professional starten",
-    href: "/register",
+    cta: "Starter testen",
+    href: undefined,
     recommended: false,
     enterprise: false,
   },
   {
+    name: "Professional",
+    planKey: "smart-guard",
+    price: "89",
+    per: "/Monat",
+    desc: "Für Agenturen, die Kunden beeindrucken wollen",
+    accent: "#10B981",
+    features: [
+      { text: "10 Projekte & täglicher Deep-Scan", highlight: true, key: true },
+      { text: "White-Label PDF — dein Logo, deine Farbe", highlight: true, key: true },
+      { text: "Client Tracking — Echtzeit-Aufrufe & Downloads", highlight: true, key: true },
+      { text: "Executive Summary — dein persönliches Fazit", highlight: true, key: true },
+      { text: "Teilen-Links für Kunden (ohne Dashboard-Zugang)", highlight: true, key: false },
+      { text: "KI-Fix-Vorschläge & Smart-Fix Drawer", highlight: false },
+    ],
+    cta: "Professional für 89 € starten →",
+    href: undefined,
+    recommended: true,
+    enterprise: false,
+  },
+  {
     name: "Agency",
-    planKey: "agency-starter",    // Stripe Plan-Key → /api/checkout
+    planKey: "agency-starter",
     price: "249",
     per: "/Monat",
     desc: "Full White-Label für professionelle Agenturen",
@@ -57,8 +77,8 @@ const PLANS = [
       { text: "E-Mail Absendername konfigurierbar", highlight: false, key: false },
     ],
     cta: "Agency-Account erstellen",
-    href: "/register",
-    recommended: true,
+    href: undefined,
+    recommended: false,
     enterprise: false,
   },
 ];
@@ -161,22 +181,25 @@ export default function AgencyPage() {
             </div>
 
             <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-              Mehr Projekte. Mehr Marge. Weniger manuelle Arbeit.
+              Verwandle kalte Daten<br />
+              <span style={{ background: "linear-gradient(90deg, #10B981, #8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                in heiße Aufträge.
+              </span>
             </h1>
 
             <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
-              Automatisierte WordPress-Audits, White-Label Reports und ein Smart-Fix Drawer mit Page-Builder-Anleitungen. Ihre Junioren erledigen Tasks, für die Sie sonst Senior-Know-how bräuchten — in einem Bruchteil der Zeit.
+              Dein Logo auf jedem Bericht. Echtzeit-Insights, wann Kunden lesen. Individuelle Fazits, die deine Expertise beweisen. Für <strong style={{ color: "rgba(255,255,255,0.8)" }}>89 €/Monat</strong> — das erste Tool, das sich direkt in Aufträge übersetzt.
             </p>
 
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <CheckoutButton
-                plan="agency-starter"
-                label="Agentur-Power freischalten →"
+                plan="smart-guard"
+                label="Professional für 89 € starten →"
                 style={{
                   padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
-                  background: "linear-gradient(90deg, #007BFF, #0057b8)",
+                  background: "linear-gradient(90deg, #059669, #10B981)",
                   color: "#fff", border: "none",
-                  boxShadow: "0 4px 32px rgba(0,123,255,0.60), 0 0 64px rgba(0,123,255,0.25)",
+                  boxShadow: "0 4px 32px rgba(16,185,129,0.55), 0 0 64px rgba(16,185,129,0.2)",
                 }}
               />
               <Link href="#pricing" style={{
@@ -189,11 +212,170 @@ export default function AgencyPage() {
             </div>
 
             <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
-              Exklusive Agency-Konditionen · Keine Mindestlaufzeit · DSGVO-konform
+              Professional-Plan · 89 €/Monat · Keine Mindestlaufzeit · DSGVO-konform
             </p>
 
             {/* Animated trust stats */}
             <AgencyStats />
+          </div>
+        </section>
+
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+        {/* ── FEATURE-SHOWCASE ── */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 52 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(16,185,129,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              Professional-Plan · 89 €/Monat
+            </p>
+            <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
+              Drei Features. Ein klarer Business-Vorteil.
+            </h2>
+            <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+              Kein anderes Tool unter 100 € gibt dir White-Label, Echtzeit-Tracking und individuelle Kundenkommunikation in einem.
+            </p>
+          </div>
+
+          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+
+            {/* Card 1: White-Label Power */}
+            <div style={{
+              padding: "32px 28px", borderRadius: 16,
+              background: "rgba(16,185,129,0.04)",
+              border: "1px solid rgba(16,185,129,0.18)",
+              display: "flex", flexDirection: "column", gap: 16,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{
+                width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {/* Palette/Brush icon */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="13.5" cy="6.5" r="0.5" fill="#10B981"/><circle cx="17.5" cy="10.5" r="0.5" fill="#10B981"/><circle cx="8.5" cy="7.5" r="0.5" fill="#10B981"/><circle cx="6.5" cy="12.5" r="0.5" fill="#10B981"/>
+                  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#10B981", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+                  White-Label Power
+                </div>
+                <h3 style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  Dein Logo.<br />Deine Marke.
+                </h3>
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>
+                  Erstelle Reports, die aussehen, als kämen sie aus deiner eigenen Software-Abteilung. Kein WebsiteFix-Branding. Dein Kunde sieht nur dich.
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["Logo + Primärfarbe einmalig setzen", "Jeder PDF-Export vollständig gebrandert", "Teilen-Links in deinem Design", "Keine fremde Marke — nirgendwo"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card 2: Client Tracking */}
+            <div style={{
+              padding: "32px 28px", borderRadius: 16,
+              background: "rgba(141,243,211,0.03)",
+              border: "1px solid rgba(141,243,211,0.15)",
+              display: "flex", flexDirection: "column", gap: 16,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(141,243,211,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{
+                width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                background: "rgba(141,243,211,0.08)", border: "1px solid rgba(141,243,211,0.22)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {/* Eye + chart icon */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  <path d="M8 20v-4M12 20v-7M16 20v-2" strokeWidth="1.5" stroke="#8df3d3"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#8df3d3", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+                  Client Tracking
+                </div>
+                <h3 style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  Wisse, wann<br />Kunden beißen.
+                </h3>
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>
+                  Erhalte Echtzeit-Insights, wenn deine Berichte angesehen oder als PDF gespeichert werden. Du rufst an, während der Bericht noch offen ist.
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["Aufruf-Zähler pro geteiltem Bericht", "Download-Tracking (PDF gespeichert)", "Aktiv-Badge wenn Bericht gerade offen ist", "Live-Feed im Dashboard: Wer liest gerade?"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card 3: Executive Summaries */}
+            <div style={{
+              padding: "32px 28px", borderRadius: 16,
+              background: "rgba(251,191,36,0.03)",
+              border: "1px solid rgba(251,191,36,0.15)",
+              display: "flex", flexDirection: "column", gap: 16,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(251,191,36,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{
+                width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.22)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {/* Pen/comment icon */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+                  Executive Summaries
+                </div>
+                <h3 style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  Deine Note.<br />Deine Expertise.
+                </h3>
+                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>
+                  Füge ein individuelles Fazit hinzu, das deine Handschrift trägt. 3 smarte Vorlagen für den schnellen Start — oder dein eigener Text.
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["Textfeld direkt im Bericht-Panel", "Autosave — kein Klicken nötig", "Erscheint auf Seite 1 des PDFs", "3 Vorlagen: Dringlich · Technisch · Kompakt"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          <div style={{ marginTop: 36, textAlign: "center" }}>
+            <CheckoutButton
+              plan="smart-guard"
+              label="Alle drei Features für 89 € freischalten →"
+              style={{
+                padding: "13px 32px", borderRadius: 10, fontWeight: 700, fontSize: 14,
+                background: "linear-gradient(90deg, #059669, #10B981)",
+                color: "#fff", border: "none",
+                boxShadow: "0 4px 20px rgba(16,185,129,0.4)",
+              }}
+            />
+            <p style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+              Monatlich kündbar · Sofort aktiv nach Checkout
+            </p>
           </div>
         </section>
 
@@ -1249,45 +1431,43 @@ export default function AgencyPage() {
             </div>
 
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
-              {PLANS.map(plan => (
+              {PLANS.map(plan => {
+                type F = { text: string; highlight: boolean; key?: boolean; locked?: boolean };
+                const isPro   = plan.planKey === "smart-guard";
+                const isAgency = plan.planKey === "agency-starter";
+                const accentColor = isPro ? "#10B981" : plan.accent;
+                return (
                 <div key={plan.name} style={{
-                  background: "rgba(255,255,255,0.04)",
+                  background: isPro ? "rgba(16,185,129,0.04)" : "rgba(255,255,255,0.03)",
                   backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: plan.recommended ? `2px solid #2563EB` : `1px solid rgba(255,255,255,0.08)`,
+                  border: isPro ? `2px solid rgba(16,185,129,0.5)` : `1px solid rgba(255,255,255,0.08)`,
                   borderRadius: 18,
                   display: "flex", flexDirection: "column",
                   overflow: "hidden",
-                  boxShadow: plan.recommended
-                    ? "0 0 60px rgba(37,99,235,0.22), 0 8px 40px rgba(37,99,235,0.18), 0 0 0 1px rgba(37,99,235,0.15)"
+                  boxShadow: isPro
+                    ? "0 0 60px rgba(16,185,129,0.18), 0 8px 40px rgba(16,185,129,0.12), 0 0 0 1px rgba(16,185,129,0.1)"
                     : "0 2px 20px rgba(0,0,0,0.3)",
+                  transform: isPro ? "scale(1.025)" : "scale(1)",
+                  zIndex: isPro ? 1 : 0,
+                  position: "relative" as const,
                 }}>
                   {/* Top stripe */}
-                  {plan.recommended && (
-                    <div style={{ background: "#2563EB", padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>★ BESTSELLER</span>
+                  {isPro && (
+                    <div style={{ background: "linear-gradient(90deg, #059669, #10B981)", padding: "9px 24px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>EMPFOHLEN FÜR AGENTUREN</span>
                     </div>
                   )}
-                  {plan.enterprise && (
-                    <div style={{ background: "#0F172A", padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", letterSpacing: "0.1em" }}>ENTERPRISE</span>
-                    </div>
-                  )}
-                  {!plan.recommended && !plan.enterprise && (
-                    <div style={{ height: 4, background: "rgba(255,255,255,0.05)" }} />
+                  {!isPro && (
+                    <div style={{ height: 4, background: isAgency ? "rgba(124,58,237,0.35)" : "rgba(255,255,255,0.05)" }} />
                   )}
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
                     <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.recommended ? "#7aa6ff" : plan.enterprise ? "rgba(255,255,255,0.5)" : plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{plan.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: accentColor, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{plan.name}</div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
-                        {plan.enterprise ? (
-                          <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>Auf Anfrage</span>
-                        ) : (
-                          <>
-                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>{plan.price}€</span>
-                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{plan.per}</span>
-                          </>
-                        )}
+                        <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>{plan.price}€</span>
+                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{plan.per}</span>
                       </div>
                       <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{plan.desc}</p>
                     </div>
@@ -1295,48 +1475,67 @@ export default function AgencyPage() {
                     <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
 
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                      {plan.features.map(f => (
-                        <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {plan.features.map(f => {
+                        const ff = f as F;
+                        const isLocked = ff.locked;
+                        return (
+                        <div key={ff.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <div style={{
                             width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                            background: (f as {text:string;highlight:boolean;key?:boolean}).key
-                              ? "rgba(122,166,255,0.2)"
-                              : f.highlight
-                                ? (plan.recommended ? "#2563EB" : plan.planKey === "agency-starter" ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
-                                : "rgba(255,255,255,0.07)",
-                            border: (f as {text:string;highlight:boolean;key?:boolean}).key ? "1px solid rgba(122,166,255,0.35)" : "none",
+                            background: isLocked
+                              ? "rgba(255,255,255,0.03)"
+                              : ff.key
+                                ? `${accentColor}22`
+                                : ff.highlight
+                                  ? (isPro ? "#059669" : isAgency ? "#7C3AED" : "rgba(255,255,255,0.12)")
+                                  : "rgba(255,255,255,0.07)",
+                            border: isLocked ? "1px solid rgba(255,255,255,0.06)" : ff.key ? `1px solid ${accentColor}40` : "none",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={(f as {text:string;highlight:boolean;key?:boolean}).key ? "#a5c1ff" : f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12"/>
-                            </svg>
+                            {isLocked ? (
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                              </svg>
+                            ) : (
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ff.key ? accentColor : ff.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            )}
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: (f as {text:string;highlight:boolean;key?:boolean}).key ? 700 : f.highlight ? 600 : 400, color: (f as {text:string;highlight:boolean;key?:boolean}).key ? "#a5c1ff" : f.highlight ? "#fff" : "rgba(255,255,255,0.4)" }}>
-                            {f.text}
+                          <span style={{
+                            fontSize: 12,
+                            fontWeight: ff.key ? 700 : ff.highlight ? 600 : 400,
+                            color: isLocked ? "rgba(255,255,255,0.2)" : ff.key ? accentColor : ff.highlight ? "#fff" : "rgba(255,255,255,0.4)",
+                            textDecoration: isLocked ? "line-through" : "none",
+                          }}>
+                            {ff.text}
                           </span>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div style={{ paddingBottom: 24 }}>
                       <CheckoutButton
-                        plan={plan.enterprise ? "enterprise" : plan.planKey}
+                        plan={plan.planKey}
                         label={plan.cta}
-                        href={plan.enterprise ? plan.href : undefined}
                         style={{
                           display: "block", textAlign: "center", width: "100%",
                           padding: "13px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700,
                           textDecoration: "none",
-                          background: plan.recommended ? "#2563EB" : plan.planKey === "agency-starter" ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)",
-                          color: plan.recommended || plan.planKey === "agency-starter" ? "#ffffff" : "rgba(255,255,255,0.7)",
-                          border: plan.recommended || plan.planKey === "agency-starter" ? "none" : "1px solid rgba(255,255,255,0.1)",
-                          boxShadow: plan.recommended ? "0 4px 14px rgba(37,99,235,0.35)" : "none",
+                          background: isPro
+                            ? "linear-gradient(90deg, #059669, #10B981)"
+                            : isAgency ? "#7C3AED" : "rgba(255,255,255,0.06)",
+                          color: isPro || isAgency ? "#fff" : "rgba(255,255,255,0.55)",
+                          border: isPro || isAgency ? "none" : "1px solid rgba(255,255,255,0.1)",
+                          boxShadow: isPro ? "0 4px 18px rgba(16,185,129,0.35)" : "none",
                         }}
                       />
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
