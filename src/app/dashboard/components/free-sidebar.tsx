@@ -73,12 +73,14 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
   }, []);
 
   const isActive = (href: string, exact = false) =>
-    exact ? pathname === href : pathname.startsWith(href);
+    exact
+      ? pathname === href
+      : pathname === href || pathname.startsWith(href + "/");
 
   const NAV = [
     { icon: "dashboard",  label: "Dashboard",              href: "/dashboard",           exact: true,  locked: false },
     { icon: "scan",       label: "Live Scan",               href: "/dashboard/scan",      exact: false, locked: false },
-    { icon: "reports",    label: "Berichte",                href: "/dashboard/scans",     exact: false, locked: false },
+    { icon: "reports",    label: "Berichte",                href: "/dashboard/scans",     exact: true,  locked: false },
     { icon: "whitelabel", label: "White-Label & Branding",  href: "/pricing",             exact: false, locked: true  },
   ];
 
