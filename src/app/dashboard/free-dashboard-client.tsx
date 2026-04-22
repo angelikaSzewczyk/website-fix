@@ -1891,14 +1891,26 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </p>
               </div>
               {!bfsgOk && (
-                <Link href="/pricing" style={{
-                  flexShrink: 0, fontSize: 11, fontWeight: 700,
-                  padding: "5px 12px", borderRadius: D.radiusXs,
-                  background: D.amberBg, border: `1px solid ${D.amberBorder}`,
-                  color: D.amber, textDecoration: "none",
-                }}>
+                <button
+                  onClick={() => {
+                    const target =
+                      document.querySelector<HTMLElement>('[data-wf-anchor="wf-recht-first"]') ??
+                      document.getElementById("wf-aufgaben");
+                    if (!target) return;
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    // Auto-open the accordion item if it has a toggle button
+                    const btn = target.querySelector<HTMLButtonElement>("button");
+                    if (btn && target.getAttribute("aria-expanded") !== "true") btn.click();
+                  }}
+                  style={{
+                    flexShrink: 0, fontSize: 11, fontWeight: 700,
+                    padding: "5px 12px", borderRadius: D.radiusXs,
+                    background: D.amberBg, border: `1px solid ${D.amberBorder}`,
+                    color: D.amber, cursor: "pointer",
+                  }}
+                >
                   Details →
-                </Link>
+                </button>
               )}
             </div>
           )}

@@ -232,11 +232,13 @@ function AccordionItem({
   issue,
   index,
   defaultOpen = false,
+  wfAnchor,
   onAutoFix,
 }: {
   issue: IssueProp;
   index: number;
   defaultOpen?: boolean;
+  wfAnchor?: string;
   onAutoFix: () => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -246,7 +248,7 @@ function AccordionItem({
   const fix    = quickFix(issue);
 
   return (
-    <div id={`wf-issue-${index}`} style={{
+    <div id={`wf-issue-${index}`} data-wf-anchor={wfAnchor} style={{
       borderBottom: "1px solid rgba(255,255,255,0.05)",
       background: open ? "rgba(255,255,255,0.02)" : "transparent",
       transition: "background 0.15s",
@@ -498,6 +500,9 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   });
   const redIssues    = sorted.filter(i => i.severity === "red");
   const yellowIssues = sorted.filter(i => i.severity === "yellow");
+
+  // Index of the first "recht" (UX/Barrierefreiheit) issue across all groups
+  const firstRechtSortedIdx = sorted.findIndex(i => i.category === "recht");
 
   // ── PDF export with hint toast ────────────────────────────────────────────
   function handleExportPDF() {
@@ -897,7 +902,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
       </div>
 
       {/* ② AUFGABEN-LISTE ─────────────────────────────────────────────────── */}
-      <div className="wf-print-accordion" style={{
+      <div id="wf-aufgaben" className="wf-print-accordion" style={{
         marginBottom: 28,
         animation: "wf-sr-fadein 0.45s 0.1s ease both",
       }}>
@@ -935,15 +940,20 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               </p>
             </div>
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(192,112,112,0.15)", borderRadius: 12, overflow: "hidden" }}>
-              {redIssues.map((issue, i) => (
-                <AccordionItem
-                  key={`red-${i}`}
-                  issue={issue}
-                  index={sorted.indexOf(issue)}
-                  defaultOpen={i === 0}
-                  onAutoFix={() => setShowUpgrade(true)}
-                />
-              ))}
+              {redIssues.map((issue, i) => {
+                const idx = sorted.indexOf(issue);
+                const isFirstRecht = idx === firstRechtSortedIdx;
+                return (
+                  <AccordionItem
+                    key={`red-${i}`}
+                    issue={issue}
+                    index={idx}
+                    defaultOpen={i === 0}
+                    wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
+                    onAutoFix={() => setShowUpgrade(true)}
+                  />
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -967,15 +977,20 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               </p>
             </div>
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, overflow: "hidden" }}>
-              {yellowIssues.map((issue, i) => (
-                <AccordionItem
-                  key={`yellow-${i}`}
-                  issue={issue}
-                  index={sorted.indexOf(issue)}
-                  defaultOpen={redIssues.length === 0 && i === 0}
-                  onAutoFix={() => setShowUpgrade(true)}
-                />
-              ))}
+              {yellowIssues.map((issue, i) => {
+                const idx = sorted.indexOf(issue);
+                const isFirstRecht = idx === firstRechtSortedIdx;
+                return (
+                  <AccordionItem
+                    key={`yellow-${i}`}
+                    issue={issue}
+                    index={idx}
+                    defaultOpen={redIssues.length === 0 && i === 0}
+                    wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
+                    onAutoFix={() => setShowUpgrade(true)}
+                  />
+                );
+              })}
             </div>
           </div>
         ) : (
