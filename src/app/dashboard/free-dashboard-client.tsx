@@ -408,7 +408,11 @@ function DrawerCard({
       )}
 
       {/* Image filename list */}
-      {images && images.length > 0 && (
+      {images && images.length > 0 && (() => {
+        const LIMIT = 15;
+        const shown = images.slice(0, LIMIT);
+        const hiddenCount = images.length - shown.length; // = total - 15 shown
+        return (
         <div style={{
           padding: "0 16px 14px",
           borderTop: fixOpen ? undefined : `1px solid ${accentBdr}`,
@@ -417,7 +421,7 @@ function DrawerCard({
             Betroffene Dateien ({images.length}):
           </p>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-            {images.slice(0, 15).map((img, j) => {
+            {shown.map((img, j) => {
               const [dir, filename] = splitPath(img);
               const full = (() => { try { return new URL(img).pathname; } catch { return img; } })();
               return (
@@ -443,14 +447,15 @@ function DrawerCard({
                 </li>
               );
             })}
-            {images.length > 15 && (
+            {hiddenCount > 0 && (
               <li style={{ fontSize: 11, color: D.textMuted, padding: "2px 4px" }}>
-                +{images.length - 15} weitere Dateien
+                +{hiddenCount} weitere Dateien
               </li>
             )}
           </ul>
         </div>
-      )}
+        );
+      })()}
 
       {/* Form field list */}
       {fields && fields.length > 0 && (
@@ -520,10 +525,18 @@ function DrawerPanel({
       entries.push({ fixKey: "noindex", label: "Noindex gesetzt — Seite für Google unsichtbar", kind: "warning" });
     if (!page.metaDescription)
       entries.push({ fixKey: "meta", label: "Meta-Description fehlt", kind: "warning" });
-    if (page.altMissing > 0)
-      entries.push({ fixKey: "alt", label: `${page.altMissing} Bilder ohne Alt-Text — SEO-Potenzial & Auffindbarkeit`, kind: "warning", count: page.altMissing, images: page.altMissingImages ?? [] });
-    if ((page.inputsWithoutLabel ?? 0) > 0)
-      entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label — beeinträchtigt UX & Conversion`, kind: "warning", count: page.inputsWithoutLabel, fields: page.inputsWithoutLabelFields ?? [] });
+    if (page.altMissing > 0) {
+      // images.length is the authoritative count — it's what the file list actually renders.
+      // page.altMissing can differ when altMissingImages was collected globally vs. per-page.
+      const imgs = page.altMissingImages ?? [];
+      const altCount = imgs.length > 0 ? imgs.length : page.altMissing;
+      entries.push({ fixKey: "alt", label: `${altCount} Bilder ohne Alt-Text — SEO-Potenzial & Auffindbarkeit`, kind: "warning", count: altCount, images: imgs });
+    }
+    if ((page.inputsWithoutLabel ?? 0) > 0) {
+      const flds = page.inputsWithoutLabelFields ?? [];
+      const labelCount = flds.length > 0 ? flds.length : (page.inputsWithoutLabel ?? 0);
+      entries.push({ fixKey: "label", label: `${labelCount} Formularfelder ohne Label — beeinträchtigt UX & Conversion`, kind: "warning", count: labelCount, fields: flds });
+    }
     if ((page.buttonsWithoutText ?? 0) > 0)
       entries.push({ fixKey: "button", label: `${page.buttonsWithoutText} Buttons ohne Text — fehlende Nutzerführung`, kind: "warning", count: page.buttonsWithoutText });
   } else if (globalIssues && globalIssues.length > 0) {
