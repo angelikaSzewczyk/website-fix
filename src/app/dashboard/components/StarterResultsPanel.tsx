@@ -84,48 +84,56 @@ function friendlyLabel(raw: string): string {
     .replace(/^Fehlendes?\s+Alt-Attribut$/i, "Barrierefreiheit: Bilder ohne Beschreibung");
 }
 
+// SEO: only real SEO topics (H1, Meta, Title, Indexierung, Sitemap)
 function getSeoDeductions(sorted: IssueProp[]): Deduction[] {
   const out: Deduction[] = [];
   sorted.forEach((issue, idx) => {
-    if (out.length >= 3) return;
+    if (out.length >= 4) return;
     const t = (issue.title + " " + issue.body).toLowerCase();
+    // Exclude non-SEO topics from this column
+    if (/barriere|bfsg|alt.?text|screenreader|alternativtext|ssl|https|cookie|dsgvo|datenschutz|formular|sicherheit|security/i.test(t)) return;
     let pts = 0;
     if (/title.?tag|kein.*title|ohne.*title/i.test(t))          pts = 14;
     else if (/meta.?desc|snippet/i.test(t))                     pts = 8;
     else if (/\bh1\b|hauptüberschrift/i.test(t))                pts = 8;
     else if (/sitemap/i.test(t))                                 pts = 6;
     else if (/noindex|ausgeschlossen/i.test(t))                  pts = 5;
-    else if (issue.severity === "red" && /seo|index/i.test(t))  pts = 5;
+    else if (issue.category === "technik" || issue.category === "speed") return; // never bleed tech into SEO
+    else if (issue.severity === "red" && issue.category !== "recht")     pts = 5;
     if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
 }
 
+// Sicherheit: SSL, DSGVO, und BFSG/Barrierefreiheit (Compliance-Themen)
 function getSecDeductions(sorted: IssueProp[]): Deduction[] {
   const out: Deduction[] = [];
   sorted.forEach((issue, idx) => {
-    if (out.length >= 3) return;
+    if (out.length >= 4) return;
     const t = (issue.title + " " + issue.body).toLowerCase();
-    // Never put accessibility issues in the Security column
-    if (/barriere|bfsg|alt.?text|screenreader|alternativtext/i.test(t)) return;
+    // Exclude pure speed/tech topics
+    if (/lcp|ladezeit|pagespeed|cls|layout.?shift|caching|cache|bildkompri|redirect.?kette/i.test(t)) return;
     let pts = 0;
-    if (/ssl|https/i.test(t))                                pts = 50;
-    else if (/cookie|consent|dsgvo|datenschutz/i.test(t))   pts = 30;
-    else if (/formular|label/i.test(t))                      pts = 15;
-    else if (/mixed.?content|unsicher.*ressource/i.test(t))  pts = 20;
-    else if (/sicherheit|security/i.test(t) && issue.severity === "red") pts = 20;
+    if (/ssl|https/i.test(t))                                              pts = 50;
+    else if (/cookie|consent|dsgvo|datenschutz/i.test(t))                 pts = 30;
+    else if (/mixed.?content|unsicher.*ressource/i.test(t))               pts = 20;
+    else if (/sicherheit|security/i.test(t) && issue.severity === "red")  pts = 20;
+    // BFSG / Barrierefreiheit = Compliance → belongs in Sicherheit
+    else if (/barriere|bfsg|screenreader|alternativtext/i.test(t))        pts = 15;
+    else if (/alt.?text|formular|label/i.test(t))                         pts = 10;
     if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
 }
 
+// Technik: nur Speed, Cache, Core Web Vitals
 function getTechDeductions(sorted: IssueProp[]): Deduction[] {
   const out: Deduction[] = [];
   sorted.forEach((issue, idx) => {
-    if (out.length >= 3) return;
+    if (out.length >= 4) return;
     const t = (issue.title + " " + issue.body).toLowerCase();
-    // Never put accessibility issues in the Technik column
-    if (/barriere|bfsg|alt.?text|screenreader|alternativtext/i.test(t)) return;
+    // Never put accessibility or compliance issues in Technik
+    if (/barriere|bfsg|alt.?text|screenreader|alternativtext|ssl|https|cookie|dsgvo|datenschutz|formular/i.test(t)) return;
     let pts = 0;
     if (/lcp|ladezeit|pagespeed|performance|core web/i.test(t))         pts = 15;
     else if (/cls|layout.?shift/i.test(t))                               pts = 10;
@@ -495,18 +503,24 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
     );
   }
 
-  // ── Score computation ─────────────────────────────────────────────────────
-  const seoScore  = clamp(100 - redCount * 14 - yellowCount * 5, 12, 94);
-  const techScore = clamp(speedScore, 10, 98);
-  const secScore  = clamp(100 - redCount * 20 - (yellowCount > 5 ? 10 : 0), 15, 97);
-
-  // ── Sorted issues ─────────────────────────────────────────────────────────
+  // ── Sorted issues (must come first — deductions depend on sorted) ─────────
   const sorted = [...issues].sort((a, b) => {
     const sevOrd = { red: 0, yellow: 1, green: 2 };
     const sd = sevOrd[a.severity] - sevOrd[b.severity];
     if (sd !== 0) return sd;
     return (b.count ?? 1) - (a.count ?? 1);
   });
+
+  // ── Column deductions (computed once, shared by score rings + details card)
+  const seoDed  = getSeoDeductions(sorted);
+  const techDed = getTechDeductions(sorted);
+  const secDed  = getSecDeductions(sorted);
+
+  // ── Score computation — derived from actual deductions so ring ↔ list always match
+  // Each deduction that appears in the list is exactly what drives the score down.
+  const seoScore  = clamp(100 - seoDed.reduce((s, d) => s + d.pts, 0),  12, 100);
+  const techScore = clamp(speedScore, 10, 98); // Technik = PageSpeed API score (external signal)
+  const secScore  = clamp(100 - secDed.reduce((s, d) => s + d.pts, 0),  12, 100);
   const redIssues    = sorted.filter(i => i.severity === "red");
   const yellowIssues = sorted.filter(i => i.severity === "yellow");
 
@@ -730,10 +744,6 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
         {/* ── Slide-down details card — always in DOM, CSS-hidden on screen when closed ── */}
         {(() => {
-          const seoDed   = getSeoDeductions(sorted);
-          const techDed  = getTechDeductions(sorted);
-          const secDed   = getSecDeductions(sorted);
-
           type Col = {
             heading: string;
             score: number;
@@ -746,6 +756,11 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
             { heading: "Sicherheit", score: secScore,  desc: "Datenschutz & SSL",             deductions: secDed },
           ];
 
+          const excellentMsg: Record<string, string> = {
+            SEO:        "Hervorragend: SEO-Grundstruktur vollständig korrekt.",
+            Technik:    "Hervorragend: Alle technischen Standards erfüllt.",
+            Sicherheit: "Hervorragend: Keine Sicherheits- oder Compliance-Mängel.",
+          };
           const positives: Record<string, string[]> = {
             SEO:        ["Title-Tag vorhanden", "Meta-Description gesetzt", "H1-Überschrift korrekt", "Sitemap eingereicht"],
             Technik:    ["Schnelle Ladezeit", "Core Web Vitals bestanden", "Caching aktiv"],
@@ -801,7 +816,16 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                         </li>
                       ))}
                     </ul>
-                  ) : col.score >= 90 ? (
+                  ) : col.score >= 98 ? (
+                    // Perfect score → strong positive confirmation
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                      <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1.4 }}>✅</span>
+                      <span style={{ fontSize: 11, color: "rgba(74,222,128,0.8)", lineHeight: 1.4, fontWeight: 600 }}>
+                        {excellentMsg[col.heading]}
+                      </span>
+                    </div>
+                  ) : col.score >= 80 ? (
+                    // Good — show positive signals
                     <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
                       {positives[col.heading].slice(0, 3).map(p => (
                         <li key={p} style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
@@ -810,7 +834,16 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                         </li>
                       ))}
                     </ul>
+                  ) : col.heading === "Technik" ? (
+                    // Technik score = PageSpeed API signal, no specific issues detected
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                      <span style={{ flexShrink: 0, fontSize: 13, lineHeight: 1.3 }}>⚠️</span>
+                      <span style={{ fontSize: 11, color: "rgba(251,191,36,0.75)", lineHeight: 1.5 }}>
+                        PageSpeed-Score: {col.score}/100 — Ladezeit oder Server-Antwortzeit verbessern.
+                      </span>
+                    </div>
                   ) : (
+                    // Safety fallback — should not occur (scores derive from deductions)
                     <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
                       Keine spezifischen Abzüge erkannt.
                     </p>
