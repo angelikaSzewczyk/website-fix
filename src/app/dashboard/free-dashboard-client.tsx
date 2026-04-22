@@ -1099,6 +1099,19 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     return Array.from(map.values());
   })();
 
+  // Consolidated issues mapped to the flat IssueProp shape StarterResultsPanel expects.
+  // Uses displayTitle (friendly) and totalCount (sum of all occurrences across pages).
+  const panelIssues: ParsedIssueProp[] = consolidatedIssues.map(i => ({
+    severity: i.severity,
+    title: i.displayTitle,
+    body: i.body,
+    category: i.category,
+    count: i.totalCount,
+  }));
+  // Counts based on unique issue types (not raw occurrences) — used for score formulas.
+  const consolidatedRedCount    = panelIssues.filter(i => i.severity === "red").length;
+  const consolidatedYellowCount = panelIssues.filter(i => i.severity === "yellow").length;
+
   // ── Tech chip building ─────────────────────────────────────────────────────
   // Prefer the structured fingerprint (real HTML signals). Falls back to
   // text-based heuristics only for scans performed before the fingerprint
@@ -1956,18 +1969,47 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ④b STARTER RESULTS PANEL — Score rings, Top-Priorities, Accordion, Export */}
+          {/* ④b STARTER RESULTS PANEL — Ebene 1: Score rings + Ebene 2: Accordion */}
           <StarterResultsPanel
-            issues={issues}
-            redCount={redCount}
-            yellowCount={yellowCount}
+            issues={panelIssues}
+            redCount={consolidatedRedCount}
+            yellowCount={consolidatedYellowCount}
             speedScore={speedScore}
             plan={plan}
             lastScan={!!lastScan}
             focusMode={isNewScan}
           />
 
-          {/* ⑤ PERFORMANCE SNAPSHOT — hidden in focus mode */}
+          {/* ─── EBENE 3: DEEP-SCAN MAP ─────────────────────────────────────── */}
+          {!isNewScan && hasData && unterseiten && unterseiten.length > 0 && (
+            <div ref={mapSectionRef}>
+              <DeepScanMap
+                homepageUrl={lastScan?.url ?? ""}
+                homepageIssueCount={panelIssues.length}
+                unterseiten={unterseiten}
+                isFree={isFree}
+                onOpenDrawer={setDrawerPageUrl}
+                checkedUrls={checkedUrls}
+                onToggleChecked={toggleChecked}
+                highlightUrl={highlightUrl}
+              />
+            </div>
+          )}
+
+          {/* Side drawer */}
+          {!isNewScan && drawerPageUrl && unterseiten && (
+            <DrawerPanel
+              pageUrl={drawerPageUrl}
+              unterseiten={unterseiten}
+              onClose={() => setDrawerPageUrl(null)}
+              isChecked={checkedUrls.has(drawerPageUrl)}
+              onToggleChecked={() => toggleChecked(drawerPageUrl)}
+            />
+          )}
+
+          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
+
+          {/* ─── EBENE 4: PERFORMANCE & SEARCH CARDS ───────────────────────── */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <SectionLabel>Scan · Sichtbarkeit &amp; Performance</SectionLabel>
@@ -1979,7 +2021,12 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 tip?: { text: string; cta?: { label: string; href: string } };
               }> => {
                 const scanUrl = lastScan?.url ?? "";
-                const psUrl = scanUrl ? `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(scanUrl)}` : "https://pagespeed.web.dev/";
+                const psUrl = scanUrl
+                  ? `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(scanUrl)}`
+                  : "https://pagespeed.web.dev/";
+                const gscUrl = scanUrl
+                  ? `https://search.google.com/search-console/index?resource_id=${encodeURIComponent(scanUrl)}`
+                  : "https://search.google.com/search-console";
                 return [
                   {
                     label: "Indexierte URLs",
@@ -1988,7 +2035,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     color: hasData ? D.blueSoft : D.textFaint,
                     tip: hasData && indexedUrls === 0 ? {
                       text: "Deine Seite ist noch nicht bei Google registriert.",
-                      cta: { label: "Search Console öffnen", href: "https://search.google.com/search-console" },
+                      cta: { label: "Search Console öffnen →", href: gscUrl },
                     } : undefined,
                   },
                   {
@@ -2008,7 +2055,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     color: hasData ? (lcpMs < 2500 ? D.green : D.amber) : D.textFaint,
                     tip: hasData && lcpMs >= 2500 ? {
                       text: "Bilder komprimieren & Caching-Plugin aktivieren senkt LCP spürbar.",
-                      cta: { label: "PageSpeed Details", href: psUrl },
+                      cta: { label: "PageSpeed Insights →", href: psUrl },
                     } : undefined,
                   },
                   {
@@ -2018,6 +2065,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     color: hasData ? (mobileOk ? D.green : D.red) : D.textFaint,
                     tip: hasData && !mobileOk ? {
                       text: "Schriftgrößen ≥ 16px und genug Abstand zwischen Buttons auf Smartphones.",
+                      cta: { label: "Mobile Test →", href: `https://search.google.com/test/mobile-friendly?url=${encodeURIComponent(scanUrl)}` },
                     } : undefined,
                   },
                 ];
@@ -2038,7 +2086,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </p>
                   <p style={{ margin: 0, fontSize: 11, color: D.textMuted }}>{tile.sub}</p>
 
-                  {/* Action-Guide Tip — only when a value needs improvement */}
                   {tile.tip && (
                     <div style={{
                       marginTop: 10,
@@ -2048,7 +2095,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       border: "1px solid rgba(251,191,36,0.16)",
                     }}>
                       <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-                        {/* Lightbulb icon */}
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24"
                           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                           style={{ flexShrink: 0, marginTop: 1 }}>
@@ -2072,7 +2118,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                             border: "1px solid rgba(251,191,36,0.2)",
                           }}
                         >
-                          {tile.tip.cta.label} →
+                          {tile.tip.cta.label}
                         </a>
                       )}
                     </div>
@@ -2080,7 +2126,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
               ))}
             </div>
-            {/* Snapshot disclaimer */}
             <p style={{ margin: "10px 0 0", fontSize: 11, color: D.textFaint, lineHeight: 1.6, fontWeight: 400 }}>
               Diese Werte basieren auf Scan-Schätzungen.{" "}
               <Link href="/pricing" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
@@ -2089,7 +2134,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               {" "}sind im Professional Plan verfügbar.
             </p>
 
-            {/* Deep-Scan info */}
             {hasData && (
               <div style={{
                 marginTop: 14,
@@ -2122,35 +2166,6 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               </div>
             )}
           </div>}
-
-          {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
-
-          {/* ⑥ DEEP-SCAN MAP — hidden in focus mode */}
-          {!isNewScan && hasData && unterseiten && unterseiten.length > 0 && (
-            <div ref={mapSectionRef}>
-              <DeepScanMap
-                homepageUrl={lastScan?.url ?? ""}
-                homepageIssueCount={issues.length}
-                unterseiten={unterseiten}
-                isFree={isFree}
-                onOpenDrawer={setDrawerPageUrl}
-                checkedUrls={checkedUrls}
-                onToggleChecked={toggleChecked}
-                highlightUrl={highlightUrl}
-              />
-            </div>
-          )}
-
-          {/* Side drawer */}
-          {!isNewScan && drawerPageUrl && unterseiten && (
-            <DrawerPanel
-              pageUrl={drawerPageUrl}
-              unterseiten={unterseiten}
-              onClose={() => setDrawerPageUrl(null)}
-              isChecked={checkedUrls.has(drawerPageUrl)}
-              onToggleChecked={() => toggleChecked(drawerPageUrl)}
-            />
-          )}
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 

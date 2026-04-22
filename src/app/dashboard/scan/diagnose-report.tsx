@@ -529,12 +529,14 @@ export default function DiagnoseReport({
   const issueCount = issueCountProp ?? (critCount + warnCount);
 
   // If the AI text has no emoji-formatted issues but the DB says there ARE issues,
-  // derive a fallback score from the DB count — never falsely show 100/green.
+  // derive a fallback score — never falsely show 100/green when issues exist.
+  // issueCountProp is the SUM of all .count values (e.g. 241 total items), not just
+  // issue types, so we use sqrt-scaling to keep the score in a sensible range.
   const hasDbIssues = (issueCountProp ?? 0) > 0;
   const score = allIssues.length > 0
     ? calcScore(allIssues)
     : hasDbIssues
-      ? Math.max(5, Math.min(62, 100 - (issueCountProp! * 2)))
+      ? Math.max(8, Math.round(100 - Math.sqrt(issueCountProp!) * 5.5))
       : 100;
 
   const summarySection = sections.find(s =>

@@ -254,6 +254,23 @@ function ProfessionalView({ scans, kpis, monthLabel }: { scans: ScanHistoryItem[
         @media print {
           body > * { display: none !important; }
           #wf-pro-print { display: block !important; }
+          html, body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          #wf-pro-print * {
+            background-color: transparent !important;
+            color: #111111 !important;
+            border-color: #d1d5db !important;
+            box-shadow: none !important;
+          }
+          #wf-pro-print [style*="color: rgba"],
+          #wf-pro-print [style*="color: #fff"] {
+            color: #111111 !important;
+          }
+          @page { margin: 18mm 16mm; size: A4 portrait; }
         }
         @media screen { #wf-pro-print { display: none; } }
         @keyframes wf-rpt-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
@@ -549,6 +566,23 @@ function AgencyView({
         @media print {
           body > * { display: none !important; }
           #wf-agency-print { display: block !important; }
+          html, body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          #wf-agency-print * {
+            background-color: transparent !important;
+            color: #111111 !important;
+            border-color: #d1d5db !important;
+            box-shadow: none !important;
+          }
+          #wf-agency-print [style*="color: rgba"],
+          #wf-agency-print [style*="color: #fff"] {
+            color: #111111 !important;
+          }
+          @page { margin: 18mm 16mm; size: A4 portrait; }
         }
         @media screen { #wf-agency-print { display: none; } }
       `}</style>

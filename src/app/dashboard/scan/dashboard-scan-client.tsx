@@ -370,6 +370,7 @@ export default function DashboardScanClient({
   const [fromCache, setFromCache] = useState(false);
   const [cachedAt, setCachedAt] = useState<string | null>(null);
   const [isForceRefreshing, setIsForceRefreshing] = useState(false);
+  const [dbIssueCount, setDbIssueCount] = useState<number | undefined>(undefined);
 
   // Full-site specific state
   const [fsProgress, setFsProgress] = useState<FullSiteProgress | null>(null);
@@ -451,7 +452,7 @@ export default function DashboardScanClient({
     setState("scanning");
     setScanStep(0);
     setDiagnose(""); setError(""); setWcagViolations([]); setPerfData(null);
-    setSavedScanId(null); setFromCache(false); setCachedAt(null);
+    setSavedScanId(null); setFromCache(false); setCachedAt(null); setDbIssueCount(undefined);
 
     // Progressive step animation — advance every ~1.4 s, stop one before the last
     const steps = SCAN_STEPS[tab as Exclude<TabType, "fullsite">];
@@ -477,6 +478,7 @@ export default function DashboardScanClient({
         setDiagnose(data.diagnose ?? "");
         setFromCache(data.fromCache === true);
         setCachedAt(data.cachedAt ?? null);
+        if (typeof data.issueCount === "number") setDbIssueCount(data.issueCount);
         if (tab === "wcag") setWcagViolations(data.violations ?? []);
         if (tab === "performance") setPerfData({ scores: data.scores, vitals: data.vitals, opportunities: data.opportunities });
         if (data.scanId) setSavedScanId(data.scanId);
@@ -1332,7 +1334,7 @@ export default function DashboardScanClient({
               onRefresh={handleForceRefresh}
               url={url}
               totalPages={fsResult?.totalPages}
-              issueCount={fsResult?.issueCount}
+              issueCount={fsResult?.issueCount ?? dbIssueCount}
               scannedAt={cachedAt}
             />
           )}

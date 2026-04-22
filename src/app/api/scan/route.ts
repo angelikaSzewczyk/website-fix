@@ -495,30 +495,32 @@ export async function POST(req: NextRequest) {
       if (cached && cacheHasAudit) {
         const { cachedAt, ...payload } = cached;
         let scanId: string | null = null;
+        const fp = cached.scanData.techFingerprint;
+        type CachedAudit = {
+          gescannteSeiten?: number;
+          unterseiten?: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number }[];
+          altTexte?: { fehlend?: number; gesamt?: number };
+          duplicateTitles?: { title: string; seiten: string[] }[];
+          duplicateMetas?: { meta: string; seiten: string[] }[];
+          brokenLinks?: { url: string; status: number }[];
+          verwaistSeiten?: string[];
+        };
+        const cachedAudit = cached.scanData.audit as CachedAudit | undefined;
+        const cachedUnterseiten = cachedAudit?.unterseiten ?? [];
+        const cachedIssuesJson = buildIssuesJson(
+          cached.scanData,
+          cachedUnterseiten,
+          cachedAudit?.altTexte?.fehlend ?? 0,
+          cachedAudit?.altTexte?.gesamt ?? 0,
+          cachedAudit?.duplicateTitles ?? [],
+          cachedAudit?.duplicateMetas ?? [],
+          cachedAudit?.brokenLinks ?? [],
+          cachedAudit?.verwaistSeiten ?? [],
+        );
+        // Sum of all .count values = total optimisations (e.g. 241), not just issue types.
+        const totalCachedIssues = cachedIssuesJson.reduce((a, i) => a + i.count, 0);
         if (userId) {
           const issueCount = computeIssueCount(cached.scanData);
-          const fp = cached.scanData.techFingerprint;
-          type CachedAudit = {
-            gescannteSeiten?: number;
-            unterseiten?: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number }[];
-            altTexte?: { fehlend?: number; gesamt?: number };
-            duplicateTitles?: { title: string; seiten: string[] }[];
-            duplicateMetas?: { meta: string; seiten: string[] }[];
-            brokenLinks?: { url: string; status: number }[];
-            verwaistSeiten?: string[];
-          };
-          const cachedAudit = cached.scanData.audit as CachedAudit | undefined;
-          const cachedUnterseiten = cachedAudit?.unterseiten ?? [];
-          const cachedIssuesJson = buildIssuesJson(
-            cached.scanData,
-            cachedUnterseiten,
-            cachedAudit?.altTexte?.fehlend ?? 0,
-            cachedAudit?.altTexte?.gesamt ?? 0,
-            cachedAudit?.duplicateTitles ?? [],
-            cachedAudit?.duplicateMetas ?? [],
-            cachedAudit?.brokenLinks ?? [],
-            cachedAudit?.verwaistSeiten ?? [],
-          );
           scanId = await saveUserScan({
             userId,
             url: targetUrl,
@@ -531,7 +533,8 @@ export async function POST(req: NextRequest) {
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
-        return NextResponse.json({ success: true, fromCache: true, cachedAt, scanId, ...payload });
+        // Spread payload last so our issueCount (real sum) wins over any stale cached value.
+        return NextResponse.json({ success: true, fromCache: true, cachedAt, scanId, ...payload, issueCount: totalCachedIssues });
       }
     }
 

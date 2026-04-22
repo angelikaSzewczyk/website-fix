@@ -396,6 +396,33 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── Skeleton ring (shown while scores haven't loaded yet) ────────────────────
+function SkeletonRing({ label }: { label: string }) {
+  return (
+    <div style={{ textAlign: "center", padding: "8px 0" }}>
+      <div style={{
+        position: "relative", width: 106, height: 106, margin: "0 auto 10px",
+        borderRadius: "50%",
+        background: "linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)",
+        backgroundSize: "400px 100%",
+        animation: "wf-shimmer 1.6s infinite",
+      }}>
+        <svg width="106" height="106" viewBox="0 0 106 106">
+          <circle cx="53" cy="53" r="42" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+        </svg>
+      </div>
+      <div style={{
+        height: 10, width: 60, margin: "0 auto",
+        borderRadius: 6,
+        background: "linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)",
+        backgroundSize: "400px 100%",
+        animation: "wf-shimmer 1.6s infinite",
+      }} />
+      <p style={{ margin: "6px 0 0", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.2)" }}>{label}</p>
+    </div>
+  );
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
@@ -404,7 +431,32 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   const [openItems, setOpenItems]       = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
 
-  if (!lastScan || issues.length === 0) return null;
+  if (!lastScan) return null;
+
+  // Scan data present but issues array still empty → show skeleton to prevent "Score 100" flash
+  if (issues.length === 0) {
+    return (
+      <div className="wf-print-root" style={{ marginBottom: 28 }}>
+        <style>{`
+          @keyframes wf-shimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position:  400px 0; }
+          }
+        `}</style>
+        <div className="wf-print-card" style={{
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 16, padding: "28px 32px",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24 }}>
+            <SkeletonRing label="SEO" />
+            <SkeletonRing label="Technik" />
+            <SkeletonRing label="Sicherheit" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Score computation ─────────────────────────────────────────────────────
   const seoScore  = clamp(100 - redCount * 14 - yellowCount * 5, 12, 94);
