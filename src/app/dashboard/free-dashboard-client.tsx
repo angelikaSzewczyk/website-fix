@@ -486,12 +486,14 @@ function DrawerCard({
 function DrawerPanel({
   pageUrl,
   unterseiten,
+  globalIssues,
   onClose,
   isChecked,
   onToggleChecked,
 }: {
   pageUrl: string;
   unterseiten: UnterseiteProp[];
+  globalIssues?: ParsedIssueProp[];
   onClose: () => void;
   isChecked: boolean;
   onToggleChecked: () => void;
@@ -503,7 +505,9 @@ function DrawerPanel({
 
   type DrawerEntry = { fixKey: string | null; label: string; kind: "critical" | "warning"; count?: number; images?: string[]; fields?: string[] };
   const entries: DrawerEntry[] = [];
+
   if (page) {
+    // Subpage: build entries from per-page crawl data
     if (!page.title || page.title === "(kein Title)")
       entries.push({ fixKey: "title", label: "Title-Tag fehlt", kind: "critical" });
     if (!page.h1 || page.h1 === "(kein H1)")
@@ -518,6 +522,17 @@ function DrawerPanel({
       entries.push({ fixKey: "label", label: `${page.inputsWithoutLabel} Formularfelder ohne Label — beeinträchtigt UX & Conversion`, kind: "warning", count: page.inputsWithoutLabel, fields: page.inputsWithoutLabelFields ?? [] });
     if ((page.buttonsWithoutText ?? 0) > 0)
       entries.push({ fixKey: "button", label: `${page.buttonsWithoutText} Buttons ohne Text — fehlende Nutzerführung`, kind: "warning", count: page.buttonsWithoutText });
+  } else if (globalIssues && globalIssues.length > 0) {
+    // Homepage (not in unterseiten): show the consolidated scan issues
+    for (const issue of globalIssues) {
+      entries.push({
+        fixKey: null,
+        label: issue.count && issue.count > 1
+          ? `${issue.title} (${issue.count}×)`
+          : issue.title,
+        kind: issue.severity === "red" ? "critical" : "warning",
+      });
+    }
   }
 
   return (
@@ -693,7 +708,7 @@ function DrawerPanel({
 }
 
 // ─── Deep-Scan Map ────────────────────────────────────────────────────────────
-function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onOpenDrawer, checkedUrls, onToggleChecked, highlightUrl }: {
+function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onOpenDrawer, checkedUrls, onToggleChecked, highlightUrl, activeUrl }: {
   homepageUrl: string;
   homepageIssueCount: number;
   unterseiten: UnterseiteProp[];
@@ -702,6 +717,7 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
   checkedUrls: Set<string>;
   onToggleChecked: (url: string) => void;
   highlightUrl?: string | null;
+  activeUrl?: string | null;
 }) {
   const [expanded, setExpanded] = useState<number | null>(null);
   void expanded; void setExpanded;
@@ -712,46 +728,57 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
       <SectionHead>Deep-Scan Map</SectionHead>
       <Card style={{ padding: 0, overflow: "hidden" }}>
         {/* ── Startseite ── */}
-        <div style={{
-          padding: "13px 20px",
-          borderBottom: `1px solid ${D.divider}`,
-          background: "rgba(0,123,255,0.035)",
-          display: "flex", alignItems: "center", gap: 10,
-        }}>
-          <span style={{
-            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-            background: "rgba(0,123,255,0.12)", color: D.blueSoft,
-            border: "1px solid rgba(0,123,255,0.22)", whiteSpace: "nowrap", flexShrink: 0,
-          }}>START</span>
-          <span style={{
-            fontSize: 12, fontWeight: 600, color: D.text, fontFamily: "monospace",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
-          }}>
-            {homepageUrl}
-          </span>
-          <span style={{
-            fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
-            color: homepageIssueCount > 0 ? D.amber : D.green,
-            background: homepageIssueCount > 0 ? D.amberBg : D.greenBg,
-            border: `1px solid ${homepageIssueCount > 0 ? D.amberBorder : D.greenBorder}`,
-            padding: "2px 8px", borderRadius: 4,
-          }}>
-            {homepageIssueCount > 0 ? `${homepageIssueCount} Optimierungen` : "✓ Optimiert"}
-          </span>
-          {homepageIssueCount > 0 && (
-            <button
-              onClick={() => onOpenDrawer(homepageUrl)}
+        {(() => {
+          const isHomeActive = activeUrl === homepageUrl;
+          return (
+            <div
+              onClick={() => homepageIssueCount > 0 && onOpenDrawer(homepageUrl)}
               style={{
-                flexShrink: 0, fontSize: 11, fontWeight: 700,
-                padding: "3px 10px", borderRadius: 4, cursor: "pointer",
-                background: "rgba(251,191,36,0.08)", border: `1px solid rgba(251,191,36,0.28)`,
-                color: D.amber,
+                padding: "13px 20px",
+                borderBottom: `1px solid ${D.divider}`,
+                background: isHomeActive
+                  ? "rgba(251,191,36,0.10)"
+                  : "rgba(0,123,255,0.035)",
+                borderLeft: isHomeActive ? `3px solid ${D.amber}` : "3px solid transparent",
+                display: "flex", alignItems: "center", gap: 10,
+                cursor: homepageIssueCount > 0 ? "pointer" : "default",
+                transition: "background 0.15s",
               }}
             >
-              SEO-Fix →
-            </button>
-          )}
-        </div>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                background: "rgba(0,123,255,0.12)", color: D.blueSoft,
+                border: "1px solid rgba(0,123,255,0.22)", whiteSpace: "nowrap", flexShrink: 0,
+              }}>START</span>
+              <span style={{
+                fontSize: 12, fontWeight: 600, color: D.text, fontFamily: "monospace",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+              }}>
+                {homepageUrl}
+              </span>
+              <span style={{
+                fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
+                color: homepageIssueCount > 0 ? D.amber : D.green,
+                background: homepageIssueCount > 0 ? D.amberBg : D.greenBg,
+                border: `1px solid ${homepageIssueCount > 0 ? D.amberBorder : D.greenBorder}`,
+                padding: "2px 8px", borderRadius: 4,
+              }}>
+                {homepageIssueCount > 0 ? `${homepageIssueCount} Optimierungen` : "✓ Optimiert"}
+              </span>
+              {homepageIssueCount > 0 && (
+                <span style={{
+                  flexShrink: 0, fontSize: 11, fontWeight: 700,
+                  padding: "3px 10px", borderRadius: 4,
+                  background: isHomeActive ? "rgba(251,191,36,0.18)" : "rgba(251,191,36,0.08)",
+                  border: `1px solid rgba(251,191,36,0.28)`,
+                  color: D.amber,
+                }}>
+                  SEO-Fix →
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── Unterseiten ── */}
         {unterseiten.map((page, i) => {
@@ -768,19 +795,29 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
           const isChecked = checkedUrls.has(page.url);
 
           const isHighlighted = highlightUrl === page.url;
+          const isActive      = activeUrl === page.url;
           return (
-            <div key={page.url} style={{
-              borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
-              background: isHighlighted ? "rgba(251,191,36,0.12)" : isChecked ? "rgba(74,222,128,0.04)" : "transparent",
-              opacity: isChecked ? 0.65 : 1,
-              transition: "background 0.3s, opacity 0.2s",
-              borderLeft: isHighlighted ? `3px solid ${D.amber}` : "3px solid transparent",
-            }}>
+            <div
+              key={page.url}
+              onClick={() => pageIssues > 0 && onOpenDrawer(page.url)}
+              style={{
+                borderBottom: isLast ? "none" : `1px solid ${D.divider}`,
+                background: isActive
+                  ? "rgba(251,191,36,0.10)"
+                  : isHighlighted ? "rgba(251,191,36,0.12)"
+                  : isChecked ? "rgba(74,222,128,0.04)"
+                  : "transparent",
+                opacity: isChecked ? 0.65 : 1,
+                transition: "background 0.15s, opacity 0.2s",
+                borderLeft: (isActive || isHighlighted) ? `3px solid ${D.amber}` : "3px solid transparent",
+                cursor: pageIssues > 0 ? "pointer" : "default",
+              }}
+            >
               <div style={{ padding: "11px 20px", display: "flex", alignItems: "center", gap: 8 }}>
-                {/* Geprüft checkbox */}
+                {/* Geprüft checkbox — stopPropagation so it doesn't open drawer */}
                 <button
                   title={isChecked ? "Als offen markieren" : "Als geprüft markieren"}
-                  onClick={() => onToggleChecked(page.url)}
+                  onClick={e => { e.stopPropagation(); onToggleChecked(page.url); }}
                   style={{
                     flexShrink: 0, width: 20, height: 20, borderRadius: 4,
                     border: `1.5px solid ${isChecked ? D.greenBorder : D.border}`,
@@ -792,7 +829,7 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
                   {isChecked ? "✓" : ""}
                 </button>
 
-                {/* Status badge — amber for findable optimizations, green for clean pages */}
+                {/* Status badge */}
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
                   background: pageIssues > 0 ? D.amberBg : D.greenBg,
@@ -823,19 +860,17 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
                   </span>
                 )}
 
-                {/* SEO-Fix button — opens drawer */}
+                {/* SEO-Fix label — visual affordance, row itself is the click target */}
                 {pageIssues > 0 && (
-                  <button
-                    onClick={() => onOpenDrawer(page.url)}
-                    style={{
-                      flexShrink: 0, fontSize: 11, fontWeight: 700,
-                      padding: "3px 10px", borderRadius: 4, cursor: "pointer",
-                      background: "rgba(251,191,36,0.08)", border: `1px solid rgba(251,191,36,0.28)`,
-                      color: D.amber, transition: "background 0.15s",
-                    }}
-                  >
+                  <span style={{
+                    flexShrink: 0, fontSize: 11, fontWeight: 700,
+                    padding: "3px 10px", borderRadius: 4,
+                    background: isActive ? "rgba(251,191,36,0.18)" : "rgba(251,191,36,0.08)",
+                    border: `1px solid rgba(251,191,36,0.28)`,
+                    color: D.amber,
+                  }}>
                     SEO-Fix →
-                  </button>
+                  </span>
                 )}
               </div>
             </div>
@@ -2004,6 +2039,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 checkedUrls={checkedUrls}
                 onToggleChecked={toggleChecked}
                 highlightUrl={highlightUrl}
+                activeUrl={drawerPageUrl}
               />
             </div>
           )}
@@ -2013,6 +2049,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <DrawerPanel
               pageUrl={drawerPageUrl}
               unterseiten={unterseiten}
+              globalIssues={panelIssues}
               onClose={() => setDrawerPageUrl(null)}
               isChecked={checkedUrls.has(drawerPageUrl)}
               onToggleChecked={() => toggleChecked(drawerPageUrl)}
