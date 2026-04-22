@@ -72,10 +72,14 @@ function quickFix(issue: IssueProp): string {
 // ─── Score-Breakdown helpers ──────────────────────────────────────────────────
 interface Deduction { label: string; pts: number; sortedIdx: number; }
 
-// Replaces "BFSG-Verstoß:" prefix with friendly wording — never accuse, always advise.
+// Normalises any BFSG/Barrierefreiheit variant into consistent "Barrierefreiheit: …" wording.
 function friendlyLabel(raw: string): string {
   return raw
     .replace(/^BFSG-Verstoß:\s*/i, "Barrierefreiheit: ")
+    .replace(/^Barrierefreiheits?-Verstoß:\s*/i, "Barrierefreiheit: ")
+    .replace(/\s*\(BFSG-Risiko\)\s*$/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
     .replace(/^Barrierefreiheit:\s+Bilder-Beschreibung fehlt$/i, "Barrierefreiheit: Bilder ohne Beschreibung")
     .replace(/^Fehlendes?\s+Alt-Attribut$/i, "Barrierefreiheit: Bilder ohne Beschreibung");
 }
@@ -102,12 +106,14 @@ function getSecDeductions(sorted: IssueProp[]): Deduction[] {
   sorted.forEach((issue, idx) => {
     if (out.length >= 3) return;
     const t = (issue.title + " " + issue.body).toLowerCase();
+    // Never put accessibility issues in the Security column
+    if (/barriere|bfsg|alt.?text|screenreader|alternativtext/i.test(t)) return;
     let pts = 0;
-    if (/ssl|https/i.test(t))                                      pts = 50;
-    else if (/cookie|consent|dsgvo|datenschutz/i.test(t))         pts = 30;
-    else if (/bfsg|barriere|alt.?text|alternativtext/i.test(t) && issue.severity === "red") pts = 20;
-    else if (/formular|label/i.test(t))                            pts = 15;
-    else if (issue.severity === "red")                             pts = 20;
+    if (/ssl|https/i.test(t))                                pts = 50;
+    else if (/cookie|consent|dsgvo|datenschutz/i.test(t))   pts = 30;
+    else if (/formular|label/i.test(t))                      pts = 15;
+    else if (/mixed.?content|unsicher.*ressource/i.test(t))  pts = 20;
+    else if (/sicherheit|security/i.test(t) && issue.severity === "red") pts = 20;
     if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
@@ -118,13 +124,16 @@ function getTechDeductions(sorted: IssueProp[]): Deduction[] {
   sorted.forEach((issue, idx) => {
     if (out.length >= 3) return;
     const t = (issue.title + " " + issue.body).toLowerCase();
+    // Never put accessibility issues in the Technik column
+    if (/barriere|bfsg|alt.?text|screenreader|alternativtext/i.test(t)) return;
     let pts = 0;
-    if (/lcp|ladezeit|pagespeed|performance|core web/i.test(t)) pts = 15;
-    else if (/cls|layout.?shift/i.test(t))                      pts = 10;
-    else if (/caching|cache/i.test(t))                          pts = 8;
-    else if (/bild|image|kompri/i.test(t))                      pts = 8;
-    else if (issue.category === "speed" && issue.severity === "red") pts = 15;
-    else if (issue.category === "speed")                         pts = 8;
+    if (/lcp|ladezeit|pagespeed|performance|core web/i.test(t))         pts = 15;
+    else if (/cls|layout.?shift/i.test(t))                               pts = 10;
+    else if (/caching|cache/i.test(t))                                   pts = 8;
+    else if (/bildkompri|komprimier|webp|next.gen/i.test(t))             pts = 8;
+    else if (/redirect.?kette|redirect.?loop/i.test(t))                  pts = 8;
+    else if (issue.category === "speed" && issue.severity === "red")     pts = 15;
+    else if (issue.category === "speed")                                  pts = 8;
     if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
