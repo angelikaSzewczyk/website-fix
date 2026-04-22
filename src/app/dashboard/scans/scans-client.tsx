@@ -42,6 +42,8 @@ export interface ScanRow {
   url: string;
   created_at: string;
   issue_count: number | null;
+  red_count:   number; // consolidated critical issues (live from issues_json)
+  yellow_count: number; // consolidated warning issues
 }
 
 interface Props {
@@ -132,8 +134,8 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
               {scans.map(scan => {
                 const domain = scan.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
                 const date   = new Date(scan.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
-                const issues = scan.issue_count ?? 0;
-                const accent = issues === 0 ? D.green : issues <= 3 ? D.amber : D.red;
+                const { red_count: red, yellow_count: yellow } = scan;
+                const dotColor = red > 0 ? D.red : yellow > 0 ? D.amber : D.green;
                 return (
                   <div key={scan.id} style={{
                     display: "flex", alignItems: "center", gap: 14,
@@ -141,7 +143,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
                     background: D.card, border: `1px solid ${D.border}`,
                   }}>
                     {/* Severity dot */}
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: accent, flexShrink: 0 }} />
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
 
                     {/* Domain + date */}
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -151,16 +153,36 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans 
                       <div style={{ fontSize: 11, color: D.textMuted, marginTop: 2 }}>{date}</div>
                     </div>
 
-                    {/* Issue badge */}
-                    <span style={{
-                      fontSize: 11, fontWeight: 700,
-                      padding: "2px 9px", borderRadius: 20,
-                      background: issues === 0 ? D.greenBg : issues <= 3 ? D.amberBg : D.redBg,
-                      border: `1px solid ${issues === 0 ? D.greenBorder : issues <= 3 ? D.amberBorder : D.redBorder}`,
-                      color: accent, whiteSpace: "nowrap", flexShrink: 0,
-                    }}>
-                      {issues === 0 ? "Keine Probleme" : `${issues} Problem${issues > 1 ? "e" : ""}`}
-                    </span>
+                    {/* Two-badge system: Kritisch + Hinweise (mirrors StarterResultsPanel labels) */}
+                    <div style={{ display: "flex", gap: 5, flexShrink: 0, flexWrap: "nowrap" }}>
+                      {red > 0 && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                          background: D.redBg, border: `1px solid ${D.redBorder}`, color: D.red,
+                          whiteSpace: "nowrap",
+                        }}>
+                          {red} Kritisch
+                        </span>
+                      )}
+                      {yellow > 0 && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                          background: D.amberBg, border: `1px solid ${D.amberBorder}`, color: D.amber,
+                          whiteSpace: "nowrap",
+                        }}>
+                          {yellow} Hinweise
+                        </span>
+                      )}
+                      {red === 0 && yellow === 0 && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
+                          background: D.greenBg, border: `1px solid ${D.greenBorder}`, color: D.green,
+                          whiteSpace: "nowrap",
+                        }}>
+                          Keine Probleme
+                        </span>
+                      )}
+                    </div>
 
                     {/* Direct link to scan detail / PDF */}
                     <Link href={`/dashboard/scans/${scan.id}`} style={{
