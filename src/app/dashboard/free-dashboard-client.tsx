@@ -752,7 +752,7 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
   void expanded; void setExpanded;
 
   return (
-    <div style={{ marginBottom: 28 }}>
+    <div className="wf-deep-scan-map" style={{ marginBottom: 28 }}>
       <SectionLabel>Scan-Ergebnisse · Alle analysierten Seiten</SectionLabel>
       <SectionHead>Deep-Scan Map</SectionHead>
       <Card style={{ padding: 0, overflow: "hidden" }}>

@@ -542,19 +542,21 @@ export default async function DashboardPage() {
   let lastScanIssuesJson: ParsedIssue[] | null = null;
   let techFingerprint: import("@/lib/tech-detector").TechFingerprint | null = null;
   let lastScanTotalPages: number | null = null;
+  let lastScanSpeedScore: number | null = null;
   let lastScanUnterseiten: { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number; altMissingImages?: string[]; metaDescription?: string; inputsWithoutLabel?: number; inputsWithoutLabelFields?: string[]; buttonsWithoutText?: number; foundVia?: string }[] | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
-        SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json
+        SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json, speed_score
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown }[];
+      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null }[];
       lastScanResult = rows[0]?.result ?? null;
       // issues_json is the ground truth — stored during scan, no re-parsing needed
       lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
       techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
       lastScanTotalPages = rows[0]?.total_pages ?? null;
+      lastScanSpeedScore = rows[0]?.speed_score ?? null;
       lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;
     } catch {}
   }
@@ -602,7 +604,8 @@ export default async function DashboardPage() {
   const techIssues   = issues.filter(i => i.category === "technik");
 
   const bfsgOk     = rechtIssues.length === 0;
-  const speedScore = Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
+  // Use persisted speed_score when available (avoids formula drift between live + archive views)
+  const speedScore = lastScanSpeedScore ?? Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
 
   // Agency slots: Starter = 10, Pro = unlimited
   const clientSlotLimit = plan === "agency-pro" ? 999 : 10;

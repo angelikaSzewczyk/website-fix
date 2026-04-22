@@ -20,6 +20,7 @@ type Scan = {
   created_at: string;
   issue_count: number | null;
   issues_json: string | null;
+  speed_score: number | null;
 };
 
 // ─── Consolidation helpers ─────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
 
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`
-    SELECT id, url, type, created_at, issue_count, issues_json::text AS issues_json
+    SELECT id, url, type, created_at, issue_count, issues_json::text AS issues_json, speed_score
     FROM scans
     WHERE id = ${params.id} AND user_id = ${session.user.id}
     LIMIT 1
@@ -97,10 +98,11 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
   const redCount    = panelIssues.filter(i => i.severity === "red").reduce((s, i) => s + (i.count ?? 1), 0);
   const yellowCount = panelIssues.filter(i => i.severity === "yellow").reduce((s, i) => s + (i.count ?? 1), 0);
 
-  // Speed score not stored per-scan — only the Technik ring uses this.
-  // Count only speed/tech issues (not recht/compliance) so BFSG findings don't wrongly tank the Technik ring.
+  // Use persisted speed_score when available (stored at scan time, same formula as live dashboard).
+  // Fallback: estimate from speed/tech issue count for older scans without the column.
   const techIssueCount = panelIssues.filter(i => i.category === "speed" || i.category === "technik").length;
-  const speedScore = scan.issue_count === null ? 72 : Math.max(10, Math.min(92, 100 - techIssueCount * 12));
+  const speedScore = scan.speed_score
+    ?? (scan.issue_count === null ? 72 : Math.max(10, Math.min(92, 100 - techIssueCount * 12)));
 
   return (
     <ScanDetailClient

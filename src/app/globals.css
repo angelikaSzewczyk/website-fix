@@ -3154,17 +3154,36 @@ footer a, nav a.footerLink {
   }
   @page { margin: 18mm 16mm; size: A4 portrait; }
 
-  /* ─── 2. NUCLEAR BACKGROUND STRIP ─────────────────────────────────────── */
-  /* Strips ALL dark backgrounds (incl. inline style="background:…") */
+  /* ─── 2. TARGETED BACKGROUND STRIP ────────────────────────────────────── */
+  /* Strips dark backgrounds while preserving report structure */
   * {
     background-color: transparent !important;
     background-image: none !important;
     box-shadow: none !important;
-    border-radius: 0 !important;
     color: #111111 !important;
     border-color: #d1d5db !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+
+  /* Restore card backgrounds so sections stay visually separated */
+  .wf-print-card {
+    background-color: #f8fafc !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    margin-bottom: 16pt !important;
+  }
+  .wf-print-accordion {
+    background-color: #ffffff !important;
+    border-radius: 8px !important;
+  }
+  .wf-deep-scan-map {
+    background-color: #f8fafc !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 20pt !important;
+    break-inside: avoid !important;
   }
 
   /* ─── 3. LAYOUT CHROME — HIDE ──────────────────────────────────────────── */
@@ -3230,12 +3249,6 @@ footer a, nav a.footerLink {
     -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
   }
 
-  /* ─── 9. CARD BORDERS (sections + accordion) ──────────────────────────── */
-  .wf-print-card {
-    border: 1px solid #d1d5db !important;
-    margin-bottom: 16pt !important;
-  }
-
   /* Section dividers → plain 1px black rule */
   .wf-print-root hr,
   .wf-print-root [class*="divider"] {
@@ -3261,7 +3274,14 @@ footer a, nav a.footerLink {
   #wf-aufgaben > div { break-inside: avoid !important; page-break-inside: avoid !important; }
   .wf-print-card { break-inside: avoid !important; }
 
-  /* ─── 12. SHOW PRINT-ONLY HEADER + HIDE INTERACTIVE ELEMENTS ───────────── */
+  /* ─── 12. DEEP SCAN MAP — CHECKED STATE IN PRINT ───────────────────────── */
+  /* Checked rows use inline strikethrough — preserve it and show green badge color */
+  .wf-deep-scan-map {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ─── 13. SHOW PRINT-ONLY HEADER + HIDE INTERACTIVE ELEMENTS ───────────── */
   .wf-print-header { display: flex !important; }
   .print-only      { display: block !important; }
   main { padding: 0 !important; max-width: 100% !important; }

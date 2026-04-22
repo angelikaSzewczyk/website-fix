@@ -120,6 +120,8 @@ function getSecDeductions(sorted: IssueProp[]): Deduction[] {
     else if (/sicherheit|security/i.test(t) && issue.severity === "red")  pts = 20;
     // BFSG / Barrierefreiheit = Compliance → belongs in Sicherheit
     else if (/barriere|bfsg|screenreader|alternativtext/i.test(t))        pts = 15;
+    // Impressum / Rechtstexte = Legal compliance → belongs in Sicherheit
+    else if (/impressum|rechtstext|rechtspflicht|anbieterkennzeichnung/i.test(t)) pts = 15;
     else if (/alt.?text|formular|label/i.test(t))                         pts = 10;
     if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });

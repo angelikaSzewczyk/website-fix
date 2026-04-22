@@ -137,6 +137,13 @@ function buildIssuesJson(
   return issues;
 }
 
+// ── Compute speed score from issues at scan time ─────────────
+function computeSpeedScore(issuesJson: ScanIssue[]): number {
+  const speedIssueCount  = issuesJson.filter(i => i.category === "speed").length;
+  const yellowIssueCount = issuesJson.filter(i => i.severity === "yellow").length;
+  return Math.max(10, 100 - speedIssueCount * 15 - yellowIssueCount * 8);
+}
+
 // ── Save scan to user's history ──────────────────────────────
 async function saveUserScan(params: {
   userId: string;
@@ -144,6 +151,7 @@ async function saveUserScan(params: {
   issueCount: number;
   diagnose: string;
   issuesJson: ScanIssue[];
+  speedScore: number;
   techFingerprint?: unknown;
   totalPages?: number | null;
   unterseitenJson?: unknown | null;
@@ -151,11 +159,12 @@ async function saveUserScan(params: {
   try {
     const sql = neon(process.env.DATABASE_URL!);
     const rows = await sql`
-      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, tech_fingerprint, total_pages, unterseiten_json)
+      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json)
       VALUES (
         ${params.userId}, ${params.url}, 'website',
         ${params.issueCount}, ${params.diagnose},
         ${JSON.stringify(params.issuesJson)},
+        ${params.speedScore},
         ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null},
         ${params.totalPages ?? null},
         ${params.unterseitenJson ? JSON.stringify(params.unterseitenJson) : null}
@@ -527,6 +536,7 @@ export async function POST(req: NextRequest) {
             issueCount,
             diagnose: cached.diagnose,
             issuesJson: cachedIssuesJson,
+            speedScore: computeSpeedScore(cachedIssuesJson),
             techFingerprint: fp,
             totalPages: cachedAudit?.gescannteSeiten ?? ((cachedAudit?.unterseiten?.length ?? 0) + 1),
             unterseitenJson: cachedAudit?.unterseiten ?? null,
@@ -905,7 +915,9 @@ PFLICHT-REGELN:
     // Await DB write — must complete before response so the dashboard can read it
     const savedScanId = userId
       ? await saveUserScan({
-          userId, url: targetUrl, issueCount, diagnose, issuesJson, techFingerprint,
+          userId, url: targetUrl, issueCount, diagnose, issuesJson,
+          speedScore: computeSpeedScore(issuesJson),
+          techFingerprint,
           totalPages: audit.gescannteSeiten,
           unterseitenJson: audit.unterseiten,
         })
