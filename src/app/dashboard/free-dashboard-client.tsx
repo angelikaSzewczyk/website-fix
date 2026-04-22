@@ -498,6 +498,10 @@ function DrawerPanel({
   isChecked: boolean;
   onToggleChecked: () => void;
 }) {
+  // Swipe-to-close for mobile bottom-sheet
+  const touchStartY = useRef<number>(0);
+  function handleTouchStart(e: React.TouchEvent) { touchStartY.current = e.touches[0].clientY; }
+  function handleTouchMove(e: React.TouchEvent) { if (e.touches[0].clientY - touchStartY.current > 80) onClose(); }
   const page = unterseiten.find(p => p.url === pageUrl);
   const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
   const path = toPath(pageUrl);
@@ -541,15 +545,27 @@ function DrawerPanel({
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, backdropFilter: "blur(3px)" }} />
 
       {/* Drawer */}
-      <div className="wf-drawer" style={{
-        position: "fixed", top: 0, right: 0, bottom: 0,
-        width: "min(480px, 100vw)",
-        background: "#0b0e15",
-        borderLeft: `1px solid ${D.borderMid}`,
-        zIndex: 1001, overflowY: "auto", display: "flex", flexDirection: "column",
-        boxShadow: "-8px 0 32px rgba(0,0,0,0.5)",
-        animation: "wf-drawer-slide-right 0.28s cubic-bezier(0.22,1,0.36,1) both",
-      }}>
+      <div
+        className="wf-drawer"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        style={{
+          position: "fixed", top: 0, right: 0, bottom: 0,
+          width: "min(480px, 100vw)",
+          background: "#0b0e15",
+          borderLeft: `1px solid ${D.borderMid}`,
+          zIndex: 1001, overflowY: "auto", display: "flex", flexDirection: "column",
+          boxShadow: "-8px 0 32px rgba(0,0,0,0.5)",
+          animation: "wf-drawer-slide-right 0.28s cubic-bezier(0.22,1,0.36,1) both",
+        }}
+      >
+        {/* ── Mobile drag handle (only visible on small screens via CSS) ── */}
+        <div className="wf-drawer-handle" style={{
+          display: "none", justifyContent: "center",
+          padding: "10px 0 4px", cursor: "grab", flexShrink: 0,
+        }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.18)" }} />
+        </div>
 
         {/* ── Sticky header ── */}
         <div style={{
@@ -829,15 +845,16 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
                   {isChecked ? "✓" : ""}
                 </button>
 
-                {/* Status badge */}
+                {/* Status badge — turns green immediately when page is checked off */}
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
-                  background: pageIssues > 0 ? D.amberBg : D.greenBg,
-                  color: pageIssues > 0 ? D.amber : D.green,
-                  border: `1px solid ${pageIssues > 0 ? D.amberBorder : D.greenBorder}`,
+                  background: isChecked ? D.greenBg : pageIssues > 0 ? D.amberBg : D.greenBg,
+                  color:      isChecked ? D.green  : pageIssues > 0 ? D.amber   : D.green,
+                  border: `1px solid ${isChecked ? D.greenBorder : pageIssues > 0 ? D.amberBorder : D.greenBorder}`,
                   whiteSpace: "nowrap", flexShrink: 0,
+                  transition: "background 0.2s, color 0.2s, border-color 0.2s",
                 }}>
-                  {pageIssues > 0 ? `${pageIssues} Optimierungen` : "✓ Optimiert"}
+                  {isChecked ? "✓ Geprüft" : pageIssues > 0 ? `${pageIssues} Optimierungen` : "✓ Optimiert"}
                 </span>
 
                 {/* Full URL */}
@@ -1440,6 +1457,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             border-radius: 16px 16px 0 0;
             animation: wf-drawer-slide-up 0.32s cubic-bezier(0.22,1,0.36,1) both !important;
           }
+          .wf-drawer-handle { display: flex !important; }
         }
       `}</style>
 
