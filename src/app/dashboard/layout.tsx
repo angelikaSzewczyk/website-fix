@@ -30,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const userImage = session.user.image ?? null;
 
   const isAuditPlan = plan === "free" || plan === "smart-guard" || plan === "professional" || plan === "starter";
+  const isPro       = plan === "professional" || plan === "smart-guard";
 
   // Load agency primary color for CSS variable injection (agency plans)
   let agencyPrimary = "#8df3d3";
@@ -101,15 +102,26 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const sidebarW = isAuditPlan ? FREE_SIDEBAR_W : 220;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: isAuditPlan ? "#0b0c10" : "#F0F4F8" }}>
-
+    <div
+      className={isPro ? "is-pro-plan" : ""}
+      style={{ display: "flex", minHeight: "100vh", background: isAuditPlan ? "#0b0c10" : "#F0F4F8" }}
+    >
       {/* CSS custom properties — available throughout the dashboard */}
       <style>{`
         :root {
-          --agency-primary: ${safeColor};
-          --agency-primary-bg: ${safeColor}18;
+          --agency-primary:        ${safeColor};
+          --agency-primary-bg:     ${safeColor}18;
           --agency-primary-border: ${safeColor}35;
-          --pro-accent: ${ ["professional", "smart-guard"].includes(plan) ? safeColor : safeColor };
+        }
+        /* Pro-plan global overrides */
+        .is-pro-plan {
+          --pro-emerald:        #10B981;
+          --pro-emerald-deep:   #059669;
+          --pro-emerald-bg:     rgba(16,185,129,0.07);
+          --pro-emerald-border: rgba(16,185,129,0.25);
+          --pro-gold:           #FBBF24;
+          --pro-mesh-1: radial-gradient(ellipse 60% 50% at 0% 0%,   rgba(16,185,129,0.055) 0%, transparent 70%);
+          --pro-mesh-2: radial-gradient(ellipse 50% 60% at 100% 80%, rgba(16,185,129,0.035) 0%, transparent 70%);
         }
         @media (max-width: 768px) {
           .dashboard-sidebar { display: none !important; }

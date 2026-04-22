@@ -710,87 +710,115 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
       {/* ── EXECUTIVE SUMMARY — Edit UI (Professional+, screen only) ───────── */}
       {isPro && scanId && (
         <div className="wf-no-print wf-exec-summary-edit" style={{
-          marginBottom: 24,
-          background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(141,243,211,0.15)",
-          borderRadius: 16,
-          padding: "22px 26px",
+          marginBottom: 28,
+          position: "relative",
+          borderRadius: 18,
+          padding: "2px",
+          background: "linear-gradient(135deg, rgba(16,185,129,0.45) 0%, rgba(251,191,36,0.25) 50%, rgba(16,185,129,0.15) 100%)",
+          boxShadow: "0 0 40px rgba(16,185,129,0.08), 0 4px 24px rgba(0,0,0,0.35)",
           animation: "wf-sr-fadein 0.4s ease both",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8df3d3"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-              </svg>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#8df3d3" }}>Experten-Fazit</span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(141,243,211,0.1)", color: "#8df3d3", border: "1px solid rgba(141,243,211,0.25)", letterSpacing: "0.04em" }}>
-                PROFESSIONAL
+          {/* Inner card */}
+          <div style={{
+            background: "linear-gradient(160deg, #0d1520 0%, #0b1018 100%)",
+            borderRadius: 16,
+            padding: "22px 24px",
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16, gap: 12 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                  <span style={{
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    fontSize: 15, fontWeight: 700, fontStyle: "italic",
+                    background: "linear-gradient(90deg, #FBBF24, #10B981)",
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                    letterSpacing: "-0.01em",
+                  }}>
+                    Strategische Analyse &amp; Kunden-Fazit
+                  </span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 4,
+                    background: "rgba(251,191,36,0.1)", color: "#FBBF24",
+                    border: "1px solid rgba(251,191,36,0.28)", letterSpacing: "0.06em",
+                  }}>
+                    PRO
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>
+                  Dein persönliches Fazit · erscheint auf Seite 1 des PDFs
+                </p>
+              </div>
+              <span style={{
+                fontSize: 11, flexShrink: 0, paddingTop: 2,
+                color: saveStatus === "saved" ? "#4ade80" : saveStatus === "saving" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.18)",
+                transition: "color 0.3s",
+              }}>
+                {saveStatus === "saving" ? "Speichert…" : saveStatus === "saved" ? "✓ Gespeichert" : "Auto-Save"}
               </span>
             </div>
-            <span style={{ fontSize: 11, color: saveStatus === "saved" ? "#4ade80" : saveStatus === "saving" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.2)" }}>
-              {saveStatus === "saving" ? "Speichert…" : saveStatus === "saved" ? "✓ Gespeichert" : "Auto-Save aktiv"}
-            </span>
-          </div>
 
-          {/* Smart template buttons */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-            {([
-              {
-                label: "Dringlich",
-                icon: "⚠️",
-                text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung.",
-              },
-              {
-                label: "Technisch",
-                icon: "🔧",
-                text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden.",
-              },
-              {
-                label: "Kompakt",
-                icon: "📋",
-                text: "Kurzfazit: Website-Analyse abgeschlossen. Handlungsbedarf und Optimierungshinweise identifiziert. Nächste Schritte: Prioritäten gemeinsam besprechen und Maßnahmenplan erstellen.",
-              },
-            ] as { label: string; icon: string; text: string }[]).map(tpl => (
-              <button
-                key={tpl.label}
-                onClick={() => handleSummaryChange(tpl.text)}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700,
-                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.55)", cursor: "pointer", fontFamily: "inherit",
-                  transition: "background 0.15s, border-color 0.15s",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(141,243,211,0.08)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(141,243,211,0.25)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)";
-                }}
-              >
-                {tpl.icon} {tpl.label}
-              </button>
-            ))}
-          </div>
+            {/* Smart template buttons */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" as const }}>
+              {([
+                { label: "Dringlich", icon: "⚠️", text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung." },
+                { label: "Technisch", icon: "🔧", text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden." },
+                { label: "Kompakt",   icon: "📋", text: "Kurzfazit: Website-Analyse abgeschlossen. Handlungsbedarf und Optimierungshinweise identifiziert. Nächste Schritte: Prioritäten gemeinsam besprechen und Maßnahmenplan erstellen." },
+              ] as { label: string; icon: string; text: string }[]).map(tpl => (
+                <button
+                  key={tpl.label}
+                  onClick={() => handleSummaryChange(tpl.text)}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)",
+                    color: "rgba(141,243,211,0.7)", cursor: "pointer", fontFamily: "inherit",
+                    transition: "background 0.15s, border-color 0.15s, color 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.background = "rgba(16,185,129,0.14)";
+                    b.style.borderColor = "rgba(16,185,129,0.4)";
+                    b.style.color = "#8df3d3";
+                  }}
+                  onMouseLeave={e => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.background = "rgba(16,185,129,0.07)";
+                    b.style.borderColor = "rgba(16,185,129,0.2)";
+                    b.style.color = "rgba(141,243,211,0.7)";
+                  }}
+                >
+                  {tpl.icon} {tpl.label}
+                </button>
+              ))}
+            </div>
 
-          <textarea
-            value={execSummary}
-            onChange={e => handleSummaryChange(e.target.value)}
-            placeholder="Schreibe hier ein kurzes Fazit für deinen Kunden (z.B. Prioritäten, nächste Schritte)..."
-            rows={4}
-            style={{
-              width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 13,
-              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
-              color: "#fff", outline: "none", resize: "vertical", lineHeight: 1.65,
-              fontFamily: "inherit", boxSizing: "border-box",
-            }}
-          />
-          <p style={{ margin: "6px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>
-            Dieser Text erscheint nach den Score-Ringen im PDF — sichtbar nur für dich und deine Kunden.
-          </p>
+            <textarea
+              value={execSummary}
+              onChange={e => handleSummaryChange(e.target.value)}
+              placeholder="Schreibe hier dein strategisches Fazit für den Kunden — Prioritäten, nächste Schritte, deine Empfehlung…"
+              rows={5}
+              style={{
+                width: "100%", padding: "14px 16px", borderRadius: 10, fontSize: 13,
+                background: "rgba(255,255,255,0.025)",
+                border: "1px solid rgba(16,185,129,0.2)",
+                color: "#fff", outline: "none", resize: "vertical" as const, lineHeight: 1.7,
+                fontFamily: "inherit", boxSizing: "border-box" as const,
+                transition: "border-color 0.2s, box-shadow 0.2s",
+              }}
+              onFocus={e => {
+                e.currentTarget.style.borderColor = "rgba(16,185,129,0.5)";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.08)";
+              }}
+              onBlur={e => {
+                e.currentTarget.style.borderColor = "rgba(16,185,129,0.2)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+          </div>
         </div>
       )}
 

@@ -51,6 +51,96 @@ interface Props {
   unreadTickets?: number;
 }
 
+// ─── Live-Monitor Widget ───────────────────────────────────────────────────────
+function LiveMonitor() {
+  type ActivityRow = { url: string; last_viewed_at: string; view_count: number; download_count: number };
+  const [activity, setActivity]   = useState<ActivityRow[]>([]);
+  const [pulse, setPulse]         = useState(false);
+  const prevTop = useRef<string | null>(null);
+
+  function domainOf(url: string) { return url.replace(/^https?:\/\//, "").replace(/\/$/, ""); }
+
+  function timeAgo(iso: string): string {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60)   return "gerade eben";
+    if (diff < 3600) return `vor ${Math.floor(diff / 60)} Min.`;
+    if (diff < 86400) return `vor ${Math.floor(diff / 3600)} Std.`;
+    return `vor ${Math.floor(diff / 86400)} Tagen`;
+  }
+
+  async function fetchActivity() {
+    try {
+      const res = await fetch("/api/live-activity");
+      if (!res.ok) return;
+      const data = await res.json() as { activity: ActivityRow[] };
+      const newTop = data.activity[0]?.last_viewed_at ?? null;
+      if (prevTop.current !== null && newTop !== prevTop.current) {
+        setPulse(true);
+        setTimeout(() => setPulse(false), 4000);
+      }
+      prevTop.current = newTop;
+      setActivity(data.activity);
+    } catch { /* non-critical */ }
+  }
+
+  useEffect(() => {
+    fetchActivity();
+    const id = setInterval(fetchActivity, 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const hasActivity = activity.length > 0;
+  const latest      = activity[0];
+
+  return (
+    <div style={{
+      margin: "0 8px 10px",
+      padding: "12px 14px",
+      borderRadius: 10,
+      background: hasActivity && pulse
+        ? "rgba(16,185,129,0.1)"
+        : hasActivity
+          ? "rgba(16,185,129,0.05)"
+          : "rgba(255,255,255,0.02)",
+      border: `1px solid ${hasActivity ? "rgba(16,185,129,0.22)" : "rgba(255,255,255,0.07)"}`,
+      transition: "background 0.5s, border-color 0.5s",
+    }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: hasActivity ? 8 : 0 }}>
+        <span style={{ position: "relative", display: "inline-flex", width: 7, height: 7, flexShrink: 0 }}>
+          <span style={{
+            position: "absolute", inset: 0, borderRadius: "50%",
+            background: hasActivity ? "#10B981" : "rgba(255,255,255,0.2)",
+            animation: hasActivity ? "wf-live-pulse 2s ease-in-out infinite" : "none",
+          }} />
+        </span>
+        <span style={{ fontSize: 9, fontWeight: 800, color: hasActivity ? "#10B981" : "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+          Live-Monitor
+        </span>
+      </div>
+      {!hasActivity ? (
+        <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.2)", lineHeight: 1.5, fontStyle: "italic" }}>
+          Warte auf Kunden-Interaktion…
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 5 }}>
+          {activity.slice(0, 2).map((row, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2, opacity: i === 0 ? 1 : 0.5 }}>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span style={{ fontSize: 10, color: i === 0 ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, maxWidth: 130 }}>
+                <strong style={{ color: i === 0 ? "#fff" : "rgba(255,255,255,0.45)", fontWeight: 700 }}>{domainOf(row.url)}</strong>
+                {" · "}{timeAgo(row.last_viewed_at)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, projectUrl = "", unreadTickets = 0 }: Props) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen]   = useState(false);
@@ -100,6 +190,10 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           0%, 100% { box-shadow: 0 0 4px rgba(34,197,94,0.5); }
           50%       { box-shadow: 0 0 8px rgba(34,197,94,0.9); }
         }
+        @keyframes wf-live-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.35; transform: scale(1.6); }
+        }
         .wf-sidebar-link { transition: background 0.12s, color 0.12s; }
         .wf-sidebar-link:hover { background: rgba(255,255,255,0.04) !important; }
         .wf-sidebar-link.active { background: ${isPro ? "var(--agency-primary-bg, rgba(16,185,129,0.08))" : S.blueBg} !important; }
@@ -122,6 +216,27 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
         .wf-pro-badge { animation: wf-gold-pulse 3s ease-in-out infinite; }
         .wf-plan-dot  { animation: wf-green-glow 2s ease-in-out infinite; }
       `}</style>
+
+      {/* Pro header stripe */}
+      {isPro && (
+        <div style={{
+          padding: "7px 14px",
+          background: "linear-gradient(90deg, rgba(5,150,105,0.18) 0%, rgba(16,185,129,0.08) 100%)",
+          borderBottom: "1px solid rgba(16,185,129,0.18)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 800, color: "#10B981", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>
+            Professional
+          </span>
+          {/* Diamond PRO icon */}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.06em" }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            PRO
+          </span>
+        </div>
+      )}
 
       {/* Logo */}
       <div style={{ padding: "18px 16px 16px", borderBottom: `1px solid ${S.sidebarBdr}` }}>
@@ -238,6 +353,9 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           plan={plan}
         />
       )}
+
+      {/* Live-Monitor (Pro only) */}
+      {isPro && <LiveMonitor />}
 
       {/* User section — always at bottom */}
       <div ref={menuRef} style={{ padding: "10px 10px 12px", borderTop: `1px solid ${S.sidebarBdr}`, position: "relative", marginTop: "auto" }}>
