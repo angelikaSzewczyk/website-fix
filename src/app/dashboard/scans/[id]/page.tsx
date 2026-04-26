@@ -8,7 +8,7 @@ type ScanIssue = {
   severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: "recht" | "speed" | "technik";
+  category: "recht" | "speed" | "technik" | "shop" | "builder";
   url?: string;
   count: number;
 };

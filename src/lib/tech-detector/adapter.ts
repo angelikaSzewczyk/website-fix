@@ -66,6 +66,9 @@ export function fingerprintToDisplay(fp: TechFingerprint): DashboardFingerprint 
     tracking:   fp.tracking
       .filter(t => t.confidence >= CONFIDENCE_THRESHOLD && t.value !== UNKNOWN)
       .map(t => t.value),
+    wpPlugins:  (fp.wpPlugins ?? [])
+      .filter(p => p.confidence >= CONFIDENCE_THRESHOLD && p.value !== UNKNOWN)
+      .map(p => p.value),
   };
 }
 
@@ -166,6 +169,16 @@ export function buildTechChips(fp: TechFingerprint): TechChip[] {
       value:      display.tagManager,
       color:      "amber",
       confidence: `${Math.round(fp.tagManager.confidence * 100)}%`,
+    });
+  }
+  // WordPress-Plugins als einzelne Chips (nur sichtbar bei erkanntem WordPress)
+  for (const plugin of fp.wpPlugins ?? []) {
+    if (plugin.confidence < CONFIDENCE_THRESHOLD) continue;
+    chips.push({
+      label:      "WP-Plugin",
+      value:      plugin.value,
+      color:      "purple",
+      confidence: `${Math.round(plugin.confidence * 100)}%`,
     });
   }
 

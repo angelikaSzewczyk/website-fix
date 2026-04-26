@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import Anthropic from "@anthropic-ai/sdk";
 import { MODELS } from "@/lib/ai-models";
+import { isAgency } from "@/lib/plans";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -204,7 +205,7 @@ export async function generateMonthlyValueReport(
   if (!session?.user) return { error: "Nicht eingeloggt." };
 
   const plan = (session.user as { plan?: string }).plan;
-  if (plan !== "agency-pro") return { error: "Nur für den Agency Pro Plan." };
+  if (!isAgency(plan)) return { error: "Nur für den Agency-Plan." };
 
   const sql = neon(process.env.DATABASE_URL!);
 

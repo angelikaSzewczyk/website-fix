@@ -261,6 +261,11 @@ export const RULES: DetectionRule[] = [
   },
   {
     category: "builder", value: "Elementor", source: "html",
+    pattern: /class="[^"]*\belementor-element\b/,
+    weight: 0.95, evidence: "Elementor-Element-Klasse 'elementor-element' gefunden",
+  },
+  {
+    category: "builder", value: "Elementor", source: "html",
     pattern: /class="elementor/,
     weight: 0.85, evidence: "Elementor CSS-Klasse gefunden",
   },
@@ -288,6 +293,11 @@ export const RULES: DetectionRule[] = [
   },
   {
     category: "builder", value: "Divi", source: "html",
+    pattern: /class="[^"]*\bet_pb_section\b/,
+    weight: 0.95, evidence: "Divi Section-Klasse 'et_pb_section' gefunden",
+  },
+  {
+    category: "builder", value: "Divi", source: "html",
     pattern: /class="et_pb_/,
     weight: 0.85, evidence: "Divi 'et_pb_'-Klasse gefunden",
   },
@@ -300,6 +310,33 @@ export const RULES: DetectionRule[] = [
     category: "builder", value: "Divi", source: "script-url",
     pattern: /divi\/js\//,
     weight: 0.85, evidence: "Divi Theme-Skript geladen",
+  },
+
+  // ── Astra ────────────────────────────────────────────────────
+  {
+    category: "builder", value: "Astra", source: "html",
+    pattern: /astra-theme-id|class="[^"]*ast-(container|header|desktop|flex|col-)/,
+    weight: 0.95, evidence: "Astra-Theme-Marker im HTML gefunden",
+  },
+  {
+    category: "builder", value: "Astra", source: "link-url",
+    pattern: /\/wp-content\/themes\/astra\//,
+    weight: 0.95, evidence: "Astra-Theme-Stylesheet geladen",
+  },
+  {
+    category: "builder", value: "Astra", source: "script-url",
+    pattern: /\/wp-content\/(themes\/astra|plugins\/astra)/,
+    weight: 0.90, evidence: "Astra-Theme- oder Plugin-Skript geladen",
+  },
+  {
+    category: "builder", value: "Astra", source: "meta",
+    key: "generator", pattern: /astra/i,
+    weight: 0.85, evidence: "Meta-Generator enthält 'Astra'",
+  },
+  {
+    category: "builder", value: "Astra", source: "html",
+    pattern: /body class="[^"]*ast-(plain-container|separate-container|fluid-container)/,
+    weight: 0.90, evidence: "Astra Body-Layout-Klasse gefunden",
   },
 
   // ── WPBakery ─────────────────────────────────────────────────
@@ -505,18 +542,33 @@ export const RULES: DetectionRule[] = [
 
   {
     category: "ecommerce", value: "WooCommerce", source: "html",
-    pattern: /class="woocommerce/,
+    pattern: /class="[^"]*woocommerce/,
     weight: 0.90, evidence: "WooCommerce CSS-Klasse gefunden",
   },
   {
     category: "ecommerce", value: "WooCommerce", source: "html",
-    pattern: /is-woocommerce/,
+    pattern: /is-woocommerce|woocommerce-page/,
     weight: 0.85, evidence: "WooCommerce Body-Klasse gefunden",
   },
   {
     category: "ecommerce", value: "WooCommerce", source: "script-url",
-    pattern: /woocommerce\//,
-    weight: 0.85, evidence: "WooCommerce Skript geladen",
+    pattern: /\/wp-content\/plugins\/woocommerce\//,
+    weight: 0.95, evidence: "WooCommerce-Plugin-Skript geladen (/wp-content/plugins/woocommerce/)",
+  },
+  {
+    category: "ecommerce", value: "WooCommerce", source: "link-url",
+    pattern: /\/wp-content\/plugins\/woocommerce\//,
+    weight: 0.90, evidence: "WooCommerce-Plugin-Stylesheet geladen",
+  },
+  {
+    category: "ecommerce", value: "WooCommerce", source: "meta",
+    key: "generator", pattern: /woocommerce/i,
+    weight: 0.95, evidence: "Meta-Generator enthält 'WooCommerce'",
+  },
+  {
+    category: "ecommerce", value: "WooCommerce", source: "html",
+    pattern: /wc-ajax=|woocommerce-cart-fragments|wc-block-/,
+    weight: 0.80, evidence: "WooCommerce-AJAX/Block-Marker im HTML",
   },
   {
     category: "ecommerce", value: "Magento", source: "html",
@@ -788,6 +840,148 @@ export const RULES: DetectionRule[] = [
     category: "tracking", value: "Pinterest Tag", source: "script-url",
     pattern: /pintrk/,
     weight: 0.90, evidence: "Pinterest Tag referenziert",
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  // WORDPRESS PLUGINS (Performance / SEO / Builder)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── WP Rocket (Caching / Performance) ────────────────────────
+  {
+    category: "wpPlugin", value: "WP Rocket", source: "html",
+    pattern: /<!-- This website is like a Rocket/i,
+    weight: 1.00, evidence: "WP Rocket Signatur-Kommentar im HTML",
+  },
+  {
+    category: "wpPlugin", value: "WP Rocket", source: "script-url",
+    pattern: /\/plugins\/wp-rocket\//,
+    weight: 0.95, evidence: "WP Rocket Plugin-Skript geladen",
+  },
+  {
+    category: "wpPlugin", value: "WP Rocket", source: "html",
+    pattern: /data-rocket-(src|lazyload|type)/,
+    weight: 0.85, evidence: "WP Rocket Lazy-Load-Attribute gefunden",
+  },
+
+  // ── WP Fastest Cache ─────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "WP Fastest Cache", source: "html",
+    pattern: /wp-fastest-cache/i,
+    weight: 0.90, evidence: "WP Fastest Cache Signatur im HTML",
+  },
+
+  // ── W3 Total Cache ───────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "W3 Total Cache", source: "html",
+    pattern: /w3-total-cache|w3tc/i,
+    weight: 0.90, evidence: "W3 Total Cache Signatur im HTML",
+  },
+
+  // ── LiteSpeed Cache ──────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "LiteSpeed Cache", source: "header",
+    key: "x-litespeed-cache", pattern: /hit|miss/i,
+    weight: 0.95, evidence: "LiteSpeed Cache Header gefunden",
+  },
+  {
+    category: "wpPlugin", value: "LiteSpeed Cache", source: "script-url",
+    pattern: /\/plugins\/litespeed-cache\//,
+    weight: 0.90, evidence: "LiteSpeed Cache Plugin-Skript geladen",
+  },
+
+  // ── Yoast SEO ────────────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Yoast SEO", source: "html",
+    pattern: /<!-- This site is optimized with the Yoast SEO/i,
+    weight: 1.00, evidence: "Yoast SEO Signatur-Kommentar im HTML",
+  },
+  {
+    category: "wpPlugin", value: "Yoast SEO", source: "script-url",
+    pattern: /\/plugins\/wordpress-seo\//,
+    weight: 0.95, evidence: "Yoast SEO Plugin-Skript geladen",
+  },
+
+  // ── Rank Math SEO ────────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Rank Math", source: "html",
+    pattern: /<!-- Rank Math/i,
+    weight: 1.00, evidence: "Rank Math Signatur-Kommentar im HTML",
+  },
+  {
+    category: "wpPlugin", value: "Rank Math", source: "script-url",
+    pattern: /\/plugins\/seo-by-rank-math\//,
+    weight: 0.90, evidence: "Rank Math Plugin-Skript geladen",
+  },
+
+  // ── All in One SEO ───────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "All in One SEO", source: "html",
+    pattern: /<!-- All in One SEO/i,
+    weight: 1.00, evidence: "All in One SEO Signatur-Kommentar im HTML",
+  },
+
+  // ── Contact Form 7 ───────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Contact Form 7", source: "script-url",
+    pattern: /\/plugins\/contact-form-7\//,
+    weight: 0.95, evidence: "Contact Form 7 Plugin-Skript geladen",
+  },
+  {
+    category: "wpPlugin", value: "Contact Form 7", source: "html",
+    pattern: /class="wpcf7"/,
+    weight: 0.85, evidence: "Contact Form 7 CSS-Klasse gefunden",
+  },
+
+  // ── WPForms ──────────────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "WPForms", source: "script-url",
+    pattern: /\/plugins\/wpforms-lite\/|\/plugins\/wpforms\//,
+    weight: 0.90, evidence: "WPForms Plugin-Skript geladen",
+  },
+
+  // ── Wordfence Security ───────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Wordfence", source: "html",
+    pattern: /wfWAFAutoPrependPrepend|wordfence/i,
+    weight: 0.85, evidence: "Wordfence Security-Signatur gefunden",
+  },
+
+  // ── Jetpack ──────────────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Jetpack", source: "script-url",
+    pattern: /\/plugins\/jetpack\//,
+    weight: 0.90, evidence: "Jetpack Plugin-Skript geladen",
+  },
+
+  // ── Akismet ──────────────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Akismet", source: "script-url",
+    pattern: /\/plugins\/akismet\//,
+    weight: 0.85, evidence: "Akismet Plugin-Skript geladen",
+  },
+
+  // ── Smush / ShortPixel (Bild-Optimierung) ────────────────────
+  {
+    category: "wpPlugin", value: "Smush", source: "script-url",
+    pattern: /\/plugins\/wp-smushit\//,
+    weight: 0.90, evidence: "Smush Image-Optimization Plugin geladen",
+  },
+  {
+    category: "wpPlugin", value: "ShortPixel", source: "html",
+    pattern: /shortpixel/i,
+    weight: 0.85, evidence: "ShortPixel Image-Optimization Signatur gefunden",
+  },
+
+  // ── Cookie-Banner ────────────────────────────────────────────
+  {
+    category: "wpPlugin", value: "Borlabs Cookie", source: "script-url",
+    pattern: /\/plugins\/borlabs-cookie\//,
+    weight: 0.95, evidence: "Borlabs Cookie Plugin-Skript geladen",
+  },
+  {
+    category: "wpPlugin", value: "Complianz GDPR", source: "script-url",
+    pattern: /\/plugins\/complianz-gdpr\//,
+    weight: 0.90, evidence: "Complianz GDPR Plugin-Skript geladen",
   },
 ];
 

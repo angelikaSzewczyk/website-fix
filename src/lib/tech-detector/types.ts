@@ -41,7 +41,8 @@ export type DetectionCategory =
   | "hosting"
   | "tracking"
   | "analytics"
-  | "tagManager";
+  | "tagManager"
+  | "wpPlugin";
 
 /**
  * A single detection rule.
@@ -98,6 +99,7 @@ export interface TechFingerprint {
   tracking:   DetectedValue[];    // can be multiple (GTM + GA + Pixel)
   analytics:  DetectedValue;
   tagManager: DetectedValue;
+  wpPlugins:  DetectedValue[];    // detected WordPress plugins (Yoast, WP Rocket, …)
 }
 
 /** Final output of the detection engine */
@@ -124,4 +126,5 @@ export interface DashboardFingerprint {
   analytics:  string | null;
   tagManager: string | null;
   tracking:   string[];          // all detected trackers
+  wpPlugins:  string[];          // detected WordPress plugins
 }

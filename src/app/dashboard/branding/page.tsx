@@ -11,12 +11,12 @@ export default function BrandingPage() {
   const [status, setStatus]           = useState<"idle" | "ok" | "error">("idle");
 
   useEffect(() => {
-    fetch("/api/agency/settings")
+    fetch("/api/agency-settings")
       .then(r => r.json())
       .then(d => {
-        setAgencyName(d.agencyName ?? "");
-        setLogoUrl(d.logoUrl ?? "");
-        setPrimaryColor(d.primaryColor ?? "#2563EB");
+        setAgencyName(d.agency_name ?? "");
+        setLogoUrl(d.logo_url ?? "");
+        setPrimaryColor(d.primary_color ?? "#2563EB");
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -27,10 +27,10 @@ export default function BrandingPage() {
     setSaving(true);
     setStatus("idle");
     try {
-      const res = await fetch("/api/agency/settings", {
-        method: "POST",
+      const res = await fetch("/api/agency-settings", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agencyName, logoUrl, primaryColor }),
+        body: JSON.stringify({ agency_name: agencyName, logo_url: logoUrl, primary_color: primaryColor }),
       });
       setStatus(res.ok ? "ok" : "error");
     } catch {

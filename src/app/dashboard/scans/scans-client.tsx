@@ -264,6 +264,22 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans,
   const limitReached = monthlyScans >= scanLimit;
   const accent = "var(--agency-primary, #8df3d3)";
 
+  // Pre-compute "previous scan of same URL" lookup for the Compare button.
+  // Scans come sorted newest-first. For each scan, find the next-older scan
+  // with the same origin → wir können dann Before/After vergleichen.
+  function originOf(raw: string): string { try { return new URL(raw).origin; } catch { return raw; } }
+  const previousScanByNewerId = new Map<string, string>();
+  for (let i = 0; i < scans.length; i++) {
+    const newer = scans[i];
+    const origin = originOf(newer.url);
+    for (let j = i + 1; j < scans.length; j++) {
+      if (originOf(scans[j].url) === origin) {
+        previousScanByNewerId.set(newer.id, scans[j].id);
+        break;
+      }
+    }
+  }
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: D.page, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
@@ -321,7 +337,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans,
                 Noch keine Berichte vorhanden
               </h2>
               <p style={{ margin: "0 0 24px", fontSize: 14, color: D.textMuted, lineHeight: 1.7 }}>
-                Starte deinen ersten Scan — dein Bericht ist sofort als PDF verfügbar.
+                Starte dein erstes WordPress-Audit — dein Bericht ist sofort als PDF verfügbar.
               </p>
               <Link href="/dashboard/scan" style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
@@ -401,6 +417,27 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans,
                         </Tip>
                       )
                     }
+
+                    {/* Compare button — only Pro+, only if a previous scan of same URL exists */}
+                    {isPro && previousScanByNewerId.has(scan.id) && (
+                      <Link
+                        href={`/dashboard/scans/compare?a=${previousScanByNewerId.get(scan.id)}&b=${scan.id}`}
+                        style={{
+                          flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "6px 11px", borderRadius: D.radiusXs,
+                          background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)",
+                          color: "#10B981", fontSize: 11, fontWeight: 700,
+                          textDecoration: "none", whiteSpace: "nowrap",
+                        }}
+                        title="Vorher/Nachher-Vergleich mit dem letzten Scan dieser URL"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <polyline points="9 5 15 12 9 19"/>
+                        </svg>
+                        Vergleichen
+                      </Link>
+                    )}
 
                     {/* View button */}
                     <Link href={`/dashboard/scans/${scan.id}`} style={{

@@ -43,13 +43,14 @@ const PLANS = [
   },
   {
     name: "Professional",
-    planKey: "smart-guard",
+    planKey: "professional",
     price: "89",
     per: "/Monat",
-    desc: "Für Agenturen, die Kunden beeindrucken wollen",
+    desc: "Für WordPress-Agenturen, die Kunden beeindrucken wollen",
     accent: "#10B981",
     features: [
-      { text: "10 Projekte & täglicher Deep-Scan", highlight: true, key: true },
+      { text: "10 WordPress-Projekte & täglicher Deep-Scan", highlight: true, key: true },
+      { text: "WP-Plugin-Erkennung (Elementor, Yoast, WP Rocket)", highlight: true, key: true },
       { text: "White-Label PDF — dein Logo, deine Farbe", highlight: true, key: true },
       { text: "Client Tracking — Echtzeit-Aufrufe & Downloads", highlight: true, key: true },
       { text: "Executive Summary — dein persönliches Fazit", highlight: true, key: true },
@@ -63,7 +64,7 @@ const PLANS = [
   },
   {
     name: "Agency",
-    planKey: "agency-starter",
+    planKey: "agency",
     price: "249",
     per: "/Monat",
     desc: "Full White-Label für professionelle Agenturen",
@@ -177,23 +178,20 @@ export default function AgencyPage() {
               fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
             }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-              Exklusiv für Web-Agenturen &amp; Freelancer
+              Exklusiv für WordPress-Agenturen &amp; Freelancer
             </div>
 
-            <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
-              Verwandle kalte Daten<br />
-              <span style={{ background: "linear-gradient(90deg, #10B981, #8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                in heiße Aufträge.
-              </span>
+            <h1 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 900, marginLeft: "auto", marginRight: "auto" }}>
+              Das <span style={{ background: "linear-gradient(90deg, #10B981, #8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>#1 White-Label<br />Audit Tool</span> für WordPress-Agenturen.
             </h1>
 
-            <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 640, margin: "0 auto 40px", fontWeight: 400 }}>
-              Dein Logo auf jedem Bericht. Echtzeit-Insights, wann Kunden lesen. Individuelle Fazits, die deine Expertise beweisen. Für <strong style={{ color: "rgba(255,255,255,0.8)" }}>89 €/Monat</strong> — das erste Tool, das sich direkt in Aufträge übersetzt.
+            <p style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 680, margin: "0 auto 40px", fontWeight: 400 }}>
+              Gewinne mehr WordPress-Aufträge durch professionelle Audits. SEO, BFSG, WP-Performance, /wp-admin-Sicherheit und Plugin-Analyse — mit deinem Logo auf dem Bericht. Für <strong style={{ color: "rgba(255,255,255,0.8)" }}>89 €/Monat</strong> — das erste Tool, das sich direkt in Aufträge übersetzt.
             </p>
 
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <CheckoutButton
-                plan="smart-guard"
+                plan="professional"
                 label="Professional für 89 € starten →"
                 style={{
                   padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15,
@@ -364,7 +362,7 @@ export default function AgencyPage() {
 
           <div style={{ marginTop: 36, textAlign: "center" }}>
             <CheckoutButton
-              plan="smart-guard"
+              plan="professional"
               label="Alle drei Features für 89 € freischalten →"
               style={{
                 padding: "13px 32px", borderRadius: 10, fontWeight: 700, fontSize: 14,
@@ -915,7 +913,7 @@ export default function AgencyPage() {
                 ))}
 
                 <CheckoutButton
-                  plan="agency-starter"
+                  plan="agency"
                   label="Agentur-Power freischalten →"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 8,
@@ -997,10 +995,10 @@ export default function AgencyPage() {
             <div style={{ textAlign: "center", marginBottom: 52 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.7)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Feature Deep-Dive</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Gebaut für Agenturen, die skalieren.
+                Gebaut für WordPress-Agenturen, die skalieren.
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 520, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
-                Jedes Feature ist darauf ausgelegt, Ihren Workflow zu automatisieren und Ihre Kunden zu begeistern.
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+                WordPress-spezifische Audits, Plugin-Erkennung (Elementor, WP Rocket, Yoast, WooCommerce) und /wp-admin-Security-Checks — alles unter deiner Marke.
               </p>
             </div>
 
@@ -1433,8 +1431,8 @@ export default function AgencyPage() {
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
               {PLANS.map(plan => {
                 type F = { text: string; highlight: boolean; key?: boolean; locked?: boolean };
-                const isPro   = plan.planKey === "smart-guard";
-                const isAgency = plan.planKey === "agency-starter";
+                const isPro   = plan.planKey === "professional";
+                const isAgency = plan.planKey === "agency";
                 const accentColor = isPro ? "#10B981" : plan.accent;
                 return (
                 <div key={plan.name} style={{
@@ -1694,7 +1692,7 @@ export default function AgencyPage() {
               <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>
                 <div className="wf-agency-cta-btn">
                   <CheckoutButton
-                    plan="agency-starter"
+                    plan="agency"
                     label="Agentur-Power freischalten →"
                     style={{
                       padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,

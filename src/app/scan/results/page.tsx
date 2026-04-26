@@ -8,6 +8,7 @@ import MobileNav from "../../components/MobileNav";
 import SiteFooter from "../../components/SiteFooter";
 
 import { type StoredScan, saveScanToStorage, loadScanFromStorage } from "@/lib/scan-storage";
+import { normalizePlan } from "@/lib/plans";
 
 // ── Rich page item used in Deep-Scan Map ─────────────────────────────────────
 type PageItem = {
@@ -439,6 +440,292 @@ function HealthRing({ score, displayScore }: { score: number; displayScore: numb
   );
 }
 
+// ── Quick-Check-Zusammenfassung ──────────────────────────────────────────────
+// Zeigt für anonyme/Free-User die wichtigsten Treffer aus Builder/Woo/DSGVO-
+// Audit, OHNE konkrete Issue-Details preiszugeben. Druckt damit Wertigkeit auf
+// und führt zum Upgrade.
+function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: boolean }) {
+  if (isDemo || !scan) return null;
+
+  const builder      = scan.builderAudit?.builder ?? null;
+  const domDepth     = scan.builderAudit?.maxDomDepth ?? 0;
+  const fonts        = scan.builderAudit?.googleFontFamilies.length ?? 0;
+  const wooDetected  = !!scan.isWooCommerce;
+  const wooHasIssues = wooDetected && ((scan.wooAudit?.revenueRiskPct ?? 0) > 0
+                       || scan.wooAudit?.cartButtonsBlocked
+                       || scan.wooAudit?.outdatedTemplates
+                       || (scan.wooAudit?.pluginImpact?.length ?? 0) >= 2);
+
+  // Nichts erkannt → Komponente nicht anzeigen
+  if (!builder && !wooDetected && fonts === 0) return null;
+
+  const cards: Array<{
+    title: string;
+    detail: string;
+    tone: "warn" | "ok" | "info";
+    icon: "builder" | "shop" | "dsgvo";
+  }> = [];
+
+  if (builder) {
+    const isCritical = domDepth > 22;
+    const isWarning  = domDepth > 15 && !isCritical;
+    cards.push({
+      title:  isCritical ? `${builder} · DOM-Risiko: KRITISCH` : isWarning ? `${builder} · DOM-Risiko: HOCH` : `${builder} erkannt`,
+      detail: isCritical || isWarning
+        ? `DOM-Verschachtelungstiefe ${domDepth} — über dem Google-Limit von 15. Render-Stau auf Mobilgeräten wahrscheinlich.`
+        : `Sauber konfiguriert · DOM-Tiefe im grünen Bereich.`,
+      tone: isCritical ? "warn" : isWarning ? "warn" : "ok",
+      icon: "builder",
+    });
+  }
+
+  if (wooDetected) {
+    cards.push({
+      title:  wooHasIssues ? "WooCommerce optimierungsbedürftig" : "WooCommerce-Shop erkannt",
+      detail: wooHasIssues
+        ? "Mehrere Performance- oder Datenbank-Probleme gefunden — exakte Befunde im vollen Bericht."
+        : "Shop technisch sauber · Detail-Audit im vollen Bericht.",
+      tone: wooHasIssues ? "warn" : "ok",
+      icon: "shop",
+    });
+  }
+
+  if (fonts > 0) {
+    cards.push({
+      title:  "DSGVO-Status: Google Fonts gefunden",
+      detail: "Externe Google-Font-Anfragen erkannt — DSGVO-relevant (LG München 3 O 17493/20). Konkrete Familien im vollen Bericht.",
+      tone:   "warn",
+      icon:   "dsgvo",
+    });
+  } else {
+    cards.push({
+      title:  "DSGVO-Status: Keine Google Fonts",
+      detail: "Keine externen Font-Requests an Google-Server erkannt — gut für die Compliance.",
+      tone:   "ok",
+      icon:   "dsgvo",
+    });
+  }
+
+  return (
+    <div style={{
+      marginBottom: 28, borderRadius: 14, overflow: "hidden",
+      background: "linear-gradient(135deg, rgba(122,166,255,0.05), rgba(16,185,129,0.04))",
+      border: "1px solid rgba(122,166,255,0.22)",
+    }}>
+      <div style={{
+        padding: "12px 18px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const,
+        borderBottom: "1px solid rgba(122,166,255,0.15)",
+      }}>
+        <span style={{
+          fontSize: 9, fontWeight: 800, padding: "3px 9px", borderRadius: 10,
+          background: "rgba(122,166,255,0.12)", color: "#7aa6ff",
+          border: "1px solid rgba(122,166,255,0.32)", letterSpacing: "0.08em",
+        }}>
+          QUICK-CHECK
+        </span>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+          Sofort-Diagnose deiner Seite
+        </h3>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", marginLeft: "auto" }}>
+          Builder · WooCommerce · DSGVO
+        </span>
+      </div>
+      <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+        {cards.map((c, i) => {
+          const colors = c.tone === "warn"
+            ? { fg: "#fbbf24", bg: "rgba(251,191,36,0.08)", bd: "rgba(251,191,36,0.25)" }
+            : c.tone === "ok"
+            ? { fg: "#4ade80", bg: "rgba(74,222,128,0.08)", bd: "rgba(74,222,128,0.25)" }
+            : { fg: "#7aa6ff", bg: "rgba(122,166,255,0.08)", bd: "rgba(122,166,255,0.25)" };
+
+          return (
+            <div key={i} style={{
+              padding: "12px 14px", borderRadius: 10,
+              background: colors.bg, border: `1px solid ${colors.bd}`,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                {/* Icon je Slot */}
+                {c.icon === "builder" && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    {c.tone === "warn"
+                      ? <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
+                      : <><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></>}
+                  </svg>
+                )}
+                {c.icon === "shop" && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                )}
+                {c.icon === "dsgvo" && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                )}
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: colors.fg, letterSpacing: "-0.01em" }}>
+                  {c.title}
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+                {c.detail}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Upgrade-CTA für anon User ────────────────────────────────────────────────
+function FullReportLockedCTA({ tier }: { tier: "anon" | "free" | "paid" }) {
+  if (tier === "paid") return null; // Bezahlende sehen das nicht
+
+  return (
+    <div style={{
+      marginBottom: 32, borderRadius: 16, overflow: "hidden",
+      background: "linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(124,58,237,0.06) 100%)",
+      border: "1px solid rgba(16,185,129,0.32)",
+      boxShadow: "0 0 40px rgba(16,185,129,0.08)",
+    }}>
+      <div style={{ padding: "22px 28px 20px" }}>
+        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 800, color: "#10B981", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          Vollen Bericht freischalten
+        </p>
+        <h3 style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 900, letterSpacing: "-0.025em", color: "#fff" }}>
+          Detaillierte Issues, Optimierungs-Plan und Builder-Anleitungen
+        </h3>
+        <p style={{ margin: "0 0 18px", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+          Du hast die Quick-Check-Diagnose gesehen — der volle Bericht liefert konkrete Issues mit Lösungs-Snippets, einen exportierbaren Optimierungs-Plan und builder-spezifische Schritt-für-Schritt-Anleitungen für Elementor, Divi und Astra.
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+          {/* Starter — 29 € */}
+          <Link
+            href="/register?plan=starter"
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "16px 20px", borderRadius: 12,
+              background: "linear-gradient(90deg, #059669, #10B981)",
+              border: "1px solid rgba(16,185,129,0.5)",
+              textDecoration: "none", color: "#fff",
+              boxShadow: "0 6px 20px rgba(16,185,129,0.32)",
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <line x1="12" y1="16" x2="12" y2="18"/>
+            </svg>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2, letterSpacing: "-0.01em" }}>
+                Vollen Bericht für 29 € freischalten
+              </div>
+              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+                Starter-Plan · 5 Scans/Monat · alle Issues sichtbar · monatlich kündbar
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </Link>
+
+          {/* Agency — 7 Tage Test */}
+          <Link
+            href="/register?plan=agency&trial=7"
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "16px 20px", borderRadius: 12,
+              background: "rgba(124,58,237,0.10)",
+              border: "1px solid rgba(124,58,237,0.45)",
+              textDecoration: "none", color: "#fff",
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <path d="M20 8v6"/><path d="M23 11h-6"/>
+            </svg>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2, letterSpacing: "-0.01em", color: "#fff" }}>
+                Für Agenturen: 7 Tage kostenlos testen
+              </div>
+              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
+                Agency-Plan · White-Label · Lead-Widget · unbegrenzte Scans
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </Link>
+        </div>
+
+        <p style={{ margin: "14px 0 0", fontSize: 11, color: "rgba(255,255,255,0.32)", lineHeight: 1.5, textAlign: "center" }}>
+          Keine versteckten Kosten · DSGVO-konform · jederzeit kündbar
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Locked-Overlay-Wrapper für Detail-Cards (anon User) ──────────────────────
+function LockedOverlay({ children, tier, ctaHref = "/register?plan=starter" }: {
+  children: React.ReactNode;
+  tier: "anon" | "free" | "paid";
+  ctaHref?: string;
+}) {
+  if (tier === "paid") return <>{children}</>;
+
+  return (
+    <div style={{ position: "relative" }}>
+      {/* Geblurrter Inhalt — visuell präsent, aber nicht lesbar */}
+      <div style={{
+        filter: "blur(6px)",
+        pointerEvents: "none",
+        userSelect: "none",
+        opacity: 0.55,
+      }} aria-hidden="true">
+        {children}
+      </div>
+      {/* Lock-Overlay */}
+      <div style={{
+        position: "absolute", inset: 0,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 10, padding: 20,
+        background: "linear-gradient(180deg, rgba(11,12,16,0.45) 0%, rgba(11,12,16,0.78) 70%)",
+        borderRadius: 14,
+      }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: 12,
+          background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+            Detail-Befunde im vollen Bericht
+          </p>
+          <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, maxWidth: 320 }}>
+            Konkrete Issues, Lösungs-Snippets und builder-spezifische Anleitungen — ab 29 €/Monat.
+          </p>
+        </div>
+        <Link href={ctaHref} style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          padding: "8px 16px", borderRadius: 8,
+          background: "linear-gradient(90deg, #059669, #10B981)",
+          color: "#fff", fontSize: 12, fontWeight: 800, textDecoration: "none",
+          boxShadow: "0 4px 14px rgba(16,185,129,0.35)",
+        }}>
+          Jetzt freischalten →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 // ── Main inner component ──────────────────────────────────────────────────────
 function ResultsInner() {
   const params = useSearchParams();
@@ -495,10 +782,10 @@ function ResultsInner() {
         const plan: string = (data?.user as { plan?: string } | undefined)?.plan ?? "";
         if (!data?.user) {
           setUserTier("anon");
-        } else if (["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(plan)) {
+        } else if (normalizePlan(plan) !== null) {
           setUserTier("paid");
         } else {
-          setUserTier("free"); // logged in but free plan
+          setUserTier("free"); // logged in but unknown plan (shouldn't happen with new DB default)
         }
       })
       .catch(() => setUserTier("anon"));
@@ -676,6 +963,12 @@ function ResultsInner() {
               )}
             </p>
           </div>
+
+          {/* ── QUICK-CHECK-ZUSAMMENFASSUNG (anon/free) ── */}
+          {userTier !== "paid" && <QuickCheckSummary scan={scan} isDemo={isDemo} />}
+
+          {/* ── UPGRADE-CTA (anon/free) ── */}
+          {!isDemo && userTier !== "paid" && <FullReportLockedCTA tier={userTier} />}
 
           {/* ── WEBSITE-OPTIMIERUNGS-REPORT ── */}
           <div style={{ marginBottom: 40 }}>
@@ -1088,7 +1381,15 @@ function ResultsInner() {
                   </div>
 
                   {/* ── BEWEIS-MODUS: technisches Protokoll ── */}
-                  {isExpanded && <ProtoPanelContent p={p} tier={userTier} />}
+                  {isExpanded && (
+                    userTier === "anon" ? (
+                      <div style={{ padding: "14px 20px 18px" }}>
+                        <LockedOverlay tier={userTier}>
+                          <ProtoPanelContent p={p} tier={userTier} />
+                        </LockedOverlay>
+                      </div>
+                    ) : <ProtoPanelContent p={p} tier={userTier} />
+                  )}
                 </div>
               );
             })}

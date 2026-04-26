@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import { normalizePlan, PLAN_LABEL } from "@/lib/plans";
 
 // ─── Design tokens — matches dashboard dark theme ──────────────────────────────
 const D = {
@@ -157,7 +158,7 @@ export default function FreeSettingsClient({
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting,      setDeleting]      = useState(false);
 
-  const planLabel  = plan === "starter" ? "Starter" : plan === "agency" || plan === "agency-starter" || plan === "agency-pro" ? "Agency" : "Professional";
+  const planLabel  = PLAN_LABEL[normalizePlan(plan) ?? "starter"] ?? "Starter";
   const scansUsed  = Math.min(monthlyScans, scanLimit);
   const scanPct    = Math.round((scansUsed / scanLimit) * 100);
 
@@ -296,6 +297,48 @@ export default function FreeSettingsClient({
             </button>
           </div>
         </Card>
+
+        {/* ═══════════════════════════════════════════
+            WHITE-LABEL UPGRADE CALLOUT (nur Starter)
+        ═══════════════════════════════════════════ */}
+        <div style={{
+          marginBottom: 16, padding: "20px 24px", borderRadius: D.radius,
+          background: "linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(251,191,36,0.04) 100%)",
+          border: "1px solid rgba(16,185,129,0.25)",
+          position: "relative", overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }} />
+          <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 20,
+                background: "rgba(16,185,129,0.15)", color: "#10B981",
+                border: "1px solid rgba(16,185,129,0.35)", letterSpacing: "0.06em",
+              }}>
+                PROFESSIONAL FEATURE
+              </span>
+            </div>
+            <h2 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: D.text, letterSpacing: "-0.01em" }}>
+              White-Label Branding freischalten
+            </h2>
+            <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
+              Dein Logo auf jedem PDF-Bericht. Deine Agenturfarbe im Dashboard. Teilen-Links mit deinem Namen statt WebsiteFix — <strong style={{ color: "#10B981" }}>ab 89 €/Monat</strong>.
+            </p>
+            <Link href="/fuer-agenturen#pricing" style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "9px 16px", borderRadius: 8,
+              background: "linear-gradient(90deg, #059669, #10B981)",
+              color: "#fff", fontSize: 13, fontWeight: 700,
+              textDecoration: "none", boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+            }}>
+              Auf Professional upgraden →
+            </Link>
+          </div>
+        </div>
 
         {/* ═══════════════════════════════════════════
             SEKTION 2 — PROJEKT

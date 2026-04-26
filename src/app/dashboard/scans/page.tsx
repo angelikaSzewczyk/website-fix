@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import ScansClient from "./scans-client";
 import type { ScanRow } from "./scans-client";
+import { isAtLeastProfessional } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Berichte — WebsiteFix",
@@ -40,15 +41,13 @@ function countIssues(issuesJson: string | null): { red: number; yellow: number }
   } catch { return { red: 0, yellow: 0 }; }
 }
 
-const PRO_PLANS = ["professional", "smart-guard", "agency", "agency-starter", "agency-pro"];
-
 export default async function ScansPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const firstName = session.user.name?.split(" ")[0] ?? "User";
   const plan = (session.user as { plan?: string }).plan ?? "starter";
-  const isPro = PRO_PLANS.includes(plan);
+  const isPro = isAtLeastProfessional(plan);
 
   let scans: ScanRow[] = [];
   let monthlyScans = 0;

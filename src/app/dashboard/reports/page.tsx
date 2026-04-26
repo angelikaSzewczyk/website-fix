@@ -3,15 +3,15 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import ReportsClient from "./reports-client";
+import { isAgency as isAgencyPlan, normalizePlan } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Berichte — WebsiteFix",
   robots: { index: false },
 };
 
-// Valid plans — no "business" / "freelancer" legacy aliases
-const ALLOWED_PLANS  = ["starter", "professional", "smart-guard", "agency-starter", "agency-pro"];
-const AGENCY_PLANS   = ["agency-starter", "agency-pro"];
+// Legacy-aware plan gate — normalizePlan handles backwards-compat
+
 
 export type ScanHistoryItem = {
   id:          string;
@@ -63,11 +63,11 @@ export default async function ReportsPage() {
     plan = (session.user as { plan?: string }).plan ?? "starter";
   }
 
-  if (!ALLOWED_PLANS.includes(plan)) redirect("/dashboard");
+  if (normalizePlan(plan) === null) redirect("/dashboard");
 
   const userId   = Number(session.user.id);
   const agencyId = String(session.user.id);
-  const isAgency = AGENCY_PLANS.includes(plan);
+  const isAgency = isAgencyPlan(plan);
 
   const now        = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();

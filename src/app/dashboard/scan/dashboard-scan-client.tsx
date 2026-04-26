@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import DiagnoseReport from "./diagnose-report";
+import { isAgency, isAtLeastProfessional, normalizePlan } from "@/lib/plans";
 
 // ─── Dark glassmorphism tokens — matches free-dashboard-client ────────────────
 const C = {
@@ -380,16 +381,16 @@ export default function DashboardScanClient({
   const [urlHint, setUrlHint]       = useState<"https" | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isAgencyPlan      = plan === "agency-starter" || plan === "agency-pro";
-  const isFullsiteEnabled = plan !== "free"; // starter, professional, agency all have fullsite
+  const canonical         = normalizePlan(plan);
+  const isAgencyPlan      = isAgency(plan);
+  const isFullsiteEnabled = canonical !== null; // starter, professional, agency all have fullsite
   const limitReached      = monthlyScans >= scanLimit;
 
-  // Page limit per plan for full-site crawl
+  // Page limit per canonical plan for full-site crawl
   const fullsitePageLimit =
-    plan === "starter"                                        ? 25
-    : plan === "professional" || plan === "smart-guard"       ? 100
-    : plan === "agency-starter"                               ? 150
-    : plan === "agency-pro"                                   ? 500
+    canonical === "starter"      ? 25
+    : canonical === "professional" ? 100
+    : canonical === "agency"     ? 500
     : 0;
 
   // Pre-fill the URL field on mount — query param takes priority, then projectUrl

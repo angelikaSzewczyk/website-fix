@@ -7,6 +7,7 @@ import { callWithRetry } from "@/lib/ai-retry";
 import { getCachedFullScan, saveFullScan, cacheTtlHours } from "@/lib/scan-cache";
 import { logScan } from "@/lib/scan-logger";
 import { MODELS } from "@/lib/ai-models";
+import { normalizePlan, isAgency } from "@/lib/plans";
 
 export const maxDuration = 300;
 
@@ -16,10 +17,10 @@ const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|pdf|zip|mp4|mp3|css|js|ico|woff|w
 
 // ── Plan limits ─────────────────────────────────────────────────────────────
 function getMaxPages(plan: string): number {
-  if (plan === "agency-pro")      return 150;
-  if (plan === "agency-starter")  return 50;
-  if (plan === "smart-guard" || plan === "professional") return 25;
-  if (plan === "starter")         return 15;
+  const p = normalizePlan(plan);
+  if (p === "agency")       return 150;
+  if (p === "professional") return 25;
+  if (p === "starter")      return 15;
   return 10;
 }
 
@@ -458,8 +459,7 @@ Erstelle vollständigen Site-Audit auf Deutsch für Agentur-Kundenbericht:
         // ── Sonnet Expert-Fix (agency plans only) ─────────────────────────
         // Runs AFTER the complete event so the UI can render immediately.
         // Sends a second SSE event with before/after code fixes for top issues.
-        const isAgencyPlan = plan === "agency-pro" || plan === "agency-starter";
-        if (isAgencyPlan && issueCount > 0 && !abortSignal?.aborted) {
+        if (isAgency(plan) && issueCount > 0 && !abortSignal?.aborted) {
           try {
             enqueue("phase", { phase: "expert", message: "KI-Experte erstellt Code-Fixes…" });
 

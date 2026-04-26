@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import FreeDashboardClient from "./free-dashboard-client";
+import { isAtLeastProfessional } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ type ParsedIssue = {
   severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: "recht" | "speed" | "technik";
+  category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number; // actual error count (e.g. 24 for 24 missing alt texts)
   url?: string;   // page URL for per-page issues
 };
@@ -387,7 +388,7 @@ function StatusBadge({ status }: { status: "ok" | "warning" | "critical" | strin
 
 function ProgressBar({ plan, scanCount, hasResult }: { plan: string; scanCount: number; hasResult: boolean }) {
   const badge = PLAN_BADGE[plan as keyof typeof PLAN_BADGE] ?? PLAN_BADGE["starter"];
-  const isPro = plan === "professional" || plan === "smart-guard" || plan === "agency" || plan === "agency-starter" || plan === "agency-pro";
+  const isPro = isAtLeastProfessional(plan);
   // Steps: account created (always), first scan done, Pro/Agency plan, second scan done
   const steps = [true, scanCount > 0, isPro, scanCount > 1];
   const done = steps.filter(Boolean).length;
@@ -405,7 +406,7 @@ function ProgressBar({ plan, scanCount, hasResult }: { plan: string; scanCount: 
           {badge.label}
         </span>
         {!isPro && (
-          <Link href="/fuer-agenturen#pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", color: "#10B981" }}>
+          <Link href="/fuer-agenturen#pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "var(--pro-emerald-bg)", border: "1px solid var(--pro-emerald-border)", color: "var(--pro-emerald)" }}>
             Auf Professional upgraden →
           </Link>
         )}
@@ -542,20 +543,30 @@ export default async function DashboardPage() {
   let lastScanTotalPages: number | null = null;
   let lastScanSpeedScore: number | null = null;
   let lastScanUnterseiten: { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number; altMissingImages?: string[]; metaDescription?: string; inputsWithoutLabel?: number; inputsWithoutLabelFields?: string[]; buttonsWithoutText?: number; foundVia?: string }[] | null = null;
+  let lastScanWooAudit: {
+    addToCartButtons: number; cartButtonsBlocked: boolean;
+    pluginImpact: Array<{ name: string; impactScore: number; reason: string }>;
+    outdatedTemplates: boolean; revenueRiskPct: number;
+  } | null = null;
+  let lastScanBuilderAudit: {
+    builder: string | null; maxDomDepth: number; divCount: number;
+    googleFontFamilies: string[]; cssBloatHints: string[]; stylesheetCount: number;
+  } | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
-        SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json, speed_score
+        SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json, speed_score, meta_json
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null }[];
+      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit } | null }[];
       lastScanResult = rows[0]?.result ?? null;
-      // issues_json is the ground truth — stored during scan, no re-parsing needed
       lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
       techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
       lastScanTotalPages = rows[0]?.total_pages ?? null;
       lastScanSpeedScore = rows[0]?.speed_score ?? null;
       lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;
+      lastScanWooAudit = rows[0]?.meta_json?.woo_audit ?? null;
+      lastScanBuilderAudit = rows[0]?.meta_json?.builder_audit ?? null;
     } catch {}
   }
 
@@ -694,6 +705,8 @@ export default async function DashboardPage() {
             fingerprint={techFingerprint}
             totalPages={lastScanTotalPages}
             unterseiten={lastScanUnterseiten}
+            wooAudit={lastScanWooAudit}
+            builderAudit={lastScanBuilderAudit}
           />
         </Suspense>
       )}

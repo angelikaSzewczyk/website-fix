@@ -210,11 +210,18 @@ interface Props {
   logoUrl: string | null;
   primaryColor: string;
   shareToken: string;
+  isWooCommerce?: boolean;
+  builderAudit?: {
+    builder: string | null; maxDomDepth: number; divCount: number;
+    googleFontFamilies: string[]; cssBloatHints: string[]; stylesheetCount: number;
+  } | null;
 }
 
 export default function ViewClient({
   url, createdAt, issues, redCount, yellowCount, speedScore,
   execSummary, agencyName, agencyWebsite, logoUrl, primaryColor, shareToken,
+  isWooCommerce = false,
+  builderAudit = null,
 }: Props) {
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
     day: "2-digit", month: "long", year: "numeric",
@@ -327,6 +334,193 @@ export default function ViewClient({
               </p>
             </div>
           )}
+
+          {/* E-Commerce & Shop-Performance — nur wenn WooCommerce erkannt */}
+          {isWooCommerce && (() => {
+            const shopIssues = sorted.filter(i => i.category === "shop");
+            return (
+              <div style={{
+                marginBottom: 28, borderRadius: 12, overflow: "hidden",
+                background: "rgba(127,84,179,0.06)",
+                border: "1px solid rgba(127,84,179,0.32)",
+                animation: "wf-view-in 0.4s 0.07s ease both",
+              }}>
+                <div style={{
+                  padding: "12px 18px",
+                  background: "linear-gradient(90deg, rgba(127,84,179,0.18) 0%, transparent 100%)",
+                  borderBottom: "1px solid rgba(127,84,179,0.25)",
+                  display: "flex", alignItems: "center", gap: 10,
+                }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+                    background: "#7F54B3", display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="none">
+                      <path d="M21 5H3a1 1 0 0 0-1 1v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1zM4 13l1.5 7h13l1.5-7H4zm6 2h4v3h-4v-3z"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                      E-Commerce & Shop-Performance
+                    </h3>
+                    <p style={{ margin: "2px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.45)" }}>
+                      WooCommerce-spezifische Optimierungen
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 20,
+                    background: "#7F54B3", color: "#fff", letterSpacing: "0.06em",
+                  }}>
+                    WOOCOMMERCE
+                  </span>
+                </div>
+                <div style={{ padding: "14px 18px" }}>
+                  <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>
+                    <strong style={{ color: "#C084B8" }}>Dieser Shop nutzt WooCommerce.</strong>{" "}
+                    {shopIssues.length > 0
+                      ? "Optimierungspotenzial bei der Datenbank-Struktur und am Checkout-Prozess gefunden — konkrete Hinweise unten."
+                      : "Der Shop läuft technisch sauber. Keine kritischen Performance- oder Security-Fragmente gefunden."}
+                  </p>
+                  {shopIssues.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {shopIssues.map((issue, idx) => {
+                        const isRed = issue.severity === "red";
+                        return (
+                          <div key={idx} style={{
+                            padding: "10px 12px", borderRadius: 7,
+                            background: isRed ? "rgba(160,80,80,0.10)" : "rgba(251,191,36,0.08)",
+                            border: `1px solid ${isRed ? "rgba(160,80,80,0.22)" : "rgba(251,191,36,0.22)"}`,
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
+                              <span style={{
+                                fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 10,
+                                background: isRed ? "rgba(160,80,80,0.18)" : "rgba(251,191,36,0.14)",
+                                color: isRed ? "#c07070" : "#fbbf24", letterSpacing: "0.05em",
+                              }}>
+                                {isRed ? "HANDLUNGSBEDARF" : "OPTIMIERUNG"}
+                              </span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                                {issue.title}
+                              </span>
+                            </div>
+                            <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
+                              {issue.body}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Builder-Intelligence — nur wenn Page-Builder erkannt */}
+          {builderAudit && builderAudit.builder && (() => {
+            const builderIssues = sorted.filter(i => i.category === "builder");
+            const builderThemes: Record<string, { primary: string; bg: string; bd: string; logo: string }> = {
+              Elementor: { primary: "#D5336D", bg: "rgba(213,51,109,0.10)", bd: "rgba(213,51,109,0.32)", logo: "E" },
+              Divi:      { primary: "#00B5AD", bg: "rgba(0,181,173,0.10)",  bd: "rgba(0,181,173,0.32)",  logo: "D" },
+              Astra:     { primary: "#4A90E2", bg: "rgba(74,144,226,0.10)", bd: "rgba(74,144,226,0.32)", logo: "A" },
+              WPBakery:  { primary: "#F7781F", bg: "rgba(247,120,31,0.10)", bd: "rgba(247,120,31,0.32)", logo: "W" },
+            };
+            const bt = builderThemes[builderAudit.builder] ?? { primary: "#94A3B8", bg: "rgba(148,163,184,0.10)", bd: "rgba(148,163,184,0.32)", logo: "B" };
+            return (
+              <div style={{
+                marginBottom: 28, borderRadius: 12, overflow: "hidden",
+                background: bt.bg, border: `1px solid ${bt.bd}`,
+                animation: "wf-view-in 0.4s 0.09s ease both",
+              }}>
+                <div style={{
+                  padding: "12px 18px",
+                  background: `linear-gradient(90deg, ${bt.bg} 0%, transparent 100%)`,
+                  borderBottom: `1px solid ${bt.bd}`,
+                  display: "flex", alignItems: "center", gap: 10,
+                }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+                    background: bt.primary, display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, fontWeight: 900, color: "#fff",
+                  }}>{bt.logo}</div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                      Builder- & Theme-Analyse
+                    </h3>
+                    <p style={{ margin: "2px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.45)" }}>
+                      {builderAudit.builder} · DOM-Struktur, Fonts, CSS-Bloat
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 20,
+                    background: bt.primary, color: "#fff", letterSpacing: "0.06em",
+                  }}>
+                    {builderAudit.builder.toUpperCase()}
+                  </span>
+                </div>
+                <div style={{ padding: "14px 18px" }}>
+                  {/* KPI-Row */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 12 }}>
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 8,
+                      background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)",
+                    }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.06em" }}>DOM-Tiefe</p>
+                      <p style={{ margin: 0, fontSize: 17, fontWeight: 900, color: builderAudit.maxDomDepth > 22 ? "#c07070" : builderAudit.maxDomDepth > 15 ? "#fbbf24" : "#4ade80" }}>
+                        {builderAudit.maxDomDepth}
+                      </p>
+                    </div>
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 8,
+                      background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)",
+                    }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Google Fonts</p>
+                      <p style={{ margin: 0, fontSize: 17, fontWeight: 900, color: builderAudit.googleFontFamilies.length > 2 ? "#fbbf24" : "#4ade80" }}>
+                        {builderAudit.googleFontFamilies.length}
+                      </p>
+                    </div>
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 8,
+                      background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)",
+                    }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stylesheets</p>
+                      <p style={{ margin: 0, fontSize: 17, fontWeight: 900, color: builderAudit.stylesheetCount >= 8 ? "#fbbf24" : "#4ade80" }}>
+                        {builderAudit.stylesheetCount}
+                      </p>
+                    </div>
+                  </div>
+                  {builderIssues.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {builderIssues.map((issue, idx) => {
+                        const isRed = issue.severity === "red";
+                        return (
+                          <div key={idx} style={{
+                            padding: "10px 12px", borderRadius: 7,
+                            background: isRed ? "rgba(160,80,80,0.10)" : "rgba(251,191,36,0.08)",
+                            border: `1px solid ${isRed ? "rgba(160,80,80,0.22)" : "rgba(251,191,36,0.22)"}`,
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
+                              <span style={{
+                                fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 10,
+                                background: isRed ? "rgba(160,80,80,0.18)" : "rgba(251,191,36,0.14)",
+                                color: isRed ? "#c07070" : "#fbbf24", letterSpacing: "0.05em",
+                              }}>
+                                {isRed ? "HANDLUNGSBEDARF" : "OPTIMIERUNG"}
+                              </span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{issue.title}</span>
+                            </div>
+                            <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
+                              {issue.body}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Score overview */}
           <div style={{

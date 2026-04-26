@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE,
   "emailVerified" TIMESTAMPTZ,
   image TEXT,
-  plan VARCHAR(20) DEFAULT 'free',
+  plan VARCHAR(20) DEFAULT 'starter',
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()

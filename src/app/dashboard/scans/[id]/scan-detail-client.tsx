@@ -44,9 +44,9 @@ export default function ScanDetailClient({ url, createdAt, plan, issues, redCoun
               padding: "9px 20px", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 700,
               background: "#007BFF", color: "#fff", boxShadow: "0 2px 10px rgba(0,123,255,0.35)",
             }}>
-              Neuer Scan →
+              Neues WordPress-Audit →
             </Link>
-            <PrintButton url={url} type="Website-Check" date={date} scanId={scanId} plan={plan} />
+            <PrintButton url={url} type="WordPress-Audit" date={date} scanId={scanId} plan={plan} />
           </div>
         </div>
 

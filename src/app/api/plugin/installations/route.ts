@@ -7,8 +7,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
-
-const AGENCY_PLANS = ["agency-starter", "agency-pro"];
+import { isAgency } from "@/lib/plans";
 
 export async function GET() {
   const session = await auth();
@@ -17,7 +16,7 @@ export async function GET() {
   if (!user?.id) {
     return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
   }
-  if (!AGENCY_PLANS.includes(user.plan ?? "starter")) {
+  if (!isAgency(user.plan)) {
     return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
   }
 

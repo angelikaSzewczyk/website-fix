@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import Link from "next/link";
 import type { Metadata } from "next";
 import MonitoringClient from "./monitoring-client";
+import { normalizePlan } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Automatisches Monitoring — WebsiteFix",
@@ -27,8 +28,8 @@ export default async function MonitoringPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const plan = (session.user as { plan?: string }).plan ?? "free";
-  if (!["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(plan)) redirect("/dashboard");
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
+  if (normalizePlan(plan) === null) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
 

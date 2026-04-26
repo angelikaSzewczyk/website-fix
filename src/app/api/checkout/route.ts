@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/auth";
 
+// Legacy-Keys (smart-guard, agency-starter) akzeptieren wir weiter für alte Links,
+// mappen aber intern auf professional / agency.
 const PLAN_PRICE_MAP: Record<string, string | undefined> = {
   "starter":        process.env.STRIPE_PRICE_STARTER,
   "professional":   process.env.STRIPE_PRICE_PROFESSIONAL ?? process.env.STRIPE_PRICE_SMART_GUARD,
-  "smart-guard":    process.env.STRIPE_PRICE_SMART_GUARD   ?? process.env.STRIPE_PRICE_PROFESSIONAL,
-  "agency-starter": process.env.STRIPE_PRICE_AGENCY_STARTER ?? process.env.STRIPE_PRICE_AGENCY,
+  "agency":         process.env.STRIPE_PRICE_AGENCY        ?? process.env.STRIPE_PRICE_AGENCY_STARTER,
+  "smart-guard":    process.env.STRIPE_PRICE_PROFESSIONAL  ?? process.env.STRIPE_PRICE_SMART_GUARD,
+  "agency-starter": process.env.STRIPE_PRICE_AGENCY        ?? process.env.STRIPE_PRICE_AGENCY_STARTER,
 };
 
 function missingEnvPage(plan: string): Response {

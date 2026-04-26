@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
+import { isAgency } from "@/lib/plans";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -50,7 +51,7 @@ export default async function ClientsPage() {
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!["agency-pro", "agency-starter"].includes(plan ?? "")) redirect("/dashboard");
+  if (!isAgency(plan)) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
 

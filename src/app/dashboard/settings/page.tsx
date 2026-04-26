@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import SettingsClient from "./settings-client";
 import FreeSettingsClient from "./free-settings-client";
+import { hasBrandingAccess } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Einstellungen — WebsiteFix",
@@ -16,11 +17,10 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const plan = (session.user as { plan?: string }).plan ?? "free";
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
 
-  // ── Agency / Professional plans → white-label / branding settings ─────────
-  const BRANDING_PLANS = ["agency-pro", "agency-starter", "professional", "smart-guard", "starter"];
-  if (BRANDING_PLANS.includes(plan)) {
+  // ── All canonical plans → white-label / branding settings ─────────
+  if (hasBrandingAccess(plan)) {
     const sql = neon(process.env.DATABASE_URL!);
     const [row] = await sql`
       SELECT agency_name, agency_website, logo_url, primary_color

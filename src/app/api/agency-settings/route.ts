@@ -1,14 +1,14 @@
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
+import { hasBrandingAccess } from "@/lib/plans";
 
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const plan = (session.user as { plan?: string }).plan;
-  const BRANDING_PLANS = ["agency-pro", "agency-starter", "professional", "smart-guard", "starter"];
-  if (!BRANDING_PLANS.includes(plan ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!hasBrandingAccess(plan)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`
@@ -26,8 +26,7 @@ export async function PUT(req: Request) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const plan = (session.user as { plan?: string }).plan;
-  const BRANDING_PLANS = ["agency-pro", "agency-starter", "professional", "smart-guard", "starter"];
-  if (!BRANDING_PLANS.includes(plan ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!hasBrandingAccess(plan)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
   const agencyName    = String(body.agency_name    ?? "").slice(0, 100);

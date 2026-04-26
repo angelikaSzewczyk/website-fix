@@ -24,6 +24,7 @@ import {
   detectAnalytics,
   detectTagManager,
   detectTracking,
+  detectWpPlugins,
 } from "./detectors";
 
 export interface BuildFingerprintOptions {
@@ -60,6 +61,7 @@ export async function buildFingerprint(
     analytics:  detectAnalytics(data),
     tagManager: detectTagManager(data),
     tracking:   detectTracking(data),
+    wpPlugins:  detectWpPlugins(data),
   };
 
   return {
@@ -89,5 +91,6 @@ export function buildFingerprintFromRaw(rawData: Parameters<typeof detectCms>[0]
     analytics:  detectAnalytics(rawData),
     tagManager: detectTagManager(rawData),
     tracking:   detectTracking(rawData),
+    wpPlugins:  detectWpPlugins(rawData),
   };
 }

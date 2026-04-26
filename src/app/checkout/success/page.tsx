@@ -9,17 +9,14 @@ export const metadata: Metadata = {
 };
 
 const PLAN_INFO: Record<string, { label: string; accent: string; accentBg: string; isAgency: boolean; isStarter: boolean }> = {
-  // Current plan tiers
-  starter:         { label: "Starter",      accent: "#60a5fa", accentBg: "rgba(96,165,250,0.1)",   isAgency: false, isStarter: true },
-  professional:    { label: "Professional", accent: "#FBBF24", accentBg: "rgba(251,191,36,0.1)",  isAgency: false, isStarter: false },
-  "smart-guard":   { label: "Professional", accent: "#FBBF24", accentBg: "rgba(251,191,36,0.1)",  isAgency: false, isStarter: false },
-  "agency-starter":{ label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
-  "agency-pro":    { label: "Agency Pro",   accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
+  // Canonical plan tiers
+  starter:         { label: "Starter",      accent: "#60a5fa", accentBg: "rgba(96,165,250,0.1)",  isAgency: false, isStarter: true },
+  professional:    { label: "Professional", accent: "#10B981", accentBg: "rgba(16,185,129,0.1)",  isAgency: false, isStarter: false },
   agency:          { label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
-  // Legacy aliases (keep for old links)
-  freelancer:      { label: "Starter",      accent: "#60a5fa", accentBg: "rgba(96,165,250,0.1)",  isAgency: false, isStarter: true },
-  agency_core:     { label: "Professional", accent: "#FBBF24", accentBg: "rgba(251,191,36,0.1)",  isAgency: false, isStarter: false },
-  agency_scale:    { label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
+  // Legacy aliases (old Stripe-Links)
+  "smart-guard":   { label: "Professional", accent: "#10B981", accentBg: "rgba(16,185,129,0.1)",  isAgency: false, isStarter: false },
+  "agency-starter":{ label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
+  "agency-pro":    { label: "Agency",       accent: "#a78bfa", accentBg: "rgba(167,139,250,0.1)", isAgency: true,  isStarter: false },
 };
 
 export default function CheckoutSuccessPage({

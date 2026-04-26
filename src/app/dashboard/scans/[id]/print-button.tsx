@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
+import { isAtLeastProfessional } from "@/lib/plans";
 
 export default function PrintButton({ url, type, date, scanId, plan }: {
   url: string; type: string; date: string;
@@ -9,7 +8,7 @@ export default function PrintButton({ url, type, date, scanId, plan }: {
 }) {
   const [shareState, setShareState] = useState<"idle" | "loading" | "copied" | "error">("idle");
   const [shareLink,  setShareLink]  = useState<string | null>(null);
-  const isPro = PRO_PLANS.includes(plan ?? "");
+  const isPro = isAtLeastProfessional(plan);
 
   async function handleShare() {
     if (!scanId || !isPro) return;

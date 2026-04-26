@@ -11,8 +11,10 @@ import {
   Clock,
   Archive,
   Users,
+  Code2,
 } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
+import { isAgency as isAgencyPlan } from "@/lib/plans";
 
 type NavItem = {
   href: string;
@@ -23,14 +25,14 @@ type NavItem = {
 };
 
 // Plans that get the agency nav
-const AGENCY_PLANS = ["agency", "agency-starter", "agency-pro"];
 
 // 4-item agency nav (same for both agency tiers)
 const AGENCY_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard",          label: "Kommandozentrale",   icon: <LayoutDashboard size={16} />, exact: true },
-  { href: "/dashboard/clients",  label: "Kundenliste",        icon: <Users size={16} /> },
-  { href: "/dashboard/reports",  label: "Berichte-Archiv",    icon: <Archive size={16} /> },
-  { href: "/dashboard/settings", label: "Team-Einstellungen", icon: <Settings size={16} /> },
+  { href: "/dashboard",              label: "Kommandozentrale",   icon: <LayoutDashboard size={16} />, exact: true },
+  { href: "/dashboard/clients",      label: "Kundenliste",        icon: <Users size={16} /> },
+  { href: "/dashboard/reports",      label: "Berichte-Archiv",    icon: <Archive size={16} /> },
+  { href: "/dashboard/widget-config",label: "Widget-Konfigurator", icon: <Code2 size={16} /> },
+  { href: "/dashboard/settings",     label: "Team-Einstellungen", icon: <Settings size={16} /> },
 ];
 
 // Nav for free / single plans
@@ -127,7 +129,7 @@ function SlimSidebar({ plan, userName, userImage, signOutButton, lastScanClean }
 export default function SidebarNav({ plan, userName, userImage, signOutButton, lastScanClean }: Props) {
   const pathname  = usePathname();
   const planCfg   = PLAN_CONFIG[plan] ?? PLAN_CONFIG["starter"];
-  const isAgency  = AGENCY_PLANS.includes(plan);
+  const isAgency  = isAgencyPlan(plan);
   const isProPlan = isAgency; // all agency plans get white-label branding
 
   // Starter / Professional → slim icon sidebar (layout uses FreeSidebar, but keep as fallback)

@@ -177,3 +177,17 @@ export function detectTracking(data: RawWebsiteData): DetectedValue[] {
       evidence:   c.evidence,
     }));
 }
+
+/**
+ * WordPress plugin detector — returns ALL detected plugins, not just the best.
+ */
+export function detectWpPlugins(data: RawWebsiteData): DetectedValue[] {
+  const candidates = runRules("wpPlugin", data);
+  return candidates
+    .filter(c => c.confidence >= CONFIDENCE_THRESHOLD)
+    .map(c => ({
+      value:      c.value,
+      confidence: Math.round(c.confidence * 100) / 100,
+      evidence:   c.evidence,
+    }));
+}

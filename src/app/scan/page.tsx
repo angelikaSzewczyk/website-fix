@@ -31,10 +31,10 @@ const MAX_FREE_PAGES = 10;
 
 // ── Progress steps data ───────────────────────────────────────────────────────
 const STEPS: { phase: ScanPhase; label: string; sub?: string }[] = [
-  { phase: "step1", label: "Startseite wird geladen…",         sub: "Verbinde mit Zieldomain" },
-  { phase: "step2", label: "Meta-Daten & Links gelesen",        sub: "Titel, Description, H1 & interne Links…" },
-  { phase: "step3", label: "Barrierefreiheit & SEO geprüft",   sub: "Alt-Texte, BFSG-Konformität, robots.txt…" },
-  { phase: "step4", label: "KI erstellt Snapshot-Report…",     sub: "Befunde werden aggregiert" },
+  { phase: "step1", label: "Startseite & Sub-Pages werden geladen…", sub: "Crawler verbindet sich mit der Zieldomain" },
+  { phase: "step2", label: "Builder-Detection läuft",                 sub: "Elementor, Divi, Astra, WPBakery · DOM-Tiefe wird gemessen" },
+  { phase: "step3", label: "WooCommerce & DSGVO-Check",              sub: "Shop-Performance, Cart-Fragments, Google Fonts, externe Embeds…" },
+  { phase: "step4", label: "BFSG, SEO & KI-Befund-Aggregation",      sub: "Alt-Texte, Meta-Daten, Barrierefreiheit · Optimierungs-Plan wird erstellt" },
 ];
 
 const PHASE_ORDER: ScanPhase[] = ["idle","step1","step2","step3","step4","done","error"];

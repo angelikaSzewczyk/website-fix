@@ -11,7 +11,7 @@ type ScanIssue = {
   severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: "recht" | "speed" | "technik";
+  category: "recht" | "speed" | "technik" | "shop" | "builder";
   url?: string;
   count: number;
 };
@@ -22,7 +22,17 @@ type Row = {
   created_at: string;
   issues_json: string | null;
   speed_score: number | null;
-  meta_json: { executive_summary?: string } | null;
+  meta_json: {
+    executive_summary?: string;
+    builder_audit?: {
+      builder: string | null; maxDomDepth: number; divCount: number;
+      googleFontFamilies: string[]; cssBloatHints: string[]; stylesheetCount: number;
+    } | null;
+  } | null;
+  tech_fingerprint: {
+    ecommerce?: { value?: string; confidence?: number };
+    builder?:   { value?: string; confidence?: number };
+  } | null;
   agency_name: string | null;
   agency_website: string | null;
   logo_url: string | null;
@@ -82,6 +92,7 @@ export default async function ViewPage({ params }: { params: { token: string } }
         s.issues_json::text AS issues_json,
         s.speed_score,
         s.meta_json,
+        s.tech_fingerprint,
         a.agency_name,
         a.agency_website,
         a.logo_url,
@@ -117,6 +128,10 @@ export default async function ViewPage({ params }: { params: { token: string } }
   const speedScore = scan.speed_score ?? Math.max(10, Math.min(92, 100 - techCount * 12));
 
   const execSummary = scan.meta_json?.executive_summary ?? null;
+  const isWooCommerce =
+    scan.tech_fingerprint?.ecommerce?.value === "WooCommerce" &&
+    (scan.tech_fingerprint?.ecommerce?.confidence ?? 0) >= 0.45;
+  const builderAudit = scan.meta_json?.builder_audit ?? null;
 
   return (
     <ViewClient
@@ -132,6 +147,8 @@ export default async function ViewPage({ params }: { params: { token: string } }
       logoUrl={scan.logo_url}
       primaryColor={scan.primary_color ?? "#8df3d3"}
       shareToken={params.token}
+      isWooCommerce={isWooCommerce}
+      builderAudit={builderAudit}
     />
   );
 }

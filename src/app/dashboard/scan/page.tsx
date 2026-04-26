@@ -9,7 +9,7 @@ export default async function DashboardScanPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const plan = (session.user as { plan?: string }).plan ?? "free";
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
 
   let projectUrl: string | null = null;
   let monthlyScans = 0;

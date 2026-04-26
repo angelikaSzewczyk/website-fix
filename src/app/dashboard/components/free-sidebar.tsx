@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
 import HilfeModal from "./hilfe-modal";
+import { isAtLeastProfessional, isAgency, getPlanTheme, getPlanQuota, normalizePlan } from "@/lib/plans";
 
 // ─── Design tokens (matches free-dashboard-client) ────────────────────────────
 const S = {
@@ -49,6 +50,54 @@ interface Props {
   scanLimit: number;
   projectUrl?: string;
   unreadTickets?: number;
+}
+
+// ─── Plan-Badge ────────────────────────────────────────────────────────────────
+// Neben dem User-Namen: [STARTER] blau | [PROFESSIONAL] emerald+gold | [AGENCY] indigo+cyan
+function PlanBadge({ canonical }: { canonical: "starter" | "professional" | "agency" }) {
+  const styles = {
+    starter: {
+      label: "STARTER",
+      bg: "rgba(0,123,255,0.12)",
+      color: "#7aa6ff",
+      border: "1px solid rgba(0,123,255,0.30)",
+    },
+    professional: {
+      label: "PROFESSIONAL",
+      bg: "rgba(5,46,22,0.85)",
+      color: "#FBBF24",
+      border: "1px solid rgba(16,185,129,0.35)",
+    },
+    agency: {
+      label: "AGENCY",
+      bg: "rgba(91,33,182,0.28)",
+      color: "#22D3EE",
+      border: "1px solid rgba(124,58,237,0.45)",
+    },
+  }[canonical];
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 3,
+      fontSize: 8, fontWeight: 800, letterSpacing: "0.08em",
+      padding: "2px 6px", borderRadius: 10,
+      flexShrink: 0, whiteSpace: "nowrap",
+      background: styles.bg,
+      color:      styles.color,
+      border:     styles.border,
+    }}>
+      {canonical === "professional" && (
+        <svg width="7" height="7" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+        </svg>
+      )}
+      {canonical === "agency" && (
+        <svg width="7" height="7" viewBox="0 0 24 24" fill="#22D3EE" stroke="none">
+          <path d="M12 2l3 5h5l-4 4 1.5 6-5.5-3-5.5 3L8 11 4 7h5z"/>
+        </svg>
+      )}
+      {styles.label}
+    </span>
+  );
 }
 
 // ─── Live-Monitor Widget ───────────────────────────────────────────────────────
@@ -147,14 +196,24 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
   const [hilfeOpen, setHilfeOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const remaining    = Math.max(0, scanLimit - monthlyScans);
-  const limitReached = monthlyScans >= scanLimit;
-  const planLabel    = plan === "starter" ? "Starter" : plan === "agency" || plan === "agency-starter" || plan === "agency-pro" ? "Agency" : "Professional";
-  const isPro        = plan === "professional" || plan === "smart-guard" || plan === "agency" || plan === "agency-starter" || plan === "agency-pro";
-  // Use CSS variable for accent so it picks up the user's agency color
-  const accent       = isPro ? "var(--agency-primary, #10B981)" : S.blue;
-  const accentBg     = isPro ? "var(--agency-primary-bg, rgba(16,185,129,0.08))" : S.blueBg;
-  const accentBorder = isPro ? "var(--agency-primary-border, rgba(16,185,129,0.25))" : S.blueBorder;
+  // Plan-Theme (Starter=Blau, Professional=Emerald, Agency=Indigo)
+  const canonical    = normalizePlan(plan) ?? "starter";
+  const theme        = getPlanTheme(plan);
+  const quota        = getPlanQuota(plan);
+  const isPro        = isAtLeastProfessional(plan);
+  const isAgencyPlan = isAgency(plan);
+
+  // Echter Scan-Quota-Cap (UI-seitig aus plans.ts, später per Stripe überschreibbar)
+  const effectiveLimit = quota.monthlyScans;
+  const remaining      = Math.max(0, effectiveLimit - monthlyScans);
+  const limitReached   = monthlyScans >= effectiveLimit;
+  const usagePct       = Math.min(100, Math.round((monthlyScans / Math.max(1, effectiveLimit)) * 100));
+
+  // Accent-Tokens: Plan-Theme — Agency-User bekommen ihr User-Branding über var(--agency-primary)
+  const accent       = `var(--plan-primary, ${theme.primary})`;
+  const accentBg     = `var(--plan-primary-bg, ${theme.bg})`;
+  const accentBorder = `var(--plan-primary-border, ${theme.border})`;
+  void scanLimit;  // prop kept for compat, echtes Limit kommt aus Quota
 
   // Close user menu on outside click
   useEffect(() => {
@@ -172,11 +231,14 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
       ? pathname === href
       : pathname === href || pathname.startsWith(href + "/");
 
+  // White-Label-Nav: Starter → gelockt mit Upgrade-CTA | Pro/Agency → aktiv
   const NAV = [
     { icon: "dashboard",  label: "Dashboard",              href: "/dashboard",           exact: true,  locked: false },
     { icon: "scan",       label: "Live Scan",               href: "/dashboard/scan",      exact: false, locked: false },
     { icon: "reports",    label: "Berichte",                href: "/dashboard/scans",     exact: true,  locked: false },
-    { icon: "whitelabel", label: "White-Label & Branding",  href: "/pricing",             exact: false, locked: true  },
+    isPro
+      ? { icon: "whitelabel", label: "White-Label & Branding", href: "/dashboard/settings#branding", exact: false, locked: false }
+      : { icon: "whitelabel", label: "White-Label & Branding", href: "/fuer-agenturen#pricing",      exact: false, locked: true  },
   ];
 
   return (
@@ -217,8 +279,8 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
         .wf-plan-dot  { animation: wf-green-glow 2s ease-in-out infinite; }
       `}</style>
 
-      {/* Pro header stripe */}
-      {isPro && (
+      {/* Plan-Header-Stripe — plan-spezifisch gefärbt */}
+      {canonical === "professional" && (
         <div style={{
           padding: "7px 14px",
           background: "linear-gradient(90deg, rgba(5,150,105,0.18) 0%, rgba(16,185,129,0.08) 100%)",
@@ -228,13 +290,51 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           <span style={{ fontSize: 9, fontWeight: 800, color: "#10B981", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>
             Professional
           </span>
-          {/* Diamond PRO icon */}
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.06em" }}>
             <svg width="9" height="9" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
             PRO
           </span>
+        </div>
+      )}
+      {canonical === "agency" && (
+        <div style={{
+          padding: "7px 14px",
+          background: "linear-gradient(90deg, rgba(91,33,182,0.28) 0%, rgba(124,58,237,0.12) 100%)",
+          borderBottom: "1px solid rgba(124,58,237,0.28)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 800, color: "#A78BFA", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>
+            Agency
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800, color: "#22D3EE", letterSpacing: "0.06em" }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="#22D3EE" stroke="none">
+              <path d="M12 2l3 5h5l-4 4 1.5 6-5.5-3-5.5 3L8 11 4 7h5z"/>
+            </svg>
+            ELITE
+          </span>
+        </div>
+      )}
+      {canonical === "starter" && (
+        <div style={{
+          padding: "7px 14px",
+          background: "linear-gradient(90deg, rgba(0,123,255,0.14) 0%, rgba(0,123,255,0.04) 100%)",
+          borderBottom: "1px solid rgba(0,123,255,0.20)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 800, color: "#7aa6ff", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>
+            Starter
+          </span>
+          <Link href="/fuer-agenturen#pricing" style={{
+            display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800,
+            color: "#10B981", letterSpacing: "0.06em", textDecoration: "none",
+          }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 12 12 4 4 12"/><line x1="12" y1="20" x2="12" y2="4"/>
+            </svg>
+            UPGRADE
+          </Link>
         </div>
       )}
 
@@ -278,18 +378,6 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
                 </span>
               )}
 
-              {/* Scan counter badge for Live Scan */}
-              {item.icon === "scan" && !item.locked && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
-                  background: limitReached ? S.redBg : S.amberBg,
-                  border: `1px solid ${limitReached ? "rgba(239,68,68,0.25)" : S.amberBorder}`,
-                  color: limitReached ? S.red : S.amber,
-                  letterSpacing: "0.03em", flexShrink: 0,
-                }}>
-                  {remaining}/{scanLimit}
-                </span>
-              )}
 
               {/* Locked badge for White-Label */}
               {item.locked && (
@@ -312,6 +400,55 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           );
         })}
       </nav>
+
+      {/* Nutzungs-Bar (Kontingent-Anzeige) — plan-abhängig ────────────────── */}
+      <div style={{ padding: "4px 14px 10px" }}>
+        <div style={{
+          padding: "10px 12px", borderRadius: 9,
+          background: limitReached ? "rgba(239,68,68,0.08)" : accentBg,
+          border: `1px solid ${limitReached ? "rgba(239,68,68,0.22)" : accentBorder}`,
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              Diesen Monat
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: limitReached ? "#f87171" : accent, fontVariantNumeric: "tabular-nums" }}>
+              {monthlyScans}/{effectiveLimit}
+            </span>
+          </div>
+          <div style={{
+            height: 4, borderRadius: 99, overflow: "hidden",
+            background: "rgba(255,255,255,0.06)",
+          }}>
+            <div style={{
+              height: "100%",
+              width: `${usagePct}%`,
+              background: limitReached
+                ? "linear-gradient(90deg, #ef4444, #f87171)"
+                : `linear-gradient(90deg, ${theme.deep}, ${theme.primary})`,
+              transition: "width 0.35s ease",
+              boxShadow: `0 0 8px ${accent}`,
+            }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+              {canonical === "starter" ? "Starter" : canonical === "professional" ? "Professional" : "Agency"} · {quota.monthlyScansLabel}
+            </span>
+            {!isAgencyPlan && (
+              <Link href="/fuer-agenturen#pricing" style={{
+                fontSize: 10, fontWeight: 700, color: "#10B981", textDecoration: "none",
+              }}>
+                Upgrade →
+              </Link>
+            )}
+          </div>
+          {canonical === "starter" && remaining <= 2 && !limitReached && (
+            <p style={{ margin: "8px 0 0", fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
+              Nur noch {remaining} {remaining === 1 ? "Scan" : "Scans"} diesen Monat — Professional entsperrt <strong style={{ color: "#10B981" }}>25/Monat</strong>.
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Hilfe button */}
       <div style={{ padding: "0 8px 6px" }}>
@@ -416,34 +553,11 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               {firstName.charAt(0).toUpperCase()}
             </span>
           </div>
-          <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: S.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ flex: 1, textAlign: "left", minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: S.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
               {firstName}
             </p>
-            {isPro ? (
-              <span style={{
-                display: "inline-flex", alignItems: "center", gap: 4,
-                fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
-                padding: "2px 8px", borderRadius: 10, marginTop: 3,
-                background: "rgba(5,46,22,0.85)",
-                color: "#FBBF24",
-                border: "1px solid rgba(16,185,129,0.35)",
-              }}>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
-                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                </svg>
-                PROFESSIONAL
-              </span>
-            ) : (
-              <p style={{ margin: 0, fontSize: 10, color: S.textMuted, lineHeight: 1.3, display: "flex", alignItems: "center", gap: 5 }}>
-                <span className="wf-plan-dot" style={{
-                  width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
-                  background: "#22C55E",
-                  display: "inline-block",
-                }} />
-                Plan: {planLabel}
-              </p>
-            )}
+            <PlanBadge canonical={canonical} />
           </div>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={S.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             style={{ flexShrink: 0, transform: menuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>

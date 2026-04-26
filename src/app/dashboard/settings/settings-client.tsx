@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { isAgency as isAgencyPlan } from "@/lib/plans";
 
 type AgencySettings = {
   agency_name: string;
@@ -234,9 +236,38 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
       <h1 style={{ fontSize: 26, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
         Agentur-Einstellungen
       </h1>
-      <p style={{ margin: "0 0 48px", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
+      <p style={{ margin: "0 0 24px", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
         White-Label Branding und Team-Verwaltung.
       </p>
+
+      {/* Integrations-Shortcut — Pro/Agency */}
+      <Link href="/dashboard/settings/integrations" style={{
+        display: "flex", alignItems: "center", gap: 12, marginBottom: 32,
+        padding: "14px 18px", borderRadius: 12,
+        background: "linear-gradient(90deg, rgba(16,185,129,0.08), rgba(66,133,244,0.05))",
+        border: "1px solid rgba(16,185,129,0.26)",
+        textDecoration: "none", color: "#fff", fontFamily: "inherit",
+      }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+          background: "#10B981", display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 2 }}>
+            Integrationen verwalten · Slack, Jira, Trello, Zapier, GSC
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+            Scan-Ergebnisse als Tasks exportieren, Slack-Alerts aktivieren, Webhook-Payload für Zapier einrichten.
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </Link>
 
       {/* TWO-COLUMN LAYOUT: Form + Live Preview */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 20, alignItems: "start", marginBottom: 28 }}>
@@ -248,7 +279,7 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
             <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Branding-Center</h2>
-            {plan === "agency-pro" || plan === "agency-starter" ? (
+            {isAgencyPlan(plan) ? (
               <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>
                 FULL WHITE-LABEL AKTIV
               </span>
@@ -336,7 +367,7 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
             </div>
 
             {/* Subdomain — agency-only */}
-            {(plan === "agency-pro" || plan === "agency-starter") && (
+            {isAgencyPlan(plan) && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
@@ -356,7 +387,7 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
             )}
 
             {/* Report sender name — agency-only */}
-            {(plan === "agency-pro" || plan === "agency-starter") && (
+            {isAgencyPlan(plan) && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <label style={{ ...label, marginBottom: 0 }}>E-Mail Absendername</label>

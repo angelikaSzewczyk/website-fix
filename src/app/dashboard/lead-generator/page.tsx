@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import LeadGeneratorClient from "./lead-generator-client";
+import { isAgency } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Lead-Generator — WebsiteFix",
@@ -24,8 +25,8 @@ export default async function LeadGeneratorPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const plan = (session.user as { plan?: string }).plan ?? "free";
-  if (!["agency-pro", "agency-starter"].includes(plan)) redirect("/dashboard");
+  const plan = (session.user as { plan?: string }).plan ?? "starter";
+  if (!isAgency(plan)) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
   const agencyId = String(session.user.id);

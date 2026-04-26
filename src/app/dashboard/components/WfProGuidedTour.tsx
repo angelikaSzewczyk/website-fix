@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { ArrowRight, Check } from "lucide-react";
+import { isAtLeastProfessional } from "@/lib/plans";
 
 const TOUR_KEY = "wf_pro_guided_tour_v1";
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
 
 const STEPS = [
   {
@@ -52,7 +52,7 @@ export default function WfProGuidedTour({ plan, scansCount }: Props) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!PRO_PLANS.includes(plan)) return;
+    if (!isAtLeastProfessional(plan)) return;
     if (scansCount < 1) return;
     try {
       if (!localStorage.getItem(TOUR_KEY)) setVisible(true);

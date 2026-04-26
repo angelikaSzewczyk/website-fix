@@ -9,8 +9,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-
-const AGENCY_PLANS = ["agency-starter", "agency-pro"];
+import { isAgency } from "@/lib/plans";
 
 // In-memory rate limit: 60 req / 60 min per IP
 const ipHits = new Map<string, { count: number; resetAt: number }>();
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
 
   const user = rows[0];
 
-  if (!AGENCY_PLANS.includes(user.plan)) {
+  if (!isAgency(user.plan)) {
     return NextResponse.json({
       valid: false,
       error: `Agency plan required. Current plan: ${user.plan}`,

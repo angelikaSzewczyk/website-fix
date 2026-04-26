@@ -11,6 +11,9 @@ import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
 import { buildFingerprintFromRaw } from "@/lib/tech-detector";
 import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
+import { normalizePlan, isAgency, isAtLeastProfessional } from "@/lib/plans";
+import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrations";
+import { sendScanSummaryToSlack } from "@/lib/slack";
 
 export const maxDuration = 60;
 
@@ -48,7 +51,7 @@ export type ScanIssue = {
   severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: "recht" | "speed" | "technik";
+  category: "recht" | "speed" | "technik" | "shop" | "builder"; // shop = WooCommerce, builder = Page-Builder/Theme
   url?: string; // per-page issues carry their URL
   count: number; // actual number of errors this issue represents (e.g. 24 for alt-missing)
 };
@@ -137,6 +140,528 @@ function buildIssuesJson(
   return issues;
 }
 
+// ── WordPress-spezifische Security / Performance Checks ───────────
+/** Prüft /wp-admin, /wp-login.php und /xmlrpc.php auf offene Angriffsflächen. */
+async function runWordPressChecks(baseUrl: string): Promise<ScanIssue[]> {
+  const issues: ScanIssue[] = [];
+  let origin: string;
+  try { origin = new URL(baseUrl).origin; } catch { return issues; }
+
+  async function probe(path: string): Promise<number | null> {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(origin + path, {
+        method: "HEAD",
+        signal: controller.signal,
+        redirect: "manual",
+        headers: { "User-Agent": "WebsiteFix-Scanner/1.0" },
+      });
+      clearTimeout(t);
+      return res.status;
+    } catch { return null; }
+  }
+
+  const [loginStatus, xmlrpcStatus] = await Promise.all([
+    probe("/wp-login.php"),
+    probe("/xmlrpc.php"),
+  ]);
+
+  if (loginStatus !== null && loginStatus < 400) {
+    issues.push({
+      severity: "yellow",
+      title: "WordPress-Login unter /wp-login.php öffentlich erreichbar",
+      body: "Der Standard-Login ist über die Standard-URL erreichbar und ein bekanntes Ziel für Brute-Force-Angriffe. Empfehlung: Login-URL ändern (z.B. WPS Hide Login) oder per .htaccess / Firewall absichern.",
+      category: "technik",
+      count: 1,
+    });
+  }
+
+  if (xmlrpcStatus !== null && xmlrpcStatus < 400 && xmlrpcStatus !== 405) {
+    issues.push({
+      severity: "red",
+      title: "XML-RPC-Endpunkt (/xmlrpc.php) offen — Brute-Force-Risiko",
+      body: "xmlrpc.php erlaubt Remote-Aufrufe und wird für verteilte Angriffe (Pingback-DDoS, Login-Bruteforce) missbraucht. Empfehlung: .htaccess-Block oder Plugin 'Disable XML-RPC'.",
+      category: "technik",
+      count: 1,
+    });
+  }
+
+  return issues;
+}
+
+// ── WooCommerce-spezifische Shop-Checks ─────────────────────────────────
+/**
+ * E-Commerce Business Auditor für WooCommerce.
+ * Prüft Cart-Performance, Database-Bloat, Upload-Security, UX-Buttons,
+ * Plugin-Impact und veraltete Templates. Erzeugt shop-kategorisierte Issues
+ * plus strukturierte Meta-Daten für die Dashboard-Visualisierung.
+ */
+export type WooAuditMeta = {
+  /** Anzahl gefundener add_to_cart-Buttons auf der Seite */
+  addToCartButtons:     number;
+  /** Sind kritische Skripte nahe der Buttons blockierend (ohne defer/async)? */
+  cartButtonsBlocked:   boolean;
+  /** Top 3 WooCommerce-Addons mit geschätztem TTI-Impact (Gewicht 1..10). */
+  pluginImpact:         Array<{ name: string; impactScore: number; reason: string }>;
+  /** Hinweis: Shop verwendet veraltete Template-Override im Theme-Ordner? */
+  outdatedTemplates:    boolean;
+  /** Revenue-at-Risk — Basis-Prozent-Wert für die UI-Kalkulation (0-40) */
+  revenueRiskPct:       number;
+};
+
+async function runWooCommerceChecks(params: {
+  baseUrl: string;
+  html: string;
+  scriptUrls: string[];
+  speedScore: number;
+}): Promise<{ issues: ScanIssue[]; meta: WooAuditMeta }> {
+  const issues: ScanIssue[] = [];
+  const meta: WooAuditMeta = {
+    addToCartButtons:   0,
+    cartButtonsBlocked: false,
+    pluginImpact:       [],
+    outdatedTemplates:  false,
+    revenueRiskPct:     0,
+  };
+  let origin: string;
+  try { origin = new URL(params.baseUrl).origin; } catch { return { issues, meta }; }
+
+  async function probe(path: string): Promise<number | null> {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(origin + path, {
+        method: "GET",
+        signal: controller.signal,
+        redirect: "manual",
+        headers: { "User-Agent": "WebsiteFix-Scanner/1.0" },
+      });
+      clearTimeout(t);
+      return res.status;
+    } catch { return null; }
+  }
+
+  // Kleiner Helper: gibt true zurück, wenn irgendein <script> mit dieser URL-Pattern
+  // KEIN defer/async-Attribut hat (blockierendes Parsen).
+  function hasBlockingScript(pattern: RegExp): boolean {
+    const tags = params.html.match(/<script[^>]*>/gi) ?? [];
+    return tags.some(tag => pattern.test(tag) && !/\b(defer|async)\b/i.test(tag));
+  }
+
+  // 1. Cart-Fragments: wc-ajax=get_refreshed_fragments wird auf JEDER Seite geladen
+  //    und ist der klassische WooCommerce-Ladezeit-Killer (unncached AJAX-Request).
+  const hasCartFragments =
+    /wc-cart-fragments|wc-ajax=get_refreshed_fragments|woocommerce-cart-fragments/.test(params.html) ||
+    params.scriptUrls.some(u => /wc-cart-fragments/.test(u));
+
+  if (hasCartFragments) {
+    issues.push({
+      severity: "yellow",
+      title: "WooCommerce Cart-Fragments blockiert Ladezeit (wc-ajax=get_refreshed_fragments)",
+      body: "Das cart-fragments.js-Skript löst auf JEDER Seite einen AJAX-Request an /?wc-ajax=get_refreshed_fragments aus — ein klassischer WooCommerce-Performance-Killer, besonders auf der Startseite und Blog-Artikeln ohne Warenkorb. Empfehlung: Cart-Fragments per Plugin (Disable Cart Fragments) oder Code-Snippet auf Nicht-Shop-Seiten deaktivieren — spart typisch 200–500 ms Ladezeit.",
+      category: "shop",
+      count: 1,
+    });
+  }
+
+  // 2. Upload-Ordner-Security: woocommerce_uploads enthält Order-CSVs, Rechnungen, Lizenzen.
+  //    Wenn Directory-Listing aktiv ist (Status 200 mit HTML-Listing), ist das kritisch.
+  const uploadDirStatus = await probe("/wp-content/uploads/woocommerce_uploads/");
+  if (uploadDirStatus !== null && uploadDirStatus === 200) {
+    issues.push({
+      severity: "red",
+      title: "WooCommerce Upload-Verzeichnis ungeschützt — Rechnungs-/Order-Daten lesbar",
+      body: "/wp-content/uploads/woocommerce_uploads/ liefert HTTP 200 und listet womöglich Rechnungen, Order-Exporte und Lizenz-Dateien auf. Das ist DSGVO-relevant: Kundendaten dürfen nicht direkt per URL abrufbar sein. Empfehlung: .htaccess-Regel 'Options -Indexes' setzen und Deny from all für dieses Verzeichnis aktivieren, oder das Verzeichnis per Plugin (WooCommerce Protected Categories) absichern.",
+      category: "shop",
+      count: 1,
+    });
+  }
+
+  // 3. Database-Bloat-Indikatoren: Wenn der HTML-Output sehr viele versteckte
+  //    woocommerce-Transient-/Session-Marker enthält, deutet das auf aufgeblähte
+  //    wp_options oder abandoned carts hin. Heuristik: zähle wc_session_/wc_cart_-Marker.
+  const sessionMarkers = (params.html.match(/wc_session_|wc_cart_|woocommerce_cart_hash|woocommerce_items_in_cart/g) ?? []).length;
+  if (sessionMarkers >= 6) {
+    issues.push({
+      severity: "yellow",
+      title: "WooCommerce Database-Bloat wahrscheinlich — viele Session-/Cart-Fragmente im HTML",
+      body: `Im HTML-Output wurden ${sessionMarkers} WooCommerce-Session- und Cart-Marker gefunden. Das deutet auf verwaiste Transients und ungelöschte Expired Sessions in wp_options hin — ein typisches WooCommerce-Problem bei Shops älter als 6 Monate. Empfehlung: Plugin 'WP-Optimize' oder Admin-Tools → WooCommerce Tools → "Kundensitzungen aufräumen" laufen lassen. Bei Shops mit >1.000 Bestellungen: zusätzlich alte Order-Metadaten mit Delete Old Orders (Safe) bereinigen.`,
+      category: "shop",
+      count: 1,
+    });
+  }
+
+  // 4. Checkout-/Cart-Seite-spezifisch: prüfe, ob der Shop HTTPS-Cookies setzt
+  //    (wichtig für PCI-DSS-Konformität beim Checkout)
+  const hasHttpsCheckout = /secure[^>]*cookie|__Secure-woocommerce|__Host-woocommerce/i.test(params.html);
+  if (!hasHttpsCheckout && params.baseUrl.startsWith("https://")) {
+    if (hasCartFragments) {
+      issues.push({
+        severity: "yellow",
+        title: "WooCommerce: Session-Cookies ohne sichtbares Secure-Flag",
+        body: "Für WooCommerce-Shops empfohlen: alle Session-Cookies sollten das Secure- und HttpOnly-Flag haben (wichtig für PCI-DSS bei Checkouts). Prüfe in wp-config.php, ob 'force_ssl_admin' und 'force_ssl_login' aktiv sind — setzt beides für eingeloggte Kunden Secure-Cookies.",
+        category: "shop",
+        count: 1,
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // E-COMMERCE BUSINESS AUDITOR — erweiterte Pro/Agency-Checks
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // 5. UX-Quick-Check: add_to_cart-Buttons finden + prüfen, ob blockierende
+  //    Skripte in ihrer Nähe stehen. Schneller Checkout = mehr Conversions.
+  const addToCartMatches = params.html.match(/class="[^"]*(?:add_to_cart|add-to-cart|single_add_to_cart)[^"]*"|data-product_id=/gi) ?? [];
+  meta.addToCartButtons = addToCartMatches.length;
+
+  // "Blockierende" Skripte in der Nähe der Buttons: WooCommerce-Add-to-Cart
+  // hängt an jquery und wc-add-to-cart.js — wenn diese ohne defer/async
+  // geladen werden, verzögert das die TTI spürbar.
+  meta.cartButtonsBlocked =
+    meta.addToCartButtons > 0 &&
+    (hasBlockingScript(/jquery(\.min)?\.js/i) || hasBlockingScript(/wc-add-to-cart/i));
+
+  if (meta.addToCartButtons > 0 && meta.cartButtonsBlocked) {
+    issues.push({
+      severity: "yellow",
+      title: `UX-Bremse: ${meta.addToCartButtons} "In den Warenkorb"-Button${meta.addToCartButtons > 1 ? "s" : ""} hinter blockierendem JavaScript`,
+      body: `Auf der Seite sind ${meta.addToCartButtons} add_to_cart-Elemente — aber jQuery oder wc-add-to-cart.js werden OHNE defer/async geladen. Das heißt: Der Button reagiert erst, nachdem das gesamte JavaScript geparst wurde (typisch +300–900 ms auf mobile). Lösung: WP Rocket / FlyingPress → "Defer JavaScript" aktivieren, oder manuell <script defer> in functions.php patchen. Jede 100 ms Verzögerung kostet typisch 1 % Conversion (Akamai-Studie).`,
+      category: "shop",
+      count: 1,
+    });
+  }
+
+  // 6. Plugin-Impact-Score: Top 3 WC-Addons nach geschätztem TTI-Impact.
+  //    Heuristik: bekannte "schwere" Plugin-Familien + wie oft ihr Skript
+  //    eingebunden ist.
+  const PLUGIN_WEIGHTS: Record<string, { pattern: RegExp; baseImpact: number; reason: string }> = {
+    "WooCommerce Product Addons":   { pattern: /woocommerce-product-addons/i,         baseImpact: 7, reason: "Lädt mehrere Custom-Option-Scripts auf jeder Produktseite" },
+    "YITH WooCommerce Wishlist":    { pattern: /yith-woocommerce-wishlist/i,          baseImpact: 6, reason: "Fügt jQuery-UI + Wishlist-Framework global hinzu" },
+    "WooCommerce Germanized":       { pattern: /woocommerce-germanized/i,             baseImpact: 5, reason: "DSGVO-Module laden zusätzliche Tracking-/Cookie-Scripts" },
+    "Variation Swatches":           { pattern: /variation-swatches|variations-radio/i,baseImpact: 6, reason: "Swatches-Rendering läuft on-the-fly pro Produkt-Variante" },
+    "WooCommerce Advanced Shipping":{ pattern: /woocommerce-advanced-shipping/i,      baseImpact: 4, reason: "Zusätzliche Shipping-Calculator-Scripts am Frontend" },
+    "WooCommerce Smart Coupons":    { pattern: /woocommerce-smart-coupons/i,          baseImpact: 5, reason: "Lädt Coupon-UI-Framework global" },
+    "WooCommerce Bookings":         { pattern: /woocommerce-bookings/i,               baseImpact: 7, reason: "Kalender-/Zeitpicker-Scripts sind TTI-intensiv" },
+    "WooCommerce Subscriptions":    { pattern: /woocommerce-subscriptions/i,          baseImpact: 6, reason: "Recurring-Billing-UI zieht zusätzliche Assets" },
+    "Elementor Pro WooCommerce":    { pattern: /elementor-pro.*woocommerce|pro\/assets\/js\/woocommerce/i, baseImpact: 8, reason: "Elementor-Widgets laden pro Shop-Block eigene Scripts" },
+    "WooCommerce Cart Fragments":   { pattern: /wc-cart-fragments/i,                  baseImpact: 9, reason: "Klassischer TTI-Killer: AJAX-Request auf JEDER Seite" },
+  };
+
+  const allUrls = [...params.scriptUrls, ...(params.html.match(/href=["']([^"']+)["']/gi) ?? [])];
+  for (const [name, def] of Object.entries(PLUGIN_WEIGHTS)) {
+    const hits = allUrls.filter(u => def.pattern.test(u)).length;
+    if (hits > 0) {
+      // Zusätzlicher Impact bei mehrfacher Einbindung
+      const impactScore = Math.min(10, def.baseImpact + Math.min(2, Math.floor(hits / 2)));
+      meta.pluginImpact.push({ name, impactScore, reason: def.reason });
+    }
+  }
+  meta.pluginImpact.sort((a, b) => b.impactScore - a.impactScore);
+  meta.pluginImpact = meta.pluginImpact.slice(0, 3);
+
+  if (meta.pluginImpact.length >= 2) {
+    const topNames = meta.pluginImpact.map(p => p.name).join(", ");
+    issues.push({
+      severity: "yellow",
+      title: `Plugin-Ballast: ${meta.pluginImpact.length} WooCommerce-Addons belasten die Ladezeit stark`,
+      body: `Die Top-Verdächtigen auf dieser Seite: ${topNames}. Jedes dieser Plugins lädt eigenständige JavaScript-Framework-Teile — auch auf Seiten ohne Shop-Bezug (z. B. Blog-Artikeln). Empfehlung: Mit dem Plugin "Asset CleanUp" oder "Perfmatters" diese Scripts selektiv nur auf /shop, /warenkorb, /produkt/* laden — typisch –40 % TTI auf Nicht-Shop-Seiten.`,
+      category: "shop",
+      count: meta.pluginImpact.length,
+    });
+  }
+
+  // 7. Security-Focus: Veraltete WooCommerce-Templates im Theme-Ordner.
+  //    WooCommerce markiert veraltete Templates mit einem HTML-Kommentar
+  //    (sichtbar nur im Admin, aber manchmal im HTML-Output bei fehlerhaften
+  //    Themes) oder per Classname "woocommerce-template-outdated".
+  //    Zusätzlich: Template-Version-String in Archive/Single-Templates
+  //    (<!-- This template is outdated -->).
+  const hasOutdatedTemplate =
+    /woocommerce-template-outdated|<!--\s*this template is outdated|template is out of date/i.test(params.html) ||
+    // Heuristik: Theme-Override auf altem wc-Template-Pfad
+    /wp-content\/themes\/[^/]+\/woocommerce\/archive-product\.php/i.test(params.html);
+
+  meta.outdatedTemplates = hasOutdatedTemplate;
+
+  if (hasOutdatedTemplate) {
+    issues.push({
+      severity: "red",
+      title: "WooCommerce-Template im Theme veraltet — Darstellungsfehler nach WP-Update wahrscheinlich",
+      body: "Im HTML-Output tauchen Marker für veraltete WooCommerce-Template-Overrides auf (/wp-content/themes/<dein-theme>/woocommerce/). Das bedeutet: Dein Theme überschreibt Standard-WooCommerce-Templates, die nach einem WooCommerce-Update nicht mitgewachsen sind. Typische Folgen: defekte Checkout-Felder, fehlende Steuerberechnungen, verschwundene Produktbilder. Lösung: Admin → WooCommerce → Status → System-Status → Abschnitt 'Templates' öffnen, jeden Override mit Versions-Hinweis aktualisieren (Datei aus /wp-content/plugins/woocommerce/templates/ neu kopieren und Anpassungen mergen).",
+      category: "shop",
+      count: 1,
+    });
+  }
+
+  // 8. Revenue-at-Risk — Basis-Prozentwert für die UI-Kalkulation.
+  //    Formel: jede 100 ms Ladezeit-Verlust kostet ~1 % Conversion (Akamai/Amazon).
+  //    speedScore = 100 → 0 % Risk | speedScore = 50 → ~25 % Risk | Bloat & Cart-Fragments
+  //    addieren jeweils 3-5 %.
+  const speed = params.speedScore ?? 70;
+  let riskPct = Math.max(0, Math.round((100 - speed) * 0.35)); // 100 → 0 %, 60 → 14 %, 30 → 24 %
+  if (hasCartFragments)                riskPct += 5;
+  if (meta.cartButtonsBlocked)         riskPct += 4;
+  if (meta.pluginImpact.length >= 2)   riskPct += 3;
+  if (hasOutdatedTemplate)             riskPct += 2;
+  meta.revenueRiskPct = Math.min(40, riskPct); // Cap bei 40 % — realistisches Maximum
+
+  return { issues, meta };
+}
+
+// ── DSGVO-Compliance-Check: externe Embeds ohne Consent-Wrapper ──────────
+/**
+ * Erkennt Google Maps, YouTube, Vimeo, Google Analytics und Facebook-Pixel im
+ * HTML. Prüft, ob ein Cookie-Banner (Borlabs/Complianz/Cookiebot/UserCentrics)
+ * aktiv ist UND ob die Embeds explizit in einen Consent-Wrapper eingebettet sind.
+ *
+ * Heuristik für Wrapper-Detection:
+ * - Borlabs:  data-borlabs-cookie-uuid oder class="BorlabsCookie"
+ * - Complianz: cmplz-blocked-content / data-category / cmplz-iframe
+ * - Cookiebot: data-cookieconsent= / cookieconsent-optout-marketing
+ * - UserCentrics: uc-embedding-container / data-usercentrics
+ *
+ * Fehlt für ein erkanntes Embed der Wrapper UND es gibt keinen Cookie-Banner →
+ * "yellow"-Issue (DSGVO-Risiko). Gibt es das Embed UND einen Banner aber keinen
+ * Wrapper → "red"-Issue (Banner ist da, aber Embeds laden trotzdem ungeschützt).
+ */
+async function runDsgvoEmbedChecks(html: string): Promise<ScanIssue[]> {
+  const issues: ScanIssue[] = [];
+
+  // Embeds-Detection
+  const embeds: Array<{ name: string; pattern: RegExp; severity: "red" | "yellow" }> = [
+    { name: "Google Maps",      pattern: /maps\.googleapis\.com\/maps|google\.com\/maps\/embed|maps\.google\.com\/maps\?/i, severity: "red" },
+    { name: "YouTube",          pattern: /youtube\.com\/embed|youtube-nocookie\.com\/embed|youtu\.be\/embed/i,                severity: "red" },
+    { name: "Vimeo",            pattern: /player\.vimeo\.com\/video\//i,                                                       severity: "yellow" },
+    { name: "Google Analytics", pattern: /googletagmanager\.com\/gtag\/js|google-analytics\.com\/analytics\.js/i,              severity: "red" },
+    { name: "Facebook Pixel",   pattern: /connect\.facebook\.net\/[^/]+\/fbevents\.js/i,                                       severity: "red" },
+  ];
+  const found = embeds.filter(e => e.pattern.test(html));
+  if (found.length === 0) return issues;
+
+  // Cookie-Banner-Detection (nur ob ein Banner-Plugin geladen ist — Wrapper-Check separat)
+  const bannerSignals = [
+    /BorlabsCookie|borlabs-cookie/i,
+    /complianz|cmplz-/i,
+    /cookieconsent|cookiebot/i,
+    /usercentrics|uc-cmp-/i,
+    /cookie-law-info/i,
+    /cookieyes/i,
+  ];
+  const hasBanner = bannerSignals.some(p => p.test(html));
+
+  // Wrapper-Detection — sucht nach Consent-Wrapper-Attributen/Klassen im HTML
+  const wrapperSignals = [
+    /data-borlabs-cookie-uuid|data-borlabs-cookie-type/i,
+    /cmplz-blocked-content|data-category=["'](?:marketing|statistics|preferences)/i,
+    /data-cookieconsent=["'](?:marketing|statistics)/i,
+    /uc-embedding-container|data-usercentrics/i,
+    /cli-embed-content|cookielawinfo-checkbox-/i,
+  ];
+  const hasWrapper = wrapperSignals.some(p => p.test(html));
+
+  // Pro erkanntem Embed ein Issue (zusammenfassend, nicht pro Iframe).
+  // Severity: ohne Banner = red (kompletter Verstoß), mit Banner aber ohne Wrapper = red,
+  // mit Banner und mit Wrapper = kein Issue (Setup vermutlich korrekt).
+  if (hasBanner && hasWrapper) return issues;
+
+  const names = found.map(f => f.name).join(", ");
+  if (!hasBanner) {
+    issues.push({
+      severity: "red",
+      title:    `DSGVO-Verstoß: ${found.length} externe Embed${found.length > 1 ? "s" : ""} ohne Cookie-Banner (${names})`,
+      body:     `Auf der Seite werden ${names} ohne Consent-Banner geladen. Diese Services setzen Tracking-Cookies und übertragen IP-Adressen ins Ausland — DSGVO-Verstoß ohne Einwilligung. Lösung: Plugin 'Borlabs Cookie' oder 'Complianz GDPR' installieren und die Embeds in Consent-Wrapper packen.`,
+      category: "recht",
+      count:    found.length,
+    });
+  } else {
+    issues.push({
+      severity: "red",
+      title:    `Cookie-Banner aktiv, aber ${found.length} Embed${found.length > 1 ? "s" : ""} ohne Consent-Wrapper (${names})`,
+      body:     `Ein Cookie-Banner-Plugin wurde erkannt, aber ${names} laden trotzdem ohne sichtbaren Consent-Wrapper. Im Banner-Backend prüfen, ob die Services für 'YouTube', 'Google Maps', 'Google Analytics' aktiviert sind — und ob die Embeds im Markup mit data-borlabs-cookie-uuid, cmplz-blocked-content oder data-cookieconsent gewrappt werden.`,
+      category: "recht",
+      count:    found.length,
+    });
+  }
+
+  return issues;
+}
+
+// ── Builder-Intelligence: DOM-Depth, Fonts, CSS-Bloat ──────────────────────
+/**
+ * Deep-Audit für Page-Builder (Elementor, Divi, Astra, WPBakery).
+ * Analysiert DOM-Verschachtelungstiefe, Google-Font-Nutzung, CSS-Bloat-Hinweise.
+ */
+export type BuilderAuditMeta = {
+  /** Erkannter Builder (oder null). */
+  builder:             string | null;
+  /** Maximal gemessene DOM-Verschachtelungstiefe. */
+  maxDomDepth:         number;
+  /** Anzahl <div>-Tags (Richtwert für Builder-Overhead). */
+  divCount:            number;
+  /** Liste eindeutig geladener Google-Font-Familien. */
+  googleFontFamilies:  string[];
+  /** CSS-Bloat-Hinweise (Animation-CSS geladen ohne Animationen, etc.). */
+  cssBloatHints:       string[];
+  /** Anzahl unique externer Stylesheets. */
+  stylesheetCount:     number;
+};
+
+function analyzeBuilderHtml(html: string, builder: string | null): BuilderAuditMeta {
+  const meta: BuilderAuditMeta = {
+    builder,
+    maxDomDepth:        0,
+    divCount:           0,
+    googleFontFamilies: [],
+    cssBloatHints:      [],
+    stylesheetCount:    0,
+  };
+
+  // ── 1. DOM-Depth — schneller tokenizer-ähnlicher Scan ──
+  // Wir ignorieren selbstschließende und void-elements (meta/img/link/input/br/hr/area/base/col/embed/source/track/wbr).
+  const VOID = /^(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/i;
+  let depth = 0;
+  let maxDepth = 0;
+  let divCount = 0;
+  const tagRegex = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)[^>]*?(\/?)>/g;
+  let m: RegExpExecArray | null;
+  while ((m = tagRegex.exec(html)) !== null) {
+    const isClose     = m[1] === "/";
+    const tag         = m[2].toLowerCase();
+    const isSelfClose = m[3] === "/" || VOID.test(tag);
+    // Skip non-tree elements that live in <head> style
+    if (tag === "script" || tag === "style") continue;
+    if (isClose) {
+      if (depth > 0) depth--;
+    } else if (!isSelfClose) {
+      depth++;
+      if (depth > maxDepth) maxDepth = depth;
+      if (tag === "div") divCount++;
+    }
+    // Safety: extreme nesting caps — bei Rekursion-Detection abbrechen
+    if (depth > 100) break;
+  }
+  meta.maxDomDepth = maxDepth;
+  meta.divCount    = divCount;
+
+  // ── 2. Google-Font-Familien extrahieren ──
+  const fontFamilies = new Set<string>();
+  // Pattern 1: <link href="...fonts.googleapis.com/css?family=Roboto|Open+Sans">
+  const linkCssRegex = /fonts\.googleapis\.com\/css2?\?[^"'>\s]+/gi;
+  let lm: RegExpExecArray | null;
+  while ((lm = linkCssRegex.exec(html)) !== null) {
+    const url = lm[0];
+    // family=Roboto:wght@400 ODER family=Roboto|Open+Sans
+    const famMatches = Array.from(url.matchAll(/family=([^&:|]+)/gi));
+    for (const fm of famMatches) {
+      // URL-decoded split on "|" (legacy v1) or on &family=... (v2)
+      const raw = decodeURIComponent(fm[1]);
+      raw.split("|").forEach(f => {
+        const name = f.replace(/\+/g, " ").trim();
+        if (name && name.length < 40) fontFamilies.add(name);
+      });
+    }
+    // Zusätzlich: v2-syntax mit mehrfach &family=...
+    const allFamParams = url.matchAll(/[?&]family=([^&]+)/gi);
+    for (const p of allFamParams) {
+      const raw = decodeURIComponent(p[1]);
+      const name = raw.split(":")[0].replace(/\+/g, " ").trim();
+      if (name && name.length < 40) fontFamilies.add(name);
+    }
+  }
+  // Pattern 2: @import url('https://fonts.googleapis.com/css?family=...') im HTML-Style-Block
+  const importRegex = /@import\s+url\(['"]https:\/\/fonts\.googleapis\.com\/css[^'")]+['"]\)/gi;
+  const importMatches = html.match(importRegex) ?? [];
+  for (const imp of importMatches) {
+    const fam = imp.match(/family=([^&'"|:]+)/i);
+    if (fam) {
+      const name = decodeURIComponent(fam[1]).replace(/\+/g, " ").trim();
+      if (name) fontFamilies.add(name);
+    }
+  }
+  meta.googleFontFamilies = Array.from(fontFamilies).slice(0, 10);
+
+  // ── 3. Stylesheet-Count (für Kontext) ──
+  meta.stylesheetCount = (html.match(/<link[^>]+rel=["']stylesheet["']/gi) ?? []).length;
+
+  // ── 4. CSS-Bloat-Heuristik ──
+  // Hinweis 1: Animation-Stylesheet geladen, aber keine animierten Klassen im HTML
+  const loadsAnimateCss = /\banimate(\.min)?\.css\b|\banimate-css\b|animate__animated/.test(html);
+  const usesAnimation   = /animate__|data-animation|class="[^"]*wow[- ]|class="[^"]*animated\b/.test(html);
+  if (loadsAnimateCss && !usesAnimation) {
+    meta.cssBloatHints.push("Animate.css geladen, aber keine animierten Elemente im Markup — CSS-Datei ist Ballast.");
+  }
+  // Hinweis 2: FontAwesome geladen, aber keine fa-Klassen benutzt
+  const loadsFontAwesome = /font-?awesome|\/fa\.css|\/fontawesome[-.]/i.test(html);
+  const usesFontAwesome  = /class="[^"]*\bfa[- ]/.test(html) || /class="[^"]*\bfas\b/.test(html) || /class="[^"]*\bfab\b/.test(html);
+  if (loadsFontAwesome && !usesFontAwesome) {
+    meta.cssBloatHints.push("Font Awesome geladen, aber keine fa-Icons im HTML gefunden — überflüssiger 70+ kB Download.");
+  }
+  // Hinweis 3: Elementor "icons-support" CSS geladen ohne i-Elemente
+  if (builder === "Elementor" && /elementor-icons/.test(html) && !/<i\s+class="[^"]*eicon-/.test(html)) {
+    meta.cssBloatHints.push("Elementor-Icons-CSS geladen, aber keine eicon-Elemente genutzt.");
+  }
+  // Hinweis 4: Bei >8 Stylesheets ohne Aggregation ein Hinweis
+  if (meta.stylesheetCount >= 8) {
+    meta.cssBloatHints.push(`${meta.stylesheetCount} separate Stylesheets — Aggregation (WP Rocket "Combine CSS") empfohlen.`);
+  }
+
+  return meta;
+}
+
+function buildBuilderIssues(audit: BuilderAuditMeta): ScanIssue[] {
+  const issues: ScanIssue[] = [];
+  if (!audit.builder) return issues;
+
+  // ── DOM-Depth-Issue: kritisch bei > 15 für Page-Builder ──
+  if (audit.maxDomDepth > 15) {
+    const severity = audit.maxDomDepth > 22 ? "red" : "yellow";
+    issues.push({
+      severity,
+      title: `Übermäßige DOM-Verschachtelung erkannt (Tiefe: ${audit.maxDomDepth})`,
+      body: `${audit.builder} generiert eine DOM-Verschachtelungstiefe von ${audit.maxDomDepth} Ebenen (${audit.divCount} <div>-Tags). Google empfiehlt maximal 15 Ebenen — darüber erschwert es das Layout-Rendering, besonders auf Mobilgeräten mit schwacher CPU. Folge: höherer LCP, schlechtere Scroll-Performance. Empfehlung: ${audit.builder === "Elementor" ? "Migration zu Elementor-Containern (Flexbox) — reduziert Section/Column/Inner-Section-Ebenen um typisch 40 %." : audit.builder === "Divi" ? "Mit dem 'Collapse Nested Rows'-Feature Sections zusammenfassen." : "Unnötige Wrapper-Divs entfernen, CSS-Grid/Flexbox statt verschachtelter Rows nutzen."}`,
+      category: "builder",
+      count: 1,
+    });
+  }
+
+  // ── Google-Font-Familien-Issue: > 2 ist Risiko ──
+  if (audit.googleFontFamilies.length > 2) {
+    issues.push({
+      severity: "yellow",
+      title: `Hohe Font-Vielfalt: ${audit.googleFontFamilies.length} Google-Font-Familien geladen`,
+      body: `Die Seite lädt ${audit.googleFontFamilies.length} verschiedene Schriftfamilien von Google Fonts (${audit.googleFontFamilies.slice(0, 5).join(", ")}${audit.googleFontFamilies.length > 5 ? ", …" : ""}). Jede Familie bedeutet zusätzliche Font-Files (WOFF2) + Render-Blocking + DSGVO-Fragen. Empfehlung: 1) Auf max. 2 Familien reduzieren (Heading + Body), 2) Google Fonts lokal hosten (Plugin 'OMGF') — verhindert die Verbindung zu Google-Servern und erfüllt DSGVO ohne Cookie-Banner-Zustimmung, 3) font-display: swap setzen, damit Text sofort sichtbar ist.`,
+      category: "builder",
+      count: audit.googleFontFamilies.length,
+    });
+  }
+
+  // ── Google-Font DSGVO-Hinweis: 1 oder mehr geladen ohne lokales Hosting ──
+  if (audit.googleFontFamilies.length >= 1) {
+    issues.push({
+      severity: "yellow",
+      title: "Google Fonts werden von Google-Servern geladen — DSGVO-Risiko",
+      body: "Das LG München (Az. 3 O 17493/20) hat 2022 entschieden: Das Einbetten von Google Fonts via fonts.googleapis.com überträgt die IP-Adresse der Besucher an Google in den USA — DSGVO-Verstoß ohne explizite Einwilligung. Lösung: Google Fonts lokal hosten. Schnellster Weg: Plugin 'OMGF | Host Google Fonts Locally' oder 'Local Google Fonts' — ein Klick, keine Code-Änderungen nötig.",
+      category: "recht",
+      count: audit.googleFontFamilies.length,
+    });
+  }
+
+  // ── CSS-Bloat-Issues ──
+  for (const hint of audit.cssBloatHints) {
+    issues.push({
+      severity: "yellow",
+      title: "CSS-Bloat erkannt — ungenutzte Builder-Styles geladen",
+      body: hint,
+      category: "builder",
+      count: 1,
+    });
+  }
+
+  return issues;
+}
+
 // ── Compute speed score from issues at scan time ─────────────
 function computeSpeedScore(issuesJson: ScanIssue[]): number {
   const speedIssueCount  = issuesJson.filter(i => i.category === "speed").length;
@@ -155,11 +680,17 @@ async function saveUserScan(params: {
   techFingerprint?: unknown;
   totalPages?: number | null;
   unterseitenJson?: unknown | null;
+  wooAudit?: WooAuditMeta | null;
+  builderAudit?: BuilderAuditMeta | null;
 }): Promise<string | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
+    const metaJsonObj: Record<string, unknown> = {};
+    if (params.wooAudit)     metaJsonObj.woo_audit     = params.wooAudit;
+    if (params.builderAudit) metaJsonObj.builder_audit = params.builderAudit;
+    const metaJson = Object.keys(metaJsonObj).length > 0 ? metaJsonObj : null;
     const rows = await sql`
-      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json)
+      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json, meta_json)
       VALUES (
         ${params.userId}, ${params.url}, 'website',
         ${params.issueCount}, ${params.diagnose},
@@ -167,7 +698,8 @@ async function saveUserScan(params: {
         ${params.speedScore},
         ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null},
         ${params.totalPages ?? null},
-        ${params.unterseitenJson ? JSON.stringify(params.unterseitenJson) : null}
+        ${params.unterseitenJson ? JSON.stringify(params.unterseitenJson) : null},
+        ${metaJson ? JSON.stringify(metaJson) : null}::jsonb
       )
       RETURNING id::text
     ` as { id: string }[];
@@ -400,23 +932,21 @@ function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
 
 // ── Plan-based crawl depth ──────────────────────────────────
 function getMaxSubpages(plan: string): number {
-  if (plan === "agency-pro")      return 10000;
-  if (plan === "agency-starter")  return 2500;
-  if (plan === "smart-guard" || plan === "professional")  return 500;
-  if (plan === "starter")         return 50;
-  return 10; // free / anonym
+  const p = normalizePlan(plan);
+  if (p === "agency")       return 10000;
+  if (p === "professional") return 500;
+  if (p === "starter")      return 50;
+  return 10; // unknown / anonym
 }
 
 // ── Monthly scan limits per plan ────────────────────────────
 // Matches features.ts: Starter = 3/month, Professional/Agency = unlimited
-const MONTHLY_LIMITS: Record<string, number> = {
-  "starter":         3,
-  "professional":  999,
-  "smart-guard":   999,
-  "agency":        999,
-  "agency-starter": 999,
-  "agency-pro":    999,
-};
+function getMonthlyLimit(plan: string): number {
+  const p = normalizePlan(plan);
+  if (p === "starter") return 3;
+  if (p === "professional" || p === "agency") return 999;
+  return 0;
+}
 
 // ── Main Handler ────────────────────────────────────────────
 export async function POST(req: NextRequest) {
@@ -455,7 +985,7 @@ export async function POST(req: NextRequest) {
 
     // ── Registered users: monthly scan limit ───────────────
     if (userId) {
-      const monthlyLimit = MONTHLY_LIMITS[userPlan] ?? 3;
+      const monthlyLimit = getMonthlyLimit(userPlan);
       try {
         const sql = neon(process.env.DATABASE_URL!);
         const rows = await sql`
@@ -540,6 +1070,8 @@ export async function POST(req: NextRequest) {
             techFingerprint: fp,
             totalPages: cachedAudit?.gescannteSeiten ?? ((cachedAudit?.unterseiten?.length ?? 0) + 1),
             unterseitenJson: cachedAudit?.unterseiten ?? null,
+            wooAudit: (cached.scanData?.wooAudit as WooAuditMeta | null | undefined) ?? null,
+            builderAudit: (cached.scanData?.builderAudit as BuilderAuditMeta | null | undefined) ?? null,
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
@@ -909,6 +1441,61 @@ PFLICHT-REGELN:
       orphanedPages,
     );
 
+    // WordPress-spezifische Zusatz-Checks (nur wenn WordPress erkannt)
+    if (techFingerprint.cms.value === "WordPress" && techFingerprint.cms.confidence >= 0.45) {
+      try {
+        const wpIssues = await runWordPressChecks(targetUrl);
+        issuesJson.push(...wpIssues);
+      } catch { /* non-fatal */ }
+    }
+
+    // WooCommerce-spezifische Shop-Checks (nur wenn WooCommerce erkannt)
+    const isWooCommerce =
+      techFingerprint.ecommerce.value === "WooCommerce" &&
+      techFingerprint.ecommerce.confidence >= 0.45;
+    let wooMeta: WooAuditMeta | null = null;
+    if (isWooCommerce) {
+      try {
+        // Extract script URLs from mainHtml — lightweight parse
+        const scriptUrls: string[] = Array.from(
+          mainHtml.matchAll(/<script[^>]+src=["']([^"']+)["']/gi),
+          m => m[1],
+        );
+        const wooResult = await runWooCommerceChecks({
+          baseUrl:    targetUrl,
+          html:       mainHtml,
+          scriptUrls,
+          speedScore: computeSpeedScore(issuesJson),
+        });
+        issuesJson.push(...wooResult.issues);
+        wooMeta = wooResult.meta;
+      } catch { /* non-fatal */ }
+    }
+    // Flag + Meta für Dashboard/View — SoT für "WooCommerce Shop"-Badge & Business-Auditor
+    scanData.isWooCommerce = isWooCommerce;
+    scanData.wooAudit = wooMeta;
+
+    // Builder-Intelligence: DOM-Depth, Google Fonts, CSS-Bloat — für ALLE scans
+    // mit erkanntem Builder (Elementor, Divi, Astra, WPBakery, Beaver…)
+    let builderAudit: BuilderAuditMeta | null = null;
+    try {
+      const builderName = techFingerprint.builder.confidence >= 0.45
+        ? techFingerprint.builder.value
+        : null;
+      // Astra wird als "builder" gespeichert, auch wenn's technisch ein Theme ist —
+      // weil das gleiche DOM-Audit-Verfahren zutrifft.
+      builderAudit = analyzeBuilderHtml(mainHtml, builderName);
+      const builderIssues = buildBuilderIssues(builderAudit);
+      issuesJson.push(...builderIssues);
+    } catch { /* non-fatal */ }
+    scanData.builderAudit = builderAudit;
+
+    // DSGVO-Check: externe Embeds ohne Consent-Wrapper (für ALLE Scans)
+    try {
+      const dsgvoIssues = await runDsgvoEmbedChecks(mainHtml);
+      issuesJson.push(...dsgvoIssues);
+    } catch { /* non-fatal */ }
+
     // Actual sum of all errors (e.g. 24 missing alt texts = 24, not 1)
     const issueCount = issuesJson.reduce((acc, i) => acc + i.count, 0);
 
@@ -920,11 +1507,63 @@ PFLICHT-REGELN:
           techFingerprint,
           totalPages: audit.gescannteSeiten,
           unterseitenJson: audit.unterseiten,
+          wooAudit: wooMeta,
+          builderAudit,
         })
       : null;
 
     // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
     await saveScanAsync(targetUrl, { scanData, diagnose });
+
+    // ── Integrations-Trigger (fire-and-forget, blockiert Scan-Response nicht) ──
+    if (userId && isAtLeastProfessional(userPlan)) {
+      const redCount    = issuesJson.filter(i => i.severity === "red").reduce((a, i) => a + i.count, 0);
+      const yellowCount = issuesJson.filter(i => i.severity === "yellow").reduce((a, i) => a + i.count, 0);
+      const score       = computeSpeedScore(issuesJson);
+
+      (async () => {
+        try {
+          const integrations = await getIntegrationSettings(userId);
+
+          // Zapier: volles meta_json-Event (alle Pro+ bekommen das, wenn Webhook gesetzt)
+          await triggerZapierScanWebhook(integrations, {
+            scanId:        savedScanId,
+            url:           targetUrl,
+            createdAt:     new Date().toISOString(),
+            score,
+            issueCount,
+            redCount,
+            yellowCount,
+            techFingerprint,
+            wooAudit:      wooMeta,
+            builderAudit,
+            isWooCommerce,
+            builder:       builderAudit?.builder ?? null,
+          });
+
+          // Slack-Zusammenfassung: nur für Agency (249 €)
+          if (isAgency(userPlan) && integrations.slack_webhook_url) {
+            await sendScanSummaryToSlack({
+              webhookUrl:    integrations.slack_webhook_url,
+              projectUrl:    targetUrl,
+              scanId:        savedScanId,
+              score,
+              issueCount,
+              redCount,
+              yellowCount,
+              builder:       builderAudit?.builder ?? null,
+              isWooCommerce,
+              wooRiskPct:    wooMeta?.revenueRiskPct ?? null,
+              domDepth:      builderAudit?.maxDomDepth ?? null,
+              dashboardUrl:  process.env.NEXTAUTH_URL ?? "https://website-fix.com",
+              agencyName:    "WebsiteFix",
+            });
+          }
+        } catch (err) {
+          console.error("[scan-integrations] failed:", err);
+        }
+      })();
+    }
 
     logScan({ userId, url: targetUrl, scanType: "website", status: "success", durationMs: Date.now() - scanStart });
     return NextResponse.json({ success: true, scanData, diagnose, issueCount, scanId: savedScanId });

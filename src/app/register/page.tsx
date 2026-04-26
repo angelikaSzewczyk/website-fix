@@ -20,33 +20,27 @@ const PLAN_CONTENT: Record<string, {
       "Sofort-Check für Google-Ranking",
     ],
   },
-  "smart-guard": {
-    headline: <>KI-Power für<br />deine Website.</>,
-    sub: "KI-gestützte Korrekturen. Kein manueller Aufwand.",
-    bullets: [
-      "Alle Smart-Fix Anleitungen",
-      "KI-gestützte Fehlerbehebung",
-      "Unbegrenzte Scans inklusive",
-    ],
-  },
   professional: {
-    headline: <>KI-Power für<br />deine Website.</>,
-    sub: "KI-gestützte Korrekturen. Kein manueller Aufwand.",
+    headline: <>Das WordPress-Audit<br />das Kunden überzeugt.</>,
+    sub: "Unbegrenzte WP-Scans. KI-Empfehlungen. White-Label Berichte.",
     bullets: [
-      "Alle Smart-Fix Anleitungen",
-      "KI-gestützte Fehlerbehebung",
-      "Unbegrenzte Scans inklusive",
+      "Unbegrenzte WordPress-Audits",
+      "Automatisches Monitoring 24/7",
+      "White-Label PDF-Reports",
     ],
   },
-  "agency-starter": {
-    headline: <>Der<br />Agentur-Autopilot.</>,
+  agency: {
+    headline: <>Der WordPress-Agentur<br />Autopilot.</>,
     sub: "Konto erstellen. Direkt zu Stripe. Sofort loslegen.",
     bullets: [
-      "Alle Agency-Features & Plugin",
-      "White-Label Berichte",
+      "Alle Agency-Features & WordPress-Plugin",
+      "Vollständiges White-Label",
       "Mass-Fix für alle Kunden-Sites",
     ],
   },
+  // Legacy-Keys für alte Register-Links:
+  "smart-guard":    { headline: <>KI-Power für<br />deine Website.</>, sub: "Professional-Plan.", bullets: ["Unbegrenzte Scans", "KI-Empfehlungen", "White-Label Berichte"] },
+  "agency-starter": { headline: <>Der<br />Agentur-Autopilot.</>,       sub: "Agency-Plan.",       bullets: ["Alle Agency-Features", "White-Label Berichte", "Mass-Fix"] },
 };
 
 // Fallback: kein Plan in URL → zur Preisseite schicken (kein Free-Zugang)

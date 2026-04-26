@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import ValueReportClient from "./value-report-client";
 import type { ReportBranding, ReportKPIs, ActivityItem, SavedSite, ScanHistoryItem } from "./page";
+import { isAgency as isAgencyPlan, isAtLeastProfessional, normalizePlan } from "@/lib/plans";
 
 // ── Design tokens: DARK (Starter / Professional) ──────────────────────────────
 const D = {
@@ -96,7 +97,7 @@ function StarterView({ scans }: { scans: ScanHistoryItem[] }) {
             Noch keine Scans vorhanden
           </p>
           <p style={{ margin: "0 0 20px", fontSize: 13, color: D.textSub }}>
-            Starte deinen ersten Scan, um hier einen Bericht zu sehen.
+            Starte dein erstes WordPress-Audit, um hier einen Bericht zu sehen.
           </p>
           <Link href="/dashboard/scan" style={{
             display: "inline-flex", alignItems: "center", gap: 7,
@@ -904,11 +905,12 @@ export default function ReportsClient({
   agencyId:    string;
   savedSites:  SavedSite[];
 }) {
-  const isAgency       = plan === "agency-starter" || plan === "agency-pro";
-  const isProfessional = plan === "professional" || plan === "smart-guard";
+  const canonical = normalizePlan(plan);
   // starter (and any unknown) → StarterView
 
-  if (isAgency) return <AgencyView plan={plan} branding={branding} kpis={kpis} activities={activities} monthLabel={monthLabel} savedSites={savedSites} />;
-  if (isProfessional) return <ProfessionalView scans={scanHistory} kpis={kpis} monthLabel={monthLabel} />;
+  if (isAgencyPlan(plan)) return <AgencyView plan={plan} branding={branding} kpis={kpis} activities={activities} monthLabel={monthLabel} savedSites={savedSites} />;
+  if (canonical === "professional" || (isAtLeastProfessional(plan) && !isAgencyPlan(plan))) {
+    return <ProfessionalView scans={scanHistory} kpis={kpis} monthLabel={monthLabel} />;
+  }
   return <StarterView scans={scanHistory} />;
 }

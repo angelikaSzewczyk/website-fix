@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
       u.email AS user_email, u.name AS user_name, u.plan
     FROM saved_websites sw
     JOIN users u ON u.id = sw.user_id
-    WHERE u.plan IN ('smart-guard', 'professional', 'starter', 'agency-starter', 'agency-pro')
+    WHERE u.plan IN ('starter', 'professional', 'agency', 'smart-guard', 'agency-starter', 'agency-pro')
       AND (sw.last_check_at IS NULL OR sw.last_check_at < NOW() - INTERVAL '23 hours')
     LIMIT 20
   ` as SavedWebsite[];

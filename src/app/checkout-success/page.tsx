@@ -17,8 +17,11 @@ function CheckoutSuccessContent() {
   const planLabel: Record<string, string> = {
     starter:          "Starter",
     professional:     "Professional",
+    agency:           "Agency",
+    // Legacy-Keys für alte Checkout-Links:
     "smart-guard":    "Professional",
     "agency-starter": "Agency",
+    "agency-pro":     "Agency",
   };
 
   useEffect(() => {

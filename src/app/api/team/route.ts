@@ -1,19 +1,15 @@
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
+import { isAgency, normalizePlan } from "@/lib/plans";
 
-// Seat limits per plan (additional members, excluding owner)
-const SEAT_LIMITS: Record<string, number> = {
-  "agency-starter": 2,  // 3 total
-  "agency-pro":     9,  // 10 total
-};
-
+// Seat limits per canonical plan (additional members, excluding owner)
 function getPlanSeats(plan: string): number {
-  return SEAT_LIMITS[plan] ?? 0;
+  return normalizePlan(plan) === "agency" ? 9 : 0;
 }
 
 function isPaidAgencyPlan(plan: string): boolean {
-  return plan === "agency-pro" || plan === "agency-starter";
+  return isAgency(plan);
 }
 
 export async function GET() {

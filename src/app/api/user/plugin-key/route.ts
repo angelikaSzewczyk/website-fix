@@ -8,8 +8,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { randomBytes } from "crypto";
-
-const AGENCY_PLANS = ["agency-starter", "agency-pro"];
+import { isAgency } from "@/lib/plans";
 
 function generateKey(): string {
   return "wf_live_" + randomBytes(24).toString("hex");
@@ -34,7 +33,7 @@ export async function GET() {
   const user = session?.user as UserSession | undefined;
   if (!user?.id) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-  if (!AGENCY_PLANS.includes(user.plan ?? "starter")) {
+  if (!isAgency(user.plan)) {
     return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
   }
 
@@ -48,7 +47,7 @@ export async function POST() {
   const user = session?.user as UserSession | undefined;
   if (!user?.id) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-  if (!AGENCY_PLANS.includes(user.plan ?? "starter")) {
+  if (!isAgency(user.plan)) {
     return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
   }
 

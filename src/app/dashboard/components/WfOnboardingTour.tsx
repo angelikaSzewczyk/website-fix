@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Clock, ChevronLeft, Search, BarChart2, FileText } from "lucide-react";
+import { isAtLeastProfessional } from "@/lib/plans";
 
 const ONBOARDING_KEY = "wf_onboarding_done";
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
 
 type Phase = "welcome" | "wizard-1" | "wizard-2" | "wizard-3" | "tour" | null;
 
@@ -13,24 +13,24 @@ type Phase = "welcome" | "wizard-1" | "wizard-2" | "wizard-3" | "tour" | null;
 const TOUR_STEPS = [
   {
     icon: <Search size={20} strokeWidth={1.8} />,
-    title: "Schritt 1 — Scan starten",
-    body: "Gib hier die URL deiner Website ein. Wir prüfen bis zu 25 Seiten auf SEO- und Technik-Fehler — in unter 60 Sekunden.",
+    title: "Schritt 1 — WordPress-Audit starten",
+    body: "Gib die URL deiner WordPress-Seite ein. Wir prüfen SEO, BFSG-Barrierefreiheit, WP-Performance, /wp-admin-Sicherheit und aktive Plugins — in unter 60 Sekunden.",
   },
   {
     icon: <BarChart2 size={20} strokeWidth={1.8} />,
-    title: "Schritt 2 — Ergebnisse lesen",
-    body: "Hier erscheinen deine Ergebnisse. Kategorisiert in Kritisch, Warnungen und Optimierungen — mit direkten Fix-Anleitungen.",
+    title: "Schritt 2 — WP-Performance Check lesen",
+    body: "Dein Bericht zeigt WordPress-spezifische Befunde: Cache-Plugin erkannt, Yoast/Rank Math Status, /xmlrpc.php offen, Bilder-Optimierung. Mit klaren Fix-Anleitungen.",
   },
   {
     icon: <FileText size={20} strokeWidth={1.8} />,
-    title: "Schritt 3 — Berichte exportieren",
-    body: "Deine fertigen Berichte kannst du jederzeit exportieren und als PDF an Kunden weitergeben.",
+    title: "Schritt 3 — White-Label Berichte",
+    body: "Exportiere deinen WordPress-Audit als PDF oder teile ihn per Link — mit deinem Logo und deiner Agenturfarbe.",
   },
 ];
 
 const PLAN_LABEL: Record<string, string> = {
-  starter: "Starter", professional: "Professional",
-  "smart-guard": "Professional", "agency-starter": "Agency", "agency-pro": "Agency Pro",
+  starter: "Starter", professional: "Professional", agency: "Agency",
+  "smart-guard": "Professional", "agency-starter": "Agency", "agency-pro": "Agency",
 };
 
 // ─── Animated scan item ───────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
   const [phase, setPhase]       = useState<Phase>(null);
   const [tourStep, setTourStep] = useState(0);
   const router = useRouter();
-  const isPro = PRO_PLANS.includes(plan);
+  const isPro = isAtLeastProfessional(plan);
 
   // Wizard state (pro)
   const [agencyName, setAgencyName] = useState("");
@@ -326,22 +326,22 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
           </div>
 
           <span style={{ display: "block", textAlign: "center", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#10B981", marginBottom: 8 }}>
-            SCHRITT 2 VON 3 · ERSTER SCAN
+            SCHRITT 2 VON 3 · ERSTES WORDPRESS-AUDIT
           </span>
           <h1 style={{ textAlign: "center", margin: "0 0 8px", fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-            Bereit für den ersten Erfolg?
+            Bereit für deinen ersten WP-Audit?
           </h1>
           <p style={{ textAlign: "center", margin: "0 0 28px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
-            Wir prüfen SEO, Technik, Sicherheit und Barrierefreiheit — in unter 60 Sekunden.
+            Wir prüfen SEO, BFSG, WP-Performance, aktive Plugins und /wp-admin-Sicherheit — in unter 60 Sekunden.
           </p>
 
           <div>
             <label style={{ display: "block", fontSize: 12, color: "rgba(255,255,255,0.45)", marginBottom: 6, fontWeight: 600 }}>
-              Website-URL
+              WordPress-URL
             </label>
             <input
               style={{ ...inputStyle, fontSize: 15 }}
-              placeholder="https://deine-website.de"
+              placeholder="https://deine-wordpress-seite.de"
               value={scanUrl}
               onChange={e => setScanUrl(e.target.value)}
               onKeyDown={e => e.key === "Enter" && canScan && setPhase("wizard-3")}
@@ -359,7 +359,7 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
               cursor: canScan ? "pointer" : "default",
             }}
           >
-            Scan starten <ArrowRight size={15} strokeWidth={2.5} />
+            WordPress-Audit starten <ArrowRight size={15} strokeWidth={2.5} />
           </button>
 
           <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12 }}>

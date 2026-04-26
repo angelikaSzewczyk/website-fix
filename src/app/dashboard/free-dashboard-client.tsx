@@ -8,13 +8,15 @@ import WfProGuidedTour from "./components/WfProGuidedTour";
 import StarterResultsPanel from "./components/StarterResultsPanel";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
+import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan } from "@/lib/plans";
+import { matchIssueType, recommendPluginsForIssues } from "@/lib/expert-guidance";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ParsedIssueProp {
   severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: "recht" | "speed" | "technik";
+  category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number; // actual number of errors this issue represents
   url?: string;   // page URL for per-page issues
 }
@@ -62,6 +64,23 @@ export interface FreeDashboardProps {
   totalPages: number | null;
   /** Subpage data from the last scan. */
   unterseiten: UnterseiteProp[] | null;
+  /** WooCommerce Business-Audit-Meta — nur gesetzt wenn Shop erkannt. */
+  wooAudit?: {
+    addToCartButtons:    number;
+    cartButtonsBlocked:  boolean;
+    pluginImpact:        Array<{ name: string; impactScore: number; reason: string }>;
+    outdatedTemplates:   boolean;
+    revenueRiskPct:      number;
+  } | null;
+  /** Builder-Intelligence-Meta — DOM-Tiefe, Fonts, CSS-Bloat. */
+  builderAudit?: {
+    builder:             string | null;
+    maxDomDepth:         number;
+    divCount:            number;
+    googleFontFamilies:  string[];
+    cssBloatHints:       string[];
+    stylesheetCount:     number;
+  } | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -913,6 +932,1292 @@ function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFree, onO
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
+// ─── WordPress-Expert-Mode ────────────────────────────────────────────────────
+// Starter → einfache Aufzählung | Professional/Agency → Icons + Status-Indikator
+type PluginDetected = { value: string; confidence: number; evidence: string[] };
+
+function WordPressPluginsBlock({ plugins, plan }: { plugins: PluginDetected[]; plan: string }) {
+  const pro = isAtLeastProfessional(plan);
+  const visible = plugins.filter(p => p.confidence >= CONFIDENCE_THRESHOLD);
+  if (visible.length === 0) return null;
+
+  // Status-Heuristik für Pro/Agency — mappt Plugin → Status-Hinweis
+  const STATUS: Record<string, { kind: "ok" | "warn" | "action"; note: string }> = {
+    "WP Rocket":        { kind: "warn",   note: "Cache aktiv — prüfe Lazy-Load & Critical CSS für +20 PageSpeed" },
+    "WP Fastest Cache": { kind: "warn",   note: "Cache aktiv — Minification aktivieren für weitere Speed-Gains" },
+    "W3 Total Cache":   { kind: "warn",   note: "Veraltetes Caching-Plugin — WP Rocket oder LiteSpeed empfohlen" },
+    "LiteSpeed Cache":  { kind: "ok",     note: "Server-Cache aktiv — optimale Konfiguration für WordPress" },
+    "Yoast SEO":        { kind: "ok",     note: "SEO-Plugin erkannt — stelle sicher, dass XML-Sitemap aktiv ist" },
+    "Rank Math":        { kind: "ok",     note: "Modernes SEO-Plugin — Schema-Markup automatisch aktiv" },
+    "All in One SEO":   { kind: "ok",     note: "SEO-Plugin erkannt — prüfe Meta-Descriptions auf jeder Seite" },
+    "Contact Form 7":   { kind: "action", note: "Kein Honeypot-Schutz aktiv — Spam-Risiko. Plugin 'CF7 Honeypot' empfohlen" },
+    "WPForms":          { kind: "ok",     note: "Form-Plugin mit integriertem Spam-Schutz" },
+    "Wordfence":        { kind: "ok",     note: "Firewall aktiv — empfohlen: 2FA aktivieren, Scan-Interval auf täglich" },
+    "Jetpack":          { kind: "warn",   note: "Jetpack verbraucht Ressourcen — prüfe welche Module wirklich nötig sind" },
+    "Akismet":          { kind: "ok",     note: "Spam-Filter aktiv" },
+    "Smush":            { kind: "ok",     note: "Bild-Optimierung aktiv" },
+    "ShortPixel":       { kind: "ok",     note: "Bild-Optimierung aktiv" },
+    "Borlabs Cookie":   { kind: "ok",     note: "DSGVO-konformer Cookie-Banner aktiv" },
+    "Complianz GDPR":   { kind: "ok",     note: "DSGVO-Banner aktiv — automatische Cookie-Scans laufen" },
+  };
+
+  const statusColor = { ok: "#4ade80", warn: "#fbbf24", action: "#fb923c" } as const;
+  const statusBg    = { ok: "rgba(74,222,128,0.08)", warn: "rgba(251,191,36,0.08)", action: "rgba(251,146,60,0.08)" } as const;
+  const statusBdr   = { ok: "rgba(74,222,128,0.22)", warn: "rgba(251,191,36,0.28)", action: "rgba(251,146,60,0.28)" } as const;
+  const statusLabel = { ok: "OK", warn: "Optimieren", action: "Handlungsbedarf" } as const;
+
+  return (
+    <div style={{
+      marginBottom: 28, padding: "18px 20px", borderRadius: D.radiusSm,
+      background: "rgba(255,255,255,0.02)", border: `1px solid ${D.border}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{
+            width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+            background: "rgba(0,115,170,0.15)", border: "1px solid rgba(0,115,170,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 13, fontWeight: 800, color: "#21759b",
+          }}>W</span>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: D.text }}>
+            WordPress-Plugins · {visible.length} erkannt
+          </h3>
+        </div>
+        {!pro && (
+          <Link href="/fuer-agenturen#pricing" style={{
+            fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20,
+            background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)",
+            color: "#10B981", textDecoration: "none",
+          }}>
+            Plugin-Optimierung freischalten →
+          </Link>
+        )}
+      </div>
+
+      {!pro && (
+        <>
+          {/* STARTER: einfache Aufzählung */}
+          <ul style={{ margin: 0, padding: "0 0 0 18px", fontSize: 13, color: D.textSub, lineHeight: 1.9 }}>
+            {visible.map(p => (
+              <li key={p.value} style={{ color: D.textSub }}>
+                <span style={{ color: D.text, fontWeight: 600 }}>{p.value}</span>
+              </li>
+            ))}
+          </ul>
+          <div style={{
+            marginTop: 14, padding: "10px 12px", borderRadius: 7,
+            background: "rgba(16,185,129,0.04)", border: "1px dashed rgba(16,185,129,0.22)",
+            fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.55,
+          }}>
+            <strong style={{ color: "#10B981" }}>Professional-Feature:</strong> Sieh pro Plugin, was konkret optimiert werden muss — z.B. „WP Rocket: Lazy-Load für +20 PageSpeed aktivieren".
+          </div>
+        </>
+      )}
+
+      {pro && (
+        <>
+          {/* PRO / AGENCY: Icons + Status-Indikator */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {visible.map(p => {
+              const s = STATUS[p.value] ?? { kind: "ok" as const, note: "Plugin erkannt, keine spezifischen Hinweise" };
+              return (
+                <div key={p.value} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "10px 12px", borderRadius: 8,
+                  background: statusBg[s.kind],
+                  border: `1px solid ${statusBdr[s.kind]}`,
+                }}>
+                  <div style={{
+                    width: 30, height: 30, borderRadius: 6, flexShrink: 0,
+                    background: "rgba(0,115,170,0.15)", border: "1px solid rgba(0,115,170,0.3)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, fontWeight: 800, color: "#21759b",
+                  }}>
+                    {p.value.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>{p.value}</span>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 10,
+                        background: `rgba(${hexToRgb(statusColor[s.kind])},0.12)`,
+                        color: statusColor[s.kind],
+                        border: `1px solid ${statusBdr[s.kind]}`,
+                        letterSpacing: "0.04em",
+                      }}>
+                        {statusLabel[s.kind]}
+                      </span>
+                      <span style={{ fontSize: 10, color: D.textMuted }}>
+                        Confidence {Math.round(p.confidence * 100)}%
+                      </span>
+                    </div>
+                    <p style={{ margin: "3px 0 0", fontSize: 12, color: D.textSub, lineHeight: 1.5 }}>
+                      {s.note}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── WooCommerce — E-Commerce & Shop-Performance Sektion ──────────────────────
+// Starter: Nur Badge + Lock-Hint. Professional/Agency: Volle Deep-Checks.
+type WooAuditProp = {
+  addToCartButtons:    number;
+  cartButtonsBlocked:  boolean;
+  pluginImpact:        Array<{ name: string; impactScore: number; reason: string }>;
+  outdatedTemplates:   boolean;
+  revenueRiskPct:      number;
+};
+
+function WooCommerceSection({ plan, shopIssues, audit }: {
+  plan: string;
+  shopIssues: ParsedIssueProp[];
+  audit?: WooAuditProp | null;
+}) {
+  const pro = isAtLeastProfessional(plan);
+
+  // WooCommerce-Brand-Farbe (official plum) + Accent-Variations
+  const WOO = {
+    primary:  "#7F54B3",
+    primaryBg:"rgba(127,84,179,0.10)",
+    primaryBd:"rgba(127,84,179,0.32)",
+    magenta:  "#C084B8",
+  };
+
+  return (
+    <div style={{
+      marginBottom: 28, borderRadius: D.radius, overflow: "hidden",
+      background: "rgba(255,255,255,0.02)",
+      border: `1px solid ${WOO.primaryBd}`,
+      boxShadow: `0 0 0 1px ${WOO.primaryBg}`,
+    }}>
+      {/* Section-Header */}
+      <div style={{
+        padding: "14px 20px",
+        background: `linear-gradient(90deg, ${WOO.primaryBg} 0%, transparent 100%)`,
+        borderBottom: `1px solid ${WOO.primaryBd}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: 7, flexShrink: 0,
+            background: WOO.primary, display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" stroke="none">
+              <path d="M21 5H3a1 1 0 0 0-1 1v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1zM4 13l1.5 7h13l1.5-7H4zm6 2h4v3h-4v-3z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: D.text, letterSpacing: "-0.01em" }}>
+              E-Commerce & Shop-Performance
+            </h3>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: D.textMuted }}>
+              WooCommerce-spezifische Optimierungen
+            </p>
+          </div>
+        </div>
+        <span style={{
+          fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20,
+          background: WOO.primary, color: "#fff", letterSpacing: "0.06em",
+        }}>
+          {pro ? "SHOP-AUDIT AKTIV" : "SHOP ERKANNT"}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "18px 20px" }}>
+        {/* Agentur-Textbaustein — immer sichtbar */}
+        <div style={{
+          padding: "12px 14px", borderRadius: 8, marginBottom: pro ? 16 : 14,
+          background: WOO.primaryBg,
+          border: `1px solid ${WOO.primaryBd}`,
+        }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
+            <strong style={{ color: WOO.magenta }}>Dieser Shop nutzt WooCommerce.</strong>{" "}
+            {pro
+              ? shopIssues.length > 0
+                ? `Optimierungspotenzial bei der Datenbank-Struktur und am Checkout-Prozess gefunden — ${shopIssues.length} ${shopIssues.length === 1 ? "Empfehlung" : "Empfehlungen"} unten.`
+                : "Der Shop läuft technisch sauber. Keine kritischen Performance- oder Security-Fragmente im HTML gefunden."
+              : "Für jeden WooCommerce-Shop gibt es spezifische Performance- und Datenbank-Optimierungen. Im Professional-Plan wird dein Shop auf Cart-Fragments, Database-Bloat und Upload-Security geprüft."}
+          </p>
+        </div>
+
+        {/* STARTER: Locked-Preview — zeigt WAS geprüft wird, nicht das Ergebnis */}
+        {!pro && (
+          <>
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginBottom: 14,
+            }}>
+              {[
+                { title: "Cart-Fragments-Check",  sub: "wc-ajax=get_refreshed_fragments Ladezeit-Killer" },
+                { title: "Database-Bloat-Analyse", sub: "wp_options & verwaiste Cart-Sessions" },
+                { title: "Upload-Verzeichnis",     sub: "/wp-content/uploads/woocommerce_uploads Security" },
+                { title: "Secure-Cookies-Audit",   sub: "PCI-DSS-Konformität am Checkout" },
+              ].map(check => (
+                <div key={check.title} style={{
+                  padding: "10px 12px", borderRadius: 7,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px dashed rgba(255,255,255,0.12)",
+                  opacity: 0.65, position: "relative",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                    <LockIco size={11} color={D.textMuted} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{check.title}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: D.textMuted, lineHeight: 1.45 }}>{check.sub}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              padding: "14px 16px", borderRadius: 8,
+              background: "linear-gradient(90deg, rgba(16,185,129,0.08), rgba(251,191,36,0.05))",
+              border: "1px solid rgba(16,185,129,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+            }}>
+              <div style={{ flex: "1 1 auto", minWidth: 200 }}>
+                <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#10B981" }}>
+                  Shop-Audit im Professional-Plan
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
+                  Konkrete Handlungsempfehlungen für Cart-Performance, DB-Bloat und Checkout-Security — ab 89 €/Monat.
+                </p>
+              </div>
+              <Link href="/fuer-agenturen#pricing" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 16px", borderRadius: 8,
+                background: "linear-gradient(90deg, #059669, #10B981)",
+                color: "#fff", fontSize: 12, fontWeight: 700,
+                textDecoration: "none", whiteSpace: "nowrap",
+                boxShadow: "0 3px 10px rgba(16,185,129,0.28)",
+              }}>
+                Shop-Audit freischalten →
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* PROFESSIONAL / AGENCY: Deep-Checks mit konkreten Befunden */}
+        {pro && (
+          <>
+            {/* ═══ E-COMMERCE BUSINESS AUDITOR ═══════════════════════════════ */}
+            {audit && (
+              <div style={{ marginBottom: 16 }}>
+                {/* Sub-Header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 20,
+                    background: "linear-gradient(90deg, rgba(16,185,129,0.15), rgba(251,191,36,0.1))",
+                    color: "#10B981", border: "1px solid rgba(16,185,129,0.3)", letterSpacing: "0.08em",
+                  }}>
+                    BUSINESS AUDITOR
+                  </span>
+                  <span style={{ fontSize: 10, color: D.textMuted, letterSpacing: "0.04em" }}>
+                    Revenue-Impact & UX-Performance
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
+                  {/* ── Revenue-at-Risk ──────────────────────────────────────── */}
+                  {(() => {
+                    const risk = audit.revenueRiskPct;
+                    const riskColor = risk >= 25 ? "#f87171" : risk >= 15 ? "#fbbf24" : risk > 0 ? "#fbbf24" : "#4ade80";
+                    const riskBg    = risk >= 25 ? "rgba(239,68,68,0.08)" : risk >= 15 ? "rgba(251,191,36,0.08)" : risk > 0 ? "rgba(251,191,36,0.05)" : "rgba(74,222,128,0.08)";
+                    const riskBd    = risk >= 25 ? "rgba(239,68,68,0.25)" : risk >= 15 ? "rgba(251,191,36,0.28)" : risk > 0 ? "rgba(251,191,36,0.22)" : "rgba(74,222,128,0.22)";
+                    const verdict =
+                      risk >= 25 ? "Kritischer Conversion-Verlust"
+                      : risk >= 15 ? "Messbarer Umsatzverlust"
+                      : risk >= 5 ? "Leichte Bremse"
+                      : "Shop läuft optimal";
+                    return (
+                      <div style={{
+                        padding: "14px 16px", borderRadius: 10,
+                        background: riskBg, border: `1px solid ${riskBd}`,
+                      }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                          Revenue-at-Risk
+                        </p>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
+                          <span style={{ fontSize: 28, fontWeight: 900, color: riskColor, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                            {risk}
+                          </span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: riskColor }}>%</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.5 }}>
+                          {risk > 0
+                            ? `Bei dieser Ladezeit riskieren Sie ${risk} % Ihrer Conversion-Rate. ${verdict}.`
+                            : verdict}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── UX Quick-Check: Add-to-Cart Buttons ───────────────────── */}
+                  {(() => {
+                    const n       = audit.addToCartButtons;
+                    const blocked = audit.cartButtonsBlocked;
+                    const okColor = n === 0 ? "#94a3b8" : blocked ? "#fbbf24" : "#4ade80";
+                    const okBg    = n === 0 ? "rgba(148,163,184,0.06)" : blocked ? "rgba(251,191,36,0.08)" : "rgba(74,222,128,0.08)";
+                    const okBd    = n === 0 ? "rgba(148,163,184,0.18)" : blocked ? "rgba(251,191,36,0.28)" : "rgba(74,222,128,0.22)";
+                    return (
+                      <div style={{
+                        padding: "14px 16px", borderRadius: 10,
+                        background: okBg, border: `1px solid ${okBd}`,
+                      }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                          UX Quick-Check
+                        </p>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
+                          <span style={{ fontSize: 28, fontWeight: 900, color: okColor, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                            {n}
+                          </span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: okColor }}>
+                            Buttons
+                          </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.5 }}>
+                          {n === 0
+                            ? "Keine add_to_cart-Buttons auf dieser Seite gefunden."
+                            : blocked
+                              ? "Blockierendes JavaScript in Button-Nähe — TTI-Verzögerung bei Interaktion."
+                              : "Buttons laden asynchron — optimale Reaktionszeit beim Klick."}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── Template-Status ────────────────────────────────────── */}
+                  <div style={{
+                    padding: "14px 16px", borderRadius: 10,
+                    background: audit.outdatedTemplates ? "rgba(239,68,68,0.08)" : "rgba(74,222,128,0.08)",
+                    border: `1px solid ${audit.outdatedTemplates ? "rgba(239,68,68,0.25)" : "rgba(74,222,128,0.22)"}`,
+                  }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                      Template-Status
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke={audit.outdatedTemplates ? "#f87171" : "#4ade80"}
+                        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        {audit.outdatedTemplates
+                          ? <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>
+                          : <polyline points="20 6 9 17 4 12"/>}
+                      </svg>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: audit.outdatedTemplates ? "#f87171" : "#4ade80" }}>
+                        {audit.outdatedTemplates ? "Veraltete Overrides" : "Templates aktuell"}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.5 }}>
+                      {audit.outdatedTemplates
+                        ? "Theme überschreibt veraltete WooCommerce-Templates — Darstellungsfehler nach Updates wahrscheinlich."
+                        : "Keine Theme-Overrides auf veralteten WooCommerce-Template-Versionen erkannt."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Plugin-Impact-Score (Top 3) ─────────────────────────── */}
+                {audit.pluginImpact.length > 0 && (
+                  <div style={{
+                    marginTop: 10, padding: "14px 16px", borderRadius: 10,
+                    background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.22)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+                      <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                        Plugin-Impact · Top {audit.pluginImpact.length}
+                      </p>
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+                        Geschätzter TTI-Impact auf diese Seite
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {audit.pluginImpact.map(p => {
+                        const barPct   = Math.round((p.impactScore / 10) * 100);
+                        const barColor = p.impactScore >= 8 ? "#f87171" : p.impactScore >= 6 ? "#fbbf24" : "#fb923c";
+                        return (
+                          <div key={p.name} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center" }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: D.text, marginBottom: 2 }}>{p.name}</div>
+                              <div style={{ fontSize: 11, color: D.textMuted, lineHeight: 1.4 }}>{p.reason}</div>
+                              <div style={{ height: 3, borderRadius: 99, marginTop: 5, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: `${barPct}%`, background: barColor, borderRadius: 99 }} />
+                              </div>
+                            </div>
+                            <span style={{
+                              fontSize: 12, fontWeight: 800, padding: "4px 9px", borderRadius: 10,
+                              background: `rgba(${hexToRgb(barColor)},0.12)`,
+                              color: barColor, border: `1px solid rgba(${hexToRgb(barColor)},0.28)`,
+                              fontVariantNumeric: "tabular-nums", minWidth: 48, textAlign: "center",
+                            }}>
+                              {p.impactScore}/10
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p style={{ margin: "10px 0 0", fontSize: 11, color: "rgba(255,255,255,0.42)", lineHeight: 1.5 }}>
+                      <strong style={{ color: "#A78BFA" }}>Empfehlung:</strong> Mit "Asset CleanUp" oder "Perfmatters" die obigen Plugins selektiv nur auf Shop-Seiten laden — typisch –40 % TTI auf Nicht-Shop-Seiten.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ═══ Befunde (Issues) ═══════════════════════════════════════════ */}
+            {shopIssues.length === 0 ? (
+              <div style={{
+                padding: "14px 16px", borderRadius: 8,
+                background: D.greenBg, border: `1px solid ${D.greenBorder}`,
+                display: "flex", alignItems: "center", gap: 10,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={D.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <p style={{ margin: 0, fontSize: 13, color: D.green, fontWeight: 600 }}>
+                  Shop technisch sauber — keine kritischen Befunde bei Cart-Fragments, Upload-Security und Session-Cookies.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {shopIssues.map((issue, idx) => {
+                  const isRed   = issue.severity === "red";
+                  const bg      = isRed ? D.redBg      : D.amberBg;
+                  const bd      = isRed ? D.redBorder  : D.amberBorder;
+                  const clr     = isRed ? D.red        : D.amber;
+                  return (
+                    <div key={idx} style={{
+                      padding: "12px 14px", borderRadius: 8,
+                      background: bg, border: `1px solid ${bd}`,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 10,
+                          background: `rgba(${hexToRgb(clr)},0.15)`,
+                          color: clr, border: `1px solid ${bd}`, letterSpacing: "0.05em",
+                        }}>
+                          {isRed ? "HANDLUNGSBEDARF" : "OPTIMIERUNG"}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
+                          {issue.title}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 12.5, color: D.textSub, lineHeight: 1.6 }}>
+                        {issue.body}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Builder-Intelligence Sektion (Elementor / Divi / Astra / WPBakery) ──────
+type BuilderAuditProp = {
+  builder:            string | null;
+  maxDomDepth:        number;
+  divCount:           number;
+  googleFontFamilies: string[];
+  cssBloatHints:      string[];
+  stylesheetCount:    number;
+};
+
+// Builder-Brand-Colors: Elementor Pink, Divi Teal, Astra Blue
+function getBuilderTheme(name: string | null) {
+  switch (name) {
+    case "Elementor": return { primary: "#D5336D", bg: "rgba(213,51,109,0.10)", bd: "rgba(213,51,109,0.32)", logo: "E" };
+    case "Divi":      return { primary: "#00B5AD", bg: "rgba(0,181,173,0.10)",  bd: "rgba(0,181,173,0.32)",  logo: "D" };
+    case "Astra":     return { primary: "#4A90E2", bg: "rgba(74,144,226,0.10)", bd: "rgba(74,144,226,0.32)", logo: "A" };
+    case "WPBakery":  return { primary: "#F7781F", bg: "rgba(247,120,31,0.10)", bd: "rgba(247,120,31,0.32)", logo: "W" };
+    default:          return { primary: "#94A3B8", bg: "rgba(148,163,184,0.10)",bd: "rgba(148,163,184,0.32)",logo: "B" };
+  }
+}
+
+function BuilderIntelligenceSection({ plan, audit, builderIssues, onGeneratePlan }: {
+  plan: string;
+  audit: BuilderAuditProp;
+  builderIssues: ParsedIssueProp[];
+  onGeneratePlan: () => void;
+}) {
+  const pro = isAtLeastProfessional(plan);
+  const theme = getBuilderTheme(audit.builder);
+  const depthCritical = audit.maxDomDepth > 22;
+  const depthWarning  = audit.maxDomDepth > 15 && !depthCritical;
+  const fontsHigh     = audit.googleFontFamilies.length > 2;
+
+  return (
+    <div style={{
+      marginBottom: 28, borderRadius: D.radius, overflow: "hidden",
+      background: "rgba(255,255,255,0.02)", border: `1px solid ${theme.bd}`,
+      boxShadow: `0 0 0 1px ${theme.bg}`,
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "14px 20px",
+        background: `linear-gradient(90deg, ${theme.bg} 0%, transparent 100%)`,
+        borderBottom: `1px solid ${theme.bd}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: 7, flexShrink: 0,
+            background: theme.primary, display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 15, fontWeight: 900, color: "#fff",
+          }}>
+            {theme.logo}
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: D.text, letterSpacing: "-0.01em" }}>
+              Builder- & Theme-Analyse
+            </h3>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: D.textMuted }}>
+              {audit.builder ?? "Kein Page-Builder"} · DOM-Struktur, Fonts, CSS-Bloat
+            </p>
+          </div>
+        </div>
+        <span style={{
+          fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20,
+          background: theme.primary, color: "#fff", letterSpacing: "0.06em",
+        }}>
+          {audit.builder ? audit.builder.toUpperCase() + " ERKANNT" : "KEIN BUILDER"}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "18px 20px" }}>
+        {/* STARTER: Locked-Preview */}
+        {!pro && (
+          <>
+            <p style={{ margin: "0 0 14px", fontSize: 12.5, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
+              <strong style={{ color: theme.primary }}>{audit.builder ?? "Page-Builder"} erkannt.</strong>{" "}
+              Für Page-Builder-Seiten gibt es spezifische Optimierungen: DOM-Verschachtelung, Font-Auswahl, Asset-Bloat. Im Professional-Plan wird deine Seite auf alle drei Dimensionen geprüft und liefert einen fertigen Optimierungs-Plan zum Export.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginBottom: 14 }}>
+              {[
+                { title: "DOM-Depth Analyzer",    sub: "Verschachtelungstiefe + Render-Impact" },
+                { title: "Google-Font Tracker",   sub: "DSGVO-Check + Performance-Bewertung" },
+                { title: "CSS-Bloat Heuristik",   sub: "Ungenutzte Builder-Styles identifizieren" },
+                { title: "Optimierungs-Plan PDF", sub: "Fertige Checkliste für Kunden-Export" },
+              ].map(check => (
+                <div key={check.title} style={{
+                  padding: "10px 12px", borderRadius: 7,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px dashed rgba(255,255,255,0.12)",
+                  opacity: 0.65,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                    <LockIco size={11} color={D.textMuted} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{check.title}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: D.textMuted, lineHeight: 1.45 }}>{check.sub}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              padding: "14px 16px", borderRadius: 8,
+              background: "linear-gradient(90deg, rgba(16,185,129,0.08), rgba(251,191,36,0.05))",
+              border: "1px solid rgba(16,185,129,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+            }}>
+              <div style={{ flex: "1 1 auto", minWidth: 200 }}>
+                <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#10B981" }}>
+                  Builder-Intelligence im Professional-Plan
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
+                  Tiefere Analysen und exportierbarer Optimierungs-Plan für deine Kunden — ab 89 €/Monat.
+                </p>
+              </div>
+              <Link href="/fuer-agenturen#pricing" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 16px", borderRadius: 8,
+                background: "linear-gradient(90deg, #059669, #10B981)",
+                color: "#fff", fontSize: 12, fontWeight: 700,
+                textDecoration: "none", whiteSpace: "nowrap",
+                boxShadow: "0 3px 10px rgba(16,185,129,0.28)",
+              }}>
+                Builder-Intelligence freischalten →
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* PROFESSIONAL / AGENCY: Volle Analyse + Plan-Button */}
+        {pro && (
+          <>
+            {/* 3-Spalten-KPI-Grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 10, marginBottom: 14,
+            }}>
+              {/* DOM-Depth */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 10,
+                background: depthCritical ? D.redBg : depthWarning ? D.amberBg : D.greenBg,
+                border: `1px solid ${depthCritical ? D.redBorder : depthWarning ? D.amberBorder : D.greenBorder}`,
+              }}>
+                <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  DOM-Tiefe
+                </p>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 28, fontWeight: 900,
+                    color: depthCritical ? D.red : depthWarning ? D.amber : D.green,
+                    lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {audit.maxDomDepth}
+                  </span>
+                  <span style={{ fontSize: 11, color: D.textMuted }}>Ebenen</span>
+                </div>
+                <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.45 }}>
+                  {depthCritical ? "Kritisch — Render-Stau auf mobilen Geräten wahrscheinlich."
+                   : depthWarning ? "Google empfiehlt ≤ 15 — Optimierung spürbar."
+                   : "Im grünen Bereich — saubere DOM-Struktur."}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 10.5, color: D.textMuted }}>
+                  {audit.divCount} &lt;div&gt;-Tags gesamt
+                </p>
+              </div>
+
+              {/* Google Fonts */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 10,
+                background: fontsHigh ? D.amberBg : audit.googleFontFamilies.length > 0 ? D.amberBg : D.greenBg,
+                border: `1px solid ${fontsHigh ? D.amberBorder : audit.googleFontFamilies.length > 0 ? D.amberBorder : D.greenBorder}`,
+              }}>
+                <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Google Fonts
+                </p>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 28, fontWeight: 900,
+                    color: fontsHigh ? D.amber : audit.googleFontFamilies.length > 0 ? D.amber : D.green,
+                    lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {audit.googleFontFamilies.length}
+                  </span>
+                  <span style={{ fontSize: 11, color: D.textMuted }}>
+                    Famil{audit.googleFontFamilies.length === 1 ? "ie" : "ien"}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.45, wordBreak: "break-word" }}>
+                  {audit.googleFontFamilies.length === 0
+                    ? "Keine externen Google Fonts erkannt — top."
+                    : audit.googleFontFamilies.slice(0, 3).join(", ") + (audit.googleFontFamilies.length > 3 ? ", …" : "")}
+                </p>
+                {audit.googleFontFamilies.length > 0 && (
+                  <p style={{ margin: "4px 0 0", fontSize: 10.5, color: D.textMuted }}>DSGVO-Check empfohlen</p>
+                )}
+              </div>
+
+              {/* CSS-Bloat */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 10,
+                background: audit.cssBloatHints.length > 0 ? D.amberBg : D.greenBg,
+                border: `1px solid ${audit.cssBloatHints.length > 0 ? D.amberBorder : D.greenBorder}`,
+              }}>
+                <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: D.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  CSS-Bloat
+                </p>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 28, fontWeight: 900,
+                    color: audit.cssBloatHints.length > 0 ? D.amber : D.green,
+                    lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {audit.cssBloatHints.length}
+                  </span>
+                  <span style={{ fontSize: 11, color: D.textMuted }}>Hinweise</span>
+                </div>
+                <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.45 }}>
+                  {audit.cssBloatHints.length === 0
+                    ? "Keine ungenutzten Builder-Styles erkannt."
+                    : audit.cssBloatHints[0].slice(0, 90) + (audit.cssBloatHints[0].length > 90 ? "…" : "")}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 10.5, color: D.textMuted }}>
+                  {audit.stylesheetCount} Stylesheets insgesamt
+                </p>
+              </div>
+            </div>
+
+            {/* Befunde (Builder-Issues) */}
+            {builderIssues.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                {builderIssues.map((issue, idx) => {
+                  const isRed = issue.severity === "red";
+                  return (
+                    <div key={idx} style={{
+                      padding: "10px 12px", borderRadius: 8,
+                      background: isRed ? D.redBg : D.amberBg,
+                      border: `1px solid ${isRed ? D.redBorder : D.amberBorder}`,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 10,
+                          background: `rgba(${hexToRgb(isRed ? D.red : D.amber)},0.15)`,
+                          color: isRed ? D.red : D.amber,
+                          border: `1px solid ${isRed ? D.redBorder : D.amberBorder}`,
+                          letterSpacing: "0.05em",
+                        }}>
+                          {isRed ? "HANDLUNGSBEDARF" : "OPTIMIERUNG"}
+                        </span>
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: D.text }}>{issue.title}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11.5, color: D.textSub, lineHeight: 1.55 }}>{issue.body}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Generate-Plan Button */}
+            <button
+              onClick={onGeneratePlan}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "12px 22px", borderRadius: 10, fontSize: 13, fontWeight: 800,
+                background: `linear-gradient(90deg, ${theme.primary}, ${theme.primary}DD)`,
+                color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
+                boxShadow: `0 4px 14px ${theme.bg}`,
+                letterSpacing: "-0.01em",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1.1)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1)"; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/>
+              </svg>
+              Optimierungs-Plan generieren
+            </button>
+            <p style={{ margin: "6px 0 0", fontSize: 11, color: D.textMuted }}>
+              Exportierbare Checkliste mit 3–5 Handlungspunkten, abgeleitet aus DOM-Tiefe, Fonts, Shop-Status und erkannten Plugins.
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Empfohlene Werkzeuge — Plugin-Quick-Fixes ───────────────────────────────
+// Aggregiert die Issue-Types aus den aktuellen Befunden, mappt sie auf
+// Plugin-Empfehlungen und rendert sie als Aktions-Karten.
+function RecommendedToolsSection({ issues, builder }: {
+  issues: ParsedIssueProp[];
+  builder: BuilderAuditProp | null;
+}) {
+  const types = issues.map(i => matchIssueType(i.title, i.body)).filter(t => t !== "unknown");
+  if (types.length === 0) return null;
+
+  const plugins = recommendPluginsForIssues(types).slice(0, 6);
+  if (plugins.length === 0) return null;
+
+  return (
+    <div style={{
+      marginBottom: 28, padding: "18px 20px", borderRadius: D.radiusSm,
+      background: "rgba(122,166,255,0.04)", border: "1px solid rgba(122,166,255,0.22)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <span style={{
+          fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 10,
+          background: "rgba(122,166,255,0.12)", color: "#7aa6ff",
+          border: "1px solid rgba(122,166,255,0.3)", letterSpacing: "0.06em",
+        }}>
+          EXPERT-GUIDANCE
+        </span>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: D.text, letterSpacing: "-0.01em" }}>
+          Empfohlene Werkzeuge
+        </h3>
+      </div>
+      <p style={{ margin: "0 0 14px", fontSize: 12.5, color: D.textSub, lineHeight: 1.55 }}>
+        Basierend auf den Befunden{builder?.builder ? ` deiner ${builder.builder}-Seite` : ""} schlagen wir diese Plugins vor — jedes löst direkt eines der gefundenen Probleme.
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
+        {plugins.map(p => (
+          <div key={p.id} style={{
+            padding: "12px 14px", borderRadius: 10,
+            background: "rgba(255,255,255,0.025)", border: `1px solid ${D.border}`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 800, color: D.text, letterSpacing: "-0.01em" }}>{p.name}</span>
+              <span style={{
+                fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 10,
+                background: p.pricing === "free" ? "rgba(74,222,128,0.10)" : p.pricing === "freemium" ? "rgba(122,166,255,0.10)" : "rgba(251,191,36,0.10)",
+                color:      p.pricing === "free" ? "#4ade80" : p.pricing === "freemium" ? "#7aa6ff" : "#fbbf24",
+                border:    `1px solid ${p.pricing === "free" ? "rgba(74,222,128,0.28)" : p.pricing === "freemium" ? "rgba(122,166,255,0.28)" : "rgba(251,191,36,0.28)"}`,
+                letterSpacing: "0.05em", whiteSpace: "nowrap",
+              }}>
+                {p.pricing === "free" ? "GRATIS" : p.pricing === "freemium" ? "FREEMIUM" : "PAID"}
+              </span>
+            </div>
+            <p style={{ margin: "0 0 6px", fontSize: 11, color: D.textMuted, lineHeight: 1.5 }}>
+              {p.description}
+            </p>
+            <p style={{ margin: "0 0 8px", fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+              <strong style={{ color: "#7aa6ff" }}>Warum es hilft:</strong> {p.whyItHelps}
+            </p>
+            <a href={p.url} target="_blank" rel="noopener noreferrer" style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "5px 11px", borderRadius: 6, fontSize: 11, fontWeight: 700,
+              background: "rgba(122,166,255,0.10)", border: "1px solid rgba(122,166,255,0.28)",
+              color: "#7aa6ff", textDecoration: "none",
+            }}>
+              {p.vendor} öffnen ↗
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── GSC-Insight-Card ────────────────────────────────────────────────────────
+// Zeigt Impressions/Clicks aus Search Console neben dem Speed-Score.
+// Bei speedScore < 40: roter Insight "Traffic-Risiko durch sinkende Performance".
+function GscInsightCard({ speedScore, domainUrl }: { speedScore: number; domainUrl: string }) {
+  const [state, setState] = useState<"loading" | "not_configured" | "ok" | "error">("loading");
+  const [totals, setTotals] = useState<{ impressions: number; clicks: number; ctr: number; position: number | null } | null>(null);
+  const [reason, setReason] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/integrations/gsc")
+      .then(r => r.json())
+      .then(d => {
+        if (cancelled) return;
+        if (d.connected && d.ok && d.totals) { setTotals(d.totals); setState("ok"); }
+        else if (!d.connected)                { setState("not_configured"); setReason(d.reason ?? ""); }
+        else                                  { setState("error"); setReason(d.error ?? ""); }
+      })
+      .catch(() => { if (!cancelled) setState("error"); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const lowSpeed = speedScore < 40;
+  if (state === "loading" && !lowSpeed) return null; // Keep UI clean during initial load
+
+  const domain = (() => { try { return new URL(domainUrl).hostname.replace(/^www\./, ""); } catch { return domainUrl; } })();
+
+  return (
+    <div style={{
+      marginBottom: 24, borderRadius: D.radiusSm, overflow: "hidden",
+      background: "rgba(66,133,244,0.04)", border: "1px solid rgba(66,133,244,0.22)",
+    }}>
+      <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
+        <div style={{
+          width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+          background: "#4285F4", display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 11, fontWeight: 900, color: "#fff",
+        }}>G</div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#4285F4", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 1 }}>
+            Search Console · {domain}
+          </div>
+          <div style={{ fontSize: 11, color: D.textMuted }}>
+            {state === "ok" && totals ? "Letzte 28 Tage"
+             : state === "loading" ? "Lädt GSC-Daten…"
+             : state === "not_configured" ? (
+                reason === "plan" ? "Professional-Plan erforderlich"
+                : "Noch nicht verbunden"
+              )
+             : "Fehler beim Abruf"}
+          </div>
+        </div>
+
+        {state === "ok" && totals && (
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" as const, alignItems: "center" }}>
+            <InlineStat label="Impressions" value={totals.impressions.toLocaleString("de-DE")} />
+            <InlineStat label="Klicks"      value={totals.clicks.toLocaleString("de-DE")} />
+            <InlineStat label="CTR"         value={`${(totals.ctr * 100).toFixed(2)}%`} />
+            {totals.position !== null && <InlineStat label="Ø Position" value={totals.position.toFixed(1)} />}
+          </div>
+        )}
+
+        {state === "not_configured" && (
+          <Link href="/dashboard/settings/integrations" style={{
+            fontSize: 11, fontWeight: 700, color: "#4285F4",
+            padding: "5px 11px", borderRadius: 6,
+            background: "rgba(66,133,244,0.10)", border: "1px solid rgba(66,133,244,0.28)",
+            textDecoration: "none", whiteSpace: "nowrap" as const,
+          }}>
+            GSC verbinden →
+          </Link>
+        )}
+      </div>
+
+      {/* Low-Speed-Insight — eigener Auto-Warning-Block */}
+      {lowSpeed && (
+        <div style={{
+          padding: "10px 16px", borderTop: "1px solid rgba(66,133,244,0.18)",
+          background: "rgba(239,68,68,0.06)",
+          display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" as const,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.5 }}>
+            <strong style={{ color: "#f87171" }}>Traffic-Risiko erkannt:</strong> Speed-Score von {speedScore} liegt unter 40.{" "}
+            {state === "ok" && totals
+              ? `Bei ${totals.impressions.toLocaleString("de-DE")} Impressions/Monat bedeutet jede 100 ms Ladezeit-Verlust ~1% Click-Through-Rate. Google bewertet Core-Web-Vitals im Ranking.`
+              : "GSC-Daten zeigen Traffic-Risiko durch sinkende Performance — Core-Web-Vitals wirken auf das Ranking."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InlineStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ textAlign: "right" }}>
+      <div style={{ fontSize: 10, color: D.textMuted, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", fontVariantNumeric: "tabular-nums" }}>{value}</div>
+    </div>
+  );
+}
+
+// ─── Optimierungs-Plan Generator ─────────────────────────────────────────────
+type PlanContext = {
+  builder:       BuilderAuditProp | null;
+  woo:           WooAuditProp | null;
+  speedScore:    number;
+  redCount:      number;
+  yellowCount:   number;
+  url:           string;
+};
+
+function generateOptimizationPlan(ctx: PlanContext): Array<{ title: string; body: string; priority: "red" | "yellow" }> {
+  const steps: Array<{ title: string; body: string; priority: "red" | "yellow"; weight: number }> = [];
+  const b = ctx.builder;
+
+  // 1. DOM-Verschachtelung
+  if (b && b.maxDomDepth > 22) {
+    steps.push({
+      title: `${b.builder ?? "Page-Builder"}-DOM-Struktur verschlanken`,
+      body: `Aktuelle Verschachtelungstiefe: ${b.maxDomDepth} Ebenen, ${b.divCount} <div>-Tags. ${b.builder === "Elementor"
+        ? "Migration von Section/Column zu Elementor-Containern (Flexbox) — reduziert Ebenen um ~40 %."
+        : b.builder === "Divi"
+        ? "Mit Divi 'Collapse Nested Rows' Sections zusammenfassen."
+        : "Unnötige Wrapper-Divs entfernen, CSS-Grid statt verschachtelter Rows."}`,
+      priority: "red",
+      weight:   10,
+    });
+  } else if (b && b.maxDomDepth > 15) {
+    steps.push({
+      title: `${b.builder ?? "Builder"}-DOM-Tiefe auf ≤ 15 reduzieren`,
+      body:  `DOM-Tiefe aktuell ${b.maxDomDepth}. Google empfiehlt max. 15 — darüber leidet die Render-Performance auf Mobilgeräten.`,
+      priority: "yellow",
+      weight:   7,
+    });
+  }
+
+  // 2. Google Fonts
+  if (b && b.googleFontFamilies.length > 2) {
+    steps.push({
+      title: "Google Fonts auf max. 2 Familien reduzieren",
+      body:  `${b.googleFontFamilies.length} Font-Familien geladen (${b.googleFontFamilies.slice(0, 3).join(", ")}…). Best Practice: Heading + Body, mehr nicht. Spart typisch 150–400 ms Ladezeit.`,
+      priority: "yellow",
+      weight:   6,
+    });
+  }
+  if (b && b.googleFontFamilies.length >= 1) {
+    steps.push({
+      title: "Google Fonts lokal hosten (DSGVO)",
+      body:  "Plugin 'OMGF | Host Google Fonts Locally' installieren. Behebt DSGVO-Risiko (LG München 2022) UND spart DNS-Request zu Google-Servern — Ladezeit-Gewinn inklusive.",
+      priority: "red",
+      weight:   9,
+    });
+  }
+
+  // 3. CSS-Bloat
+  if (b && b.cssBloatHints.length > 0) {
+    steps.push({
+      title: "Ungenutztes CSS entfernen",
+      body:  b.cssBloatHints.slice(0, 2).join(" — "),
+      priority: "yellow",
+      weight:   5,
+    });
+  }
+
+  // 4. WooCommerce — wenn Shop
+  if (ctx.woo) {
+    if (ctx.woo.revenueRiskPct >= 15) {
+      steps.push({
+        title: "WooCommerce Cart-Fragments auf Nicht-Shop-Seiten deaktivieren",
+        body:  `Revenue-at-Risk: ${ctx.woo.revenueRiskPct} %. wc-ajax=get_refreshed_fragments bremst jede Seite. Plugin 'Disable Cart Fragments' installieren oder manuell per Code-Snippet entfernen — spart 200–500 ms Ladezeit.`,
+        priority: "red",
+        weight:   10,
+      });
+    }
+    if (ctx.woo.pluginImpact.length >= 2) {
+      const names = ctx.woo.pluginImpact.map(p => p.name).join(", ");
+      steps.push({
+        title: "Heavy WooCommerce-Plugins selektiv laden",
+        body:  `${names} — mit "Asset CleanUp" oder "Perfmatters" diese Scripts nur auf /shop, /warenkorb, /produkt/* laden. Typisch –40 % TTI auf Blog-/Info-Seiten.`,
+        priority: "yellow",
+        weight:   7,
+      });
+    }
+    if (ctx.woo.outdatedTemplates) {
+      steps.push({
+        title: "Veraltete WooCommerce-Template-Overrides aktualisieren",
+        body:  "Admin → WooCommerce → Status → Templates. Jeden Override mit Versions-Hinweis neu aus /plugins/woocommerce/templates/ kopieren und eigene Anpassungen mergen. Verhindert Checkout-Fehler nach WC-Updates.",
+        priority: "red",
+        weight:   9,
+      });
+    }
+  }
+
+  // 5. Performance-Fallback wenn speedScore niedrig
+  if (ctx.speedScore < 50 && steps.length < 3) {
+    steps.push({
+      title: "Caching + Bildkompression aktivieren",
+      body:  "WP Rocket oder FlyingPress installieren (Page-Cache + Asset-Minification + Lazy-Load). Bilder mit ShortPixel oder Smush in WebP konvertieren.",
+      priority: "yellow",
+      weight:   6,
+    });
+  }
+
+  // Sortieren nach weight (desc) und auf 5 Punkte kappen
+  steps.sort((a, b2) => b2.weight - a.weight);
+  return steps.slice(0, 5).map(({ title, body, priority }) => ({ title, body, priority }));
+}
+
+// ─── Optimierungs-Plan Modal ─────────────────────────────────────────────────
+function OptimizationPlanModal({ onClose, plan, builder, woo, speedScore, redCount, yellowCount, url, scanId }: {
+  onClose: () => void;
+  plan: string;
+  builder: BuilderAuditProp | null;
+  woo: WooAuditProp | null;
+  speedScore: number;
+  redCount: number;
+  yellowCount: number;
+  url: string;
+  scanId?: string;
+}) {
+  const steps = generateOptimizationPlan({ builder, woo, speedScore, redCount, yellowCount, url });
+  const theme = getBuilderTheme(builder?.builder ?? null);
+  void plan;
+
+  // Task-Export-State: pro Step-Index zeigen wir "idle | loading | done | error"
+  const [exportState, setExportState] = useState<Record<number, "idle" | "loading" | "done" | "error">>({});
+  const [exportErr,   setExportErr]   = useState<Record<number, string>>({});
+  const [exportLinks, setExportLinks] = useState<Record<number, string>>({});
+
+  async function exportStep(idx: number, step: { title: string; body: string; priority: "red" | "yellow" }) {
+    setExportState(p => ({ ...p, [idx]: "loading" }));
+    setExportErr(p => ({ ...p, [idx]: "" }));
+    try {
+      const res = await fetch("/api/integrations/export-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title:       step.title,
+          description: step.body,
+          priority:    step.priority,
+          url,
+          scanId,
+          source:      "optimization_plan",
+          meta: {
+            builder:    builder?.builder ?? null,
+            domDepth:   builder?.maxDomDepth ?? null,
+            googleFonts: builder?.googleFontFamilies ?? [],
+            wooRiskPct: woo?.revenueRiskPct ?? null,
+            speedScore,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setExportState(p => ({ ...p, [idx]: "error" }));
+        setExportErr(p => ({ ...p, [idx]: data.error ?? "Export fehlgeschlagen" }));
+      } else {
+        setExportState(p => ({ ...p, [idx]: "done" }));
+        if (data.externalUrl) setExportLinks(p => ({ ...p, [idx]: data.externalUrl }));
+      }
+    } catch {
+      setExportState(p => ({ ...p, [idx]: "error" }));
+      setExportErr(p => ({ ...p, [idx]: "Verbindungsfehler" }));
+    }
+  }
+
+  function handlePrint() { window.print(); }
+  function handleCopy() {
+    const text = [
+      `Optimierungs-Plan · ${url}`,
+      `Erstellt: ${new Date().toLocaleDateString("de-DE")}`,
+      "",
+      ...steps.map((s, i) => `${i + 1}. ${s.title}\n   ${s.body}`),
+    ].join("\n");
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+
+  return (
+    <>
+      <style>{`
+        @keyframes wf-opt-spin { to { transform: rotate(360deg); } }
+        @media print {
+          body > *:not(.wf-opt-plan-root) { display: none !important; }
+          .wf-opt-plan-root { position: static !important; background: #fff !important; }
+          .wf-opt-plan-card { background: #fff !important; color: #0b0c10 !important; box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+          .wf-opt-plan-card * { color: #0b0c10 !important; }
+          .wf-opt-plan-no-print { display: none !important; }
+        }
+      `}</style>
+      <div className="wf-opt-plan-root" onClick={onClose} style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.72)", backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      }}>
+        <div className="wf-opt-plan-card" onClick={e => e.stopPropagation()} style={{
+          maxWidth: 640, width: "100%", maxHeight: "90vh", overflowY: "auto",
+          borderRadius: 16, background: "#0f1623",
+          border: `1px solid ${theme.bd}`, boxShadow: "0 24px 60px rgba(0,0,0,0.7)",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "22px 28px",
+            background: `linear-gradient(135deg, ${theme.bg} 0%, transparent 100%)`,
+            borderBottom: `1px solid ${theme.bd}`,
+            display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10,
+          }}>
+            <div>
+              <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: theme.primary }}>
+                WebsiteFix · Optimierungs-Plan
+              </p>
+              <h2 style={{ margin: "0 0 3px", fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
+                {steps.length} Handlungspunkte für {builder?.builder ?? "deine Website"}
+              </h2>
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                {url} · {new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}
+              </p>
+            </div>
+            <button className="wf-opt-plan-no-print" onClick={onClose} style={{
+              width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.55)", cursor: "pointer", fontSize: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>×</button>
+          </div>
+
+          {/* Steps */}
+          <div style={{ padding: "22px 28px" }}>
+            {steps.length === 0 ? (
+              <p style={{ margin: 0, fontSize: 13, color: D.textSub }}>
+                Die Seite läuft technisch sauber — derzeit keine priorisierten Handlungspunkte.
+              </p>
+            ) : (
+              <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {steps.map((step, idx) => (
+                  <li key={idx} style={{
+                    padding: "14px 16px", marginBottom: 10, borderRadius: 10,
+                    background: step.priority === "red" ? "rgba(239,68,68,0.06)" : "rgba(251,191,36,0.05)",
+                    border: `1px solid ${step.priority === "red" ? "rgba(239,68,68,0.22)" : "rgba(251,191,36,0.22)"}`,
+                    display: "flex", gap: 12, alignItems: "flex-start",
+                  }}>
+                    <div style={{
+                      width: 26, height: 26, flexShrink: 0, borderRadius: 7,
+                      background: step.priority === "red" ? "#f87171" : "#fbbf24",
+                      color: "#0b0c10", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, fontWeight: 900,
+                    }}>
+                      {idx + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 800, color: "#fff" }}>{step.title}</span>
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, padding: "1px 7px", borderRadius: 10,
+                          background: step.priority === "red" ? "rgba(239,68,68,0.15)" : "rgba(251,191,36,0.15)",
+                          color: step.priority === "red" ? "#f87171" : "#fbbf24",
+                          border: `1px solid ${step.priority === "red" ? "rgba(239,68,68,0.3)" : "rgba(251,191,36,0.3)"}`,
+                          letterSpacing: "0.06em",
+                        }}>
+                          {step.priority === "red" ? "PRIORITÄT" : "OPTIMIERUNG"}
+                        </span>
+                      </div>
+                      <p style={{ margin: "0 0 8px", fontSize: 12.5, color: "rgba(255,255,255,0.62)", lineHeight: 1.6 }}>{step.body}</p>
+
+                      {/* Task-Export-Button — fire-and-forget an Jira/Trello/Zapier */}
+                      <div className="wf-opt-plan-no-print" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => exportStep(idx, step)}
+                          disabled={exportState[idx] === "loading" || exportState[idx] === "done"}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            padding: "5px 10px", borderRadius: 6, fontSize: 10.5, fontWeight: 700,
+                            background: exportState[idx] === "done" ? "rgba(74,222,128,0.10)" : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${exportState[idx] === "done" ? "rgba(74,222,128,0.3)" : "rgba(255,255,255,0.12)"}`,
+                            color: exportState[idx] === "done" ? "#4ade80" : "rgba(255,255,255,0.55)",
+                            cursor: exportState[idx] === "loading" || exportState[idx] === "done" ? "default" : "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          {exportState[idx] === "loading" ? (
+                            <><span style={{ width: 10, height: 10, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", display: "inline-block", animation: "wf-opt-spin 0.7s linear infinite" }} /> Wird exportiert…</>
+                          ) : exportState[idx] === "done" ? (
+                            <>✓ Als Task exportiert</>
+                          ) : (
+                            <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Als Task exportieren</>
+                          )}
+                        </button>
+                        {exportState[idx] === "done" && exportLinks[idx] && (
+                          <a href={exportLinks[idx]} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, color: "#4ade80", textDecoration: "none", fontWeight: 700 }}>
+                            Ticket öffnen ↗
+                          </a>
+                        )}
+                        {exportState[idx] === "error" && (
+                          <span style={{ fontSize: 10.5, color: "#f87171" }}>
+                            {exportErr[idx]}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="wf-opt-plan-no-print" style={{
+            padding: "14px 28px 22px", borderTop: "1px solid rgba(255,255,255,0.07)",
+            display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end",
+          }}>
+            <button onClick={handleCopy} style={{
+              padding: "9px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.7)", cursor: "pointer", fontFamily: "inherit",
+            }}>
+              Als Text kopieren
+            </button>
+            <button onClick={handlePrint} style={{
+              padding: "9px 18px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+              background: `linear-gradient(90deg, ${theme.primary}, ${theme.primary}DD)`,
+              color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
+              boxShadow: `0 3px 10px ${theme.bg}`,
+            }}>
+              Als PDF exportieren
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function FreeDashboardClient(props: FreeDashboardProps) {
   const {
     firstName, plan,
@@ -923,6 +2228,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     scans, monthlyScans, scanLimit,
     fingerprint,
     totalPages, unterseiten,
+    wooAudit,
+    builderAudit,
   } = props;
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
@@ -942,7 +2249,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   }, []);
 
   // Professional welcome banner — shown once after upgrade
-  const isPro = plan === "professional" || plan === "smart-guard";
+  const isPro = isAtLeastProfessional(plan);
   const [showProWelcome, setShowProWelcome] = useState(false);
   useEffect(() => {
     if (!isPro) return;
@@ -973,15 +2280,16 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
   const [connectedSites, setConnectedSites]     = useState<{ site_url: string; site_name: string | null; last_seen: string }[]>([]);
   const [batchFixType, setBatchFixType]         = useState("ping");
   const [batchRunning, setBatchRunning]         = useState(false);
+  const [showOptPlan,  setShowOptPlan]          = useState(false);
   const [batchResult, setBatchResult]           = useState<{ summary: { total: number; success: number; failed: number } } | null>(null);
   const [quickStartUrl, setQuickStartUrl]       = useState("");
   const [showLimitModal, setShowLimitModal]     = useState(false);
 
-  const isAgencyPlan = plan === "agency-starter" || plan === "agency-pro";
+  const isAgencyUser = isAgencyPlan(plan);
 
   // Fetch plugin API key + connected sites for Agency users
   useEffect(() => {
-    if (!isAgencyPlan) return;
+    if (!isAgencyUser) return;
     fetch("/api/user/plugin-key")
       .then(r => r.json())
       .then((d: { key?: string }) => { if (d.key) setPluginApiKey(d.key); })
@@ -992,7 +2300,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
         if (d.sites) setConnectedSites(d.sites);
       })
       .catch(() => {});
-  }, [isAgencyPlan]);
+  }, [isAgencyUser]);
 
   async function handleRegenerateKey() {
     setPluginKeyLoading(true);
@@ -1079,14 +2387,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     setTimeout(() => setHighlightUrl(null), 2500);
   }
 
-  const PAID_PLANS = ["smart-guard", "professional", "starter", "agency-starter", "agency-pro"];
-  const isPaid           = PAID_PLANS.includes(plan);
-  const isStarter        = plan === "starter";
-  const isProfessionalPlus = ["smart-guard", "professional", "agency-starter", "agency-pro"].includes(plan);
-  const isAgency         = plan === "agency-starter" || plan === "agency-pro";
+  const canonical        = normalizePlan(plan);
+  const isPaid           = canonical !== null;
+  const isStarter        = canonical === "starter";
+  const isProfessionalPlus = isAtLeastProfessional(plan);
+  const isAgency         = isAgencyPlan(plan);
   const isSmartGuard     = isProfessionalPlus; // alias used in drawer code — means Pro+ only
   const isFree           = !isPaid;
-  const planLabel  = plan === "agency-pro" ? "Agency Pro" : plan === "agency-starter" ? "Agency" : isPaid ? "Professional" : "Free";
+  const planLabel        = canonical === "agency" ? "Agency" : canonical === "professional" ? "Professional" : canonical === "starter" ? "Starter" : "—";
   const domain     = lastScan?.url
     ? lastScan.url.replace(/^https?:\/\//, "").replace(/\/$/, "")
     : sessionDomain ?? "—";
@@ -1597,7 +2905,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 background: D.card, border: `1px solid ${D.borderMid}`,
                 color: D.textSub,
               }}>
-                {plan === "agency-pro" || plan === "agency-starter" ? "Unlimited" : plan === "starter" ? "3 Slots" : isProfessionalPlus ? "10 Slots" : "1 / 1"}
+                {isAgency ? "Unlimited" : isStarter ? "3 Slots" : isProfessionalPlus ? "10 Slots" : "1 / 1"}
               </span>
             </div>
 
@@ -1605,7 +2913,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans/Monat</span>
               {/* Professional / Agency = unlimited */}
-              {["agency-pro", "agency-starter", "smart-guard", "professional"].includes(plan) ? (
+              {isProfessionalPlus ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
                   padding: "2px 9px", borderRadius: 20,
@@ -1868,6 +3176,23 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert ✓"}
                   </span>
                 </div>
+
+                {/* WooCommerce-Shop-Badge — immer sichtbar bei erkanntem Shop (alle Pläne) */}
+                {fingerprint && fingerprint.ecommerce.value === "WooCommerce" && fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD && (
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 7,
+                    padding: "5px 13px 5px 10px", borderRadius: 20,
+                    background: "linear-gradient(90deg, rgba(150,88,138,0.14), rgba(124,58,237,0.08))",
+                    border: "1px solid rgba(150,88,138,0.35)",
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#96588A" stroke="none">
+                      <path d="M21 5H3a1 1 0 0 0-1 1v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1zM4 13l1.5 7h13l1.5-7H4zm6 2h4v3h-4v-3z"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#C084B8", letterSpacing: "0.03em" }}>
+                      WooCommerce Shop
+                    </span>
+                  </div>
+                )}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 {monthlyScans >= scanLimit ? (
@@ -1937,7 +3262,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
           )}
 
           {/* Agency: Lead-Magnet Setup prompt */}
-          {(plan === "agency-starter" || plan === "agency-pro") && (
+          {isAgency && (
             <div style={{
               display: "flex", alignItems: "center", gap: 16,
               padding: "18px 24px", marginBottom: 16,
@@ -1974,6 +3299,14 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
           )}
 
+          {/* ①b GSC-CARD + LOW-SPEED-INSIGHT — Professional+ */}
+          {!isNewScan && lastScan && isAtLeastProfessional(plan) && (
+            <GscInsightCard
+              speedScore={speedScore}
+              domainUrl={lastScan.url}
+            />
+          )}
+
           {/* ② TECH FINGERPRINT STRIP */}
           {!isNewScan && lastScan && techChips.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
@@ -1996,6 +3329,40 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* ②b WORDPRESS-EXPERT-MODE — Plugin-Liste mit plan-abhängiger Tiefe */}
+          {!isNewScan && lastScan && fingerprint && fingerprint.cms.value === "WordPress" &&
+            (fingerprint.wpPlugins ?? []).filter(p => p.confidence >= CONFIDENCE_THRESHOLD).length > 0 && (
+            <WordPressPluginsBlock
+              plugins={fingerprint.wpPlugins ?? []}
+              plan={plan}
+            />
+          )}
+
+          {/* ②c E-COMMERCE & SHOP-PERFORMANCE — nur bei erkanntem WooCommerce */}
+          {!isNewScan && lastScan && fingerprint && fingerprint.ecommerce.value === "WooCommerce" &&
+            fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD && (
+            <WooCommerceSection
+              plan={plan}
+              shopIssues={issues.filter(i => i.category === "shop")}
+              audit={wooAudit}
+            />
+          )}
+
+          {/* ②d BUILDER-INTELLIGENCE — Elementor / Divi / Astra / WPBakery */}
+          {!isNewScan && lastScan && builderAudit && builderAudit.builder && (
+            <BuilderIntelligenceSection
+              plan={plan}
+              audit={builderAudit}
+              builderIssues={issues.filter(i => i.category === "builder")}
+              onGeneratePlan={() => setShowOptPlan(true)}
+            />
+          )}
+
+          {/* ②e EXPERT-GUIDANCE — Empfohlene Werkzeuge */}
+          {!isNewScan && lastScan && issues.length > 0 && (
+            <RecommendedToolsSection issues={issues} builder={builderAudit ?? null} />
           )}
 
           {/* ③ BFSG / COMPLIANCE BANNER */}
@@ -2120,6 +3487,16 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             lastScan={!!lastScan}
             focusMode={isNewScan}
             scanId={lastScan?.id}
+            isWooCommerce={!!fingerprint && fingerprint.ecommerce.value === "WooCommerce" && fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD}
+            builderName={builderAudit?.builder ?? null}
+            builderForGuidance={
+              builderAudit?.builder === "Elementor" ||
+              builderAudit?.builder === "Divi" ||
+              builderAudit?.builder === "Astra" ||
+              builderAudit?.builder === "WPBakery"
+                ? builderAudit.builder
+                : null
+            }
           />
 
           {/* ─── EBENE 3: DEEP-SCAN MAP ─────────────────────────────────────── */}
@@ -2417,7 +3794,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       </div>
                       {/* Upgrade CTA */}
                       <Link
-                        href={module.status === "Agency" ? "/pricing?plan=agency-starter" : "/pricing?plan=professional"}
+                        href={module.status === "Agency" ? "/pricing?plan=agency" : "/pricing?plan=professional"}
                         style={{
                           fontSize: 12, fontWeight: 600,
                           color: module.status === "Agency" ? "#a78bfa" : "#fbbf24",
@@ -2893,7 +4270,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
                 {/* CTA */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                  <Link href="/pricing?plan=agency-starter" style={{
+                  <Link href="/pricing?plan=agency" style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
                     padding: "11px 24px", borderRadius: 8,
                     background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
@@ -3230,6 +4607,21 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── OPTIMIERUNGS-PLAN MODAL (Builder-Intelligence, Pro/Agency) ── */}
+      {showOptPlan && (
+        <OptimizationPlanModal
+          onClose={() => setShowOptPlan(false)}
+          plan={plan}
+          builder={builderAudit ?? null}
+          woo={wooAudit ?? null}
+          speedScore={speedScore}
+          redCount={redCount}
+          yellowCount={yellowCount}
+          url={lastScan?.url ?? ""}
+          scanId={lastScan?.id}
+        />
       )}
 
       {/* ── SCAN-LIMIT UPGRADE MODAL ─────────────────────────────────── */}

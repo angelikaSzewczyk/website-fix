@@ -6,7 +6,7 @@ import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
-import { normalizePlan } from "@/lib/plans";
+import { normalizePlan, getPlanTheme, hasBrandingAccess } from "@/lib/plans";
 
 const SCAN_LIMIT = 3;
 
@@ -33,6 +33,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // starter → FreeSidebar dark UI; professional + agency → FreeSidebar with Pro stripe (or SidebarNav)
   const isAuditPlan = plan === "starter" || plan === "professional";
   const isPro       = plan === "professional" || plan === "agency";
+  const isAgencyPlan = plan === "agency";
+  const isStarterPlan = plan === "starter";
+  const theme = getPlanTheme(plan);
 
   // Load agency primary color for CSS variable injection (agency plans)
   let agencyPrimary = "#8df3d3";
@@ -70,15 +73,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       `,
     ];
 
-    const BRANDING_PLANS = ["agency", "professional", "starter"];
-    if (BRANDING_PLANS.includes(plan)) {
-      queries.push(
-        sql`
-          SELECT primary_color FROM agency_settings
-          WHERE user_id = ${session.user.id} LIMIT 1
-        `
-      );
-    }
+    queries.push(
+      sql`
+        SELECT primary_color FROM agency_settings
+        WHERE user_id = ${session.user.id} LIMIT 1
+      `
+    );
 
     const results = await Promise.all(queries);
 
@@ -92,38 +92,68 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     projectUrl    = urlRows[0]?.url    ?? "";
     unreadTickets = unreadRows[0]?.cnt ?? 0;
 
-    if (BRANDING_PLANS.includes(plan)) {
-      const colorRows = results[4] as { primary_color: string | null }[];
-      if (colorRows[0]?.primary_color) agencyPrimary = colorRows[0].primary_color;
-    }
+    const colorRows = results[4] as { primary_color: string | null }[];
+    if (colorRows[0]?.primary_color) agencyPrimary = colorRows[0].primary_color;
   } catch { /* non-critical */ }
 
-  // Sanitize: only allow valid hex colors to prevent CSS injection
-  const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(agencyPrimary) ? agencyPrimary : "#8df3d3";
+  // Sanitize: only allow valid hex colors to prevent CSS injection.
+  // Starter hat KEIN Branding — nutzt immer Theme-Primary. Pro/Agency dürfen Custom-Color.
+  const userBrandingColor = hasBrandingAccess(plan) && /^#[0-9a-fA-F]{3,8}$/.test(agencyPrimary)
+    ? agencyPrimary
+    : theme.primary;
+  const safeColor = userBrandingColor;
 
   const sidebarW = isAuditPlan ? FREE_SIDEBAR_W : 220;
 
+  const planClass = `plan-${plan}`; // plan-starter | plan-professional | plan-agency
+
   return (
     <div
-      className={isPro ? "is-pro-plan" : ""}
+      className={`${planClass} ${isPro ? "is-pro-plan " : ""}${isAgencyPlan ? "is-agency-plan " : ""}${isStarterPlan ? "is-starter-plan" : ""}`.trim()}
       style={{ display: "flex", minHeight: "100vh", background: isAuditPlan ? "#0b0c10" : "#F0F4F8" }}
     >
       {/* CSS custom properties — available throughout the dashboard */}
       <style>{`
         :root {
+          /* Plan-Primary (wird plan-spezifisch überschrieben, Fallback = sicherer Wert) */
+          --plan-primary:        ${theme.primary};
+          --plan-primary-deep:   ${theme.deep};
+          --plan-primary-bg:     ${theme.bg};
+          --plan-primary-border: ${theme.border};
+          --plan-secondary:      ${theme.secondary ?? "transparent"};
+
+          /* Agency-Primary = User-Branding wenn berechtigt, sonst Plan-Theme-Primary */
           --agency-primary:        ${safeColor};
           --agency-primary-bg:     ${safeColor}18;
           --agency-primary-border: ${safeColor}35;
+
+          /* Emerald-Tokens (für Professional-Upgrade-CTAs überall im Starter-Dashboard) */
+          --pro-emerald:           #10B981;
+          --pro-emerald-deep:      #059669;
+          --pro-emerald-soft:      #34D399;
+          --pro-emerald-bg:        rgba(16,185,129,0.08);
+          --pro-emerald-bg-strong: rgba(16,185,129,0.14);
+          --pro-emerald-border:    rgba(16,185,129,0.25);
+          --pro-emerald-glow:      0 0 24px rgba(16,185,129,0.25);
+          --pro-gold:              #FBBF24;
+          --pro-gold-deep:         #D97706;
+          --pro-gold-bg:           rgba(251,191,36,0.10);
+          --pro-gold-border:       rgba(251,191,36,0.30);
+
+          /* Agency-Indigo-Tokens (für Agency-CTAs im Pro/Starter-Dashboard) */
+          --agency-indigo:         #7C3AED;
+          --agency-indigo-deep:    #5B21B6;
+          --agency-indigo-bg:      rgba(124,58,237,0.10);
+          --agency-indigo-border:  rgba(124,58,237,0.30);
         }
-        /* Pro-plan global overrides */
-        .is-pro-plan {
-          --pro-emerald:        #10B981;
-          --pro-emerald-deep:   #059669;
-          --pro-emerald-bg:     rgba(16,185,129,0.07);
-          --pro-emerald-border: rgba(16,185,129,0.25);
-          --pro-gold:           #FBBF24;
+        /* Pro-plan global mesh/background overrides */
+        .is-pro-plan:not(.is-agency-plan) {
           --pro-mesh-1: radial-gradient(ellipse 60% 50% at 0% 0%,   rgba(16,185,129,0.055) 0%, transparent 70%);
           --pro-mesh-2: radial-gradient(ellipse 50% 60% at 100% 80%, rgba(16,185,129,0.035) 0%, transparent 70%);
+        }
+        .is-agency-plan {
+          --pro-mesh-1: radial-gradient(ellipse 60% 50% at 0% 0%,   rgba(124,58,237,0.065) 0%, transparent 70%);
+          --pro-mesh-2: radial-gradient(ellipse 50% 60% at 100% 80%, rgba(124,58,237,0.045) 0%, transparent 70%);
         }
         @media (max-width: 768px) {
           .dashboard-sidebar { display: none !important; }

@@ -51,6 +51,25 @@ export type StoredScan = {
   issueCount:           number;
   techFingerprint:      unknown;
   scanId:               string | null;
+  /** Builder-Audit für Quick-Check (DOM-Tiefe, Google Fonts, CSS-Bloat). */
+  builderAudit: {
+    builder:            string | null;
+    maxDomDepth:        number;
+    divCount:           number;
+    googleFontFamilies: string[];
+    cssBloatHints:      string[];
+    stylesheetCount:    number;
+  } | null;
+  /** WooCommerce-Audit für Quick-Check (Cart-Performance, Plugin-Impact, Revenue-Risk). */
+  wooAudit: {
+    addToCartButtons:    number;
+    cartButtonsBlocked:  boolean;
+    pluginImpact:        Array<{ name: string; impactScore: number; reason: string }>;
+    outdatedTemplates:   boolean;
+    revenueRiskPct:      number;
+  } | null;
+  /** True wenn WooCommerce erkannt (Convenience aus tech_fingerprint). */
+  isWooCommerce:        boolean;
 };
 
 // ── Shape of the /api/scan response ─────────────────────────────────────────
@@ -74,6 +93,9 @@ export type ApiScanResponse = {
     hasRankMath?: boolean;
     hasYoast?: boolean;
     techFingerprint?: unknown;
+    builderAudit?: unknown;
+    wooAudit?: unknown;
+    isWooCommerce?: boolean;
     audit?: {
       gescannteSeiten?: number;
       entdeckteUrls?: number;
@@ -151,6 +173,9 @@ export function saveScanToStorage(url: string, data: ApiScanResponse): void {
       issueCount:           data.issueCount ?? 0,
       techFingerprint:      sd.techFingerprint ?? null,
       scanId:               data.scanId ?? null,
+      builderAudit:         (sd.builderAudit as StoredScan["builderAudit"]) ?? null,
+      wooAudit:             (sd.wooAudit     as StoredScan["wooAudit"])     ?? null,
+      isWooCommerce:        !!sd.isWooCommerce,
     };
 
     sessionStorage.setItem(SCAN_STORAGE_KEY, JSON.stringify(stored));

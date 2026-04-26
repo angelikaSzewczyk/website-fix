@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { auth } from "@/auth";
 import { generateReportData, renderReportEmail, formatMonth } from "@/lib/monthly-report";
+import { normalizePlan } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
     SELECT id, plan FROM users WHERE email = ${session.user.email}
   `) as { id: number; plan: string }[];
 
-  if (!user || !["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(user.plan)) {
+  if (!user || normalizePlan(user.plan) === null) {
     return NextResponse.json({ error: "Bezahlter Plan erforderlich" }, { status: 403 });
   }
 

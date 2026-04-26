@@ -1,15 +1,14 @@
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
-
-const PRO_PLANS = ["professional", "smart-guard", "agency", "agency-starter", "agency-pro"];
+import { isAtLeastProfessional } from "@/lib/plans";
 
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const plan = (session.user as { plan?: string }).plan ?? "";
-  if (!PRO_PLANS.includes(plan)) return NextResponse.json({ activity: [] });
+  if (!isAtLeastProfessional(plan)) return NextResponse.json({ activity: [] });
 
   try {
     const sql = neon(process.env.DATABASE_URL!);

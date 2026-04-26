@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 interface CheckoutButtonProps {
-  plan: string;       // "starter" | "smart-guard" | "professional" | "agency-starter"
+  plan: string;       // "starter" | "professional" | "agency"
   label: string;
   style?: React.CSSProperties;
   href?: string;      // fallback for enterprise (mailto)

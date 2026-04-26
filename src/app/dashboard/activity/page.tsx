@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
+import { isAgency } from "@/lib/plans";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -70,7 +71,7 @@ const EVENT_META: Record<string, {
     detail: m => m.jira_key ? `Ticket ${m.jira_key} · ${m.issue_label ?? ""}` : "",
   },
   scan_completed: {
-    label:  "Website-Scan abgeschlossen",
+    label:  "WordPress-Audit abgeschlossen",
     icon:   "🔍",
     color:  C.textSub,
     bg:     C.divider,
@@ -137,7 +138,7 @@ export default async function ActivityPage({
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!["agency-pro", "agency-starter"].includes(plan ?? "")) redirect("/dashboard");
+  if (!isAgency(plan)) redirect("/dashboard");
 
   const sql = neon(process.env.DATABASE_URL!);
   const selectedClientId = searchParams.client ? parseInt(searchParams.client) : null;

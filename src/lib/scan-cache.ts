@@ -11,6 +11,7 @@
  */
 
 import { neon } from "@neondatabase/serverless";
+import { isAgency } from "./plans";
 
 export type CachedScanPayload = {
   scanData: Record<string, unknown>;
@@ -22,7 +23,7 @@ export type CachedScanResult = CachedScanPayload & { cachedAt: string };
 
 /** Agency plans get a shorter (12 h) cache window so they see optimisation results faster. */
 export function cacheTtlHours(plan: string): number {
-  return (plan === "agency-starter" || plan === "agency-pro") ? 12 : 24;
+  return isAgency(plan) ? 12 : 24;
 }
 
 // ── Scan cache (POST /api/scan) ───────────────────────────────────────────────

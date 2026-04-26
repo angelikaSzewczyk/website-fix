@@ -16,8 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
-
-const AGENCY_PLANS  = ["agency-starter", "agency-pro"];
+import { isAgency } from "@/lib/plans";
 const VALID_FIX_TYPES = ["set_alt_text", "set_meta_description", "set_title", "remove_noindex", "set_post_meta", "ping"];
 
 type SiteResult = {
@@ -77,7 +76,7 @@ export async function POST(req: NextRequest) {
   if (!user?.id) {
     return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
   }
-  if (!AGENCY_PLANS.includes(user.plan ?? "starter")) {
+  if (!isAgency(user.plan)) {
     return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
   }
 

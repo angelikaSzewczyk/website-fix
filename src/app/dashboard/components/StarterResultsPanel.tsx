@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { isAtLeastProfessional } from "@/lib/plans";
+import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
   severity: "red" | "yellow" | "green";
   title: string;
   body: string;
-  category: "recht" | "speed" | "technik";
+  category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number;
 }
 
@@ -21,6 +23,9 @@ interface Props {
   lastScan:    boolean; // true = scan data is present
   focusMode?:  boolean; // true = came from fresh scan redirect
   scanId?:     string;  // present when viewing a saved scan — enables executive summary
+  isWooCommerce?: boolean; // triggers the Shop-Owner executive-summary template suggestion
+  builderName?:   string | null; // erkannter Page-Builder für Builder-Smart-Template
+  builderForGuidance?: BuilderName; // identifizierter Builder für Solution-Variants
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -255,18 +260,26 @@ function AccordionItem({
   defaultOpen = false,
   wfAnchor,
   onAutoFix,
+  builder = null,
 }: {
   issue: IssueProp;
   index: number;
   defaultOpen?: boolean;
   wfAnchor?: string;
   onAutoFix: () => void;
+  builder?: BuilderName;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [showSolution, setShowSolution] = useState(false);
   const color  = getColor(issue.severity);
   const bg     = getBg(issue.severity);
   const border = getBorder(issue.severity);
   const fix    = quickFix(issue);
+
+  // Expert-Guidance: Issue klassifizieren + builder-spezifische Lösung holen
+  const issueType = matchIssueType(issue.title, issue.body);
+  const solution  = getSolution(issueType, builder);
+  const variant   = solution ? pickVariant(solution, builder) : null;
 
   return (
     <div id={`wf-issue-${index}`} data-wf-anchor={wfAnchor} style={{
@@ -332,25 +345,134 @@ function AccordionItem({
               <strong>Quick Fix:</strong> {fix}
             </p>
           </div>
-          {/* Auto-Fix button (locked for Starter) */}
-          <button
-            onClick={onAutoFix}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "7px 16px", borderRadius: 7,
-              background: "rgba(251,191,36,0.07)",
-              border: "1px solid rgba(251,191,36,0.22)",
-              color: "rgba(251,191,36,0.55)",
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            Auto-Fix via Plugin
-          </button>
+          {/* Action row: Solution-Toggle + Auto-Fix */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {solution && (
+              <button
+                onClick={() => setShowSolution(s => !s)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "7px 14px", borderRadius: 7,
+                  background: showSolution ? "rgba(16,185,129,0.14)" : "rgba(16,185,129,0.07)",
+                  border: `1px solid ${showSolution ? "rgba(16,185,129,0.40)" : "rgba(16,185,129,0.22)"}`,
+                  color: "#10B981",
+                  fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                </svg>
+                {showSolution ? "Lösung ausblenden" : `So löst du das${builder ? ` in ${builder}` : ""}`}
+              </button>
+            )}
+            <button
+              onClick={onAutoFix}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "7px 14px", borderRadius: 7,
+                background: "rgba(251,191,36,0.07)",
+                border: "1px solid rgba(251,191,36,0.22)",
+                color: "rgba(251,191,36,0.55)",
+                fontSize: 12, fontWeight: 700, cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              Auto-Fix via Plugin
+            </button>
+          </div>
+
+          {/* Expert-Guidance: ausklappbare Lösung mit Builder-spezifischen Schritten */}
+          {showSolution && solution && variant && (
+            <div style={{
+              marginTop: 14, padding: "16px 18px", borderRadius: 10,
+              background: "linear-gradient(135deg, rgba(16,185,129,0.06), rgba(251,191,36,0.03))",
+              border: "1px solid rgba(16,185,129,0.25)",
+              animation: "wf-sol-in 0.2s ease both",
+            }}>
+              <style>{`@keyframes wf-sol-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" as const }}>
+                <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 10, background: "rgba(16,185,129,0.15)", color: "#10B981", border: "1px solid rgba(16,185,129,0.35)", letterSpacing: "0.06em" }}>
+                  EXPERT-GUIDANCE
+                </span>
+                {variant.builder && variant.builder !== "any" && (
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 10, background: "rgba(122,166,255,0.12)", color: "#7aa6ff", border: "1px solid rgba(122,166,255,0.3)", letterSpacing: "0.06em" }}>
+                    {variant.builder.toUpperCase()}-SPEZIFISCH
+                  </span>
+                )}
+              </div>
+              <h4 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                {solution.headline}
+              </h4>
+              <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+                <strong style={{ color: "rgba(255,255,255,0.7)" }}>Warum:</strong> {solution.rootCause}
+              </p>
+
+              {/* Schritte */}
+              <ol style={{ margin: "0 0 12px", padding: "0 0 0 0", listStyle: "none" }}>
+                {variant.steps.map((step, i) => (
+                  <li key={i} style={{
+                    display: "flex", gap: 10, alignItems: "flex-start",
+                    padding: "7px 0", borderBottom: i < variant.steps.length - 1 ? "1px dashed rgba(255,255,255,0.05)" : "none",
+                  }}>
+                    <span style={{
+                      flexShrink: 0, width: 19, height: 19, borderRadius: 5,
+                      background: "rgba(16,185,129,0.12)", color: "#10B981",
+                      fontSize: 10.5, fontWeight: 900,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginTop: 1,
+                    }}>{i + 1}</span>
+                    <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>{step}</span>
+                  </li>
+                ))}
+              </ol>
+
+              {variant.caveat && (
+                <div style={{
+                  padding: "8px 11px", borderRadius: 7, marginBottom: 12,
+                  background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.22)",
+                  fontSize: 11.5, color: "rgba(251,191,36,0.85)", lineHeight: 1.55,
+                }}>
+                  <strong>⚠ Achtung:</strong> {variant.caveat}
+                </div>
+              )}
+
+              {/* Empfohlene Plugins */}
+              {solution.recommendedPlugins.length > 0 && (
+                <div>
+                  <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                    Empfohlene Plugins
+                  </p>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {solution.recommendedPlugins.map(id => {
+                      const p = PLUGIN_CATALOG[id];
+                      if (!p) return null;
+                      return (
+                        <a key={id} href={p.url} target="_blank" rel="noopener noreferrer" style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                          background: "rgba(122,166,255,0.08)", border: "1px solid rgba(122,166,255,0.25)",
+                          color: "#7aa6ff", textDecoration: "none",
+                        }}>
+                          {p.name}
+                          <span style={{ fontSize: 9, opacity: 0.7 }}>· {p.pricing === "free" ? "kostenlos" : p.pricing === "freemium" ? "freemium" : "kostenpflichtig"}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <p style={{ margin: "10px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.35)" }}>
+                <strong>Erwarteter Impact:</strong> {solution.estImpact}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -472,9 +594,7 @@ function SkeletonRing({ label }: { label: string }) {
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-const PRO_PLANS = ["professional", "smart-guard", "agency-pro", "agency-starter"];
-
-export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId }: Props) {
+export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId, isWooCommerce = false, builderName = null, builderForGuidance = null }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
   const [showPdfHint, setShowPdfHint]   = useState(false);
@@ -483,7 +603,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   void openItems; void setOpenItems;
 
   // ── Executive Summary (Professional+) ────────────────────────────────────
-  const isPro = PRO_PLANS.includes(plan);
+  const isPro = isAtLeastProfessional(plan);
   const [execSummary, setExecSummary]   = useState("");
   const [saveStatus,  setSaveStatus]    = useState<"idle" | "saving" | "saved">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -767,6 +887,16 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                 { label: "Dringlich", icon: "⚠️", text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung." },
                 { label: "Technisch", icon: "🔧", text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden." },
                 { label: "Kompakt",   icon: "📋", text: "Kurzfazit: Website-Analyse abgeschlossen. Handlungsbedarf und Optimierungshinweise identifiziert. Nächste Schritte: Prioritäten gemeinsam besprechen und Maßnahmenplan erstellen." },
+                ...(isWooCommerce ? [{
+                  label: "Shop-Owner",
+                  icon:  "🛒",
+                  text:  "Shop-Audit abgeschlossen: Ihr WooCommerce-Shop zeigt messbares Optimierungspotenzial bei Checkout-Performance und Datenbank-Struktur. Jede 100 ms Ladezeit-Verbesserung bedeutet ca. 1 % mehr Umsatz (Akamai). Unsere Empfehlung: 1) Cart-Fragments auf Nicht-Shop-Seiten deaktivieren, 2) schwere Plugin-Scripts selektiv laden, 3) WooCommerce-Template-Overrides im Theme auf aktuelle Versionen bringen. Wir schätzen das Revenue-Potenzial auf Basis der Analyse und setzen die Maßnahmen in einem festen Wartungsvertrag um.",
+                }] : []),
+                ...(builderName ? [{
+                  label: `${builderName}-Audit`,
+                  icon:  "🎨",
+                  text:  `Analyse von ${builderName} zeigt signifikanten Optimierungsbedarf bei der Asset-Struktur: DOM-Verschachtelung, Font-Vielfalt und ungenutzte Builder-Styles wirken sich direkt auf Ladezeit und Core Web Vitals aus. Wir empfehlen einen technischen Service-Termin, in dem wir ${builderName === "Elementor" ? "Container-Migration, Font-Konsolidierung und Asset-Aggregation" : builderName === "Divi" ? "Section-Verschlankung, Font-Konsolidierung und Style-Aggregation" : "Theme-Optimierung, Font-Konsolidierung und Asset-Aggregation"} in einem festen Rahmen umsetzen. Erwarteter Impact: –30 bis –50 % LCP auf Mobile, messbar in PageSpeed Insights.`,
+                }] : []),
               ] as { label: string; icon: string; text: string }[]).map(tpl => (
                 <button
                   key={tpl.label}
@@ -1153,6 +1283,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     defaultOpen={i === 0}
                     wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
                     onAutoFix={() => setShowUpgrade(true)}
+                    builder={builderForGuidance}
                   />
                 );
               })}
@@ -1190,6 +1321,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     defaultOpen={redIssues.length === 0 && i === 0}
                     wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
                     onAutoFix={() => setShowUpgrade(true)}
+                    builder={builderForGuidance}
                   />
                 );
               })}
