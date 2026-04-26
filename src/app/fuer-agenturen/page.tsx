@@ -671,12 +671,12 @@ export default function AgencyPage() {
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Echtzeit-Alerts für Ihr Team. Wissen, wenn es brennt, bevor der Kunde anruft.</div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-slack" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(192,132,252,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
-                <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(192,132,252,0.1)", border: "1px solid rgba(192,132,252,0.3)", color: "rgba(192,132,252,0.9)", cursor: "pointer" }}>
+                <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(192,132,252,0.1)", border: "1px solid rgba(192,132,252,0.3)", color: "rgba(192,132,252,0.9)", cursor: "pointer" }}>
                   Verknüpfen →
                 </button>
               </div>
@@ -698,12 +698,12 @@ export default function AgencyPage() {
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Automatisierte Tickets. Fehler werden ohne manuelles Kopieren direkt zu Entwickler-Tasks.</div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-jira" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(122,166,255,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
-                <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(37,99,235,0.1)", border: "1px solid rgba(122,166,255,0.3)", color: "rgba(122,166,255,0.9)", cursor: "pointer" }}>
+                <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(37,99,235,0.1)", border: "1px solid rgba(122,166,255,0.3)", color: "rgba(122,166,255,0.9)", cursor: "pointer" }}>
                   Verknüpfen →
                 </button>
               </div>
@@ -725,12 +725,12 @@ export default function AgencyPage() {
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Kanban für Wartungs-Tasks</div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-trello" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(91,184,250,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
-                <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(0,121,191,0.1)", border: "1px solid rgba(91,184,250,0.3)", color: "rgba(91,184,250,0.9)", cursor: "pointer" }}>
+                <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(0,121,191,0.1)", border: "1px solid rgba(91,184,250,0.3)", color: "rgba(91,184,250,0.9)", cursor: "pointer" }}>
                   Verknüpfen →
                 </button>
               </div>
@@ -752,12 +752,12 @@ export default function AgencyPage() {
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Grenzenlose Freiheit. Verbinden Sie WebsiteFix mit über 5.000 Apps wie HubSpot oder Salesforce.</div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-zapier" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,109,45,0.4)", display: "inline-block" }} />
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
                 </div>
-                <button style={{ fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, background: "rgba(255,80,10,0.1)", border: "1px solid rgba(255,109,45,0.3)", color: "rgba(255,109,45,0.9)", cursor: "pointer" }}>
+                <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(255,80,10,0.1)", border: "1px solid rgba(255,109,45,0.3)", color: "rgba(255,109,45,0.9)", cursor: "pointer" }}>
                   Verknüpfen →
                 </button>
               </div>
