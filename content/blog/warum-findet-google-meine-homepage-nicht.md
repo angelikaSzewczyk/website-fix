@@ -11,8 +11,8 @@ tags:
   - "Sichtbarkeit"
   - "WordPress"
 status: "published"
-thumbnail: "/blog/seo-thumbnail.jpg"
-ogImage: "/blog/seo-thumbnail.jpg"
+thumbnail: "/blog/seo-thumbnail.webp"
+ogImage: "/blog/seo-thumbnail.webp"
 faq:
   - q: "Warum ist meine WordPress-Seite so langsam?"
     a: "In 80 % aller Fälle sind es drei Ursachen: ein Page-Builder mit verschachtelten Sections (DOM-Tiefe > 15), unkomprimierte Bilder ohne Lazy-Load und 5+ Plugin-Stylesheets, die auf jeder Seite mitgeladen werden — auch dort, wo sie nicht gebraucht werden. Ein WordPress-Audit identifiziert exakt welche Datei welche Verzögerung verursacht."
@@ -26,7 +26,7 @@ faq:
     a: "Für die meisten der 5 Fehler nicht. Noindex-Tag entfernen, Sitemap einreichen, Plugin installieren (z. B. WP Rocket für Performance, Yoast für Meta-Daten) — das schaffst du selbst. Komplexere DOM-Optimierung in Elementor oder Divi geht aber meist schneller mit Agentur-Hilfe."
 ---
 
-![Warum findet Google meine Homepage nicht — die 5 häufigsten Fehler](/blog/seo-thumbnail.jpg)
+![Warum findet Google meine Homepage nicht — die 5 häufigsten Fehler](/blog/seo-thumbnail.webp)
 
 # Unsichtbar bei Google? Warum deine WordPress-Seite keine Besucher bringt.
 
