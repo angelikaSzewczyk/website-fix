@@ -1,6 +1,6 @@
 "use client";
 import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import BrandLogo from "../components/BrandLogo";
@@ -56,16 +56,37 @@ const DEFAULT_CONTENT = {
 
 function RegisterContent() {
   const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") ?? "";
+  const plan         = searchParams.get("plan")  ?? "";
+  // Trial-Param (z.B. ?trial=7 für Agency 7-Tage-Test) wird durchgereicht ans
+  // Stripe-Checkout. Der eigentliche Trial-Mode wird von der Stripe-API gesetzt,
+  // nicht clientseitig — wir reichen ihn nur weiter.
+  const trialDays    = (() => {
+    const t = parseInt(searchParams.get("trial") ?? "", 10);
+    return Number.isFinite(t) && t > 0 && t <= 30 ? t : 0;
+  })();
 
-  const content = PLAN_CONTENT[plan] ?? DEFAULT_CONTENT;
+  // Session-State — entscheidet, ob die Page den Form anzeigt oder einen
+  // "Du bist bereits eingeloggt"-Hinweis. WICHTIG: Wir redirecten nur, wenn
+  // status === "authenticated" — alles andere zeigt das Formular.
+  const { status: sessionStatus } = useSession();
+
+  const content    = PLAN_CONTENT[plan] ?? DEFAULT_CONTENT;
   const isPaidPlan = plan && plan !== "free";
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName]         = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+
+  // Hilfsfunktion: baut die Checkout-URL inkl. trial-Param.
+  // Wird NUR aufgerufen, nachdem der User in der DB angelegt UND eingeloggt ist —
+  // sonst könnten wir auf einen Plan zugreifen, den der User noch nicht hat.
+  function checkoutUrlFor(p: string): string {
+    const params = new URLSearchParams({ plan: p });
+    if (trialDays > 0) params.set("trial", String(trialDays));
+    return `/api/checkout?${params.toString()}`;
+  }
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -136,16 +157,22 @@ function RegisterContent() {
           }
         } catch { /* non-critical */ }
 
-        // Harter Redirect zur GET-Checkout-Route (Session-Cookie wird automatisch mitgeschickt)
-        // Kein POST-Fetch nötig — vermeidet Race Conditions mit Session-Initialisierung
+        // Harter Redirect zur GET-Checkout-Route — erst NACHDEM:
+        //   1. /api/auth/register den User in der DB angelegt hat (POST oben)
+        //   2. signIn() die Session-Cookie gesetzt hat (Bedingung: signInRes.ok)
+        // → erst jetzt darf auf den Plan zugegriffen werden. Trial-Tage werden
+        //   per Query-Param weitergereicht (Stripe setzt den eigentlichen Trial-Mode).
         if (isPaidPlan) {
-          window.location.href = `/api/checkout?plan=${encodeURIComponent(plan)}`;
+          window.location.href = checkoutUrlFor(plan);
         } else {
           // Kein Plan → zur Preisseite, nie zum Dashboard
           window.location.href = "/fuer-agenturen";
         }
       } else {
-        window.location.href = "/login";
+        // signIn fehlgeschlagen — wir leiten NICHT auto-redirected weiter,
+        // sondern zeigen einen Fehler. So vermeiden wir den /login → /dashboard
+        // → /fuer-agenturen-Loop bei Race-Conditions mit der Session-Init.
+        setError("Konto erstellt, aber automatischer Login fehlgeschlagen. Bitte manuell anmelden.");
       }
     } catch {
       setError("Netzwerkfehler. Bitte prüfe deine Verbindung und versuche es erneut.");
@@ -156,10 +183,13 @@ function RegisterContent() {
 
   async function handleGoogle() {
     setLoading(true);
-    // Hash-Fragmente (#...) sind in HTTP-Redirects nicht erlaubt → NextAuth rejectet sie
-    // Stattdessen: AutoCheckout liest ?checkout= param auf /fuer-agenturen
-    const callbackUrl = isPaidPlan
-      ? `/fuer-agenturen?checkout=${encodeURIComponent(plan)}`
+    // Hash-Fragmente (#...) sind in HTTP-Redirects nicht erlaubt → NextAuth rejectet sie.
+    // Stattdessen: AutoCheckout liest ?checkout= und ?trial= params auf /fuer-agenturen.
+    const params = new URLSearchParams();
+    if (isPaidPlan) params.set("checkout", plan);
+    if (trialDays > 0) params.set("trial", String(trialDays));
+    const callbackUrl = params.toString()
+      ? `/fuer-agenturen?${params.toString()}`
       : "/fuer-agenturen";
     await signIn("google", { callbackUrl });
   }
@@ -233,11 +263,29 @@ function RegisterContent() {
           <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.025em", color: "#0F172A" }}>
             Account erstellen
           </h1>
-          <p style={{ fontSize: 14, color: "#64748B", margin: "0 0 32px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: "#64748B", margin: "0 0 24px", lineHeight: 1.6 }}>
             {isPaidPlan
-              ? "Konto erstellen — du wirst direkt zum sicheren Stripe-Checkout weitergeleitet."
+              ? trialDays > 0
+                ? `Konto erstellen — ${trialDays} Tage kostenlos testen, danach automatisch der ${plan === "agency" ? "Agency" : "Professional"}-Plan.`
+                : "Konto erstellen — du wirst direkt zum sicheren Stripe-Checkout weitergeleitet."
               : "Account erstellen — Plan direkt im nächsten Schritt wählen."}
           </p>
+
+          {/* Hinweis bei bereits authenticated Session — KEIN Auto-Redirect.
+              User entscheidet selbst, ob er upgraden oder ausloggen will. */}
+          {sessionStatus === "authenticated" && (
+            <div style={{
+              padding: "12px 14px", marginBottom: 22, borderRadius: 9,
+              background: "#FFFBEB", border: "1px solid #FDE68A",
+              fontSize: 13, color: "#92400E", lineHeight: 1.5,
+            }}>
+              <strong>Du bist bereits eingeloggt.</strong>{" "}
+              {isPaidPlan
+                ? <>Wenn du auf deinem aktuellen Account upgraden willst, gehe zu <Link href={checkoutUrlFor(plan)} style={{ color: "#92400E", textDecoration: "underline", fontWeight: 700 }}>Checkout für {plan}</Link>.</>
+                : <>Du kannst direkt zum <Link href="/dashboard" style={{ color: "#92400E", textDecoration: "underline", fontWeight: 700 }}>Dashboard</Link> oder hier ein neues Konto anlegen.</>
+              }
+            </div>
+          )}
 
           {/* Google */}
           <button onClick={handleGoogle} disabled={loading} style={{

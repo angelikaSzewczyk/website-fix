@@ -25,6 +25,15 @@ function missingEnvPage(plan: string): Response {
   );
 }
 
+/** Liest und validiert den `?trial=N`-Param. Akzeptiert 1..30 Tage, sonst 0. */
+function parseTrialDays(req: NextRequest, fallback: number = 0): number {
+  const raw = req.nextUrl.searchParams.get("trial");
+  if (!raw) return fallback;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return n > 0 && n <= 30 ? n : fallback;
+}
+
 // ── GET: Harter Browser-Redirect aus register/page.tsx → window.location.href ──
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -38,10 +47,14 @@ export async function GET(req: NextRequest) {
   if (!priceId) return missingEnvPage(plan);
 
   if (!session?.user) {
-    // Nicht eingeloggt → zur Registrierung mit Plan
-    return NextResponse.redirect(new URL(`/register?plan=${encodeURIComponent(plan)}`, req.url));
+    // Nicht eingeloggt → zur Registrierung mit Plan + Trial weitergereicht
+    const trial = req.nextUrl.searchParams.get("trial") ?? "";
+    const params = new URLSearchParams({ plan });
+    if (trial) params.set("trial", trial);
+    return NextResponse.redirect(new URL(`/register?${params.toString()}`, req.url));
   }
 
+  const trialDays = parseTrialDays(req);
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   try {
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -53,7 +66,10 @@ export async function GET(req: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen`,
       locale: "de",
       allow_promotion_codes: true,
-      metadata: { plan, userId: session.user.id ?? "" },
+      // Trial: Stripe Subscription Trial-Days. Wir setzen es nur, wenn explizit
+      // angefragt — sonst startet die Subscription sofort kostenpflichtig.
+      ...(trialDays > 0 ? { subscription_data: { trial_period_days: trialDays } } : {}),
+      metadata: { plan, userId: session.user.id ?? "", trial: String(trialDays) },
     });
     return NextResponse.redirect(checkoutSession.url!);
   } catch (err) {
