@@ -109,14 +109,29 @@ export const PLAN_LABEL: Record<string, string> = Object.fromEntries(
 
 /**
  * Maps any DB plan string (including legacy values) to a canonical PlanKey.
- * Returns null for unknown values or "free" → caller should redirect to /fuer-agenturen.
- * Kept for DB-backwards-compatibility — existing rows may still contain legacy strings.
+ *
+ * Legacy "free" wird auf "starter" gemappt — vor der 3-Plan-Migration war "free"
+ * der Default für unbezahlte User. Im neuen Modell ist Starter der minimale
+ * Plan; Free-User landen damit im Dashboard (mit Upgrade-Hinweisen) statt im
+ * Redirect-Loop zur Pricing-Seite. Echtes "Plan unbekannt" (null/undefined/
+ * fremde Strings) → null und Caller redirected.
  */
 export function normalizePlan(plan: string | null | undefined): PlanKey | null {
-  if (plan === "starter") return "starter";
+  if (plan === "starter" || plan === "free") return "starter";
   if (plan === "professional" || plan === "smart-guard") return "professional";
   if (plan === "agency" || plan === "agency-starter" || plan === "agency-pro") return "agency";
   return null;
+}
+
+/** True, wenn der DB-Wert ein Legacy-Wert ist, der ein DB-Update vertragen
+ *  könnte (z.B. "free" → "starter"). Wird vom Dashboard-Layout für
+ *  Self-Healing genutzt. */
+export function isLegacyPlanValue(plan: string | null | undefined): boolean {
+  if (!plan) return false;
+  return plan === "free"
+      || plan === "smart-guard"
+      || plan === "agency-starter"
+      || plan === "agency-pro";
 }
 
 // ── Plan-Rank ──────────────────────────────────────────────────────────────

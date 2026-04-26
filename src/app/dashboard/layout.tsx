@@ -6,7 +6,7 @@ import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
-import { normalizePlan, getPlanTheme, hasBrandingAccess } from "@/lib/plans";
+import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue } from "@/lib/plans";
 
 const SCAN_LIMIT = 3;
 
@@ -20,6 +20,17 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     const sqlGate = neon(process.env.DATABASE_URL!);
     const planRow = await sqlGate`SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1`;
     rawPlan = (planRow[0]?.plan as string) ?? "starter";
+
+    // Self-Heal: Legacy-DB-Werte (free, smart-guard, agency-starter, agency-pro)
+    // werden in den canonical Wert migriert. Verhindert Redirect-Loops bei
+    // Bestandsusern, die vor der 3-Plan-Migration angelegt wurden.
+    if (isLegacyPlanValue(rawPlan)) {
+      const canonical = normalizePlan(rawPlan);
+      if (canonical && canonical !== rawPlan) {
+        await sqlGate`UPDATE users SET plan = ${canonical} WHERE id = ${session.user.id}`;
+        rawPlan = canonical;
+      }
+    }
   } catch {
     rawPlan = (session.user as { plan?: string }).plan ?? "starter";
   }
