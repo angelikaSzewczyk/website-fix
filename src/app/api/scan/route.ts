@@ -1449,10 +1449,25 @@ PFLICHT-REGELN:
       } catch { /* non-fatal */ }
     }
 
-    // WooCommerce-spezifische Shop-Checks (nur wenn WooCommerce erkannt)
+    // WooCommerce-Hard-Detection — falsch positives sind ein Killer-Bug:
+    // Tierarztpraxen ohne Shop dürfen NIE eine WC-Karte sehen, nur weil ein
+    // Theme zufällig eine "woocommerce"-CSS-Klasse mitbringt. Wir fordern hier:
+    //   1. Tech-Detector: ecommerce === "WooCommerce" mit hoher Confidence (>= 0.70)
+    //   2. ZUSÄTZLICH einen der harten Core-Marker im HTML:
+    //      - /wp-content/plugins/woocommerce/ (Plugin-Pfad in Script/Link)
+    //      - WooCommerce-Generator-Meta-Tag
+    //      - wc-ajax-Endpunkt (cart-fragments etc.)
+    //      - data-wc-store-api / wc-block-Marker
+    // Beides muss erfüllt sein → kein False-Positive bei Themes oder Plugin-Resten.
+    const hasWcCoreMarker =
+      /\/wp-content\/plugins\/woocommerce\//i.test(mainHtml) ||
+      /<meta[^>]+name=["']generator["'][^>]+woocommerce/i.test(mainHtml) ||
+      /\bwc-ajax=|woocommerce-cart-fragments|data-wc-store-api|wc-blocks-style/i.test(mainHtml);
+
     const isWooCommerce =
       techFingerprint.ecommerce.value === "WooCommerce" &&
-      techFingerprint.ecommerce.confidence >= 0.45;
+      techFingerprint.ecommerce.confidence >= 0.70 &&
+      hasWcCoreMarker;
     let wooMeta: WooAuditMeta | null = null;
     if (isWooCommerce) {
       try {

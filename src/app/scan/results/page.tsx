@@ -450,14 +450,31 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
   const builder      = scan.builderAudit?.builder ?? null;
   const domDepth     = scan.builderAudit?.maxDomDepth ?? 0;
   const fonts        = scan.builderAudit?.googleFontFamilies.length ?? 0;
-  const wooDetected  = !!scan.isWooCommerce;
-  const wooHasIssues = wooDetected && ((scan.wooAudit?.revenueRiskPct ?? 0) > 0
-                       || scan.wooAudit?.cartButtonsBlocked
-                       || scan.wooAudit?.outdatedTemplates
-                       || (scan.wooAudit?.pluginImpact?.length ?? 0) >= 2);
+
+  // ── HARTE WooCommerce-Prüfung — keine False-Positives bei Tierärzten & Co. ──
+  // Wir verlangen explizit `=== true` (nicht truthy) und prüfen ZUSÄTZLICH,
+  // ob es echte Shop-Signale gibt: revenueRiskPct > 0 ODER konkrete shop-Befunde
+  // im wooAudit. Sonst blenden wir die Karte komplett aus (auch wenn der
+  // Backend-Flag fälschlich true wäre — Defense in depth).
+  const wooDetected  = scan.isWooCommerce === true;
+  const wooHasShopSignals =
+    wooDetected && (
+      (scan.wooAudit?.revenueRiskPct ?? 0) > 0 ||
+      scan.wooAudit?.cartButtonsBlocked === true ||
+      scan.wooAudit?.outdatedTemplates  === true ||
+      (scan.wooAudit?.pluginImpact?.length ?? 0) >= 1 ||
+      (scan.wooAudit?.addToCartButtons   ?? 0) > 0
+    );
+  // Sicherheits-Check ("keine Geister-Meldungen"): WooCommerce-Karte nur
+  // anzeigen, wenn `isWooCommerce === true` UND mindestens ein konkretes
+  // Shop-Signal vorliegt. Wenn isWooCommerce zwar true wäre aber alle Audit-
+  // Werte bei 0 stehen (verdächtig — vermutlich False-Positive), zeigen wir
+  // gar nichts. Konsequenz: Tierarztpraxen sehen niemals "WooCommerce" oder
+  // "Umsatz-Risiko" auf ihrem Bericht.
+  const showWooCard  = wooDetected && wooHasShopSignals;
 
   // Nichts erkannt → Komponente nicht anzeigen
-  if (!builder && !wooDetected && fonts === 0) return null;
+  if (!builder && !showWooCard && fonts === 0) return null;
 
   const cards: Array<{
     title: string;
@@ -479,15 +496,17 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
     });
   }
 
-  // WooCommerce-Card NUR wenn ein Shop tatsächlich erkannt wurde — bei Nicht-Shop-Sites
-  // verschwindet die Karte komplett, das Auto-Grid füllt den Platz mit Builder + DSGVO.
-  if (wooDetected) {
+  // WooCommerce-Card NUR wenn:
+  //   1. wooDetected === true (Backend-Flag exakt)
+  //   2. Defense in depth — falls jemand das Flag fälschlich setzt, sehen wir
+  //      den False-Positive zumindest nicht prominent
+  if (showWooCard) {
     cards.push({
-      title:  wooHasIssues ? "⚠️ Umsatz-Risiko erkannt" : "WooCommerce-Shop erkannt",
-      detail: wooHasIssues
+      title:  wooHasShopSignals ? "⚠️ Umsatz-Risiko erkannt" : "WooCommerce-Shop erkannt",
+      detail: wooHasShopSignals
         ? "Verzögerungen im Checkout reduzieren die Kaufwahrscheinlichkeit massiv. Details im vollen Bericht."
         : "Shop technisch sauber · Detail-Audit im vollen Bericht.",
-      tone: wooHasIssues ? "warn" : "ok",
+      tone: wooHasShopSignals ? "warn" : "ok",
       icon: "shop",
     });
   }
@@ -532,7 +551,10 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
           Builder · WooCommerce · DSGVO
         </span>
       </div>
-      <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+      <div
+        className={`wf-quick-grid wf-quick-grid-${cards.length}`}
+        style={{ padding: "14px 18px", display: "grid", gap: 10 }}
+      >
         {cards.map((c, i) => {
           const colors = c.tone === "warn"
             ? { fg: "#fbbf24", bg: "rgba(251,191,36,0.08)", bd: "rgba(251,191,36,0.25)" }
@@ -1616,6 +1638,19 @@ function ResultsInner() {
           50%       { opacity: 1;   transform: scale(1.15); }
         }
         .wf-seo-pulse-dot { animation: wf-seo-pulse 1.4s ease-in-out infinite; }
+
+        /* Quick-Check-Grid — passt sich exakt der Anzahl der Karten an,
+           damit bei verstecktem WC-Slot kein leerer Auto-Fit-Slot bleibt. */
+        .wf-quick-grid-1 { grid-template-columns: 1fr; }
+        .wf-quick-grid-2 { grid-template-columns: 1fr; }
+        .wf-quick-grid-3 { grid-template-columns: 1fr; }
+        @media (min-width: 640px) {
+          .wf-quick-grid-2 { grid-template-columns: 1fr 1fr; }
+          .wf-quick-grid-3 { grid-template-columns: 1fr 1fr; }
+        }
+        @media (min-width: 900px) {
+          .wf-quick-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        }
         @media (max-width: 768px) {
           .wf-scan-header { display: none !important; }
           .wf-scan-row {
