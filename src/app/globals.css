@@ -1621,6 +1621,90 @@ input[type="file"].input {
   text-underline-offset: 3px;
 }
 
+/* ── Blog-Tabellen — luftiges, lesbares Layout statt Pipe-Wurst ──────────── */
+.blogContent table {
+  width: 100%;
+  margin: 28px 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 14px;
+}
+.blogContent thead {
+  background: rgba(122,166,255,0.06);
+}
+.blogContent th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  white-space: nowrap;
+}
+.blogContent td {
+  padding: 12px 16px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.55;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: top;
+}
+.blogContent tr:last-child td {
+  border-bottom: none;
+}
+.blogContent tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+.blogContent td strong {
+  color: #fff;
+}
+
+/* Mobile: Tabellen werden zu vertikalen Karten — niemals horizontal scrollen,
+   weil das auf Mobile mit Daumen-Scroll konflikt-prone ist. */
+@media (max-width: 720px) {
+  .blogContent table {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+  }
+  .blogContent thead {
+    display: none;
+  }
+  .blogContent tr {
+    display: block;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 10px;
+  }
+  .blogContent td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.06);
+    font-size: 13.5px;
+  }
+  .blogContent tr td:last-child {
+    border-bottom: none;
+  }
+  .blogContent td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+}
+
 .blogContent code {
   font-size: 13px;
   padding: 2px 6px;

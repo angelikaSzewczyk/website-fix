@@ -5,6 +5,7 @@ import { cache } from "react";
 import matter from "gray-matter";
 import { remark } from "remark";
 import html from "remark-html";
+import gfm from "remark-gfm";
 import RelatedPosts from "@/app/components/related-posts";
 import BlogHeader from "@/app/components/blog-header";
 import BlogClientWrapper from "@/app/components/blog-client-wrapper";
@@ -15,7 +16,13 @@ const getPostData = cache(async (slug: string) => {
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, "utf8");
   const { data, content } = matter(raw);
-  const processed = await remark().use(html).process(content);
+  // GFM aktiviert Tabellen, Strikethrough, Task-Lists, Auto-Linking.
+  // remark-html braucht allowDangerousHtml damit GFM-erzeugtes HTML
+  // (z.B. <table>) nicht als Plaintext escaped wird.
+  const processed = await remark()
+    .use(gfm)
+    .use(html, { sanitize: false })
+    .process(content);
   return { data, contentHtml: processed.toString() };
 });
 
