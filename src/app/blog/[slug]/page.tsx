@@ -23,24 +23,26 @@ function decorateTableCells(htmlString: string): string {
     const thRegex = /<th[^>]*>([\s\S]*?)<\/th>/g;
     let m: RegExpExecArray | null;
     while ((m = thRegex.exec(headerMatch[1])) !== null) {
-      // HTML-Tags und " entfernen, kürzen
       const text = m[1].replace(/<[^>]+>/g, "").replace(/"/g, "&quot;").trim();
       headers.push(text);
     }
     if (headers.length === 0) return tableMatch;
 
-    // Jede tbody-Row durchgehen und data-label auf die td's setzen
-    return tableMatch.replace(/<tbody([\s\S]*?)<\/tbody>/, (tbodyMatch, tbodyAttrs) => {
-      const updatedTbody = tbodyMatch.replace(/<tr([\s\S]*?)<\/tr>/g, (rowMatch) => {
-        let colIdx = 0;
-        return rowMatch.replace(/<td([^>]*)>/g, (tdMatch, tdAttrs) => {
-          const label = headers[colIdx] ?? "";
-          colIdx++;
-          if (!label || /data-label=/.test(tdAttrs)) return tdMatch;
-          return `<td${tdAttrs} data-label="${label}">`;
-        });
-      });
-      return `<tbody${tbodyAttrs}${updatedTbody.replace(/^<tbody[\s\S]*?>/, "").replace(/<\/tbody>$/, "")}</tbody>`;
+    // Auf jede <td> innerhalb des kompletten Tabellen-Strings das data-label setzen.
+    // (Kein verschachteltes tbody/tr-Replace — das hatte den Body verdoppelt.)
+    // <th>-Tags im <thead> bleiben unangetastet, weil unser Regex nur <td> matcht.
+    let colIdx = 0;
+    return tableMatch.replace(/<tr[^>]*>|<td([^>]*)>/g, (m2, tdAttrs) => {
+      // Auf jede neue <tr>-Zeile springt der Spalten-Index zurück auf 0
+      if (m2.startsWith("<tr")) {
+        colIdx = 0;
+        return m2;
+      }
+      // <td>-Match — data-label setzen, falls noch nicht da und Header existiert
+      const label = headers[colIdx] ?? "";
+      colIdx++;
+      if (!label || /data-label=/.test(tdAttrs)) return m2;
+      return `<td${tdAttrs} data-label="${label}">`;
     });
   });
 }

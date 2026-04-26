@@ -982,13 +982,55 @@ function ResultsInner() {
                 {displayDomain}
               </span>
             )}
-            <Link href="/pricing" className="hide-sm" style={{
-              fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
-              background: "#007BFF", color: "#fff", textDecoration: "none",
-              boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
-            }}>
-              Jetzt optimieren →
-            </Link>
+            <div className="hide-sm" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+              <Link
+                href="/checkout?plan=starter"
+                onClick={() => {
+                  // Plausible-Event (no-op wenn Plausible nicht geladen)
+                  if (typeof window !== "undefined") {
+                    const w = window as unknown as {
+                      plausible?: (event: string, opts?: { props?: Record<string, string> }) => void;
+                      gtag?: (cmd: string, event: string, params?: Record<string, string>) => void;
+                    };
+                    try {
+                      w.plausible?.("Click Optimize Button", { props: { location: "scan-header" } });
+                      w.gtag?.("event", "click_optimize_button", { location: "scan-header" });
+                    } catch { /* tracker not ready */ }
+                  }
+                }}
+                className="wf-optimize-cta"
+                style={{
+                  fontSize: 13, padding: "8px 20px", borderRadius: 8, fontWeight: 700,
+                  background: "#10B981", color: "#fff", textDecoration: "none",
+                  whiteSpace: "nowrap" as const,
+                }}
+              >
+                Jetzt optimieren →
+              </Link>
+              <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontWeight: 500, letterSpacing: "0.01em" }}>
+                ✓ Über 1.200 WordPress-Seiten optimiert
+              </span>
+              <style>{`
+                @keyframes wf-optimize-pulse {
+                  0%, 100% {
+                    box-shadow: 0 4px 14px rgba(16,185,129,0.40),
+                                0 0 0 0 rgba(16,185,129,0.30);
+                  }
+                  50% {
+                    box-shadow: 0 4px 22px rgba(16,185,129,0.65),
+                                0 0 0 6px rgba(16,185,129,0.05);
+                  }
+                }
+                .wf-optimize-cta {
+                  animation: wf-optimize-pulse 2.4s ease-in-out infinite;
+                  transition: transform 0.18s ease, filter 0.18s ease;
+                }
+                .wf-optimize-cta:hover {
+                  transform: translateY(-1px);
+                  filter: brightness(1.08);
+                }
+              `}</style>
+            </div>
             {/* Burger-Menü — nur auf Mobile sichtbar */}
             <MobileNav />
           </div>
