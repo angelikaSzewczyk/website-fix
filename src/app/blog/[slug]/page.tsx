@@ -11,6 +11,40 @@ import BlogHeader from "@/app/components/blog-header";
 import BlogClientWrapper from "@/app/components/blog-client-wrapper";
 import SiteFooter from "@/app/components/SiteFooter";
 
+/** Injiziert `data-label="<Spaltenname>"` in jeden <td>, damit das Mobile-CSS
+ *  die Spalten-Header per ::before-Pseudo-Element anzeigen kann.
+ *  Server-side Post-Processing — keine Client-JS-Abhängigkeit. */
+function decorateTableCells(htmlString: string): string {
+  return htmlString.replace(/<table([\s\S]*?)<\/table>/g, (tableMatch) => {
+    // Header-Texte aus dem ersten <thead><tr> extrahieren
+    const headerMatch = tableMatch.match(/<thead[\s\S]*?<tr[\s\S]*?>([\s\S]*?)<\/tr>[\s\S]*?<\/thead>/);
+    if (!headerMatch) return tableMatch;
+    const headers: string[] = [];
+    const thRegex = /<th[^>]*>([\s\S]*?)<\/th>/g;
+    let m: RegExpExecArray | null;
+    while ((m = thRegex.exec(headerMatch[1])) !== null) {
+      // HTML-Tags und " entfernen, kürzen
+      const text = m[1].replace(/<[^>]+>/g, "").replace(/"/g, "&quot;").trim();
+      headers.push(text);
+    }
+    if (headers.length === 0) return tableMatch;
+
+    // Jede tbody-Row durchgehen und data-label auf die td's setzen
+    return tableMatch.replace(/<tbody([\s\S]*?)<\/tbody>/, (tbodyMatch, tbodyAttrs) => {
+      const updatedTbody = tbodyMatch.replace(/<tr([\s\S]*?)<\/tr>/g, (rowMatch) => {
+        let colIdx = 0;
+        return rowMatch.replace(/<td([^>]*)>/g, (tdMatch, tdAttrs) => {
+          const label = headers[colIdx] ?? "";
+          colIdx++;
+          if (!label || /data-label=/.test(tdAttrs)) return tdMatch;
+          return `<td${tdAttrs} data-label="${label}">`;
+        });
+      });
+      return `<tbody${tbodyAttrs}${updatedTbody.replace(/^<tbody[\s\S]*?>/, "").replace(/<\/tbody>$/, "")}</tbody>`;
+    });
+  });
+}
+
 const getPostData = cache(async (slug: string) => {
   const filePath = path.join(process.cwd(), "content", "blog", `${slug}.md`);
   if (!fs.existsSync(filePath)) return null;
@@ -23,7 +57,9 @@ const getPostData = cache(async (slug: string) => {
     .use(gfm)
     .use(html, { sanitize: false })
     .process(content);
-  return { data, contentHtml: processed.toString() };
+  // Post-process: data-label auf <td> injizieren fuer Mobile-Tabellen-Cards
+  const decorated = decorateTableCells(processed.toString());
+  return { data, contentHtml: decorated };
 });
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
