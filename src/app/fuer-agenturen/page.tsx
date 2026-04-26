@@ -59,27 +59,29 @@ const PLANS = [
     ],
     cta: "Professional für 89 € starten →",
     href: undefined,
-    recommended: true,
+    recommended: false,
     enterprise: false,
   },
   {
-    name: "Agency",
+    name: "Agency Pro (White-Label)",
     planKey: "agency",
     price: "249",
     per: "/Monat",
-    desc: "Full White-Label für professionelle Agenturen",
+    desc: "Full White-Label · die Empfehlung für etablierte Agenturen",
     accent: "#7C3AED",
     features: [
-      { text: "50 Projekte", highlight: true, key: true },
-      { text: "Full White-Label (Logo & Farben)", highlight: true, key: true },
-      { text: "Lead-Magnet Widget für Neukunden-Akquise", highlight: true, key: true },
-      { text: "Eigene Subdomain (portal.ihre-agentur.de)", highlight: true, key: true },
-      { text: "Automatischer Report-Versand an Kunden", highlight: true, key: false },
-      { text: "E-Mail Absendername konfigurierbar", highlight: false, key: false },
+      { text: "Unlimitierte Scans · keine monatlichen Limits", highlight: true, key: true },
+      { text: "Eigenes Branding im Lead-Widget (Farbe, Logo, Domain)", highlight: true, key: true },
+      { text: "PDF-Export für Kunden — komplett unter deiner Marke", highlight: true, key: true },
+      { text: "API-Zugriff für eigene Workflows & Integrationen", highlight: true, key: true },
+      { text: "Eigene Subdomain (portal.ihre-agentur.de)", highlight: true, key: false },
+      { text: "Automatischer Report-Versand mit deinem SMTP", highlight: true, key: false },
+      { text: "Lead-Magnet Widget für Neukunden-Akquise", highlight: false, key: false },
+      { text: "Priority-Support · Onboarding-Call inklusive", highlight: false, key: false },
     ],
-    cta: "Agency-Account erstellen",
+    cta: "Agency Pro für 249 € starten →",
     href: undefined,
-    recommended: false,
+    recommended: true,
     enterprise: false,
   },
 ];
@@ -137,7 +139,7 @@ export default function AgencyPage() {
               }}>
                 Anmelden
               </Link>
-              <Link href="/pricing" className="hide-sm" style={{
+              <Link href="#pricing" className="hide-sm" style={{
                 fontSize: 13, padding: "7px 18px", borderRadius: 8, fontWeight: 700,
                 background: "#007BFF", color: "#fff", textDecoration: "none",
                 boxShadow: "0 2px 12px rgba(0,123,255,0.4)",
@@ -1431,33 +1433,35 @@ export default function AgencyPage() {
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
               {PLANS.map(plan => {
                 type F = { text: string; highlight: boolean; key?: boolean; locked?: boolean };
-                const isPro   = plan.planKey === "professional";
-                const isAgency = plan.planKey === "agency";
-                const accentColor = isPro ? "#10B981" : plan.accent;
+                const isAgency      = plan.planKey === "agency";
+                const isRecommended = plan.recommended;            // Daten-getrieben: Agency Pro = empfohlen auf /fuer-agenturen
+                const accentColor   = plan.accent;                 // Indigo bei Agency, Emerald bei Pro, Blau bei Starter
+                // RGB-Werte fuer Box-Shadow-Glow ohne harte Hex-Werte
+                const accentRgb = isAgency ? "124,58,237" : plan.planKey === "professional" ? "16,185,129" : "96,165,250";
                 return (
                 <div key={plan.name} style={{
-                  background: isPro ? "rgba(16,185,129,0.04)" : "rgba(255,255,255,0.03)",
+                  background: isRecommended ? `rgba(${accentRgb},0.06)` : "rgba(255,255,255,0.03)",
                   backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: isPro ? `2px solid rgba(16,185,129,0.5)` : `1px solid rgba(255,255,255,0.08)`,
+                  border: isRecommended ? `2px solid rgba(${accentRgb},0.55)` : `1px solid rgba(255,255,255,0.08)`,
                   borderRadius: 18,
                   display: "flex", flexDirection: "column",
                   overflow: "hidden",
-                  boxShadow: isPro
-                    ? "0 0 60px rgba(16,185,129,0.18), 0 8px 40px rgba(16,185,129,0.12), 0 0 0 1px rgba(16,185,129,0.1)"
+                  boxShadow: isRecommended
+                    ? `0 0 60px rgba(${accentRgb},0.20), 0 8px 40px rgba(${accentRgb},0.14), 0 0 0 1px rgba(${accentRgb},0.12)`
                     : "0 2px 20px rgba(0,0,0,0.3)",
-                  transform: isPro ? "scale(1.025)" : "scale(1)",
-                  zIndex: isPro ? 1 : 0,
+                  transform: isRecommended ? "scale(1.025)" : "scale(1)",
+                  zIndex: isRecommended ? 1 : 0,
                   position: "relative" as const,
                 }}>
-                  {/* Top stripe */}
-                  {isPro && (
-                    <div style={{ background: "linear-gradient(90deg, #059669, #10B981)", padding: "9px 24px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  {/* Top stripe — "Empfohlen für Profis"-Badge nur auf der recommended Card */}
+                  {isRecommended && (
+                    <div style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}DD)`, padding: "9px 24px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>EMPFOHLEN FÜR AGENTUREN</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: "0.1em" }}>EMPFOHLEN FÜR PROFIS</span>
                     </div>
                   )}
-                  {!isPro && (
-                    <div style={{ height: 4, background: isAgency ? "rgba(124,58,237,0.35)" : "rgba(255,255,255,0.05)" }} />
+                  {!isRecommended && (
+                    <div style={{ height: 4, background: `rgba(${accentRgb},0.20)` }} />
                   )}
 
                   <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
@@ -1485,7 +1489,7 @@ export default function AgencyPage() {
                               : ff.key
                                 ? `${accentColor}22`
                                 : ff.highlight
-                                  ? (isPro ? "#059669" : isAgency ? "#7C3AED" : "rgba(255,255,255,0.12)")
+                                  ? (isRecommended ? accentColor : "rgba(255,255,255,0.12)")
                                   : "rgba(255,255,255,0.07)",
                             border: isLocked ? "1px solid rgba(255,255,255,0.06)" : ff.key ? `1px solid ${accentColor}40` : "none",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -1521,12 +1525,12 @@ export default function AgencyPage() {
                           display: "block", textAlign: "center", width: "100%",
                           padding: "13px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700,
                           textDecoration: "none",
-                          background: isPro
-                            ? "linear-gradient(90deg, #059669, #10B981)"
+                          background: isRecommended
+                            ? `linear-gradient(90deg, ${accentColor}, ${accentColor}DD)`
                             : isAgency ? "#7C3AED" : "rgba(255,255,255,0.06)",
-                          color: isPro || isAgency ? "#fff" : "rgba(255,255,255,0.55)",
-                          border: isPro || isAgency ? "none" : "1px solid rgba(255,255,255,0.1)",
-                          boxShadow: isPro ? "0 4px 18px rgba(16,185,129,0.35)" : "none",
+                          color: isRecommended || isAgency ? "#fff" : "rgba(255,255,255,0.55)",
+                          border: isRecommended || isAgency ? "none" : "1px solid rgba(255,255,255,0.1)",
+                          boxShadow: isRecommended ? `0 4px 18px rgba(${accentRgb},0.40)` : "none",
                         }}
                       />
                     </div>
