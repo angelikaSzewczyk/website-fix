@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Layers, BellDot, ShieldAlert, Globe, ShieldCheck, Zap, Server } from "lucide-react";
+import { Layers, BellDot, ShieldAlert, Globe, ShieldCheck, Zap, Server, Palette, Headphones, Magnet, Crown, ArrowRight, Check } from "lucide-react";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
@@ -1672,43 +1672,198 @@ export default function AgencyPage() {
           </div>
         </section>
 
-        {/* CTA BANNER */}
-        <section style={{ padding: "60px 24px 80px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div className="wf-agency-cta-banner" style={{
-              padding: "clamp(40px, 5vw, 64px) clamp(28px, 5vw, 56px)",
-              borderRadius: 20,
-              background: "linear-gradient(135deg, rgba(0,123,255,0.07) 0%, rgba(0,0,0,0.35) 100%)",
-              border: "1px solid rgba(0,123,255,0.2)",
-              boxShadow: "0 0 80px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
-              display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 32,
-              position: "relative", overflow: "hidden",
+        {/* ─── AGENCY-PARTNERSCHAFT — Premium Section ───────────────────── */}
+        <section style={{ padding: "80px 24px 96px", borderTop: "1px solid rgba(255,255,255,0.06)", position: "relative", overflow: "hidden" }}>
+          {/* Edler Hintergrund-Glow — violett mit feinem Goldakzent */}
+          <div aria-hidden="true" style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background:
+              "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.14) 0%, transparent 60%), " +
+              "radial-gradient(ellipse 50% 40% at 80% 100%, rgba(251,191,36,0.05) 0%, transparent 70%)",
+          }} />
+
+          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+
+            {/* Section-Heading */}
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontSize: 11, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const,
+                color: "#A78BFA", padding: "5px 12px", borderRadius: 20,
+                background: "rgba(124,58,237,0.10)", border: "1px solid rgba(124,58,237,0.32)",
+                marginBottom: 16,
+              }}>
+                <Crown size={12} strokeWidth={2.4} />
+                Agency-Partnerschaft
+              </span>
+              <h2 style={{ margin: "0 0 12px", fontSize: "clamp(26px, 3.6vw, 40px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.12, color: "#fff" }}>
+                Werde zur <span style={{ background: "linear-gradient(90deg, #A78BFA, #FBBF24)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>&bdquo;Technical SEO&ldquo;-Instanz</span> für deine Kunden.
+              </h2>
+              <p style={{ margin: "0 auto", maxWidth: 680, fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
+                Verkaufe keine hübschen Websites, sondern messbare Ergebnisse. Nutze unser Audit-Tool als White-Label-Lösung und schließe Wartungsverträge schneller ab.
+              </p>
+            </div>
+
+            {/* Premium-Card */}
+            <div className="wf-agency-card" style={{
+              padding: "clamp(36px, 4vw, 56px) clamp(28px, 4vw, 56px)",
+              borderRadius: 22,
+              background:
+                "linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(15,15,20,0.85) 50%, rgba(0,0,0,0.92) 100%)",
+              border: "1px solid rgba(124,58,237,0.40)",
+              boxShadow:
+                "0 0 0 1px rgba(167,139,250,0.10), " +
+                "0 0 80px rgba(124,58,237,0.18), " +
+                "0 24px 60px rgba(0,0,0,0.55), " +
+                "inset 0 1px 0 rgba(255,255,255,0.06)",
+              position: "relative",
+              overflow: "hidden",
             }}>
-              <div style={{ position: "absolute", top: "-50%", left: "-10%", width: "50%", height: "200%", background: "radial-gradient(ellipse, rgba(0,123,255,0.10) 0%, transparent 70%)", pointerEvents: "none" }} />
-              <div className="wf-agency-cta-text" style={{ position: "relative" }}>
-                <h2 style={{ margin: "0 0 10px", fontSize: "clamp(22px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                  Erste Website scannen — kostenlos, in 60 Sekunden.
-                </h2>
-                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                  Erst-Analyse ohne Zugriff — dann Fixes via Agency-Plugin vollautomatisch direkt in WordPress einpflegen.
-                </p>
+              {/* Innerer Gold-/Violett-Akzent oben rechts */}
+              <div aria-hidden="true" style={{
+                position: "absolute", top: -120, right: -80, width: 280, height: 280, borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(251,191,36,0.10) 0%, rgba(124,58,237,0.18) 40%, transparent 70%)",
+                pointerEvents: "none",
+              }} />
+
+              {/* Preis-Header */}
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 24, marginBottom: 36, position: "relative" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8, flexWrap: "wrap" as const }}>
+                    <span style={{
+                      fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 900, letterSpacing: "-0.04em",
+                      background: "linear-gradient(135deg, #fff 0%, #A78BFA 100%)",
+                      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                      lineHeight: 1,
+                    }}>
+                      249&nbsp;€
+                    </span>
+                    <span style={{ fontSize: 16, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
+                      / Monat
+                    </span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+                      padding: "2px 8px", borderRadius: 6,
+                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
+                      letterSpacing: "0.04em",
+                    }}>
+                      zzgl. MwSt.
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, maxWidth: 460 }}>
+                    Reines B2B-Angebot · Monatlich kündbar · Keine Mindestlaufzeit
+                  </p>
+                </div>
+
+                {/* Top-right ROI-Kalk-Badge */}
+                <div style={{
+                  padding: "12px 16px", borderRadius: 12,
+                  background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.30)",
+                  maxWidth: 320,
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#10B981", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 4 }}>
+                    Kostenrechnung
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.55 }}>
+                    Bei 50 Kunden-Audits/Monat: <strong style={{ color: "#10B981" }}>unter 5&nbsp;€ pro Audit</strong>.
+                    Ein einziger verkaufter Wartungsvertrag deckt die Jahresgebühr.
+                  </div>
+                </div>
               </div>
-              <div className="wf-agency-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", alignItems: "flex-start" }}>
-                <div className="wf-agency-cta-btn">
+
+              {/* Drei Kern-Features */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 32 }}>
+                {[
+                  {
+                    Icon: Palette,
+                    accent: "#A78BFA",
+                    accentBg: "rgba(167,139,250,0.10)",
+                    accentBd: "rgba(167,139,250,0.32)",
+                    title: "White-Label Reporting",
+                    body: "Berichte komplett im Agentur-Design — dein Logo, deine Farben, deine Domain. Kein WebsiteFix-Schriftzug, kein Hinweis aufs Tool.",
+                  },
+                  {
+                    Icon: Headphones,
+                    accent: "#FBBF24",
+                    accentBg: "rgba(251,191,36,0.08)",
+                    accentBd: "rgba(251,191,36,0.30)",
+                    title: "Priority Support",
+                    body: "Direkter Draht für technische Fragen. Onboarding-Call beim Start, schnelle Antwortzeiten, exklusiver Slack-Channel für Agency-Partner.",
+                  },
+                  {
+                    Icon: Magnet,
+                    accent: "#10B981",
+                    accentBg: "rgba(16,185,129,0.08)",
+                    accentBd: "rgba(16,185,129,0.28)",
+                    title: "Lead-Generator Widget",
+                    body: "Einbindbares Widget für deine Agentur-Website. Sammelt vollautomatisch qualifizierte SEO-Anfragen — die Email-Adresse landet direkt in deinem Dashboard.",
+                  },
+                ].map(f => (
+                  <div key={f.title} style={{
+                    padding: "20px 22px", borderRadius: 14,
+                    background: "rgba(255,255,255,0.025)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 10, marginBottom: 14,
+                      background: f.accentBg, border: `1px solid ${f.accentBd}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <f.Icon size={18} strokeWidth={1.8} color={f.accent} />
+                    </div>
+                    <h3 style={{ margin: "0 0 6px", fontSize: 14.5, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                      {f.title}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                      {f.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Inkludierte Kernpunkte als kompakte Zeile */}
+              <div style={{
+                padding: "14px 18px", borderRadius: 12, marginBottom: 28,
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                display: "flex", flexWrap: "wrap" as const, gap: 14, alignItems: "center", justifyContent: "center",
+              }}>
+                {[
+                  "Unlimitierte Scans",
+                  "API-Zugriff",
+                  "Eigene Subdomain (portal.agentur.de)",
+                  "SMTP-Versand mit eigenem Absender",
+                  "Onboarding-Call",
+                ].map(p => (
+                  <span key={p} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+                    <Check size={12} strokeWidth={2.6} color="#A78BFA" />
+                    {p}
+                  </span>
+                ))}
+              </div>
+
+              {/* CTA — Premium Button */}
+              <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 12, position: "relative" }}>
+                <div style={{ width: "100%", maxWidth: 480 }}>
                   <CheckoutButton
                     plan="agency"
-                    label="Agentur-Power freischalten →"
+                    label="Jetzt Agency-Partnerschaft starten"
                     style={{
-                      padding: "14px 32px", borderRadius: 11, fontWeight: 800, fontSize: 15,
-                      background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                      color: "#fff", border: "none", whiteSpace: "nowrap",
-                      boxShadow: "0 4px 24px rgba(0,123,255,0.4)",
+                      width: "100%",
+                      padding: "16px 32px", borderRadius: 12, fontWeight: 800, fontSize: 15,
+                      background: "linear-gradient(90deg, #5B21B6 0%, #7C3AED 50%, #A78BFA 100%)",
+                      color: "#fff", border: "none",
+                      boxShadow:
+                        "0 6px 28px rgba(124,58,237,0.45), " +
+                        "0 0 0 1px rgba(167,139,250,0.30), " +
+                        "inset 0 1px 0 rgba(255,255,255,0.18)",
+                      letterSpacing: "0.005em",
                     }}
                   />
                 </div>
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingLeft: 4 }}>
-                  Agency Starter ab 99€/Monat · Monatlich kündbar. Keine Mindestlaufzeit.
-                </span>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.42)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <ArrowRight size={11} strokeWidth={2.4} color="rgba(255,255,255,0.55)" />
+                  Sofortiger Zugriff auf alle Pro-Features &amp; unlimitierte Scans
+                </p>
               </div>
             </div>
           </div>

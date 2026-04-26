@@ -52,11 +52,29 @@ export default function CheckoutButton({ plan, label, style, href }: CheckoutBut
     <>
     {error && (
       <div style={{
-        fontSize: 12, color: "#EF4444", marginBottom: 8,
-        background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
-        borderRadius: 6, padding: "6px 10px",
+        fontSize: 12, marginBottom: 10,
+        background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.28)",
+        borderRadius: 8, padding: "9px 12px",
+        display: "flex", alignItems: "flex-start", gap: 8,
       }}>
-        ⚠ {error}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444"
+          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ flexShrink: 0, marginTop: 1 }}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div style={{ flex: 1, color: "rgba(255,255,255,0.85)" }}>
+          <div style={{ color: "#EF4444", fontWeight: 700, marginBottom: 2 }}>{error}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+            Falls das Problem bestehen bleibt: Schreib uns direkt unter{" "}
+            <a href="mailto:support@website-fix.com?subject=Checkout-Problem"
+              style={{ color: "#7aa6ff", textDecoration: "underline" }}>
+              support@website-fix.com
+            </a>
+            {" "}— wir aktivieren deinen Plan manuell.
+          </div>
+        </div>
       </div>
     )}
     <button
