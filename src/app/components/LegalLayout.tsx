@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import SiteFooter from "./SiteFooter";
 
 function BrandMark() {
   return (
@@ -13,22 +14,40 @@ function BrandMark() {
   );
 }
 
+/**
+ * Layout für rechtliche Seiten (Impressum, Datenschutz, AGB).
+ *
+ * Sticky-Footer-Pattern: Outer-Container ist flex-column mit min-height: 100vh,
+ * Content-Wrapper hat flex: 1 — bei kurzem Content (z.B. Impressum) bleibt
+ * der globale SiteFooter trotzdem am unteren Bildrand kleben.
+ *
+ * footerLink / footerLabel / extraLinks sind nur noch für Backwards-Compat
+ * vorhanden und werden ignoriert — der globale SiteFooter rendert eigene Links
+ * (identisch zu Landingpage / Blog / Scan).
+ */
 export default function LegalLayout({
   children,
   title,
-  footerLink,
-  footerLabel,
-  extraLinks,
+  footerLink: _footerLink,
+  footerLabel: _footerLabel,
+  extraLinks: _extraLinks,
 }: {
   children: ReactNode;
   title: string;
-  footerLink: string;
-  footerLabel: string;
+  /** @deprecated wird vom globalen SiteFooter ersetzt */
+  footerLink?: string;
+  /** @deprecated wird vom globalen SiteFooter ersetzt */
+  footerLabel?: string;
+  /** @deprecated wird vom globalen SiteFooter ersetzt */
   extraLinks?: { href: string; label: string }[];
 }) {
+  void _footerLink; void _footerLabel; void _extraLinks;
+
   return (
     <div style={{
       minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
       background: "#0a0a0a",
       color: "#fff",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -66,8 +85,8 @@ export default function LegalLayout({
         </div>
       </nav>
 
-      {/* ── Content ── */}
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "52px 24px 96px" }}>
+      {/* ── Content (flex: 1 → drückt Footer immer ans Ende, auch bei kurzen Pages) ── */}
+      <div style={{ flex: 1, maxWidth: 860, width: "100%", margin: "0 auto", padding: "52px 24px 96px" }}>
         {/* Glass card */}
         <div style={{
           background: "rgba(255,255,255,0.03)",
@@ -122,29 +141,8 @@ export default function LegalLayout({
         </div>
       </div>
 
-      {/* ── Footer ── */}
-      <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        padding: "28px 24px", textAlign: "center",
-      }}>
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.22)", lineHeight: 2 }}>
-          {`© ${new Date().getFullYear()} website-fix.com`}
-          <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-          <Link href="/" className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>Startseite</Link>
-          <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-          <Link href={footerLink} className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
-            {footerLabel}
-          </Link>
-          {extraLinks?.map((l) => (
-            <span key={l.href}>
-              <span style={{ margin: "0 10px", opacity: 0.4 }}>·</span>
-              <Link href={l.href} className="legal-a" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
-                {l.label}
-              </Link>
-            </span>
-          ))}
-        </p>
-      </footer>
+      {/* ── Globaler SiteFooter — identisch zu Landingpage / Blog / Scan ── */}
+      <SiteFooter />
     </div>
   );
 }
