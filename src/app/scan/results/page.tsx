@@ -479,11 +479,13 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
     });
   }
 
+  // WooCommerce-Card NUR wenn ein Shop tatsächlich erkannt wurde — bei Nicht-Shop-Sites
+  // verschwindet die Karte komplett, das Auto-Grid füllt den Platz mit Builder + DSGVO.
   if (wooDetected) {
     cards.push({
-      title:  wooHasIssues ? "WooCommerce optimierungsbedürftig" : "WooCommerce-Shop erkannt",
+      title:  wooHasIssues ? "⚠️ Umsatz-Risiko erkannt" : "WooCommerce-Shop erkannt",
       detail: wooHasIssues
-        ? "Mehrere Performance- oder Datenbank-Probleme gefunden — exakte Befunde im vollen Bericht."
+        ? "Verzögerungen im Checkout reduzieren die Kaufwahrscheinlichkeit massiv. Details im vollen Bericht."
         : "Shop technisch sauber · Detail-Audit im vollen Bericht.",
       tone: wooHasIssues ? "warn" : "ok",
       icon: "shop",
@@ -678,12 +680,12 @@ function LockedOverlay({ children, tier, ctaHref = "/register?plan=starter" }: {
 
   return (
     <div style={{ position: "relative" }}>
-      {/* Geblurrter Inhalt — visuell präsent, aber nicht lesbar */}
+      {/* Geblurrter Inhalt — Struktur erkennbar, Text absolut nicht mehr entzifferbar */}
       <div style={{
-        filter: "blur(6px)",
+        filter: "blur(10px)",
         pointerEvents: "none",
         userSelect: "none",
-        opacity: 0.55,
+        opacity: 0.5,
       }} aria-hidden="true">
         {children}
       </div>
@@ -994,78 +996,126 @@ function ResultsInner() {
                 </p>
               )}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {/* Gold — Ranking-Blocker (Wachstums-Bremsen) */}
-              <div style={{ padding: "20px 22px", borderRadius: 14, background: critErrors > 0 && !isDemo ? "rgba(251,191,36,0.07)" : "rgba(251,191,36,0.04)", border: critErrors > 0 && !isDemo ? "1px solid rgba(251,191,36,0.3)" : "1px solid rgba(251,191,36,0.15)", display: "flex", flexDirection: "column", gap: 10, boxShadow: critErrors > 0 && !isDemo ? "0 0 24px rgba(251,191,36,0.06)" : "none" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>⚡</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#FBBF24" }}>Wachstums-Bremsen</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  {[
-                    !scan?.https && "Kein HTTPS: verhindert optimale Google-Sichtbarkeit und schließt potenzielle Kunden aus",
-                    scan?.robotsBlocked && "robots.txt blockiert Google: Seite wird nicht indexiert — kein organischer Traffic möglich",
-                    scan?.noIndex && "noindex auf Startseite: Google schließt die Seite aktiv aus dem Index aus",
-                    (scan?.brokenLinksCount ?? 0) > 0 && `${scan!.brokenLinksCount} Broken Links: Nutzer und Google landen auf leeren Seiten — direkte Ranking-Einbuße`,
-                    !scan?.hasTitle && "Kein <title>-Tag: wichtigstes On-Page-SEO-Signal fehlt — Klickrate sinkt",
-                    scan?.hasUnreachable && "Unterseiten nicht erreichbar (404): Crawling-Budget verschwendet, Nutzer verloren",
-                    (scan?.altMissingCount ?? 0) > 0 && `${scan!.altMissingCount} Bilder ohne Alt-Text: Google-Bild-Suche vollständig ausgeschlossen`,
-                    isDemo && "Formularfelder ohne Label: verhindert Conversions durch schlechte Nutzerführung",
-                    isDemo && "3 Broken Links: Nutzer und Google landen auf leeren Seiten",
-                  ].filter(Boolean).map((msg, i) => (
-                    <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
-                      <span style={{ color: "#FBBF24", flexShrink: 0, fontWeight: 700 }}>›</span>{msg as string}
+            {(() => {
+              // Items pro Spalte erst sammeln und filtern, damit wir
+              // bei leeren Spalten kein "Bug-Gefühl" produzieren.
+              const blockerItems: string[] = [
+                !scan?.https                       ? "Kein HTTPS: verhindert optimale Google-Sichtbarkeit und schließt potenzielle Kunden aus" : "",
+                scan?.robotsBlocked                ? "robots.txt blockiert Google: Seite wird nicht indexiert — kein organischer Traffic möglich" : "",
+                scan?.noIndex                      ? "noindex auf Startseite: Google schließt die Seite aktiv aus dem Index aus" : "",
+                (scan?.brokenLinksCount ?? 0) > 0  ? `${scan!.brokenLinksCount} Broken Links: Nutzer und Google landen auf leeren Seiten — direkte Ranking-Einbuße` : "",
+                !scan?.hasTitle                    ? "Kein <title>-Tag: wichtigstes On-Page-SEO-Signal fehlt — Klickrate sinkt" : "",
+                scan?.hasUnreachable               ? "Unterseiten nicht erreichbar (404): Crawling-Budget verschwendet, Nutzer verloren" : "",
+                (scan?.altMissingCount ?? 0) > 0   ? `${scan!.altMissingCount} Bilder ohne Alt-Text: Google-Bild-Suche vollständig ausgeschlossen` : "",
+                isDemo                             ? "Formularfelder ohne Label: verhindert Conversions durch schlechte Nutzerführung" : "",
+                isDemo                             ? "3 Broken Links: Nutzer und Google landen auf leeren Seiten" : "",
+              ].filter(Boolean);
+
+              const seoItems: string[] = [
+                !scan?.hasMeta                            ? "Meta-Description fehlt: Klickrate in Google-Suchergebnissen leidet" : "",
+                !scan?.hasH1                              ? "Kein H1-Tag: Google fehlt die Haupt-Überschrift als Relevanz-Signal" : "",
+                !scan?.hasSitemap                         ? "Keine Sitemap: Google findet neue Seiten langsamer" : "",
+                (scan?.duplicateTitlesCount ?? 0) > 1     ? "Doppelte Seitentitel: Keyword-Kannibalisierung schadet Rankings" : "",
+                (scan?.duplicateMetasCount  ?? 0) > 1     ? "Doppelte Meta-Descriptions: Google verwässert das Relevanz-Signal" : "",
+                isDemo                                    ? "168 Bilder ohne Alt-Text: Google kann sie nicht lesen — Smart-Fix Guide im Professional Plan" : "",
+                isDemo                                    ? "9 Seiten ohne Meta-Description — automatisch behebbar" : "",
+              ].filter(Boolean);
+
+              const optimizedItems: string[] = [
+                (scan?.https     ?? isDemo) ? "HTTPS aktiv — verschlüsselte Verbindung" : "",
+                (scan?.hasTitle  ?? isDemo) ? "Title-Tag vorhanden — Google-Ranking-Grundlage" : "",
+                (scan?.hasSitemap?? isDemo) ? "Sitemap gefunden — Indexierung optimiert" : "",
+                (scan?.hasMeta   ?? isDemo) ? "Meta-Description gesetzt — bessere Klickrate" : "",
+                (scan?.hasH1     ?? false)  ? "H1-Überschrift vorhanden — klares Relevanz-Signal" : "",
+                (scan ? !scan.robotsBlocked : isDemo) ? "Google-Zugang erlaubt — vollständige Indexierung" : "",
+              ].filter(Boolean);
+
+              // Zähle, wie viele Spalten wirklich Inhalt haben — auf 2-Spalten-Grid wechseln,
+              // wenn nur 2 Spalten Inhalt zeigen (vermeidet "leeres Loch").
+              const filledColumns = (blockerItems.length > 0 ? 1 : 0) + (seoItems.length > 0 ? 1 : 0) + (optimizedItems.length > 0 ? 1 : 0);
+              const minWidth = filledColumns >= 3 ? 220 : filledColumns === 2 ? 280 : 320;
+
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth}px, 1fr))`, gap: 12 }}>
+                  {/* Gold — Wachstums-Bremsen (nur rendern, wenn Items vorhanden) */}
+                  {blockerItems.length > 0 ? (
+                    <div style={{ padding: "20px 22px", borderRadius: 14, background: critErrors > 0 && !isDemo ? "rgba(251,191,36,0.07)" : "rgba(251,191,36,0.04)", border: critErrors > 0 && !isDemo ? "1px solid rgba(251,191,36,0.3)" : "1px solid rgba(251,191,36,0.15)", display: "flex", flexDirection: "column", gap: 10, boxShadow: critErrors > 0 && !isDemo ? "0 0 24px rgba(251,191,36,0.06)" : "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>⚡</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#FBBF24" }}>Wachstums-Bremsen</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {blockerItems.map((msg, i) => (
+                          <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
+                            <span style={{ color: "#FBBF24", flexShrink: 0, fontWeight: 700 }}>›</span>{msg}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (!isDemo && (
+                    <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.20)", display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>✓</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>Wachstums-Bremsen</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+                        Keine kritischen Blocker auf der Startseite gefunden — saubere Basis.
+                      </p>
                     </div>
                   ))}
-                  {!isDemo && !scan?.robotsBlocked && scan?.https && !scan?.noIndex && (scan?.brokenLinksCount ?? 0) === 0 && scan?.hasTitle && !scan?.hasUnreachable && (scan?.altMissingCount ?? 0) === 0 && (
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>Keine Wachstums-Bremsen gefunden ✓</div>
+
+                  {/* Yellow — SEO & UX-Optimierungen (Animated Placeholder bei leer) */}
+                  {seoItems.length > 0 ? (
+                    <div style={{ padding: "20px 22px", borderRadius: 14, background: AMBER_BG, border: `1px solid ${AMBER_BDR}`, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>✦</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>SEO &amp; UX-Optimierungen</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {seoItems.map((msg, i) => (
+                          <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
+                            <span style={{ color: AMBER, flexShrink: 0 }}>→</span>{msg}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: "20px 22px", borderRadius: 14, background: AMBER_BG, border: `1px solid ${AMBER_BDR}`, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>✦</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>SEO &amp; UX-Optimierungen</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <span className="wf-seo-pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: AMBER, flexShrink: 0 }} />
+                        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, fontStyle: "italic" }}>
+                          SEO-Analyse wird im vollen Bericht generiert…
+                        </p>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.32)", lineHeight: 1.45 }}>
+                        Im Gratis-Scan werden nur die wichtigsten Blocker geprüft. Title-Tag-Strukturen, Meta-Description-Coverage und H1-Hierarchie über alle Unterseiten analysieren wir im vollen Bericht.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Green — Bereits optimiert (nur wenn Items vorhanden) */}
+                  {optimizedItems.length > 0 && (
+                    <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>🟢</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>Bereits optimiert ✓</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {optimizedItems.map((msg, i) => (
+                          <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
+                            <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span>{msg}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-              {/* Yellow — SEO & UX-Optimierungen */}
-              <div style={{ padding: "20px 22px", borderRadius: 14, background: AMBER_BG, border: `1px solid ${AMBER_BDR}`, display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>✦</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>SEO & UX-Optimierungen</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  {[
-                    !scan?.hasMeta && "Meta-Description fehlt: Klickrate in Google-Suchergebnissen leidet",
-                    !scan?.hasH1 && "Kein H1-Tag: Google fehlt die Haupt-Überschrift als Relevanz-Signal",
-                    !scan?.hasSitemap && "Keine Sitemap: Google findet neue Seiten langsamer",
-                    (scan?.duplicateTitlesCount ?? 0) > 1 && "Doppelte Seitentitel: Keyword-Kannibalisierung schadet Rankings",
-                    (scan?.duplicateMetasCount ?? 0) > 1 && "Doppelte Meta-Descriptions: Google verwässert das Relevanz-Signal",
-                    isDemo && `168 Bilder ohne Alt-Text: Google kann sie nicht lesen — Smart-Fix Guide im Professional Plan`,
-                    isDemo && "9 Seiten ohne Meta-Description — automatisch behebbar",
-                  ].filter(Boolean).map((msg, i) => (
-                    <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
-                      <span style={{ color: AMBER, flexShrink: 0 }}>→</span>{msg as string}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Green — Bereits optimiert */}
-              <div style={{ padding: "20px 22px", borderRadius: 14, background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>🟢</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>Bereits optimiert ✓</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  {[
-                    (scan?.https ?? isDemo) && "HTTPS aktiv — verschlüsselte Verbindung",
-                    (scan?.hasTitle ?? isDemo) && "Title-Tag vorhanden — Google-Ranking-Grundlage",
-                    (scan?.hasSitemap ?? isDemo) && "Sitemap gefunden — Indexierung optimiert",
-                    (scan?.hasMeta ?? isDemo) && "Meta-Description gesetzt — bessere Klickrate",
-                    (scan?.hasH1 ?? false) && "H1-Überschrift vorhanden — klares Relevanz-Signal",
-                    (scan ? !scan.robotsBlocked : isDemo) && "Google-Zugang erlaubt — vollständige Indexierung",
-                  ].filter(Boolean).map((msg, i) => (
-                    <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.5 }}>
-                      <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span>{msg as string}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* ── Dashboard-Metriken ── */}
@@ -1530,8 +1580,8 @@ function ResultsInner() {
                     </div>
                   ))}
                 </div>
-                <Link href="/fuer-agenturen" style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-                  Agency anfragen
+                <Link href="/register?plan=agency&trial=7" style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.45)", color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none", boxShadow: "0 3px 14px rgba(124,58,237,0.28)" }}>
+                  7 Tage kostenlos testen →
                 </Link>
               </div>
             </div>
@@ -1561,6 +1611,11 @@ function ResultsInner() {
         .wf-cta-pulse {
           animation: wf-cta-pulse 2.2s ease-in-out infinite;
         }
+        @keyframes wf-seo-pulse {
+          0%, 100% { opacity: 0.4; transform: scale(0.85); }
+          50%       { opacity: 1;   transform: scale(1.15); }
+        }
+        .wf-seo-pulse-dot { animation: wf-seo-pulse 1.4s ease-in-out infinite; }
         @media (max-width: 768px) {
           .wf-scan-header { display: none !important; }
           .wf-scan-row {

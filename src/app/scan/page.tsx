@@ -218,13 +218,20 @@ export default function ScanPage() {
   // ── Activity Feed — fires timed messages during scan ───────
   function startActivityFeed(scanUrl: string) {
     const domain = (() => { try { return new URL(scanUrl).hostname; } catch { return scanUrl; } })();
+    // Status-Zeilen erwähnen explizit die neuen Prüfpunkte (Builder, WooCommerce,
+    // DSGVO, DOM-Tiefe, Google Fonts) — vermittelt dem User die Wertigkeit.
     const messages: { delay: number; level: string; msg: string; color: string }[] = [
-      { delay: 1200,  level: "INFO",     color: "#8df3d3", msg: `Startseite von ${domain} geladen` },
-      { delay: 3500,  level: "INFO",     color: "#8df3d3", msg: "Meta-Daten & interne Links analysiert" },
-      { delay: 6500,  level: "LEGAL",    color: "#c084fc", msg: "BFSG-Konformität der Startseite wird geprüft…" },
-      { delay: 10500, level: "CRITICAL", color: "#ff6b6b", msg: `Alt-Texte & Screenreader-Tauglichkeit auf ${domain} geprüft` },
-      { delay: 14000, level: "WARN",     color: "#fbbf24", msg: "Performance-Snapshot: Ladezeit & mobile Darstellung analysiert" },
-      { delay: 19000, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse gestartet — Snapshot-Befunde werden aggregiert…" },
+      { delay: 800,   level: "INFO",     color: "#8df3d3", msg: `Crawler verbindet sich mit ${domain}…` },
+      { delay: 2200,  level: "INFO",     color: "#8df3d3", msg: "Startseite geladen · Meta-Daten & interne Links analysiert" },
+      { delay: 3800,  level: "BUILDER",  color: "#7aa6ff", msg: "Page-Builder-Detection: Elementor / Divi / Astra / WPBakery…" },
+      { delay: 5600,  level: "BUILDER",  color: "#7aa6ff", msg: "DOM-Verschachtelungstiefe wird gemessen (Google-Limit: 15 Ebenen)" },
+      { delay: 7400,  level: "SHOP",     color: "#C084B8", msg: "WooCommerce-Detection · Cart-Performance & Database-Bloat" },
+      { delay: 9200,  level: "DSGVO",    color: "#c084fc", msg: "DSGVO-Check: Google Fonts, Maps, YouTube, Pixel-Trackers…" },
+      { delay: 11000, level: "LEGAL",    color: "#c084fc", msg: "BFSG-Konformität der Startseite wird geprüft…" },
+      { delay: 13000, level: "CRITICAL", color: "#ff6b6b", msg: `Alt-Texte & Screenreader-Tauglichkeit auf ${domain} geprüft` },
+      { delay: 15500, level: "WARN",     color: "#fbbf24", msg: "Performance-Snapshot: Ladezeit & mobile Darstellung analysiert" },
+      { delay: 18500, level: "INFO",     color: "#10B981", msg: "Optimierungs-Plan wird aus Befunden generiert…" },
+      { delay: 21500, level: "INFO",     color: "#7aa6ff", msg: "KI-Analyse: Snapshot-Befunde werden aggregiert…" },
     ];
     setActivityFeed([]);
     activityTimers.current.forEach(t => clearTimeout(t));
