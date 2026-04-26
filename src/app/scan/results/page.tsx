@@ -480,8 +480,29 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
     title: string;
     detail: string;
     tone: "warn" | "ok" | "info";
-    icon: "builder" | "shop" | "dsgvo";
+    icon: "builder" | "shop" | "dsgvo" | "seo";
   }> = [];
+
+  // SEO-Indikatoren für die "Indexierung & Sichtbarkeit"-Card.
+  // Wird bei Nicht-Shop-Sites anstelle der WooCommerce-Card eingeblendet —
+  // entspricht der Search-Console-User-Intention ("nicht gefunden").
+  const altMissing      = scan.altMissingCount      ?? 0;
+  const brokenLinks     = scan.brokenLinksCount     ?? 0;
+  const orphanedPages   = scan.orphanedPagesCount   ?? 0;
+  const seoBlockers: string[] = [
+    altMissing > 50         ? `${altMissing} Bilder ohne Alt-Text`        : "",
+    brokenLinks > 0          ? `${brokenLinks} defekte Link${brokenLinks !== 1 ? "s" : ""} (404)` : "",
+    scan.hasUnreachable      ? "Unterseiten nicht erreichbar"              : "",
+    scan.noIndex             ? "Startseite mit noindex"                    : "",
+    scan.robotsBlocked       ? "robots.txt blockiert Crawler"              : "",
+    !scan.hasTitle           ? "Title-Tag fehlt"                           : "",
+    !scan.hasSitemap         ? "Sitemap fehlt"                             : "",
+    orphanedPages > 0        ? `${orphanedPages} Waisenseiten`             : "",
+  ].filter(Boolean) as string[];
+
+  // SEO-Potential-Indikator (Heuristik): jeder Blocker = ~7 % Sichtbarkeits-Hebel,
+  // gecappt bei 60 %. Wird im Conversion-Footer angezeigt.
+  const seoPotentialPct = Math.min(60, seoBlockers.length * 7 + (altMissing > 200 ? 15 : 0) + (brokenLinks > 5 ? 10 : 0));
 
   if (builder) {
     const isCritical = domDepth > 22;
@@ -496,10 +517,10 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
     });
   }
 
-  // WooCommerce-Card NUR wenn:
-  //   1. wooDetected === true (Backend-Flag exakt)
-  //   2. Defense in depth — falls jemand das Flag fälschlich setzt, sehen wir
-  //      den False-Positive zumindest nicht prominent
+  // Strict Content Logic:
+  //   - WooCommerce-Card NUR wenn isWooCommerce === true UND Shop-Signale vorhanden
+  //   - Bei Nicht-Shops: SEO-Status-Card als Ersatz (entspricht der GSC-User-Intent
+  //     "Seite wird nicht gefunden")
   if (showWooCard) {
     cards.push({
       title:  wooHasShopSignals ? "⚠️ Umsatz-Risiko erkannt" : "WooCommerce-Shop erkannt",
@@ -508,6 +529,23 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
         : "Shop technisch sauber · Detail-Audit im vollen Bericht.",
       tone: wooHasShopSignals ? "warn" : "ok",
       icon: "shop",
+    });
+  } else {
+    // SEO-Status-Card: zeigt Indexierung & Sichtbarkeit für Nicht-Shop-Seiten
+    const hasMassiveBlockers = seoBlockers.length >= 2 || altMissing > 200 || brokenLinks > 5 || scan.noIndex || scan.robotsBlocked;
+    cards.push({
+      title:  hasMassiveBlockers
+        ? "⚠️ Massive Sichtbarkeits-Blocker gefunden"
+        : seoBlockers.length > 0
+        ? "Indexierung & Sichtbarkeit · Optimierungsbedarf"
+        : "Indexierung & Sichtbarkeit · Stabil",
+      detail: hasMassiveBlockers
+        ? `Google blockiert oder ignoriert wesentliche Teile deiner Seite${seoBlockers.length > 0 ? ` (${seoBlockers.slice(0, 2).join(" · ")}${seoBlockers.length > 2 ? "…" : ""})` : ""}. Sichtbarkeit & Traffic leiden direkt.`
+        : seoBlockers.length > 0
+        ? `Erste Hinweise gefunden: ${seoBlockers.slice(0, 2).join(" · ")}. Volle Auswertung im Bericht.`
+        : "Keine Hinweise auf Indexierungs- oder Sichtbarkeits-Probleme auf der Startseite.",
+      tone: hasMassiveBlockers ? "warn" : seoBlockers.length > 0 ? "info" : "ok",
+      icon: "seo",
     });
   }
 
@@ -548,7 +586,7 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
           Sofort-Diagnose deiner Seite
         </h3>
         <span style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", marginLeft: "auto" }}>
-          Builder · WooCommerce · DSGVO
+          {showWooCard ? "Builder · WooCommerce · DSGVO" : "Builder · SEO & Sichtbarkeit · DSGVO"}
         </span>
       </div>
       <div
@@ -587,6 +625,11 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
                 )}
+                {c.icon === "seo" && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                )}
                 <span style={{ fontSize: 12.5, fontWeight: 800, color: colors.fg, letterSpacing: "-0.01em" }}>
                   {c.title}
                 </span>
@@ -597,6 +640,22 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
             </div>
           );
         })}
+      </div>
+
+      {/* Conversion-Footer — quantifiziertes SEO-Potential, führt zum vollen Bericht */}
+      <div style={{
+        padding: "12px 18px 14px",
+        borderTop: "1px solid rgba(122,166,255,0.12)",
+        background: "rgba(16,185,129,0.04)",
+        display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const,
+      }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+        </svg>
+        <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.55, flex: 1, minWidth: 220 }}>
+          <strong style={{ color: "#10B981" }}>Dein SEO-Potential liegt bei +{Math.max(20, seoPotentialPct)}%.</strong>{" "}
+          Der volle Bericht zeigt dir jede einzelne Unterseite, die Google aktuell blockiert.
+        </p>
       </div>
     </div>
   );
