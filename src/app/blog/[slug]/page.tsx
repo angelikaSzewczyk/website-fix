@@ -10,7 +10,6 @@ import RelatedPosts from "@/app/components/related-posts";
 import BlogHeader from "@/app/components/blog-header";
 import BlogClientWrapper from "@/app/components/blog-client-wrapper";
 import SiteFooter from "@/app/components/SiteFooter";
-import FaqJsonLd from "@/app/components/faq-json-ld";
 
 /** Injiziert `data-label="<Spaltenname>"` in jeden <td>, damit das Mobile-CSS
  *  die Spalten-Header per ::before-Pseudo-Element anzeigen kann.
@@ -113,6 +112,19 @@ function extractTocAndInjectIds(contentHtml: string) {
   return { htmlWithIds, toc };
 }
 
+function buildFaqJsonLd(faq: { q: string; a: string }[], pageUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faq.map(({ q, a }) => ({
+      "@type": "Question",
+      "name": q,
+      "acceptedAnswer": { "@type": "Answer", "text": a },
+    })),
+    "url": pageUrl,
+  };
+}
+
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getPostData(params.slug);
   if (!post) notFound();
@@ -123,7 +135,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <>
-      {faq && faq.length > 0 && <FaqJsonLd faq={faq} pageUrl={pageUrl} />}
+      {faq && faq.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqJsonLd(faq, pageUrl)) }}
+        />
+      )}
       <BlogHeader active="blog" lang="de" />
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 96px" }}>
