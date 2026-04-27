@@ -112,35 +112,14 @@ function extractTocAndInjectIds(contentHtml: string) {
   return { htmlWithIds, toc };
 }
 
-function buildFaqJsonLd(faq: { q: string; a: string }[], pageUrl: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faq.map(({ q, a }) => ({
-      "@type": "Question",
-      "name": q,
-      "acceptedAnswer": { "@type": "Answer", "text": a },
-    })),
-    "url": pageUrl,
-  };
-}
-
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getPostData(params.slug);
   if (!post) notFound();
 
   const { htmlWithIds, toc } = extractTocAndInjectIds(post.contentHtml);
-  const faq: { q: string; a: string }[] | undefined = post.data.faq;
-  const pageUrl = `https://website-fix.com/blog/${params.slug}`;
 
   return (
     <>
-      {faq && faq.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqJsonLd(faq, pageUrl)) }}
-        />
-      )}
       <BlogHeader active="blog" lang="de" />
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 96px" }}>
