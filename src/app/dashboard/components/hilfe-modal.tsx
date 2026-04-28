@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const S = {
   bg:      "rgba(0,0,0,0.72)",
@@ -26,14 +26,66 @@ type Ticket = {
   user_read:   boolean;
 };
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+type Screenshot = {
+  name:    string;
+  type:    string;       // image/png | image/jpeg
+  dataUrl: string;       // base64 data URL
+  sizeKb:  number;
+};
+
+const MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024; // 2 MB hardcap (kein Storage-Service nötig)
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+function fmtDate(iso: string): string {
+  // Defensive: ungültige ISO-Strings dürfen das Modal nicht crashen.
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  } catch { return "—"; }
 }
 
 interface Props {
   onClose:     () => void;
   projectUrl?: string;
   plan?:       string;
+}
+
+// ─── Status-Badge mit Dot + Label (visueller Trenner) ───────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const conf = status === "open" ? {
+    label: "Offen",
+    color: S.amber,
+    bg:    "rgba(251,191,36,0.10)",
+    bd:    "rgba(251,191,36,0.32)",
+  } : status === "replied" ? {
+    label: "In Bearbeitung",
+    color: S.blue,
+    bg:    "rgba(79,142,247,0.10)",
+    bd:    "rgba(79,142,247,0.32)",
+  } : {
+    label: "Gelöst",
+    color: S.green,
+    bg:    "rgba(34,197,94,0.10)",
+    bd:    "rgba(34,197,94,0.32)",
+  };
+
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 12,
+      color: conf.color, background: conf.bg, border: `1px solid ${conf.bd}`,
+      letterSpacing: "0.04em", textTransform: "uppercase", whiteSpace: "nowrap",
+      flexShrink: 0,
+    }}>
+      <span style={{
+        width: 6, height: 6, borderRadius: "50%",
+        background: conf.color,
+        boxShadow: `0 0 6px ${conf.color}66`,
+      }} />
+      {conf.label}
+    </span>
+  );
 }
 
 export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: Props) {
@@ -46,32 +98,82 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [lastErrorLog, setLastErrorLog]     = useState<string | null>(null);
+  const [screenshot, setScreenshot]         = useState<Screenshot | null>(null);
+  const [shotError, setShotError]           = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Read last scan error from sessionStorage
+  // Crash-Sicherung: sessionStorage-Lookup darf das Modal nie crashen lassen.
+  // Defensive try/catch fängt alles — Schema-Drift, JSON-Parse-Fail, leere
+  // Felder, missing properties.
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("wf_scan_result");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { diagnose?: string; url?: string };
-        if (parsed?.diagnose) setLastErrorLog(parsed.diagnose.slice(0, 400));
+      if (!raw) return;
+      const parsed: unknown = JSON.parse(raw);
+      const diagnose = (parsed as { diagnose?: unknown })?.diagnose;
+      if (typeof diagnose === "string" && diagnose.length > 0) {
+        setLastErrorLog(diagnose.slice(0, 400));
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn("[hilfe-modal] sessionStorage parse failed (non-fatal):", err);
+    }
   }, []);
 
-  // Load tickets when switching to "Meine Tickets" tab
+  // Tickets-Tab: defensive Fetch + Parse, alles kann fehlschlagen ohne Modal-Crash.
   useEffect(() => {
     if (view !== "tickets") return;
     setTicketsLoading(true);
 
-    // Mark all as read when user opens tickets view
-    fetch("/api/support/mark-read", { method: "POST" }).catch(() => {/* non-critical */});
+    fetch("/api/support/mark-read", { method: "POST" }).catch(() => { /* non-critical */ });
 
     fetch("/api/support/tickets")
-      .then(r => r.json())
-      .then((d: { tickets?: Ticket[] }) => setTickets(d.tickets ?? []))
-      .catch(() => setTickets([]))
+      .then(r => r.ok ? r.json() : null)
+      .then((d: unknown) => {
+        const list = (d as { tickets?: unknown })?.tickets;
+        setTickets(Array.isArray(list) ? (list as Ticket[]) : []);
+      })
+      .catch(err => {
+        console.warn("[hilfe-modal] tickets fetch failed (non-fatal):", err);
+        setTickets([]);
+      })
       .finally(() => setTicketsLoading(false));
   }, [view]);
+
+  function handleScreenshotChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setShotError("");
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setShotError("Bitte PNG, JPG oder WebP wählen.");
+      return;
+    }
+    if (file.size > MAX_SCREENSHOT_BYTES) {
+      setShotError(`Datei zu groß (max. ${MAX_SCREENSHOT_BYTES / (1024 * 1024)} MB).`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result ?? "");
+      if (!dataUrl) {
+        setShotError("Datei konnte nicht gelesen werden.");
+        return;
+      }
+      setScreenshot({
+        name:    file.name,
+        type:    file.type,
+        dataUrl,
+        sizeKb:  Math.round(file.size / 1024),
+      });
+    };
+    reader.onerror = () => setShotError("Datei konnte nicht gelesen werden.");
+    reader.readAsDataURL(file);
+  }
+
+  function removeScreenshot() {
+    setScreenshot(null);
+    setShotError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,23 +192,30 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
             lastErrorLog:     lastErrorLog || null,
             timestamp:        new Date().toISOString(),
             plan,
+            // Screenshot wandert in metadata.screenshot — Server forwarded
+            // an Resend als Attachment, speichert auch in support_tickets.metadata.
+            screenshot: screenshot ? {
+              name:    screenshot.name,
+              type:    screenshot.type,
+              dataUrl: screenshot.dataUrl,
+              size_kb: screenshot.sizeKb,
+            } : null,
           },
         }),
       });
-      const data = await res.json() as { ok?: boolean; error?: string };
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; error?: string };
       if (!res.ok) { setError(data.error ?? "Fehler beim Senden."); return; }
       setSent(true);
-    } catch {
+      // Reset für nächste Anfrage
+      setSubject(""); setMessage(""); setScreenshot(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err) {
+      console.error("[hilfe-modal] submit failed:", err);
       setError("Netzwerkfehler. Bitte versuche es erneut.");
     } finally {
       setLoading(false);
     }
   }
-
-  const statusLabel = (s: string) =>
-    s === "open" ? "Offen" : s === "replied" ? "Beantwortet" : "Gelöst";
-  const statusColor = (s: string) =>
-    s === "open" ? S.amber : s === "replied" ? S.blue : S.green;
 
   return (
     <div
@@ -151,7 +260,7 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
           <button onClick={onClose} style={{
             background: "none", border: "none", color: S.sub,
             fontSize: 20, cursor: "pointer", lineHeight: 1, padding: 4,
-          }}>×</button>
+          }} aria-label="Modal schließen">×</button>
         </div>
 
         {/* ── NEW TICKET ── */}
@@ -168,7 +277,7 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
                   <strong style={{ color: S.text }}>Meine Tickets</strong>.
                 </p>
                 <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                  <button onClick={() => { setSent(false); setSubject(""); setMessage(""); }} style={{
+                  <button onClick={() => setSent(false)} style={{
                     padding: "9px 18px", borderRadius: 9, fontSize: 13, fontWeight: 600,
                     background: "rgba(255,255,255,0.07)", color: S.sub, border: `1px solid ${S.border}`, cursor: "pointer",
                   }}>
@@ -239,6 +348,78 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
                   </div>
                 </div>
 
+                {/* Screenshot-Upload */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: S.sub, marginBottom: 6 }}>
+                    Screenshot (optional)
+                  </label>
+                  {!screenshot ? (
+                    <label
+                      htmlFor="wf-support-shot"
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "10px 13px", borderRadius: 8,
+                        background: "rgba(255,255,255,0.03)",
+                        border: `1px dashed ${S.border}`,
+                        color: S.sub, fontSize: 12,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <span style={{ flex: 1 }}>Bild auswählen (PNG, JPG, WebP — max. 2&nbsp;MB)</span>
+                      <input
+                        id="wf-support-shot"
+                        ref={fileInputRef}
+                        type="file"
+                        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                        onChange={handleScreenshotChange}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  ) : (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: 8, borderRadius: 8,
+                      background: "rgba(34,197,94,0.06)",
+                      border: `1px solid rgba(34,197,94,0.22)`,
+                    }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={screenshot.dataUrl}
+                        alt={screenshot.name}
+                        style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, flexShrink: 0, background: "#000" }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: S.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {screenshot.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: S.sub, marginTop: 2 }}>
+                          {screenshot.sizeKb}&nbsp;KB · wird mitgesendet
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeScreenshot}
+                        aria-label="Screenshot entfernen"
+                        style={{
+                          background: "none", border: "none", color: S.red,
+                          fontSize: 14, cursor: "pointer", padding: "4px 8px",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        Entfernen
+                      </button>
+                    </div>
+                  )}
+                  {shotError && (
+                    <p style={{ margin: "5px 0 0", fontSize: 11, color: S.red }}>{shotError}</p>
+                  )}
+                </div>
+
                 {error && (
                   <div style={{
                     padding: "10px 13px", borderRadius: 8,
@@ -293,8 +474,8 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
                   background: !t.user_read ? "rgba(251,191,36,0.04)" : "transparent",
                 }}>
                   {/* Ticket header */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: S.text }}>
                         {!t.user_read && (
                           <span style={{
@@ -302,21 +483,15 @@ export default function HilfeModal({ onClose, projectUrl = "", plan = "free" }: 
                             background: S.amber, marginRight: 6, verticalAlign: "middle",
                           }} />
                         )}
-                        {t.subject}
+                        {t.subject || "(ohne Betreff)"}
                       </span>
                     </div>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                      color: statusColor(t.status), background: `${statusColor(t.status)}18`,
-                      flexShrink: 0,
-                    }}>
-                      {statusLabel(t.status)}
-                    </span>
+                    <StatusBadge status={t.status} />
                   </div>
 
                   {/* User message */}
                   <p style={{ margin: "0 0 8px", fontSize: 12, color: S.sub, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                    {t.message}
+                    {t.message || ""}
                   </p>
 
                   {/* Admin reply */}
