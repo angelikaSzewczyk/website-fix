@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { isAtLeastProfessional } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
+import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
@@ -90,66 +91,84 @@ function friendlyLabel(raw: string): string {
     .replace(/^Fehlendes?\s+Alt-Attribut$/i, "Barrierefreiheit: Bilder ohne Beschreibung");
 }
 
-// SEO: only real SEO topics (H1, Meta, Title, Indexierung, Sitemap)
-function getSeoDeductions(sorted: IssueProp[]): Deduction[] {
-  const out: Deduction[] = [];
-  sorted.forEach((issue, idx) => {
-    if (out.length >= 4) return;
-    const t = (issue.title + " " + issue.body).toLowerCase();
-    // Exclude non-SEO topics from this column
-    if (/barriere|bfsg|alt.?text|screenreader|alternativtext|ssl|https|cookie|dsgvo|datenschutz|formular|sicherheit|security/i.test(t)) return;
-    let pts = 0;
-    if (/title.?tag|kein.*title|ohne.*title/i.test(t))          pts = 14;
-    else if (/meta.?desc|snippet/i.test(t))                     pts = 8;
-    else if (/\bh1\b|hauptüberschrift/i.test(t))                pts = 8;
-    else if (/sitemap/i.test(t))                                 pts = 6;
-    else if (/noindex|ausgeschlossen/i.test(t))                  pts = 5;
-    else if (issue.category === "technik" || issue.category === "speed") return; // never bleed tech into SEO
-    else if (issue.severity === "red" && issue.category !== "recht")     pts = 5;
-    if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
-  });
-  return out;
+// ── Category-Weight-Tables ──────────────────────────────────────────────────
+// Pro 4-Kategorie-Bucket: Punkte-Abzug je matching Issue-Pattern.
+// Gilt nur für Issues, die der Classifier bereits in diese Kategorie gepackt
+// hat — daher kann das Pattern hier ohne "exclude unrelated topics"-Guards
+// sein.
+
+function perfWeight(issue: IssueProp): number {
+  const t = (issue.title + " " + issue.body).toLowerCase();
+  if (/lcp|ladezeit|pagespeed|core web/.test(t))   return 15;
+  if (/cls|layout.?shift/.test(t))                  return 10;
+  if (/cart.?fragment/.test(t))                     return 12;
+  if (/dom.?tiefe|dom.?depth/.test(t))              return 10;
+  if (/ttfb/.test(t))                               return 8;
+  if (/cache|caching/.test(t))                      return 8;
+  if (/css.?bloat|stylesheet|unused.?css|kb.?ersp/.test(t)) return 6;
+  if (/bildkompri|webp|komprimier/.test(t))         return 8;
+  if (issue.severity === "red")                     return 10;
+  return 5;
 }
 
-// Sicherheit: SSL, DSGVO, und BFSG/Barrierefreiheit (Compliance-Themen)
-function getSecDeductions(sorted: IssueProp[]): Deduction[] {
-  const out: Deduction[] = [];
-  sorted.forEach((issue, idx) => {
-    if (out.length >= 4) return;
-    const t = (issue.title + " " + issue.body).toLowerCase();
-    // Exclude pure speed/tech topics
-    if (/lcp|ladezeit|pagespeed|cls|layout.?shift|caching|cache|bildkompri|redirect.?kette/i.test(t)) return;
-    let pts = 0;
-    if (/ssl|https/i.test(t))                                              pts = 50;
-    else if (/cookie|consent|dsgvo|datenschutz/i.test(t))                 pts = 30;
-    else if (/mixed.?content|unsicher.*ressource/i.test(t))               pts = 20;
-    else if (/sicherheit|security/i.test(t) && issue.severity === "red")  pts = 20;
-    // BFSG / Barrierefreiheit = Compliance → belongs in Sicherheit
-    else if (/barriere|bfsg|screenreader|alternativtext/i.test(t))        pts = 15;
-    // Impressum / Rechtstexte = Legal compliance → belongs in Sicherheit
-    else if (/impressum|rechtstext|rechtspflicht|anbieterkennzeichnung/i.test(t)) pts = 15;
-    else if (/alt.?text|formular|label/i.test(t))                         pts = 10;
-    if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
-  });
-  return out;
+function seoWeight(issue: IssueProp): number {
+  const t = (issue.title + " " + issue.body).toLowerCase();
+  if (/title.?tag|kein.*title/.test(t))             return 14;
+  if (/meta.?desc|snippet/.test(t))                 return 8;
+  if (/\bh1\b|hauptüberschrift/.test(t))            return 8;
+  if (/sitemap/.test(t))                            return 6;
+  if (/canonical/.test(t))                          return 6;
+  if (/noindex|indexier|ausgeschlossen/.test(t))    return 7;
+  if (/duplicate|doppelt/.test(t))                  return 5;
+  if (/broken|404|tote.?link|verwaist|orphan/.test(t)) return 6;
+  if (/robots\.txt/.test(t))                        return 8;
+  if (issue.severity === "red")                     return 8;
+  return 4;
 }
 
-// Technik: nur Speed, Cache, Core Web Vitals
-function getTechDeductions(sorted: IssueProp[]): Deduction[] {
+function bestPracticesWeight(issue: IssueProp): number {
+  const t = (issue.title + " " + issue.body).toLowerCase();
+  if (/\bhttps\b|\bssl\b|hsts/.test(t))             return 30;
+  if (/wordpress veraltet|wp.?version/.test(t))     return 12;
+  if (/wp.?login|xmlrpc/.test(t))                   return 8;
+  if (/dsgvo|datenschutz|cookie|consent/.test(t))   return 12;
+  if (/security.?header|content-security/.test(t))  return 8;
+  if (/google.?fonts/.test(t))                      return 6;
+  if (/sicherheit|security/.test(t))                return 10;
+  if (/impressum|rechtstext/.test(t))               return 8;
+  if (issue.severity === "red")                     return 10;
+  return 5;
+}
+
+function a11yWeight(issue: IssueProp): number {
+  const t = (issue.title + " " + issue.body).toLowerCase();
+  if (/alt.?text|alt.?attribut|alternativtext/.test(t)) return 10;
+  if (/formular.?label|label/.test(t))                  return 8;
+  if (/barriere|bfsg|wcag/.test(t))                     return 12;
+  if (/aria/.test(t))                                   return 8;
+  if (/kontrast/.test(t))                               return 6;
+  if (/screenreader/.test(t))                           return 10;
+  if (issue.severity === "red")                         return 8;
+  return 4;
+}
+
+const WEIGHT_BY_CATEGORY: Record<DisplayCategory, (issue: IssueProp) => number> = {
+  performance:   perfWeight,
+  seo:           seoWeight,
+  bestPractices: bestPracticesWeight,
+  accessibility: a11yWeight,
+};
+
+/** Liefert die Top-N Deductions in einer Kategorie. Nutzt den Classifier
+ *  als Filter — kein doppelter Match-Guard mehr, weil die Klassifizierung
+ *  zentral in `lib/issue-categories` passiert. */
+function getCategoryDeductions(sorted: IssueProp[], cat: DisplayCategory, limit = 4): Deduction[] {
   const out: Deduction[] = [];
+  const weightFn = WEIGHT_BY_CATEGORY[cat];
   sorted.forEach((issue, idx) => {
-    if (out.length >= 4) return;
-    const t = (issue.title + " " + issue.body).toLowerCase();
-    // Never put accessibility or compliance issues in Technik
-    if (/barriere|bfsg|alt.?text|screenreader|alternativtext|ssl|https|cookie|dsgvo|datenschutz|formular/i.test(t)) return;
-    let pts = 0;
-    if (/lcp|ladezeit|pagespeed|performance|core web/i.test(t))         pts = 15;
-    else if (/cls|layout.?shift/i.test(t))                               pts = 10;
-    else if (/caching|cache/i.test(t))                                   pts = 8;
-    else if (/bildkompri|komprimier|webp|next.gen/i.test(t))             pts = 8;
-    else if (/redirect.?kette|redirect.?loop/i.test(t))                  pts = 8;
-    else if (issue.category === "speed" && issue.severity === "red")     pts = 15;
-    else if (issue.category === "speed")                                  pts = 8;
+    if (out.length >= limit) return;
+    if (classifyDisplayCategory(issue) !== cat) return;
+    const pts = weightFn(issue);
     if (pts > 0) out.push({ label: friendlyLabel(issue.title), pts, sortedIdx: idx });
   });
   return out;
@@ -656,7 +675,12 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
             </p>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-            {["SEO: 100", "Technik: 98", "Sicherheit: 100"].map(label => (
+            {[
+              `${CATEGORY_META.performance.shortLabel}: 98`,
+              `${CATEGORY_META.seo.shortLabel}: 100`,
+              `${CATEGORY_META.bestPractices.shortLabel}: 100`,
+              `${CATEGORY_META.accessibility.shortLabel}: 100`,
+            ].map(label => (
               <span key={label} style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", color: "#4ade80" }}>
                 ✓ {label}
               </span>
@@ -675,16 +699,18 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
     return (b.count ?? 1) - (a.count ?? 1);
   });
 
-  // ── Column deductions (computed once, shared by score rings + details card)
-  const seoDed  = getSeoDeductions(sorted);
-  const techDed = getTechDeductions(sorted);
-  const secDed  = getSecDeductions(sorted);
+  // ── Phase-3-Refactor: 4 Anzeige-Kategorien statt 3 ──────────────────────
+  // Performance bekommt PSI-Speed-Score als Baseline (genauer als Heuristik
+  // aus Issue-Listen). Andere Kategorien werden aus Deductions berechnet.
+  const perfDed = getCategoryDeductions(sorted, "performance");
+  const seoDed  = getCategoryDeductions(sorted, "seo");
+  const bpDed   = getCategoryDeductions(sorted, "bestPractices");
+  const a11yDed = getCategoryDeductions(sorted, "accessibility");
 
-  // ── Score computation — derived from actual deductions so ring ↔ list always match
-  // Each deduction that appears in the list is exactly what drives the score down.
+  const perfScore = clamp(speedScore - perfDed.reduce((s, d) => s + d.pts, 0) * 0.3, 10, 98);
   const seoScore  = clamp(100 - seoDed.reduce((s, d) => s + d.pts, 0),  12, 100);
-  const techScore = clamp(speedScore, 10, 98); // Technik = PageSpeed API score (external signal)
-  const secScore  = clamp(100 - secDed.reduce((s, d) => s + d.pts, 0),  12, 100);
+  const bpScore   = clamp(100 - bpDed.reduce((s, d) => s + d.pts, 0),   12, 100);
+  const a11yScore = clamp(100 - a11yDed.reduce((s, d) => s + d.pts, 0), 12, 100);
   const redIssues    = sorted.filter(i => i.severity === "red");
   const yellowIssues = sorted.filter(i => i.severity === "yellow");
 
@@ -1032,7 +1058,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
         </div>
 
         {/* ── Kritisch-Warnung ─────────────────────────────────────────────── */}
-        {(seoScore <= 20 || secScore <= 20) && (
+        {(seoScore <= 20 || bpScore <= 20 || a11yScore <= 20) && (
           <div style={{
             display: "flex", alignItems: "flex-start", gap: 12,
             padding: "12px 16px", borderRadius: 10, marginBottom: 20,
@@ -1050,16 +1076,19 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           </div>
         )}
 
-        {/* ── Rings row — clean, no inline clutter ────────────────────────── */}
-        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24, marginBottom: 20 }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 120px", minWidth: 120 }}>
-            <ScoreRing score={seoScore} label="SEO" delay={0} />
+        {/* ── 4 Score-Rings (Phase-3-Refactor) ─────────────────────────────── */}
+        <div className="wf-score-ring" style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 18, marginBottom: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 110px", minWidth: 110 }}>
+            <ScoreRing score={perfScore} label={CATEGORY_META.performance.label} delay={0} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 120px", minWidth: 120 }}>
-            <ScoreRing score={techScore} label="Technik" delay={180} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 110px", minWidth: 110 }}>
+            <ScoreRing score={seoScore} label={CATEGORY_META.seo.label} delay={140} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 120px", minWidth: 120 }}>
-            <ScoreRing score={secScore} label="Sicherheit" delay={360} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 110px", minWidth: 110 }}>
+            <ScoreRing score={bpScore} label={CATEGORY_META.bestPractices.label} delay={280} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 110px", minWidth: 110 }}>
+            <ScoreRing score={a11yScore} label={CATEGORY_META.accessibility.label} delay={420} />
           </div>
         </div>
 
@@ -1102,26 +1131,29 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
             deductions: Deduction[];
           };
           const cols: Col[] = [
-            { heading: "SEO",        score: seoScore,  desc: "Sichtbarkeit in Suchmaschinen", deductions: seoDed },
-            { heading: "Technik",    score: techScore, desc: "Ladezeit & Core Web Vitals",   deductions: techDed },
-            { heading: "Sicherheit", score: secScore,  desc: "Datenschutz & SSL",             deductions: secDed },
+            { heading: CATEGORY_META.performance.label,   score: perfScore, desc: CATEGORY_META.performance.description,   deductions: perfDed },
+            { heading: CATEGORY_META.seo.label,           score: seoScore,  desc: CATEGORY_META.seo.description,           deductions: seoDed },
+            { heading: CATEGORY_META.bestPractices.label, score: bpScore,   desc: CATEGORY_META.bestPractices.description, deductions: bpDed },
+            { heading: CATEGORY_META.accessibility.label, score: a11yScore, desc: CATEGORY_META.accessibility.description, deductions: a11yDed },
           ];
 
           const excellentMsg: Record<string, string> = {
-            SEO:        "Hervorragend: SEO-Grundstruktur vollständig korrekt.",
-            Technik:    "Hervorragend: Alle technischen Standards erfüllt.",
-            Sicherheit: "Hervorragend: Keine Sicherheits- oder Compliance-Mängel.",
+            [CATEGORY_META.performance.label]:   "Hervorragend: Ladezeit und Core Web Vitals im grünen Bereich.",
+            [CATEGORY_META.seo.label]:           "Hervorragend: SEO-Grundstruktur vollständig korrekt.",
+            [CATEGORY_META.bestPractices.label]: "Hervorragend: Keine Sicherheits- oder Compliance-Mängel.",
+            [CATEGORY_META.accessibility.label]: "Hervorragend: Alle WCAG-Basics erfüllt.",
           };
           const positives: Record<string, string[]> = {
-            SEO:        ["Title-Tag vorhanden", "Meta-Description gesetzt", "H1-Überschrift korrekt", "Sitemap eingereicht"],
-            Technik:    ["Schnelle Ladezeit", "Core Web Vitals bestanden", "Caching aktiv"],
-            Sicherheit: ["SSL-Zertifikat aktiv", "HTTPS erzwungen", "Cookie-Banner vorhanden"],
+            [CATEGORY_META.performance.label]:   ["Schnelle Ladezeit", "Core Web Vitals bestanden", "Saubere DOM-Tiefe"],
+            [CATEGORY_META.seo.label]:           ["Title-Tag vorhanden", "Meta-Description gesetzt", "H1-Überschrift korrekt"],
+            [CATEGORY_META.bestPractices.label]: ["SSL aktiv & HSTS gesetzt", "WordPress aktuell", "DSGVO-Banner aktiv"],
+            [CATEGORY_META.accessibility.label]: ["Alt-Texte vorhanden", "Form-Labels korrekt", "Tastatur-Navigation OK"],
           };
 
           return (
             <div className="wf-analysis-details" style={{
               display: showDetails ? "grid" : "none",
-              gridTemplateColumns: "repeat(3, 1fr)", gap: 1,
+              gridTemplateColumns: "repeat(2, 1fr)", gap: 1,
               borderRadius: 12, overflow: "hidden",
               border: "1px solid rgba(255,255,255,0.07)",
               animation: showDetails ? "wf-sr-fadein 0.22s ease both" : "none",
@@ -1185,8 +1217,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                         </li>
                       ))}
                     </ul>
-                  ) : col.heading === "Technik" ? (
-                    // Technik score = PageSpeed API signal, no specific issues detected
+                  ) : col.heading === CATEGORY_META.performance.label ? (
+                    // Performance score = PSI-Speed-Score-Baseline, keine spezifischen Issue-Treffer
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
                       <span style={{ flexShrink: 0, fontSize: 13, lineHeight: 1.3 }}>⚠️</span>
                       <span style={{ fontSize: 11, color: "rgba(251,191,36,0.75)", lineHeight: 1.5 }}>

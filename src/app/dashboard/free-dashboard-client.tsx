@@ -49,9 +49,10 @@ export interface FreeDashboardProps {
   issues: ParsedIssueProp[];
   redCount: number;
   yellowCount: number;
-  rechtIssues: ParsedIssueProp[];
-  speedIssues: ParsedIssueProp[];
-  techIssues: ParsedIssueProp[];
+  performanceIssues:   ParsedIssueProp[];
+  seoIssues:           ParsedIssueProp[];
+  bestPracticesIssues: ParsedIssueProp[];
+  accessibilityIssues: ParsedIssueProp[];
   cms: { label: string; version?: string };
   bfsgOk: boolean;
   speedScore: number;
@@ -2226,7 +2227,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     firstName, plan,
     lastScan, lastScanResult, issues,
     redCount, yellowCount,
-    rechtIssues, speedIssues, techIssues,
+    performanceIssues, seoIssues, bestPracticesIssues, accessibilityIssues,
     cms, bfsgOk, speedScore,
     scans, monthlyScans, scanLimit,
     fingerprint,
@@ -3386,7 +3387,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 <p style={{ margin: 0, fontSize: 12, color: D.textSub, marginTop: 2 }}>
                   {bfsgOk
                     ? "Alle UX-Checks bestanden — Nutzer und Google finden diese Website barrierefrei zugänglich."
-                    : `${rechtIssues.length} UX-Hürde${rechtIssues.length !== 1 ? "n" : ""} gefunden — verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen.`}
+                    : `${accessibilityIssues.length} UX-Hürde${accessibilityIssues.length !== 1 ? "n" : ""} gefunden — verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen.`}
                 </p>
               </div>
               {!bfsgOk && (

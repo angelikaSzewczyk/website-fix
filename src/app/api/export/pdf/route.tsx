@@ -15,6 +15,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { ScanReportPdf, type PdfScanIssue } from "@/lib/pdf/scan-report-pdf";
+import { classifyDisplayCategory, quickCategoryScore, DISPLAY_CATEGORIES, type DisplayCategory } from "@/lib/issue-categories";
 
 export const runtime     = "nodejs";  // @react-pdf/renderer braucht Node.js APIs
 export const maxDuration = 30;
@@ -124,6 +125,23 @@ export async function GET(req: NextRequest) {
   const topIssues  = selectTopIssues(row.issues_json, 5);
   const scannedAt  = typeof row.created_at === "string" ? row.created_at : new Date().toISOString();
 
+  // Phase-3: 4 Anzeige-Kategorie-Scores (Performance / SEO / Best Practices / Accessibility)
+  const allIssues = (row.issues_json ?? []) as PdfScanIssue[];
+  const categoryScores: Record<DisplayCategory, number> = {
+    performance:   quickCategoryScore(allIssues, "performance",   speedScore),
+    seo:           quickCategoryScore(allIssues, "seo",           100),
+    bestPractices: quickCategoryScore(allIssues, "bestPractices", 100),
+    accessibility: quickCategoryScore(allIssues, "accessibility", 100),
+  };
+  const categoryIssueCounts: Record<DisplayCategory, number> = {
+    performance:   allIssues.filter(i => classifyDisplayCategory(i) === "performance").length,
+    seo:           allIssues.filter(i => classifyDisplayCategory(i) === "seo").length,
+    bestPractices: allIssues.filter(i => classifyDisplayCategory(i) === "bestPractices").length,
+    accessibility: allIssues.filter(i => classifyDisplayCategory(i) === "accessibility").length,
+  };
+  // Suppress lint warnings for arrays we only need for type hints
+  void DISPLAY_CATEGORIES;
+
   // PDF rendern
   // TODO White-Label: Wenn der User ein agency_settings-Datensatz hat (Logo,
   // Primärfarbe, Anzeigename), hier laden und als `agency` durchreichen.
@@ -138,6 +156,8 @@ export async function GET(req: NextRequest) {
       ttfbMs={ttfbMs}
       wpVersion={wpVersion}
       topIssues={topIssues}
+      categoryScores={categoryScores}
+      categoryIssueCounts={categoryIssueCounts}
     />,
   );
 

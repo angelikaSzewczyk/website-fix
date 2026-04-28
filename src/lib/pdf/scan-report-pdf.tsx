@@ -12,6 +12,7 @@
  */
 
 import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer";
+import { CATEGORY_META, DISPLAY_CATEGORIES, type DisplayCategory } from "@/lib/issue-categories";
 
 // ─── Domain-Modell (was die Route übergibt) ─────────────────────────────────
 export type PdfScanIssue = {
@@ -40,6 +41,10 @@ export type ScanReportPdfProps = {
   /** "6.5" / "6.7.1" — null wenn aus dem Generator-Tag nicht extrahierbar */
   wpVersion:    string | null;
   topIssues:    PdfScanIssue[];  // bereits sortiert + auf 5 gekappt
+  /** Phase-3: 4 Display-Kategorie-Scores (0-100 je Bucket). */
+  categoryScores?: Record<DisplayCategory, number>;
+  /** Anzahl Issues je Kategorie — für die Kategorie-Übersicht. */
+  categoryIssueCounts?: Record<DisplayCategory, number>;
   agency?:      PdfAgencyBranding;
 };
 
@@ -103,6 +108,19 @@ const styles = StyleSheet.create({
   // Section heading
   sectionTitle:   { fontSize: 13, fontWeight: 700, color: TOKENS.text, marginBottom: 10, paddingBottom: 6, borderBottom: `1pt solid ${TOKENS.border}` },
 
+  // Category overview (4 mini-cards)
+  catGrid:        { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 22 },
+  catCard:        { flexBasis: "23%", flexGrow: 1, padding: "10pt 12pt", borderRadius: 5, border: `1pt solid ${TOKENS.border}`, backgroundColor: "#FFFFFF" },
+  catLabel:       { fontSize: 8, color: TOKENS.textMuted, textTransform: "uppercase", letterSpacing: 0.7, fontWeight: 700, marginBottom: 5 },
+  catScoreRow:    { flexDirection: "row", alignItems: "baseline", marginBottom: 4 },
+  catScore:       { fontSize: 18, fontWeight: 800 },
+  catScoreUnit:   { fontSize: 9, color: TOKENS.textMuted, marginLeft: 3, fontWeight: 600 },
+  catBar:         { height: 3, borderRadius: 2, backgroundColor: TOKENS.divider, marginBottom: 4, overflow: "hidden" },
+  catMeta:        { fontSize: 8, color: TOKENS.textSub },
+
+  // Quality badge (next to KPI)
+  qualityBadge:   { fontSize: 7, fontWeight: 800, padding: "2pt 5pt", borderRadius: 3, marginLeft: 5, textTransform: "uppercase", letterSpacing: 0.4 },
+
   // Issue rows
   issueRow:       { flexDirection: "row", alignItems: "flex-start", paddingVertical: 9, paddingHorizontal: 4, borderBottom: `0.5pt solid ${TOKENS.divider}` },
   severityDot:    { width: 6, height: 6, borderRadius: 3, marginTop: 5, marginRight: 9, flexShrink: 0 },
@@ -151,16 +169,38 @@ function categoryLabel(cat: PdfScanIssue["category"]): string {
   return "Technik";
 }
 
-function ttfbDisplay(ttfbMs: number | null): { value: string; color: string } {
-  if (ttfbMs === null)    return { value: "—",            color: TOKENS.textMuted };
-  if (ttfbMs < 200)       return { value: `${ttfbMs} ms`, color: TOKENS.green };
-  if (ttfbMs < 600)       return { value: `${ttfbMs} ms`, color: TOKENS.amber };
-  return                         { value: `${ttfbMs} ms`, color: TOKENS.red };
+function ttfbDisplay(ttfbMs: number | null): { value: string; color: string; badge: string | null; badgeColor: string; badgeBg: string } {
+  if (ttfbMs === null) {
+    return { value: "—", color: TOKENS.textMuted, badge: null, badgeColor: TOKENS.textMuted, badgeBg: TOKENS.divider };
+  }
+  if (ttfbMs < 200) {
+    return { value: `${ttfbMs} ms`, color: TOKENS.green, badge: "Schnell", badgeColor: TOKENS.green, badgeBg: "#DCFCE7" };
+  }
+  if (ttfbMs < 600) {
+    return { value: `${ttfbMs} ms`, color: TOKENS.amber, badge: "OK", badgeColor: TOKENS.amber, badgeBg: "#FEF3C7" };
+  }
+  return { value: `${ttfbMs} ms`, color: TOKENS.red, badge: "Langsam", badgeColor: TOKENS.red, badgeBg: "#FEE2E2" };
+}
+
+/** "6.7" → aktuell, "6.5" / "6.6" → Update verfügbar, < 6.5 → veraltet. */
+function wpVersionBadge(wpVersion: string | null): { badge: string; color: string; bg: string } | null {
+  if (!wpVersion) return null;
+  const [majStr, minStr] = wpVersion.split(".");
+  const maj = parseInt(majStr ?? "", 10);
+  const min = parseInt(minStr ?? "0", 10);
+  if (Number.isNaN(maj)) return null;
+  // Aktuell: 6.7+
+  if (maj > 6 || (maj === 6 && min >= 7)) return { badge: "Aktuell", color: TOKENS.green, bg: "#DCFCE7" };
+  // Update verfügbar: 6.5/6.6
+  if (maj === 6 && min >= 5) return { badge: "Update verfügbar", color: TOKENS.amber, bg: "#FEF3C7" };
+  // Veraltet: < 6.5
+  return { badge: "Veraltet", color: TOKENS.red, bg: "#FEE2E2" };
 }
 
 // ─── Document ───────────────────────────────────────────────────────────────
 export function ScanReportPdf({
-  url, scannedAt, speedScore, issueCount, totalPages, ttfbMs, wpVersion, topIssues, agency,
+  url, scannedAt, speedScore, issueCount, totalPages, ttfbMs, wpVersion, topIssues,
+  categoryScores, categoryIssueCounts, agency,
 }: ScanReportPdfProps) {
   const accent     = agency?.primaryColor ?? TOKENS.primary;
   const brandName  = agency?.name ?? "WebsiteFix";
@@ -168,6 +208,7 @@ export function ScanReportPdf({
   const verdict    = scoreVerdict(speedScore);
   const ttfb       = ttfbDisplay(ttfbMs);
   const sColor     = scoreColor(speedScore);
+  const wpBadge    = wpVersionBadge(wpVersion);
 
   return (
     <Document title={`Website-Audit ${url}`} author="WebsiteFix" creator="WebsiteFix Scanner">
@@ -207,15 +248,29 @@ export function ScanReportPdf({
           </View>
         </View>
 
-        {/* ── Metrics Grid (4 KPIs) ── */}
+        {/* ── Metrics Grid (4 KPIs) — mit Quality-Badges ── */}
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Server-Antwortzeit (TTFB)</Text>
-            <Text style={[styles.metricValue, { color: ttfb.color }]}>{ttfb.value}</Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+              <Text style={[styles.metricValue, { color: ttfb.color }]}>{ttfb.value}</Text>
+              {ttfb.badge && (
+                <Text style={[styles.qualityBadge, { color: ttfb.badgeColor, backgroundColor: ttfb.badgeBg }]}>
+                  {ttfb.badge}
+                </Text>
+              )}
+            </View>
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>WordPress-Version</Text>
-            <Text style={styles.metricValue}>{wpVersion ?? "Nicht erkannt"}</Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+              <Text style={styles.metricValue}>{wpVersion ?? "Nicht erkannt"}</Text>
+              {wpBadge && (
+                <Text style={[styles.qualityBadge, { color: wpBadge.color, backgroundColor: wpBadge.bg }]}>
+                  {wpBadge.badge}
+                </Text>
+              )}
+            </View>
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Gescannte Seiten</Text>
@@ -226,6 +281,36 @@ export function ScanReportPdf({
             <Text style={[styles.metricValue, { color: issueCount > 0 ? TOKENS.red : TOKENS.green }]}>{issueCount}</Text>
           </View>
         </View>
+
+        {/* ── Phase-3: 4 Power-Kategorien-Übersicht ── */}
+        {categoryScores && (
+          <>
+            <Text style={styles.sectionTitle}>Kategorien-Übersicht</Text>
+            <View style={styles.catGrid}>
+              {DISPLAY_CATEGORIES.map((cat) => {
+                const score = categoryScores[cat];
+                const meta  = CATEGORY_META[cat];
+                const issuesInCat = categoryIssueCounts?.[cat] ?? 0;
+                const sCol = scoreColor(score);
+                return (
+                  <View key={cat} style={styles.catCard}>
+                    <Text style={styles.catLabel}>{meta.label}</Text>
+                    <View style={styles.catScoreRow}>
+                      <Text style={[styles.catScore, { color: sCol }]}>{score}</Text>
+                      <Text style={styles.catScoreUnit}>/ 100</Text>
+                    </View>
+                    <View style={styles.catBar}>
+                      <View style={{ height: "100%", width: `${score}%`, backgroundColor: sCol }} />
+                    </View>
+                    <Text style={styles.catMeta}>
+                      {issuesInCat === 0 ? "Keine Findings" : `${issuesInCat} ${issuesInCat === 1 ? "Finding" : "Findings"}`}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         {/* ── Top 5 Wachstums-Bremsen ── */}
         <Text style={styles.sectionTitle}>Top 5 Wachstums-Bremsen</Text>

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import FreeDashboardClient from "./free-dashboard-client";
 import { isAtLeastProfessional } from "@/lib/plans";
+import { classifyDisplayCategory } from "@/lib/issue-categories";
 
 export const dynamic = "force-dynamic";
 
@@ -516,13 +517,14 @@ export default async function DashboardPage() {
     builder: string | null; maxDomDepth: number; divCount: number;
     googleFontFamilies: string[]; cssBloatHints: string[]; stylesheetCount: number;
   } | null = null;
+  let lastScanTtfbMs: number | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
         SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json, speed_score, meta_json
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit } | null }[];
+      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit; ttfb_ms?: number } | null }[];
       lastScanResult = rows[0]?.result ?? null;
       lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
       techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
@@ -531,6 +533,7 @@ export default async function DashboardPage() {
       lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;
       lastScanWooAudit = rows[0]?.meta_json?.woo_audit ?? null;
       lastScanBuilderAudit = rows[0]?.meta_json?.builder_audit ?? null;
+      lastScanTtfbMs = typeof rows[0]?.meta_json?.ttfb_ms === "number" ? rows[0].meta_json.ttfb_ms : null;
     } catch {}
   }
 
@@ -572,13 +575,19 @@ export default async function DashboardPage() {
 
   const redIssues    = issues.filter(i => i.severity === "red");
   const yellowIssues = issues.filter(i => i.severity === "yellow");
-  const rechtIssues  = issues.filter(i => i.category === "recht");
-  const speedIssues  = issues.filter(i => i.category === "speed");
-  const techIssues   = issues.filter(i => i.category === "technik");
 
-  const bfsgOk     = rechtIssues.length === 0;
+  // Phase-3-Refactor: 4 Anzeige-Kategorien (Performance / SEO / Best Practices / Accessibility).
+  // Datenmodell-Kategorie (recht/speed/technik/shop/builder) bleibt unangetastet —
+  // Mapping passiert zentral in lib/issue-categories.
+  const performanceIssues   = issues.filter(i => classifyDisplayCategory(i) === "performance");
+  const seoIssues           = issues.filter(i => classifyDisplayCategory(i) === "seo");
+  const bestPracticesIssues = issues.filter(i => classifyDisplayCategory(i) === "bestPractices");
+  const accessibilityIssues = issues.filter(i => classifyDisplayCategory(i) === "accessibility");
+
+  // BFSG = Accessibility-only (vorher: alle "recht"-Issues — Cookies/DSGVO falsch zugeordnet).
+  const bfsgOk     = accessibilityIssues.length === 0;
   // Use persisted speed_score when available (avoids formula drift between live + archive views)
-  const speedScore = lastScanSpeedScore ?? Math.max(10, 100 - speedIssues.length * 15 - yellowIssues.length * 8);
+  const speedScore = lastScanSpeedScore ?? Math.max(10, 100 - performanceIssues.length * 15 - yellowIssues.length * 8);
 
   // Agency slots: Starter = 10, Pro = unlimited
   const clientSlotLimit = plan === "agency" || plan === "agency-pro" ? 999 : 10;
@@ -657,9 +666,10 @@ export default async function DashboardPage() {
             issues={issues}
             redCount={redIssues.length}
             yellowCount={yellowIssues.length}
-            rechtIssues={rechtIssues}
-            speedIssues={speedIssues}
-            techIssues={techIssues}
+            performanceIssues={performanceIssues}
+            seoIssues={seoIssues}
+            bestPracticesIssues={bestPracticesIssues}
+            accessibilityIssues={accessibilityIssues}
             cms={cms}
             bfsgOk={bfsgOk}
             speedScore={speedScore}
