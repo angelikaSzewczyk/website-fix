@@ -223,9 +223,12 @@ function TabNav({ active, onSelect, brandColor }: {
   brandColor: string;
 }) {
   return (
-    <nav style={{
-      display: "flex", gap: 4, borderBottom: "1px solid rgba(255,255,255,0.08)",
-      marginBottom: 28, overflowX: "auto", WebkitOverflowScrolling: "touch",
+    <nav className="wf-tabs-nav" style={{
+      display: "flex", gap: 16,
+      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      marginBottom: 28,
+      maxWidth: "100%",
+      overflowX: "auto", WebkitOverflowScrolling: "touch",
     }}>
       {TABS.map(tab => {
         const isActive = active === tab.id;
@@ -235,7 +238,7 @@ function TabNav({ active, onSelect, brandColor }: {
             onClick={() => onSelect(tab.id)}
             style={{
               position: "relative",
-              padding: "12px 20px",
+              padding: "12px 4px",
               fontSize: 14, fontWeight: isActive ? 700 : 500,
               color: isActive ? "#fff" : "rgba(255,255,255,0.5)",
               background: "none", border: "none", cursor: "pointer",
@@ -245,15 +248,19 @@ function TabNav({ active, onSelect, brandColor }: {
             onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)"; }}
             onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)"; }}
           >
-            {tab.label}
-            {/* Underline-Akzent in Brand-Farbe */}
-            <span style={{
-              position: "absolute", left: 8, right: 8, bottom: -1, height: 2,
-              borderRadius: 2,
-              background: isActive ? brandColor : "transparent",
-              boxShadow: isActive ? `0 0 8px ${brandColor}55` : "none",
-              transition: "background 0.18s ease, box-shadow 0.18s ease",
-            }} />
+            {/* Inner span = text + underline. Underline-Width = exakte
+                Textbreite, weil die innere Span sich an den Text anpasst
+                und der Underline bei left:0/right:0 angedockt ist. */}
+            <span style={{ position: "relative", display: "inline-block", paddingBottom: 13 }}>
+              {tab.label}
+              <span style={{
+                position: "absolute", left: 0, right: 0, bottom: 0,
+                height: 3, borderRadius: 2,
+                background: isActive ? brandColor : "transparent",
+                boxShadow: isActive ? `0 0 10px ${brandColor}66` : "none",
+                transition: "background 0.18s ease, box-shadow 0.18s ease",
+              }} />
+            </span>
           </button>
         );
       })}
@@ -314,6 +321,16 @@ export default function SettingsTabsClient({
           box-shadow: 0 8px 24px ${brandColor}55, 0 0 0 1px ${brandColor}33 !important;
         }
         .wf-tabs-brand-btn:not(:disabled):active { filter: brightness(0.88); transform: translateY(0); }
+        /* Tab-Nav: horizontaler Scroll-Container OHNE Native-Scrollbar.
+           Funktionalität (Swipe auf Mobile) bleibt intakt — nur Visual weg. */
+        .wf-tabs-nav {
+          scrollbar-width: none;        /* Firefox */
+          -ms-overflow-style: none;     /* IE/Edge */
+        }
+        .wf-tabs-nav::-webkit-scrollbar {
+          display: none;                /* Chrome/Safari/Opera */
+          width: 0; height: 0;
+        }
       `}</style>
 
       <div style={{ maxWidth: 1020, margin: "0 auto" }}>
