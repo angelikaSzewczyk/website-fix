@@ -14,9 +14,28 @@ export type SeedResult = {
   skipped?: boolean;
 };
 
+/** Admin-Gate für Server Actions.
+ *
+ *  WICHTIG: Page-Level-Gate (redirect in page.tsx) reicht NICHT, weil
+ *  Server Actions in Next.js eigene Endpoints mit eigenen URL-Hashes sind.
+ *  Ein authentifizierter Nicht-Admin-User könnte den Action-Hash aus dem
+ *  Build-Bundle reverse-engineeren und die Action direkt POSTen, OHNE die
+ *  Page zu rendern. Daher MUSS jede sensitive Action den Admin-Check
+ *  selbst durchführen.
+ *
+ *  Returns true wenn der aktuelle User der Admin ist, sonst false.
+ */
+async function isAdmin(): Promise<boolean> {
+  const session = await auth();
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return false; // Fail-closed wenn ENV fehlt
+  return session?.user?.email === adminEmail;
+}
+
 export async function seedReportData(): Promise<SeedResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Nicht eingeloggt." };
+  if (!(await isAdmin())) return { ok: false, error: "Nicht autorisiert." };
 
   const userId = Number(session.user.id);
   const sql    = neon(process.env.DATABASE_URL!);
@@ -163,6 +182,7 @@ export async function seedReportData(): Promise<SeedResult> {
 export async function deleteSeedData(): Promise<{ ok: boolean }> {
   const session = await auth();
   if (!session?.user) return { ok: false };
+  if (!(await isAdmin())) return { ok: false };
 
   const userId = Number(session.user.id);
   const sql    = neon(process.env.DATABASE_URL!);
