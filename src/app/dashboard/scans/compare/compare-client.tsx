@@ -282,7 +282,10 @@ export default function CompareClient({ before, after }: { before: ScanSnapshot;
               const a = byCategory(after.issues, cat);
               if (b === 0 && a === 0) return null;
               const delta = a - b;
-              const label = cat === "technik" ? "Technik" : cat === "recht" ? "Barrierefreiheit & Recht" : cat === "speed" ? "Speed" : cat === "shop" ? "Shop" : "Builder";
+              // Phase-3-Begriffe: Datenkategorie 'technik' → SEO-Basics, 'speed' → Performance,
+              // 'recht' → Best Practices (DSGVO/Compliance + Barrierefreiheit zusammengefasst).
+              // Shop/Builder bleiben als spezialisierte Audit-Buckets.
+              const label = cat === "technik" ? "SEO-Basics" : cat === "recht" ? "Best Practices" : cat === "speed" ? "Performance" : cat === "shop" ? "Shop" : "Builder";
               return (
                 <div key={cat} style={{
                   padding: "12px 14px", borderRadius: 10,

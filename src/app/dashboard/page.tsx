@@ -7,6 +7,7 @@ import { neon } from "@neondatabase/serverless";
 import FreeDashboardClient from "./free-dashboard-client";
 import { isAtLeastProfessional } from "@/lib/plans";
 import { classifyDisplayCategory } from "@/lib/issue-categories";
+import ModalCloseButton from "./components/ModalCloseButton";
 
 export const dynamic = "force-dynamic";
 
@@ -870,35 +871,67 @@ export default async function DashboardPage() {
                         )}
                       </div>
 
-                      {/* Auto-Report toggle + PDF + Bericht-Button */}
+                      {/* PDF + Bericht-Button (Auto-Report-Toggle entfernt — siehe Beta-Indikator) */}
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {/* CSS-only toggle (no JS) */}
-                        <div className="ar-wrap" style={{ display: "flex", alignItems: "center", gap: 5, position: "relative" }} title="Auto-Report">
-                          <input type="checkbox" className="ar-cb" id={cbId} defaultChecked={client.autoReport} />
-                          <label htmlFor={cbId} className="ar-track" aria-label="Auto-Report">
-                            <span className="ar-thumb" />
-                          </label>
-                        </div>
-                        {/* PDF-Export — Generator wird später gebaut, Link steht. */}
-                        <a
-                          href={lastScanId ? `/api/export/pdf?scanId=${lastScanId}` : "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-disabled={!lastScanId}
-                          title={lastScanId ? "Als PDF exportieren" : "Noch kein Scan vorhanden"}
+                        {/* Beta-Indikator: Auto-Report ist noch nicht live, kein irreführender Toggle.
+                            Vorher CSS-only checkbox ohne Backend — wirkte aktiv, war Deko. */}
+                        <span
+                          aria-label="Auto-Report-Beta"
+                          title="BETA: Automatischer Versand wird aktuell für Agency-Accounts ausgerollt."
                           style={{
                             display: "inline-flex", alignItems: "center", justifyContent: "center",
-                            width: 30, height: 30, borderRadius: 7,
-                            background: lastScanId ? "#F0FDF4" : C.divider,
-                            border: `1px solid ${lastScanId ? "#A7F3D0" : C.border}`,
-                            color: lastScanId ? C.green : C.textMuted,
-                            textDecoration: "none",
-                            pointerEvents: lastScanId ? "auto" : "none",
-                            opacity: lastScanId ? 1 : 0.55,
+                            width: 28, height: 28, borderRadius: 7,
+                            background: C.divider,
+                            border: `1px solid ${C.border}`,
+                            color: C.textMuted,
+                            cursor: "help",
                           }}
                         >
-                          <PdfIcon />
-                        </a>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                          </svg>
+                        </span>
+                        {/* Reference cbId to silence unused-var TS error from removed toggle */}
+                        <span style={{ display: "none" }} aria-hidden="true">{cbId}</span>
+                        {/* PDF-Export: nur als <a> rendern wenn ein Scan existiert.
+                            Sonst ein <span> ohne Tab-/Enter-Aktivierung (echtes Disable,
+                            nicht nur pointer-events). */}
+                        {lastScanId ? (
+                          <a
+                            href={`/api/export/pdf?scanId=${lastScanId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Als PDF exportieren"
+                            style={{
+                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                              width: 30, height: 30, borderRadius: 7,
+                              background: "#F0FDF4",
+                              border: "1px solid #A7F3D0",
+                              color: C.green,
+                              textDecoration: "none",
+                            }}
+                          >
+                            <PdfIcon />
+                          </a>
+                        ) : (
+                          <span
+                            role="img"
+                            aria-label="PDF-Export verfügbar nach erstem Scan"
+                            title="Noch kein Scan vorhanden"
+                            style={{
+                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                              width: 30, height: 30, borderRadius: 7,
+                              background: C.divider,
+                              border: `1px solid ${C.border}`,
+                              color: C.textMuted,
+                              opacity: 0.55,
+                              cursor: "not-allowed",
+                            }}
+                          >
+                            <PdfIcon />
+                          </span>
+                        )}
                         <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: accent, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", boxShadow: `0 1px 6px ${accent}40` }}>
                           Bericht →
                         </Link>
@@ -917,7 +950,7 @@ export default async function DashboardPage() {
       {/* ── New Client Modal (CSS :target, no JS) ── */}
       <div id="modal-new-client" className="agency-modal">
         <div style={{ background: C.card, borderRadius: 20, padding: "32px", maxWidth: 480, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", position: "relative" }}>
-          <a href="#" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, textDecoration: "none", lineHeight: 1 }}>×</a>
+          <ModalCloseButton ariaLabel="Modal schließen" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, lineHeight: 1 }}>×</ModalCloseButton>
           <div style={{ marginBottom: 24 }}>
             <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>Neues Projekt</p>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>Kunden anlegen</h2>
@@ -936,9 +969,9 @@ export default async function DashboardPage() {
               <button type="submit" style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
                 Ersten Scan starten →
               </button>
-              <a href="#" style={{ padding: "11px 18px", borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`, color: C.textSub, fontWeight: 700, fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center" }}>
+              <ModalCloseButton style={{ padding: "11px 18px", borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`, color: C.textSub, fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center" }}>
                 Abbrechen
-              </a>
+              </ModalCloseButton>
             </div>
           </form>
         </div>

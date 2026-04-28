@@ -142,10 +142,33 @@ export async function GET(req: NextRequest) {
   // Suppress lint warnings for arrays we only need for type hints
   void DISPLAY_CATEGORIES;
 
-  // PDF rendern
-  // TODO White-Label: Wenn der User ein agency_settings-Datensatz hat (Logo,
-  // Primärfarbe, Anzeigename), hier laden und als `agency` durchreichen.
-  // Aktuell: WebsiteFix-Default-Branding.
+  // White-Label-Branding: agency_settings vom User laden. Existiert kein
+  // Eintrag oder sind alle Felder leer → undefined → PDF nutzt WebsiteFix-Defaults.
+  // Bei Pro+/Agency-Kunden mit hinterlegtem Branding ersetzt das Logo + Farbe
+  // automatisch das WebsiteFix-Default in <ScanReportPdf>.
+  let agencyBranding: { name?: string; logoUrl?: string; primaryColor?: string } | undefined;
+  try {
+    const settings = await sql`
+      SELECT agency_name, logo_url, primary_color
+      FROM agency_settings
+      WHERE user_id = ${userId}
+      LIMIT 1
+    ` as { agency_name: string | null; logo_url: string | null; primary_color: string | null }[];
+    if (settings.length > 0) {
+      const s = settings[0];
+      const name         = s.agency_name?.trim() || undefined;
+      const logoUrl      = s.logo_url?.trim() || undefined;
+      const primaryColor = s.primary_color?.trim() || undefined;
+      // Nur durchreichen wenn mindestens ein Feld gesetzt ist
+      if (name || logoUrl || primaryColor) {
+        agencyBranding = { name, logoUrl, primaryColor };
+      }
+    }
+  } catch {
+    // agency_settings-Tabelle könnte fehlen oder Migration ausstehen — silent fallback
+    agencyBranding = undefined;
+  }
+
   const buffer = await renderToBuffer(
     <ScanReportPdf
       url={row.url}
@@ -158,6 +181,7 @@ export async function GET(req: NextRequest) {
       topIssues={topIssues}
       categoryScores={categoryScores}
       categoryIssueCounts={categoryIssueCounts}
+      agency={agencyBranding}
     />,
   );
 

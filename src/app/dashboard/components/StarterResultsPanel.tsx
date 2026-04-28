@@ -36,13 +36,14 @@ function getLabel(sev: IssueProp["severity"]) {
   return sev === "red" ? "Prio" : sev === "yellow" ? "Hinweis" : "Hinweis";
 }
 function getColor(sev: IssueProp["severity"]) {
-  return sev === "red" ? "#c07070" : sev === "yellow" ? "#fbbf24" : "#4ade80";
+  // Severity-Color-Sync mit free-dashboard-client + Empty-State: red = #EF4444
+  return sev === "red" ? "#EF4444" : sev === "yellow" ? "#fbbf24" : "#4ade80";
 }
 function getBg(sev: IssueProp["severity"]) {
-  return sev === "red" ? "rgba(160,80,80,0.07)" : sev === "yellow" ? "rgba(251,191,36,0.08)" : "rgba(74,222,128,0.08)";
+  return sev === "red" ? "rgba(239,68,68,0.07)" : sev === "yellow" ? "rgba(251,191,36,0.08)" : "rgba(74,222,128,0.08)";
 }
 function getBorder(sev: IssueProp["severity"]) {
-  return sev === "red" ? "rgba(160,80,80,0.18)" : sev === "yellow" ? "rgba(251,191,36,0.22)" : "rgba(74,222,128,0.22)";
+  return sev === "red" ? "rgba(239,68,68,0.22)" : sev === "yellow" ? "rgba(251,191,36,0.22)" : "rgba(74,222,128,0.22)";
 }
 
 // Contextual tool label for bulk issues (Sammelfehler)
@@ -208,7 +209,7 @@ function ScoreRing({ score, label, delay = 0 }: { score: number; label: string; 
 
   // Derive color from the currently DISPLAYED value, not the final score.
   // This prevents the ring from glowing green while still showing "0".
-  const liveColor = d >= 70 ? "#4ade80" : d >= 40 ? "#fbbf24" : "#c07070";
+  const liveColor = d >= 70 ? "#4ade80" : d >= 40 ? "#fbbf24" : "#EF4444";
   const grade = d >= 80 ? "Sehr gut" : d >= 60 ? "Gut" : d >= 40 ? "OK" : "Potenzial";
 
   // While animation hasn't started, show a neutral skeleton ring
@@ -671,7 +672,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               Keine Probleme gefunden
             </p>
             <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
-              Deine Website erfüllt alle geprüften Standards — SEO, Technik und Barrierefreiheit sind sauber konfiguriert.
+              Deine Website erfüllt alle geprüften Standards — Performance, SEO, Best Practices und Barrierefreiheit sind sauber konfiguriert.
             </p>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
@@ -714,8 +715,11 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   const redIssues    = sorted.filter(i => i.severity === "red");
   const yellowIssues = sorted.filter(i => i.severity === "yellow");
 
-  // Index of the first "recht" (UX/Barrierefreiheit) issue across all groups
-  const firstRechtSortedIdx = sorted.findIndex(i => i.category === "recht");
+  // Index of the first Accessibility-Issue (Phase-3-Refactor: Display-Classifier
+  // statt Daten-Kategorie 'recht', weil 'recht' jetzt sowohl A11y als auch
+  // Best-Practices-Compliance enthält). Anchor wird vom UX-Hürden-Button
+  // im Dashboard angesprungen — soll auf das erste echte WCAG/BFSG-Finding zeigen.
+  const firstRechtSortedIdx = sorted.findIndex(i => classifyDisplayCategory(i) === "accessibility");
 
   // ── PDF export with hint toast ────────────────────────────────────────────
   function handleExportPDF() {
@@ -1062,14 +1066,14 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           <div style={{
             display: "flex", alignItems: "flex-start", gap: 12,
             padding: "12px 16px", borderRadius: 10, marginBottom: 20,
-            background: "rgba(160,80,80,0.12)", border: "1px solid rgba(160,80,80,0.28)",
+            background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)",
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c07070"
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444"
               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <p style={{ margin: 0, fontSize: 13, color: "#c07070", lineHeight: 1.55 }}>
+            <p style={{ margin: 0, fontSize: 13, color: "#EF4444", lineHeight: 1.55 }}>
               <strong>Kritische Lücken erkannt.</strong> Deine Website weist schwerwiegende Probleme auf, die
               Nutzervertrauen und Rankings gefährden. Sieh dir die Aufschlüsselung unten an.
             </p>
@@ -1192,7 +1196,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                             <span style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
                               {d.label}
                             </span>
-                            <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#c07070", marginLeft: 4, lineHeight: 1.4 }}>
+                            <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#EF4444", marginLeft: 4, lineHeight: 1.4 }}>
                               −{d.pts}
                             </span>
                           </button>
@@ -1298,8 +1302,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
         {redIssues.length > 0 ? (
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#c07070", flexShrink: 0 }} />
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#c07070", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444", flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#EF4444", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Handlungsbedarf — {redIssues.length} {redIssues.length === 1 ? "Aufgabe" : "Aufgaben"}
               </p>
             </div>

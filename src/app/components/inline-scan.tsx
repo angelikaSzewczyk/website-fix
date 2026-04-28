@@ -396,7 +396,7 @@ export default function InlineScan({
           und den Smart-Fix Guide.
         </div>
 
-        <a href="/pricing" className="wf-scan-limit-cta" style={{
+        <a href="/fuer-agenturen#pricing" className="wf-scan-limit-cta" style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           padding: "13px 26px", borderRadius: 11,
           background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",

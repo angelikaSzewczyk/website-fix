@@ -974,12 +974,45 @@ function getMaxSubpages(plan: string): number {
 }
 
 // ── Monthly scan limits per plan ────────────────────────────
-// Matches features.ts: Starter = 3/month, Professional/Agency = unlimited
+// Synchron mit PLAN_QUOTAS in plans.ts: Starter = 5/Monat, Professional/Agency = unlimitiert.
+// Vorher 3 (Diskrepanz zur UI-Anzeige "5 Scans/Monat").
 function getMonthlyLimit(plan: string): number {
   const p = normalizePlan(plan);
-  if (p === "starter") return 3;
+  if (p === "starter") return 5;
   if (p === "professional" || p === "agency") return 999;
   return 0;
+}
+
+// ── Server-Side-Masking für anonyme User ────────────────────
+// Verhindert "Security Through Obscurity" — Konkrete Detail-Felder
+// (Datei-Pfade, Form-IDs) werden serverseitig aus der Response entfernt,
+// nicht nur clientseitig geblurred. DevTools-Inspector kann sie damit
+// gar nicht erst sehen. Counts + URLs bleiben sichtbar (für Marketing-
+// Buckets), nur die "Beweis"-Details fallen weg.
+function maskScanDataForAnon(scanData: Record<string, unknown>): Record<string, unknown> {
+  const masked = JSON.parse(JSON.stringify(scanData));
+  if (Array.isArray(masked.startseite_altMissingImages)) {
+    masked.startseite_altMissingImages = [];
+  }
+  if (masked.formCheck && typeof masked.formCheck === "object") {
+    const fc = masked.formCheck as Record<string, unknown>;
+    if (Array.isArray(fc.inputsWithoutLabelFields)) fc.inputsWithoutLabelFields = [];
+  }
+  if (masked.audit && typeof masked.audit === "object") {
+    const audit = masked.audit as Record<string, unknown>;
+    if (Array.isArray(audit.unterseiten)) {
+      audit.unterseiten = (audit.unterseiten as Record<string, unknown>[]).map(p => ({
+        ...p,
+        altMissingImages:        [],
+        inputsWithoutLabelFields: [],
+      }));
+    }
+    const altTexte = audit.altTexte as Record<string, unknown> | undefined;
+    if (altTexte && Array.isArray(altTexte.missingImages)) {
+      altTexte.missingImages = [];
+    }
+  }
+  return masked;
 }
 
 // ── Main Handler ────────────────────────────────────────────
@@ -1110,8 +1143,13 @@ export async function POST(req: NextRequest) {
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
+        // Anon: konkrete Detail-Felder serverseitig entfernen (Datei-Pfade,
+        // Form-IDs) — DevTools-Leak-Prevention. Counts bleiben.
+        const responsePayload = userId
+          ? payload
+          : { ...payload, scanData: maskScanDataForAnon(payload.scanData as Record<string, unknown>) };
         // Spread payload last so our issueCount (real sum) wins over any stale cached value.
-        return NextResponse.json({ success: true, fromCache: true, cachedAt, scanId, ...payload, issueCount: totalCachedIssues });
+        return NextResponse.json({ success: true, fromCache: true, cachedAt, scanId, ...responsePayload, issueCount: totalCachedIssues });
       }
     }
 
@@ -1623,7 +1661,9 @@ PFLICHT-REGELN:
     }
 
     logScan({ userId, url: targetUrl, scanType: "website", status: "success", durationMs: Date.now() - scanStart });
-    return NextResponse.json({ success: true, scanData, diagnose, issueCount, scanId: savedScanId });
+    // Anon-Maskierung: konkrete Detail-Felder vor dem Versand entfernen
+    const responseScanData = userId ? scanData : maskScanDataForAnon(scanData);
+    return NextResponse.json({ success: true, scanData: responseScanData, diagnose, issueCount, scanId: savedScanId });
 
   } catch (err) {
     console.error("Scan-Fehler:", err);

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import BrandLogo from "../components/BrandLogo";
 
 type Status = "verifying" | "success" | "error";
@@ -9,6 +10,11 @@ function CheckoutSuccessContent() {
   const searchParams  = useSearchParams();
   const plan          = searchParams.get("plan") ?? "starter";
   const sessionId     = searchParams.get("session_id") ?? "";
+  // NextAuth-Session-Update: zwingt das JWT zur Re-Hydration mit dem
+  // frisch in der DB gespeicherten Plan, damit der User OHNE Re-Login
+  // direkt das richtige Dashboard sieht. Ohne den Aufruf bleibt die
+  // laufende Session bis zum Token-Ablauf auf dem alten Plan.
+  const { update: updateSession } = useSession();
 
   const [status, setStatus]   = useState<Status>("verifying");
   const [message, setMessage] = useState("Zahlung wird verifiziert…");
@@ -38,11 +44,14 @@ function CheckoutSuccessContent() {
       body: JSON.stringify({ sessionId }),
     })
       .then(r => r.json())
-      .then(data => {
+      .then(async data => {
         if (data.paid) {
           setStatus("success");
           setMessage("Dashboard wird freigeschaltet…");
-          // 2. Countdown → redirect
+          // Plan-Refresh: Session-Token re-hydraten, damit der neue Plan
+          // sofort in der laufenden Session aktiv ist (ohne Re-Login).
+          try { await updateSession(); } catch { /* non-fatal — Webhook hat den Plan schon gesetzt */ }
+          // Countdown → redirect
           let s = 3;
           setSeconds(s);
           const iv = setInterval(() => {
@@ -62,7 +71,7 @@ function CheckoutSuccessContent() {
         setStatus("error");
         setMessage(`Verbindungsfehler: ${String(err)}`);
       });
-  }, [sessionId]);
+  }, [sessionId, updateSession]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#0b0c10", display: "flex", flexDirection: "column" }}>

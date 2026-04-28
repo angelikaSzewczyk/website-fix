@@ -163,20 +163,21 @@ type Category = { label: string; Icon: React.FC<{ size?: number; color?: string 
 
 function detectCategory(text: string): Category {
   const t = text.toLowerCase();
-  if (/alt.?text|barrierefreiheit|wcag|bfsg|aria|kontrast|zugänglich/.test(t))
-    return { label: "BFSG", Icon: Eye };
-  if (/ssl|https|sicherheit|zertifikat|security/.test(t))
-    return { label: "Sicherheit", Icon: Shield };
-  if (/performance|ladezeit|speed|lcp|cls|pagespeed|core web/.test(t))
+  // Phase-3-Kategorien: Performance / SEO-Basics / Best Practices / Barrierefreiheit
+  if (/alt.?text|barrierefreiheit|wcag|bfsg|aria|kontrast|zugänglich|screenreader/.test(t))
+    return { label: "Barrierefreiheit", Icon: Eye };
+  if (/ssl|https|sicherheit|zertifikat|security|wp.?login|xmlrpc|dsgvo|cookie|datenschutz/.test(t))
+    return { label: "Best Practices", Icon: Shield };
+  if (/performance|ladezeit|speed|lcp|cls|pagespeed|core web|ttfb|dom.?tiefe/.test(t))
     return { label: "Performance", Icon: Zap };
   if (/link|404|broken|defekt|verwaist/.test(t))
     return { label: "Links", Icon: Link2 };
-  if (/bild|image|foto|alt/.test(t))
+  if (/bild|image|foto/.test(t))
     return { label: "Bilder", Icon: ImageIcon };
+  if (/title|meta|h1|noindex|canonical|sitemap|seo|indexier|duplicate/.test(t))
+    return { label: "SEO-Basics", Icon: Search };
   if (/javascript|html|css|code|skript|fehler|wp|wordpress/.test(t))
     return { label: "Technik", Icon: Code2 };
-  if (/title|meta|h1|noindex|canonical|sitemap|seo|indexier/.test(t))
-    return { label: "SEO", Icon: Search };
   return { label: "Allgemein", Icon: AlertCircle };
 }
 

@@ -89,7 +89,7 @@ export const CATEGORY_META: Record<DisplayCategory, CategoryMeta> = {
   },
   bestPractices: {
     label:       "Best Practices",
-    shortLabel:  "Sicherheit",
+    shortLabel:  "Best Practices",
     description: "WP-Version, SSL, Security-Header & DSGVO",
     accent:      "#FBBF24",
   },

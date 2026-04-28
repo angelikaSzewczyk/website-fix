@@ -674,10 +674,10 @@ export default function AgencyPage() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-slack" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(192,132,252,0.4)", display: "inline-block" }} />
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#D97706", letterSpacing: "0.06em" }}>DEMNÄCHST VERFÜGBAR</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(192,132,252,0.1)", border: "1px solid rgba(192,132,252,0.3)", color: "rgba(192,132,252,0.9)", cursor: "pointer" }}>
-                  Verknüpfen →
+                  Auf Warteliste
                 </button>
               </div>
             </div>
@@ -701,10 +701,10 @@ export default function AgencyPage() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-jira" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(122,166,255,0.4)", display: "inline-block" }} />
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#D97706", letterSpacing: "0.06em" }}>DEMNÄCHST VERFÜGBAR</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(37,99,235,0.1)", border: "1px solid rgba(122,166,255,0.3)", color: "rgba(122,166,255,0.9)", cursor: "pointer" }}>
-                  Verknüpfen →
+                  Auf Warteliste
                 </button>
               </div>
             </div>
@@ -728,10 +728,10 @@ export default function AgencyPage() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-trello" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(91,184,250,0.4)", display: "inline-block" }} />
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#D97706", letterSpacing: "0.06em" }}>DEMNÄCHST VERFÜGBAR</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(0,121,191,0.1)", border: "1px solid rgba(91,184,250,0.3)", color: "rgba(91,184,250,0.9)", cursor: "pointer" }}>
-                  Verknüpfen →
+                  Auf Warteliste
                 </button>
               </div>
             </div>
@@ -755,10 +755,10 @@ export default function AgencyPage() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span className="integ-pulse integ-pulse-zapier" style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,109,45,0.4)", display: "inline-block" }} />
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Nicht verbunden</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#D97706", letterSpacing: "0.06em" }}>DEMNÄCHST VERFÜGBAR</span>
                 </div>
                 <button style={{ fontSize: 11, fontWeight: 700, padding: "9px 14px", borderRadius: 8, textAlign: "center" as const, background: "rgba(255,80,10,0.1)", border: "1px solid rgba(255,109,45,0.3)", color: "rgba(255,109,45,0.9)", cursor: "pointer" }}>
-                  Verknüpfen →
+                  Auf Warteliste
                 </button>
               </div>
             </div>
@@ -1306,6 +1306,15 @@ export default function AgencyPage() {
                       <path d="M19.8 7.8a9 9 0 0 1 .2 2 8.2 8.2 0 0 1-.7 3.3l-2.9 8.4A9 9 0 0 0 19.8 7.8z" fill="#818cf8"/>
                     </svg>
                     WordPress · Native Integration
+                  </div>
+                  {/* Demnächst-Verfügbar-Badge — Plugin ist im Aufbau, nicht released */}
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "4px 12px", borderRadius: 20, fontSize: 10,
+                    background: "rgba(217,119,6,0.15)", border: "1px solid rgba(217,119,6,0.35)",
+                    color: "#D97706", fontWeight: 800, letterSpacing: "0.08em",
+                  }}>
+                    DEMNÄCHST VERFÜGBAR
                   </div>
                 </div>
 

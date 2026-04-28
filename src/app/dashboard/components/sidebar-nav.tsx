@@ -22,7 +22,10 @@ type NavItem = {
   label: string;
   icon: ReactNode;
   exact?: boolean;
+  /** Nicht klickbar, "BALD"-Badge — Feature noch nicht im Funnel. */
   soon?: boolean;
+  /** Klickbar, "BETA"-Badge — Feature ist live, aber im Beta-Status. */
+  beta?: boolean;
 };
 
 // Plans that get the agency nav
@@ -33,7 +36,7 @@ const AGENCY_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/clients",        label: "Kundenliste",          icon: <Users size={16} /> },
   { href: "/dashboard/reports",        label: "Berichte-Archiv",      icon: <Archive size={16} /> },
   { href: "/dashboard/widget-config",  label: "Widget-Konfigurator",  icon: <Code2 size={16} /> },
-  { href: "/dashboard/lead-generator", label: "Lead-Generator (Widget)", icon: <Magnet size={16} /> },
+  { href: "/dashboard/lead-generator", label: "Lead-Generator (Widget)", icon: <Magnet size={16} />, beta: true },
   { href: "/dashboard/settings",       label: "Team-Einstellungen",   icon: <Settings size={16} /> },
 ];
 
@@ -66,8 +69,9 @@ type Props = {
 const SLIM_ITEMS = [
   { href: "/dashboard",            label: "Übersicht",    icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, exact: true },
   { href: "/dashboard/scan",       label: "Scan starten", icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
+  { href: "/dashboard/monitoring", label: "Monitoring",   icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { href: "/dashboard/reports",    label: "Berichte",     icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
-  { href: "/dashboard/settings",   label: "Einstellungen",icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
+  { href: "/dashboard/settings",   label: "Einstellungen",icon: (active: boolean) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
 ];
 
 function SlimSidebar({ plan, userName, userImage, signOutButton, lastScanClean }: Props) {
@@ -202,6 +206,9 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
               )}
               {item.soon && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#D97706", letterSpacing: "0.06em" }}>BALD</span>
+              )}
+              {item.beta && (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(167,139,250,0.18)", color: "#A78BFA", letterSpacing: "0.06em" }}>BETA</span>
               )}
             </>
           );

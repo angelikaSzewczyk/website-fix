@@ -817,7 +817,7 @@ export default function DashboardScanClient({
             </span>
           </div>
           {limitReached && (
-            <Link href="/pricing" style={{
+            <Link href="/fuer-agenturen#pricing" style={{
               fontSize: 11, fontWeight: 700,
               padding: "4px 12px", borderRadius: C.radiusSm,
               background: C.blueBg, border: `1px solid ${C.blueBorder}`,
@@ -848,7 +848,7 @@ export default function DashboardScanClient({
                 Du hast {scanLimit} von {scanLimit} Scans dieses Monats verbraucht. Ab dem 1. des nächsten Monats steht das Kontingent wieder zur Verfügung — oder jetzt auf Professional upgraden für unlimitierte Scans.
               </p>
             </div>
-            <Link href="/pricing" style={{
+            <Link href="/fuer-agenturen#pricing" style={{
               flexShrink: 0, padding: "10px 20px", borderRadius: C.radiusSm,
               background: C.blue, color: "#fff",
               fontSize: 13, fontWeight: 700, textDecoration: "none",

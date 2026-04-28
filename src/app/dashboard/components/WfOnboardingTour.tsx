@@ -423,13 +423,14 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
             Wir prüfen deine Website…
           </h1>
           <p style={{ textAlign: "center", margin: "0 0 28px", fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-            SEO, Technik und Sicherheit — wird gleich gestartet.
+            Performance, SEO, Best Practices &amp; Barrierefreiheit — wird gleich gestartet.
           </p>
 
           <div style={{ padding: "0 4px" }}>
-            <ScanItem label="SEO-Analyse vorbereiten…"        delay={200} />
-            <ScanItem label="Technik & Performance prüfen…"   delay={900} />
-            <ScanItem label="Sicherheits-Scan starten…"       delay={1600} />
+            <ScanItem label="Performance &amp; Core Web Vitals prüfen…" delay={200} />
+            <ScanItem label="SEO-Basics analysieren…"                  delay={900} />
+            <ScanItem label="Best-Practices-Scan starten…"              delay={1600} />
+            <ScanItem label="Barrierefreiheit prüfen…"                  delay={2300} />
           </div>
 
           {scanUrl && (

@@ -251,7 +251,8 @@ function Divider({ style }: { style?: React.CSSProperties }) {
 // ─── Severity badge ───────────────────────────────────────────────────────────
 function SevBadge({ sev }: { sev: "red" | "yellow" | "green" }) {
   const map = {
-    red:    { label: "Prio",          color: "#FBBF24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.3)" },
+    // Severity-Color-Sync: red ist konsistent rot (#EF4444) — vorher gold-getönt
+    red:    { label: "Prio",          color: "#EF4444", bg: "rgba(239,68,68,0.1)",  border: "rgba(239,68,68,0.3)" },
     yellow: { label: "Optimierung",  color: D.amber, bg: D.amberBg, border: D.amberBorder },
     green:  { label: "Hinweis",      color: D.green, bg: D.greenBg, border: D.greenBorder },
   };
@@ -2575,7 +2576,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
   // ── Impact label per category / severity ──────────────────────────────────
   function getImpact(category: string, severity: string): { label: string; color: string } {
-    if (category === "recht")                            return { label: "Barrierefreiheit & Recht",         color: D.amber   };
+    if (category === "recht")                            return { label: "Best Practices",                    color: D.amber   };
     if (category === "speed" && severity === "red")      return { label: "Performance- & Ranking-Boost",     color: D.amber   };
     if (category === "speed")                            return { label: "Performance-Optimierung",          color: D.amber   };
     if (severity === "red")                              return { label: "Wachstums-Bremse",                 color: "#FBBF24" };
@@ -2969,7 +2970,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
 
             {/* Upgrade CTA */}
-            <Link href="/pricing" style={{
+            <Link href="/fuer-agenturen#pricing" style={{
               padding: "6px 16px", borderRadius: D.radiusSm,
               background: D.blue, color: "#fff",
               fontSize: 12, fontWeight: 700, textDecoration: "none",
@@ -3254,7 +3255,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   Mit Professional erhältst du für jede Wachstums-Bremse einen Direkt-Fix Guide — Schritt für Schritt, ohne Agentur.
                 </p>
               </div>
-              <Link href="/pricing" style={{
+              <Link href="/fuer-agenturen#pricing" style={{
                 flexShrink: 0, padding: "9px 20px", borderRadius: 8,
                 background: "#FBBF24", color: "#0b0c10",
                 fontSize: 12, fontWeight: 800, textDecoration: "none",
@@ -3653,7 +3654,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
             <p style={{ margin: "10px 0 0", fontSize: 11, color: D.textFaint, lineHeight: 1.6, fontWeight: 400 }}>
               Diese Werte basieren auf Scan-Schätzungen.{" "}
-              <Link href="/pricing" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
+              <Link href="/fuer-agenturen#pricing" style={{ color: D.blueSoft, textDecoration: "none", opacity: 0.8 }}>
                 Präzise Live-Daten aus GSC &amp; PageSpeed
               </Link>
               {" "}sind im Professional Plan verfügbar.
@@ -3683,7 +3684,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                     Deep-Scan ({totalPages != null ? totalPages : "10"} Seiten analysiert)
                   </strong>
                   {isFree && <>{" · "}Für 30+ Seiten und erweiterte Berichte{" "}
-                    <Link href="/pricing" style={{ color: "#7aa6ff", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,166,255,0.4)", fontWeight: 600 }}>
+                    <Link href="/fuer-agenturen#pricing" style={{ color: "#7aa6ff", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,166,255,0.4)", fontWeight: 600 }}>
                       Professional Plan →
                     </Link>
                   </>}
@@ -4425,7 +4426,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               Der Professional Plan scannt automatisch, überwacht Veränderungen 24/7 und liefert KI-Auto-Fixes — Copy-Paste-fertig für WordPress. Inkl. Score-Verlauf, monatlichem PDF-Bericht, 10 Projekten und Smart-Fix Drawer. Für 89 €/Monat. Jederzeit kündbar.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link href="/pricing" style={{
+              <Link href="/fuer-agenturen#pricing" style={{
                 padding: "13px 32px", borderRadius: D.radiusSm,
                 background: D.blue, color: "#fff",
                 fontSize: 14, fontWeight: 700, textDecoration: "none",
@@ -4433,7 +4434,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               }}>
                 Professional aktivieren →
               </Link>
-              <Link href="/pricing" style={{
+              <Link href="/fuer-agenturen#pricing" style={{
                 padding: "13px 24px", borderRadius: D.radiusSm,
                 border: `1px solid ${D.borderStrong}`,
                 color: D.textSub, fontSize: 14, textDecoration: "none",
@@ -4496,7 +4497,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   </p>
                 </div>
               </div>
-              <Link href="/pricing" className="wf-upgrade-btn" style={{
+              <Link href="/fuer-agenturen#pricing" className="wf-upgrade-btn" style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
                 padding: "9px 22px", borderRadius: D.radiusSm,
                 background: "linear-gradient(135deg, #1a7fe8 0%, #007BFF 100%)",
