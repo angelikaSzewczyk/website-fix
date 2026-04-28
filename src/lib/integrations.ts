@@ -10,6 +10,7 @@ import { neon } from "@neondatabase/serverless";
 export type IntegrationSettings = {
   slack_webhook_url:    string | null;
   zapier_webhook_url:   string | null;
+  asana_webhook_url:    string | null; // Asana akzeptiert die gleiche Webhook-Logik wie Zapier — User triggert via Asana-Rules-API
   jira_domain:          string | null; // z.B. "meineagentur.atlassian.net"
   jira_email:           string | null;
   jira_api_token:       string | null;
@@ -25,6 +26,7 @@ export type IntegrationSettings = {
 const EMPTY: IntegrationSettings = {
   slack_webhook_url:   null,
   zapier_webhook_url:  null,
+  asana_webhook_url:   null,
   jira_domain:         null,
   jira_email:          null,
   jira_api_token:      null,
@@ -47,6 +49,7 @@ export async function ensureIntegrationSchema(): Promise<void> {
       user_id              INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       slack_webhook_url    TEXT,
       zapier_webhook_url   TEXT,
+      asana_webhook_url    TEXT,
       jira_domain          TEXT,
       jira_email           TEXT,
       jira_api_token       TEXT,
@@ -60,6 +63,10 @@ export async function ensureIntegrationSchema(): Promise<void> {
       updated_at           TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  // Idempotente ALTER für DB-Instances die VOR der Asana-Erweiterung
+  // angelegt wurden — CREATE TABLE IF NOT EXISTS legt keine neuen Spalten
+  // an wenn die Tabelle schon da ist.
+  await sql`ALTER TABLE integration_settings ADD COLUMN IF NOT EXISTS asana_webhook_url TEXT`;
   schemaReady = true;
 }
 
@@ -67,7 +74,7 @@ export async function getIntegrationSettings(userId: number | string): Promise<I
   await ensureIntegrationSchema();
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`
-    SELECT slack_webhook_url, zapier_webhook_url,
+    SELECT slack_webhook_url, zapier_webhook_url, asana_webhook_url,
            jira_domain, jira_email, jira_api_token, jira_project_key,
            trello_api_key, trello_token, trello_list_id,
            gsc_site_url, gsc_service_account, ga_property_id
@@ -85,12 +92,12 @@ export async function saveIntegrationSettings(userId: number | string, patch: Pa
   const merged: IntegrationSettings = { ...current, ...patch };
   await sql`
     INSERT INTO integration_settings (
-      user_id, slack_webhook_url, zapier_webhook_url,
+      user_id, slack_webhook_url, zapier_webhook_url, asana_webhook_url,
       jira_domain, jira_email, jira_api_token, jira_project_key,
       trello_api_key, trello_token, trello_list_id,
       gsc_site_url, gsc_service_account, ga_property_id, updated_at
     ) VALUES (
-      ${userId}, ${merged.slack_webhook_url}, ${merged.zapier_webhook_url},
+      ${userId}, ${merged.slack_webhook_url}, ${merged.zapier_webhook_url}, ${merged.asana_webhook_url},
       ${merged.jira_domain}, ${merged.jira_email}, ${merged.jira_api_token}, ${merged.jira_project_key},
       ${merged.trello_api_key}, ${merged.trello_token}, ${merged.trello_list_id},
       ${merged.gsc_site_url}, ${merged.gsc_service_account}, ${merged.ga_property_id}, NOW()
@@ -98,6 +105,7 @@ export async function saveIntegrationSettings(userId: number | string, patch: Pa
     ON CONFLICT (user_id) DO UPDATE SET
       slack_webhook_url    = EXCLUDED.slack_webhook_url,
       zapier_webhook_url   = EXCLUDED.zapier_webhook_url,
+      asana_webhook_url    = EXCLUDED.asana_webhook_url,
       jira_domain          = EXCLUDED.jira_domain,
       jira_email           = EXCLUDED.jira_email,
       jira_api_token       = EXCLUDED.jira_api_token,
@@ -116,6 +124,7 @@ export async function saveIntegrationSettings(userId: number | string, patch: Pa
 export type IntegrationStatus = {
   slack:  boolean;
   zapier: boolean;
+  asana:  boolean;
   jira:   boolean;
   trello: boolean;
   gsc:    boolean;
@@ -126,6 +135,7 @@ export function connectionStatus(s: IntegrationSettings): IntegrationStatus {
   return {
     slack:  !!s.slack_webhook_url,
     zapier: !!s.zapier_webhook_url,
+    asana:  !!s.asana_webhook_url,
     jira:   !!(s.jira_domain && s.jira_email && s.jira_api_token && s.jira_project_key),
     trello: !!(s.trello_api_key && s.trello_token && s.trello_list_id),
     gsc:    !!(s.gsc_site_url && s.gsc_service_account),

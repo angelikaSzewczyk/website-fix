@@ -15,7 +15,7 @@ type BrandingSettings = {
 };
 
 type Status = {
-  slack: boolean; zapier: boolean; jira: boolean; trello: boolean; gsc: boolean; ga: boolean;
+  slack: boolean; zapier: boolean; asana: boolean; jira: boolean; trello: boolean; gsc: boolean; ga: boolean;
 };
 
 type IntegrationsVisible = {

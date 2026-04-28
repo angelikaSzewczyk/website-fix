@@ -4,7 +4,89 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type Status = {
-  slack: boolean; zapier: boolean; jira: boolean; trello: boolean; gsc: boolean; ga: boolean;
+  slack: boolean; zapier: boolean; asana: boolean; jira: boolean; trello: boolean; gsc: boolean; ga: boolean;
+};
+
+// ─── Brand-SVGs (alle 22×22, mit offiziellen Farb-Akzenten) ─────────────────
+function SlackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path fill="#E01E5A" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.522A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.52-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z"/>
+      <path fill="#36C5F0" d="M8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.52 2.521 2.528 2.528 0 0 1-2.52 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z"/>
+      <path fill="#2EB67D" d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312z"/>
+      <path fill="#ECB22E" d="M15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+    </svg>
+  );
+}
+function ZapierIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path fill="#FF4F00" d="M12 0a12 12 0 0 1 12 12 12 12 0 0 1-12 12A12 12 0 0 1 0 12 12 12 0 0 1 12 0zm0 7l1.5 3.5 3.7.4-2.8 2.5.8 3.6L12 15.2 8.8 17l.8-3.6-2.8-2.5 3.7-.4z"/>
+    </svg>
+  );
+}
+function AsanaIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <circle cx="12"   cy="16.5" r="4.5" fill="#F06A6A"/>
+      <circle cx="6.7"  cy="7.5"  r="4.5" fill="#F06A6A"/>
+      <circle cx="17.3" cy="7.5"  r="4.5" fill="#F06A6A"/>
+    </svg>
+  );
+}
+function JiraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <defs>
+        <linearGradient id="wf-jira-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%"   stopColor="#0052CC"/>
+          <stop offset="100%" stopColor="#2684FF"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#wf-jira-grad)" d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005z"/>
+      <path fill="#2684FF" d="M17.294 5.757H5.757a5.215 5.215 0 0 0 5.214 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.001 1.001 0 0 0-1.021-1.005z"/>
+      <path fill="#0052CC" d="M23.013 0H11.459a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.019 12.49V1.005A1.001 1.001 0 0 0 23.013 0z"/>
+    </svg>
+  );
+}
+function TrelloIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="3" fill="#0079BF"/>
+      <rect x="5" y="5" width="6"  height="13" rx="1" fill="#fff" opacity="0.95"/>
+      <rect x="13" y="5" width="6" height="8"  rx="1" fill="#fff" opacity="0.95"/>
+    </svg>
+  );
+}
+function GscIcon() {
+  // Google-G in den Markenfarben — vereinfachter aber sofort erkennbarer Build.
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path fill="#4285F4" d="M21.6 12.227c0-.708-.064-1.39-.182-2.045H12v3.868h5.382a4.6 4.6 0 0 1-1.995 3.018v2.51h3.232c1.891-1.741 2.981-4.305 2.981-7.351z"/>
+      <path fill="#34A853" d="M12 22c2.7 0 4.964-.895 6.619-2.422l-3.232-2.51c-.895.6-2.041.955-3.387.955-2.604 0-4.81-1.76-5.595-4.123H3.064v2.59A9.996 9.996 0 0 0 12 22z"/>
+      <path fill="#FBBC04" d="M6.405 13.9A5.997 5.997 0 0 1 6.09 12c0-.66.114-1.3.314-1.9V7.51H3.064A9.996 9.996 0 0 0 2 12c0 1.614.386 3.14 1.064 4.49z"/>
+      <path fill="#EA4335" d="M12 5.977c1.468 0 2.786.504 3.823 1.495l2.868-2.868C16.96 3.04 14.696 2 12 2A9.996 9.996 0 0 0 3.064 7.51L6.405 10.1C7.19 7.737 9.396 5.977 12 5.977z"/>
+    </svg>
+  );
+}
+function Ga4Icon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <rect x="3"  y="13" width="4" height="8"  rx="1.5" fill="#F9AB00"/>
+      <rect x="10" y="9"  width="4" height="12" rx="1.5" fill="#F9AB00"/>
+      <rect x="17" y="3"  width="4" height="18" rx="1.5" fill="#F9AB00"/>
+    </svg>
+  );
+}
+
+const ICONS: Record<string, () => React.ReactElement> = {
+  slack:  SlackIcon,
+  zapier: ZapierIcon,
+  asana:  AsanaIcon,
+  jira:   JiraIcon,
+  trello: TrelloIcon,
+  gsc:    GscIcon,
+  ga:     Ga4Icon,
 };
 
 /** Schwarz/Weiß-Text basierend auf Hex-Hintergrund (W3C-Luminanz). */
@@ -105,6 +187,15 @@ const PROVIDERS = [
     ],
   },
   {
+    id:     "asana",
+    name:   "Asana",
+    tagline:"Erstelle automatisch Aufgaben in Asana, sobald WebsiteFix kritische Fehler oder Optimierungspotenziale findet.",
+    color:  "#F06A6A",
+    fields: [
+      { key: "asana_webhook_url", label: "Webhook-URL", placeholder: "https://app.asana.com/api/1.0/webhooks/...", secret: true, help: "In Asana: Project → Customize → Rules → 'When a webhook is received'. Webhook-URL kopieren und hier einfügen — gleicher Test-Ping wie bei Slack/Zapier validiert die Verbindung." },
+    ],
+  },
+  {
     id:     "gsc",
     name:   "Google Search Console",
     tagline:"Impressions und Klicks neben deinen Scores — zeigt den SEO-ROI.",
@@ -163,7 +254,7 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
   /** Test-Ping an die eingegebene Webhook-URL. Verwendet die LIVE-Eingabe
    *  aus secrets-state, nicht die DB-gespeicherte URL — User kann testen
    *  bevor er speichert. */
-  async function testWebhook(providerId: "slack" | "zapier", urlFieldKey: string) {
+  async function testWebhook(providerId: "slack" | "zapier" | "asana", urlFieldKey: string) {
     const url = secrets[urlFieldKey] ?? "";
     if (!url) {
       setTesting(prev => ({ ...prev, [providerId]: { ok: false, msg: "Bitte zuerst eine URL eingeben." } }));
@@ -385,12 +476,20 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
                     }}
                   >
                     <div style={{
-                      width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-                      background: `${provider.color}18`, border: `1px solid ${provider.color}45`,
+                      width: 38, height: 38, borderRadius: 9, flexShrink: 0,
+                      background: "#fff",
+                      border: `1px solid ${provider.color}30`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 14, fontWeight: 900, color: provider.color,
+                      boxShadow: `0 0 0 1px ${provider.color}10, 0 4px 12px ${provider.color}18`,
                     }}>
-                      {provider.name.charAt(0)}
+                      {(() => {
+                        const Icon = ICONS[provider.id];
+                        return Icon ? <Icon /> : (
+                          <span style={{ fontSize: 14, fontWeight: 900, color: provider.color }}>
+                            {provider.name.charAt(0)}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
@@ -505,12 +604,16 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
                           {saving === provider.id ? "Speichert…" : connected ? "Aktualisieren" : "Verbinden"}
                         </button>
 
-                        {/* Test-Button — nur Slack + Zapier (Webhook-basierte Provider) */}
-                        {(provider.id === "slack" || provider.id === "zapier") && (
+                        {/* Test-Button — alle Webhook-basierten Provider (Slack, Zapier, Asana) */}
+                        {(provider.id === "slack" || provider.id === "zapier" || provider.id === "asana") && (
                           <button
                             onClick={() => testWebhook(
-                              provider.id as "slack" | "zapier",
-                              provider.id === "slack" ? "slack_webhook_url" : "zapier_webhook_url",
+                              provider.id as "slack" | "zapier" | "asana",
+                              provider.id === "slack"
+                                ? "slack_webhook_url"
+                                : provider.id === "zapier"
+                                ? "zapier_webhook_url"
+                                : "asana_webhook_url",
                             )}
                             disabled={testing[provider.id] === "loading"}
                             className="wf-int-test-btn"
@@ -621,11 +724,14 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
                     padding: "5px 11px", borderRadius: 7, fontSize: 11, fontWeight: 700,
-                    background: copied ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.06)",
-                    color: copied ? D.green : D.textSub,
-                    border: `1px solid ${copied ? "rgba(74,222,128,0.32)" : "rgba(255,255,255,0.1)"}`,
+                    // Default neutral, im Copied-State übernimmt die Brand-Farbe — passt
+                    // zum restlichen Tab-Branding (Save-Buttons + Tab-Underline).
+                    background: copied ? `${brandColor}1a` : "rgba(255,255,255,0.06)",
+                    color: copied ? brandColor : D.textSub,
+                    border: `1px solid ${copied ? `${brandColor}55` : "rgba(255,255,255,0.1)"}`,
                     cursor: "pointer", fontFamily: "inherit",
-                    transition: "background 0.15s ease, color 0.15s ease",
+                    transition: "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+                    boxShadow: copied ? `0 0 12px ${brandColor}33` : "none",
                   }}
                 >
                   {copied ? (

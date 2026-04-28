@@ -1819,22 +1819,31 @@ function GscInsightCard({ speedScore, domainUrl }: { speedScore: number; domainU
       marginBottom: 24, borderRadius: D.radiusSm, overflow: "hidden",
       background: "rgba(66,133,244,0.04)", border: "1px solid rgba(66,133,244,0.22)",
     }}>
-      <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
+      <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" as const }}>
+        {/* Offizielles Google-G — multicolor (statt Letter-Placeholder) */}
         <div style={{
-          width: 26, height: 26, borderRadius: 6, flexShrink: 0,
-          background: "#4285F4", display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 11, fontWeight: 900, color: "#fff",
-        }}>G</div>
+          width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+          background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 0 0 1px rgba(66,133,244,0.18), 0 2px 6px rgba(66,133,244,0.10)",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M21.6 12.227c0-.708-.064-1.39-.182-2.045H12v3.868h5.382a4.6 4.6 0 0 1-1.995 3.018v2.51h3.232c1.891-1.741 2.981-4.305 2.981-7.351z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.964-.895 6.619-2.422l-3.232-2.51c-.895.6-2.041.955-3.387.955-2.604 0-4.81-1.76-5.595-4.123H3.064v2.59A9.996 9.996 0 0 0 12 22z"/>
+            <path fill="#FBBC04" d="M6.405 13.9A5.997 5.997 0 0 1 6.09 12c0-.66.114-1.3.314-1.9V7.51H3.064A9.996 9.996 0 0 0 2 12c0 1.614.386 3.14 1.064 4.49z"/>
+            <path fill="#EA4335" d="M12 5.977c1.468 0 2.786.504 3.823 1.495l2.868-2.868C16.96 3.04 14.696 2 12 2A9.996 9.996 0 0 0 3.064 7.51L6.405 10.1C7.19 7.737 9.396 5.977 12 5.977z"/>
+          </svg>
+        </div>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "#4285F4", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#4285F4", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>
             Search Console · {domain}
           </div>
-          <div style={{ fontSize: 11, color: D.textMuted }}>
+          <div style={{ fontSize: 12, color: D.textMuted, lineHeight: 1.5 }}>
             {state === "ok" && totals ? "Letzte 28 Tage"
              : state === "loading" ? "Lädt GSC-Daten…"
              : state === "not_configured" ? (
-                reason === "plan" ? "Professional-Plan erforderlich"
-                : "Noch nicht verbunden"
+                reason === "plan"
+                  ? "Professional-Plan erforderlich"
+                  : "Verbinde die Google Search Console, um Traffic-Einbußen durch technische Fehler sofort zu erkennen."
               )
              : "Fehler beim Abruf"}
           </div>
@@ -1852,11 +1861,11 @@ function GscInsightCard({ speedScore, domainUrl }: { speedScore: number; domainU
         {state === "not_configured" && (
           <Link href="/dashboard/settings#integrationen" style={{
             fontSize: 11, fontWeight: 700, color: "#4285F4",
-            padding: "5px 11px", borderRadius: 6,
+            padding: "6px 13px", borderRadius: 6,
             background: "rgba(66,133,244,0.10)", border: "1px solid rgba(66,133,244,0.28)",
             textDecoration: "none", whiteSpace: "nowrap" as const,
           }}>
-            GSC verbinden →
+            Jetzt verbinden →
           </Link>
         )}
       </div>

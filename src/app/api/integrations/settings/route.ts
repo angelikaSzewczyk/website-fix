@@ -28,6 +28,7 @@ export async function GET() {
   const safe = {
     slack_webhook_url:    raw.slack_webhook_url ? "✓ verbunden" : null,
     zapier_webhook_url:   raw.zapier_webhook_url ? "✓ verbunden" : null,
+    asana_webhook_url:    raw.asana_webhook_url ? "✓ verbunden" : null,
     jira_domain:          raw.jira_domain,
     jira_email:           raw.jira_email,
     jira_api_token:       mask(raw.jira_api_token),
@@ -58,7 +59,7 @@ export async function PUT(req: Request) {
   const body = await req.json() as Partial<IntegrationSettings>;
 
   // Basic URL-Validation für Webhook-Felder
-  const urlFields: Array<keyof IntegrationSettings> = ["slack_webhook_url", "zapier_webhook_url"];
+  const urlFields: Array<keyof IntegrationSettings> = ["slack_webhook_url", "zapier_webhook_url", "asana_webhook_url"];
   for (const key of urlFields) {
     const v = body[key];
     if (v && typeof v === "string" && v.trim() !== "" && !/^https?:\/\//.test(v.trim())) {
