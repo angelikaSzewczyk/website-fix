@@ -147,6 +147,28 @@ const CA = {
 
 type ScanInterval = "manuell" | "wöchentlich" | "täglich";
 
+/** Berechnet ob ein Hex-Hintergrund schwarzen oder weißen Text braucht
+ *  (W3C Luminanz-Formel, vereinfacht). Bei ungültigem Hex → "#fff" als
+ *  sicheren Default. */
+function contrastText(hex: string): "#000" | "#fff" {
+  const cleaned = (hex || "").replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(cleaned)) return "#fff";
+  const r = parseInt(cleaned.slice(0, 2), 16);
+  const g = parseInt(cleaned.slice(2, 4), 16);
+  const b = parseInt(cleaned.slice(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? "#000" : "#fff";
+}
+
+/** Inline-Spinner für Loading-States in Buttons. */
+function Spinner({ size = 14, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" style={{ animation: "wf-spin 0.85s linear infinite" }}>
+      <path d="M12 2a10 10 0 0 1 10 10" />
+    </svg>
+  );
+}
+
 function Toggle({ checked, onChange, id }: { checked: boolean; onChange: (v: boolean) => void; id: string }) {
   return (
     <button
@@ -246,9 +268,15 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
   }
 
   const input: React.CSSProperties = {
-    width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: 14,
+    width: "100%", maxWidth: 460, padding: "10px 14px", borderRadius: 10, fontSize: 14,
     background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
     color: "#fff", outline: "none", boxSizing: "border-box",
+  };
+  /** Input-Stil ohne Breitenlimit — für Inputs in Inline-Layouts (Color Hex,
+   *  Subdomain-Splitter), wo das maxWidth: 460 bricht. */
+  const inputUnbounded: React.CSSProperties = {
+    ...input,
+    maxWidth: "none",
   };
   const label: React.CSSProperties = {
     display: "block", fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6,
@@ -256,6 +284,21 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
 
   return (
     <main style={{ maxWidth: 1020, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <style>{`
+        @keyframes wf-spin { to { transform: rotate(360deg); } }
+        /* Save-Button: Brand-Farbe + Hover-Glow */
+        .wf-save-btn:not(:disabled):hover {
+          transform: translateY(-1px);
+          filter: brightness(0.94);
+          box-shadow: 0 8px 28px ${settings.primary_color}55, 0 0 0 1px ${settings.primary_color}33 !important;
+        }
+        .wf-save-btn:not(:disabled):active {
+          transform: translateY(0);
+          filter: brightness(0.88);
+        }
+        /* Hex-Input mit invalidem Format zeigt subtilen Border-Hint */
+        .wf-hex-input:invalid { border-color: rgba(239,68,68,0.45) !important; }
+      `}</style>
       <h1 style={{ fontSize: 26, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
         Agentur-Einstellungen
       </h1>
@@ -396,10 +439,10 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
                   <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden", maxWidth: 460 }}>
                   <span style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", fontSize: 13, color: "rgba(255,255,255,0.3)", borderRight: "1px solid rgba(255,255,255,0.12)", whiteSpace: "nowrap" }}>portal.</span>
                   <input
-                    style={{ ...input, borderRadius: 0, border: "none", flex: 1 }}
+                    style={{ ...inputUnbounded, borderRadius: 0, border: "none", flex: 1 }}
                     placeholder="deine-agentur.de"
                     value={settings.subdomain ?? ""}
                     onChange={e => setSettings(s => ({ ...s, subdomain: e.target.value }))}
@@ -426,60 +469,125 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
               </div>
             )}
 
-            {/* Color picker */}
+            {/* Color picker — 6 Quick-Presets + 7. Custom-Slot (native picker)
+                + Hex-Input mit bidirektionaler Sync.
+                Layout: Presets-Reihe oben, Hex-Eingabe unten — getrennt
+                damit Hex-Validation nicht visuell kollidiert. */}
             <div>
               <label style={label}>Primärfarbe</label>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <input
-                  type="color"
-                  value={settings.primary_color}
-                  onChange={e => setSettings(s => ({ ...s, primary_color: e.target.value }))}
-                  style={{
-                    width: 44, height: 44, border: "2px solid rgba(255,255,255,0.1)",
-                    background: "none", cursor: "pointer", borderRadius: 10, padding: 2,
-                  }}
-                />
-                <input
-                  style={{ ...input, width: 130 }}
-                  value={settings.primary_color}
-                  onChange={e => setSettings(s => ({ ...s, primary_color: e.target.value }))}
-                  placeholder="#8df3d3"
-                  maxLength={7}
-                />
-                {/* Quick presets */}
-                <div style={{ display: "flex", gap: 6 }}>
-                  {["#8df3d3", "#7aa6ff", "#ffd93d", "#ff6b6b", "#a78bfa", "#f472b6"].map(c => (
+
+              {/* Reihe 1: 6 Presets + Custom-Picker als 7. Element */}
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
+                {["#8df3d3", "#7aa6ff", "#ffd93d", "#ff6b6b", "#a78bfa", "#f472b6"].map(c => {
+                  const active = settings.primary_color.toLowerCase() === c.toLowerCase();
+                  return (
                     <button
                       key={c}
+                      type="button"
                       onClick={() => setSettings(s => ({ ...s, primary_color: c }))}
                       title={c}
+                      aria-label={`Farbe ${c}`}
                       style={{
-                        width: 22, height: 22, borderRadius: "50%", border: settings.primary_color === c ? "2px solid #fff" : "2px solid transparent",
+                        width: 28, height: 28, borderRadius: "50%",
+                        border: active ? "2px solid #fff" : "2px solid rgba(255,255,255,0.1)",
                         background: c, cursor: "pointer", flexShrink: 0,
+                        boxShadow: active ? `0 0 0 3px ${c}33` : "none",
+                        transition: "box-shadow 0.18s ease, transform 0.12s ease",
                       }}
                     />
-                  ))}
+                  );
+                })}
+
+                {/* 7. Slot: Custom-Color-Picker — native input type=color
+                    als Rainbow-Swatch wenn aktuelle Farbe nicht in Presets */}
+                <label
+                  title="Eigene Farbe wählen"
+                  aria-label="Eigene Farbe wählen"
+                  style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    border: ["#8df3d3","#7aa6ff","#ffd93d","#ff6b6b","#a78bfa","#f472b6"]
+                      .map(c => c.toLowerCase()).includes(settings.primary_color.toLowerCase())
+                      ? "2px solid rgba(255,255,255,0.1)"
+                      : "2px solid #fff",
+                    background: "conic-gradient(#ff6b6b, #ffd93d, #8df3d3, #7aa6ff, #a78bfa, #f472b6, #ff6b6b)",
+                    cursor: "pointer", flexShrink: 0, position: "relative",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <input
+                    type="color"
+                    value={settings.primary_color}
+                    onChange={e => setSettings(s => ({ ...s, primary_color: e.target.value }))}
+                    style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
+                  />
+                </label>
+
+                {/* Hint: aktuelle Farbe als kompakter Swatch + Hex-Wert */}
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "5px 10px", borderRadius: 8,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  fontSize: 11, color: "rgba(255,255,255,0.5)",
+                  fontFamily: "ui-monospace, SF Mono, Menlo, monospace",
+                  marginLeft: 4,
+                }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: settings.primary_color, border: "1px solid rgba(255,255,255,0.15)" }} />
+                  {settings.primary_color.toUpperCase()}
                 </div>
               </div>
+
+              {/* Reihe 2: Hex-Eingabefeld für Profis mit fixen CI-Vorgaben */}
+              <input
+                className="wf-hex-input"
+                style={{ ...input, width: 180, fontFamily: "ui-monospace, SF Mono, Menlo, monospace", letterSpacing: "0.04em" }}
+                value={settings.primary_color}
+                onChange={e => {
+                  let v = e.target.value.trim();
+                  if (v && !v.startsWith("#")) v = "#" + v;
+                  setSettings(s => ({ ...s, primary_color: v }));
+                }}
+                placeholder="#8DF3D3"
+                maxLength={7}
+                pattern="^#[0-9a-fA-F]{6}$"
+                aria-label="Hex-Farbcode"
+              />
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", lineHeight: 1.5 }}>
+                6-stelliger Hex-Code (z.B. <code>#1a73e8</code>) — alle Vorschauen + der Speichern-Button übernehmen die Farbe in Echtzeit.
+              </p>
             </div>
           </div>
 
-          {/* Save */}
+          {/* Save — übernimmt dynamisch die gewählte Branding-Farbe.
+              Hover-Glow per CSS-Class statt inline events (sauberer + perf). */}
           <div style={{ marginTop: 26, display: "flex", alignItems: "center", gap: 12 }}>
             <button
               onClick={handleSave}
               disabled={saveState === "saving"}
+              className="wf-save-btn"
               style={{
-                padding: "10px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                padding: "11px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
                 background: saveState === "saved"
-                  ? "rgba(141,243,211,0.15)"
-                  : "linear-gradient(90deg,#8df3d3,#7aa6ff)",
-                color: saveState === "saved" ? "#8df3d3" : "#0b0c10",
-                border: saveState === "saved" ? "1px solid rgba(141,243,211,0.3)" : "none",
-                cursor: "pointer",
+                  ? "rgba(74,222,128,0.18)"
+                  : settings.primary_color,
+                color: saveState === "saved"
+                  ? "#4ade80"
+                  : contrastText(settings.primary_color),
+                border: saveState === "saved"
+                  ? "1px solid rgba(74,222,128,0.35)"
+                  : "1px solid rgba(0,0,0,0.08)",
+                cursor: saveState === "saving" ? "wait" : "pointer",
+                opacity: saveState === "saving" ? 0.7 : 1,
+                display: "inline-flex", alignItems: "center", gap: 8,
+                boxShadow: saveState === "saved"
+                  ? "none"
+                  : `0 4px 16px ${settings.primary_color}33`,
+                transition: "transform 0.12s ease, box-shadow 0.18s ease, filter 0.18s ease",
+                fontFamily: "inherit",
               }}
             >
-              {saveState === "saving" ? "Speichern..." : saveState === "saved" ? "✓ Gespeichert" : "Speichern"}
+              {saveState === "saving" && <Spinner size={13} />}
+              {saveState === "saving" ? "Speichern…" : saveState === "saved" ? "✓ Gespeichert" : "Änderungen speichern"}
             </button>
             {saveState === "error" && (
               <span style={{ fontSize: 13, color: "#ff6b6b" }}>Fehler beim Speichern.</span>
@@ -566,11 +674,12 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
         <div>
           <p style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 600, color: CA.textSub }}>E-Mail Automatisierung</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {[
+            {([
               {
                 id: "autoReport",
                 label: "Monatsbericht automatisch versenden",
                 sub: "Am 1. des Monats wird ein Bericht an den Kunden geschickt.",
+                note: "Berichte werden an die oben hinterlegte Agentur-E-Mail gesendet.",
                 checked: autoReport,
                 onChange: setAutoReport,
               },
@@ -578,10 +687,11 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
                 id: "alertsEmail",
                 label: "Sofort-Alert bei kritischen Befunden",
                 sub: "E-Mail innerhalb von 5 Minuten nach einem kritischen Scan-Ergebnis.",
+                note: null,
                 checked: true,
                 onChange: (_v: boolean) => {},
               },
-            ].map(row => (
+            ] as { id: string; label: string; sub: string; note: string | null; checked: boolean; onChange: (v: boolean) => void }[]).map(row => (
               <label key={row.id} htmlFor={row.id} style={{
                 display: "flex", alignItems: "flex-start", gap: 14,
                 padding: "14px 16px", borderRadius: 12,
@@ -592,6 +702,11 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
                 <div>
                   <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: CA.text }}>{row.label}</p>
                   <p style={{ margin: 0, fontSize: 12, color: CA.textMuted, lineHeight: 1.5 }}>{row.sub}</p>
+                  {row.note && (
+                    <p style={{ margin: "6px 0 0", fontSize: 11, color: CA.textMuted, lineHeight: 1.5, opacity: 0.75, fontStyle: "italic" }}>
+                      {row.note}
+                    </p>
+                  )}
                 </div>
               </label>
             ))}
@@ -651,11 +766,12 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
         {members.length < 2 && (
           <div style={{ marginTop: 14, display: "flex", gap: 10 }}>
             <input
-              style={{ ...input, flex: 1 }}
+              style={{ ...inputUnbounded, flex: 1 }}
               placeholder="kollegin@agentur.de"
               value={newEmail}
               onChange={e => setNewEmail(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleInvite()}
+              onKeyDown={e => e.key === "Enter" && !!newEmail && inviteState !== "loading" && handleInvite()}
+              disabled={inviteState === "loading"}
             />
             <button
               onClick={handleInvite}
@@ -663,10 +779,16 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
               style={{
                 padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
                 border: "1px solid rgba(141,243,211,0.3)", color: "#8df3d3",
-                background: "rgba(141,243,211,0.06)", cursor: "pointer", whiteSpace: "nowrap",
+                background: "rgba(141,243,211,0.06)",
+                cursor: inviteState === "loading" ? "wait" : !newEmail ? "not-allowed" : "pointer",
+                whiteSpace: "nowrap",
+                opacity: !newEmail ? 0.5 : 1,
+                display: "inline-flex", alignItems: "center", gap: 7,
+                fontFamily: "inherit",
               }}
             >
-              {inviteState === "loading" ? "..." : "Einladen"}
+              {inviteState === "loading" && <Spinner size={12} color="#8df3d3" />}
+              {inviteState === "loading" ? "Sende Einladung…" : "Einladen"}
             </button>
           </div>
         )}
