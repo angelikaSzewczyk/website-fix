@@ -154,6 +154,13 @@ export function isAgency(plan: string | null | undefined): boolean {
   return normalizePlan(plan) === "agency";
 }
 
+/** True, wenn der User irgendeinen bezahlten Plan hat (Starter+).
+ *  Verwende für Features, die jedem zahlenden Kunden zustehen
+ *  (z.B. Shop/Builder-Audit), unabhängig vom Plan-Tier. */
+export function isPaidPlan(plan: string | null | undefined): boolean {
+  return normalizePlan(plan) !== null;
+}
+
 /** True, wenn der Plan White-Label-Branding setzen darf.
  *  Starter: KEIN Branding (sieht nur Upgrade-CTA).
  *  Professional + Agency: Full Branding (Logo, Farbe, Name). */

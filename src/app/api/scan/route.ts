@@ -63,6 +63,23 @@ function classifyIssueCategory(text: string): ScanIssue["category"] {
   return "technik";
 }
 
+/** Aktuelle WordPress-Major-Version. Updaten wenn neue Releases rauskommen.
+ *  < 6.5 wird als veraltet geflaggt (≥2 Minor-Versionen hinten). */
+const LATEST_WP_VERSION = "6.7";
+const STALE_WP_THRESHOLD_MAJOR = 6;
+const STALE_WP_THRESHOLD_MINOR = 5;
+
+function isWpStale(version: string | null | undefined): boolean {
+  if (!version) return false;
+  const [majStr, minStr] = version.split(".");
+  const major = parseInt(majStr ?? "", 10);
+  const minor = parseInt(minStr ?? "0", 10);
+  if (Number.isNaN(major)) return false;
+  if (major < STALE_WP_THRESHOLD_MAJOR) return true;
+  if (major === STALE_WP_THRESHOLD_MAJOR && minor < STALE_WP_THRESHOLD_MINOR) return true;
+  return false;
+}
+
 /**
  * Build a deterministic, structured issues array directly from raw scan data.
  * This is the ground truth — saved as issues_json so the dashboard never has
@@ -99,6 +116,20 @@ function buildIssuesJson(
     issues.push({ severity: "red", title: "Kritisch: Startseite für Google unsichtbar (noindex gesetzt)", body: "Der noindex-Tag macht die Startseite für Suchmaschinen komplett unsichtbar — kein Traffic aus der organischen Suche möglich.", category: "technik", count: 1 });
   if (!scanData.sitemapVorhanden)
     issues.push({ severity: "yellow", title: "Langsame Indexierung: Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Inhalte langsamer — besonders kritisch nach Relaunch oder bei neu veröffentlichten Seiten.", category: "technik", count: 1 });
+
+  // ── WordPress-Version-Staleness ──
+  // Nur wenn wpVersion erkennbar war (viele gehärtete WP-Sites blenden den
+  // Generator-Tag aus → null → kein Issue, kein false-positive).
+  const wpVer = typeof scanData.wpVersion === "string" ? scanData.wpVersion : null;
+  if (wpVer && isWpStale(wpVer)) {
+    issues.push({
+      severity: "yellow",
+      title: `WordPress veraltet: ${wpVer} (aktuell: ${LATEST_WP_VERSION})`,
+      body: `Die installierte WordPress-Version ${wpVer} liegt mehrere Minor-Releases hinter ${LATEST_WP_VERSION}. Jede Major-Version schließt Sicherheitslücken — veraltete Cores sind das #1 Einfallstor für Hack-Versuche und führen zu Plugin-Inkompatibilitäten. Empfehlung: Im WP-Admin unter "Updates" Core, Plugins und Themes aktualisieren.`,
+      category: "technik",
+      count: 1,
+    });
+  }
 
   // ── BFSG / Accessibility ──
   if (totalAltMissing > 0)
@@ -682,12 +713,15 @@ async function saveUserScan(params: {
   unterseitenJson?: unknown | null;
   wooAudit?: WooAuditMeta | null;
   builderAudit?: BuilderAuditMeta | null;
+  /** Time-to-First-Byte in ms (annähernd: inkl. DNS+TLS). */
+  ttfbMs?: number | null;
 }): Promise<string | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
     const metaJsonObj: Record<string, unknown> = {};
     if (params.wooAudit)     metaJsonObj.woo_audit     = params.wooAudit;
     if (params.builderAudit) metaJsonObj.builder_audit = params.builderAudit;
+    if (typeof params.ttfbMs === "number" && params.ttfbMs >= 0) metaJsonObj.ttfb_ms = params.ttfbMs;
     const metaJson = Object.keys(metaJsonObj).length > 0 ? metaJsonObj : null;
     const rows = await sql`
       INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json, meta_json)
@@ -1072,6 +1106,7 @@ export async function POST(req: NextRequest) {
             unterseitenJson: cachedAudit?.unterseiten ?? null,
             wooAudit: (cached.scanData?.wooAudit as WooAuditMeta | null | undefined) ?? null,
             builderAudit: (cached.scanData?.builderAudit as BuilderAuditMeta | null | undefined) ?? null,
+            ttfbMs: typeof cached.scanData?.ttfbMs === "number" ? cached.scanData.ttfbMs : null,
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
@@ -1086,7 +1121,12 @@ export async function POST(req: NextRequest) {
     const scanData: Record<string, unknown> = { url: targetUrl };
 
     // ── 1. HAUPTSEITE ───────────────────────────────────────
+    // TTFB-Messung: Zeit bis zum ersten Byte der Homepage. Der Wert ist nur
+    // näherungsweise (umfasst auch DNS + TLS-Handshake im Node-Fetch), reicht
+    // aber als grober Server-Antwortzeit-Indikator für Agency-Reports.
+    const ttfbStart = Date.now();
     const mainRes = await fetchWithTimeout(targetUrl);
+    const ttfbMs = Date.now() - ttfbStart;
 
     // Früh-Abbruch: Seite nicht erreichbar (DNS-Fehler, Timeout, Connection refused)
     if (!mainRes) {
@@ -1185,6 +1225,7 @@ export async function POST(req: NextRequest) {
     const wpVersionMatch = mainHtml.match(/<meta[^>]+name=["']generator["'][^>]+content=["']WordPress\s+([\d.]+)/i)
       ?? mainHtml.match(/WordPress\/([\d.]+)/);
     scanData.wpVersion = wpVersionMatch?.[1] ?? null;
+    scanData.ttfbMs = ttfbMs;
 
     // ── SEO Plugin detection ────────────────────────────────────
     scanData.hasRankMath = /rank[-_]?math/i.test(mainHtml);
@@ -1524,6 +1565,7 @@ PFLICHT-REGELN:
           unterseitenJson: audit.unterseiten,
           wooAudit: wooMeta,
           builderAudit,
+          ttfbMs,
         })
       : null;
 

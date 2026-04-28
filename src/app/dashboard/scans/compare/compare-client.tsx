@@ -282,7 +282,7 @@ export default function CompareClient({ before, after }: { before: ScanSnapshot;
               const a = byCategory(after.issues, cat);
               if (b === 0 && a === 0) return null;
               const delta = a - b;
-              const label = cat === "technik" ? "Technik" : cat === "recht" ? "BFSG/DSGVO" : cat === "speed" ? "Speed" : cat === "shop" ? "Shop" : "Builder";
+              const label = cat === "technik" ? "Technik" : cat === "recht" ? "Barrierefreiheit & Recht" : cat === "speed" ? "Speed" : cat === "shop" ? "Shop" : "Builder";
               return (
                 <div key={cat} style={{
                   padding: "12px 14px", borderRadius: 10,

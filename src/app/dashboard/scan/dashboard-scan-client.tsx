@@ -310,7 +310,14 @@ type FullSiteResult = {
 type PerfData = {
   scores: { performance: number; accessibility: number; seo: number; bestPractices: number };
   vitals: { lcp: string; cls: string; tbt: string; fcp: string; si: string };
-  opportunities: { title: string; displayValue?: string; score: number | null }[];
+  opportunities: {
+    id?: string;
+    title: string;
+    displayValue?: string;
+    score: number | null;
+    /** KB-Ersparnis bei Byte-Saving-Audits (Unused CSS/JS, Bilder, Text-Compression). */
+    kbSavings?: number | null;
+  }[];
 };
 
 const TABS: { key: TabType; label: string; badge?: string; tier?: string }[] = [
@@ -1323,6 +1330,32 @@ export default function DashboardScanClient({
                   ))}
                 </div>
               </div>
+
+              {/* Optimierungsmöglichkeiten — KB-Ersparnis bei Byte-Saving-Audits */}
+              {perfData.opportunities.length > 0 && (
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 22 }}>
+                  <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Optimierungsmöglichkeiten
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {perfData.opportunities.map((opp, i) => (
+                      <div key={opp.id ?? i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "10px 12px", borderRadius: 8, background: C.cardSolid, border: `1px solid ${C.border}` }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, lineHeight: 1.4 }}>{opp.title}</div>
+                          {opp.displayValue && (
+                            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{opp.displayValue}</div>
+                          )}
+                        </div>
+                        {typeof opp.kbSavings === "number" && opp.kbSavings > 0 && (
+                          <div style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontSize: 11, fontWeight: 800, whiteSpace: "nowrap" }}>
+                            −{opp.kbSavings} KB
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

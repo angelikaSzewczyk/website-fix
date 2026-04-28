@@ -8,7 +8,7 @@ import WfProGuidedTour from "./components/WfProGuidedTour";
 import StarterResultsPanel from "./components/StarterResultsPanel";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
-import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan } from "@/lib/plans";
+import { isAtLeastProfessional, isAgency as isAgencyPlan, isPaidPlan, normalizePlan } from "@/lib/plans";
 import { matchIssueType, recommendPluginsForIssues } from "@/lib/expert-guidance";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1080,7 +1080,9 @@ function WooCommerceSection({ plan, shopIssues, audit }: {
   shopIssues: ParsedIssueProp[];
   audit?: WooAuditProp | null;
 }) {
-  const pro = isAtLeastProfessional(plan);
+  // Shop-Auditor ist für ALLE zahlenden Pläne offen (Starter+).
+  // Pro/Agency bekommen den USP über Auto-Fix-Generator + Executive Summary.
+  const pro = isPaidPlan(plan);
 
   // WooCommerce-Brand-Farbe (official plum) + Accent-Variations
   const WOO = {
@@ -1447,7 +1449,8 @@ function BuilderIntelligenceSection({ plan, audit, builderIssues, onGeneratePlan
   builderIssues: ParsedIssueProp[];
   onGeneratePlan: () => void;
 }) {
-  const pro = isAtLeastProfessional(plan);
+  // Builder-Intelligence ist für ALLE zahlenden Pläne offen (Starter+).
+  const pro = isPaidPlan(plan);
   const theme = getBuilderTheme(audit.builder);
   const depthCritical = audit.maxDomDepth > 22;
   const depthWarning  = audit.maxDomDepth > 15 && !depthCritical;
@@ -2571,7 +2574,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
 
   // ── Impact label per category / severity ──────────────────────────────────
   function getImpact(category: string, severity: string): { label: string; color: string } {
-    if (category === "recht")                            return { label: "SEO- & UX-Optimierungspotenzial",  color: D.amber   };
+    if (category === "recht")                            return { label: "Barrierefreiheit & Recht",         color: D.amber   };
     if (category === "speed" && severity === "red")      return { label: "Performance- & Ranking-Boost",     color: D.amber   };
     if (category === "speed")                            return { label: "Performance-Optimierung",          color: D.amber   };
     if (severity === "red")                              return { label: "Wachstums-Bremse",                 color: "#FBBF24" };

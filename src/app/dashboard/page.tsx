@@ -355,13 +355,6 @@ const PLAN_BADGE = {
   "agency-pro":    { label: "Agency",       color: "#7C3AED", bg: "#F5F3FF",             border: "#DDD6FE" },
 } as const;
 
-const DUMMY_CLIENTS = [
-  { id: "1", name: "Autohaus Müller GmbH",       contact: "Hans Müller",       initials: "AM", color: "#2563EB", domains: ["autohaus-mueller.de","gebrauchtwagen-mueller.de"], status: "warning"  as const, lastScan: "08. Apr 2026", assignee: "JS", autoReport: true,  clientLogin: true  },
-  { id: "2", name: "Kanzlei Schneider & Partner", contact: "Dr. Anna Schneider", initials: "KS", color: "#16A34A", domains: ["kanzlei-schneider.de"],                             status: "ok"       as const, lastScan: "09. Apr 2026", assignee: "MK", autoReport: true,  clientLogin: true  },
-  { id: "3", name: "Bäckerei Hoffmann",           contact: "Klaus Hoffmann",    initials: "BH", color: "#D97706", domains: ["baeckerei-hoffmann.de","hoffmann-catering.de","hoffmann-shop.de"], status: "critical" as const, lastScan: "07. Apr 2026", assignee: "JS", autoReport: false, clientLogin: false },
-  { id: "4", name: "TechStart Berlin UG",         contact: "Lena Vogel",        initials: "TB", color: "#7C3AED", domains: ["techstart.berlin"],                                   status: "ok"       as const, lastScan: "10. Apr 2026", assignee: "AW", autoReport: true,  clientLogin: true  },
-];
-
 // ─── Shared helpers ─────────────────────────────────────────────────────────────
 function PdfIcon() {
   return (
@@ -451,35 +444,6 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07"/></svg>
           White-Label
         </a>
-      </div>
-    </div>
-  );
-}
-
-function ClientRow({ client, last }: { client: typeof DUMMY_CLIENTS[0]; last: boolean }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 1fr 180px", gap: 16, alignItems: "center", padding: "13px 20px", borderBottom: last ? "none" : `1px solid ${C.divider}` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: `${client.color}18`, border: `1px solid ${client.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: client.color }}>{client.initials}</div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.name}</div>
-          <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{client.contact}</div>
-        </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        {client.domains.slice(0, 2).map(d => <span key={d} style={{ fontSize: 11, color: C.textSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d}</span>)}
-        {client.domains.length > 2 && <span style={{ fontSize: 10, color: C.textMuted }}>+{client.domains.length - 2} weitere</span>}
-      </div>
-      <StatusBadge status={client.status} />
-      <span style={{ fontSize: 11, color: C.textMuted }}>{client.lastScan}</span>
-      <div style={{ display: "flex", gap: 6 }}>
-        <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, background: "#F0FDF4", border: "1px solid #A7F3D0", color: C.green, fontSize: 11, fontWeight: 700, cursor: "pointer" }}><PdfIcon /> PDF</button>
-        <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-          <svg width="11" height="11" viewBox="0 0 24 24"><g fill="#7C3AED"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></g></svg>
-        </button>
-        <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blue, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-          <svg width="11" height="11" viewBox="0 0 24 24"><g fill={C.blue}><path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005zm5.723-5.756H5.757a5.215 5.215 0 0 0 5.214 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.001 1.001 0 0 0-1.021-1.005zM23.013 0H11.459a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.019 12.49V1.005A1.001 1.001 0 0 0 23.013 0z"/></g></svg>
-        </button>
       </div>
     </div>
   );
@@ -620,10 +584,10 @@ export default async function DashboardPage() {
   const clientSlotLimit = plan === "agency" || plan === "agency-pro" ? 999 : 10;
   const slotsLabel      = plan === "agency" || plan === "agency-pro" ? "∞" : String(clientSlotLimit);
 
-  // Map real saved_websites → agency client row format (or fall back to demo data)
+  // Map real saved_websites → agency client row format. No demo fallback —
+  // empty state is rendered explicitly when an agency has no analyzed sites yet.
   const AGENCY_COLORS = ["#2563EB","#16A34A","#D97706","#7C3AED","#DC2626","#0891B2","#059669","#DB2777"];
-  const isRealData = isAgency && criticalSites.length > 0;
-  const agencyClients = isRealData
+  const agencyClients = isAgency && criticalSites.length > 0
     ? criticalSites.map((site, i) => {
         const domain = (() => { try { return new URL(site.url.startsWith("http") ? site.url : `https://${site.url}`).hostname; } catch { return site.url; } })();
         const label  = site.name ?? domain;
@@ -635,7 +599,7 @@ export default async function DashboardPage() {
           : "—";
         return { id: site.id, name: label, contact: domain, initials, color: AGENCY_COLORS[i % AGENCY_COLORS.length], domains: [domain], status, lastScan: lastScanLabel, assignee: "–", autoReport: false, clientLogin: false };
       })
-    : DUMMY_CLIENTS;
+    : [];
 
   const usedSlots = agencyClients.length;
   domainCount = agencyClients.reduce((s, c) => s + c.domains.length, 0);
@@ -785,15 +749,40 @@ export default async function DashboardPage() {
                       UNLIMITIERT
                     </span>
                   </div>
-                  <span style={{ fontSize: 11, color: C.textMuted }}>{agencyClients.length} Projekte{!isRealData ? " · Demo-Daten" : ""}</span>
+                  <span style={{ fontSize: 11, color: C.textMuted }}>{agencyClients.length} {agencyClients.length === 1 ? "Projekt" : "Projekte"}</span>
                 </div>
 
-                {/* Column headers — 7 cols */}
-                <div className="agency-matrix-head" style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center" }}>
-                  {["Kunde", "Domain", "Status", "Health", "Zuständig", "Login", "Aktion"].map(h => (
-                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
-                  ))}
-                </div>
+                {/* Empty state — Agentur hat noch keine analysierten Kunden */}
+                {agencyClients.length === 0 && (
+                  <div style={{ padding: "56px 28px", textAlign: "center" }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 16, background: accentBg, border: `1px solid ${accentBorder}`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                    </div>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+                      Noch keine Kunden-Websites analysiert
+                    </h3>
+                    <p style={{ margin: "0 auto 22px", fontSize: 13, color: C.textSub, lineHeight: 1.6, maxWidth: 420 }}>
+                      Starte deinen ersten Scan, um dein Portfolio aufzubauen.
+                      Jeder neue Scan landet automatisch in der Kunden-Matrix.
+                    </p>
+                    <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 10, background: accent, color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: `0 2px 14px ${accent}50`, whiteSpace: "nowrap" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Ersten Kunden anlegen
+                    </a>
+                  </div>
+                )}
+
+                {/* Column headers — 7 cols (only when clients exist) */}
+                {agencyClients.length > 0 && (
+                  <div className="agency-matrix-head" style={{ padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`, display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 170px", gap: 12, alignItems: "center" }}>
+                    {["Kunde", "Domain", "Status", "Health", "Zuständig", "Login", "Aktion"].map(h => (
+                      <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Rows */}
                 <div style={{ overflowX: "auto" }}>
@@ -811,7 +800,7 @@ export default async function DashboardPage() {
                   const cbId = `ar-${client.id}`;
 
                   return (
-                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 130px", gap: 12, alignItems: "center", padding: "13px 22px", borderBottom: i < agencyClients.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
+                    <div key={client.id} className="agency-client-row" style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 100px 110px 68px 72px 170px", gap: 12, alignItems: "center", padding: "13px 22px", borderBottom: i < agencyClients.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent" }}>
 
                       {/* Kunde */}
                       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -871,8 +860,8 @@ export default async function DashboardPage() {
                         )}
                       </div>
 
-                      {/* Auto-Report toggle + Bericht-Button */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {/* Auto-Report toggle + PDF + Bericht-Button */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         {/* CSS-only toggle (no JS) */}
                         <div className="ar-wrap" style={{ display: "flex", alignItems: "center", gap: 5, position: "relative" }} title="Auto-Report">
                           <input type="checkbox" className="ar-cb" id={cbId} defaultChecked={client.autoReport} />
@@ -880,6 +869,26 @@ export default async function DashboardPage() {
                             <span className="ar-thumb" />
                           </label>
                         </div>
+                        {/* PDF-Export — Generator wird später gebaut, Link steht. */}
+                        <a
+                          href={lastScanId ? `/api/export/pdf?scanId=${lastScanId}` : "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-disabled={!lastScanId}
+                          title={lastScanId ? "Als PDF exportieren" : "Noch kein Scan vorhanden"}
+                          style={{
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            width: 30, height: 30, borderRadius: 7,
+                            background: lastScanId ? "#F0FDF4" : C.divider,
+                            border: `1px solid ${lastScanId ? "#A7F3D0" : C.border}`,
+                            color: lastScanId ? C.green : C.textMuted,
+                            textDecoration: "none",
+                            pointerEvents: lastScanId ? "auto" : "none",
+                            opacity: lastScanId ? 1 : 0.55,
+                          }}
+                        >
+                          <PdfIcon />
+                        </a>
                         <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: accent, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", boxShadow: `0 1px 6px ${accent}40` }}>
                           Bericht →
                         </Link>

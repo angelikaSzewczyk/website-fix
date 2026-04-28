@@ -10,7 +10,40 @@ export const maxDuration = 60;
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 type LighthouseCategory = { score: number | null };
-type LighthouseAudit = { score: number | null; displayValue?: string; title: string };
+type LighthouseAudit = {
+  score: number | null;
+  displayValue?: string;
+  title: string;
+  /** Roher Wert eines Lighthouse-Audits — bei Byte-Savings-Audits sind das Bytes. */
+  numericValue?: number;
+  /** Einheit des numericValue: "byte" für Speicher-Audits, "millisecond" für Time-Audits, etc. */
+  numericUnit?: string;
+  details?: { overallSavingsBytes?: number; overallSavingsMs?: number };
+};
+
+/** Lighthouse-Audit-IDs, die echte Byte-Savings liefern (Reduce/Defer/Eliminate). */
+const BYTE_SAVING_AUDITS = new Set([
+  "unused-css-rules",
+  "unused-javascript",
+  "render-blocking-resources",
+  "unminified-css",
+  "unminified-javascript",
+  "modern-image-formats",
+  "uses-optimized-images",
+  "uses-text-compression",
+  "uses-responsive-images",
+  "efficient-animated-content",
+  "duplicated-javascript",
+  "legacy-javascript",
+]);
+
+/** Extrahiert KB-Ersparnis aus einem Lighthouse-Audit, falls vorhanden. */
+function extractKbSavings(audit: LighthouseAudit): number | null {
+  const bytes = audit.details?.overallSavingsBytes
+    ?? (audit.numericUnit === "byte" ? audit.numericValue : undefined);
+  if (typeof bytes !== "number" || bytes <= 0) return null;
+  return Math.round(bytes / 1024);
+}
 
 export async function POST(req: NextRequest) {
   const guard = guardRequest(req);
@@ -61,12 +94,23 @@ export async function POST(req: NextRequest) {
       clsScore: audits?.["cumulative-layout-shift"]?.score ?? null,
     };
 
-    // Top Optimierungsmöglichkeiten
-    const opportunities = Object.values(audits ?? {})
-      .filter((a) => a.score !== null && a.score < 0.9 && a.displayValue)
-      .sort((a, b) => (a.score ?? 1) - (b.score ?? 1))
+    // Top Optimierungsmöglichkeiten — inkl. konkreter KB-Ersparnis bei
+    // Byte-Saving-Audits (Unused CSS/JS, Bilder, Text-Compression).
+    // PSI liefert details.overallSavingsBytes, das wir auf KB runden und
+    // direkt im Dashboard anzeigen — sehr viel überzeugender als generische
+    // Lighthouse-displayValue-Strings.
+    const auditsWithIds = Object.entries(audits ?? {}) as [string, LighthouseAudit][];
+    const opportunities = auditsWithIds
+      .filter(([, a]) => a.score !== null && a.score < 0.9 && a.displayValue)
+      .sort((a, b) => (a[1].score ?? 1) - (b[1].score ?? 1))
       .slice(0, 6)
-      .map((a) => ({ title: a.title, displayValue: a.displayValue, score: a.score }));
+      .map(([id, a]) => ({
+        id,
+        title: a.title,
+        displayValue: a.displayValue,
+        score: a.score,
+        kbSavings: BYTE_SAVING_AUDITS.has(id) ? extractKbSavings(a) : null,
+      }));
 
     // KI-Diagnose
     const prompt = `Du bist ein freundlicher Website-Performance-Experte.
