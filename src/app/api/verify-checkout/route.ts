@@ -52,13 +52,29 @@ export async function POST(req: NextRequest) {
     const email          = (checkoutSession.customer_details?.email ?? session.user.email).toLowerCase();
 
     const sql = neon(process.env.DATABASE_URL!);
-    await sql`
+    const updated = await sql`
       UPDATE users
       SET plan                  = ${plan},
           stripe_customer_id    = ${customerId},
           stripe_subscription_id = ${subscriptionId}
       WHERE email = ${email}
-    `;
+      RETURNING id
+    ` as { id: string }[];
+
+    // Cache-Invalidierung: Plan-Wechsel muss sofort wirksam sein, sonst sieht
+    // der frisch upgegradete User noch bis zu 24h den alten kleineren Scan
+    // aus dem 24h-scan_cache. Failure ist non-fatal — nächster fresh-Scan füllt
+    // den Cache mit dem neuen Plan-Limit eh wieder.
+    if (updated[0]?.id) {
+      try {
+        await sql`
+          DELETE FROM scan_cache
+          WHERE url IN (SELECT DISTINCT url FROM scans WHERE user_id = ${updated[0].id})
+        `;
+      } catch (err) {
+        console.warn(`[verify-checkout] scan_cache invalidation failed:`, err);
+      }
+    }
 
     console.log(`[verify-checkout] Plan updated: ${email} → ${plan}`);
     return NextResponse.json({ plan, paid: true });

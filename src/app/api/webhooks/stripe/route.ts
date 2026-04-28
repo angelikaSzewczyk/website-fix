@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { neon } from "@neondatabase/serverless";
 
+/** Invalidiert den scan_cache für alle URLs, die dieser User schonmal gescannt hat.
+ *  Wird bei JEDEM Plan-Wechsel gerufen — sonst sieht ein frisch upgegradeter
+ *  Agency-Kunde noch bis zu 24h den alten 10-Subpages-Scan aus dem Cache.
+ *  Failure-Mode: silently — Plan-Upgrade darf nicht hängen wenn Cache-Tabelle
+ *  fehlt oder Berechtigungen fehlen. Nächster Scan füllt den Cache eh neu.
+ *  Hinweis: erstellt eine neue neon-Instance — neon poolt intern, daher
+ *  kein Performance-Issue durch wiederholte Connections pro Webhook-Event. */
+async function invalidateScanCacheForUser(userId: string): Promise<void> {
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    await sql`
+      DELETE FROM scan_cache
+      WHERE url IN (SELECT DISTINCT url FROM scans WHERE user_id = ${userId})
+    `;
+  } catch (err) {
+    console.warn(`[stripe-webhook] scan_cache invalidation failed for user ${userId}:`, err);
+  }
+}
+
 /** Returns the plan key for a Stripe price ID, or null if unknown.
  *  null = abort the DB update — we never silently downgrade to "free" on a mystery price. */
 function priceIdToPlan(priceId: string | undefined): string | null {
@@ -46,13 +65,20 @@ export async function POST(req: NextRequest) {
     if (!plan) return NextResponse.json({ received: true }); // unknown price — already logged
 
     const subscriptionId = (session.subscription as string | null) ?? null;
-    await sql`
+    const updated = await sql`
       UPDATE users
       SET plan = ${plan},
           stripe_customer_id = ${session.customer as string},
           stripe_subscription_id = ${subscriptionId}
       WHERE email = ${email.toLowerCase()}
-    `;
+      RETURNING id
+    ` as { id: string }[];
+
+    // Cache-Invalidierung: Plan-Wechsel muss sofort wirksam sein, sonst
+    // läuft der nächste Scan in den 24h-Cache vom alten Plan.
+    if (updated[0]?.id) {
+      await invalidateScanCacheForUser(updated[0].id);
+    }
 
     console.log(`[stripe-webhook] Plan upgraded: ${email} → ${plan} (sub: ${subscriptionId})`);
   }
@@ -60,7 +86,11 @@ export async function POST(req: NextRequest) {
   if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object as Stripe.Subscription;
     const customerId = sub.customer as string;
-    await sql`UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}`;
+    const updated = await sql`
+      UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}
+      RETURNING id
+    ` as { id: string }[];
+    if (updated[0]?.id) await invalidateScanCacheForUser(updated[0].id);
   }
 
   if (event.type === "customer.subscription.updated") {
@@ -71,9 +101,17 @@ export async function POST(req: NextRequest) {
       const priceId = sub.items.data[0]?.price?.id;
       const plan = priceIdToPlan(priceId);
       if (!plan) return NextResponse.json({ received: true }); // unknown price — already logged
-      await sql`UPDATE users SET plan = ${plan} WHERE stripe_customer_id = ${customerId}`;
+      const updated = await sql`
+        UPDATE users SET plan = ${plan} WHERE stripe_customer_id = ${customerId}
+        RETURNING id
+      ` as { id: string }[];
+      if (updated[0]?.id) await invalidateScanCacheForUser(updated[0].id);
     } else if (status === "canceled" || status === "unpaid") {
-      await sql`UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}`;
+      const updated = await sql`
+        UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}
+        RETURNING id
+      ` as { id: string }[];
+      if (updated[0]?.id) await invalidateScanCacheForUser(updated[0].id);
     }
   }
 

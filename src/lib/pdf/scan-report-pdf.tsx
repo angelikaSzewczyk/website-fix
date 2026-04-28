@@ -162,7 +162,9 @@ function severityHex(sev: "red" | "yellow" | "green"): string {
 }
 
 function categoryLabel(cat: PdfScanIssue["category"]): string {
-  if (cat === "recht")   return "Barrierefreiheit & Recht";
+  // Phase-3-Begriffe — Datenkategorie 'recht' fasst Compliance + A11y zusammen,
+  // im PDF-Display als "Barrierefreiheit" gelabelt (synchron mit Dashboard).
+  if (cat === "recht")   return "Barrierefreiheit";
   if (cat === "speed")   return "Performance";
   if (cat === "shop")    return "Shop";
   if (cat === "builder") return "Page-Builder";

@@ -4306,7 +4306,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 {
                   num: "01",
                   color: "#7aa6ff",
-                  title: "Rechtliches & DSGVO",
+                  title: "Best Practices & DSGVO",
                   outcome: "Geprüft, dokumentiert, übergeben",
                   desc: "Wir prüfen Cookie-Banner, Einwilligungstexte, Datenschutzerklärung und Impressum auf DSGVO-Konformität — und korrigieren, was technisch klar umsetzbar ist.",
                   pills: ["DSGVO", "Cookie-Consent", "Impressum"],

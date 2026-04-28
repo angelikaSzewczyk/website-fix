@@ -441,8 +441,8 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
           </span>
         </div>
         <div style={{ flex: 1 }} />
-        {/* White-label settings link */}
-        <a href="/dashboard/branding" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, textDecoration: "none", whiteSpace: "nowrap" }}>
+        {/* White-label settings link — Branding lebt jetzt in /settings */}
+        <a href="/dashboard/settings#branding" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, textDecoration: "none", whiteSpace: "nowrap" }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07"/></svg>
           White-Label
         </a>
