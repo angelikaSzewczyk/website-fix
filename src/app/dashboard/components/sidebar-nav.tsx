@@ -12,6 +12,7 @@ import {
   Archive,
   Users,
   Code2,
+  Magnet,
 } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 import { isAgency as isAgencyPlan } from "@/lib/plans";
@@ -26,13 +27,14 @@ type NavItem = {
 
 // Plans that get the agency nav
 
-// 4-item agency nav (same for both agency tiers)
+// Agency nav (same for both agency tiers)
 const AGENCY_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard",              label: "Kommandozentrale",   icon: <LayoutDashboard size={16} />, exact: true },
-  { href: "/dashboard/clients",      label: "Kundenliste",        icon: <Users size={16} /> },
-  { href: "/dashboard/reports",      label: "Berichte-Archiv",    icon: <Archive size={16} /> },
-  { href: "/dashboard/widget-config",label: "Widget-Konfigurator", icon: <Code2 size={16} /> },
-  { href: "/dashboard/settings",     label: "Team-Einstellungen", icon: <Settings size={16} /> },
+  { href: "/dashboard",                label: "Kommandozentrale",     icon: <LayoutDashboard size={16} />, exact: true },
+  { href: "/dashboard/clients",        label: "Kundenliste",          icon: <Users size={16} /> },
+  { href: "/dashboard/reports",        label: "Berichte-Archiv",      icon: <Archive size={16} /> },
+  { href: "/dashboard/widget-config",  label: "Widget-Konfigurator",  icon: <Code2 size={16} /> },
+  { href: "/dashboard/lead-generator", label: "Lead-Generator (Widget)", icon: <Magnet size={16} /> },
+  { href: "/dashboard/settings",       label: "Team-Einstellungen",   icon: <Settings size={16} /> },
 ];
 
 // Nav for free / single plans

@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { LeadRow } from "./page";
+
+// Datensatz aus widget_leads — wurde früher aus page.tsx re-exportiert,
+// jetzt lokal, weil page.tsx aktuell die Placeholder-Variante ist.
+export type LeadRow = {
+  id: string;
+  visitor_email: string;
+  scanned_url: string;
+  score: number | null;
+  status: string;
+  created_at: string;
+  pdf_downloaded_at: string | null;
+  notification_sent: boolean;
+};
 
 // ── Light-mode tokens ─────────────────────────────────────────────────────────
 const C = {
