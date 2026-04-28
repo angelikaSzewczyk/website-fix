@@ -3799,7 +3799,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                       </div>
                       {/* Upgrade CTA */}
                       <Link
-                        href={module.status === "Agency" ? "/pricing?plan=agency" : "/pricing?plan=professional"}
+                        href="/fuer-agenturen#pricing"
                         style={{
                           fontSize: 12, fontWeight: 600,
                           color: module.status === "Agency" ? "#a78bfa" : "#fbbf24",
@@ -3923,7 +3923,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   {/* CTA — monitoring gets full-width prominent style */}
                   {module.status ? (
                     <Link
-                      href={module.status === "Agency" ? "/pricing?plan=agency-starter" : "/pricing?plan=professional"}
+                      href="/fuer-agenturen#pricing"
                       style={{
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         padding: "10px 18px", borderRadius: D.radiusXs,
@@ -4275,7 +4275,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 </div>
                 {/* CTA */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                  <Link href="/pricing?plan=agency" style={{
+                  <Link href="/fuer-agenturen#pricing" style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
                     padding: "11px 24px", borderRadius: 8,
                     background: "linear-gradient(135deg, #7c3aed, #a78bfa)",

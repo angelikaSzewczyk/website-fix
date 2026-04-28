@@ -181,8 +181,23 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
   const [inviteState, setInviteState] = useState<"idle" | "loading" | "error">("idle");
   const [inviteError, setInviteError] = useState("");
 
+  // /api/team kann 403 zurückgeben (Plan ohne Team-Feature), 401 (Session
+  // expired), oder Netzwerk-Fail. r.json() würde bei leerem Body throwen
+  // und einen unhandled rejection auslösen → "Application error". Daher
+  // defensiv: bei !ok einfach leeres Array setzen, kein UI-Block.
+  async function fetchTeam(): Promise<TeamMember[]> {
+    try {
+      const res = await fetch("/api/team");
+      if (!res.ok) return [];
+      const data = await res.json().catch(() => null);
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+
   useEffect(() => {
-    fetch("/api/team").then(r => r.json()).then(setMembers);
+    fetchTeam().then(setMembers);
   }, []);
 
   async function handleSave() {
@@ -198,27 +213,35 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
 
   async function handleInvite() {
     setInviteError(""); setInviteState("loading");
-    const res = await fetch("/api/team", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: newEmail }),
-    });
-    if (res.ok) {
-      const updated = await fetch("/api/team").then(r => r.json());
-      setMembers(updated); setNewEmail(""); setInviteState("idle");
-    } else {
-      const data = await res.json();
-      setInviteError(data.error ?? "Fehler beim Einladen.");
+    try {
+      const res = await fetch("/api/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail }),
+      });
+      if (res.ok) {
+        setMembers(await fetchTeam());
+        setNewEmail("");
+        setInviteState("idle");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setInviteError(data?.error ?? "Fehler beim Einladen.");
+        setInviteState("error");
+      }
+    } catch {
+      setInviteError("Netzwerkfehler beim Einladen.");
       setInviteState("error");
     }
   }
 
   async function handleRemove(id: number) {
-    await fetch("/api/team", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
+    try {
+      await fetch("/api/team", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+    } catch { /* swallow — UI-State unten setzt sowieso optimistisch */ }
     setMembers(prev => prev.filter(m => m.id !== id));
   }
 
