@@ -193,7 +193,7 @@ function Toggle({ checked, onChange, id }: { checked: boolean; onChange: (v: boo
   );
 }
 
-export default function SettingsClient({ initial, plan }: { initial: AgencySettings; plan: string }) {
+export default function SettingsClient({ initial, plan, embedded = false }: { initial: AgencySettings; plan: string; embedded?: boolean }) {
   const [settings, setSettings]   = useState<AgencySettings>(initial);
   const [members,  setMembers]    = useState<TeamMember[]>([]);
   const [scanInterval, setScanInterval] = useState<ScanInterval>("wöchentlich");
@@ -282,8 +282,16 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
     display: "block", fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6,
   };
 
+  // When embedded as a tab, drop outer <main> wrapper, H1, and integrations-shortcut
+  // — those are owned by SettingsTabsClient now.
+  const Wrapper = ({ children }: { children: React.ReactNode }) => embedded ? (
+    <>{children}</>
+  ) : (
+    <main style={{ maxWidth: 1020, margin: "0 auto", padding: "40px 24px 80px" }}>{children}</main>
+  );
+
   return (
-    <main style={{ maxWidth: 1020, margin: "0 auto", padding: "40px 24px 80px" }}>
+    <Wrapper>
       <style>{`
         @keyframes wf-spin { to { transform: rotate(360deg); } }
         /* Save-Button: Brand-Farbe + Hover-Glow */
@@ -299,15 +307,20 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
         /* Hex-Input mit invalidem Format zeigt subtilen Border-Hint */
         .wf-hex-input:invalid { border-color: rgba(239,68,68,0.45) !important; }
       `}</style>
-      <h1 style={{ fontSize: 26, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-        Agentur-Einstellungen
-      </h1>
-      <p style={{ margin: "0 0 24px", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
-        White-Label Branding und Team-Verwaltung.
-      </p>
+      {!embedded && (
+        <>
+          <h1 style={{ fontSize: 26, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+            Agentur-Einstellungen
+          </h1>
+          <p style={{ margin: "0 0 24px", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
+            White-Label Branding und Team-Verwaltung.
+          </p>
+        </>
+      )}
 
-      {/* Integrations-Shortcut — Pro/Agency */}
-      <Link href="/dashboard/settings/integrations" style={{
+      {/* Integrations-Shortcut — Pro/Agency, nur in standalone-Modus */}
+      {!embedded && (
+      <Link href="/dashboard/settings#integrationen" style={{
         display: "flex", alignItems: "center", gap: 12, marginBottom: 32,
         padding: "14px 18px", borderRadius: 12,
         background: "linear-gradient(90deg, rgba(16,185,129,0.08), rgba(66,133,244,0.05))",
@@ -334,6 +347,7 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </Link>
+      )}
 
       {/* TWO-COLUMN LAYOUT: Form + Live Preview */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 20, alignItems: "start", marginBottom: 28 }}>
@@ -799,6 +813,6 @@ export default function SettingsClient({ initial, plan }: { initial: AgencySetti
           </p>
         )}
       </section>
-    </main>
+    </Wrapper>
   );
 }

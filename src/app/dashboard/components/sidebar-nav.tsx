@@ -37,7 +37,7 @@ const AGENCY_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/reports",        label: "Berichte-Archiv",      icon: <Archive size={16} /> },
   { href: "/dashboard/widget-config",  label: "Widget-Konfigurator",  icon: <Code2 size={16} /> },
   { href: "/dashboard/lead-generator", label: "Lead-Generator (Widget)", icon: <Magnet size={16} />, beta: true },
-  { href: "/dashboard/settings",       label: "Team-Einstellungen",   icon: <Settings size={16} /> },
+  { href: "/dashboard/settings#profil", label: "Einstellungen",       icon: <Settings size={16} /> },
 ];
 
 // Nav for free / single plans
@@ -145,8 +145,12 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
 
   const navItems = isAgency ? AGENCY_NAV_ITEMS : DEFAULT_NAV_ITEMS;
 
-  const isActive = (item: NavItem) =>
-    item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  const isActive = (item: NavItem) => {
+    // Hash aus dem href entfernen — pathname enthält ihn nie, sonst würde
+    // ein Link wie "/dashboard/settings#profil" niemals als aktiv markiert.
+    const base = item.href.split("#")[0];
+    return item.exact ? pathname === base : pathname.startsWith(base);
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 12px" }}>

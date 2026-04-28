@@ -1850,7 +1850,7 @@ function GscInsightCard({ speedScore, domainUrl }: { speedScore: number; domainU
         )}
 
         {state === "not_configured" && (
-          <Link href="/dashboard/settings/integrations" style={{
+          <Link href="/dashboard/settings#integrationen" style={{
             fontSize: 11, fontWeight: 700, color: "#4285F4",
             padding: "5px 11px", borderRadius: 6,
             background: "rgba(66,133,244,0.10)", border: "1px solid rgba(66,133,244,0.28)",

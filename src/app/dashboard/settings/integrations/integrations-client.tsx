@@ -47,6 +47,9 @@ type Props = {
   hasAccess:       boolean;
   initialStatus:   Status | null;
   initialSettings: VisibleSettings | null;
+  /** Wenn true: Component rendert ohne <main>-Wrapper, ohne Back-Link,
+   *  ohne H1 — wird in SettingsTabsClient als Tab-Inhalt embedded. */
+  embedded?:       boolean;
 };
 
 const D = {
@@ -124,7 +127,7 @@ const PROVIDERS = [
 
 type FieldKey = (typeof PROVIDERS)[number]["fields"][number]["key"];
 
-export default function IntegrationsSettingsClient({ plan, hasAccess, initialStatus, initialSettings }: Props) {
+export default function IntegrationsSettingsClient({ plan, hasAccess, initialStatus, initialSettings, embedded = false }: Props) {
   const [status,  setStatus]  = useState<Status | null>(initialStatus);
   const [values,  setValues]  = useState<Record<string, string>>({
     jira_domain:      initialSettings?.jira_domain      ?? "",
@@ -264,8 +267,16 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
     }
   }
 
+  // When embedded as a tab, drop outer <main>, back-link, H1 — those belong
+  // to the parent SettingsTabsClient now.
+  const Wrapper = ({ children }: { children: React.ReactNode }) => embedded ? (
+    <>{children}</>
+  ) : (
+    <main style={{ minHeight: "100vh", background: D.page, color: D.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: "40px 24px 80px" }}>{children}</main>
+  );
+
   return (
-    <main style={{ minHeight: "100vh", background: D.page, color: D.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: "40px 24px 80px" }}>
+    <Wrapper>
       <style>{`
         @keyframes wf-spin { to { transform: rotate(360deg); } }
         @keyframes wf-toast-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
@@ -286,32 +297,36 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
         .wf-int-pre::-webkit-scrollbar { height: 6px; }
         .wf-int-pre::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
       `}</style>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <div style={embedded ? undefined : { maxWidth: 900, margin: "0 auto" }}>
 
-        <Link href="/dashboard/settings" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: D.textMuted, textDecoration: "none", marginBottom: 18 }}>
-          ← Zurück zu den Einstellungen
-        </Link>
+        {!embedded && (
+          <Link href="/dashboard/settings" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: D.textMuted, textDecoration: "none", marginBottom: 18 }}>
+            ← Zurück zu den Einstellungen
+          </Link>
+        )}
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-          <div>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.textMuted, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              Drittanbieter
-            </p>
-            <h1 style={{ margin: "0 0 8px", fontSize: 26, fontWeight: 900, letterSpacing: "-0.025em" }}>
-              Integrationen
-            </h1>
-            <p style={{ margin: 0, fontSize: 13.5, color: D.textSub, maxWidth: 620, lineHeight: 1.6 }}>
-              Verbinde Slack, Jira, Trello, Zapier und Google Search Console mit WebsiteFix. Scan-Ergebnisse lassen sich als Task exportieren, Monitoring-Alerts landen direkt in deinem Workflow.
-            </p>
+        {/* Header — nur in standalone-Modus (embedded hat Tab-Nav als Header) */}
+        {!embedded && (
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
+            <div>
+              <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: D.textMuted, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                Drittanbieter
+              </p>
+              <h1 style={{ margin: "0 0 8px", fontSize: 26, fontWeight: 900, letterSpacing: "-0.025em" }}>
+                Integrationen
+              </h1>
+              <p style={{ margin: 0, fontSize: 13.5, color: D.textSub, maxWidth: 620, lineHeight: 1.6 }}>
+                Verbinde Slack, Jira, Trello, Zapier und Google Search Console mit WebsiteFix. Scan-Ergebnisse lassen sich als Task exportieren, Monitoring-Alerts landen direkt in deinem Workflow.
+              </p>
+            </div>
+            <span style={{
+              fontSize: 10, fontWeight: 800, padding: "4px 11px", borderRadius: 20,
+              background: planBg, color: planColor, border: `1px solid ${planBd}`, letterSpacing: "0.08em", whiteSpace: "nowrap",
+            }}>
+              {planLabel}
+            </span>
           </div>
-          <span style={{
-            fontSize: 10, fontWeight: 800, padding: "4px 11px", borderRadius: 20,
-            background: planBg, color: planColor, border: `1px solid ${planBd}`, letterSpacing: "0.08em", whiteSpace: "nowrap",
-          }}>
-            {planLabel}
-          </span>
-        </div>
+        )}
 
         {/* Gating für Starter */}
         {!hasAccess && (
@@ -635,6 +650,6 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
           );
         })()}
       </div>
-    </main>
+    </Wrapper>
   );
 }

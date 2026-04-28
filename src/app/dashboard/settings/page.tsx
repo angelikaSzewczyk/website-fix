@@ -2,9 +2,10 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
-import SettingsClient from "./settings-client";
+import SettingsTabsClient from "./settings-tabs-client";
 import FreeSettingsClient from "./free-settings-client";
 import { hasBrandingAccess } from "@/lib/plans";
+import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 
 export const metadata: Metadata = {
   title: "Einstellungen — WebsiteFix",
@@ -20,9 +21,6 @@ type BrandingSettings = {
   primary_color:  string;
 };
 
-/** Safe-Defaults für Branding wenn Query fehlschlägt oder noch keine Settings
- *  hinterlegt sind. Verhindert Application Error bei frisch upgegradeten
- *  Pro-/Agency-Kunden, die noch nie /dashboard/settings#branding besucht haben. */
 const BRANDING_DEFAULTS: BrandingSettings = {
   agency_name:    "",
   agency_website: "",
@@ -31,9 +29,8 @@ const BRANDING_DEFAULTS: BrandingSettings = {
 };
 
 export default async function SettingsPage() {
-  // Auth-Gate mit defensivem try/catch — sollte Auth-Service einmal hicksen
-  // (Token-Decode-Fehler, JWT abgelaufen mid-request), nicht die ganze
-  // Page-Komponente abstürzen lassen, sondern sauber zur Login-Seite leiten.
+  // Auth-Gate mit defensivem try/catch — Auth-Service-Fehler darf die
+  // Page nicht abstürzen lassen.
   let session;
   try {
     session = await auth();
@@ -43,12 +40,12 @@ export default async function SettingsPage() {
   }
   if (!session?.user) redirect("/login");
 
-  const plan = (session.user as { plan?: string }).plan ?? "starter";
+  const plan   = (session.user as { plan?: string }).plan ?? "starter";
   const userId = session.user.id;
 
-  // ── Pro+ / Agency: White-Label-Branding-Settings laden ────────────────────
+  // ── Pro+ / Agency: Settings-Hub mit Tabs (Profil / Branding / Integrationen) ──
   if (hasBrandingAccess(plan)) {
-    let initial: BrandingSettings = { ...BRANDING_DEFAULTS };
+    let branding: BrandingSettings = { ...BRANDING_DEFAULTS };
 
     try {
       const sql = neon(process.env.DATABASE_URL!);
@@ -59,27 +56,50 @@ export default async function SettingsPage() {
         LIMIT 1
       ` as { agency_name: string | null; agency_website: string | null; logo_url: string | null; primary_color: string | null }[];
 
-      // rows[0] kann undefined sein wenn der User noch keine Branding-Daten
-      // hinterlegt hat. Optional Chaining fängt das ab — alle Felder fallen
-      // auf BRANDING_DEFAULTS zurück.
       const row = rows[0];
-      initial = {
+      branding = {
         agency_name:    row?.agency_name    ?? BRANDING_DEFAULTS.agency_name,
         agency_website: row?.agency_website ?? BRANDING_DEFAULTS.agency_website,
         logo_url:       row?.logo_url       ?? BRANDING_DEFAULTS.logo_url,
         primary_color:  row?.primary_color  ?? BRANDING_DEFAULTS.primary_color,
       };
     } catch (err) {
-      // Häufige Gründe: agency_settings-Tabelle fehlt (Migration ausstehend),
-      // Column-Mismatch nach Schema-Update, kurzfristiger DB-Connection-Drop.
-      // In allen Fällen: Page mit Defaults rendern statt 500-Error.
       console.error("[settings] agency_settings query failed:", err);
     }
 
-    return <SettingsClient plan={plan} initial={initial} />;
+    // Integrations-Settings vorab laden, damit Tab-Wechsel ohne weiteren
+    // Roundtrip flutscht. Failure → null → IntegrationsTab zeigt leere
+    // Form (User kann trotzdem konfigurieren, das Speichern füllt die DB).
+    let integrationsSettings = null;
+    let integrationsStatus   = null;
+    try {
+      const settings = await getIntegrationSettings(userId as string);
+      integrationsSettings = settings ? {
+        jira_domain:      settings.jira_domain,
+        jira_email:       settings.jira_email,
+        jira_project_key: settings.jira_project_key,
+        trello_list_id:   settings.trello_list_id,
+        gsc_site_url:     settings.gsc_site_url,
+        ga_property_id:   settings.ga_property_id,
+      } : null;
+      integrationsStatus = settings ? connectionStatus(settings) : null;
+    } catch (err) {
+      console.error("[settings] integrations query failed:", err);
+    }
+
+    return (
+      <SettingsTabsClient
+        name={session.user.name ?? ""}
+        email={session.user.email ?? ""}
+        plan={plan}
+        branding={branding}
+        integrationsStatus={integrationsStatus}
+        integrationsSettings={integrationsSettings}
+      />
+    );
   }
 
-  // ── Starter / Free-Plan: einfache Settings-Seite ──────────────────────────
+  // ── Starter / Free-Plan: einfache Settings-Seite (kein Tabs-System) ──
   let projectUrl   = "";
   let monthlyScans = 0;
 
@@ -101,7 +121,6 @@ export default async function SettingsPage() {
     monthlyScans = countRow[0]?.cnt ?? 0;
   } catch (err) {
     console.error("[settings] free-plan query failed:", err);
-    // Defaults sind schon gesetzt — Page rendert mit leerem URL + 0 Scans
   }
 
   return (
