@@ -1,10 +1,21 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import SettingsClient from "./settings-client";
 import IntegrationsSettingsClient from "./integrations/integrations-client";
 import { PLANS, normalizePlan, type PlanKey } from "@/lib/plans";
+
+// Erlaubte Provider-IDs für ?open=<provider> Deep-Link.
+// Whitelist gegen Hash-Parser-Pattern: User-Input wird nur akzeptiert,
+// wenn er hier matched — verhindert XSS- oder State-Pollution-Vektoren.
+const PROVIDER_IDS = ["slack", "zapier", "asana", "jira", "trello", "gsc", "ga"] as const;
+type ProviderId = (typeof PROVIDER_IDS)[number];
+function validateProvider(raw: string | null): ProviderId | null {
+  if (!raw) return null;
+  return (PROVIDER_IDS as readonly string[]).includes(raw) ? (raw as ProviderId) : null;
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type BrandingSettings = {
@@ -286,21 +297,44 @@ type Props = {
 export default function SettingsTabsClient({
   name, email, plan, branding, integrationsStatus, integrationsSettings,
 }: Props) {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>("profil");
   const [hydrated,  setHydrated]  = useState(false);
   const brandColor = /^#[0-9a-fA-F]{6}$/.test(branding.primary_color)
     ? branding.primary_color
     : "#8df3d3";
 
-  // Hash → Tab. Initial-Hash beim Mount + auf hashchange-Event reagieren.
+  // ?open=<provider> Deep-Link einmalig beim Mount auswerten. Wert wird in
+  // den lokalen State eingefroren, damit das nachträgliche router.replace
+  // (das den Param strippt) das Akkordeon nicht wieder schließt.
+  const [initialOpen] = useState<ProviderId | null>(() => validateProvider(searchParams?.get("open") ?? null));
+
+  // Hash → Tab. Initial-Hash beim Mount + auf hashchange + popstate reagieren.
+  // popstate fängt Browser-Back/Forward ab — Next.js' router.replace löst kein
+  // hashchange-Event aus, deshalb brauchen wir beide Listener.
   // hydrated-Flag verhindert SSR/Client-Hash-Mismatch in der ersten Frame.
   useEffect(() => {
     setActiveTab(parseHash());
     setHydrated(true);
-    function onHashChange() { setActiveTab(parseHash()); }
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    function syncFromHash() { setActiveTab(parseHash()); }
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate",   syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate",   syncFromHash);
+    };
   }, []);
+
+  // ?open=<provider> aus der URL entfernen, sobald wir ihn gelesen haben.
+  // Hash bleibt erhalten, kein Scroll-Sprung. Das verhindert, dass ein
+  // Browser-Refresh das Akkordeon erneut "automatisch" aufploppen lässt.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!searchParams?.get("open")) return;
+    const hash = window.location.hash;
+    router.replace(`${window.location.pathname}${hash}`, { scroll: false });
+  }, [router, searchParams]);
 
   function selectTab(tab: TabId) {
     setActiveTab(tab);
@@ -353,6 +387,7 @@ export default function SettingsTabsClient({
             hasAccess={true /* gegated bereits in page.tsx via hasBrandingAccess */}
             initialStatus={integrationsStatus}
             initialSettings={integrationsSettings}
+            initialOpen={initialOpen}
             embedded
           />
         </TabContent>

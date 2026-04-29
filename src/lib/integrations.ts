@@ -157,26 +157,31 @@ export type TaskExportPayload = {
   meta?:        Record<string, unknown>; // zusätzliche Daten (DOM-Depth, Fonts, Woo-Risk, …)
 };
 
+export type ExportProvider = "jira" | "trello" | "zapier" | "asana";
+
 export type ExportResult = {
   ok:       boolean;
-  provider: "jira" | "trello" | "zapier";
+  provider: ExportProvider;
   externalId?:  string;  // z.B. Jira-Issue-Key oder Trello-Card-Id
   externalUrl?: string;  // direkter Link zum Ticket
   error?:   string;
 };
 
 /** Sendet ein Task an den zuerst-konfigurierten Provider in der Reihenfolge
- *  preferredProvider → jira → trello → zapier. */
+ *  preferredProvider → jira → trello → zapier → asana. Asana steht hinten in
+ *  der Default-Kette, weil der Webhook-Empfänger (Asana-Rules) komplexer zu
+ *  konfigurieren ist als Jira/Trello — User mit allen drei nutzt eher die
+ *  expliziten Provider. Mit explizitem preferred="asana" greift es vorrangig. */
 export async function exportTask(
   settings: IntegrationSettings,
   payload: TaskExportPayload,
-  preferredProvider?: "jira" | "trello" | "zapier",
+  preferredProvider?: ExportProvider,
 ): Promise<ExportResult> {
   const status = connectionStatus(settings);
-  // Bevorzugten Provider als Erstes prüfen
-  const order: Array<"jira" | "trello" | "zapier"> = preferredProvider
-    ? [preferredProvider, ...(["jira", "trello", "zapier"] as const).filter(p => p !== preferredProvider)]
-    : ["jira", "trello", "zapier"];
+  const defaults: readonly ExportProvider[] = ["jira", "trello", "zapier", "asana"];
+  const order: ExportProvider[] = preferredProvider
+    ? [preferredProvider, ...defaults.filter(p => p !== preferredProvider)]
+    : [...defaults];
 
   for (const p of order) {
     if (!status[p]) continue;
@@ -184,12 +189,13 @@ export async function exportTask(
       if (p === "jira")   return await exportToJira(settings, payload);
       if (p === "trello") return await exportToTrello(settings, payload);
       if (p === "zapier") return await exportToZapier(settings, payload);
+      if (p === "asana")  return await exportToAsana(settings, payload);
     } catch (err) {
       return { ok: false, provider: p, error: String(err) };
     }
   }
 
-  return { ok: false, provider: "zapier", error: "Kein Integration-Provider verbunden" };
+  return { ok: false, provider: preferredProvider ?? "zapier", error: "Kein Integration-Provider verbunden" };
 }
 
 // ── Jira: REST v3, Issue anlegen ───────────────────────────────────────────
@@ -268,6 +274,35 @@ async function exportToTrello(s: IntegrationSettings, p: TaskExportPayload): Pro
     externalId:  data.id,
     externalUrl: data.shortUrl,
   };
+}
+
+// ── Asana: generischer Webhook (User-Asana-Rule "When webhook received") ──
+// Asana erlaubt eigene Webhook-URLs in Project-Rules. Wir posten dasselbe
+// Payload-Schema wie für Zapier — User kann das in seiner Asana-Rule frei
+// auf Felder mappen. event-Name "websitefix.task_export" hilft beim Filtern.
+async function exportToAsana(s: IntegrationSettings, p: TaskExportPayload): Promise<ExportResult> {
+  if (!s.asana_webhook_url) {
+    return { ok: false, provider: "asana", error: "Kein Asana-Webhook hinterlegt" };
+  }
+  const res = await fetch(s.asana_webhook_url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event:       "websitefix.task_export",
+      title:       p.title,
+      description: p.description,
+      priority:    p.priority,
+      url:         p.url,
+      scan_id:     p.scanId,
+      source:      p.source,
+      meta:        p.meta ?? {},
+      timestamp:   new Date().toISOString(),
+    }),
+  });
+  if (!res.ok) {
+    return { ok: false, provider: "asana", error: `Asana ${res.status}` };
+  }
+  return { ok: true, provider: "asana" };
 }
 
 // ── Zapier: generischer Webhook (User Zap-Trigger "Catch Hook") ────────────

@@ -7,6 +7,7 @@ import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
 import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue } from "@/lib/plans";
+import { touchLastSeen } from "@/lib/heartbeat";
 
 const SCAN_LIMIT = 3;
 
@@ -37,6 +38,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   const plan = normalizePlan(rawPlan);
   if (!plan) redirect("/fuer-agenturen");
+
+  // Heartbeat: aktualisiert users.last_seen_at fire-and-forget für jedes
+  // Dashboard-Render. Throttled auf 60 s in der DB-WHERE-Clause, damit
+  // schnelle Page-Navigation kein UPDATE-Spam erzeugt. KEIN await — DB-
+  // Failure darf den Render nicht aufhalten.
+  touchLastSeen(session.user.id as string);
 
   const userName  = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
@@ -107,9 +114,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     if (colorRows[0]?.primary_color) agencyPrimary = colorRows[0].primary_color;
   } catch { /* non-critical */ }
 
-  // Sanitize: only allow valid hex colors to prevent CSS injection.
-  // Starter hat KEIN Branding — nutzt immer Theme-Primary. Pro/Agency dürfen Custom-Color.
-  const userBrandingColor = hasBrandingAccess(plan) && /^#[0-9a-fA-F]{3,8}$/.test(agencyPrimary)
+  // Sanitize: only allow valid 6-digit hex colors. Strikt 6 Zeichen, weil
+  // wir unten Hex-Concat (`${color}14`) für Alpha-Versionen nutzen — ein
+  // 3-Zeichen-Hex (#abc) würde `#abc14` produzieren, was kein valider 8-stelliger
+  // Hex ist. Starter hat KEIN Branding → Theme-Primary. Pro/Agency dürfen Custom.
+  const userBrandingColor = hasBrandingAccess(plan) && /^#[0-9a-fA-F]{6}$/.test(agencyPrimary)
     ? agencyPrimary
     : theme.primary;
   const safeColor = userBrandingColor;
@@ -137,6 +146,17 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           --agency-primary:        ${safeColor};
           --agency-primary-bg:     ${safeColor}18;
           --agency-primary-border: ${safeColor}35;
+
+          /* Agency-Accent — gleiche Quelle wie --agency-primary, andere Alphas.
+             Wird von team-widget, locked-section, issue-action-bar konsumiert.
+             Layout-Level-Definition ersetzt die frühere Inline-Var in
+             dashboard/page.tsx, damit /dashboard/team und Scan-Detail
+             die Brand-Farbe ebenfalls erben. */
+          --agency-accent:            ${safeColor};
+          --agency-accent-bg:         ${safeColor}14;
+          --agency-accent-border:     ${safeColor}47;
+          --agency-accent-glow:       ${safeColor}50;
+          --agency-accent-glow-soft:  ${safeColor}40;
 
           /* Emerald-Tokens (für Professional-Upgrade-CTAs überall im Starter-Dashboard) */
           --pro-emerald:           #10B981;

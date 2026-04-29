@@ -95,6 +95,16 @@ export function getPlanQuota(plan: string | null | undefined): PlanQuota {
 
 export const PLAN_KEYS = Object.keys(PLANS) as PlanKey[];
 
+/** Alle Plan-Strings, die WebsiteFix in der DB akzeptiert — kanonische 3 + Legacy.
+ *  Single-Source für Bulk-User-Filter (Cron-Routes). Vorher waren die 6 Strings
+ *  in jeder SQL-Query hartkodiert; ein neuer Legacy-String hätte stillschweigend
+ *  Cron-User exkludiert. WICHTIG: "free" bewusst NICHT enthalten — Free-User
+ *  sollen keine Monitoring-Mails / Monatsberichte bekommen, das gehört zum Pro-Plan. */
+export const KNOWN_PLAN_STRINGS: readonly string[] = [
+  "starter", "professional", "agency",
+  "smart-guard", "agency-starter", "agency-pro",
+] as const;
+
 export const PLAN_MRR: Record<string, number> = Object.fromEntries(
   Object.entries(PLANS).map(([k, v]) => [k, v.mrr]),
 );

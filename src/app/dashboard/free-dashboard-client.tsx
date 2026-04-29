@@ -6,6 +6,8 @@ import Link from "next/link";
 import WfOnboardingTour from "./components/WfOnboardingTour";
 import WfProGuidedTour from "./components/WfProGuidedTour";
 import StarterResultsPanel from "./components/StarterResultsPanel";
+import LockedSection from "./components/locked-section";
+import HistoryChart from "./components/history-chart";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, isPaidPlan, normalizePlan } from "@/lib/plans";
@@ -82,6 +84,10 @@ export interface FreeDashboardProps {
     cssBloatHints:       string[];
     stylesheetCount:     number;
   } | null;
+  /** Integration-Verbindungsstatus für die Issue-Action-Bar (Pro+).
+   *  Null/undefined wenn unter Pro oder Status nicht ladbar — Action-Bar
+   *  zeigt dann nicht die Buttons, sondern die "Provider verbinden →"-Hints. */
+  integrationsStatus?: { asana: boolean; slack: boolean } | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -2244,6 +2250,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     totalPages, unterseiten,
     wooAudit,
     builderAudit,
+    integrationsStatus = null,
   } = props;
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
@@ -3313,12 +3320,40 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             </div>
           )}
 
-          {/* ①b GSC-CARD + LOW-SPEED-INSIGHT — Professional+ */}
+          {/* ①a SCORE-VERLAUF — Pro+ ─ unter Professional sieht User Lock-Card.
+              Phase-2-LockedSection: Children werden gar nicht gemountet bei
+              gelocktem User → kein Chart-Bundle, kein Daten-Fetch. */}
+          {!isNewScan && lastScan && (
+            <LockedSection
+              required="professional"
+              currentPlan={plan}
+              feature="history-chart"
+              title="Score-Verlauf · 7 Tage"
+              description="Sieh, wie sich dein Score über die Zeit entwickelt. Jede Verbesserung dokumentiert, jede Regression erkannt — bevor sie sich aufs Ranking auswirkt."
+              upsellPrice={89}
+            >
+              <HistoryChart scans={scans} />
+            </LockedSection>
+          )}
+
+          {/* ①b GSC-CARD + LOW-SPEED-INSIGHT — Agency-Feature.
+              Outer-Gate `isAtLeastProfessional`: Starter sieht die Sektion gar
+              nicht (zu viele Locks erschlagen). Pro sieht Lock-Card mit
+              Agency-Upsell. Agency sieht echte Live-Daten. */}
           {!isNewScan && lastScan && isAtLeastProfessional(plan) && (
-            <GscInsightCard
-              speedScore={speedScore}
-              domainUrl={lastScan.url}
-            />
+            <LockedSection
+              required="agency"
+              currentPlan={plan}
+              feature="gsc"
+              title="Google Search Console — Live-Daten"
+              description="Impressions, Klicks und Position direkt neben deinen Scores. Sieh den SEO-ROI deiner Optimierungen — exakt, nicht geschätzt."
+              upsellPrice={249}
+            >
+              <GscInsightCard
+                speedScore={speedScore}
+                domainUrl={lastScan.url}
+              />
+            </LockedSection>
           )}
 
           {/* ② TECH FINGERPRINT STRIP */}
@@ -3354,14 +3389,25 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
             />
           )}
 
-          {/* ②c E-COMMERCE & SHOP-PERFORMANCE — nur bei erkanntem WooCommerce */}
+          {/* ②c E-COMMERCE & SHOP-PERFORMANCE — nur bei erkanntem WooCommerce.
+              Pro+ Feature per Spec: Starter sieht die Lock-Card mit Upsell,
+              ab Professional rendert das echte Audit (inkl. Revenue-Risk in €). */}
           {!isNewScan && lastScan && fingerprint && fingerprint.ecommerce.value === "WooCommerce" &&
             fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD && (
-            <WooCommerceSection
-              plan={plan}
-              shopIssues={issues.filter(i => i.category === "shop")}
-              audit={wooAudit}
-            />
+            <LockedSection
+              required="professional"
+              currentPlan={plan}
+              feature="shop-audit"
+              title="Shop-Audit — Revenue-Risiko-Analyse"
+              description="Plugin-Impact, Cart-Performance und Template-Status für deinen WooCommerce-Shop. Erkenne, wie viel Umsatz du durch Tech-Schulden verlierst."
+              upsellPrice={89}
+            >
+              <WooCommerceSection
+                plan={plan}
+                shopIssues={issues.filter(i => i.category === "shop")}
+                audit={wooAudit}
+              />
+            </LockedSection>
           )}
 
           {/* ②d BUILDER-INTELLIGENCE — Elementor / Divi / Astra / WPBakery */}
@@ -3511,6 +3557,8 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                 ? builderAudit.builder
                 : null
             }
+            integrationsStatus={integrationsStatus}
+            scanUrl={lastScan?.url}
           />
 
           {/* ─── EBENE 3: DEEP-SCAN MAP ─────────────────────────────────────── */}

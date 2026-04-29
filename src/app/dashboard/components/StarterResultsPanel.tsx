@@ -5,6 +5,7 @@ import Link from "next/link";
 import { isAtLeastProfessional } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
+import IssueActionBar from "./issue-action-bar";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
@@ -14,6 +15,14 @@ export interface IssueProp {
   category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number;
 }
+
+/** Status der Integration-Provider, wie ihn lib/integrations.connectionStatus
+ *  liefert. Nur die zwei für den Issue-Export relevanten Provider werden hier
+ *  benötigt (Asana = Task, Slack = Notification). */
+export type IssueActionStatus = {
+  asana: boolean;
+  slack: boolean;
+};
 
 interface Props {
   issues:      IssueProp[];
@@ -27,6 +36,11 @@ interface Props {
   isWooCommerce?: boolean; // triggers the Shop-Owner executive-summary template suggestion
   builderName?:   string | null; // erkannter Page-Builder für Builder-Smart-Template
   builderForGuidance?: BuilderName; // identifizierter Builder für Solution-Variants
+  /** Wenn gesetzt UND plan ≥ professional: pro Issue die Asana/Slack-Action-Bar
+   *  rendern. Undefined (z.B. im public Share-View) → keine Action-Bar. */
+  integrationsStatus?: IssueActionStatus | null;
+  /** URL des gescannten Projekts — für die ActionBar als project-url im Payload. */
+  scanUrl?:    string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -281,6 +295,9 @@ function AccordionItem({
   wfAnchor,
   onAutoFix,
   builder = null,
+  actionStatus = null,
+  scanUrl,
+  scanId,
 }: {
   issue: IssueProp;
   index: number;
@@ -288,6 +305,11 @@ function AccordionItem({
   wfAnchor?: string;
   onAutoFix: () => void;
   builder?: BuilderName;
+  /** Wenn gesetzt → IssueActionBar (Asana/Slack) rendert unten im Panel.
+   *  Pro+ -only; null/undefined unterdrückt die Bar komplett (Share-View). */
+  actionStatus?: IssueActionStatus | null;
+  scanUrl?: string;
+  scanId?:  string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [showSolution, setShowSolution] = useState(false);
@@ -406,6 +428,18 @@ function AccordionItem({
               Auto-Fix via Plugin
             </button>
           </div>
+
+          {/* Pro-Workflow-UX: Issue → Asana / Slack. Nur wenn der Caller
+              actionStatus + scanUrl mitliefert (Pro+ Dashboard / Scan-Detail).
+              Public Share-View lässt die Props weg → keine Bar. */}
+          {actionStatus && scanUrl && (
+            <IssueActionBar
+              issue={{ severity: issue.severity, title: issue.title, body: issue.body, count: issue.count }}
+              status={actionStatus}
+              scanUrl={scanUrl}
+              scanId={scanId}
+            />
+          )}
 
           {/* Expert-Guidance: ausklappbare Lösung mit Builder-spezifischen Schritten */}
           {showSolution && solution && variant && (
@@ -614,7 +648,7 @@ function SkeletonRing({ label }: { label: string }) {
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId, isWooCommerce = false, builderName = null, builderForGuidance = null }: Props) {
+export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId, isWooCommerce = false, builderName = null, builderForGuidance = null, integrationsStatus = null, scanUrl }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
   const [showPdfHint, setShowPdfHint]   = useState(false);
@@ -1320,6 +1354,9 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
                     onAutoFix={() => setShowUpgrade(true)}
                     builder={builderForGuidance}
+                    actionStatus={isPro ? integrationsStatus ?? null : null}
+                    scanUrl={scanUrl}
+                    scanId={scanId}
                   />
                 );
               })}
@@ -1358,6 +1395,9 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
                     onAutoFix={() => setShowUpgrade(true)}
                     builder={builderForGuidance}
+                    actionStatus={isPro ? integrationsStatus ?? null : null}
+                    scanUrl={scanUrl}
+                    scanId={scanId}
                   />
                 );
               })}

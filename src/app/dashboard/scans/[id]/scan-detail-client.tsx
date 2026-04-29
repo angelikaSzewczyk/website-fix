@@ -13,9 +13,12 @@ interface Props {
   yellowCount: number;
   speedScore: number;
   scanId: string;
+  /** Integrations-Status für die Issue-Action-Bar — null wenn Free/Starter
+   *  oder Status nicht ladbar. Wird 1:1 an StarterResultsPanel weitergereicht. */
+  integrationsStatus?: { asana: boolean; slack: boolean } | null;
 }
 
-export default function ScanDetailClient({ url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId }: Props) {
+export default function ScanDetailClient({ url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId, integrationsStatus = null }: Props) {
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
     day: "2-digit", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
@@ -70,6 +73,8 @@ export default function ScanDetailClient({ url, createdAt, plan, issues, redCoun
           plan={plan}
           lastScan={true}
           scanId={scanId}
+          integrationsStatus={integrationsStatus}
+          scanUrl={url}
         />
       </div>
     </div>

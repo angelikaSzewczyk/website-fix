@@ -5,9 +5,11 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import FreeDashboardClient from "./free-dashboard-client";
-import { isAtLeastProfessional } from "@/lib/plans";
+import { isAtLeastProfessional, isAgency as isAgencyPlan, getPlanQuota } from "@/lib/plans";
 import { classifyDisplayCategory } from "@/lib/issue-categories";
+import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 import ModalCloseButton from "./components/ModalCloseButton";
+import TeamWidget from "./components/team-widget";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +45,15 @@ const C = {
 } as const;
 
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
-// Canonical plans: starter | professional | agency (+ legacy aliases)
+// Canonical plans: starter | professional | agency (+ legacy aliases). Helper
+// isAgencyPlan() normalisiert via lib/plans → Legacy-Strings (agency-starter,
+// agency-pro) werden zentral dort gemappt, nicht doppelt hier.
 function getLayout(plan: string): "single" | "agency" {
-  if (plan === "agency" || plan === "agency-starter" || plan === "agency-pro") return "agency";
-  return "single"; // starter, professional (+ legacy smart-guard)
+  return isAgencyPlan(plan) ? "agency" : "single"; // single = starter + professional
 }
+
+// Hex-Color-Validation und Branding-Color-Source leben jetzt in
+// dashboard/layout.tsx. Page-Level brauchen wir nur agency_name + logo_url.
 
 // ─── CMS Detection ──────────────────────────────────────────────────────────────
 function detectCMS(text: string, url?: string): { label: string; version?: string } {
@@ -264,80 +270,9 @@ function getFixGuide(title: string, cms: string): string {
   return "Prüfe den vollständigen Bericht für detaillierte Handlungsempfehlungen zu diesem Punkt.";
 }
 
-// ─── SVG History Chart ─────────────────────────────────────────────────────────
+// ─── ScanBrief-Type (HistoryChart wurde nach components/history-chart.tsx
+//     extrahiert; das Original lebt nicht mehr hier) ─────────────────────────
 type ScanBrief = { id: string; url: string; type: string; created_at: string; issue_count: number | null };
-
-function HistoryChart({ scans }: { scans: ScanBrief[] }) {
-  const last7 = scans.slice(0, 7).reverse();
-  const rawScores = last7.map(s => Math.max(10, 100 - (s.issue_count ?? 5) * 8));
-  // Pad to at least 2 points
-  while (rawScores.length < 2) rawScores.unshift(rawScores[0] ?? 72);
-  const n = rawScores.length;
-
-  const W = 520, H = 56, PX = 10, PY = 8;
-  const minV = Math.min(...rawScores);
-  const maxV = Math.max(...rawScores);
-  const range = Math.max(maxV - minV, 20);
-
-  const pts = rawScores.map((s, i) => ({
-    x: PX + (i / (n - 1)) * (W - PX * 2),
-    y: PY + (1 - (s - minV) / range) * (H - PY * 2),
-    s,
-  }));
-
-  const polyline = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const area     = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)} ` +
-                   pts.slice(1).map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") +
-                   ` L${pts[n-1].x.toFixed(1)},${(H - PY).toFixed(1)} L${pts[0].x.toFixed(1)},${(H - PY).toFixed(1)} Z`;
-
-  const latest = rawScores[n - 1];
-  const prev   = rawScores[n - 2];
-  const delta  = latest - prev;
-  const color  = latest >= 70 ? C.green : latest >= 50 ? C.amber : C.red;
-  const dates  = last7.map(s => {
-    const d = new Date(s.created_at);
-    return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
-  });
-
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 20px 10px", marginBottom: 16, boxShadow: C.shadow }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Score-Verlauf · 7 Tage</span>
-          <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "#ECFDF5", color: C.green, border: "1px solid #A7F3D0" }}>
-            LIVE MONITORING
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 22, fontWeight: 800, color, letterSpacing: "-0.03em", lineHeight: 1 }}>{latest}</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: delta >= 0 ? C.green : C.red }}>
-            {delta >= 0 ? "↑" : "↓"}{Math.abs(delta)}
-          </span>
-        </div>
-      </div>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", height: 52, overflow: "visible" }}>
-        <defs>
-          <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={area} fill="url(#hg)" />
-        <polyline points={polyline} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        {pts.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3.5"
-            fill={i === n - 1 ? color : C.card}
-            stroke={color} strokeWidth="1.5" />
-        ))}
-      </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        {dates.map((d, i) => (
-          <span key={i} style={{ fontSize: 9, color: C.textMuted, fontVariantNumeric: "tabular-nums" }}>{d}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type Scan = ScanBrief & { result?: string | null };
@@ -416,14 +351,31 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
   usedSlots: number; slotsLabel: string; clientSlotLimit: number;
   logoUrl?: string | null; agencyName?: string | null;
 }) {
+  // Live-Preview-Tooltip — wird sowohl auf Logo als auch auf den
+  // Text-Fallback gehängt. Subtiler Upsell-Reminder für den Wert des
+  // Agency-Plans (Branding wirkt nicht nur intern, sondern auch in den
+  // versendeten PDF-Reports → Endkunden sehen die Marke der Agentur).
+  const brandTooltip = "Dieses Branding wird auch in deinen PDF-Reports für Kunden verwendet.";
+
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 30, background: "#fff", borderBottom: `1px solid ${C.border}`, padding: "8px 28px" }}>
       <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", gap: 14 }}>
-        {/* White-label logo or default brand */}
+        {/* White-label logo or stylized text fallback. Beides bekommt den
+            gleichen "Live-Preview"-Tooltip beim Hover. cursor:help signalisiert,
+            dass es sich um eine Hint-Quelle handelt, nicht um einen Klick-Target. */}
         {logoUrl ? (
-          <img src={logoUrl} alt={agencyName ?? "Logo"} style={{ height: 28, maxWidth: 120, objectFit: "contain", flexShrink: 0 }} />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt={agencyName ?? "Logo"}
+            title={brandTooltip}
+            style={{ height: 28, maxWidth: 120, objectFit: "contain", flexShrink: 0, cursor: "help" }}
+          />
         ) : (
-          <span style={{ fontSize: 13, fontWeight: 800, color: C.text, whiteSpace: "nowrap" }}>
+          <span
+            title={brandTooltip}
+            style={{ fontSize: 13, fontWeight: 800, color: C.text, whiteSpace: "nowrap", cursor: "help" }}
+          >
             {agencyName ?? "Kommandozentrale"}
           </span>
         )}
@@ -441,8 +393,20 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
           </span>
         </div>
         <div style={{ flex: 1 }} />
-        {/* White-label settings link — Branding lebt jetzt in /settings */}
-        <a href="/dashboard/settings#branding" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, textDecoration: "none", whiteSpace: "nowrap" }}>
+        {/* White-label settings link — nutzt jetzt die Brand-CSS-Vars statt
+            hartkodierter badge-Farben. Ein-Klick zur Branding-Sektion im Hub. */}
+        <a
+          href="/dashboard/settings#branding"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: 11, fontWeight: 700,
+            padding: "4px 12px", borderRadius: 20,
+            color: "var(--agency-accent)",
+            background: "var(--agency-accent-bg)",
+            border: "1px solid var(--agency-accent-border)",
+            textDecoration: "none", whiteSpace: "nowrap",
+          }}
+        >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07"/></svg>
           White-Label
         </a>
@@ -473,7 +437,6 @@ export default async function DashboardPage() {
   // Agency data
   let criticalSites: CriticalSite[] = [];
   let domainCount = 0; // updated after agencyClients is built
-  const domainLimit = plan === "agency" || plan === "agency-pro" ? 999 : 10;
   let agencyLogoUrl: string | null = null;
   let agencyName:    string | null = null;
   if (isAgency) {
@@ -494,10 +457,13 @@ export default async function DashboardPage() {
     } catch { /* table may not exist yet */ }
 
     try {
+      // primary_color kommt aus dashboard/layout.tsx als CSS-Variable —
+      // hier nur die Identitäts-Felder für TopBar und Body-H1.
       const agRows = await sql`
-        SELECT agency_name, logo_url FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1
+        SELECT agency_name, logo_url
+        FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1
       ` as { agency_name: string | null; logo_url: string | null }[];
-      agencyLogoUrl = agRows[0]?.logo_url ?? null;
+      agencyLogoUrl = agRows[0]?.logo_url    ?? null;
       agencyName    = agRows[0]?.agency_name ?? null;
     } catch { /* non-critical */ }
   }
@@ -538,11 +504,10 @@ export default async function DashboardPage() {
     } catch {}
   }
 
-  // Monthly scan counter + plan-aware limit
-  const MONTHLY_SCAN_LIMITS: Record<string, number> = {
-    "starter": 3, "professional": 999, "smart-guard": 999, "agency": 999, "agency-starter": 999, "agency-pro": 999,
-  };
-  const SCAN_LIMIT = MONTHLY_SCAN_LIMITS[plan] ?? 3;
+  // Monthly scan counter + plan-aware limit. Single source of truth: PLAN_QUOTAS
+  // in lib/plans.ts. Legacy plan-strings (smart-guard, agency-starter, agency-pro)
+  // werden via normalizePlan() in getPlanQuota auf den kanonischen Plan gemappt.
+  const SCAN_LIMIT = getPlanQuota(plan).monthlyScans;
   const now = new Date();
   const monthlyScans = scans.filter(s => {
     const d = new Date(s.created_at);
@@ -590,9 +555,11 @@ export default async function DashboardPage() {
   // Use persisted speed_score when available (avoids formula drift between live + archive views)
   const speedScore = lastScanSpeedScore ?? Math.max(10, 100 - performanceIssues.length * 15 - yellowIssues.length * 8);
 
-  // Agency slots: Starter = 10, Pro = unlimited
-  const clientSlotLimit = plan === "agency" || plan === "agency-pro" ? 999 : 10;
-  const slotsLabel      = plan === "agency" || plan === "agency-pro" ? "∞" : String(clientSlotLimit);
+  // Agency-Slots: kanonisch aus PLAN_QUOTAS (agency = 50). Lokales isAgency
+  // ist bereits via getLayout(plan) korrekt für alle Legacy-Strings
+  // (agency-starter, agency-pro) gesetzt — kein zweites Roh-String-Match nötig.
+  const clientSlotLimit = isAgency ? getPlanQuota(plan).projects : 10;
+  const slotsLabel      = String(clientSlotLimit);
 
   // Map real saved_websites → agency client row format. No demo fallback —
   // empty state is rendered explicitly when an agency has no analyzed sites yet.
@@ -614,8 +581,29 @@ export default async function DashboardPage() {
   const usedSlots = agencyClients.length;
   domainCount = agencyClients.reduce((s, c) => s + c.domains.length, 0);
 
+  // Integrations-Status für die Issue-Action-Bar — nur für Pro im
+  // single-Layout (Agency hat kein FreeDashboardClient-Render). Bei Failure
+  // bleibt die Bar leer, der User sieht "Slack/Asana verbinden →"-Hints.
+  let integrationsStatus: { asana: boolean; slack: boolean } | null = null;
+  if (!isAgency && isAtLeastProfessional(plan)) {
+    try {
+      const settings = await getIntegrationSettings(session.user.id as string);
+      const s = connectionStatus(settings);
+      integrationsStatus = { asana: s.asana, slack: s.slack };
+    } catch (err) {
+      console.error("[dashboard] integrations status load failed:", err);
+    }
+  }
+
   return (
-    <div style={{ background: isAgency ? C.bg : "#080C14", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{
+      background: isAgency ? C.bg : "#080C14",
+      minHeight: "100vh",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      // Agency-CSS-Vars (--agency-accent*) werden jetzt zentral in
+      // dashboard/layout.tsx gesetzt und kaskadieren über alle dashboard/*
+      // Pages. Vorher inline hier — verursachte Inkonsistenz auf Scan-Detail.
+    }}>
       <style>{`
         a { text-decoration: none; }
         .dash-row:hover  { background: ${C.divider} !important; }
@@ -632,6 +620,12 @@ export default async function DashboardPage() {
           .agency-client-row  { grid-template-columns: 1fr 1fr !important; grid-template-rows: auto auto !important; gap: 8px !important; padding: 14px 16px !important; }
           .agency-client-row > *:nth-child(n+4) { display: none; }
         }
+        /* 2-Spalten-Layout (Matrix + Team-Widget) auf engen Viewports stacken.
+           Breakpoint 980px statt 860px, weil bei <1024 die rechte 320px-Spalte
+           sonst die Matrix unter ~480px Breite drückt — unleserlich. */
+        @media (max-width: 980px) {
+          .wf-agency-grid { grid-template-columns: 1fr !important; }
+        }
         /* Professional: checkbox-based done state via :has() */
         .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
         .fix-details:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: ${C.textMuted} !important; }
@@ -642,8 +636,8 @@ export default async function DashboardPage() {
           100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
         }
         .pulse-dot { animation: pulse-ring 2s infinite; }
-        /* Glassmorphism lock overlay for Free-plan locked features */
-        .lock-glass { position: absolute; inset: 0; background: rgba(248,250,252,0.9); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 14px; padding: 24px; text-align: center; z-index: 2; }
+        /* Lock-Glass-CSS war hier global definiert, aber niemals verwendet —
+           nach Phase 2 in components/locked-section.tsx gekapselt. */
         /* Auto-Report CSS toggle (server component, no JS) */
         .ar-cb { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .ar-track { display: inline-flex; width: 36px; height: 20px; border-radius: 10px; background: #CBD5E1; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
@@ -682,6 +676,7 @@ export default async function DashboardPage() {
             unterseiten={lastScanUnterseiten}
             wooAudit={lastScanWooAudit}
             builderAudit={lastScanBuilderAudit}
+            integrationsStatus={integrationsStatus}
           />
         </Suspense>
       )}
@@ -690,10 +685,15 @@ export default async function DashboardPage() {
           AGENCY LAYOUT  (plan: agency-starter | agency-pro)
           ══════════════════════════════════════════════════════════ */}
       {isAgency && (()=> {
-        // Agency always gets Violet accent
-        const accent       = "#7C3AED";
-        const accentBg     = "#F5F3FF";
-        const accentBorder = "#DDD6FE";
+        // Agency-Accent: dynamisch aus den CSS-Vars, die der Outer-Wrapper
+        // setzt. Kein Hex mehr hartkodiert — alles flowt von brandingColor.
+        // Das Default-Violet ist nur Fallback wenn der User noch keine Farbe
+        // eingestellt hat (siehe AGENCY_DEFAULT_PRIMARY).
+        const accent       = "var(--agency-accent)";
+        const accentBg     = "var(--agency-accent-bg)";
+        const accentBorder = "var(--agency-accent-border)";
+        const accentGlow   = "var(--agency-accent-glow)";       // CTA-Shadow
+        const accentGlowS  = "var(--agency-accent-glow-soft)";  // Bericht-Button
 
         const healthScore = (status: string) =>
           status === "ok" ? 88 : status === "warning" ? 61 : 34;
@@ -705,7 +705,13 @@ export default async function DashboardPage() {
 
               {/* ── Header ── */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, gap: 12, flexWrap: "wrap" }}>
-                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>Kommandozentrale</h1>
+                {/* Body-H1: Markenname statt "Kommandozentrale" wenn agency_name gesetzt.
+                    Spec §3.1 — der Agentur-Inhaber sieht *seinen* Namen groß als
+                    Page-Heading. Fallback bleibt unsere Default-Bezeichnung,
+                    damit die Page auch ohne Branding-Setup einen Titel hat. */}
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
+                  {agencyName ?? "Kommandozentrale"}
+                </h1>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   {/* Plan badge */}
                   <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
@@ -718,8 +724,13 @@ export default async function DashboardPage() {
                       Slots: {usedSlots} / {slotsLabel}
                     </span>
                   </div>
-                  {/* Branding badge */}
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: "#F5F3FF", border: "1px solid #DDD6FE", color: "#7C3AED", whiteSpace: "nowrap" }}>
+                  {/* Branding badge — Live-Preview-Hint: Tooltip zeigt dem
+                      Agentur-Admin, wo das Branding noch wirkt (PDF-Reports).
+                      Subtiler Upsell-Reminder für den 249€-Plan. */}
+                  <span
+                    title="Dieses Branding wird auch in deinen PDF-Reports für Kunden verwendet."
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, whiteSpace: "nowrap", cursor: "help" }}
+                  >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     White-Label aktiv
                   </span>
@@ -748,6 +759,10 @@ export default async function DashboardPage() {
                   </div>
                 ))}
               </div>
+
+              {/* ── 2-Spalten-Grid: Kunden-Matrix (links, breit) + Team-Widget (rechts, fix 320px).
+                   Mobile (< 980px) stack vertikal — siehe .wf-agency-grid in Styles. */}
+              <div className="wf-agency-grid" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 18, alignItems: "start" }}>
 
               {/* ── Kunden-Matrix ── */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadowMd }}>
@@ -779,7 +794,7 @@ export default async function DashboardPage() {
                       Starte deinen ersten Scan, um dein Portfolio aufzubauen.
                       Jeder neue Scan landet automatisch in der Kunden-Matrix.
                     </p>
-                    <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 10, background: accent, color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: `0 2px 14px ${accent}50`, whiteSpace: "nowrap" }}>
+                    <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 10, background: accent, color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: `0 2px 14px ${accentGlow}`, whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                       Ersten Kunden anlegen
                     </a>
@@ -932,7 +947,7 @@ export default async function DashboardPage() {
                             <PdfIcon />
                           </span>
                         )}
-                        <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: accent, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", boxShadow: `0 1px 6px ${accent}40` }}>
+                        <Link href={detailHref} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: accent, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", boxShadow: `0 1px 6px ${accentGlowS}` }}>
                           Bericht →
                         </Link>
                       </div>
@@ -943,6 +958,12 @@ export default async function DashboardPage() {
                 </div>
 
               </div>
+              {/* /Kunden-Matrix — Team-Widget rendert als rechte Spalte im
+                  wf-agency-grid Container und schließt diesen unten ab. */}
+
+              <TeamWidget />
+              </div>
+              {/* /wf-agency-grid */}
           </main>
         );
       })()}

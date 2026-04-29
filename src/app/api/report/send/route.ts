@@ -7,15 +7,18 @@ import { normalizePlan } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
   }
 
   const sql = neon(process.env.DATABASE_URL!);
 
+  // Lookup über session.user.id (kanonisch). Vorher: WHERE email = … —
+  // funktional ok, aber bricht bei Email-Wechsel und ist nicht der NextAuth-
+  // Standard. id ist primary key, garantiert eindeutig + indexed.
   const [user] = (await sql`
-    SELECT id, plan FROM users WHERE email = ${session.user.email}
-  `) as { id: number; plan: string }[];
+    SELECT id, email, plan FROM users WHERE id = ${session.user.id}
+  `) as { id: number; email: string; plan: string }[];
 
   if (!user || normalizePlan(user.plan) === null) {
     return NextResponse.json({ error: "Bezahlter Plan erforderlich" }, { status: 403 });
@@ -46,7 +49,9 @@ export async function POST(req: NextRequest) {
   if (resend) {
     await resend.emails.send({
       from: "WebsiteFix <support@website-fix.com>",
-      to: session.user.email,
+      // E-Mail aus DB statt aus Session: garantiert die aktuell verifizierte
+      // Adresse. Session-Email kann nach Wechsel kurzzeitig veraltet sein.
+      to: user.email,
       subject: `Monatsbericht ${monthLabel} — ${data.websites.length} Website${data.websites.length !== 1 ? "s" : ""} überwacht`,
       html,
     });
@@ -71,5 +76,5 @@ export async function POST(req: NextRequest) {
       avg_uptime_pct = EXCLUDED.avg_uptime_pct
   `;
 
-  return NextResponse.json({ ok: true, month: targetDate.toISOString().slice(0, 7), email: session.user.email });
+  return NextResponse.json({ ok: true, month: targetDate.toISOString().slice(0, 7), email: user.email });
 }

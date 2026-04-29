@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { hash } from "bcryptjs";
 import { Resend } from "resend";
+import { logAudit } from "@/lib/audit";
+
+// Token-Format-Check identisch zu /invite/[token] — defense-in-depth, falls
+// jemand ein gefälschtes Token-Feld an /register sendet.
+const INVITE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,80}$/;
 
 function buildWelcomeEmail(firstName: string): string {
   return `<!DOCTYPE html>
@@ -89,7 +94,12 @@ function buildWelcomeEmail(firstName: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, invite } = await req.json() as {
+      name?:    string;
+      email?:   string;
+      password?: string;
+      invite?:  string;  // Optional: Token aus /invite/[token]-Flow
+    };
 
     if (!email || !password || !name) {
       return NextResponse.json({ error: "Alle Felder sind erforderlich." }, { status: 400 });
@@ -97,6 +107,8 @@ export async function POST(req: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json({ error: "Passwort muss mindestens 8 Zeichen haben." }, { status: 400 });
     }
+    // Optional invite-Token validieren bevor er die DB sieht.
+    const inviteToken = invite && INVITE_TOKEN_PATTERN.test(invite) ? invite : null;
 
     const sql = neon(process.env.DATABASE_URL!);
 
@@ -118,6 +130,43 @@ export async function POST(req: NextRequest) {
       INSERT INTO users (name, email, password_hash, "emailVerified")
       VALUES (${name}, ${email.toLowerCase()}, ${hashed}, NOW())
     `;
+
+    // ── Invite-Token-Claim (Phase 9) ────────────────────────────────────
+    // Wenn der User über /invite/[token] kam: jetzt joined_at setzen.
+    // Strenge Match-Conditions: Token muss noch gültig + die Email im Token
+    // muss zur registrierten Email passen. Verhindert "geleakter Token wird
+    // mit fremder Email kombiniert"-Angriff. Token wird beim Claim NICHT
+    // gelöscht (joined_at IS NULL bleibt der Replay-Check) — Audit-Trail
+    // bleibt erhalten.
+    if (inviteToken) {
+      try {
+        const claimed = await sql`
+          UPDATE team_members
+          SET    joined_at = NOW()
+          WHERE  invite_token     = ${inviteToken}
+            AND  token_expires_at > NOW()
+            AND  joined_at        IS NULL
+            AND  LOWER(member_email) = ${email.toLowerCase()}
+          RETURNING id, owner_id, member_email
+        ` as { id: number; owner_id: number; member_email: string }[];
+
+        if (claimed[0]) {
+          logAudit({
+            ownerId:     claimed[0].owner_id,
+            action:      "team.join",
+            memberEmail: claimed[0].member_email,
+            memberId:    claimed[0].id,
+          });
+        }
+        // Kein Failure-Path: wenn Token nicht matched (z.B. abgelaufen während
+        // der User das Formular ausfüllte), wird der Account trotzdem erstellt.
+        // User landet als Standard-Free-User; Owner kann erneut einladen.
+      } catch (err) {
+        console.error("[register] invite-token claim failed:", err);
+        // Non-blocking — Account-Erstellung erfolgreich, Team-Verknüpfung kommt
+        // später per Re-Invite zustande.
+      }
+    }
 
     // Send plan-aware welcome email (non-blocking)
     const firstName = name.split(" ")[0] ?? name;

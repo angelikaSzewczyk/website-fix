@@ -129,6 +129,12 @@ type Props = {
   hasAccess:       boolean;
   initialStatus:   Status | null;
   initialSettings: VisibleSettings | null;
+  /** Provider-ID, dessen Akkordeon beim ersten Render bereits aufgeklappt
+   *  sein soll. Wird vom Hub aus dem ?open=<provider> Deep-Link gespeist
+   *  (Dashboard-Widget → "GSC verbinden" → springt direkt ins offene
+   *  GSC-Akkordeon). Der Hub validiert bereits gegen die Provider-Whitelist;
+   *  hier nochmal defensiv prüfen, falls der Prop von woanders kommt. */
+  initialOpen?:    string | null;
   /** Wenn true: Component rendert ohne <main>-Wrapper, ohne Back-Link,
    *  ohne H1 — wird in SettingsTabsClient als Tab-Inhalt embedded. */
   embedded?:       boolean;
@@ -218,7 +224,7 @@ const PROVIDERS = [
 
 type FieldKey = (typeof PROVIDERS)[number]["fields"][number]["key"];
 
-export default function IntegrationsSettingsClient({ plan, hasAccess, initialStatus, initialSettings, embedded = false }: Props) {
+export default function IntegrationsSettingsClient({ plan, hasAccess, initialStatus, initialSettings, initialOpen, embedded = false }: Props) {
   const [status,  setStatus]  = useState<Status | null>(initialStatus);
   const [values,  setValues]  = useState<Record<string, string>>({
     jira_domain:      initialSettings?.jira_domain      ?? "",
@@ -231,7 +237,14 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
   const [secrets, setSecrets] = useState<Record<string, string>>({});
   const [saving,  setSaving]  = useState<string | null>(null);
   const [errors,  setErrors]  = useState<Record<string, string>>({});
-  const [openId,  setOpenId]  = useState<string | null>(null);
+  // initialOpen: nur akzeptieren, wenn er einer existierenden Provider-ID
+  // entspricht. Lazy-Init via Funktion → useState führt es nur einmal beim
+  // Mount aus. Danach steuert der User den State per Klick — der Hint wird
+  // nicht erneut angewendet, auch wenn der Prop sich später ändert.
+  const [openId,  setOpenId]  = useState<string | null>(() => {
+    if (!initialOpen) return null;
+    return PROVIDERS.some(p => p.id === initialOpen) ? initialOpen : null;
+  });
   const [testing, setTesting] = useState<Record<string, TestStatus>>({});
   const [copied,  setCopied]  = useState(false);
 

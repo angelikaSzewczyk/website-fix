@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { checkWebsite, type CheckAlert } from "@/lib/monitor";
 import { sendSlackAlert, type AlertType } from "@/lib/slack";
+import { KNOWN_PLAN_STRINGS } from "@/lib/plans";
 
 export const maxDuration = 60;
 
@@ -67,14 +68,16 @@ export async function GET(req: NextRequest) {
 
   const sql = neon(process.env.DATABASE_URL!);
 
-  // Alle gespeicherten Websites von Pro/Agentur-Nutzern holen
+  // Alle gespeicherten Websites von Pro/Agentur-Nutzern holen. Plan-Filter
+  // via KNOWN_PLAN_STRINGS — synchron mit der monthly-report-Cron, kein
+  // hartkodiertes IN ('a', 'b', 'c', …) mehr.
   const websites = await sql`
     SELECT
       sw.id, sw.user_id, sw.url, sw.name, sw.alert_email,
       u.email AS user_email, u.name AS user_name, u.plan
     FROM saved_websites sw
     JOIN users u ON u.id = sw.user_id
-    WHERE u.plan IN ('starter', 'professional', 'agency', 'smart-guard', 'agency-starter', 'agency-pro')
+    WHERE u.plan = ANY(${KNOWN_PLAN_STRINGS as string[]})
       AND (sw.last_check_at IS NULL OR sw.last_check_at < NOW() - INTERVAL '23 hours')
     LIMIT 20
   ` as SavedWebsite[];

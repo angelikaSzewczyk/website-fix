@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { isAtLeastProfessional } from "@/lib/plans";
-import { getIntegrationSettings, exportTask, type TaskExportPayload } from "@/lib/integrations";
+import { getIntegrationSettings, exportTask, type TaskExportPayload, type ExportProvider } from "@/lib/integrations";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     scanId?:     string;
     source?:     TaskExportPayload["source"];
     meta?:       Record<string, unknown>;
-    preferred?:  "jira" | "trello" | "zapier";
+    preferred?:  ExportProvider;  // jira | trello | zapier | asana
   };
 
   if (!body.title || !body.description || !body.url) {

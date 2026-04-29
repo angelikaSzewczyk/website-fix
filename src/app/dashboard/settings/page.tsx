@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 const SCAN_LIMIT = 3;
+const FETCH_TIMEOUT_MS = 3000;
 
 type BrandingSettings = {
   agency_name:    string;
@@ -27,6 +28,19 @@ const BRANDING_DEFAULTS: BrandingSettings = {
   logo_url:       "",
   primary_color:  "#8df3d3",
 };
+
+/** Race a promise against a timeout. Wenn die Quelle (DB, OAuth, externe API)
+ *  länger als ms braucht, rejecten wir mit einem deterministischen Fehler —
+ *  Promise.allSettled fängt das ab und der Hub rendert mit Default-Werten,
+ *  statt zu blocken. */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`[settings] ${label} timed out after ${ms}ms`)), ms),
+    ),
+  ]);
+}
 
 export default async function SettingsPage() {
   // Auth-Gate mit defensivem try/catch — Auth-Service-Fehler darf die
@@ -45,35 +59,53 @@ export default async function SettingsPage() {
 
   // ── Pro+ / Agency: Settings-Hub mit Tabs (Profil / Branding / Integrationen) ──
   if (hasBrandingAccess(plan)) {
+    type BrandingRow = {
+      agency_name: string | null; agency_website: string | null;
+      logo_url: string | null;    primary_color: string | null;
+    };
+
+    const sql = neon(process.env.DATABASE_URL!);
+
+    // Beide Quellen parallel + jeweils mit 3-s-Timeout. Eine hakelige Quelle
+    // (z. B. Neon-Rebalance, hängender OAuth-Refresh) blockiert nicht mehr
+    // den gesamten Hub-Render — der jeweils andere Tab rendert trotzdem.
+    const [brandingResult, integrationsResult] = await Promise.allSettled([
+      withTimeout(
+        sql`
+          SELECT agency_name, agency_website, logo_url, primary_color
+            FROM agency_settings
+           WHERE user_id = ${userId}
+           LIMIT 1
+        ` as unknown as Promise<BrandingRow[]>,
+        FETCH_TIMEOUT_MS,
+        "agency_settings query",
+      ),
+      withTimeout(
+        getIntegrationSettings(userId as string),
+        FETCH_TIMEOUT_MS,
+        "integration_settings query",
+      ),
+    ]);
+
     let branding: BrandingSettings = { ...BRANDING_DEFAULTS };
-
-    try {
-      const sql = neon(process.env.DATABASE_URL!);
-      const rows = await sql`
-        SELECT agency_name, agency_website, logo_url, primary_color
-        FROM agency_settings
-        WHERE user_id = ${userId}
-        LIMIT 1
-      ` as { agency_name: string | null; agency_website: string | null; logo_url: string | null; primary_color: string | null }[];
-
-      const row = rows[0];
+    if (brandingResult.status === "fulfilled") {
+      const row = brandingResult.value[0];
       branding = {
         agency_name:    row?.agency_name    ?? BRANDING_DEFAULTS.agency_name,
         agency_website: row?.agency_website ?? BRANDING_DEFAULTS.agency_website,
         logo_url:       row?.logo_url       ?? BRANDING_DEFAULTS.logo_url,
         primary_color:  row?.primary_color  ?? BRANDING_DEFAULTS.primary_color,
       };
-    } catch (err) {
-      console.error("[settings] agency_settings query failed:", err);
+    } else {
+      console.error("[settings] agency_settings failed:", brandingResult.reason);
     }
 
-    // Integrations-Settings vorab laden, damit Tab-Wechsel ohne weiteren
-    // Roundtrip flutscht. Failure → null → IntegrationsTab zeigt leere
-    // Form (User kann trotzdem konfigurieren, das Speichern füllt die DB).
+    // Failure → null → IntegrationsTab zeigt leere Form mit "Status unbekannt".
+    // Der User kann trotzdem konfigurieren; das Speichern füllt die DB.
     let integrationsSettings = null;
     let integrationsStatus   = null;
-    try {
-      const settings = await getIntegrationSettings(userId as string);
+    if (integrationsResult.status === "fulfilled") {
+      const settings = integrationsResult.value;
       integrationsSettings = settings ? {
         jira_domain:      settings.jira_domain,
         jira_email:       settings.jira_email,
@@ -83,8 +115,8 @@ export default async function SettingsPage() {
         ga_property_id:   settings.ga_property_id,
       } : null;
       integrationsStatus = settings ? connectionStatus(settings) : null;
-    } catch (err) {
-      console.error("[settings] integrations query failed:", err);
+    } else {
+      console.error("[settings] integrations failed:", integrationsResult.reason);
     }
 
     return (

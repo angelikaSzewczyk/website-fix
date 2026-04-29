@@ -11,7 +11,7 @@ import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
 import { buildFingerprintFromRaw } from "@/lib/tech-detector";
 import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
-import { normalizePlan, isAgency, isAtLeastProfessional } from "@/lib/plans";
+import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan } from "@/lib/plans";
 import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrations";
 import { sendScanSummaryToSlack } from "@/lib/slack";
 
@@ -1024,7 +1024,10 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     const userId  = session?.user?.id as string | undefined;
     const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "starter";
-    const isPaid = ["smart-guard", "professional", "starter", "agency-starter", "agency-pro"].includes(userPlan);
+    // isPaidPlan() normalisiert Legacy-Strings (smart-guard, agency-starter, agency-pro, free)
+    // → kanonischer Plan. Vorher: hartkodierte Liste, in der "agency" UND "free" fehlten →
+    // canonical-Agency-User wurden fälschlich als unbezahlt behandelt (15 statt 50 Broken-Link-Checks).
+    const isPaid = isPaidPlan(userPlan);
 
     // ── Admin test-bypass cookie: skips IP rate limit ──────────
     const bypassCookie = req.cookies.get("wf_admin_test")?.value ?? "";

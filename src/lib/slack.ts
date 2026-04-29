@@ -146,6 +146,80 @@ export async function sendScanSummaryToSlack(p: ScanSummaryPayload): Promise<voi
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SINGLE-ISSUE — Pro-User postet einzelnen Befund aus dem Dashboard in Slack
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type SlackIssuePayload = {
+  webhookUrl:   string;          // User-Webhook aus integration_settings
+  severity:     "red" | "yellow" | "green";
+  title:        string;
+  body:         string;
+  count?:       number | null;   // z.B. "24 Bilder"
+  projectUrl:   string;
+  scanId?:      string | null;
+  dashboardUrl: string;
+};
+
+/** Postet einen einzelnen Issue als Slack-Block. Nicht-blockierend (try/catch);
+ *  Fehler werden vom Caller (Route) als 502 gemeldet, damit der User weiß,
+ *  dass der Webhook nicht antwortet. */
+export async function postIssueToSlack(p: SlackIssuePayload): Promise<{ ok: boolean; status?: number; error?: string }> {
+  if (!p.webhookUrl) return { ok: false, error: "Kein Slack-Webhook hinterlegt" };
+
+  const sevIcon  = p.severity === "red" ? "🔴" : p.severity === "yellow" ? "🟡" : "🟢";
+  const sevLabel = p.severity === "red" ? "Kritisch" : p.severity === "yellow" ? "Hinweis" : "OK";
+  const color    = p.severity === "red" ? "#ef4444" : p.severity === "yellow" ? "#fbbf24" : "#22c55e";
+  const domain   = (() => { try { return new URL(p.projectUrl).host; } catch { return p.projectUrl; } })();
+  const titleSuffix = p.count && p.count > 1 ? ` · ${p.count}×` : "";
+
+  const blocks: Array<Record<string, unknown>> = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: `${sevIcon} ${p.title}${titleSuffix}`, emoji: true },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Status*\n${sevLabel}` },
+        { type: "mrkdwn", text: `*Website*\n<${p.projectUrl}|${domain}>` },
+      ],
+    },
+    {
+      type: "section",
+      text: { type: "mrkdwn", text: `*Details*\n${p.body.slice(0, 1500)}` },
+    },
+  ];
+
+  if (p.scanId) {
+    blocks.push({
+      type: "actions",
+      elements: [{
+        type: "button",
+        text: { type: "plain_text", text: "🔍 Bericht ansehen", emoji: true },
+        action_id: "open_scan",
+        url: `${p.dashboardUrl}/dashboard/scans/${p.scanId}`,
+      }],
+    });
+  }
+
+  try {
+    const res = await fetch(p.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attachments: [{ color, fallback: `${sevLabel}: ${p.title}`, blocks }],
+      }),
+    });
+    if (!res.ok) {
+      return { ok: false, status: res.status, error: `Slack ${res.status}` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Netzwerkfehler" };
+  }
+}
+
 export async function sendSlackAlert(alert: SlackAlertPayload): Promise<void> {
   const botToken  = process.env.SLACK_BOT_TOKEN;
   const channelId = process.env.SLACK_CHANNEL_ID;

@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { IssueProp } from "@/app/dashboard/components/StarterResultsPanel";
+import { isAtLeastProfessional } from "@/lib/plans";
+import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 import ScanDetailClient from "./scan-detail-client";
 
 type ScanIssue = {
@@ -104,6 +106,20 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
   const speedScore = scan.speed_score
     ?? (scan.issue_count === null ? 72 : Math.max(10, Math.min(92, 100 - techIssueCount * 12)));
 
+  // Integrations-Status für die Issue-Action-Bar — identisch zur Logik in
+  // dashboard/page.tsx. Pro+ kriegt die Asana/Slack-Buttons; bei Failure
+  // bleibt es leer und der User sieht nur die "Provider verbinden →"-Hints.
+  let integrationsStatus: { asana: boolean; slack: boolean } | null = null;
+  if (isAtLeastProfessional(plan)) {
+    try {
+      const settings = await getIntegrationSettings(session.user.id as string);
+      const s = connectionStatus(settings);
+      integrationsStatus = { asana: s.asana, slack: s.slack };
+    } catch (err) {
+      console.error("[scans/[id]] integrations status load failed:", err);
+    }
+  }
+
   return (
     <ScanDetailClient
       url={scan.url}
@@ -114,6 +130,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
       yellowCount={yellowCount}
       speedScore={speedScore}
       scanId={scan.id}
+      integrationsStatus={integrationsStatus}
     />
   );
 }

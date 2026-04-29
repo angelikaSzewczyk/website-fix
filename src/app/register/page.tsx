@@ -1,9 +1,33 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import BrandLogo from "../components/BrandLogo";
+
+/** CSS-Var-Set — Single-Source der Variablen-Namen, damit Set + Cleanup
+ *  symmetrisch sind. Mismatch wäre ein Stacking-Leak in andere Pages. */
+const AGENCY_CSS_VARS = [
+  "--agency-accent",
+  "--agency-accent-bg",
+  "--agency-accent-border",
+  "--agency-accent-glow",
+  "--agency-accent-glow-soft",
+] as const;
+
+function applyBrandColor(hex: string): void {
+  const root = document.documentElement;
+  root.style.setProperty("--agency-accent",            hex);
+  root.style.setProperty("--agency-accent-bg",         `${hex}14`); //  8%
+  root.style.setProperty("--agency-accent-border",     `${hex}47`); // 28%
+  root.style.setProperty("--agency-accent-glow",       `${hex}50`); // 31%
+  root.style.setProperty("--agency-accent-glow-soft",  `${hex}40`); // 25%
+}
+
+function clearBrandColor(): void {
+  const root = document.documentElement;
+  for (const key of AGENCY_CSS_VARS) root.style.removeProperty(key);
+}
 
 // ─── Plan-specific left-panel content ────────────────────────────────────────
 const PLAN_CONTENT: Record<string, {
@@ -54,6 +78,15 @@ const DEFAULT_CONTENT = {
   ],
 };
 
+// Token-Format-Pattern identisch zu /invite/[token] und /api/auth/register —
+// Token wird clientseitig vor-validiert, bevor er ins Form-State landet.
+// Verhindert, dass ein invalider URL-Param (z.B. abgeschnittener Link) als
+// Token an die Register-Route gesendet wird.
+const INVITE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,80}$/;
+function isValidInviteToken(t: string | null): boolean {
+  return !!t && INVITE_TOKEN_PATTERN.test(t);
+}
+
 function RegisterContent() {
   const searchParams = useSearchParams();
   const plan         = searchParams.get("plan")  ?? "";
@@ -65,6 +98,16 @@ function RegisterContent() {
     return Number.isFinite(t) && t > 0 && t <= 30 ? t : 0;
   })();
 
+  // ── Invite-Pre-Fill (Phase 10) ──────────────────────────────────────────
+  // ?email + ?invite kommen aus /invite/[token]-Redirect. Email wird ins
+  // Form-Feld vorgefüllt + nicht editierbar gemacht (sonst könnte der User
+  // versehentlich eine andere Adresse eintragen → Token würde nicht claimen,
+  // siehe Schicht 4 in /invite/[token]). Token wird hidden mitgesendet.
+  const inviteEmailParam = searchParams.get("email")  ?? "";
+  const inviteTokenParam = searchParams.get("invite") ?? "";
+  const inviteToken      = isValidInviteToken(inviteTokenParam) ? inviteTokenParam : null;
+  const isInviteFlow     = !!inviteToken && !!inviteEmailParam;
+
   // Session-State — entscheidet, ob die Page den Form anzeigt oder einen
   // "Du bist bereits eingeloggt"-Hinweis. WICHTIG: Wir redirecten nur, wenn
   // status === "authenticated" — alles andere zeigt das Formular.
@@ -74,10 +117,44 @@ function RegisterContent() {
   const isPaidPlan = plan && plan !== "free";
 
   const [name, setName]         = useState("");
-  const [email, setEmail]       = useState("");
+  const [email, setEmail]       = useState(isInviteFlow ? inviteEmailParam : "");
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
+
+  // Live-Branding (Phase 11): wenn Invite-Flow erkannt, lädt useEffect die
+  // Agency-Identität (Name + Brand-Farbe) und injiziert die CSS-Variablen
+  // ins :root-Element. Damit erbt JEDES <var(--agency-accent)>-Token auf
+  // dieser Page die Brand-Farbe, ohne dass /register im Dashboard-Layout
+  // hängen muss.
+  //
+  // Failure-Mode: wenn Fetch fehlschlägt oder Token nicht (mehr) gültig ist,
+  // bleiben die Vars unverändert → Fallback-Default-Violet greift weiterhin.
+  // KEIN Crash, KEIN Layout-Shift, nur weniger personalisiert.
+  const [agencyName, setAgencyName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isInviteFlow || !inviteToken) return;
+    let aborted = false;
+
+    fetch(`/api/invite-meta?token=${encodeURIComponent(inviteToken)}`, { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : null))
+      .then((data: { agency_name: string; brand_color: string | null } | null) => {
+        if (aborted || !data) return;
+        if (data.agency_name) setAgencyName(data.agency_name);
+        if (data.brand_color && /^#[0-9a-fA-F]{6}$/.test(data.brand_color)) {
+          applyBrandColor(data.brand_color);
+        }
+      })
+      .catch(() => { /* silent — Default-Vars bleiben aktiv */ });
+
+    // Cleanup: Vars beim Unmount entfernen, damit sie nicht in andere Pages
+    // (Login, Public-Routes) leaken. SPA-Navigation würde sonst die Vars
+    // beibehalten bis zum nächsten Hard-Reload.
+    return () => {
+      aborted = true;
+      clearBrandColor();
+    };
+  }, [isInviteFlow, inviteToken]);
 
   // Hilfsfunktion: baut die Checkout-URL inkl. trial-Param.
   // Wird NUR aufgerufen, nachdem der User in der DB angelegt UND eingeloggt ist —
@@ -94,10 +171,17 @@ function RegisterContent() {
     setError("");
 
     try {
+      // Invite-Flow: Token aus URL als hidden field mitsenden. Server claimed
+      // das team_members-Row nach erfolgreicher User-Erstellung (siehe
+      // /api/auth/register POST). Wenn Token invalide ist, wird der Account
+      // trotzdem angelegt — kein silent failure, kein blockierender Bug.
+      const body: Record<string, string> = { name, email, password };
+      if (inviteToken) body.invite = inviteToken;
+
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify(body),
       });
 
       const text = await res.text();
@@ -261,15 +345,41 @@ function RegisterContent() {
 
         <div style={{ maxWidth: 380, width: "100%", margin: "0 auto", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.025em", color: "#0F172A" }}>
-            Account erstellen
+            {isInviteFlow
+              ? agencyName
+                ? `${agencyName} hat dich eingeladen`
+                : "Team-Einladung annehmen"
+              : "Account erstellen"}
           </h1>
           <p style={{ fontSize: 14, color: "#64748B", margin: "0 0 24px", lineHeight: 1.6 }}>
-            {isPaidPlan
+            {isInviteFlow
+              ? `Erstelle deinen Account mit ${inviteEmailParam}, um ${agencyName ? `dem Team von ${agencyName}` : "deinem Team"} auf WebsiteFix beizutreten.`
+              : isPaidPlan
               ? trialDays > 0
                 ? `Konto erstellen — ${trialDays} Tage kostenlos testen, danach automatisch der ${plan === "agency" ? "Agency" : "Professional"}-Plan.`
                 : "Konto erstellen — du wirst direkt zum sicheren Stripe-Checkout weitergeleitet."
               : "Account erstellen — Plan direkt im nächsten Schritt wählen."}
           </p>
+
+          {/* Invite-Banner: visuelle Bestätigung dass die Einladung erkannt
+              wurde, plus Hinweis dass die Email fix ist (Token-Mismatch sonst).
+              Brand-Farbe wird durch applyBrandColor() bei Page-Mount injiziert. */}
+          {isInviteFlow && (
+            <div style={{
+              padding: "12px 14px", marginBottom: 22, borderRadius: 9,
+              background: "var(--agency-accent-bg, rgba(124,58,237,0.08))",
+              border: "1px solid var(--agency-accent-border, rgba(124,58,237,0.28))",
+              fontSize: 12.5, color: "#0F172A", lineHeight: 1.55,
+            }}>
+              <strong style={{ fontWeight: 700 }}>
+                {agencyName ? `Einladung von ${agencyName}.` : "Einladung erkannt."}
+              </strong>{" "}
+              <span style={{ color: "#475569" }}>
+                Die E-Mail-Adresse ist durch deine Einladung festgelegt. Du brauchst
+                nur Name &amp; Passwort — fertig.
+              </span>
+            </div>
+          )}
 
           {/* Hinweis bei bereits authenticated Session — KEIN Auto-Redirect.
               User entscheidet selbst, ob er upgraden oder ausloggen will. */}
@@ -312,16 +422,34 @@ function RegisterContent() {
 
           <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              { label: "Name", type: "text", value: name, set: setName, ph: "Dein Name" },
-              { label: "E-Mail", type: "email", value: email, set: setEmail, ph: "du@agentur.de" },
-              { label: "Passwort", type: "password", value: password, set: setPassword, ph: "Mindestens 8 Zeichen" },
+              { label: "Name",     type: "text",     value: name,     set: setName,     ph: "Dein Name",            readOnly: false },
+              { label: "E-Mail",   type: "email",    value: email,    set: setEmail,    ph: "du@agentur.de",        readOnly: isInviteFlow },
+              { label: "Passwort", type: "password", value: password, set: setPassword, ph: "Mindestens 8 Zeichen", readOnly: false },
             ].map(f => (
               <div key={f.label}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>{f.label}</label>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                  {f.label}
+                  {f.readOnly && (
+                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: "var(--agency-accent, #7C3AED)" }}>
+                      · aus Einladung
+                    </span>
+                  )}
+                </label>
                 <input
                   type={f.type} value={f.value} onChange={e => f.set(e.target.value)}
                   placeholder={f.ph} required
-                  style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid #E2E8F0", fontSize: 14, color: "#0F172A", outline: "none", background: "#FAFBFC", boxSizing: "border-box" }}
+                  readOnly={f.readOnly}
+                  // Invite-Email-Field: read-only via DOM, optisch grauer und
+                  // mit cursor:not-allowed signalisiert. Nicht "disabled" weil
+                  // disabled-Felder im Form-Submit nicht mitgesendet werden.
+                  style={{
+                    width: "100%", padding: "11px 14px", borderRadius: 9,
+                    border: "1.5px solid #E2E8F0",
+                    fontSize: 14, color: "#0F172A", outline: "none",
+                    background: f.readOnly ? "#F1F5F9" : "#FAFBFC",
+                    cursor: f.readOnly ? "not-allowed" : "text",
+                    boxSizing: "border-box",
+                  }}
                 />
               </div>
             ))}
