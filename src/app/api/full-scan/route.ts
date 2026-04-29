@@ -382,6 +382,15 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
         sql`ALTER TABLE scans ADD COLUMN IF NOT EXISTS total_pages INTEGER`.catch(() => null);
 
         try {
+          // tech_fingerprint MUSS NULL sein wenn nicht verkabelt — KEIN leeres
+          // Objekt {}. Frontend hat checks wie `fingerprint && fingerprint.ecommerce.value`,
+          // die mit `{}` (truthy aber sub-Felder undefined) crashen würden.
+          // Mit NULL greift der falsy-Check sauber → "kein Fingerprint" Pfad.
+          // Phase A2 verkabelt buildFingerprintFromRaw und ersetzt das null.
+          const fingerprintJson = scanResult.techFingerprint
+            ? JSON.stringify(scanResult.techFingerprint)
+            : null;
+
           await sql`
             INSERT INTO scans (
               id, user_id, url, type,
@@ -398,7 +407,7 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
               ${diagnose},
               ${JSON.stringify(scanResult.issues)}::jsonb,
               ${scanResult.speedScore},
-              ${JSON.stringify(scanResult.techFingerprint ?? {})}::jsonb,
+              ${fingerprintJson}::jsonb,
               ${scanResult.totalPages},
               ${JSON.stringify(scanResult.unterseiten)}::jsonb,
               ${JSON.stringify({

@@ -494,7 +494,21 @@ export default async function DashboardPage() {
       ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit; ttfb_ms?: number } | null }[];
       lastScanResult = rows[0]?.result ?? null;
       lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
-      techFingerprint = (rows[0]?.tech_fingerprint as import("@/lib/tech-detector").TechFingerprint | null) ?? null;
+      // Sanitize tech_fingerprint: leeres Objekt {} aus DB (z.B. Phase-B-Migration
+      // ohne verkabelten TechFingerprint-Builder) wird als NULL behandelt.
+      // Sonst crasht Frontend bei `fingerprint && fingerprint.ecommerce.value`,
+      // weil {} truthy ist aber sub-Felder undefined sind.
+      const rawFingerprint = rows[0]?.tech_fingerprint;
+      techFingerprint = (
+        rawFingerprint &&
+        typeof rawFingerprint === "object" &&
+        Object.keys(rawFingerprint).length > 0 &&
+        // Mindest-Strukturcheck: TechFingerprint hat mindestens cms-Feld.
+        // Schutz gegen alte/kaputte DB-Einträge.
+        "cms" in rawFingerprint
+      )
+        ? rawFingerprint as import("@/lib/tech-detector").TechFingerprint
+        : null;
       lastScanTotalPages = rows[0]?.total_pages ?? null;
       lastScanSpeedScore = rows[0]?.speed_score ?? null;
       lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;

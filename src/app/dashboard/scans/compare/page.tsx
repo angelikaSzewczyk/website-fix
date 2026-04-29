@@ -86,6 +86,18 @@ export default async function ComparePage({ searchParams }: { searchParams: { a?
   const issuesBefore = parseIssues(before.issues_json);
   const issuesAfter  = parseIssues(after.issues_json);
 
+  // Sanitize tech_fingerprint: leeres Objekt {} aus DB → NULL behandeln.
+  // Sonst crasht der Client-Code mit `fingerprint && fingerprint.ecommerce.value`.
+  // Mindest-Strukturcheck: TechFingerprint hat immer cms-Feld.
+  function sanitizeFingerprint(raw: unknown): ScanRow["tech_fingerprint"] {
+    if (!raw || typeof raw !== "object") return null;
+    if (Object.keys(raw).length === 0) return null;
+    if (!("cms" in raw)) return null;
+    return raw as ScanRow["tech_fingerprint"];
+  }
+  const fingerprintBefore = sanitizeFingerprint(before.tech_fingerprint);
+  const fingerprintAfter  = sanitizeFingerprint(after.tech_fingerprint);
+
   return (
     <CompareClient
       before={{
@@ -95,7 +107,7 @@ export default async function ComparePage({ searchParams }: { searchParams: { a?
         issueCount:   before.issue_count ?? 0,
         speedScore:   before.speed_score ?? 0,
         issues:       issuesBefore,
-        techFingerprint: before.tech_fingerprint,
+        techFingerprint: fingerprintBefore,
         wooAudit:     before.meta_json?.woo_audit ?? null,
         builderAudit: before.meta_json?.builder_audit ?? null,
       }}
@@ -106,7 +118,7 @@ export default async function ComparePage({ searchParams }: { searchParams: { a?
         issueCount:   after.issue_count ?? 0,
         speedScore:   after.speed_score ?? 0,
         issues:       issuesAfter,
-        techFingerprint: after.tech_fingerprint,
+        techFingerprint: fingerprintAfter,
         wooAudit:     after.meta_json?.woo_audit ?? null,
         builderAudit: after.meta_json?.builder_audit ?? null,
       }}
