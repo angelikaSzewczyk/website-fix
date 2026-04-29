@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import BrandLogo from "@/app/components/BrandLogo";
 import HilfeModal from "./hilfe-modal";
-import { isAtLeastProfessional, isAgency, getPlanTheme, getPlanQuota, normalizePlan } from "@/lib/plans";
+import { isAtLeastProfessional, isAgency, getPlanTheme, getPlanQuota, normalizePlan, formatQuotaLimit, isUnlimitedQuota } from "@/lib/plans";
 
 // ─── Design tokens (matches free-dashboard-client) ────────────────────────────
 const S = {
@@ -203,11 +203,16 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
   const isPro        = isAtLeastProfessional(plan);
   const isAgencyPlan = isAgency(plan);
 
-  // Echter Scan-Quota-Cap (UI-seitig aus plans.ts, später per Stripe überschreibbar)
+  // Echter Scan-Quota-Cap (UI-seitig aus plans.ts, später per Stripe überschreibbar).
+  // Agency: monthlyScans=500 als Anti-Abuse-Cap, UI rendert aber "∞" (siehe
+  // formatQuotaLimit). limitReached und Progress-Bar werden für unlimitierte
+  // Pläne unterdrückt — ein Agency-User sieht NIE eine "Limit erreicht"-Pill.
   const effectiveLimit = quota.monthlyScans;
+  const isUnlimited    = isUnlimitedQuota(plan);
+  const limitDisplay   = formatQuotaLimit(plan);  // "5", "25", oder "∞"
   const remaining      = Math.max(0, effectiveLimit - monthlyScans);
-  const limitReached   = monthlyScans >= effectiveLimit;
-  const usagePct       = Math.min(100, Math.round((monthlyScans / Math.max(1, effectiveLimit)) * 100));
+  const limitReached   = !isUnlimited && monthlyScans >= effectiveLimit;
+  const usagePct       = isUnlimited ? 0 : Math.min(100, Math.round((monthlyScans / Math.max(1, effectiveLimit)) * 100));
 
   // Accent-Tokens: Plan-Theme — Agency-User bekommen ihr User-Branding über var(--agency-primary)
   const accent       = `var(--plan-primary, ${theme.primary})`;
@@ -413,7 +418,7 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               Diesen Monat
             </span>
             <span style={{ fontSize: 11, fontWeight: 800, color: limitReached ? "#f87171" : accent, fontVariantNumeric: "tabular-nums" }}>
-              {monthlyScans}/{effectiveLimit}
+              {monthlyScans}/{limitDisplay}
             </span>
           </div>
           <div style={{

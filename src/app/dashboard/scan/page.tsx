@@ -1,15 +1,21 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
+import { getPlanQuota } from "@/lib/plans";
 import DashboardScanClient from "./dashboard-scan-client";
-
-const SCAN_LIMIT = 3;
 
 export default async function DashboardScanPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan ?? "starter";
+
+  // Single-Source aus PLAN_QUOTAS (lib/plans.ts) — Starter:5, Pro:25, Agency:100.
+  // Vorher: const SCAN_LIMIT = 3 hartkodiert → Pro-User mit 3 Scans sahen
+  // fälschlich "3/3 Limit erreicht" + "Professional aktivieren"-Banner,
+  // obwohl sie 22 Scans übrig hatten (Phase-1-Inkonsistenz war hier
+  // versehentlich übersehen worden).
+  const scanLimit = getPlanQuota(plan).monthlyScans;
 
   let projectUrl: string | null = null;
   let monthlyScans = 0;
@@ -39,7 +45,7 @@ export default async function DashboardScanPage() {
       plan={plan}
       projectUrl={projectUrl}
       monthlyScans={monthlyScans}
-      scanLimit={SCAN_LIMIT}
+      scanLimit={scanLimit}
     />
   );
 }

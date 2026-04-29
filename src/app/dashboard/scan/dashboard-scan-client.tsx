@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import DiagnoseReport from "./diagnose-report";
-import { isAgency, isAtLeastProfessional, normalizePlan } from "@/lib/plans";
+import { isAgency, isAtLeastProfessional, normalizePlan, formatQuotaLimit, isUnlimitedQuota } from "@/lib/plans";
 
 // ─── Dark glassmorphism tokens — matches free-dashboard-client ────────────────
 const C = {
@@ -351,6 +351,39 @@ function formatCacheAge(cachedAt: string): string {
   return "gerade eben";
 }
 
+// ── Plan-aware Upgrade-Hint für das Limit-Reached-Banner ────────────────────
+// Pro hat schon Pro → "Professional aktivieren" wäre absurd. Agency hat keine
+// höhere Stufe → kein CTA, nur Reset-Hinweis. Starter (oder unbekannt) sieht
+// den klassischen Pro-Upsell.
+type UpgradeHint = {
+  ctaLabel: string | null;   // null → keinen CTA-Button rendern
+  ctaHref:  string;
+  bannerSuffix: string;
+};
+function upgradeHintFor(plan: string): UpgradeHint {
+  const canonical = normalizePlan(plan);
+  if (canonical === "agency") {
+    return {
+      ctaLabel: null,
+      ctaHref:  "",
+      bannerSuffix: "Ab dem 1. des nächsten Monats steht dein Kontingent wieder zur Verfügung.",
+    };
+  }
+  if (canonical === "professional") {
+    return {
+      ctaLabel: "Auf Agency upgraden →",
+      ctaHref:  "/fuer-agenturen#pricing",
+      bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Agency upgraden für 100 Scans/Monat.",
+    };
+  }
+  // starter (oder Unknown-Fallback)
+  return {
+    ctaLabel: "Professional aktivieren →",
+    ctaHref:  "/fuer-agenturen#pricing",
+    bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Professional upgraden für 25 Scans/Monat.",
+  };
+}
+
 export default function DashboardScanClient({
   userName,
   plan,
@@ -391,7 +424,13 @@ export default function DashboardScanClient({
   const canonical         = normalizePlan(plan);
   const isAgencyPlan      = isAgency(plan);
   const isFullsiteEnabled = canonical !== null; // starter, professional, agency all have fullsite
-  const limitReached      = monthlyScans >= scanLimit;
+  // Agency hat Anti-Abuse-Cap bei 500 — UI rendert "∞", limitReached wird für
+  // unlimitierte Pläne nie true (selbst bei theoretischen 500 Scans bleibt
+  // das Pill auf "∞"; Server würde an dem Punkt 429 zurückgeben).
+  const isUnlimited       = isUnlimitedQuota(plan);
+  const limitDisplay      = formatQuotaLimit(plan);
+  const limitReached      = !isUnlimited && monthlyScans >= scanLimit;
+  const upgrade           = upgradeHintFor(plan);
 
   // Page limit per canonical plan for full-site crawl
   const fullsitePageLimit =
@@ -813,11 +852,18 @@ export default function DashboardScanClient({
               border: `1px solid ${limitReached ? C.redBorder : C.borderMid}`,
               color: limitReached ? C.red : C.textSub,
             }}>
-              {monthlyScans} / {scanLimit}{limitReached ? " — Limit erreicht" : ` — ${scansRemaining} verbleibend`}
+              {monthlyScans} / {limitDisplay}{
+                isUnlimited     ? " — Flatrate" :
+                limitReached    ? " — Limit erreicht" :
+                                  ` — ${scansRemaining} verbleibend`
+              }
             </span>
           </div>
-          {limitReached && (
-            <Link href="/fuer-agenturen#pricing" style={{
+          {/* "Limit erhöhen"-Pill: Agency hat keine höhere Stufe, also kein
+              CTA — sonst landet der User auf der Pricing-Page mit nichts zu
+              kaufen. Pro/Starter sehen den Pill mit Plan-passendem Label. */}
+          {limitReached && upgrade.ctaLabel && (
+            <Link href={upgrade.ctaHref} style={{
               fontSize: 11, fontWeight: 700,
               padding: "4px 12px", borderRadius: C.radiusSm,
               background: C.blueBg, border: `1px solid ${C.blueBorder}`,
@@ -845,17 +891,19 @@ export default function DashboardScanClient({
                 Scan-Limit für diesen Monat erreicht
               </p>
               <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
-                Du hast {scanLimit} von {scanLimit} Scans dieses Monats verbraucht. Ab dem 1. des nächsten Monats steht das Kontingent wieder zur Verfügung — oder jetzt auf Professional upgraden für unlimitierte Scans.
+                Du hast {scanLimit} von {scanLimit} Scans dieses Monats verbraucht. {upgrade.bannerSuffix}
               </p>
             </div>
-            <Link href="/fuer-agenturen#pricing" style={{
-              flexShrink: 0, padding: "10px 20px", borderRadius: C.radiusSm,
-              background: C.blue, color: "#fff",
-              fontSize: 13, fontWeight: 700, textDecoration: "none",
-              boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
-            }}>
-              Professional aktivieren →
-            </Link>
+            {upgrade.ctaLabel && (
+              <Link href={upgrade.ctaHref} style={{
+                flexShrink: 0, padding: "10px 20px", borderRadius: C.radiusSm,
+                background: C.blue, color: "#fff",
+                fontSize: 13, fontWeight: 700, textDecoration: "none",
+                boxShadow: "0 4px 16px rgba(0,123,255,0.35)",
+              }}>
+                {upgrade.ctaLabel}
+              </Link>
+            )}
           </div>
         ) : (
           <form onSubmit={handleScan} style={{ display: "flex", flexDirection: "column", gap: 8 }}>

@@ -85,12 +85,29 @@ export interface PlanQuota {
 export const PLAN_QUOTAS: Record<PlanKey, PlanQuota> = {
   starter:      { monthlyScans: 5,        monthlyScansLabel: "5 Scans",       projects: 3,  projectsLabel: "3 Projekte" },
   professional: { monthlyScans: 25,       monthlyScansLabel: "25 Scans",      projects: 10, projectsLabel: "10 Projekte" },
-  agency:       { monthlyScans: 100,      monthlyScansLabel: "100 Scans",     projects: 50, projectsLabel: "50 Projekte" },
+  // Agency: technisches Anti-Abuse-Cap bei 500 Scans/Monat. UI rendert "Flatrate" /
+  // "∞" damit der User nicht zählt. Wer 500 wirklich erreicht (extrem unwahrscheinlich)
+  // bekommt am Server-Side-Limit einen 429 — ehrlicher als "Unbegrenzt" und dann
+  // doch eine Wand bei 100.
+  agency:       { monthlyScans: 500,      monthlyScansLabel: "Flatrate",      projects: 50, projectsLabel: "50 Projekte" },
 };
 
 export function getPlanQuota(plan: string | null | undefined): PlanQuota {
   const p = normalizePlan(plan) ?? "starter";
   return PLAN_QUOTAS[p];
+}
+
+/** True, wenn das Quota-UI für diesen Plan als "unlimited" rendern soll
+ *  (technisches Cap existiert in PLAN_QUOTAS, ist aber so hoch dass User
+ *  effektiv keine Wand spüren). Aktuell nur Agency. */
+export function isUnlimitedQuota(plan: string | null | undefined): boolean {
+  return normalizePlan(plan) === "agency";
+}
+
+/** UI-formatiertes Limit für "X / Y"-Counter — gibt "∞" zurück bei
+ *  unlimitierten Plans, sonst den numerischen Cap als String. */
+export function formatQuotaLimit(plan: string | null | undefined): string {
+  return isUnlimitedQuota(plan) ? "∞" : String(getPlanQuota(plan).monthlyScans);
 }
 
 export const PLAN_KEYS = Object.keys(PLANS) as PlanKey[];

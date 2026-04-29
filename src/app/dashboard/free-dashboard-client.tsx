@@ -2930,40 +2930,20 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               </span>
             </div>
 
-            {/* Scan usage — plan-aware */}
+            {/* Scan usage — plan-aware. Eine 3-fach-Verzweigung statt vorher
+                3 separate Pill-Branches: Agency=Flatrate, sonst limit-aware
+                Pro+Starter via scanLimit-Prop (kommt jetzt korrekt vom Server). */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans/Monat</span>
-              {/* Professional / Agency = unlimited */}
-              {isProfessionalPlus ? (
+              {isAgency ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
                   padding: "2px 9px", borderRadius: 20,
                   background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)",
                   color: "#FBBF24",
                 }}>
-                  Unbegrenzt
+                  Flatrate
                 </span>
-              ) : isStarter ? (
-                /* Starter = 3/Monat */
-                monthlyScans >= 3 ? (
-                  <span style={{
-                    fontSize: 11, fontWeight: 700,
-                    padding: "2px 10px", borderRadius: 20,
-                    background: D.redBg, border: `1px solid ${D.redBorder}`,
-                    color: D.red,
-                  }}>
-                    Limit erreicht
-                  </span>
-                ) : (
-                  <span style={{
-                    fontSize: 11, fontWeight: 700,
-                    padding: "2px 9px", borderRadius: 20,
-                    background: D.card, border: `1px solid ${D.borderMid}`,
-                    color: D.textSub,
-                  }}>
-                    {Math.max(0, 3 - monthlyScans)} / 3
-                  </span>
-                )
               ) : monthlyScans >= scanLimit ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
@@ -2980,7 +2960,7 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
                   background: D.card, border: `1px solid ${D.borderMid}`,
                   color: D.textSub,
                 }}>
-                  {scanLimit - monthlyScans} verbleibend
+                  {scanLimit - monthlyScans} / {scanLimit} verbleibend
                 </span>
               )}
             </div>

@@ -11,7 +11,7 @@ import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
 import { buildFingerprintFromRaw } from "@/lib/tech-detector";
 import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
-import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan } from "@/lib/plans";
+import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan, getPlanQuota } from "@/lib/plans";
 import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrations";
 import { sendScanSummaryToSlack } from "@/lib/slack";
 
@@ -974,13 +974,13 @@ function getMaxSubpages(plan: string): number {
 }
 
 // ── Monthly scan limits per plan ────────────────────────────
-// Synchron mit PLAN_QUOTAS in plans.ts: Starter = 5/Monat, Professional/Agency = unlimitiert.
-// Vorher 3 (Diskrepanz zur UI-Anzeige "5 Scans/Monat").
+// Single-Source-Lookup gegen PLAN_QUOTAS in lib/plans.ts. Vorher hartkodiert
+// (5 / 999 / 999) — Pro/Agency hatten faktisch kein Server-Cap, was ein
+// Cost-DoS-Vektor war. Jetzt: Starter=5, Pro=25, Agency=500 (anti-abuse-Cap;
+// UI rendert "Flatrate"). Unauthenticated User bekommen weiterhin 0.
 function getMonthlyLimit(plan: string): number {
-  const p = normalizePlan(plan);
-  if (p === "starter") return 5;
-  if (p === "professional" || p === "agency") return 999;
-  return 0;
+  if (normalizePlan(plan) === null) return 0;
+  return getPlanQuota(plan).monthlyScans;
 }
 
 // ── Server-Side-Masking für anonyme User ────────────────────
