@@ -73,17 +73,36 @@ export function saveScanAsync(url: string, payload: CachedScanPayload): Promise<
 // ── Full-site scan cache (GET /api/full-scan SSE) ────────────────────────────
 // Stores the complete crawl result so a cache hit skips the entire BFS crawl.
 // Uses a "fullsite:" key prefix to avoid colliding with regular scan entries.
+//
+// SCHEMA-BUMP (Phase B / Operation Unified Core):
+//   v1 (legacy): { totalPages, issueCount, diagnose, scanId }
+//   v2 (current): { version: 2, scanResult: ScanResult, scanId }
+//
+// v1-Cache-Einträge werden absichtlich IGNORIERT (return null), weil sie
+// kein issues_json haben und damit "Keine Probleme" suggerieren würden —
+// genau der Trust-Bug aus dem Screenshot. Alte Einträge laufen über ihr
+// 24h-TTL aus und werden nie wieder gelesen.
+
+import type { ScanResult } from "./scan-engine/types";
 
 const FS_PREFIX = "fullsite:";
+const FS_CACHE_VERSION = 2 as const;
 
-export type CachedFullScanPayload = {
-  totalPages: number;
-  issueCount: number;
-  diagnose:   string;
-  scanId:     string | null;
+export type CachedFullScanV2 = {
+  version:     2;
+  scanResult:  ScanResult;
+  scanId:      string | null;
 };
-export type CachedFullScanResult = CachedFullScanPayload & { cachedAt: string };
+export type CachedFullScanResult = CachedFullScanV2 & { cachedAt: string };
 
+/** Liest cached Full-Scan. Gibt NULL zurück bei:
+ *   - kein Cache-Eintrag
+ *   - TTL abgelaufen
+ *   - DB-Fehler
+ *   - Schema-Mismatch (version !== 2 → alter v1-Eintrag, ignored)
+ *
+ *  Damit ist sichergestellt, dass kein alter Cache-Eintrag den neuen
+ *  Engine-basierten Scan überdecken kann. */
 export async function getCachedFullScan(
   url: string,
   ttlHours = 24,
@@ -99,8 +118,14 @@ export async function getCachedFullScan(
       LIMIT  1
     `;
     if (!rows.length) return null;
+
+    const data = rows[0].response_json as { version?: number } | null;
+    // Schema-Check: alle Einträge ohne version === 2 sind v1 oder kaputt.
+    // Im DB-Layer NICHT löschen — nur ignorieren. Sie laufen über TTL aus.
+    if (!data || data.version !== FS_CACHE_VERSION) return null;
+
     return {
-      ...(rows[0].response_json as CachedFullScanPayload),
+      ...(data as CachedFullScanV2),
       cachedAt: rows[0].created_at as string,
     };
   } catch {
@@ -108,9 +133,19 @@ export async function getCachedFullScan(
   }
 }
 
-export async function saveFullScan(url: string, payload: CachedFullScanPayload): Promise<void> {
+/** Speichert einen vollständigen Full-Scan im neuen v2-Format. */
+export async function saveFullScan(
+  url: string,
+  scanResult: ScanResult,
+  scanId: string | null,
+): Promise<void> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
+    const payload: CachedFullScanV2 = {
+      version:    FS_CACHE_VERSION,
+      scanResult,
+      scanId,
+    };
     await sql`
       INSERT INTO scan_cache (url, response_json)
       VALUES (${FS_PREFIX + url}, ${JSON.stringify(payload)}::jsonb)
@@ -123,10 +158,12 @@ export async function saveFullScan(url: string, payload: CachedFullScanPayload):
 
 // ── Legacy diagnose-only helpers (kept for any external call-sites) ───────────
 
-/** @deprecated — use getCachedFullScan / saveFullScan for full-scan routes */
+/** @deprecated — use getCachedFullScan / saveFullScan for full-scan routes.
+ *  Schema-Bump v2: diagnose lebt jetzt unter result.scanResult.diagnose.
+ *  Bei alten v1-Caches gibt getCachedFullScan ohnehin null zurück. */
 export async function getCachedDiagnose(url: string, ttlHours = 24): Promise<string | null> {
   const result = await getCachedFullScan(url, ttlHours);
-  return result?.diagnose ?? null;
+  return result?.scanResult.diagnose ?? null;
 }
 
 /** @deprecated — use saveFullScan for full-scan routes */
