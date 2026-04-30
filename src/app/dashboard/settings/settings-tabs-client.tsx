@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import SettingsClient from "./settings-client";
 import IntegrationsSettingsClient from "./integrations/integrations-client";
+import AgencyConfigClient from "./agency-config-client";
 import { PLANS, normalizePlan, type PlanKey } from "@/lib/plans";
 
 // Erlaubte Provider-IDs für ?open=<provider> Deep-Link.
@@ -285,6 +286,8 @@ type Props = {
   name:  string;
   email: string;
   plan:  string;
+  /** Numerische User-ID = agency_id für Lead-Snippet + WP-Bridge. */
+  userId: string;
 
   // Branding
   branding: BrandingSettings;
@@ -295,7 +298,7 @@ type Props = {
 };
 
 export default function SettingsTabsClient({
-  name, email, plan, branding, integrationsStatus, integrationsSettings,
+  name, email, plan, userId, branding, integrationsStatus, integrationsSettings,
 }: Props) {
   const router       = useRouter();
   const searchParams = useSearchParams();
@@ -379,6 +382,11 @@ export default function SettingsTabsClient({
 
         <TabContent show={hydrated && activeTab === "branding"}>
           <SettingsClient plan={plan} initial={branding} embedded />
+          {/* Sprint 12: SMTP + Custom-Domain + WP-API-Key + Lead-Snippet
+              hängen unter dem klassischen Branding-Form. Eigene Component,
+              damit settings-client.tsx schlank bleibt und die ganzen
+              fetch-Hooks gekapselt sind. */}
+          <AgencyConfigClient agencyId={userId} plan={plan} />
         </TabContent>
 
         <TabContent show={hydrated && activeTab === "integrationen"}>

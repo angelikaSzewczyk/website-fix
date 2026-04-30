@@ -571,22 +571,39 @@ export default async function AgencyDashboard({
                     </div>
                   </div>
 
-                  {/* Domain */}
+                  {/* Domain + CMS-Pill (Sprint 12) */}
                   <div style={{ minWidth: 0 }}>
                     <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: accent, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: "none" }}>
                       {domain}
                     </a>
-                    {isLimited && (
-                      <span title={`Letzter Scan nur ${row.last_total_pages} Seiten — Plan-Cap ist ${planMaxPages}. Erneuter Scan empfohlen.`} style={{
-                        display: "inline-block", marginTop: 4,
-                        fontSize: 9.5, fontWeight: 700,
-                        padding: "1px 7px", borderRadius: 8,
-                        background: C.amberBg, border: "1px solid rgba(251,191,36,0.35)",
-                        color: C.amber, letterSpacing: "0.05em", textTransform: "uppercase",
-                      }}>
-                        Eingeschränkter Scan
-                      </span>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                      {/* CMS-Context-Pill — zeigt Elementor/Divi/Gutenberg etc. */}
+                      {row.cms_context && (
+                        <span title={`Erkanntes WordPress-System: ${cmsContextLabel(row.cms_context)} — Fix-Anleitungen sind darauf zugeschnitten.`} style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          fontSize: 9.5, fontWeight: 700,
+                          padding: "1px 7px", borderRadius: 8,
+                          background: "rgba(124,58,237,0.10)",
+                          border: "1px solid rgba(124,58,237,0.28)",
+                          color: "#a78bfa", letterSpacing: "0.04em",
+                        }}>
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                          </svg>
+                          {cmsContextLabel(row.cms_context)}
+                        </span>
+                      )}
+                      {isLimited && (
+                        <span title={`Letzter Scan nur ${row.last_total_pages} Seiten — Plan-Cap ist ${planMaxPages}. Erneuter Scan empfohlen.`} style={{
+                          fontSize: 9.5, fontWeight: 700,
+                          padding: "1px 7px", borderRadius: 8,
+                          background: C.amberBg, border: "1px solid rgba(251,191,36,0.35)",
+                          color: C.amber, letterSpacing: "0.05em", textTransform: "uppercase",
+                        }}>
+                          Eingeschränkter Scan
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Status */}
@@ -671,6 +688,133 @@ export default async function AgencyDashboard({
         {/* Right-Column-Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <TeamWidget />
+
+          {/* ── Live-Monitor (Sprint 12) ──────────────────────────────────
+              website_alerts mit acknowledged_at IS NULL. Wenn nichts da ist,
+              rendern wir einen kompakten "Alles ruhig"-State mit Pulse-Dot,
+              damit das Widget nie leer wirkt. */}
+          <div style={{
+            background: liveAlerts.length > 0 ? "rgba(248,113,113,0.06)" : C.card,
+            border: `1px solid ${liveAlerts.length > 0 ? "rgba(248,113,113,0.22)" : C.border}`,
+            borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)",
+          }}>
+            <div style={{
+              padding: "14px 18px",
+              borderBottom: `1px solid ${liveAlerts.length > 0 ? "rgba(248,113,113,0.18)" : C.divider}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: liveAlerts.length > 0 ? C.red : C.green,
+                  boxShadow: `0 0 8px ${liveAlerts.length > 0 ? C.red : C.green}80`,
+                }} />
+                <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+                  Live-Monitor
+                </span>
+              </div>
+              {liveAlerts.length > 0 ? (
+                <span style={{
+                  fontSize: 10, fontWeight: 800,
+                  padding: "2px 8px", borderRadius: 12,
+                  background: "rgba(248,113,113,0.16)",
+                  border: "1px solid rgba(248,113,113,0.35)",
+                  color: C.red, letterSpacing: "0.06em",
+                }}>
+                  {liveAlerts.length} OFFEN
+                </span>
+              ) : (
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.06em" }}>
+                  ALLES OK
+                </span>
+              )}
+            </div>
+
+            {liveAlerts.length === 0 ? (
+              <div style={{ padding: "20px 18px 22px", fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+                Keine offenen Alarme.<br/>
+                <span style={{ color: C.textSub }}>
+                  Der Cron prüft täglich Plugin-Diff, SSL, Uptime und meldet Veränderungen automatisch hier.
+                </span>
+              </div>
+            ) : (
+              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {liveAlerts.map((alert, i) => {
+                  const isCritical = alert.severity === "critical";
+                  const isInfo     = alert.severity === "info";
+                  const dotColor   = isCritical ? C.red : isInfo ? C.blue : C.amber;
+                  const ts = new Date(alert.created_at);
+                  const ago = (() => {
+                    const diff = Date.now() - ts.getTime();
+                    const mins = Math.floor(diff / 60000);
+                    if (mins < 1)   return "gerade eben";
+                    if (mins < 60)  return `vor ${mins} min`;
+                    const hrs = Math.floor(mins / 60);
+                    if (hrs < 24)   return `vor ${hrs} h`;
+                    return ts.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
+                  })();
+                  // Plugin-Diff-Alerts haben besonderen Mehrwert: wir zeigen
+                  // den Site-Namen prominent, damit klar ist, WO der Diff
+                  // aufgetreten ist.
+                  const siteLabel = alert.site_name ?? (() => {
+                    if (!alert.site_url) return "Unbekannte Site";
+                    try { return new URL(alert.site_url).hostname.replace(/^www\./, ""); }
+                    catch { return alert.site_url; }
+                  })();
+                  // Type-Icon-Mapping
+                  const typeBadge = (() => {
+                    switch (alert.alert_type) {
+                      case "plugin_added":   return "Plugin neu";
+                      case "plugin_removed": return "Plugin weg";
+                      case "auto_heal":      return "Auto-Heal";
+                      case "speed_drop":     return "Speed";
+                      case "wp_outdated":    return "WP veraltet";
+                      case "ssl_expiring":   return "SSL";
+                      case "site_offline":   return "Offline";
+                      default:               return alert.alert_type;
+                    }
+                  })();
+                  return (
+                    <li key={alert.id} style={{
+                      display: "flex", alignItems: "flex-start", gap: 10,
+                      padding: "11px 18px",
+                      borderBottom: i < liveAlerts.length - 1 ? `1px solid ${C.divider}` : "none",
+                    }}>
+                      <span style={{
+                        width: 8, height: 8, borderRadius: "50%",
+                        background: dotColor, flexShrink: 0,
+                        marginTop: 4,
+                        boxShadow: `0 0 6px ${dotColor}80`,
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {alert.title}
+                        </div>
+                        {alert.message && (
+                          <div style={{ fontSize: 10.5, color: C.textSub, marginTop: 2, lineHeight: 1.5 }}>
+                            {alert.message}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 10, color: C.textMuted }}>{siteLabel}</span>
+                          <span style={{
+                            fontSize: 9, fontWeight: 700,
+                            padding: "1px 6px", borderRadius: 8,
+                            background: `${dotColor}1a`,
+                            border: `1px solid ${dotColor}33`,
+                            color: dotColor, letterSpacing: "0.04em", textTransform: "uppercase",
+                          }}>
+                            {typeBadge}
+                          </span>
+                          <span style={{ fontSize: 10, color: C.textMuted }}>· {ago}</span>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
 
           {/* Widget 1: Activity-Feed */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>

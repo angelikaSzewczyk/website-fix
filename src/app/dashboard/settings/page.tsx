@@ -124,6 +124,7 @@ export default async function SettingsPage() {
         name={session.user.name ?? ""}
         email={session.user.email ?? ""}
         plan={plan}
+        userId={String(session.user.id)}
         branding={branding}
         integrationsStatus={integrationsStatus}
         integrationsSettings={integrationsSettings}
