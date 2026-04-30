@@ -306,8 +306,8 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
   const SLOT_OVER_FG  = "#f87171";
 
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 30, background: TOPBAR_BG, backdropFilter: "blur(12px)", borderBottom: `1px solid ${TOPBAR_BORDER}`, padding: "8px 28px" }}>
-      <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", gap: 14 }}>
+    <div style={{ position: "sticky", top: 0, zIndex: 30, background: TOPBAR_BG, backdropFilter: "blur(12px)", borderBottom: `1px solid ${TOPBAR_BORDER}`, padding: "8px 32px" }}>
+      <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 14 }}>
         {/* White-label logo or stylized text fallback. */}
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

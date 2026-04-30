@@ -251,9 +251,9 @@ export default async function AgencyDashboard({
                 </a>
               </div>
 
-              {/* ── Stat Strip — kompakte Glassmorphism-Cards, technische Icons.
-                  Höhen-Layout: Wert prominent oben, Label klein darunter. */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 22 }}>
+              {/* ── Stat Strip — Sprint 10: 4-col full-width, gap reduziert,
+                  echtes Bento-Feeling. */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 14 }}>
                 {([
                   { value: agencyClients.length,                                       label: "Aktive Kunden",    color: C.blue,
                     iconPath: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
@@ -295,9 +295,10 @@ export default async function AgencyDashboard({
                 ))}
               </div>
 
-              {/* ── 2-Spalten-Grid: Kunden-Matrix (links, breit) + Team-Widget (rechts, fix 320px).
-                   Mobile (< 980px) stack vertikal — siehe .wf-agency-grid in Styles. */}
-              <div className="wf-agency-grid" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 18, alignItems: "start" }}>
+              {/* ── Bento-Grid (Sprint 10) — 2:1 proportional, Right-Column ist
+                  ein vertikaler Stack: Team + Live-Widgets. Skaliert auf
+                  breiten Monitoren (kein fixed-width mehr). */}
+              <div className="wf-agency-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14, alignItems: "start" }}>
 
               {/* ── Kunden-Matrix ── */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadowMd }}>
@@ -548,20 +549,12 @@ export default async function AgencyDashboard({
                 </div>
 
               </div>
-              {/* /Kunden-Matrix — Team-Widget rendert als rechte Spalte im
-                  wf-agency-grid Container und schließt diesen unten ab. */}
+              {/* /Kunden-Matrix */}
 
+              {/* Right-Column-Stack (Sprint 10): TeamWidget + 3 Live-Widgets
+                  vertikal gestapelt. Sitzt in der 1fr-Spalte des Bento-Grids. */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <TeamWidget />
-              </div>
-              {/* /wf-agency-grid */}
-
-              {/* ── Sprint 9: 3 Live-Widgets ─────────────────────────────────
-                  Zuletzt gescannt | System-Status | Anstehende Berichte */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 16, marginTop: 24,
-              }}>
                 {/* ── Widget 1: Zuletzt gescannte Kunden ──────────────────── */}
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
                   <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -711,7 +704,9 @@ export default async function AgencyDashboard({
                   })()}
                 </div>
               </div>
-              {/* /Sprint 9 widgets */}
+              {/* /Right-Column-Stack */}
+              </div>
+              {/* /wf-agency-grid */}
           </main>
         );
 }
