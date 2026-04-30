@@ -28,15 +28,52 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
-  const { url, name } = await req.json();
-  if (!url) return NextResponse.json({ error: "URL fehlt" }, { status: 400 });
+  const body = await req.json() as {
+    url?: string;
+    name?: string;
+    isCustomerProject?: boolean;
+    clientLabel?: string;
+  };
+  const url = body.url;
+  if (!url || typeof url !== "string" || !url.trim()) {
+    return NextResponse.json({ error: "URL fehlt" }, { status: 400 });
+  }
+
+  // Normalisierung — wir speichern http(s) immer mit Protocol, sonst
+  // matcht der spätere `WHERE url = ${url}` JOIN nicht.
+  let cleanUrl = url.trim();
+  if (!/^https?:\/\//i.test(cleanUrl)) cleanUrl = "https://" + cleanUrl;
+
+  const cleanName  = body.name?.trim() || null;
+  const isCustomer = body.isCustomerProject === true;
+  const clientLabel = body.clientLabel?.trim() || null;
+
   const sql = neon(process.env.DATABASE_URL!);
-  await sql`
-    INSERT INTO saved_websites (user_id, url, name)
-    VALUES (${session.user.id}, ${url.trim()}, ${name?.trim() ?? null})
-    ON CONFLICT (user_id, url) DO NOTHING
-  `;
-  return NextResponse.json({ success: true });
+  // RETURNING id::text — der New-Client-Modal-Flow muss die neue ID
+  // sofort wissen, um danach auf /dashboard/scan?websiteId=<id> zu redirecten.
+  // Bei Conflict (URL existiert schon) → existierende ID zurückgeben, damit
+  // der Flow trotzdem weitergeht (DO UPDATE auf name fixt verlorene clientName).
+  const rows = await sql`
+    INSERT INTO saved_websites (user_id, url, name, is_customer_project, client_label)
+    VALUES (
+      ${session.user.id},
+      ${cleanUrl},
+      ${cleanName},
+      ${isCustomer},
+      ${clientLabel}
+    )
+    ON CONFLICT (user_id, url)
+    DO UPDATE SET
+      name                = COALESCE(EXCLUDED.name,                saved_websites.name),
+      is_customer_project = saved_websites.is_customer_project OR EXCLUDED.is_customer_project,
+      client_label        = COALESCE(EXCLUDED.client_label,        saved_websites.client_label)
+    RETURNING id::text, url, name, is_customer_project, client_label
+  ` as Array<{
+    id: string; url: string; name: string | null;
+    is_customer_project: boolean; client_label: string | null;
+  }>;
+
+  return NextResponse.json({ success: true, website: rows[0] ?? null });
 }
 
 export async function DELETE(req: NextRequest) {

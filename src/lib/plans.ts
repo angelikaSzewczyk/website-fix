@@ -199,3 +199,26 @@ export function hasBrandingAccess(plan: string | null | undefined): boolean {
 export function hasWhiteLabelExport(plan: string | null | undefined): boolean {
   return isAtLeastProfessional(plan);
 }
+
+// ── Crawl-Tiefe (Single Source of Truth) ──────────────────────────────────
+// WICHTIG: Diese Funktion ist die EINZIGE Autorität für maxSubpages.
+// /api/scan, /api/full-scan, scan-cache.ts und Dashboard-UI MÜSSEN sie
+// importieren — nicht reimplementieren. Ein zweiter Tabellen-Spiegel
+// wäre der Drift-Vektor, den wir gerade ausrotten.
+//
+// Rückgabe in Seiten/Crawl. anonyme User = 10, Starter = 50,
+// Professional = 500, Agency = 10000 (effektiv "alles").
+export function getMaxSubpages(plan: string | null | undefined): number {
+  const p = normalizePlan(plan);
+  if (p === "agency")       return 10000;
+  if (p === "professional") return 500;
+  if (p === "starter")      return 50;
+  return 10; // unauthenticated / unknown
+}
+
+/** Plan-Tier-Schlüssel für Cache-Isolation (Composite-Key url:plan_tier:depth).
+ *  Anonyme/unbekannte Pläne erhalten "anon" — verhindert Cache-Mischung
+ *  zwischen registrierten und unregistrierten Scans. */
+export function planTierKey(plan: string | null | undefined): string {
+  return normalizePlan(plan) ?? "anon";
+}

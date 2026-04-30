@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import ValueReportClient from "./value-report-client";
 import type { ReportBranding, ReportKPIs, ActivityItem, SavedSite, ScanHistoryItem } from "./page";
@@ -523,9 +523,41 @@ function AgencyView({
   savedSites: SavedSite[];
 }) {
   const [printing, setPrinting]           = useState(false);
+  // autoReport spiegelt jetzt den echten DB-Zustand (scheduled_reports.is_active)
+  // — vorher pure useState ohne Persistenz. Initial wird der State per
+  // GET /api/reports/schedule beim Mount geladen.
   const [autoReport, setAutoReport]       = useState(false);
   const [clientEmail, setClientEmail]     = useState("");
-  const [autoSaved, setAutoSaved]         = useState(false);
+  // saveStatus statt autoSaved: idle | saving | saved | error. Erlaubt
+  // dem Button "Speichern…" während des fetch + "✓ Gespeichert" nach
+  // 200 OK + "Fehler" wenn der Server abweist.
+  const [saveStatus, setSaveStatus]       = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError,  setSaveError]        = useState<string | null>(null);
+  const [scheduleId, setScheduleId]       = useState<number | null>(null);
+
+  // ── Beim Mount: bestehenden Zustand aus DB ziehen ──────────────────────
+  // Damit der Toggle beim Reload nicht "Inaktiv" ist, obwohl der User
+  // gestern auf "Aktiv" gestellt hat. GET /api/reports/schedule liefert
+  // alle Konfigs des Users — wir greifen die Default-Konfig (website_id=NULL).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/reports/schedule");
+        if (!res.ok) return;
+        const data = await res.json() as { schedules?: Array<{
+          id: number; website_id: string | null; recipient_email: string; is_active: boolean;
+        }> };
+        const def = data.schedules?.find(s => s.website_id === null);
+        if (!cancelled && def) {
+          setAutoReport(def.is_active);
+          setClientEmail(def.recipient_email);
+          setScheduleId(def.id);
+        }
+      } catch { /* netter Failure: Toggle bleibt auf default */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const color    = branding.primaryColor;
   const colorBg  = `${color}12`;
@@ -556,10 +588,83 @@ function AgencyView({
     setTimeout(() => { window.print(); setPrinting(false); }, 100);
   }
 
-  function handleAutoSave() {
-    setAutoSaved(true);
-    setTimeout(() => setAutoSaved(false), 2500);
+  // Speichern-Button: echter DB-Write via /api/reports/schedule.
+  // Toggle-State wird erst NACH 200 OK auf isActive gesetzt — damit
+  // "Aktiv" wirklich "Aktiv im Cron" bedeutet.
+  async function handleAutoSave() {
+    setSaveStatus("saving");
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/reports/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail:   clientEmail,
+          interval:         "monthly",
+          brandingEnabled:  true,
+          isActive:         autoReport,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setSaveStatus("error");
+        setSaveError(typeof err.error === "string" ? err.error : "Speichern fehlgeschlagen.");
+        return;
+      }
+      const data = await res.json() as { schedule?: { id: number; is_active: boolean; recipient_email: string } };
+      if (data.schedule) {
+        setAutoReport(data.schedule.is_active);
+        setClientEmail(data.schedule.recipient_email);
+        setScheduleId(data.schedule.id);
+      }
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2500);
+    } catch {
+      setSaveStatus("error");
+      setSaveError("Verbindung zum Server unterbrochen.");
+    }
   }
+
+  // Toggle: optimistisches Flip + persistierter Save. Wenn der Server
+  // ablehnt (z.B. Plan-Downgrade während der Session), rollen wir den
+  // State zurück.
+  async function handleToggleAutoReport() {
+    const next = !autoReport;
+    setAutoReport(next);
+    // Wenn keine Email vorhanden ist, nicht persistieren — der User muss
+    // erst eine eingeben. Toggle bleibt im UI, bis "Speichern" geklickt wird.
+    if (!clientEmail.trim()) return;
+    setSaveStatus("saving");
+    try {
+      const res = await fetch("/api/reports/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail:  clientEmail,
+          interval:        "monthly",
+          brandingEnabled: true,
+          isActive:        next,
+        }),
+      });
+      if (!res.ok) {
+        setAutoReport(!next); // rollback
+        setSaveStatus("error");
+        return;
+      }
+      const data = await res.json() as { schedule?: { id: number; is_active: boolean } };
+      if (data.schedule) {
+        setScheduleId(data.schedule.id);
+        setAutoReport(data.schedule.is_active);
+      }
+      setSaveStatus("idle");
+    } catch {
+      setAutoReport(!next);
+      setSaveStatus("error");
+    }
+  }
+  // scheduleId wird für künftige DELETE-Aktionen vorgehalten — explizit
+  // referenzieren, damit TS keinen unused-warning wirft.
+  void scheduleId;
 
   const aiSummary = (() => {
     const parts: string[] = [];
@@ -648,12 +753,15 @@ function AgencyView({
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button
-                onClick={() => setAutoReport(v => !v)}
+                onClick={handleToggleAutoReport}
+                disabled={saveStatus === "saving"}
                 style={{
                   width: 44, height: 24, borderRadius: 12,
                   border: `1px solid ${autoReport ? "rgba(124,58,237,0.6)" : "rgba(255,255,255,0.10)"}`,
                   background: autoReport ? "rgba(124,58,237,0.40)" : "rgba(255,255,255,0.06)",
-                  cursor: "pointer", position: "relative", transition: "background 0.2s, border-color 0.2s", flexShrink: 0,
+                  cursor: saveStatus === "saving" ? "wait" : "pointer",
+                  position: "relative", transition: "background 0.2s, border-color 0.2s", flexShrink: 0,
+                  opacity: saveStatus === "saving" ? 0.7 : 1,
                 }}
               >
                 <div style={{
@@ -683,17 +791,25 @@ function AgencyView({
               />
               <button
                 onClick={handleAutoSave}
+                disabled={saveStatus === "saving" || !clientEmail.trim()}
                 style={{
                   padding: "8px 18px", borderRadius: 8,
                   background: "rgba(124,58,237,0.18)",
                   border: "1px solid rgba(124,58,237,0.40)",
                   color: "#a78bfa",
                   fontSize: 13, fontWeight: 700,
-                  cursor: "pointer", fontFamily: "inherit",
+                  cursor: saveStatus === "saving" ? "wait" : !clientEmail.trim() ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                  opacity: !clientEmail.trim() ? 0.55 : 1,
                 }}
               >
-                {autoSaved ? "✓ Gespeichert" : "Speichern"}
+                {saveStatus === "saving" ? "Speichern…" : saveStatus === "saved" ? "✓ Gespeichert" : "Speichern"}
               </button>
+            </div>
+          )}
+          {saveStatus === "error" && (
+            <div style={{ marginTop: 10, fontSize: 11.5, color: L.red, fontWeight: 600 }}>
+              {saveError ?? "Speichern fehlgeschlagen."}
             </div>
           )}
         </div>

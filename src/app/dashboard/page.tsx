@@ -13,7 +13,7 @@ import { isAtLeastProfessional, isAgency as isAgencyPlan, getPlanQuota } from "@
 import { classifyDisplayCategory } from "@/lib/issue-categories";
 import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 import ModalCloseButton from "./components/ModalCloseButton";
-import TeamWidget from "./components/team-widget";
+import NewClientForm from "./components/new-client-form";
 
 export const dynamic = "force-dynamic";
 
@@ -212,12 +212,9 @@ type ScanBrief = { id: string; url: string; type: string; created_at: string; is
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type Scan = ScanBrief & { result?: string | null };
-type CriticalSite = {
-  id: string; url: string; name: string | null;
-  last_check_status: string; last_check_at: string;
-  ssl_days_left: number | null; security_score: number | null;
-  alerts: { level: string; message: string }[] | null;
-};
+// CriticalSite-Typ existierte hier zur Übergabe an AgencyDashboard. Mit
+// Sprint 11 lädt AgencyDashboard 2.0 seine Matrix selbst — dieser Typ ist
+// nicht mehr nötig und wurde entfernt.
 
 const PLAN_BADGE = {
   "starter":       { label: "Starter",      color: "#2563EB", bg: "#EFF6FF",             border: "#BFDBFE" },
@@ -410,31 +407,27 @@ export default async function DashboardPage({
         ORDER BY created_at DESC LIMIT 20
       ` as Scan[];
 
-  // Agency data
-  let criticalSites: CriticalSite[] = [];
-  let domainCount = 0; // updated after agencyClients is built
+  // ─── Agency Wrapper-Daten ──────────────────────────────────────────────
+  // Phase 3 Sprint 11: AgencyDashboard 2.0 lädt seine Kunden-Matrix selbst
+  // (dieselbe LATERAL-JOIN-SQL wie /dashboard/clients). page.tsx braucht nur
+  // noch die Agency-Identität (Name, Logo) für die TopBar plus den Slot-
+  // Count für das "X / Y"-Pill. Vorher wurde criticalSites zusätzlich hier
+  // berechnet — Folge: zwei Queries auf dieselben Tabellen mit leicht
+  // unterschiedlichen Filtern → Zahlen-Drift zwischen TopBar und Matrix.
+  let usedAgencySlots = 0;
   let agencyLogoUrl: string | null = null;
   let agencyName:    string | null = null;
   if (isAgency) {
     try {
-      criticalSites = await sql`
-        SELECT sw.id::text, sw.url, sw.name, sw.last_check_status, sw.last_check_at,
-               wc.ssl_days_left, wc.security_score, wc.alerts
-        FROM saved_websites sw
-        LEFT JOIN LATERAL (
-          SELECT ssl_days_left, security_score, alerts FROM website_checks
-          WHERE website_id = sw.id AND user_id = sw.user_id
-          ORDER BY checked_at DESC LIMIT 1
-        ) wc ON true
-        WHERE sw.user_id = ${session.user.id}
-        ORDER BY sw.last_check_at DESC NULLS LAST LIMIT 10
-      ` as CriticalSite[];
-      domainCount = criticalSites.length;
-    } catch { /* table may not exist yet */ }
+      const slotRows = await sql`
+        SELECT COUNT(*)::int AS cnt
+        FROM saved_websites
+        WHERE user_id = ${session.user.id}
+      ` as { cnt: number }[];
+      usedAgencySlots = slotRows[0]?.cnt ?? 0;
+    } catch { /* non-critical */ }
 
     try {
-      // primary_color kommt aus dashboard/layout.tsx als CSS-Variable —
-      // hier nur die Identitäts-Felder für TopBar und Body-H1.
       const agRows = await sql`
         SELECT agency_name, logo_url
         FROM agency_settings WHERE user_id = ${session.user.id} LIMIT 1
@@ -558,31 +551,12 @@ export default async function DashboardPage({
   // Use persisted speed_score when available (avoids formula drift between live + archive views)
   const speedScore = lastScanSpeedScore ?? Math.max(10, 100 - performanceIssues.length * 15 - yellowIssues.length * 8);
 
-  // Agency-Slots: kanonisch aus PLAN_QUOTAS (agency = 50). Lokales isAgency
-  // ist bereits via getLayout(plan) korrekt für alle Legacy-Strings
-  // (agency-starter, agency-pro) gesetzt — kein zweites Roh-String-Match nötig.
+  // Agency-Slots: kanonisch aus PLAN_QUOTAS (agency = 50).
   const clientSlotLimit = isAgency ? getPlanQuota(plan).projects : 10;
   const slotsLabel      = String(clientSlotLimit);
-
-  // Map real saved_websites → agency client row format. No demo fallback —
-  // empty state is rendered explicitly when an agency has no analyzed sites yet.
-  const AGENCY_COLORS = ["#2563EB","#16A34A","#D97706","#7C3AED","#DC2626","#0891B2","#059669","#DB2777"];
-  const agencyClients = isAgency && criticalSites.length > 0
-    ? criticalSites.map((site, i) => {
-        const domain = (() => { try { return new URL(site.url.startsWith("http") ? site.url : `https://${site.url}`).hostname; } catch { return site.url; } })();
-        const label  = site.name ?? domain;
-        const initials = label.replace(/https?:\/\//, "").replace(/\./g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "??";
-        const rawStatus = site.last_check_status ?? "ok";
-        const status: "ok" | "warning" | "critical" = rawStatus === "critical" || rawStatus === "error" ? "critical" : rawStatus === "warning" ? "warning" : "ok";
-        const lastScanLabel = site.last_check_at
-          ? new Date(site.last_check_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })
-          : "—";
-        return { id: site.id, name: label, contact: domain, initials, color: AGENCY_COLORS[i % AGENCY_COLORS.length], domains: [domain], status, lastScan: lastScanLabel, assignee: "–", autoReport: false, clientLogin: false };
-      })
-    : [];
-
-  const usedSlots = agencyClients.length;
-  domainCount = agencyClients.reduce((s, c) => s + c.domains.length, 0);
+  // usedSlots stammt jetzt aus dem dedizierten COUNT(*) oben — KEIN
+  // separates Mapping mehr, das mit AgencyDashboard 2.0 driften könnte.
+  const usedSlots = usedAgencySlots;
 
   // Integrations-Status für die Issue-Action-Bar — nur für Pro im
   // single-Layout (Agency hat kein FreeDashboardClient-Render). Bei Failure
@@ -735,13 +709,16 @@ export default async function DashboardPage({
           userId={String(session.user.id)}
           agencyName={agencyName}
           agencyLogoUrl={agencyLogoUrl}
-          criticalSites={criticalSites}
           scans={scans}
           usedSlots={usedSlots}
         />
       )}
 
-      {/* ── New Client Modal (CSS :target, no JS) ── */}
+      {/* ── New Client Modal (CSS :target Show + Client-Component-Form) ──
+          Wrapper bleibt CSS-:target gesteuert, damit Open/Close ohne
+          Re-Render des ganzen Tree-Wrappers funktioniert. Form ist jetzt
+          ein Client-Component (NewClientForm), das per fetch /api/websites
+          den Kundennamen persistent speichert, bevor es zum Scan navigiert. */}
       <div id="modal-new-client" className="agency-modal">
         <div style={{ background: C.card, borderRadius: 20, padding: "32px", maxWidth: 480, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", position: "relative" }}>
           <ModalCloseButton ariaLabel="Modal schließen" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, lineHeight: 1 }}>×</ModalCloseButton>
@@ -750,24 +727,7 @@ export default async function DashboardPage({
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>Kunden anlegen</h2>
             <p style={{ margin: "6px 0 0", fontSize: 13, color: C.textSub }}>Füge einen neuen Kunden zur Kunden-Matrix hinzu.</p>
           </div>
-          <form action="/dashboard/scan" method="GET" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 5 }}>Kundenname</label>
-              <input name="clientName" type="text" placeholder="z.B. Autohaus Müller GmbH" style={{ width: "100%", padding: "10px 14px", borderRadius: 9, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 5 }}>Website-URL</label>
-              <input name="url" type="url" placeholder="https://kunde-website.de" required style={{ width: "100%", padding: "10px 14px", borderRadius: 9, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button type="submit" style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: C.blue, color: "#fff", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
-                Ersten Scan starten →
-              </button>
-              <ModalCloseButton style={{ padding: "11px 18px", borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`, color: C.textSub, fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center" }}>
-                Abbrechen
-              </ModalCloseButton>
-            </div>
-          </form>
+          <NewClientForm />
         </div>
       </div>
 

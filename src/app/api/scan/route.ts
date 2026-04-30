@@ -5,13 +5,13 @@ import { checkIpRateLimit } from "@/lib/ip-rate-limit";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
-import { getCachedScan, saveScanAsync, cacheTtlHours } from "@/lib/scan-cache";
+import { getCachedScan, saveScanAsync } from "@/lib/scan-cache";
 import { logScan } from "@/lib/scan-logger";
 import { batchAsync } from "@/lib/batch-async";
 import { MODELS } from "@/lib/ai-models";
 import { buildFingerprintFromRaw } from "@/lib/tech-detector";
 import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
-import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan, getPlanQuota } from "@/lib/plans";
+import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan, getPlanQuota, getMaxSubpages } from "@/lib/plans";
 import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrations";
 import { sendScanSummaryToSlack } from "@/lib/slack";
 import { consolidateScans, consolidatePerPageIssuesPublic, classifyScopesPublic } from "@/lib/scan-engine/aggregator";
@@ -755,6 +755,50 @@ async function saveUserScan(params: {
 }): Promise<string | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
+
+    // ── Depth-Validation ──────────────────────────────────────────────
+    // Verhindert das "197 → 9 Issues"-Problem: ein Starter-Scan (50 Seiten)
+    // darf einen Agency-Scan (10000 Seiten) nicht aus dem "letzten Scan"
+    // verdrängen. is_superseded entscheidet, welcher Scan als Last-Scan gilt.
+    //
+    // Logik:
+    //   1. Größte total_pages aller Non-Superseded-Scans für (user, url) lesen.
+    //   2. neu < bestehend → neuer Scan kommt mit is_superseded=true rein,
+    //      bestehende bleiben unangetastet. Der neuere/flachere Scan ist
+    //      historisch da, aber UI rendert weiter den tieferen.
+    //   3. neu >= bestehend → alle bisherigen Scans dieser URL mit kleinerer
+    //      total_pages werden auf is_superseded=true gesetzt, der neue
+    //      Scan ist die Wahrheit.
+    let isSuperseded = false;
+    const newPages = params.totalPages ?? 0;
+    try {
+      const maxPagesRows = await sql`
+        SELECT COALESCE(MAX(total_pages), 0)::int AS max_pages
+        FROM   scans
+        WHERE  user_id = ${params.userId}
+          AND  url     = ${params.url}
+          AND  is_superseded = FALSE
+      ` as { max_pages: number }[];
+      const existingMax = maxPagesRows[0]?.max_pages ?? 0;
+      if (newPages > 0 && existingMax > 0 && newPages < existingMax) {
+        isSuperseded = true;
+      } else if (newPages >= existingMax && existingMax > 0) {
+        // Neuer Scan ist mindestens so tief — alte werden gestempelt.
+        await sql`
+          UPDATE scans
+          SET    is_superseded = TRUE
+          WHERE  user_id = ${params.userId}
+            AND  url     = ${params.url}
+            AND  is_superseded = FALSE
+            AND  COALESCE(total_pages, 0) < ${newPages}
+        `;
+      }
+    } catch (err) {
+      // Spalte fehlt evtl. (Migration nicht ausgerollt) — INSERT trotzdem
+      // versuchen; ON CONFLICT der Migration kümmert sich um den Default.
+      console.error("[scan] depth-validation skipped:", err);
+    }
+
     const metaJsonObj: Record<string, unknown> = {};
     if (params.wooAudit)     metaJsonObj.woo_audit     = params.wooAudit;
     if (params.builderAudit) metaJsonObj.builder_audit = params.builderAudit;
@@ -764,7 +808,7 @@ async function saveUserScan(params: {
     if (typeof params.wcagHeuristicLabel === "string") metaJsonObj.wcag_heuristic_label = params.wcagHeuristicLabel;
     const metaJson = Object.keys(metaJsonObj).length > 0 ? metaJsonObj : null;
     const rows = await sql`
-      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json, meta_json)
+      INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json, meta_json, is_superseded)
       VALUES (
         ${params.userId}, ${params.url}, 'website',
         ${params.issueCount}, ${params.diagnose},
@@ -773,7 +817,8 @@ async function saveUserScan(params: {
         ${params.techFingerprint ? JSON.stringify(params.techFingerprint) : null},
         ${params.totalPages ?? null},
         ${params.unterseitenJson ? JSON.stringify(params.unterseitenJson) : null},
-        ${metaJson ? JSON.stringify(metaJson) : null}::jsonb
+        ${metaJson ? JSON.stringify(metaJson) : null}::jsonb,
+        ${isSuperseded}
       )
       RETURNING id::text
     ` as { id: string }[];
@@ -1004,14 +1049,9 @@ function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
   }, {} as Record<string, T[]>);
 }
 
-// ── Plan-based crawl depth ──────────────────────────────────
-function getMaxSubpages(plan: string): number {
-  const p = normalizePlan(plan);
-  if (p === "agency")       return 10000;
-  if (p === "professional") return 500;
-  if (p === "starter")      return 50;
-  return 10; // unknown / anonym
-}
+// Plan-based crawl depth lebt jetzt in lib/plans.ts (getMaxSubpages).
+// Single-Source-Lookup verhindert, dass /api/scan, /api/full-scan und
+// scan-cache jeweils eine eigene Tabelle pflegen.
 
 // ── Monthly scan limits per plan ────────────────────────────
 // Single-Source-Lookup gegen PLAN_QUOTAS in lib/plans.ts. Vorher hartkodiert
@@ -1137,8 +1177,9 @@ export async function POST(req: NextRequest) {
 
     // ── Cache check — skipped when forceRefresh=true ────────
     if (!forceRefresh) {
-      const ttl    = cacheTtlHours(userPlan);
-      const cached = await getCachedScan(targetUrl, ttl);
+      // Cache-Key = (url, plan_tier, max_depth) — siehe lib/scan-cache.ts.
+      // Ein Starter-Cache kann einen Agency-Cache nicht mehr überschreiben.
+      const cached = await getCachedScan(targetUrl, userPlan);
       // Treat cache as stale if it's from an old version without audit data
       const cacheHasAudit = !!(cached?.scanData?.audit as { unterseiten?: unknown[] } | undefined)?.unterseiten?.length;
       if (cached && cacheHasAudit) {
@@ -1691,8 +1732,9 @@ PFLICHT-REGELN:
         })
       : null;
 
-    // Persist to 24h cache — awaited so Vercel doesn't kill it before it completes
-    await saveScanAsync(targetUrl, { scanData, diagnose });
+    // Persist to plan-aware cache — composite-key (url, plan_tier, max_depth).
+    // Awaited damit Vercel die Function nicht vor dem Cache-Write killt.
+    await saveScanAsync(targetUrl, userPlan, { scanData, diagnose });
 
     // ── Integrations-Trigger (fire-and-forget, blockiert Scan-Response nicht) ──
     if (userId && isAtLeastProfessional(userPlan)) {

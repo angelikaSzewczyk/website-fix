@@ -87,3 +87,78 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
 -- Idempotent: WHERE-Filter machen das Statement sicher mehrfach ausführbar.
 UPDATE users SET plan = 'professional' WHERE plan IN ('smart-guard', 'pro');
 UPDATE users SET plan = 'agency'       WHERE plan IN ('agency-pro', 'agency-starter');
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Phase 3 / Sprint 11 — ARCHITECTURAL REBUILD
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Cache-Isolation: scan_cache cache_key wird url + plan_tier + max_depth.
+-- Vorher war der Cache plan-agnostisch → "197 → 9 Issues"-Drift, weil ein
+-- Starter-Scan (50 Seiten) den Agency-Cache (10000 Seiten) überschrieben hat.
+-- Mit dieser Migration kann das nicht mehr passieren: jede Plan-Tier-Stufe
+-- hat ihre eigene Cache-Zeile.
+ALTER TABLE scan_cache ADD COLUMN IF NOT EXISTS plan_tier TEXT NOT NULL DEFAULT 'anon';
+ALTER TABLE scan_cache ADD COLUMN IF NOT EXISTS max_depth INTEGER NOT NULL DEFAULT 10;
+
+-- Alte UNIQUE-Constraint (url) entfernen, neue composite-UNIQUE setzen.
+-- DROP IF EXISTS ist idempotent — produziert NOTICE statt Error wenn
+-- bereits gedroppt wurde.
+DO $$
+BEGIN
+  -- Drop old single-column unique index/constraint if present
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'scan_cache_url_key'
+  ) THEN
+    ALTER TABLE scan_cache DROP CONSTRAINT scan_cache_url_key;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE indexname = 'scan_cache_url_key' AND schemaname = 'public'
+  ) THEN
+    EXECUTE 'DROP INDEX IF EXISTS public.scan_cache_url_key';
+  END IF;
+END $$;
+
+-- Composite-UNIQUE: (url, plan_tier, max_depth). Alle Cache-Reads/Writes
+-- in lib/scan-cache.ts treffen genau diese Kombination.
+CREATE UNIQUE INDEX IF NOT EXISTS scan_cache_composite_key
+  ON scan_cache(url, plan_tier, max_depth);
+
+-- Depth-Validation: scans.is_superseded markiert Scans, die durch einen
+-- tieferen Scan derselben URL "überholt" wurden. Die UI rendert dann den
+-- tieferen Scan als "letzten Scan", nicht den jüngeren-aber-flacheren.
+-- Schützt vor: Agency-User scant 197 Issues → Starter-Account des selben
+-- Users (über JWT-Drift) scant 9 → Dashboard zeigt 9. Mit is_superseded
+-- bleibt der 197-Scan die Wahrheit.
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS is_superseded BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE INDEX IF NOT EXISTS scans_url_user_supersede_idx
+  ON scans(user_id, url, created_at DESC)
+  WHERE is_superseded = FALSE;
+
+-- scheduled_reports: persistente Auto-Monthly-Reports.
+-- Ersetzt den Mock-Toggle in /dashboard/reports. Cron-Job (separater Worker)
+-- liest is_active=TRUE Zeilen und versendet am 1. jeden Monats.
+CREATE TABLE IF NOT EXISTS scheduled_reports (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  website_id UUID REFERENCES saved_websites(id) ON DELETE CASCADE,
+  recipient_email TEXT NOT NULL,
+  interval TEXT NOT NULL DEFAULT 'monthly',
+  branding_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Eine Konfiguration pro (user, website) — Upsert auf POST. NULL website_id
+-- = Account-weiter Default-Report (alle Sites gebündelt). Partial-Index,
+-- weil UNIQUE-Constraints NULL-Werte als unique behandeln (jede NULL ist
+-- eine eigene Zeile) — wir wollen aber: eine NULL-website-Zeile pro user.
+CREATE UNIQUE INDEX IF NOT EXISTS scheduled_reports_user_website_idx
+  ON scheduled_reports(user_id, website_id)
+  WHERE website_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS scheduled_reports_user_default_idx
+  ON scheduled_reports(user_id)
+  WHERE website_id IS NULL;

@@ -1,44 +1,76 @@
 /**
- * DB-backed scan cache.
+ * DB-backed scan cache — Phase 3 Sprint 11 Refactor.
  *
- * Default TTL: 24 hours (free/pro plans).
- * Agency plans (agentur, agency_core, agency_scale) use 12 h so they see
- * results of their optimisations faster.
+ * ╭─────────────────────────────────────────────────────────────╮
+ * │ Cache-Key = url : plan_tier : depth                         │
+ * ╰─────────────────────────────────────────────────────────────╯
  *
- * TTL is enforced via a JS-computed cutoff timestamp — NOT via SQL INTERVAL
- * literals — because the neon tagged-template driver parameterises template
- * expressions, which breaks `INTERVAL '${n} hours'` at runtime.
+ * Vorher war der Cache plan-agnostisch (key = url). Effekt: ein Starter-User
+ * scannt eine Site mit max 50 Seiten — das Ergebnis (z.B. 9 Issues) landet
+ * im Cache. Eine Stunde später triggert ein Agency-User für dieselbe URL
+ * einen Scan mit 10000 Seiten und bekommt den Starter-Cache mit 9 Issues
+ * zurück. UI sieht den Starter-Scan als "letzten Scan" — nächster Refresh
+ * findet 197 echte Issues. Genau die "197 → 9"-Schwingung aus dem Audit.
+ *
+ * Lösung: composite key. Für jeden Plan-Tier (starter / professional /
+ * agency / anon) existiert eine eigene Cache-Zeile. Ein Starter-Scan
+ * kann einen Agency-Cache NICHT mehr überschreiben — er hat einen anderen
+ * Schlüssel. Die UNIQUE-Constraint (url, plan_tier, max_depth) wird in
+ * der Migration erzwungen.
+ *
+ * Default TTL: 24 h (starter / professional). Agency: 12 h (sehen Optim-
+ * ierungs-Erfolge schneller).
+ *
+ * TTL wird via JS-Cutoff geprüft, nicht via INTERVAL — die neon-Driver-
+ * Tagged-Templates parameterisieren `${n}` zu $1, was `INTERVAL '$1 hours'`
+ * zur Laufzeit kaputt macht.
  */
 
 import { neon } from "@neondatabase/serverless";
-import { isAgency } from "./plans";
+import { isAgency, planTierKey, getMaxSubpages } from "./plans";
 
 export type CachedScanPayload = {
   scanData: Record<string, unknown>;
   diagnose: string;
 };
 
-/** Result type — adds cache timestamp so callers can show "cached N hours ago". */
+/** Result-Type — ergänzt Cache-Timestamp für "cached vor N h"-Anzeigen. */
 export type CachedScanResult = CachedScanPayload & { cachedAt: string };
 
-/** Agency plans get a shorter (12 h) cache window so they see optimisation results faster. */
-export function cacheTtlHours(plan: string): number {
+/** Agency-Plans bekommen 12 h Cache-Window, alle anderen 24 h. */
+export function cacheTtlHours(plan: string | null | undefined): number {
   return isAgency(plan) ? 12 : 24;
 }
 
 // ── Scan cache (POST /api/scan) ───────────────────────────────────────────────
 
+/**
+ * Lädt einen gecachten Single-Page-Scan.
+ *
+ * @param url     Ziel-URL (rohe Eingabe, nicht der composite key)
+ * @param plan    User-Plan-String (kanonisch oder Legacy — normalizePlan intern)
+ * @param ttlHours TTL-Override; default = cacheTtlHours(plan)
+ *
+ * Liefert NULL bei: kein Treffer, abgelaufen, DB-Fehler, oder wenn die
+ * gespeicherte plan_tier/max_depth nicht zu plan passt.
+ */
 export async function getCachedScan(
   url: string,
-  ttlHours = 24,
+  plan: string | null | undefined,
+  ttlHours?: number,
 ): Promise<CachedScanResult | null> {
   try {
-    const sql    = neon(process.env.DATABASE_URL!);
-    const cutoff = new Date(Date.now() - ttlHours * 3_600_000).toISOString();
-    const rows   = await sql`
+    const sql      = neon(process.env.DATABASE_URL!);
+    const tier     = planTierKey(plan);
+    const depth    = getMaxSubpages(plan);
+    const ttl      = ttlHours ?? cacheTtlHours(plan);
+    const cutoff   = new Date(Date.now() - ttl * 3_600_000).toISOString();
+    const rows     = await sql`
       SELECT response_json, created_at
       FROM   scan_cache
-      WHERE  url = ${url}
+      WHERE  url        = ${url}
+        AND  plan_tier  = ${tier}
+        AND  max_depth  = ${depth}
         AND  created_at > ${cutoff}
       LIMIT  1
     `;
@@ -52,22 +84,36 @@ export async function getCachedScan(
   }
 }
 
-export async function saveScan(url: string, payload: CachedScanPayload): Promise<void> {
+/**
+ * Speichert einen Single-Page-Scan-Cache.
+ * Composite UNIQUE-Constraint = (url, plan_tier, max_depth).
+ */
+export async function saveScan(
+  url: string,
+  plan: string | null | undefined,
+  payload: CachedScanPayload,
+): Promise<void> {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    const sql   = neon(process.env.DATABASE_URL!);
+    const tier  = planTierKey(plan);
+    const depth = getMaxSubpages(plan);
     await sql`
-      INSERT INTO scan_cache (url, response_json)
-      VALUES (${url}, ${JSON.stringify(payload)}::jsonb)
-      ON CONFLICT (url)
+      INSERT INTO scan_cache (url, plan_tier, max_depth, response_json)
+      VALUES (${url}, ${tier}, ${depth}, ${JSON.stringify(payload)}::jsonb)
+      ON CONFLICT (url, plan_tier, max_depth)
       DO UPDATE SET response_json = EXCLUDED.response_json,
-                    created_at   = NOW()
+                    created_at    = NOW()
     `;
   } catch { /* non-critical */ }
 }
 
-/** @deprecated kept for call-site compatibility; use saveScan() */
-export function saveScanAsync(url: string, payload: CachedScanPayload): Promise<void> {
-  return saveScan(url, payload);
+/** @deprecated Compat-Alias für die Pre-Refactor-Signatur — verwendet saveScan. */
+export function saveScanAsync(
+  url: string,
+  plan: string | null | undefined,
+  payload: CachedScanPayload,
+): Promise<void> {
+  return saveScan(url, plan, payload);
 }
 
 // ── Full-site scan cache (GET /api/full-scan SSE) ────────────────────────────
@@ -95,25 +141,25 @@ export type CachedFullScanV2 = {
 };
 export type CachedFullScanResult = CachedFullScanV2 & { cachedAt: string };
 
-/** Liest cached Full-Scan. Gibt NULL zurück bei:
- *   - kein Cache-Eintrag
- *   - TTL abgelaufen
- *   - DB-Fehler
- *   - Schema-Mismatch (version !== 2 → alter v1-Eintrag, ignored)
- *
- *  Damit ist sichergestellt, dass kein alter Cache-Eintrag den neuen
- *  Engine-basierten Scan überdecken kann. */
+/** Liest cached Full-Scan unter (url, plan_tier, max_depth).
+ *  Gibt NULL bei: kein Treffer, TTL abgelaufen, DB-Fehler, Schema-Mismatch. */
 export async function getCachedFullScan(
   url: string,
-  ttlHours = 24,
+  plan: string | null | undefined,
+  ttlHours?: number,
 ): Promise<CachedFullScanResult | null> {
   try {
-    const sql    = neon(process.env.DATABASE_URL!);
-    const cutoff = new Date(Date.now() - ttlHours * 3_600_000).toISOString();
-    const rows   = await sql`
+    const sql      = neon(process.env.DATABASE_URL!);
+    const tier     = planTierKey(plan);
+    const depth    = getMaxSubpages(plan);
+    const ttl      = ttlHours ?? cacheTtlHours(plan);
+    const cutoff   = new Date(Date.now() - ttl * 3_600_000).toISOString();
+    const rows     = await sql`
       SELECT response_json, created_at
       FROM   scan_cache
-      WHERE  url = ${FS_PREFIX + url}
+      WHERE  url        = ${FS_PREFIX + url}
+        AND  plan_tier  = ${tier}
+        AND  max_depth  = ${depth}
         AND  created_at > ${cutoff}
       LIMIT  1
     `;
@@ -136,22 +182,25 @@ export async function getCachedFullScan(
 /** Speichert einen vollständigen Full-Scan im neuen v2-Format. */
 export async function saveFullScan(
   url: string,
+  plan: string | null | undefined,
   scanResult: ScanResult,
   scanId: string | null,
 ): Promise<void> {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    const sql   = neon(process.env.DATABASE_URL!);
+    const tier  = planTierKey(plan);
+    const depth = getMaxSubpages(plan);
     const payload: CachedFullScanV2 = {
       version:    FS_CACHE_VERSION,
       scanResult,
       scanId,
     };
     await sql`
-      INSERT INTO scan_cache (url, response_json)
-      VALUES (${FS_PREFIX + url}, ${JSON.stringify(payload)}::jsonb)
-      ON CONFLICT (url)
+      INSERT INTO scan_cache (url, plan_tier, max_depth, response_json)
+      VALUES (${FS_PREFIX + url}, ${tier}, ${depth}, ${JSON.stringify(payload)}::jsonb)
+      ON CONFLICT (url, plan_tier, max_depth)
       DO UPDATE SET response_json = EXCLUDED.response_json,
-                    created_at   = NOW()
+                    created_at    = NOW()
     `;
   } catch { /* non-critical */ }
 }
@@ -161,14 +210,17 @@ export async function saveFullScan(
 /** @deprecated — use getCachedFullScan / saveFullScan for full-scan routes.
  *  Schema-Bump v2: diagnose lebt jetzt unter result.scanResult.diagnose.
  *  Bei alten v1-Caches gibt getCachedFullScan ohnehin null zurück. */
-export async function getCachedDiagnose(url: string, ttlHours = 24): Promise<string | null> {
-  const result = await getCachedFullScan(url, ttlHours);
+export async function getCachedDiagnose(
+  url: string,
+  plan: string | null | undefined,
+  ttlHours?: number,
+): Promise<string | null> {
+  const result = await getCachedFullScan(url, plan, ttlHours);
   return result?.scanResult.diagnose ?? null;
 }
 
 /** @deprecated — use saveFullScan for full-scan routes */
 export async function saveDiagnose(url: string, diagnose: string): Promise<void> {
-  // no-op: full-scan now saves via saveFullScan; kept to avoid build errors
   void url; void diagnose;
 }
 

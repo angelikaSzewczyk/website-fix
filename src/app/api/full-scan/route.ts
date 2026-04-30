@@ -35,7 +35,7 @@ import { isUrlAllowed, guardRequest, isRealWebsiteContent } from "@/lib/scan-gua
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
-import { getCachedFullScan, saveFullScan, cacheTtlHours } from "@/lib/scan-cache";
+import { getCachedFullScan, saveFullScan } from "@/lib/scan-cache";
 import { logScan } from "@/lib/scan-logger";
 import { MODELS } from "@/lib/ai-models";
 import { normalizePlan, isAgency } from "@/lib/plans";
@@ -213,9 +213,10 @@ export async function GET(req: NextRequest) {
       const fsStart = Date.now();
       try {
         // ── Cache-Hit-Check (v2-Schema; v1 wird automatisch ignoriert) ────
+        // Composite-Key (url, plan_tier, max_depth) verhindert Drift zwischen
+        // Plan-Tiers — siehe lib/scan-cache.ts.
         if (!forceRefresh) {
-          const ttl    = cacheTtlHours(plan);
-          const cached = await getCachedFullScan(targetUrl, ttl);
+          const cached = await getCachedFullScan(targetUrl, plan);
           if (cached) {
             logScan({ userId: session.user!.id, url: targetUrl, scanType: "fullsite", status: "cached", fromCache: true });
             enqueue("complete", {
@@ -405,12 +406,43 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
             ? JSON.stringify(scanResult.techFingerprint)
             : null;
 
+          // ── Depth-Validation (siehe lib/scan-cache + scan/route saveUserScan) ─
+          // Verhindert Drift, wenn ein flacherer Scan denselben URL-Eintrag
+          // im Dashboard verdrängt. Älterer-tieferer Scan bleibt Last-Scan,
+          // der neue Eintrag wird historisch gespeichert (is_superseded=true).
+          let isSuperseded = false;
+          const newPages   = scanResult.totalPages ?? 0;
+          try {
+            const maxRows = await sql`
+              SELECT COALESCE(MAX(total_pages), 0)::int AS max_pages
+              FROM   scans
+              WHERE  user_id = ${session.user!.id}
+                AND  url     = ${targetUrl}
+                AND  is_superseded = FALSE
+            ` as { max_pages: number }[];
+            const existingMax = maxRows[0]?.max_pages ?? 0;
+            if (newPages > 0 && existingMax > 0 && newPages < existingMax) {
+              isSuperseded = true;
+            } else if (newPages >= existingMax && existingMax > 0) {
+              await sql`
+                UPDATE scans
+                SET    is_superseded = TRUE
+                WHERE  user_id = ${session.user!.id}
+                  AND  url     = ${targetUrl}
+                  AND  is_superseded = FALSE
+                  AND  COALESCE(total_pages, 0) < ${newPages}
+              `;
+            }
+          } catch (err) {
+            console.error("[full-scan] depth-validation skipped:", err);
+          }
+
           await sql`
             INSERT INTO scans (
               id, user_id, url, type,
               issue_count, result, issues_json,
               speed_score, tech_fingerprint, total_pages,
-              unterseiten_json, meta_json
+              unterseiten_json, meta_json, is_superseded
             )
             VALUES (
               ${scanId},
@@ -428,7 +460,8 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
                 ...scanResult.meta,
                 avg_ttfb_ms:           scanResult.avgTtfbMs,
                 wcag_heuristic_score:  scanResult.wcagHeuristicScore,
-              })}::jsonb
+              })}::jsonb,
+              ${isSuperseded}
             )
           `;
         } catch (err) {
@@ -438,7 +471,8 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
         }
 
         // ── Phase 5: Cache speichern (v2-Schema) ──────────────────────────
-        await saveFullScan(targetUrl, scanResult, scanId);
+        // plan-Param sorgt für Composite-Key-Isolation pro Plan-Tier.
+        await saveFullScan(targetUrl, plan, scanResult, scanId);
 
         logScan({
           userId:     session.user!.id,
