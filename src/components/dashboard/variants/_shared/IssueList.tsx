@@ -6,6 +6,7 @@ import { isAtLeastProfessional } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
 import IssueActionBar from "@/app/dashboard/components/issue-action-bar";
+import { LockIco } from "./UIHelpers";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
@@ -535,7 +536,7 @@ function AccordionItem({
               <button
                 type="button"
                 onClick={onUpgradeClick}
-                title="KI-gestützte Schritt-für-Schritt-Anleitungen sind ab dem Professional-Plan verfügbar"
+                title="Spare wertvolle Zeit: Erhalte eine KI-gestützte Schritt-für-Schritt-Anleitung, um diesen Fehler sofort in deinem Builder (Elementor/Gutenberg) zu lösen."
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "7px 14px", borderRadius: 7,
@@ -546,13 +547,8 @@ function AccordionItem({
                   fontFamily: "inherit",
                 }}
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
-                </svg>
-                KI-Guide freischalten — Pro
+                <LockIco size={11} color="rgba(16,185,129,0.75)" />
+                Schritt-für-Schritt-Anleitung freischalten
               </button>
             )}
             <button

@@ -579,11 +579,11 @@ function consolidatedBodyFor(kind: IssueKind, totalCount: number, urls: string[]
 
   switch (kind) {
     case "alt-text-missing":
-      return `${totalCount} Bilder ohne Alt-Text — Barrierefreiheitsgesetz ab 06/2025 verpflichtend, konkrete Abmahngefahr. Betroffen: ${sample}${extra}`;
+      return `BFSG-Verstoß (§3 Abs. 2): ${totalCount} Bilder ohne Alt-Text — ab 06/2025 verpflichtend, konkrete Abmahngefahr. Betroffen: ${sample}${extra}`;
     case "form-label-missing":
       return `Formularfelder ohne sichtbares Label — Screen-Reader können sie nicht vorlesen (BFSG §3 Abs. 2). Betroffen: ${sample}${extra}`;
     case "form-button-text-missing":
-      return `Buttons ohne Text- oder aria-label sind für Screen-Reader bedeutungslos. Betroffen: ${sample}${extra}`;
+      return `BFSG-Verstoß (§3 Abs. 2): Buttons ohne sichtbaren Text oder aria-label sind für Screen-Reader bedeutungslos — ab 06/2025 verpflichtend, konkrete Abmahngefahr. Betroffen: ${sample}${extra}`;
     case "title-missing":
       return `Fehlende Title-Tags verhindern Ranking-Snippets — diese Seiten können nicht ranken. Betroffen: ${sample}${extra}`;
     case "h1-missing":
@@ -602,9 +602,9 @@ function consolidatedBodyFor(kind: IssueKind, totalCount: number, urls: string[]
     case "favicon-missing":
       return `Browser-Tabs zeigen ein generisches Default-Icon — Marken-Wiedererkennung leidet, wirkt unprofessionell beim Bookmarken. Betroffen: ${sample}${extra}`;
     case "html-lang-missing":
-      return `Screen-Reader können die Sprache nicht erkennen → BFSG-relevant. Plus: Google nutzt das Attribut als Ranking-Signal für lokalisierte Suche. Betroffen: ${sample}${extra}`;
+      return `BFSG-Verstoß (§3 Abs. 2): Screen-Reader können die Seitensprache nicht erkennen und falsch aussprechen — ab 06/2025 verpflichtend, konkrete Abmahngefahr. Plus: Google nutzt das Attribut als Ranking-Signal für lokalisierte Suche. Betroffen: ${sample}${extra}`;
     case "heading-hierarchy-broken":
-      return `Screen-Reader navigieren über Überschriften-Levels — gebrochene Reihenfolge frustriert Nutzer mit Behinderungen, BFSG-relevant. Betroffen: ${sample}${extra}`;
+      return `BFSG-Verstoß (§3 Abs. 2): Screen-Reader navigieren über Überschriften-Levels — gebrochene Reihenfolge schließt Nutzer mit Behinderungen aus, ab 06/2025 verpflichtend, konkrete Abmahngefahr. Betroffen: ${sample}${extra}`;
     case "security-headers-missing":
       return `Fehlende CSP/HSTS-Header lassen Browser im weichen Modus — XSS, Clickjacking und Protokoll-Downgrade sind nicht hardened. Betroffen: ${sample}${extra}`;
     default:
