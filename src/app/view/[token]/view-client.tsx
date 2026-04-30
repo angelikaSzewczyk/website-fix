@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { IssueProp } from "@/app/dashboard/components/StarterResultsPanel";
+import type { IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
 
 // ─── Score helpers (mirrors StarterResultsPanel) ───────────────────────────────
 

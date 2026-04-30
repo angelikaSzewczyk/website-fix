@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import StarterResultsPanel, { type IssueProp } from "@/app/dashboard/components/StarterResultsPanel";
+import IssueList, { type IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
 import PrintButton from "./print-button";
 
 interface Props {
@@ -65,7 +65,7 @@ export default function ScanDetailClient({ url, createdAt, plan, issues, redCoun
         </div>
 
         {/* Results panel */}
-        <StarterResultsPanel
+        <IssueList
           issues={issues}
           redCount={redCount}
           yellowCount={yellowCount}

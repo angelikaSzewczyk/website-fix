@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
-import type { IssueProp } from "@/app/dashboard/components/StarterResultsPanel";
+import type { IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
 import { isAtLeastProfessional } from "@/lib/plans";
 import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 import ScanDetailClient from "./scan-detail-client";

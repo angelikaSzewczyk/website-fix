@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ViewClient from "./view-client";
-import type { IssueProp } from "@/app/dashboard/components/StarterResultsPanel";
+import type { IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
 
 export const metadata: Metadata = { robots: { index: false } };
 export const dynamic = "force-dynamic";

@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import StarterResultsPanel from "@/app/dashboard/components/StarterResultsPanel";
+import IssueList from "@/components/dashboard/variants/_shared/IssueList";
+import ScoreRingSection from "./_shared/ScoreRingSection";
 import LockedSection from "@/app/dashboard/components/locked-section";
-import HistoryChart from "@/app/dashboard/components/history-chart";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
 import type { TechFingerprint } from "@/lib/tech-detector";
@@ -3006,21 +3006,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             />
           )}
 
-          {/* ①a SCORE-VERLAUF — nur für Pro+ inline. Starter sieht den
-              Lock-Card-Teaser konsolidiert am Seitenende (Pro-Vorschau-Sektion).
-              Cleanup-Konzept: Tool-Daten oben, Upsell-Inhalte unten. */}
-          {!isNewScan && lastScan && isAtLeastProfessional(plan) && (
-            <LockedSection
-              required="professional"
-              currentPlan={plan}
-              feature="history-chart"
-              title="Score-Verlauf · 7 Tage"
-              description="Sieh, wie sich dein Score über die Zeit entwickelt. Jede Verbesserung dokumentiert, jede Regression erkannt — bevor sie sich aufs Ranking auswirkt."
-              upsellPrice={89}
-            >
-              <HistoryChart scans={scans} />
-            </LockedSection>
-          )}
+          {/* Score-Verlauf ist Pro-Feature — Starter rendert ihn nicht (per Plan-Spec). */}
 
           {/* ①b GSC-CARD + LOW-SPEED-INSIGHT — Agency-Feature.
               Outer-Gate `isAtLeastProfessional`: Starter sieht die Sektion gar
@@ -3218,8 +3204,8 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ④b STARTER RESULTS PANEL — Ebene 1: Score rings + Ebene 2: Accordion */}
-          <StarterResultsPanel
+          {/* ④a SCORE-RINGS — Ebene 1 (Phase-2 Shared) */}
+          <ScoreRingSection
             issues={panelIssues}
             redCount={consolidatedRedCount}
             yellowCount={consolidatedYellowCount}
@@ -3240,6 +3226,32 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             }
             integrationsStatus={integrationsStatus}
             scanUrl={lastScan?.url}
+          />
+
+          {/* ④b ISSUE-LIST — Ebene 2 (Starter: KI-Guide gelockt). */}
+          <IssueList
+            issues={panelIssues}
+            redCount={consolidatedRedCount}
+            yellowCount={consolidatedYellowCount}
+            speedScore={speedScore}
+            plan={plan}
+            lastScan={!!lastScan}
+            focusMode={isNewScan}
+            scanId={lastScan?.id}
+            isWooCommerce={!!fingerprint && fingerprint.ecommerce.value === "WooCommerce" && fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD}
+            builderName={builderAudit?.builder ?? null}
+            builderForGuidance={
+              builderAudit?.builder === "Elementor" ||
+              builderAudit?.builder === "Divi" ||
+              builderAudit?.builder === "Astra" ||
+              builderAudit?.builder === "WPBakery"
+                ? builderAudit.builder
+                : null
+            }
+            integrationsStatus={integrationsStatus}
+            scanUrl={lastScan?.url}
+            hideScoreRings
+            lockExpertFix
           />
 
           {/* ─── EBENE 3: DEEP-SCAN MAP ─────────────────────────────────────── */}

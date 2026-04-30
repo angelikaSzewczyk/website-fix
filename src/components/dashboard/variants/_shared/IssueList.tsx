@@ -5,7 +5,7 @@ import Link from "next/link";
 import { isAtLeastProfessional } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
-import IssueActionBar from "./issue-action-bar";
+import IssueActionBar from "@/app/dashboard/components/issue-action-bar";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
@@ -46,6 +46,18 @@ interface Props {
   integrationsStatus?: IssueActionStatus | null;
   /** URL des gescannten Projekts — für die ActionBar als project-url im Payload. */
   scanUrl?:    string;
+  /** Phase-2: erzwingt KI-Guide-Lock unabhängig vom Plan. Wenn weggelassen,
+   *  fällt die Komponente auf das Plan-basierte Verhalten zurück (Pro+ frei,
+   *  Starter gelockt). Variant-Caller setzen das explizit, damit das Gating
+   *  vom Variant-Composition-Layer kontrolliert wird. */
+  lockExpertFix?: boolean;
+  /** Phase-2: unterdrückt den Score-Ring-Card-Block. Variants, die bereits
+   *  oben ScoreRingSection rendern, übergeben true — sonst Doppel-Render. */
+  hideScoreRings?: boolean;
+  /** Phase-2: unterdrückt die Issue-Gruppen (rot/gelb). Inverse Schwester
+   *  zu hideScoreRings — wird von ScoreRingSection.tsx genutzt, das nur
+   *  den Score-Ring-Block aus IssueList wiederverwendet. */
+  hideIssueGroups?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -782,7 +794,7 @@ function SkeletonRing({ label }: { label: string }) {
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-export default function StarterResultsPanel({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId, isWooCommerce = false, builderName = null, builderForGuidance = null, integrationsStatus = null, scanUrl }: Props) {
+export default function IssueList({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId, isWooCommerce = false, builderName = null, builderForGuidance = null, integrationsStatus = null, scanUrl, lockExpertFix, hideScoreRings = false, hideIssueGroups = false }: Props) {
   const [showUpgrade, setShowUpgrade]   = useState(false);
   const [showWLModal, setShowWLModal]   = useState(false);
   const [showPdfHint, setShowPdfHint]   = useState(false);
@@ -792,6 +804,10 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
 
   // ── Executive Summary (Professional+) ────────────────────────────────────
   const isPro = isAtLeastProfessional(plan);
+  // Phase-2: lockExpertFix-Prop überschreibt das Plan-Default. Wenn der
+  // Variant-Caller explizit lockExpertFix=true setzt, gilt das, egal welcher
+  // Plan. Default-Fallback (undefined) → Plan-basiertes Verhalten (Pro+ frei).
+  const expertFixGated = lockExpertFix ?? !isPro;
   const [execSummary, setExecSummary]   = useState("");
   const [saveStatus,  setSaveStatus]    = useState<"idle" | "saving" | "saved">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1151,6 +1167,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
       )}
 
       {/* ① SCORE RINGS ─────────────────────────────────────────────────────── */}
+      {!hideScoreRings && (
       <div className="wf-print-card" style={{
         marginBottom: 28,
         background: "rgba(255,255,255,0.02)",
@@ -1425,6 +1442,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           );
         })()}
       </div>
+      )}
 
       {/* ── EXECUTIVE SUMMARY — Print box (after score rings, page 1) ───────── */}
       {isPro && scanId && execSummary.trim() && (
@@ -1454,6 +1472,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
       )}
 
       {/* ② AUFGABEN-LISTE ─────────────────────────────────────────────────── */}
+      {!hideIssueGroups && (
       <div id="wf-aufgaben" className="wf-print-accordion" style={{
         marginBottom: 28,
         animation: "wf-sr-fadein 0.45s 0.1s ease both",
@@ -1507,7 +1526,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     actionStatus={isPro ? integrationsStatus ?? null : null}
                     scanUrl={scanUrl}
                     scanId={scanId}
-                    gated={!isPro}
+                    gated={expertFixGated}
                     onUpgradeClick={() => setShowUpgrade(true)}
                   />
                 );
@@ -1550,7 +1569,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
                     actionStatus={isPro ? integrationsStatus ?? null : null}
                     scanUrl={scanUrl}
                     scanId={scanId}
-                    gated={!isPro}
+                    gated={expertFixGated}
                     onUpgradeClick={() => setShowUpgrade(true)}
                   />
                 );
@@ -1568,6 +1587,7 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
           </div>
         )}
       </div>
+      )}
 
       {/* ④ FOCUS-MODE BACK BUTTON ──────────────────────────────────────────── */}
       {focusMode && (
