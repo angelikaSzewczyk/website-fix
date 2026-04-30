@@ -176,7 +176,7 @@ function StatusDot({ kind }: { kind: "online" | "joined" | "invited" }) {
         title="Offline · Account aktiv, gerade nicht eingeloggt"
         style={{
           width: 8, height: 8, borderRadius: "50%",
-          background: "#94A3B8",
+          background: "rgba(255,255,255,0.30)",
           flexShrink: 0,
         }}
       />
@@ -236,7 +236,7 @@ function MemberRow({ m }: { m: DerivedMember }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
             <span style={{
-              fontSize: 13, fontWeight: 700, color: "#0F172A",
+              fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.92)",
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               minWidth: 0,
             }}>
@@ -248,7 +248,7 @@ function MemberRow({ m }: { m: DerivedMember }) {
             fontSize: 11,
             // Aktivere Members optisch nach vorn — wenn jemand heute Scans
             // gemacht hat, leicht prominenter rendern als "Bereit"/"Keine Scans".
-            color: m.scansToday > 0 ? "#475569" : "#94A3B8",
+            color: m.scansToday > 0 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.40)",
             fontWeight: m.scansToday > 0 ? 600 : 400,
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
@@ -271,10 +271,10 @@ function Skeleton() {
     <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "4px" }}>
       {[0, 1, 2].map(i => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 14px" }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(15,23,42,0.06)" }} />
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(255,255,255,0.05)" }} />
           <div style={{ flex: 1 }}>
-            <div style={{ width: "60%", height: 12, background: "rgba(15,23,42,0.06)", borderRadius: 4, marginBottom: 6 }} />
-            <div style={{ width: "40%", height: 10, background: "rgba(15,23,42,0.04)", borderRadius: 4 }} />
+            <div style={{ width: "60%", height: 12, background: "rgba(255,255,255,0.05)", borderRadius: 4, marginBottom: 6 }} />
+            <div style={{ width: "40%", height: 10, background: "rgba(255,255,255,0.04)", borderRadius: 4 }} />
           </div>
         </div>
       ))}
@@ -353,10 +353,10 @@ export default function TeamWidget() {
     <aside
       aria-label="Team-Mitglieder"
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "rgba(255,255,255,0.025)",
+        border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 16,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        boxShadow: "none",
         overflow: "hidden",
         display: "flex", flexDirection: "column",
       }}
@@ -383,17 +383,17 @@ export default function TeamWidget() {
         .wf-team-list {
           isolation: isolate;
         }
-        .wf-team-row:hover { background: #F8FAFC; }
+        .wf-team-row:hover { background: rgba(255,255,255,0.04); }
       `}</style>
 
       {/* Header */}
       <div style={{
         padding: "14px 18px",
-        borderBottom: "1px solid #F1F5F9",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "#0F172A", letterSpacing: "-0.01em" }}>Team</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }}>Team</span>
           {!loading && !error && (
             <span style={{
               fontSize: 10, fontWeight: 700,
@@ -415,7 +415,7 @@ export default function TeamWidget() {
 
         {!loading && error && (
           <div style={{ padding: "20px 14px", textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: 12, color: "#DC2626", lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: 12, color: "#f87171", lineHeight: 1.5 }}>
               {error}
             </p>
           </div>
@@ -435,10 +435,10 @@ export default function TeamWidget() {
               </svg>
             </div>
             <div>
-              <p style={{ margin: "0 0 4px", fontSize: 13.5, fontWeight: 700, color: "#0F172A" }}>
+              <p style={{ margin: "0 0 4px", fontSize: 13.5, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>
                 Noch keine Mitglieder
               </p>
-              <p style={{ margin: 0, fontSize: 12, color: "#64748B", lineHeight: 1.5, maxWidth: 220 }}>
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, maxWidth: 220 }}>
                 Lade Kollegen ein, damit sie an Audits und Berichten mitarbeiten können.
               </p>
             </div>
@@ -455,7 +455,7 @@ export default function TeamWidget() {
 
       {/* Footer-CTA — nur wenn Mitglieder vorhanden UND noch Platz im Plan */}
       {!loading && !error && usedSeats > 0 && usedSeats < maxSeats && (
-        <div style={{ padding: "12px 14px", borderTop: "1px solid #F1F5F9" }}>
+        <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <InviteCta tone="secondary" />
         </div>
       )}

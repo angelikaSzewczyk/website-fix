@@ -30,20 +30,23 @@ const D = {
   redBdr:     "rgba(160,80,80,0.18)",
 };
 
-// ── Design tokens: LIGHT (Agency) ─────────────────────────────────────────────
+// ── Design tokens: AGENCY (Phase 3 Sprint 7 — auf Dark-Mode geflippt) ────────
+// Variable-Name "L" historisch beibehalten, damit alle bestehenden L.* Refe-
+// renzen unverändert funktionieren. Werte gemappt aus Pro/Starter-Variants
+// (UIHelpers.D), damit das Berichte-Archiv visuell zur Kommandozentrale passt.
 const L = {
-  bg:       "#F8FAFC",
-  card:     "#FFFFFF",
-  border:   "#E5E7EB",
-  divider:  "#F3F4F6",
-  shadow:   "0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)",
-  shadowMd: "0 2px 16px rgba(0,0,0,0.08)",
-  text:     "#0D1321",
-  textSub:  "#374151",
-  textMuted:"#6B7280",
-  green:    "#15803D", greenBg: "#F0FDF4", greenBdr: "#BBF7D0",
-  amber:    "#B45309", amberBg: "#FFFBEB", amberBdr: "#FDE68A",
-  red:      "#B91C1C", redBg:   "#FEF2F2", redBdr:   "#FECACA",
+  bg:       "#0b0c10",
+  card:     "rgba(255,255,255,0.025)",
+  border:   "rgba(255,255,255,0.08)",
+  divider:  "rgba(255,255,255,0.06)",
+  shadow:   "none",
+  shadowMd: "0 4px 18px rgba(0,0,0,0.5)",
+  text:     "rgba(255,255,255,0.92)",
+  textSub:  "rgba(255,255,255,0.65)",
+  textMuted:"rgba(255,255,255,0.4)",
+  green:    "#4ade80", greenBg: "rgba(74,222,128,0.10)",  greenBdr: "rgba(74,222,128,0.28)",
+  amber:    "#fbbf24", amberBg: "rgba(251,191,36,0.10)",  amberBdr: "rgba(251,191,36,0.28)",
+  red:      "#f87171", redBg:   "rgba(248,113,113,0.10)", redBdr:   "rgba(248,113,113,0.28)",
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -535,10 +538,18 @@ function AgencyView({
   const uptimeColor = kpis.uptimePct === null ? L.textMuted : kpis.uptimePct >= 99 ? L.green : kpis.uptimePct >= 95 ? L.amber : L.red;
   const uptimeBg    = kpis.uptimePct === null ? L.divider  : kpis.uptimePct >= 99 ? L.greenBg : kpis.uptimePct >= 95 ? L.amberBg : L.redBg;
   const uptimeBdr   = kpis.uptimePct === null ? L.border   : kpis.uptimePct >= 99 ? L.greenBdr : kpis.uptimePct >= 95 ? L.amberBdr : L.redBdr;
-  const msVal       = kpis.avgResponseMs ? `${kpis.avgResponseMs} ms` : "—";
-  const msBg        = !kpis.avgResponseMs ? L.divider : kpis.avgResponseMs < 500 ? L.greenBg : kpis.avgResponseMs < 1500 ? L.amberBg : L.redBg;
-  const msColor     = !kpis.avgResponseMs ? L.textMuted : kpis.avgResponseMs < 500 ? L.green : kpis.avgResponseMs < 1500 ? L.amber : L.red;
-  const msBdr       = !kpis.avgResponseMs ? L.border : kpis.avgResponseMs < 500 ? L.greenBdr : kpis.avgResponseMs < 1500 ? L.amberBdr : L.redBdr;
+
+  // Phase 3 Sprint 7 — Sanity-Cap auf avgResponseMs.
+  // kpis.avgResponseMs kommt aus scan_log.duration_ms (UNSERE interne
+  // Scan-Dauer, nicht die Response-Time des Kunden-Servers). Werte > 5s
+  // sind keine sinnvolle Endkunden-Metrik; in dem Fall lieber "—" als
+  // einen absurden 23-Sekunden-Wert in der White-Label-Kachel.
+  const RESPONSE_MS_THRESHOLD = 5000;
+  const responseMs            = kpis.avgResponseMs && kpis.avgResponseMs <= RESPONSE_MS_THRESHOLD ? kpis.avgResponseMs : null;
+  const msVal       = responseMs ? `${responseMs} ms` : "—";
+  const msBg        = !responseMs ? L.divider : responseMs < 500 ? L.greenBg : responseMs < 1500 ? L.amberBg : L.redBg;
+  const msColor     = !responseMs ? L.textMuted : responseMs < 500 ? L.green : responseMs < 1500 ? L.amber : L.red;
+  const msBdr       = !responseMs ? L.border : responseMs < 500 ? L.greenBdr : responseMs < 1500 ? L.amberBdr : L.redBdr;
 
   function handlePrint() {
     setPrinting(true);
@@ -603,9 +614,12 @@ function AgencyView({
           </div>
           <button onClick={handlePrint} disabled={printing} style={{
             display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
-            borderRadius: 9, border: `1px solid ${L.border}`, background: L.card,
-            cursor: printing ? "default" : "pointer", color: L.textSub,
-            fontSize: 13, fontWeight: 600, boxShadow: L.shadow,
+            borderRadius: 9,
+            border: "1px solid rgba(124,58,237,0.40)",
+            background: "rgba(124,58,237,0.18)",
+            cursor: printing ? "default" : "pointer",
+            color: "#a78bfa",
+            fontSize: 13, fontWeight: 700,
             opacity: printing ? 0.5 : 1, fontFamily: "inherit",
           }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -636,16 +650,17 @@ function AgencyView({
               <button
                 onClick={() => setAutoReport(v => !v)}
                 style={{
-                  width: 44, height: 24, borderRadius: 12, border: "none",
-                  background: autoReport ? color : "#D1D5DB",
-                  cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0,
+                  width: 44, height: 24, borderRadius: 12,
+                  border: `1px solid ${autoReport ? "rgba(124,58,237,0.6)" : "rgba(255,255,255,0.10)"}`,
+                  background: autoReport ? "rgba(124,58,237,0.40)" : "rgba(255,255,255,0.06)",
+                  cursor: "pointer", position: "relative", transition: "background 0.2s, border-color 0.2s", flexShrink: 0,
                 }}
               >
                 <div style={{
-                  position: "absolute", top: 3, left: autoReport ? 23 : 3,
+                  position: "absolute", top: 2, left: autoReport ? 22 : 2,
                   width: 18, height: 18, borderRadius: "50%",
-                  background: "#fff", transition: "left 0.2s",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  background: autoReport ? "#a78bfa" : "rgba(255,255,255,0.55)",
+                  transition: "left 0.2s, background 0.2s",
                 }} />
               </button>
               <span style={{ fontSize: 12, fontWeight: 600, color: autoReport ? L.text : L.textMuted }}>
@@ -670,8 +685,10 @@ function AgencyView({
                 onClick={handleAutoSave}
                 style={{
                   padding: "8px 18px", borderRadius: 8,
-                  background: color, border: "none",
-                  color: "#fff", fontSize: 13, fontWeight: 700,
+                  background: "rgba(124,58,237,0.18)",
+                  border: "1px solid rgba(124,58,237,0.40)",
+                  color: "#a78bfa",
+                  fontSize: 13, fontWeight: 700,
                   cursor: "pointer", fontFamily: "inherit",
                 }}
               >

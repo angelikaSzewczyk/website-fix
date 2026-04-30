@@ -135,7 +135,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <div
       className={`${planClass} ${isPro ? "is-pro-plan " : ""}${isAgencyPlan ? "is-agency-plan " : ""}${isStarterPlan ? "is-starter-plan" : ""}`.trim()}
-      style={{ display: "flex", minHeight: "100vh", background: isAuditPlan ? "#0b0c10" : "#F0F4F8" }}
+      style={{ display: "flex", minHeight: "100vh", background: "#0b0c10" }}
     >
       {/* CSS custom properties — available throughout the dashboard */}
       <style>{`
@@ -253,7 +253,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       )}
 
       {/* CONTENT */}
-      <div className="dashboard-content" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, background: isAuditPlan ? "#0b0c10" : "#F8FAFC", minHeight: "100vh" }}>
+      <div className="dashboard-content" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, background: "#0b0c10", minHeight: "100vh" }}>
         {children}
       </div>
 

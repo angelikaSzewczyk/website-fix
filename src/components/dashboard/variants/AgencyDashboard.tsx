@@ -125,29 +125,35 @@ export default function AgencyDashboard({
         return (
           <main style={{ padding: "28px 32px 80px" }}>
 
-              {/* ── Subtle Body-Header — Plan/Slots/White-Label sind in der
-                  Topbar (AgencyTopBar in page.tsx) bereits sichtbar, daher
-                  hier minimal: nur agency_name (oder Default) und Primary-CTA. */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, gap: 12, flexWrap: "wrap" }}>
+              {/* ── Action-Bar Body-Header (Phase 3 Sprint 8).
+                  Plan/Slots/White-Label sind in der Topbar bereits sichtbar.
+                  Hier: Eyebrow + h1 links, Primary-CTA prominent rechts. */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: 24, gap: 14, flexWrap: "wrap",
+                paddingBottom: 18, borderBottom: `1px solid ${C.divider}`,
+              }}>
                 <div>
-                  <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.12em", textTransform: "uppercase" }}>
                     Kommandozentrale
                   </p>
-                  <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+                  <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
                     {agencyName ?? "Kunden-Übersicht"}
                   </h1>
                 </div>
-                {/* CTA — Lila statt Yellow, abgestimmt auf FeatureGate-Locks */}
+                {/* Primary CTA — solides Lila mit Shadow-Glow für Prominenz */}
                 <a href="#modal-new-client" style={{
-                  display: "inline-flex", alignItems: "center", gap: 7,
-                  padding: "9px 18px", borderRadius: 10,
-                  background: "rgba(124,58,237,0.18)",
-                  border: "1px solid rgba(124,58,237,0.40)",
-                  color: "#a78bfa",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "11px 22px", borderRadius: 10,
+                  background: "rgba(124,58,237,0.85)",
+                  border: "1px solid rgba(167,139,250,0.55)",
+                  color: "#fff",
                   fontWeight: 700, fontSize: 13, textDecoration: "none",
                   whiteSpace: "nowrap",
+                  boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
+                  transition: "transform 0.12s ease, box-shadow 0.12s ease",
                 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Neuen Kunden anlegen
                 </a>
               </div>
@@ -209,43 +215,81 @@ export default function AgencyDashboard({
                   <span style={{ fontSize: 11, color: C.textMuted }}>{agencyClients.length} {agencyClients.length === 1 ? "Projekt" : "Projekte"}</span>
                 </div>
 
-                {/* Empty state — Agentur hat noch keine analysierten Kunden.
-                    Tech-Icon: stilisiertes Server-Stack-Symbol statt generischem
-                    "users"-SVG. Lila-Akzent matcht FeatureGate-Locks-Saturation. */}
+                {/* Quick-Start Guide — Phase 3 Sprint 8.
+                    Statt zentrierter "Noch nichts da"-Anzeige drei horizontale
+                    Step-Karten, die füllen die volle Breite der Kunden-Matrix
+                    und führen den User durch das Onboarding. */}
                 {agencyClients.length === 0 && (
-                  <div style={{ padding: "56px 28px", textAlign: "center" }}>
-                    <div style={{
-                      width: 56, height: 56, borderRadius: 14, marginBottom: 20,
-                      background: "rgba(124,58,237,0.10)",
-                      border: "1px solid rgba(124,58,237,0.30)",
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <rect x="3"  y="3"  width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="3"  width="7" height="7" rx="1.5"/>
-                        <rect x="3"  y="14" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1.5" strokeDasharray="2.5 2"/>
-                      </svg>
+                  <div style={{ padding: "28px 22px 26px" }}>
+                    <div style={{ marginBottom: 18 }}>
+                      <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                        Quick-Start
+                      </p>
+                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+                        Dein Agentur-Setup in 3 Schritten
+                      </h3>
                     </div>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
-                      Noch keine Kunden-Websites analysiert
-                    </h3>
-                    <p style={{ margin: "0 auto 22px", fontSize: 12.5, color: C.textSub, lineHeight: 1.65, maxWidth: 380 }}>
-                      Starte deinen ersten Scan, um dein Portfolio aufzubauen.
-                      Jeder neue Scan landet automatisch in der Kunden-Matrix.
-                    </p>
-                    <a href="#modal-new-client" style={{
-                      display: "inline-flex", alignItems: "center", gap: 7,
-                      padding: "10px 20px", borderRadius: 9,
-                      background: "rgba(124,58,237,0.18)",
-                      border: "1px solid rgba(124,58,237,0.40)",
-                      color: "#a78bfa",
-                      fontWeight: 700, fontSize: 12.5, textDecoration: "none",
-                      whiteSpace: "nowrap",
-                    }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Ersten Kunden anlegen
-                    </a>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                      {[
+                        {
+                          n: "1",
+                          title: "Domain hinzufügen",
+                          desc: "Lege deinen ersten Kunden mit Website-URL und Namen an.",
+                          cta: "Kunden anlegen",
+                          href: "#modal-new-client",
+                        },
+                        {
+                          n: "2",
+                          title: "White-Label einrichten",
+                          desc: "Lade dein Agentur-Logo hoch und setze die Brand-Farbe.",
+                          cta: "Branding öffnen",
+                          href: "/dashboard/settings#branding",
+                        },
+                        {
+                          n: "3",
+                          title: "Ersten Bericht versenden",
+                          desc: "Aktiviere den automatischen Monats-Report im Berichte-Archiv.",
+                          cta: "Berichte öffnen",
+                          href: "/dashboard/reports",
+                        },
+                      ].map(step => (
+                        <div key={step.n} style={{
+                          padding: "16px 18px", borderRadius: 11,
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(124,58,237,0.18)",
+                          display: "flex", flexDirection: "column", gap: 9,
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                            <span style={{
+                              width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                              background: "rgba(124,58,237,0.18)",
+                              border: "1px solid rgba(124,58,237,0.40)",
+                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                              fontSize: 11, fontWeight: 800, color: "#a78bfa", lineHeight: 1,
+                            }}>
+                              {step.n}
+                            </span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+                              {step.title}
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: 11.5, color: C.textSub, lineHeight: 1.55, flex: 1 }}>
+                            {step.desc}
+                          </p>
+                          <Link href={step.href} style={{
+                            alignSelf: "flex-start",
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "5px 10px", borderRadius: 6,
+                            background: "rgba(124,58,237,0.14)",
+                            border: "1px solid rgba(124,58,237,0.32)",
+                            color: "#a78bfa",
+                            fontSize: 11, fontWeight: 700, textDecoration: "none",
+                          }}>
+                            {step.cta} →
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
