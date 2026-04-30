@@ -352,7 +352,11 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────────────
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ project?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -364,11 +368,34 @@ export default async function DashboardPage() {
   const isAgency  = layout === "agency";
   const isSingle  = layout === "single";
 
-  const scans = await sql`
-    SELECT id, url, type, created_at, issue_count
-    FROM scans WHERE user_id = ${session.user.id}
-    ORDER BY created_at DESC LIMIT 20
-  ` as Scan[];
+  // Phase 3 Sprint 4: ?project=<id> Active-Project-Scoping.
+  // Wenn ein Projekt-Param mitkommt, schauen wir die zugehörige URL nach
+  // (mit Ownership-Check) und scopen den scans-SELECT auf genau diese URL.
+  // Sonst: bisheriges Verhalten — letzte 20 Scans des Users über alle URLs.
+  const sp = await searchParams;
+  const projectId = sp?.project ?? null;
+  let scopedProjectUrl: string | null = null;
+  if (projectId) {
+    try {
+      const rows = await sql`
+        SELECT url FROM saved_websites WHERE id = ${projectId} AND user_id = ${session.user.id} LIMIT 1
+      ` as { url: string }[];
+      scopedProjectUrl = rows[0]?.url ?? null;
+    } catch { /* spalte/tabelle fehlt → fallback auf global */ }
+  }
+
+  const scans = scopedProjectUrl
+    ? await sql`
+        SELECT id, url, type, created_at, issue_count
+        FROM scans
+        WHERE user_id = ${session.user.id} AND url = ${scopedProjectUrl}
+        ORDER BY created_at DESC LIMIT 20
+      ` as Scan[]
+    : await sql`
+        SELECT id, url, type, created_at, issue_count
+        FROM scans WHERE user_id = ${session.user.id}
+        ORDER BY created_at DESC LIMIT 20
+      ` as Scan[];
 
   // Agency data
   let criticalSites: CriticalSite[] = [];

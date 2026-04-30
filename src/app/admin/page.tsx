@@ -22,6 +22,8 @@ export type AdminUser = {
   created_at: string;
   bonus_scans: number;
   scan_count: number;
+  saved_websites_count: number;  // Phase 3 Sprint 4
+  last_login_at: string | null;  // Phase 3 Sprint 4 (null wenn nie eingeloggt seit Migration)
 };
 
 export type ScanLogRow = {
@@ -92,16 +94,21 @@ export default async function AdminPage() {
         ORDER BY DATE(created_at)
       `,
 
-      // All users with scan count
+      // All users with scan count + saved_websites count + last login (Phase 3 Sprint 4).
+      // last_login_at::text gibt NULL für User, die seit der Migration noch nicht
+      // eingeloggt waren — Frontend rendert "—" statt Datum.
       sql`
         SELECT
           u.id::text, u.email, u.name, u.plan,
           u.created_at::text,
           COALESCE(u.bonus_scans, 0)::int AS bonus_scans,
-          COUNT(s.id)::int                AS scan_count
+          COUNT(DISTINCT s.id)::int  AS scan_count,
+          COUNT(DISTINCT sw.id)::int AS saved_websites_count,
+          u.last_login_at::text       AS last_login_at
         FROM users u
-        LEFT JOIN scans s ON s.user_id = u.id
-        GROUP BY u.id, u.email, u.name, u.plan, u.created_at, u.bonus_scans
+        LEFT JOIN scans          s  ON s.user_id  = u.id
+        LEFT JOIN saved_websites sw ON sw.user_id = u.id
+        GROUP BY u.id, u.email, u.name, u.plan, u.created_at, u.bonus_scans, u.last_login_at
         ORDER BY u.created_at DESC
         LIMIT 500
       `,

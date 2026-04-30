@@ -74,3 +74,7 @@ ALTER TABLE saved_websites ADD COLUMN IF NOT EXISTS client_logo_url TEXT;
 -- Index für den Power-Switcher: schnelles Filtern nach Kunden-Marker.
 CREATE INDEX IF NOT EXISTS saved_websites_is_customer_idx
   ON saved_websites(user_id, is_customer_project);
+
+-- Phase 3 / Sprint 4: last_login_at für Admin-User-Liste.
+-- Wird im NextAuth-jwt-Callback bei jedem Login auf NOW() gesetzt.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;

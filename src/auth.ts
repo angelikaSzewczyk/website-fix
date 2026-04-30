@@ -71,6 +71,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const rows = await sql`SELECT plan, created_at FROM users WHERE id = ${user.id}`;
           token.plan = (rows[0]?.plan as string) ?? "starter";
 
+          // Phase 3 Sprint 4: last_login_at für Admin-Übersicht. Schreibt
+          // bei jedem JWT-Issue (=Login). Silently failt wenn die Spalte
+          // fehlt — Migration noch nicht durch ist kein Login-Blocker.
+          await sql`UPDATE users SET last_login_at = NOW() WHERE id = ${user.id}`.catch(() => {});
+
           // Welcome-Mail nur beim ersten Login (Account gerade erstellt)
           const createdAt = rows[0]?.created_at as string | undefined;
           const isNew = createdAt && (Date.now() - new Date(createdAt).getTime()) < 60_000;

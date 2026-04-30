@@ -612,14 +612,14 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
               background: D.surface, border: `1px solid ${D.border}`,
               borderRadius: 14, overflow: "hidden",
             }}>
-              {/* Table header */}
+              {/* Table header — Phase 3 Sprint 4: + Sites + Last Login */}
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 210px",
+                gridTemplateColumns: "1fr 100px 55px 50px 50px 95px 175px 200px",
                 padding: "10px 20px",
                 borderBottom: `1px solid ${D.border}`,
               }}>
-                {["User / E-Mail", "Plan", "Scans", "Credits", "Angemeldet", "Plan ändern", "Aktionen"].map(h => (
+                {["User / E-Mail", "Plan", "Scans", "Sites", "Credits", "Letzter Login", "Plan ändern", "Aktionen"].map(h => (
                   <span key={h} style={{ fontSize: 10, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                     {h}
                   </span>
@@ -631,19 +631,19 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 return (
                   <div key={user.id} style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 110px 65px 55px 95px 185px 210px",
+                    gridTemplateColumns: "1fr 100px 55px 50px 50px 95px 175px 200px",
                     padding: "12px 20px",
                     alignItems: "center",
                     borderBottom: i < pagedUsers.length - 1 ? `1px solid ${D.border}` : "none",
                   }}>
-                    {/* Email + name */}
+                    {/* Email + name + reg-date als sub-line (created_at zog von eigener Spalte hierher) */}
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {user.email}
                       </div>
-                      {user.name && (
-                        <div style={{ fontSize: 11, color: D.muted }}>{user.name}</div>
-                      )}
+                      <div style={{ fontSize: 11, color: D.muted }}>
+                        {user.name ? `${user.name} · ` : ""}reg. {fmtDate(user.created_at)}
+                      </div>
                     </div>
 
                     {/* Plan badge */}
@@ -662,14 +662,19 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       {user.scan_count}
                     </div>
 
+                    {/* Saved-Websites count (Phase 3 Sprint 4) */}
+                    <div style={{ fontSize: 14, fontWeight: 700, color: user.saved_websites_count > 0 ? D.text : D.muted }}>
+                      {user.saved_websites_count}
+                    </div>
+
                     {/* Bonus scans */}
                     <div style={{ fontSize: 13, color: user.bonus_scans > 0 ? D.amber : D.muted }}>
                       {user.bonus_scans > 0 ? `+${user.bonus_scans}` : "—"}
                     </div>
 
-                    {/* Date */}
+                    {/* Letzter Login (Phase 3 Sprint 4) */}
                     <div style={{ fontSize: 12, color: D.muted }}>
-                      {fmtDate(user.created_at)}
+                      {user.last_login_at ? fmtDate(user.last_login_at) : "—"}
                     </div>
 
                     {/* Plan ändern */}

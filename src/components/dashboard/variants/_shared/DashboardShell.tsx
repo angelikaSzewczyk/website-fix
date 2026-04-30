@@ -23,6 +23,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import WfOnboardingTour from "@/app/dashboard/components/WfOnboardingTour";
 import WfProGuidedTour from "@/app/dashboard/components/WfProGuidedTour";
+import WebsiteSettingsModal, { type WebsiteSettingsTarget } from "./WebsiteSettingsModal";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan } from "@/lib/plans";
 
 // ── Design tokens (mirrored from Variants) ───────────────────────────────────
@@ -125,6 +126,17 @@ export default function DashboardShell({
   const ownCount      = projects?.filter(p => !p.is_customer_project).length ?? 0;
   const customerCount = projects?.filter(p =>  p.is_customer_project).length ?? 0;
 
+  // Phase 3 Sprint 4: Settings-Modal-State (Edit-Stift im Switcher).
+  const [settingsTarget, setSettingsTarget] = useState<WebsiteSettingsTarget | null>(null);
+  function refreshProjects() {
+    setProjectsLoading(true);
+    fetch("/api/websites")
+      .then(r => r.json())
+      .then(d => setProjects((d.websites as ProjectRow[]) ?? []))
+      .catch(() => {})
+      .finally(() => setProjectsLoading(false));
+  }
+
   const canonical = normalizePlan(plan);
   const isStarter = canonical === "starter";
   const isPro     = isAtLeastProfessional(plan);
@@ -156,9 +168,12 @@ export default function DashboardShell({
 
   function handleSelectProject(p: ProjectRow) {
     setProjectDialogOpen(false);
-    // Mit letztem Scan → Scan-Detail-View; sonst frischen Scan starten.
+    // Phase 3 Sprint 4: Active-Project-Scoping.
+    // /dashboard?project=<id> → page.tsx scopt den lastScan-Query auf diese
+    // Website. Falls noch kein Scan existiert, fallen wir auf /dashboard/scan
+    // mit URL-Vorbefüllung zurück, damit der User direkt einen Scan starten kann.
     if (p.last_scan_id) {
-      window.location.href = `/dashboard/scans/${p.last_scan_id}`;
+      window.location.href = `/dashboard?project=${p.id}`;
     } else {
       window.location.href = `/dashboard/scan?url=${encodeURIComponent(p.url)}`;
     }
@@ -510,22 +525,29 @@ export default function DashboardShell({
                     ? new Date(p.last_scan_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })
                     : "–";
                   return (
-                    <button
+                    <div
                       key={p.id}
-                      onClick={() => handleSelectProject(p)}
                       style={{
-                        width: "100%", textAlign: "left",
+                        width: "100%",
                         padding: "11px 14px",
-                        background: "transparent",
-                        border: "none",
                         borderBottom: i < visibleProjects.length - 1 ? `1px solid ${D.divider}` : "none",
-                        color: D.text,
-                        cursor: "pointer", fontFamily: "inherit",
                         display: "flex", alignItems: "center", gap: 11,
                         transition: "background 0.12s",
                       }}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,123,255,0.06)")}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                    <button
+                      onClick={() => handleSelectProject(p)}
+                      style={{
+                        flex: 1, textAlign: "left",
+                        background: "transparent",
+                        border: "none",
+                        color: D.text,
+                        cursor: "pointer", fontFamily: "inherit",
+                        display: "flex", alignItems: "center", gap: 11,
+                        padding: 0,
+                      }}
                     >
                       {/* Avatar (Logo oder Initial) */}
                       <div style={{
@@ -575,6 +597,34 @@ export default function DashboardShell({
                         <polyline points="9 18 15 12 9 6"/>
                       </svg>
                     </button>
+                    {/* Edit-Stift: öffnet WebsiteSettingsModal (Phase 3 Sprint 4) */}
+                    <button
+                      type="button"
+                      onClick={() => setSettingsTarget({
+                        id: p.id, url: p.url, name: p.name,
+                        is_customer_project: p.is_customer_project,
+                        client_label: p.client_label,
+                        client_logo_url: p.client_logo_url,
+                      })}
+                      title="Projekt-Einstellungen bearbeiten"
+                      style={{
+                        flexShrink: 0,
+                        width: 26, height: 26, borderRadius: 6,
+                        background: "transparent",
+                        border: `1px solid ${D.border}`,
+                        color: D.textMuted,
+                        cursor: "pointer", padding: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    </div>
                   );
                 })
               )}
@@ -631,6 +681,15 @@ export default function DashboardShell({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Settings-Modal (Phase 3 Sprint 4) */}
+      {settingsTarget && (
+        <WebsiteSettingsModal
+          target={settingsTarget}
+          onClose={() => setSettingsTarget(null)}
+          onSaved={() => { setSettingsTarget(null); refreshProjects(); }}
+        />
       )}
     </div>
   );
