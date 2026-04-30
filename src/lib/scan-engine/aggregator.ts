@@ -114,6 +114,11 @@ export function consolidateScans(
     meta:               options.meta ?? {},
     avgTtfbMs,
     wcagHeuristicScore,
+    // Phase A2: Disclaimer-String, den UIs zwingend anzeigen sollen.
+    // Verhindert dass das Frontend "WCAG-Konformität" suggeriert wo nur
+    // strukturelle Heuristik vorliegt. Phase A3 (axe-core/Headless) ersetzt
+    // den String mit "WCAG-AA-Audit" oder ähnlich.
+    wcagHeuristicLabel: "Heuristische Analyse",
     diagnose:           "",   // Caller füllt nachträglich via Anthropic-API
   };
 }
@@ -523,6 +528,19 @@ function consolidatedTitleFor(kind: IssueKind, totalCount: number, pageCount: nu
       return `Für Google gesperrt: noindex auf ${pageCount} ${seitenLabel}`;
     case "page-not-reachable":
       return `${pageCount} Unterseite${pageCount > 1 ? "n" : ""} geben 4xx/5xx zurück`;
+    // ── Phase A2 ──
+    case "og-missing":
+      return `Schlechte Social-Vorschau: OpenGraph-Tags fehlen auf ${pageCount} ${seitenLabel}`;
+    case "twitter-card-missing":
+      return `Twitter/X-Vorschau fehlt auf ${pageCount} ${seitenLabel}`;
+    case "favicon-missing":
+      return `Favicon fehlt auf ${pageCount} ${seitenLabel}`;
+    case "html-lang-missing":
+      return `Sprache nicht definiert: <html lang="..."> fehlt auf ${pageCount} ${seitenLabel}`;
+    case "heading-hierarchy-broken":
+      return `Überschriften-Hierarchie falsch auf ${pageCount} ${seitenLabel}`;
+    case "security-headers-missing":
+      return `Security-Header fehlen auf ${pageCount} ${seitenLabel}`;
     default:
       return `Mehrere Seiten betroffen (${pageCount})`;
   }
@@ -550,6 +568,19 @@ function consolidatedBodyFor(kind: IssueKind, totalCount: number, urls: string[]
       return `Diese Seiten sind für Suchmaschinen komplett unsichtbar. Beabsichtigt? Betroffen: ${sample}${extra}`;
     case "page-not-reachable":
       return `Diese URLs liefern Fehlerseiten — Besucher und Google landen auf 404/5xx. Betroffen: ${sample}${extra}`;
+    // ── Phase A2 ──
+    case "og-missing":
+      return `Ohne OpenGraph zeigen LinkedIn/Facebook/Slack beim Teilen nur die rohe URL — keine Vorschau-Card mit Bild + Titel. Betroffen: ${sample}${extra}`;
+    case "twitter-card-missing":
+      return `Ohne twitter:card zeigt X/Twitter beim Teilen kein Vorschau-Bild — messbar niedrigere Engagement-Rate. Betroffen: ${sample}${extra}`;
+    case "favicon-missing":
+      return `Browser-Tabs zeigen ein generisches Default-Icon — Marken-Wiedererkennung leidet, wirkt unprofessionell beim Bookmarken. Betroffen: ${sample}${extra}`;
+    case "html-lang-missing":
+      return `Screen-Reader können die Sprache nicht erkennen → BFSG-relevant. Plus: Google nutzt das Attribut als Ranking-Signal für lokalisierte Suche. Betroffen: ${sample}${extra}`;
+    case "heading-hierarchy-broken":
+      return `Screen-Reader navigieren über Überschriften-Levels — gebrochene Reihenfolge frustriert Nutzer mit Behinderungen, BFSG-relevant. Betroffen: ${sample}${extra}`;
+    case "security-headers-missing":
+      return `Fehlende CSP/HSTS-Header lassen Browser im weichen Modus — XSS, Clickjacking und Protokoll-Downgrade sind nicht hardened. Betroffen: ${sample}${extra}`;
     default:
       return `Betroffen: ${sample}${extra}`;
   }

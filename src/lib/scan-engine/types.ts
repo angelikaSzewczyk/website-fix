@@ -23,6 +23,7 @@ export type IssueKind =
   | "duplicate-metas"
   | "broken-links"
   | "orphaned-pages"
+  | "ssl-expiring-soon"        // Phase A2: Slot für SSL-Cert-Expiry-Check (Phase A3 verkabelt tls.connect)
   // ── Root-Page (oder per-Seite, wird vom Aggregator konsolidiert) ──
   | "root-not-reachable"
   | "page-not-reachable"
@@ -33,7 +34,16 @@ export type IssueKind =
   | "alt-text-missing"
   | "form-label-missing"
   | "form-button-text-missing"
-  // ── Builder/Shop (Phase B-Migration) ──
+  // ── Phase A2: Social/Branding ──
+  | "og-missing"
+  | "twitter-card-missing"
+  | "favicon-missing"
+  // ── Phase A2: Deep SEO & Structure ──
+  | "html-lang-missing"
+  | "heading-hierarchy-broken"
+  // ── Phase A2: Security & Connectivity ──
+  | "security-headers-missing"
+  // ── Builder/Shop (Phase A3) ──
   | "builder-deep-dom"
   | "builder-too-many-fonts"
   | "builder-css-bloat"
@@ -108,6 +118,21 @@ export type PageAudit = {
   internalLinks:        string[];
   /** TTFB in ms (vom Crawler gemessen) — null wenn nicht erfasst. */
   ttfbMs:               number | null;
+  // ── Phase A2: Social & Branding ──
+  /** OpenGraph-Tag-Set. False = Tag fehlt → Issue wird generiert. */
+  ogTags:               { title: boolean; description: boolean; image: boolean };
+  /** Twitter-Card-Tags. */
+  twitterCards:         { card: boolean; title: boolean };
+  /** Favicon (link rel="icon" oder shortcut icon oder apple-touch-icon). */
+  hasFavicon:           boolean;
+  // ── Phase A2: Deep SEO & Structure ──
+  /** <html lang="..."> Wert oder null wenn nicht gesetzt. */
+  htmlLang:             string | null;
+  /** Heading-Hierarchie-Validität + Detail (für Issue-Body). */
+  headingHierarchy:     { ok: boolean; issue: string | null };
+  // ── Phase A2: Security ──
+  /** Welche Security-Header fehlen. Aktuell: CSP + HSTS. */
+  securityHeadersMissing: string[];
   // ── Per-Seite generierte Issues — bereits mit url, kind, count gefüllt ──
   pageIssues:           ScanIssue[];
 };
@@ -125,6 +150,11 @@ export type SiteContext = {
   /** Erkannte WordPress-Major-Version (z.B. "6.5"), null wenn nicht WP
    *  oder Generator-Tag versteckt. */
   wpVersion:            string | null;
+  /** Phase A2 / Infrastructure-Slot: SSL-Cert-Ablaufdatum als ISO-String.
+   *  Aktuell IMMER null — Phase A3 verkabelt tls.connect() für die echte
+   *  Cert-Inspection. Existiert hier vorerst nur als Datentyp-Slot, sodass
+   *  Aggregator + DB-Schema schon bereit sind. */
+  sslExpiresAt:         string | null;
 };
 
 // ─── Final Scan-Result (1:1 die 11 DB-Spalten der scans-Tabelle) ────────────
@@ -178,6 +208,11 @@ export type ScanResult = {
    *  Issues, NICHT auf echtem axe-core-Audit. UI muss explizit als
    *  "Heuristik · zertifizierter Audit folgt" labeln. */
   wcagHeuristicScore:  number;
+  /** Phase A2: expliziter Disclaimer-String, den UIs anzeigen müssen wenn
+   *  sie wcagHeuristicScore rendern. Nicht ableiten lassen — kommt direkt
+   *  aus dem Aggregator-Output, sodass keine Frontend-Variante "echter
+   *  Audit" suggeriert. */
+  wcagHeuristicLabel:  string;
   // ── Prosa-Layer (result) ──
   /** Claude-generierter Diagnose-Text. Wird VOM CALLER nach consolidateScans()
    *  per Anthropic-API gefüllt — der Aggregator selbst ruft kein AI auf,

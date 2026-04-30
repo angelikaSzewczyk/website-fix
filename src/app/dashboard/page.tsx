@@ -411,13 +411,17 @@ export default async function DashboardPage() {
     googleFontFamilies: string[]; cssBloatHints: string[]; stylesheetCount: number;
   } | null = null;
   let lastScanTtfbMs: number | null = null;
+  // Phase A2: Site-Wide-Metrics aus meta_json
+  let lastScanAvgTtfbMs: number | null = null;
+  let lastScanWcagScore: number | null = null;
+  let lastScanWcagLabel: string | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
         SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json, speed_score, meta_json
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit; ttfb_ms?: number } | null }[];
+      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit; ttfb_ms?: number; avg_ttfb_ms?: number; wcag_heuristic_score?: number; wcag_heuristic_label?: string } | null }[];
       lastScanResult = rows[0]?.result ?? null;
       lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
       // Sanitize tech_fingerprint: leeres Objekt {} aus DB (z.B. Phase-B-Migration
@@ -441,6 +445,17 @@ export default async function DashboardPage() {
       lastScanWooAudit = rows[0]?.meta_json?.woo_audit ?? null;
       lastScanBuilderAudit = rows[0]?.meta_json?.builder_audit ?? null;
       lastScanTtfbMs = typeof rows[0]?.meta_json?.ttfb_ms === "number" ? rows[0].meta_json.ttfb_ms : null;
+      // Phase A2: full-scan schreibt avg_ttfb_ms, single-scan ttfb_ms.
+      // Wenn beide da: prefer avg_ttfb_ms (Site-Wide-Mittelwert ist aussagekräftiger).
+      lastScanAvgTtfbMs = typeof rows[0]?.meta_json?.avg_ttfb_ms === "number"
+        ? rows[0].meta_json.avg_ttfb_ms
+        : lastScanTtfbMs;
+      lastScanWcagScore = typeof rows[0]?.meta_json?.wcag_heuristic_score === "number"
+        ? rows[0].meta_json.wcag_heuristic_score
+        : null;
+      lastScanWcagLabel = typeof rows[0]?.meta_json?.wcag_heuristic_label === "string"
+        ? rows[0].meta_json.wcag_heuristic_label
+        : null;
     } catch {}
   }
 
@@ -615,6 +630,9 @@ export default async function DashboardPage() {
             wooAudit={lastScanWooAudit}
             builderAudit={lastScanBuilderAudit}
             integrationsStatus={integrationsStatus}
+            avgTtfbMs={lastScanAvgTtfbMs}
+            wcagHeuristicScore={lastScanWcagScore}
+            wcagHeuristicLabel={lastScanWcagLabel}
           />
         </Suspense>
       )}

@@ -152,6 +152,7 @@ async function buildSiteContext(rootUrl: string, rootHtml: string): Promise<Site
     sitemapVorhanden,
     robotsBlockiertAlles,
     wpVersion:            extractWpVersion(rootHtml),
+    sslExpiresAt:         null,  // Phase A3: tls.connect()-Probe für Cert-Inspection
   };
 }
 

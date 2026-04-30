@@ -88,6 +88,11 @@ export interface FreeDashboardProps {
    *  Null/undefined wenn unter Pro oder Status nicht ladbar — Action-Bar
    *  zeigt dann nicht die Buttons, sondern die "Provider verbinden →"-Hints. */
   integrationsStatus?: { asana: boolean; slack: boolean } | null;
+  /** Phase A2 Site-Wide-Metrics aus meta_json. Alle drei optional —
+   *  legacy-Scans ohne diese Felder rendern keine Pill. */
+  avgTtfbMs?:          number | null;
+  wcagHeuristicScore?: number | null;
+  wcagHeuristicLabel?: string | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -2251,6 +2256,9 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
     wooAudit,
     builderAudit,
     integrationsStatus = null,
+    avgTtfbMs = null,
+    wcagHeuristicScore = null,
+    wcagHeuristicLabel = null,
   } = props;
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
@@ -3297,6 +3305,53 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               }}>
                 Widget einrichten →
               </Link>
+            </div>
+          )}
+
+          {/* Phase A2 — Site-Wide-Metrics-Bar (Helikopter-Blick).
+              Rendert nur, wenn meta_json mindestens TTFB ODER WCAG-Score liefert
+              (legacy-Scans ohne die neuen meta-Felder zeigen die Bar nicht). */}
+          {!isNewScan && lastScan && (avgTtfbMs != null || wcagHeuristicScore != null) && (
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18,
+              padding: "12px 18px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 12,
+              alignItems: "center",
+            }}>
+              {avgTtfbMs != null && (
+                <div title="Time to First Byte — Mittelwert über alle gecrawlten Seiten" style={{
+                  display: "flex", alignItems: "center", gap: 7,
+                  padding: "5px 12px", borderRadius: 20,
+                  background: avgTtfbMs < 200 ? "rgba(34,197,94,0.10)"
+                            : avgTtfbMs < 600 ? "rgba(251,191,36,0.10)"
+                            :                   "rgba(248,113,113,0.10)",
+                  border: `1px solid ${avgTtfbMs < 200 ? "rgba(34,197,94,0.30)"
+                                     : avgTtfbMs < 600 ? "rgba(251,191,36,0.30)"
+                                     :                   "rgba(248,113,113,0.30)"}`,
+                }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Ø TTFB</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: avgTtfbMs < 200 ? "#4ade80" : avgTtfbMs < 600 ? "#fbbf24" : "#f87171" }}>
+                    {avgTtfbMs} ms
+                  </span>
+                </div>
+              )}
+              {wcagHeuristicScore != null && (
+                <div title={`${wcagHeuristicLabel ?? "Heuristische Analyse"}. Struktureller Check — für rechtssichere Audits ist ein manueller Test/Headless-Audit erforderlich.`}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 7, cursor: "help",
+                    padding: "5px 12px", borderRadius: 20,
+                    background: "rgba(124,58,237,0.10)",
+                    border: "1px solid rgba(124,58,237,0.30)",
+                }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>WCAG-Heuristik</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: wcagHeuristicScore >= 80 ? "#4ade80" : wcagHeuristicScore >= 60 ? "#fbbf24" : "#f87171" }}>
+                    {wcagHeuristicScore}/100
+                  </span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>· {wcagHeuristicLabel ?? "Heuristik"}</span>
+                </div>
+              )}
             </div>
           )}
 

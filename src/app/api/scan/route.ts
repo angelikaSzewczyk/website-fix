@@ -98,6 +98,13 @@ function inferIssueKind(title: string): IssueKind | undefined {
   if (t.includes("noindex"))                                    return "noindex";
   if (t.includes("formular-label") || t.includes("formularfelder")) return "form-label-missing";
   if (t.includes("button") && t.includes("ohne") && t.includes("text")) return "form-button-text-missing";
+  // Phase A2 — neue Per-Page-Kinds
+  if (t.includes("opengraph") || t.includes("social-vorschau"))   return "og-missing";
+  if (t.includes("twitter") || t.includes("x-vorschau"))           return "twitter-card-missing";
+  if (t.includes("favicon"))                                       return "favicon-missing";
+  if (t.includes("sprache nicht definiert") || t.includes("html lang")) return "html-lang-missing";
+  if (t.includes("überschriften-hierarchie") || t.includes("heading-hierarchie")) return "heading-hierarchy-broken";
+  if (t.includes("security-header"))                               return "security-headers-missing";
   // Site-Wide-Kinds (für scope-Klassifikation, nicht-konsolidierbar)
   if (t.includes("https fehlt") || t.includes("verschlüsselte verbindung")) return "no-https";
   if (t.includes("robots.txt blockiert"))                       return "robots-blocks-all";

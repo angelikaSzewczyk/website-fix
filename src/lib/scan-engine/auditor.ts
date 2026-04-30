@@ -56,6 +56,14 @@ export class WebsiteAuditor {
     const formIssues      = ok ? this.countFormIssues(html)     : { inputsWithoutLabel: 0, inputsWithoutLabelFields: [], buttonsWithoutText: 0 };
     const internalLinks   = ok ? this.extractInternalLinks(html, url) : [];
 
+    // ── Phase A2: Social/Branding/SEO-Tiefen-Checks ────────────────────────
+    const ogTags          = ok ? this.checkOpenGraph(html)      : { title: false, description: false, image: false };
+    const twitterCards    = ok ? this.checkTwitterCards(html)   : { card: false, title: false };
+    const hasFavicon      = ok ? this.checkFavicon(html)        : false;
+    const htmlLang        = ok ? this.checkLanguage(html)       : null;
+    const headingHierarchy = ok ? this.checkHeadingHierarchy(html) : { ok: true, issue: null };
+    const securityHeadersMissing = this.checkSecurityHeaders(input.headers);
+
     // ── Per-Page-Issue-Generation ─────────────────────────────────────────
     const isRootPage = url === this.opts.rootUrl;
     const pageIssues = this.buildPerPageIssues({
@@ -68,6 +76,12 @@ export class WebsiteAuditor {
       altMissing:           altResult.missing,
       inputsWithoutLabel:   formIssues.inputsWithoutLabel,
       buttonsWithoutText:   formIssues.buttonsWithoutText,
+      ogTags,
+      twitterCards,
+      hasFavicon,
+      htmlLang,
+      headingHierarchy,
+      securityHeadersMissing,
       isRootPage,
     });
 
@@ -88,6 +102,12 @@ export class WebsiteAuditor {
       buttonsWithoutText:       formIssues.buttonsWithoutText,
       internalLinks,
       ttfbMs:                   input.ttfbMs ?? null,
+      ogTags,
+      twitterCards,
+      hasFavicon,
+      htmlLang,
+      headingHierarchy,
+      securityHeadersMissing,
       pageIssues,
     };
   }
@@ -116,6 +136,12 @@ export class WebsiteAuditor {
     altMissing:          number;
     inputsWithoutLabel:  number;
     buttonsWithoutText:  number;
+    ogTags:              { title: boolean; description: boolean; image: boolean };
+    twitterCards:        { card: boolean; title: boolean };
+    hasFavicon:          boolean;
+    htmlLang:            string | null;
+    headingHierarchy:    { ok: boolean; issue: string | null };
+    securityHeadersMissing: string[];
     isRootPage:          boolean;
   }): ScanIssue[] {
     const issues: ScanIssue[] = [];
@@ -249,7 +275,179 @@ export class WebsiteAuditor {
       });
     }
 
+    // ── Phase A2: OpenGraph (Social-Vorschau) ──
+    // Mindestens title + description müssen da sein für eine sinnvolle Social-Card.
+    // og:image ist nice-to-have aber nicht kritisch — wird im Body-Text erwähnt.
+    if (!p.ogTags.title || !p.ogTags.description) {
+      const missing: string[] = [];
+      if (!p.ogTags.title)       missing.push("og:title");
+      if (!p.ogTags.description) missing.push("og:description");
+      if (!p.ogTags.image)       missing.push("og:image");
+      issues.push({
+        kind:     "og-missing",
+        severity: "yellow",
+        title:    p.isRootPage
+          ? `Schlechte Social-Vorschau: OpenGraph-Tags fehlen (Startseite)`
+          : `Schlechte Social-Vorschau: OpenGraph-Tags fehlen auf ${path}`,
+        body:     `Fehlend: ${missing.join(", ")}. Ohne OpenGraph zeigen LinkedIn/Facebook beim Teilen nur die rohe URL — keine Vorschau-Card mit Bild + Titel.`,
+        category: "technik",
+        url:      p.url,
+        count:    1,
+      });
+    }
+
+    // ── Phase A2: Twitter-Card ──
+    if (!p.twitterCards.card) {
+      issues.push({
+        kind:     "twitter-card-missing",
+        severity: "yellow",
+        title:    p.isRootPage
+          ? `Twitter/X-Vorschau fehlt (Startseite)`
+          : `Twitter/X-Vorschau fehlt auf ${path}`,
+        body:     "Ohne twitter:card-Tag zeigt X/Twitter beim Teilen kein Vorschau-Bild — Engagement-Rate ist messbar niedriger.",
+        category: "technik",
+        url:      p.url,
+        count:    1,
+      });
+    }
+
+    // ── Phase A2: Favicon ──
+    if (!p.hasFavicon) {
+      issues.push({
+        kind:     "favicon-missing",
+        severity: "yellow",
+        title:    p.isRootPage
+          ? `Favicon fehlt (Startseite)`
+          : `Favicon fehlt auf ${path}`,
+        body:     "Browser-Tabs zeigen ein generisches Default-Icon — Marken-Wiedererkennung leidet, wirkt unprofessionell beim Bookmarken.",
+        category: "technik",
+        url:      p.url,
+        count:    1,
+      });
+    }
+
+    // ── Phase A2: html lang-Attribut (BFSG + SEO-relevant) ──
+    if (!p.htmlLang) {
+      issues.push({
+        kind:     "html-lang-missing",
+        severity: "yellow",
+        title:    p.isRootPage
+          ? `Sprache nicht definiert: <html lang="..."> fehlt (Startseite)`
+          : `Sprache nicht definiert: <html lang="..."> fehlt auf ${path}`,
+        body:     "Screen-Reader können die Sprache nicht erkennen → BFSG-relevant. Plus: Google nutzt das Attribut als Ranking-Signal für lokalisierte Suche.",
+        category: "recht",
+        url:      p.url,
+        count:    1,
+      });
+    }
+
+    // ── Phase A2: Heading-Hierarchie ──
+    if (!p.headingHierarchy.ok && p.headingHierarchy.issue) {
+      issues.push({
+        kind:     "heading-hierarchy-broken",
+        severity: "yellow",
+        title:    `Überschriften-Hierarchie falsch auf ${path}`,
+        body:     `${p.headingHierarchy.issue}. Screen-Reader navigieren über Überschriften-Levels — gebrochene Reihenfolge frustriert Nutzer mit Behinderungen und ist BFSG-relevant.`,
+        category: "recht",
+        url:      p.url,
+        count:    1,
+      });
+    }
+
+    // ── Phase A2: Security-Header ──
+    if (p.securityHeadersMissing.length > 0) {
+      issues.push({
+        kind:     "security-headers-missing",
+        severity: "yellow",
+        title:    p.isRootPage
+          ? `Security-Header fehlen (Startseite)`
+          : `Security-Header fehlen auf ${path}`,
+        body:     `Fehlend: ${p.securityHeadersMissing.join(", ")}. Diese Header schützen vor XSS-Injection, Clickjacking und Protokoll-Downgrade-Angriffen — fehlen sie, sind moderne Browser nicht im Hardening-Modus.`,
+        category: "technik",
+        url:      p.url,
+        count:    1,
+      });
+    }
+
     return issues;
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // PHASE A2 — DOM/HEADER CHECKS (Social, Branding, SEO-Tiefe, Security)
+  // ═════════════════════════════════════════════════════════════════════════
+
+  /** OpenGraph: prüft Anwesenheit der drei Standard-Tags (title/description/image).
+   *  Akzeptiert sowohl property="og:..." als auch name="og:..." (manche CMS
+   *  serialisieren falsch — Facebook ist tolerant, wir auch). */
+  private checkOpenGraph(html: string): { title: boolean; description: boolean; image: boolean } {
+    const has = (key: string) =>
+      new RegExp(`<meta[^>]+(?:property|name)=["']og:${key}["']`, "i").test(html);
+    return {
+      title:       has("title"),
+      description: has("description"),
+      image:       has("image"),
+    };
+  }
+
+  /** Twitter-Cards: card-Type ist Pflicht (summary/summary_large_image/etc.),
+   *  twitter:title als Bonus-Indikator. */
+  private checkTwitterCards(html: string): { card: boolean; title: boolean } {
+    return {
+      card:  /<meta[^>]+name=["']twitter:card["']/i.test(html),
+      title: /<meta[^>]+name=["']twitter:title["']/i.test(html),
+    };
+  }
+
+  /** Favicon: drei Varianten akzeptiert — rel="icon", rel="shortcut icon",
+   *  rel="apple-touch-icon". Falls eine davon existiert, gilt das als OK. */
+  private checkFavicon(html: string): boolean {
+    return /<link[^>]+rel=["'](?:shortcut\s+icon|icon|apple-touch-icon)["']/i.test(html);
+  }
+
+  /** html lang-Attribut: extrahiert den Wert oder null. */
+  private checkLanguage(html: string): string | null {
+    const m = html.match(/<html[^>]+lang\s*=\s*["']([^"']+)["']/i);
+    return m ? m[1].trim() : null;
+  }
+
+  /** Heading-Hierarchie: detektiert die zwei häufigsten Probleme:
+   *    1. Mehrere H1 auf einer Seite (SEO + Accessibility)
+   *    2. Level-Sprünge (H1 → H3 ohne H2)
+   *  Tieferer hierarchical-validator kann später kommen. */
+  private checkHeadingHierarchy(html: string): { ok: boolean; issue: string | null } {
+    const headings: number[] = [];
+    const regex = /<h([1-6])(?:\s[^>]*)?>/gi;
+    let m;
+    while ((m = regex.exec(html)) !== null) {
+      headings.push(parseInt(m[1], 10));
+    }
+    if (headings.length === 0) return { ok: true, issue: null };
+
+    const h1Count = headings.filter(h => h === 1).length;
+    if (h1Count > 1) {
+      return { ok: false, issue: `${h1Count} H1-Überschriften auf einer Seite (sollte genau 1 sein)` };
+    }
+
+    // Level-Sprung: aufeinanderfolgende headings dürfen max 1 Level höher sein.
+    for (let i = 1; i < headings.length; i++) {
+      const diff = headings[i] - headings[i - 1];
+      if (diff > 1) {
+        return { ok: false, issue: `Sprung von H${headings[i - 1]} direkt zu H${headings[i]} (H${headings[i - 1] + 1} fehlt)` };
+      }
+    }
+
+    return { ok: true, issue: null };
+  }
+
+  /** Security-Header: prüft die zwei wichtigsten — Content-Security-Policy
+   *  schützt vor XSS, Strict-Transport-Security (HSTS) verhindert
+   *  Protokoll-Downgrade. Andere Header (X-Frame-Options, X-Content-Type-Options)
+   *  sind Phase-A3-Erweiterung. */
+  private checkSecurityHeaders(headers: Headers): string[] {
+    const missing: string[] = [];
+    if (!headers.get("content-security-policy"))   missing.push("Content-Security-Policy");
+    if (!headers.get("strict-transport-security")) missing.push("Strict-Transport-Security (HSTS)");
+    return missing;
   }
 
   // ═════════════════════════════════════════════════════════════════════════
