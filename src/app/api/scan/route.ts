@@ -14,8 +14,9 @@ import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
 import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan, getPlanQuota } from "@/lib/plans";
 import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrations";
 import { sendScanSummaryToSlack } from "@/lib/slack";
-import { consolidatePerPageIssuesPublic, classifyScopesPublic } from "@/lib/scan-engine/aggregator";
-import type { IssueKind } from "@/lib/scan-engine/types";
+import { consolidateScans, consolidatePerPageIssuesPublic, classifyScopesPublic } from "@/lib/scan-engine/aggregator";
+import { generatePerPageIssues } from "@/lib/scan-engine/auditor";
+import type { IssueKind, PageAudit, SiteContext } from "@/lib/scan-engine/types";
 
 export const maxDuration = 60;
 
@@ -129,6 +130,120 @@ function annotateAndConsolidate(issues: ScanIssue[], totalPages: number): ScanIs
   const annotated = issues.map(i => i.kind ? i : { ...i, kind: inferIssueKind(i.title) });
   const consolidated = consolidatePerPageIssuesPublic(annotated);
   return classifyScopesPublic(consolidated, totalPages);
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// PHASE A3.2 — scanData → PageAudit Mapper für Engine-Konsolidierung
+// ═════════════════════════════════════════════════════════════════════════
+//
+// Statt buildIssuesJson() + annotateAndConsolidate() rufen wir consolidateScans()
+// aus dem Aggregator auf. Dafür müssen die schon vorhandenen scanData/unterseiten-
+// Felder in PageAudit-Strukturen umgewickelt werden — DOM-Parsing ist bereits
+// passiert, kein zweites Parse nötig.
+//
+// Phase A2-Felder (ogTags, twitterCards, hasFavicon, htmlLang, headingHierarchy,
+// securityHeadersMissing) werden mit Default-False/Null gefüllt — der existing
+// /api/scan-Crawl detected sie noch nicht. Phase A4 könnte scanSubpage durch
+// auditor.analyze() ersetzen, dann werden auch die A2-Issues erkannt.
+
+type LegacyUnterseite = {
+  url:                string;
+  erreichbar:         boolean;
+  status:             number;
+  title:              string;
+  h1:                 string;
+  metaDescription:    string;
+  noindex:            boolean;
+  canonical:          string;
+  altMissing:         number;
+  altTotal:           number;
+  altMissingImages:   string[];
+  inputsWithoutLabel: number;
+  inputsWithoutLabelFields: string[];
+  buttonsWithoutText: number;
+  outgoingLinks?:     string[];
+};
+
+const PHASE_A2_DEFAULTS = {
+  ogTags:                 { title: false, description: false, image: false },
+  twitterCards:           { card: false, title: false },
+  hasFavicon:             false,
+  htmlLang:               null as string | null,
+  headingHierarchy:       { ok: true, issue: null as string | null },
+  securityHeadersMissing: [] as string[],
+};
+
+/** Mappt die Root-Page (aus scanData) auf eine PageAudit. */
+function rootScanDataToPageAudit(
+  scanData: Record<string, unknown>,
+  rootUrl: string,
+  ttfbMs: number | null,
+): PageAudit {
+  const fc = scanData.formCheck as { inputsWithoutLabel?: number; buttonsWithoutText?: number; inputsWithoutLabelFields?: string[] } | undefined;
+  const audit: PageAudit = {
+    url:                       rootUrl,
+    status:                    scanData.erreichbar ? 200 : 0,
+    ok:                        !!scanData.erreichbar,
+    title:                     (scanData.title as string)            ?? "",
+    h1:                        (scanData.h1 as string)               ?? "",
+    metaDescription:           (scanData.metaDescription as string)  ?? "",
+    noindex:                   !!scanData.indexierungGesperrt,
+    canonical:                 (scanData.canonical as string)        ?? "",
+    altMissing:                (scanData.startseite_altMissing as number) ?? 0,
+    altTotal:                  (scanData.startseite_altTotal as number)   ?? 0,
+    altMissingImages:          (scanData.startseite_altMissingImages as string[]) ?? [],
+    inputsWithoutLabel:        fc?.inputsWithoutLabel        ?? 0,
+    inputsWithoutLabelFields:  fc?.inputsWithoutLabelFields  ?? [],
+    buttonsWithoutText:        fc?.buttonsWithoutText        ?? 0,
+    internalLinks:             [],
+    ttfbMs,
+    ...PHASE_A2_DEFAULTS,
+    pageIssues:                [],
+  };
+  // Issue-Generation via reused engine logic
+  audit.pageIssues = generatePerPageIssues(audit, rootUrl);
+  return audit;
+}
+
+/** Mappt eine Subpage (aus unterseiten[]) auf eine PageAudit. */
+function subpageToPageAudit(p: LegacyUnterseite, rootUrl: string): PageAudit {
+  const audit: PageAudit = {
+    url:                       p.url,
+    status:                    p.status,
+    ok:                        p.erreichbar,
+    title:                     p.title,
+    h1:                        p.h1,
+    metaDescription:           p.metaDescription,
+    noindex:                   p.noindex,
+    canonical:                 p.canonical,
+    altMissing:                p.altMissing,
+    altTotal:                  p.altTotal,
+    altMissingImages:          p.altMissingImages,
+    inputsWithoutLabel:        p.inputsWithoutLabel,
+    inputsWithoutLabelFields:  p.inputsWithoutLabelFields,
+    buttonsWithoutText:        p.buttonsWithoutText,
+    internalLinks:             p.outgoingLinks ?? [],
+    ttfbMs:                    null,
+    ...PHASE_A2_DEFAULTS,
+    pageIssues:                [],
+  };
+  audit.pageIssues = generatePerPageIssues(audit, rootUrl);
+  return audit;
+}
+
+/** Site-Context aus scanData ableiten — keine zusätzlichen Probes nötig,
+ *  /api/scan hat https/sitemap/robots/wpVersion bereits selbst extracted. */
+function siteContextFromScanData(scanData: Record<string, unknown>, rootUrl: string): SiteContext {
+  return {
+    rootUrl,
+    https:                !!scanData.https,
+    sitemapVorhanden:     !!scanData.sitemapVorhanden,
+    robotsBlockiertAlles: !!scanData.robotsBlockiertAlles,
+    wpVersion:            typeof scanData.wpVersion === "string" ? scanData.wpVersion : null,
+    // Phase A3.1 SSL-Check ist im /api/full-scan verkabelt; /api/scan
+    // bekommt Phase A4 die SSL-Probe (oder über shared Helper).
+    sslExpiresAt:         null,
+  };
 }
 
 /** Aktuelle WordPress-Major-Version. Updaten wenn neue Releases rauskommen.
@@ -783,6 +898,11 @@ async function saveUserScan(params: {
   builderAudit?: BuilderAuditMeta | null;
   /** Time-to-First-Byte in ms (annähernd: inkl. DNS+TLS). */
   ttfbMs?: number | null;
+  /** Phase A2/A3: Site-Wide-Metrics aus dem Aggregator. Werden in meta_json
+   *  geschrieben, damit das Dashboard sie identisch zum Full-Scan rendern kann. */
+  avgTtfbMs?:          number | null;
+  wcagHeuristicScore?: number | null;
+  wcagHeuristicLabel?: string | null;
 }): Promise<string | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
@@ -790,6 +910,9 @@ async function saveUserScan(params: {
     if (params.wooAudit)     metaJsonObj.woo_audit     = params.wooAudit;
     if (params.builderAudit) metaJsonObj.builder_audit = params.builderAudit;
     if (typeof params.ttfbMs === "number" && params.ttfbMs >= 0) metaJsonObj.ttfb_ms = params.ttfbMs;
+    if (typeof params.avgTtfbMs === "number" && params.avgTtfbMs >= 0) metaJsonObj.avg_ttfb_ms = params.avgTtfbMs;
+    if (typeof params.wcagHeuristicScore === "number") metaJsonObj.wcag_heuristic_score = params.wcagHeuristicScore;
+    if (typeof params.wcagHeuristicLabel === "string") metaJsonObj.wcag_heuristic_label = params.wcagHeuristicLabel;
     const metaJson = Object.keys(metaJsonObj).length > 0 ? metaJsonObj : null;
     const rows = await sql`
       INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json, meta_json)
@@ -1184,20 +1307,18 @@ export async function POST(req: NextRequest) {
         };
         const cachedAudit = cached.scanData.audit as CachedAudit | undefined;
         const cachedUnterseiten = cachedAudit?.unterseiten ?? [];
-        const cachedTotalPages = cachedAudit?.gescannteSeiten ?? (cachedUnterseiten.length + 1);
-        const cachedIssuesJson = annotateAndConsolidate(
-          buildIssuesJson(
-            cached.scanData,
-            cachedUnterseiten,
-            cachedAudit?.altTexte?.fehlend ?? 0,
-            cachedAudit?.altTexte?.gesamt ?? 0,
-            cachedAudit?.duplicateTitles ?? [],
-            cachedAudit?.duplicateMetas ?? [],
-            cachedAudit?.brokenLinks ?? [],
-            cachedAudit?.verwaistSeiten ?? [],
-          ),
-          cachedTotalPages,
+        // Phase A3.2: Engine-Konsolidierung statt buildIssuesJson + annotateAndConsolidate.
+        // Mappt scanData/unterseiten → PageAudit[] und ruft consolidateScans auf —
+        // identisches issues_json-Format wie /api/full-scan.
+        const cachedRootAudit = rootScanDataToPageAudit(cached.scanData, targetUrl, null);
+        const cachedSubAudits = cachedUnterseiten.map(p => subpageToPageAudit(p as LegacyUnterseite, targetUrl));
+        const cachedSiteCtx   = siteContextFromScanData(cached.scanData, targetUrl);
+        const cachedScanResult = consolidateScans(
+          [cachedRootAudit, ...cachedSubAudits],
+          cachedSiteCtx,
+          { rootUrl: targetUrl, plan: userPlan, type: "website" },
         );
+        const cachedIssuesJson = cachedScanResult.issues;
         // Sum of all .count values = total optimisations (e.g. 241), not just issue types.
         const totalCachedIssues = cachedIssuesJson.reduce((a, i) => a + i.count, 0);
         if (userId) {
@@ -1583,20 +1704,27 @@ PFLICHT-REGELN:
 
     // ── Async DB write + cache — never blocks the response ─
 
-    // Build structured issues from raw data — this is the ground truth for the dashboard.
-    // `let` weil wir am Ende mit annotateAndConsolidate() das Array durch die
-    // konsolidierte Version ersetzen (kind-Annotation, URL-Konsolidierung,
-    // 80%-Scope-Klassifikation aus dem Aggregator).
-    let issuesJson = buildIssuesJson(
-      scanData,
-      unterseiten,
-      totalAltMissing,
-      totalImages,
-      duplicateTitles,
-      duplicateMetas,
-      brokenLinks,
-      orphanedPages,
+    // ── Phase A3.2: Engine-Konsolidierung (statt buildIssuesJson) ────────
+    // Single Source of Truth — identische issues_json-Struktur wie /api/full-scan.
+    // Mapper baut PageAudit[] aus den schon vorhandenen scanData/unterseiten-
+    // Feldern (DOM-Parsing ist bereits passiert), Aggregator generiert
+    // Site-Wide-Issues (https/robots/sitemap/dups/brokenLinks/orphans),
+    // konsolidiert per-page-Duplikate über affectedUrls und klassifiziert scope.
+    const _rootAudit  = rootScanDataToPageAudit(scanData, targetUrl, ttfbMs ?? null);
+    const _subAudits  = unterseiten.map(p => subpageToPageAudit(p as LegacyUnterseite, targetUrl));
+    const _siteCtx    = siteContextFromScanData(scanData, targetUrl);
+    const _scanResult = consolidateScans(
+      [_rootAudit, ..._subAudits],
+      _siteCtx,
+      { rootUrl: targetUrl, plan: userPlan, type: "website" },
     );
+
+    // `let` weil WP/Builder/DSGVO-Issues unten noch angefügt werden.
+    // Existing duplicateTitles/duplicateMetas/brokenLinks/orphanedPages
+    // wurden bereits in _scanResult.issues vom Aggregator abgedeckt — die
+    // legacy buildIssuesJson()-Aufrufe sind jetzt obsolet.
+    let issuesJson: ScanIssue[] = _scanResult.issues;
+    void totalAltMissing; void totalImages; void duplicateTitles; void duplicateMetas; void brokenLinks; void orphanedPages;
 
     // WordPress-spezifische Zusatz-Checks (nur wenn WordPress erkannt)
     if (techFingerprint.cms.value === "WordPress" && techFingerprint.cms.confidence >= 0.45) {
@@ -1680,17 +1808,23 @@ PFLICHT-REGELN:
     // Actual sum of all errors (e.g. 24 missing alt texts = 24, not 1)
     const issueCount = issuesJson.reduce((acc, i) => acc + i.count, 0);
 
-    // Await DB write — must complete before response so the dashboard can read it
+    // Await DB write — must complete before response so the dashboard can read it.
+    // Phase A3.2: Site-Wide-Metrics (avgTtfbMs, wcagHeuristicScore) kommen aus
+    // dem Aggregator-Output (_scanResult) und werden in meta_json geschrieben —
+    // identisches Format wie /api/full-scan.
     const savedScanId = userId
       ? await saveUserScan({
           userId, url: targetUrl, issueCount, diagnose, issuesJson,
-          speedScore: computeSpeedScore(issuesJson),
+          speedScore:         _scanResult.speedScore,
           techFingerprint,
-          totalPages: audit.gescannteSeiten,
-          unterseitenJson: audit.unterseiten,
-          wooAudit: wooMeta,
+          totalPages:         audit.gescannteSeiten,
+          unterseitenJson:    audit.unterseiten,
+          wooAudit:           wooMeta,
           builderAudit,
           ttfbMs,
+          avgTtfbMs:          _scanResult.avgTtfbMs,
+          wcagHeuristicScore: _scanResult.wcagHeuristicScore,
+          wcagHeuristicLabel: _scanResult.wcagHeuristicLabel,
         })
       : null;
 

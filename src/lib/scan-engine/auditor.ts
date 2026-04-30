@@ -600,3 +600,46 @@ export class WebsiteAuditor {
 
 // ─── Re-export der Issue-Kinds für einfaches Match-and-Group im Aggregator ──
 export type { IssueKind };
+
+// ─── Public Pure-Function für /api/scan-Mapper (Phase A3.2) ─────────────────
+
+/** Generiert per-Page-Issues aus einer schon konstruierten PageAudit-Struktur.
+ *  Identische Logik zur privaten buildPerPageIssues-Methode — wird aber als
+ *  pure Function exportiert, damit /api/scan die schon vorhandene
+ *  scanData/unterseiten-Struktur in PageAudits mappen und Issues generieren
+ *  kann, OHNE HTML neu zu parsen.
+ *
+ *  Flow:
+ *    1. Mapper baut PageAudit aus scanData/unterseiten (DOM bereits parsed)
+ *    2. generatePerPageIssues(audit, rootUrl) → ScanIssue[] mit kind+url+count
+ *    3. PageAudit.pageIssues = generatePerPageIssues(...)
+ *    4. consolidateScans([pageAudits], siteContext, opts) → konsolidiertes ScanResult
+ */
+export function generatePerPageIssues(
+  audit: Omit<PageAudit, "pageIssues">,
+  rootUrl: string,
+): ScanIssue[] {
+  // Re-use der existing private Methode via temp instance — DRY ohne
+  // duplizierte Logic. Constructor ist leichtgewichtig (nur opts-Storage).
+  const tempAuditor = new WebsiteAuditor({ rootUrl, plan: "starter" });
+  // @ts-expect-error — private-method access ist intentional: wir wollen
+  // exakt dieselbe Issue-Generation für Mapper UND analyze().
+  return tempAuditor.buildPerPageIssues({
+    url:                 audit.url,
+    ok:                  audit.ok,
+    title:               audit.title,
+    h1:                  audit.h1,
+    metaDescription:     audit.metaDescription,
+    noindex:             audit.noindex,
+    altMissing:          audit.altMissing,
+    inputsWithoutLabel:  audit.inputsWithoutLabel,
+    buttonsWithoutText:  audit.buttonsWithoutText,
+    ogTags:              audit.ogTags,
+    twitterCards:        audit.twitterCards,
+    hasFavicon:          audit.hasFavicon,
+    htmlLang:            audit.htmlLang,
+    headingHierarchy:    audit.headingHierarchy,
+    securityHeadersMissing: audit.securityHeadersMissing,
+    isRootPage:          audit.url === rootUrl,
+  });
+}
