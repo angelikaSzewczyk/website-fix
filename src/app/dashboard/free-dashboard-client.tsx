@@ -3325,36 +3325,68 @@ export default function FreeDashboardClient(props: FreeDashboardProps) {
               alignItems: "center",
             }}>
               {avgTtfbMs != null && (
-                <div title="Time to First Byte — Mittelwert über alle gecrawlten Seiten" style={{
-                  display: "flex", alignItems: "center", gap: 7,
-                  padding: "5px 12px", borderRadius: 20,
-                  background: avgTtfbMs < 200 ? "rgba(34,197,94,0.10)"
-                            : avgTtfbMs < 600 ? "rgba(251,191,36,0.10)"
-                            :                   "rgba(248,113,113,0.10)",
-                  border: `1px solid ${avgTtfbMs < 200 ? "rgba(34,197,94,0.30)"
-                                     : avgTtfbMs < 600 ? "rgba(251,191,36,0.30)"
-                                     :                   "rgba(248,113,113,0.30)"}`,
-                }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Ø TTFB</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: avgTtfbMs < 200 ? "#4ade80" : avgTtfbMs < 600 ? "#fbbf24" : "#f87171" }}>
-                    {avgTtfbMs} ms
-                  </span>
-                </div>
-              )}
-              {wcagHeuristicScore != null && (
-                <div title={`${wcagHeuristicLabel ?? "Heuristische Analyse"}. Struktureller Check — für rechtssichere Audits ist ein manueller Test/Headless-Audit erforderlich.`}
-                  style={{
+                isPro ? (
+                  <div title="Time to First Byte — Mittelwert über alle gecrawlten Seiten" style={{
+                    display: "flex", alignItems: "center", gap: 7,
+                    padding: "5px 12px", borderRadius: 20,
+                    background: avgTtfbMs < 200 ? "rgba(34,197,94,0.10)"
+                              : avgTtfbMs < 600 ? "rgba(251,191,36,0.10)"
+                              :                   "rgba(248,113,113,0.10)",
+                    border: `1px solid ${avgTtfbMs < 200 ? "rgba(34,197,94,0.30)"
+                                       : avgTtfbMs < 600 ? "rgba(251,191,36,0.30)"
+                                       :                   "rgba(248,113,113,0.30)"}`,
+                  }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Ø TTFB</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: avgTtfbMs < 200 ? "#4ade80" : avgTtfbMs < 600 ? "#fbbf24" : "#f87171" }}>
+                      {avgTtfbMs} ms
+                    </span>
+                  </div>
+                ) : (
+                  <div title="Genaue Aufschlüsselung nur im Pro-Plan verfügbar" style={{
                     display: "flex", alignItems: "center", gap: 7, cursor: "help",
                     padding: "5px 12px", borderRadius: 20,
-                    background: "rgba(124,58,237,0.10)",
-                    border: "1px solid rgba(124,58,237,0.30)",
-                }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>WCAG-Heuristik</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: wcagHeuristicScore >= 80 ? "#4ade80" : wcagHeuristicScore >= 60 ? "#fbbf24" : "#f87171" }}>
-                    {wcagHeuristicScore}/100
-                  </span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>· {wcagHeuristicLabel ?? "Heuristik"}</span>
-                </div>
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px dashed rgba(16,185,129,0.30)",
+                  }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Ø TTFB</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>— ms</span>
+                    <span style={{ fontSize: 10, color: "rgba(16,185,129,0.7)" }}>· Pro</span>
+                  </div>
+                )
+              )}
+              {wcagHeuristicScore != null && (
+                isPro ? (
+                  <div title={`${wcagHeuristicLabel ?? "Heuristische Analyse"}. Struktureller Check — für rechtssichere Audits ist ein manueller Test/Headless-Audit erforderlich.`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 7, cursor: "help",
+                      padding: "5px 12px", borderRadius: 20,
+                      background: "rgba(124,58,237,0.10)",
+                      border: "1px solid rgba(124,58,237,0.30)",
+                  }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>WCAG-Heuristik</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: wcagHeuristicScore >= 80 ? "#4ade80" : wcagHeuristicScore >= 60 ? "#fbbf24" : "#f87171" }}>
+                      {wcagHeuristicScore}/100
+                    </span>
+                    <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>· {wcagHeuristicLabel ?? "Heuristik"}</span>
+                  </div>
+                ) : (
+                  <div title="Genaue Aufschlüsselung nur im Pro-Plan verfügbar" style={{
+                    display: "flex", alignItems: "center", gap: 7, cursor: "help",
+                    padding: "5px 12px", borderRadius: 20,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px dashed rgba(16,185,129,0.30)",
+                  }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>WCAG-Heuristik</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.3)" }}>—/100</span>
+                    <span style={{ fontSize: 10, color: "rgba(16,185,129,0.7)" }}>· Pro</span>
+                  </div>
+                )
               )}
             </div>
           )}
