@@ -15,30 +15,33 @@ import Link from "next/link";
 import TeamWidget from "@/app/dashboard/components/team-widget";
 import { getPlanQuota } from "@/lib/plans";
 
-// ─── Theme tokens (Agency-light layout, vs. variants/_shared/UIHelpers.D dark) ─
+// ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6: vereinheitlicht mit
+//     Pro/Starter-Variants + IssueList. Glassmorphism über transparent-
+//     weißem Layer auf dunklem Page-BG.). Variable-Namen behalten, damit
+//     Render-Block unverändert bleibt — nur Werte gemappt.
 const C = {
-  bg:          "#F8FAFC",
-  card:        "#FFFFFF",
-  border:      "#E2E8F0",
-  divider:     "#F1F5F9",
-  shadow:      "0 1px 3px rgba(0,0,0,0.06)",
-  shadowMd:    "0 4px 16px rgba(0,0,0,0.08)",
-  text:        "#0F172A",
-  textSub:     "#475569",
-  textMuted:   "#94A3B8",
-  blue:        "#2563EB",
-  blueBg:      "#EFF6FF",
-  blueBorder:  "#BFDBFE",
-  green:       "#16A34A",
-  greenBg:     "#F0FDF4",
+  bg:          "#0b0c10",                       // Page-BG (matches D.page)
+  card:        "rgba(255,255,255,0.025)",       // Glassmorphism-Card
+  border:      "rgba(255,255,255,0.08)",
+  divider:     "rgba(255,255,255,0.06)",
+  shadow:      "none",                          // Dark theme: keine Karten-Shadows
+  shadowMd:    "0 4px 18px rgba(0,0,0,0.5)",
+  text:        "rgba(255,255,255,0.92)",
+  textSub:     "rgba(255,255,255,0.55)",
+  textMuted:   "rgba(255,255,255,0.4)",
+  blue:        "#7aa6ff",
+  blueBg:      "rgba(0,123,255,0.08)",
+  blueBorder:  "rgba(0,123,255,0.22)",
+  green:       "#4ade80",
+  greenBg:     "rgba(74,222,128,0.10)",
   greenDot:    "#22C55E",
-  amber:       "#D97706",
-  amberBg:     "#FFFBEB",
+  amber:       "#fbbf24",
+  amberBg:     "rgba(251,191,36,0.10)",
   amberDot:    "#F59E0B",
-  red:         "#DC2626",
-  redBg:       "#FEF2F2",
+  red:         "#f87171",
+  redBg:       "rgba(248,113,113,0.10)",
   redDot:      "#EF4444",
-  yellow:      "#EAB308",
+  yellow:      "#fbbf24",
 } as const;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -122,58 +125,67 @@ export default function AgencyDashboard({
         return (
           <main style={{ padding: "28px 32px 80px" }}>
 
-              {/* ── Header ── */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, gap: 12, flexWrap: "wrap" }}>
-                {/* Body-H1: Markenname statt "Kommandozentrale" wenn agency_name gesetzt.
-                    Spec §3.1 — der Agentur-Inhaber sieht *seinen* Namen groß als
-                    Page-Heading. Fallback bleibt unsere Default-Bezeichnung,
-                    damit die Page auch ohne Branding-Setup einen Titel hat. */}
-                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
-                  {agencyName ?? "Kommandozentrale"}
-                </h1>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  {/* Plan badge */}
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
-                    Plan: {badge.label}
-                  </span>
-                  {/* Slots */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: usedSlots >= clientSlotLimit ? C.redBg : C.divider, border: `1px solid ${usedSlots >= clientSlotLimit ? "#FECACA" : C.border}` }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={usedSlots >= clientSlotLimit ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: usedSlots >= clientSlotLimit ? C.red : C.text, whiteSpace: "nowrap" }}>
-                      Slots: {usedSlots} / {slotsLabel}
-                    </span>
-                  </div>
-                  {/* Branding badge — Live-Preview-Hint: Tooltip zeigt dem
-                      Agentur-Admin, wo das Branding noch wirkt (PDF-Reports).
-                      Subtiler Upsell-Reminder für den 249€-Plan. */}
-                  <span
-                    title="Dieses Branding wird auch in deinen PDF-Reports für Kunden verwendet."
-                    style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, whiteSpace: "nowrap", cursor: "help" }}
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    White-Label aktiv
-                  </span>
-                  {/* CTA */}
-                  <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 10, background: C.yellow, color: "#0a0a0a", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 2px 12px rgba(234,179,8,0.35)", whiteSpace: "nowrap" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    + Neuen Kunden
-                  </a>
+              {/* ── Subtle Body-Header — Plan/Slots/White-Label sind in der
+                  Topbar (AgencyTopBar in page.tsx) bereits sichtbar, daher
+                  hier minimal: nur agency_name (oder Default) und Primary-CTA. */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    Kommandozentrale
+                  </p>
+                  <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+                    {agencyName ?? "Kunden-Übersicht"}
+                  </h1>
                 </div>
+                {/* CTA — Lila statt Yellow, abgestimmt auf FeatureGate-Locks */}
+                <a href="#modal-new-client" style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "9px 18px", borderRadius: 10,
+                  background: "rgba(124,58,237,0.18)",
+                  border: "1px solid rgba(124,58,237,0.40)",
+                  color: "#a78bfa",
+                  fontWeight: 700, fontSize: 13, textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Neuen Kunden anlegen
+                </a>
               </div>
 
-              {/* ── Stat Strip ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-                {[
-                  { value: agencyClients.length,                                             label: "Aktive Kunden",     color: C.blue,    icon: "👥" },
-                  { value: agencyClients.reduce((s, c) => s + c.domains.length, 0),        label: "Domains gesamt",   color: C.green,   icon: "🌐" },
-                  { value: agencyClients.filter(c => c.status === "critical").length,       label: "Handlungsbedarf",  color: C.red,     icon: "🔴" },
-                  { value: scans.length,                                                   label: "Scans gesamt",     color: C.textSub, icon: "📊" },
-                ].map(s => (
-                  <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", boxShadow: C.shadow, display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 22 }}>{s.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 26, fontWeight: 800, color: s.color, letterSpacing: "-0.025em", lineHeight: 1 }}>{s.value}</div>
-                      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{s.label}</div>
+              {/* ── Stat Strip — kompakte Glassmorphism-Cards, technische Icons.
+                  Höhen-Layout: Wert prominent oben, Label klein darunter. */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 22 }}>
+                {([
+                  { value: agencyClients.length,                                       label: "Aktive Kunden",    color: C.blue,
+                    iconPath: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
+                  { value: agencyClients.reduce((s, c) => s + c.domains.length, 0),  label: "Domains gesamt",   color: C.green,
+                    iconPath: <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></> },
+                  { value: agencyClients.filter(c => c.status === "critical").length, label: "Handlungsbedarf",  color: C.red,
+                    iconPath: <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></> },
+                  { value: scans.length,                                              label: "Scans gesamt",     color: C.textSub,
+                    iconPath: <><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></> },
+                ]).map(s => (
+                  <div key={s.label} style={{
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                    padding: "14px 16px",
+                    backdropFilter: "blur(8px)",
+                    display: "flex", alignItems: "center", gap: 12,
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: `${s.color}1a`, border: `1px solid ${s.color}33`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: s.color,
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        {s.iconPath}
+                      </svg>
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{s.value}</div>
+                      <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 3, letterSpacing: "0.02em" }}>{s.label}</div>
                     </div>
                   </div>
                 ))}
@@ -197,24 +209,41 @@ export default function AgencyDashboard({
                   <span style={{ fontSize: 11, color: C.textMuted }}>{agencyClients.length} {agencyClients.length === 1 ? "Projekt" : "Projekte"}</span>
                 </div>
 
-                {/* Empty state — Agentur hat noch keine analysierten Kunden */}
+                {/* Empty state — Agentur hat noch keine analysierten Kunden.
+                    Tech-Icon: stilisiertes Server-Stack-Symbol statt generischem
+                    "users"-SVG. Lila-Akzent matcht FeatureGate-Locks-Saturation. */}
                 {agencyClients.length === 0 && (
                   <div style={{ padding: "56px 28px", textAlign: "center" }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 16, background: accentBg, border: `1px solid ${accentBorder}`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    <div style={{
+                      width: 56, height: 56, borderRadius: 14, marginBottom: 20,
+                      background: "rgba(124,58,237,0.10)",
+                      border: "1px solid rgba(124,58,237,0.30)",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3"  y="3"  width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="3"  width="7" height="7" rx="1.5"/>
+                        <rect x="3"  y="14" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" strokeDasharray="2.5 2"/>
                       </svg>
                     </div>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
                       Noch keine Kunden-Websites analysiert
                     </h3>
-                    <p style={{ margin: "0 auto 22px", fontSize: 13, color: C.textSub, lineHeight: 1.6, maxWidth: 420 }}>
+                    <p style={{ margin: "0 auto 22px", fontSize: 12.5, color: C.textSub, lineHeight: 1.65, maxWidth: 380 }}>
                       Starte deinen ersten Scan, um dein Portfolio aufzubauen.
                       Jeder neue Scan landet automatisch in der Kunden-Matrix.
                     </p>
-                    <a href="#modal-new-client" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 10, background: accent, color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: `0 2px 14px ${accentGlow}`, whiteSpace: "nowrap" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <a href="#modal-new-client" style={{
+                      display: "inline-flex", alignItems: "center", gap: 7,
+                      padding: "10px 20px", borderRadius: 9,
+                      background: "rgba(124,58,237,0.18)",
+                      border: "1px solid rgba(124,58,237,0.40)",
+                      color: "#a78bfa",
+                      fontWeight: 700, fontSize: 12.5, textDecoration: "none",
+                      whiteSpace: "nowrap",
+                    }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                       Ersten Kunden anlegen
                     </a>
                   </div>

@@ -23,29 +23,32 @@ export const metadata: Metadata = {
 };
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
+// Phase 3 Sprint 6: Dark-Mode-Tokens (vorher light → Stilbruch im Agency-
+// Layout). New-Client-Modal + globale CSS-Selektoren konsumieren diese
+// Tokens. AgencyTopBar nutzt eigene lokale Tokens für Topbar-Spezifika.
 const C = {
-  bg:          "#F8FAFC",
-  card:        "#FFFFFF",
-  border:      "#E2E8F0",
-  divider:     "#F1F5F9",
-  shadow:      "0 1px 3px rgba(0,0,0,0.06)",
-  shadowMd:    "0 4px 16px rgba(0,0,0,0.08)",
-  text:        "#0F172A",
-  textSub:     "#475569",
-  textMuted:   "#94A3B8",
-  blue:        "#2563EB",
-  blueBg:      "#EFF6FF",
-  blueBorder:  "#BFDBFE",
-  green:       "#16A34A",
-  greenBg:     "#F0FDF4",
+  bg:          "#0b0c10",
+  card:        "rgba(255,255,255,0.025)",
+  border:      "rgba(255,255,255,0.08)",
+  divider:     "rgba(255,255,255,0.06)",
+  shadow:      "none",
+  shadowMd:    "0 4px 18px rgba(0,0,0,0.5)",
+  text:        "rgba(255,255,255,0.92)",
+  textSub:     "rgba(255,255,255,0.55)",
+  textMuted:   "rgba(255,255,255,0.4)",
+  blue:        "#7aa6ff",
+  blueBg:      "rgba(0,123,255,0.08)",
+  blueBorder:  "rgba(0,123,255,0.22)",
+  green:       "#4ade80",
+  greenBg:     "rgba(74,222,128,0.10)",
   greenDot:    "#22C55E",
-  amber:       "#D97706",
-  amberBg:     "#FFFBEB",
+  amber:       "#fbbf24",
+  amberBg:     "rgba(251,191,36,0.10)",
   amberDot:    "#F59E0B",
-  red:         "#DC2626",
-  redBg:       "#FEF2F2",
+  red:         "#f87171",
+  redBg:       "rgba(248,113,113,0.10)",
   redDot:      "#EF4444",
-  yellow:      "#EAB308",
+  yellow:      "#fbbf24",
 } as const;
 
 // ─── Plan → Layout ──────────────────────────────────────────────────────────────
@@ -290,12 +293,22 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
   // versendeten PDF-Reports → Endkunden sehen die Marke der Agentur).
   const brandTooltip = "Dieses Branding wird auch in deinen PDF-Reports für Kunden verwendet.";
 
+  // Phase 3 Sprint 6: Dark-Mode-Tokens (vorher light → Stilbruch).
+  // Lokale const, weil page.tsx-C noch für andere helper light bleibt.
+  const TOPBAR_BG     = "rgba(11,12,16,0.85)";
+  const TOPBAR_BORDER = "rgba(255,255,255,0.06)";
+  const TOPBAR_DIV    = "rgba(255,255,255,0.10)";
+  const TOPBAR_TEXT   = "rgba(255,255,255,0.92)";
+  const TOPBAR_SUB    = "rgba(255,255,255,0.55)";
+  const TOPBAR_CARD   = "rgba(255,255,255,0.04)";
+  const SLOT_OVER_BG  = "rgba(248,113,113,0.12)";
+  const SLOT_OVER_BD  = "rgba(248,113,113,0.30)";
+  const SLOT_OVER_FG  = "#f87171";
+
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 30, background: "#fff", borderBottom: `1px solid ${C.border}`, padding: "8px 28px" }}>
+    <div style={{ position: "sticky", top: 0, zIndex: 30, background: TOPBAR_BG, backdropFilter: "blur(12px)", borderBottom: `1px solid ${TOPBAR_BORDER}`, padding: "8px 28px" }}>
       <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", gap: 14 }}>
-        {/* White-label logo or stylized text fallback. Beides bekommt den
-            gleichen "Live-Preview"-Tooltip beim Hover. cursor:help signalisiert,
-            dass es sich um eine Hint-Quelle handelt, nicht um einen Klick-Target. */}
+        {/* White-label logo or stylized text fallback. */}
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -307,21 +320,24 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
         ) : (
           <span
             title={brandTooltip}
-            style={{ fontSize: 13, fontWeight: 800, color: C.text, whiteSpace: "nowrap", cursor: "help" }}
+            style={{ fontSize: 13, fontWeight: 800, color: TOPBAR_TEXT, whiteSpace: "nowrap", cursor: "help" }}
           >
             {agencyName ?? "Kommandozentrale"}
           </span>
         )}
-        <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, color: badge.color, background: badge.bg, border: `1px solid ${badge.border}`, whiteSpace: "nowrap" }}>
+        <div style={{ width: 1, height: 16, background: TOPBAR_DIV, flexShrink: 0 }} />
+        {/* Plan-Pill — lila wie FeatureGate-Locks, nicht mehr badge.bg-light. */}
+        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, color: "#a78bfa", background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.30)", whiteSpace: "nowrap" }}>
           Plan: {badge.label}
         </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 12px", borderRadius: 20, background: usedSlots >= clientSlotLimit ? C.redBg : C.divider, border: `1px solid ${usedSlots >= clientSlotLimit ? "#FECACA" : C.border}` }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={usedSlots >= clientSlotLimit ? C.red : C.textSub} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 12px", borderRadius: 20,
+            background: usedSlots >= clientSlotLimit ? SLOT_OVER_BG  : TOPBAR_CARD,
+            border:     `1px solid ${usedSlots >= clientSlotLimit ? SLOT_OVER_BD : TOPBAR_BORDER}` }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={usedSlots >= clientSlotLimit ? SLOT_OVER_FG : TOPBAR_SUB} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <span style={{ fontSize: 11, fontWeight: 700, color: usedSlots >= clientSlotLimit ? C.red : C.text, whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: usedSlots >= clientSlotLimit ? SLOT_OVER_FG : TOPBAR_TEXT, whiteSpace: "nowrap" }}>
             Slots: {usedSlots} / {slotsLabel}
           </span>
         </div>
@@ -584,7 +600,9 @@ export default async function DashboardPage({
 
   return (
     <div style={{
-      background: isAgency ? C.bg : "#080C14",
+      // Phase 3 Sprint 6: Dark-Mode für alle Plans (vorher: Agency hatte
+      // light-bg C.bg → Stilbruch zum Rest des Tools).
+      background: "#0b0c10",
       minHeight: "100vh",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       // Agency-CSS-Vars (--agency-accent*) werden jetzt zentral in
