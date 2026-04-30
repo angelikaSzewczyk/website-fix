@@ -12,6 +12,7 @@
  */
 
 import Link from "next/link";
+import { neon } from "@neondatabase/serverless";
 import TeamWidget from "@/app/dashboard/components/team-widget";
 import { getPlanQuota } from "@/lib/plans";
 
@@ -60,6 +61,8 @@ type Props = {
   plan: string;
   /** PLAN_BADGE-Eintrag für die Plan-Pill. */
   badge: { label: string; color: string; bg: string; border: string };
+  /** User-ID für Live-Daten-Queries (Sprint 9). */
+  userId: string;
   /** Markenname der Agentur (aus agency_settings); null = Default "Kommandozentrale". */
   agencyName: string | null;
   /** Logo-URL der Agentur. */
@@ -71,6 +74,33 @@ type Props = {
   /** Anzahl belegter Slots (= criticalSites.length). */
   usedSlots: number;
 };
+
+// ─── Sparkline — Mini-SVG-Trend für KPI-Cards (Sprint 9) ─────────────────────
+function Sparkline({ values, color, width = 60, height = 18 }: { values: number[]; color: string; width?: number; height?: number }) {
+  if (values.length === 0) return null;
+  const max = Math.max(...values, 1);
+  const min = Math.min(...values, 0);
+  const range = Math.max(1, max - min);
+  const stepX = values.length > 1 ? width / (values.length - 1) : 0;
+  const points = values.map((v, i) => {
+    const x = i * stepX;
+    const y = height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.85"
+      />
+    </svg>
+  );
+}
 
 // Health-Score aus dem Status der Kunden-Site. Approximation für die UI-Pill.
 function healthScore(status: string) {
@@ -90,9 +120,65 @@ function PdfIcon() {
   );
 }
 
-export default function AgencyDashboard({
-  firstName, plan, badge, agencyName, agencyLogoUrl, criticalSites, scans, usedSlots,
+export default async function AgencyDashboard({
+  firstName, plan, badge, userId, agencyName, agencyLogoUrl, criticalSites, scans, usedSlots,
 }: Props) {
+  // ─── Sprint 9: Live-Daten für Widgets + Sparklines ────────────────────────
+  const sql = neon(process.env.DATABASE_URL!);
+  type DayRow      = { day: string; cnt: number };
+  type RecentRow   = { id: string; url: string; created_at: string; issue_count: number | null; name: string | null };
+  type HealthRow   = { ok: number; total: number };
+  let scanTrend: DayRow[]      = [];
+  let recentScans: RecentRow[] = [];
+  let scanHealth: HealthRow    = { ok: 0, total: 0 };
+  try {
+    const [trendRows, recentRows, healthRows] = await Promise.all([
+      // Scans pro Tag der letzten 7 Tage (für Sparkline + System-Status)
+      sql`
+        SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
+               COUNT(*)::int AS cnt
+        FROM scans
+        WHERE user_id = ${userId} AND created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY day ORDER BY day
+      `,
+      // Letzte 5 Scans, joined mit saved_websites für den Anzeige-Namen
+      sql`
+        SELECT s.id::text, s.url, s.created_at::text, s.issue_count,
+               sw.name
+        FROM scans s
+        LEFT JOIN saved_websites sw ON sw.url = s.url AND sw.user_id = s.user_id
+        WHERE s.user_id = ${userId}
+        ORDER BY s.created_at DESC LIMIT 5
+      `,
+      // Scan-Log Success-Rate der letzten 24 Stunden — System-Status-Indikator
+      sql`
+        SELECT COUNT(*) FILTER (WHERE status = 'success')::int AS ok,
+               COUNT(*)::int                                    AS total
+        FROM scan_log
+        WHERE user_id = ${userId} AND created_at >= NOW() - INTERVAL '24 hours'
+      `,
+    ]);
+    scanTrend   = trendRows   as DayRow[];
+    recentScans = recentRows  as RecentRow[];
+    scanHealth  = (healthRows[0] as HealthRow | undefined) ?? { ok: 0, total: 0 };
+  } catch {
+    // Tabellen fehlen evtl. (z.B. scan_log), Render fällt graceful auf leere Widgets
+  }
+
+  // 7-Tage-Array auffüllen — fehlende Tage = 0 (für Sparkline-Verlauf)
+  const trendValues: number[] = (() => {
+    const map = new Map(scanTrend.map(r => [r.day, r.cnt]));
+    const out: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      out.push(map.get(key) ?? 0);
+    }
+    return out;
+  })();
+  const scansThisWeek = trendValues.reduce((s, v) => s + v, 0);
+  const healthPct = scanHealth.total > 0 ? Math.round((scanHealth.ok / scanHealth.total) * 100) : null;
   void firstName; void agencyLogoUrl; // reserviert für künftige Personalisierung / Print-Header
 
   // CSS-Variablen kommen aus dashboard/layout.tsx (Branding-Color-Cascade).
@@ -125,10 +211,17 @@ export default function AgencyDashboard({
         return (
           <main style={{ padding: "28px 32px 80px" }}>
 
-              {/* ── Action-Bar Body-Header (Phase 3 Sprint 8).
-                  Plan/Slots/White-Label sind in der Topbar bereits sichtbar.
-                  Hier: Eyebrow + h1 links, Primary-CTA prominent rechts. */}
+              {/* ── Sticky Action-Bar (Phase 3 Sprint 9).
+                  position:sticky + backdrop-blur lässt den Content elegant
+                  drunter durchscrollen. AgencyTopBar darüber ist bei z-index
+                  30, daher hier 25 — bleibt unter der App-Topbar. */}
               <div style={{
+                position: "sticky", top: 0, zIndex: 25,
+                marginLeft: -32, marginRight: -32, paddingLeft: 32, paddingRight: 32,
+                marginTop: -32, paddingTop: 24,
+                background: "rgba(11,12,16,0.78)",
+                backdropFilter: "blur(15px)",
+                WebkitBackdropFilter: "blur(15px)",
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 marginBottom: 24, gap: 14, flexWrap: "wrap",
                 paddingBottom: 18, borderBottom: `1px solid ${C.divider}`,
@@ -168,8 +261,9 @@ export default function AgencyDashboard({
                     iconPath: <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></> },
                   { value: agencyClients.filter(c => c.status === "critical").length, label: "Handlungsbedarf",  color: C.red,
                     iconPath: <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></> },
-                  { value: scans.length,                                              label: "Scans gesamt",     color: C.textSub,
-                    iconPath: <><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></> },
+                  { value: scansThisWeek,                                             label: "Scans · 7 Tage",   color: C.blue,
+                    iconPath: <><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></>,
+                    sparkline: trendValues },
                 ]).map(s => (
                   <div key={s.label} style={{
                     background: C.card,
@@ -189,10 +283,14 @@ export default function AgencyDashboard({
                         {s.iconPath}
                       </svg>
                     </div>
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{s.value}</div>
                       <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 3, letterSpacing: "0.02em" }}>{s.label}</div>
                     </div>
+                    {/* Sprint 9: Sparkline nur wo sinnvoll (Scans-Verlauf 7d). */}
+                    {"sparkline" in s && s.sparkline && (
+                      <Sparkline values={s.sparkline} color={s.color} width={56} height={20} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -456,6 +554,164 @@ export default function AgencyDashboard({
               <TeamWidget />
               </div>
               {/* /wf-agency-grid */}
+
+              {/* ── Sprint 9: 3 Live-Widgets ─────────────────────────────────
+                  Zuletzt gescannt | System-Status | Anstehende Berichte */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 16, marginTop: 24,
+              }}>
+                {/* ── Widget 1: Zuletzt gescannte Kunden ──────────────────── */}
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
+                  <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>Zuletzt gescannt</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                      Live
+                    </span>
+                  </div>
+                  {recentScans.length === 0 ? (
+                    <div style={{ padding: "32px 18px", textAlign: "center", fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+                      Noch keine Scans im Account.<br/>
+                      Starte einen ersten Scan, dann erscheint er hier.
+                    </div>
+                  ) : (
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                      {recentScans.map((r, i) => {
+                        const dom = (() => { try { return new URL(r.url).hostname.replace(/^www\./, ""); } catch { return r.url; } })();
+                        const ts  = new Date(r.created_at);
+                        const ago = (() => {
+                          const diff = Date.now() - ts.getTime();
+                          const mins = Math.floor(diff / 60000);
+                          if (mins < 1)   return "gerade eben";
+                          if (mins < 60)  return `vor ${mins} min`;
+                          const hrs = Math.floor(mins / 60);
+                          if (hrs < 24)   return `vor ${hrs} h`;
+                          return ts.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
+                        })();
+                        const issueColor = r.issue_count === 0 ? C.green : r.issue_count != null && r.issue_count > 5 ? C.red : C.amber;
+                        return (
+                          <li key={r.id} style={{
+                            display: "flex", alignItems: "center", gap: 11,
+                            padding: "10px 18px",
+                            borderBottom: i < recentScans.length - 1 ? `1px solid ${C.divider}` : "none",
+                          }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: issueColor, flexShrink: 0, boxShadow: `0 0 6px ${issueColor}80` }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {r.name ?? dom}
+                              </div>
+                              <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 2 }}>
+                                {ago}
+                                {r.issue_count != null && (
+                                  <> · <span style={{ color: issueColor, fontWeight: 600 }}>
+                                    {r.issue_count === 0 ? "Sauber" : `${r.issue_count} Issues`}
+                                  </span></>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+
+                {/* ── Widget 2: System-Status ──────────────────────────────── */}
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "14px 18px", backdropFilter: "blur(8px)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>System-Status</span>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: healthPct === null || healthPct >= 95 ? C.green : healthPct >= 80 ? C.amber : C.red,
+                      boxShadow: `0 0 8px ${healthPct === null || healthPct >= 95 ? C.green : healthPct >= 80 ? C.amber : C.red}80`,
+                    }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, color: C.textMuted }}>Scan-Erfolgsrate · 24h</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: healthPct === null ? C.textMuted : healthPct >= 95 ? C.green : healthPct >= 80 ? C.amber : C.red }}>
+                        {healthPct !== null ? `${healthPct} %` : "—"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, color: C.textMuted }}>Scans heute</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
+                        {trendValues[trendValues.length - 1] ?? 0}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, color: C.textMuted }}>Scans · letzte 7 Tage</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
+                        {scansThisWeek}
+                      </span>
+                    </div>
+                    {scanHealth.total > 0 && (
+                      <div style={{ marginTop: 4, fontSize: 10.5, color: C.textMuted, lineHeight: 1.5 }}>
+                        {scanHealth.ok} von {scanHealth.total} Scan-Versuchen erfolgreich.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Widget 3: Anstehende Berichte ─────────────────────────
+                    Phase-3-Stub: derived aus criticalSites (1. des Folgemonats
+                    pro Site). Echtes Scheduling kommt in Phase 4. */}
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
+                  <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>Anstehende Berichte</span>
+                    <Link href="/dashboard/reports" style={{ fontSize: 10.5, fontWeight: 700, color: "#a78bfa", textDecoration: "none", letterSpacing: "0.04em" }}>
+                      Alle →
+                    </Link>
+                  </div>
+                  {criticalSites.length === 0 ? (
+                    <div style={{ padding: "32px 18px", textAlign: "center", fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+                      Noch keine Kunden für Auto-Reports konfiguriert.<br/>
+                      Lege einen Kunden an, um den nächsten Bericht zu planen.
+                    </div>
+                  ) : (() => {
+                    const now = new Date();
+                    const next1 = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                    const fmt = next1.toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
+                    return (
+                      <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                        {criticalSites.slice(0, 5).map((site, i) => {
+                          const dom = (() => { try { return new URL(site.url.startsWith("http") ? site.url : `https://${site.url}`).hostname.replace(/^www\./, ""); } catch { return site.url; } })();
+                          return (
+                            <li key={site.id} style={{
+                              display: "flex", alignItems: "center", gap: 11,
+                              padding: "10px 18px",
+                              borderBottom: i < Math.min(criticalSites.length, 5) - 1 ? `1px solid ${C.divider}` : "none",
+                            }}>
+                              <div style={{
+                                width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                                background: "rgba(124,58,237,0.14)",
+                                border: "1px solid rgba(124,58,237,0.32)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                              }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                                  <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {site.name ?? dom}
+                                </div>
+                                <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 2 }}>
+                                  Monatsbericht · {fmt}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    );
+                  })()}
+                </div>
+              </div>
+              {/* /Sprint 9 widgets */}
           </main>
         );
 }

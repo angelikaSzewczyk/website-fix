@@ -732,6 +732,7 @@ export default async function DashboardPage({
           firstName={firstName}
           plan={plan}
           badge={badge}
+          userId={String(session.user.id)}
           agencyName={agencyName}
           agencyLogoUrl={agencyLogoUrl}
           criticalSites={criticalSites}
