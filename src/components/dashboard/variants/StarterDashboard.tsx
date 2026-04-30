@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import WfOnboardingTour from "@/app/dashboard/components/WfOnboardingTour";
-import WfProGuidedTour from "@/app/dashboard/components/WfProGuidedTour";
 import StarterResultsPanel from "@/app/dashboard/components/StarterResultsPanel";
 import LockedSection from "@/app/dashboard/components/locked-section";
 import HistoryChart from "@/app/dashboard/components/history-chart";
+import DashboardShell from "./_shared/DashboardShell";
+import MetricPillBar from "./_shared/MetricPillBar";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, isPaidPlan, normalizePlan } from "@/lib/plans";
@@ -2227,11 +2227,8 @@ export default function StarterDashboard(props: StarterDashboardProps) {
   const [drawerPageUrl, setDrawerPageUrl]       = useState<string | null>(null);
   const [checkedUrls, setCheckedUrls]           = useState<Set<string>>(new Set());
   const [highlightUrl, setHighlightUrl]         = useState<string | null>(null);
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  // projectDialogOpen / cancelHover / switchHover / switching → in DashboardShell
   const mapSectionRef = useRef<HTMLDivElement>(null);
-  const [cancelHover, setCancelHover]           = useState(false);
-  const [switchHover, setSwitchHover]           = useState(false);
-  const [switching, setSwitching]               = useState(false);
   const [sessionDomain, setSessionDomain]       = useState<string | null>(null);
   const [pluginApiKey, setPluginApiKey]         = useState<string | null>(null);
   const [pluginKeyCopied, setPluginKeyCopied]   = useState(false);
@@ -2294,15 +2291,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
     setTimeout(() => setPluginKeyCopied(false), 2000);
   }
 
-  async function handleProjectSwitch() {
-    if (switching) return;
-    setSwitching(true);
-    try {
-      await fetch("/api/clear-project", { method: "POST" });
-    } catch { /* non-critical */ }
-    setProjectDialogOpen(false);
-    window.location.href = "/dashboard/scan";
-  }
+  // handleProjectSwitch → in DashboardShell
 
   // Read anonymous scan domain from sessionStorage when no DB scan exists yet
   useEffect(() => {
@@ -2706,217 +2695,18 @@ export default function StarterDashboard(props: StarterDashboardProps) {
   const mobileOk    = speedScore > 55;
 
 
+
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: D.page, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <style>{`
-        @keyframes wf-pulse-dot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50%       { opacity: 0.35; transform: scale(0.8); }
-        }
-        @keyframes wf-ring {
-          0%   { transform: scale(1); opacity: 0.55; }
-          100% { transform: scale(2.4); opacity: 0; }
-        }
-        @keyframes wf-gold-pulse {
-          0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.18); }
-          50%       { box-shadow: 0 0 10px rgba(251,191,36,0.35); }
-        }
-        @keyframes wf-arrow-slide {
-          0%   { transform: translateX(0); }
-          50%  { transform: translateX(3px); }
-          100% { transform: translateX(0); }
-        }
-        .wf-nav-locked { transition: opacity 0.15s; }
-        .wf-nav-locked:hover { opacity: 1 !important; background: rgba(251,191,36,0.04) !important; }
-        .wf-nav-whitelabel:hover { background: rgba(167,139,250,0.06) !important; }
-        .wf-upgrade-btn { transition: box-shadow 0.2s, transform 0.15s; }
-        .wf-upgrade-btn:hover { box-shadow: 0 6px 28px rgba(0,123,255,0.55) !important; transform: translateY(-1px); }
-        .wf-upgrade-btn:hover .wf-arrow { animation: wf-arrow-slide 0.4s ease-in-out; }
-        .wf-pro-badge { animation: wf-gold-pulse 3s ease-in-out infinite; }
-        .wf-disabled-card { transition: filter 0.3s; }
-        .wf-disabled-card:hover { filter: saturate(0.4) brightness(0.8) !important; }
-        @keyframes wf-drawer-slide-right {
-          from { transform: translateX(100%); }
-          to   { transform: translateX(0); }
-        }
-        @keyframes wf-drawer-slide-up {
-          from { transform: translateY(100%); }
-          to   { transform: translateY(0); }
-        }
-        @media (max-width: 640px) {
-          .wf-drawer {
-            top: auto !important;
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            max-height: 85vh;
-            border-left: none !important;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px 16px 0 0;
-            animation: wf-drawer-slide-up 0.32s cubic-bezier(0.22,1,0.36,1) both !important;
-          }
-          .wf-drawer-handle { display: flex !important; }
-        }
-      `}</style>
-
-
-      {/* ── Onboarding Tour (new users only) ───────────── */}
-      <WfOnboardingTour
+    <>
+      <DashboardShell
         firstName={firstName}
         plan={plan}
-        scansCount={scans.length}
-      />
-
-      {/* ── Pro Guided Tour (after first scan, Pro+ only) ─ */}
-      <WfProGuidedTour
-        plan={plan}
-        scansCount={scans.length}
-      />
-
-      {/* ══════════════════════════════════════════════════
-          MAIN — sidebar is rendered by dashboard layout.tsx
-      ══════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-
-        {/* Impersonation banner */}
-        {isImpersonating && (
-          <div style={{
-            padding: "10px 20px", background: "rgba(245,158,11,0.12)",
-            borderBottom: "1px solid rgba(245,158,11,0.3)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            gap: 12,
-          }}>
-            <span style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600 }}>
-              👁 Admin-Ansicht — Du siehst das Dashboard als dieser Nutzer.
-            </span>
-            <a href="/admin" style={{
-              fontSize: 12, color: "#fbbf24", textDecoration: "underline", cursor: "pointer",
-            }}>
-              ← Zurück zum Admin
-            </a>
-          </div>
-        )}
-
-        {/* ── TOP BAR ──────────────────────────────────── */}
-        <header style={{
-          position: "sticky", top: 0, zIndex: 40,
-          background: D.topbar,
-          backdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${D.divider}`,
-        }}>
-          <div style={{
-            maxWidth: 1100, margin: "0 auto", padding: "0 24px",
-            height: 52,
-            display: "flex", alignItems: "center", gap: 14,
-          }}>
-            {/* Aktives Projekt + Stift-Icon */}
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                Aktives Projekt
-              </span>
-              {domain !== "—" ? (
-                <>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
-                    {domain}
-                  </span>
-                  <button
-                    onClick={() => setProjectDialogOpen(true)}
-                    title="Projekt wechseln"
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      width: 22, height: 22, borderRadius: 5,
-                      background: "transparent", border: `1px solid ${D.border}`,
-                      cursor: "pointer", padding: 0, flexShrink: 0,
-                      transition: "border-color 0.15s",
-                    }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                      stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <Link href="/dashboard/scan" style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  padding: "4px 12px", borderRadius: D.radiusSm,
-                  background: D.blueBg, border: `1px solid ${D.blueBorder}`,
-                  color: D.blueSoft, fontSize: 12, fontWeight: 700, textDecoration: "none",
-                }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  Website hinzufügen
-                </Link>
-              )}
-            </div>
-
-            <div style={{ flex: 1 }} />
-
-            {/* Projekt-Slots — plan-aware */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekte</span>
-              <span style={{
-                fontSize: 11, fontWeight: 700,
-                padding: "2px 9px", borderRadius: 20,
-                background: D.card, border: `1px solid ${D.borderMid}`,
-                color: D.textSub,
-              }}>
-                {isAgency ? "Unlimited" : isStarter ? "3 Slots" : isProfessionalPlus ? "10 Slots" : "1 / 1"}
-              </span>
-            </div>
-
-            {/* Scan usage — plan-aware. Eine 3-fach-Verzweigung statt vorher
-                3 separate Pill-Branches: Agency=Flatrate, sonst limit-aware
-                Pro+Starter via scanLimit-Prop (kommt jetzt korrekt vom Server). */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans/Monat</span>
-              {isAgency ? (
-                <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: "2px 9px", borderRadius: 20,
-                  background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)",
-                  color: "#FBBF24",
-                }}>
-                  Flatrate
-                </span>
-              ) : monthlyScans >= scanLimit ? (
-                <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: "2px 10px", borderRadius: 20,
-                  background: D.redBg, border: `1px solid ${D.redBorder}`,
-                  color: D.red,
-                }}>
-                  Limit erreicht
-                </span>
-              ) : (
-                <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: "2px 9px", borderRadius: 20,
-                  background: D.card, border: `1px solid ${D.borderMid}`,
-                  color: D.textSub,
-                }}>
-                  {scanLimit - monthlyScans} / {scanLimit} verbleibend
-                </span>
-              )}
-            </div>
-
-            {/* Upgrade CTA */}
-            <Link href="/fuer-agenturen#pricing" style={{
-              padding: "6px 16px", borderRadius: D.radiusSm,
-              background: D.blue, color: "#fff",
-              fontSize: 12, fontWeight: 700, textDecoration: "none",
-              boxShadow: D.blueGlow,
-            }}>
-              Upgrade →
-            </Link>
-          </div>
-        </header>
-
-        {/* ── PAGE CONTENT ─────────────────────────────── */}
-        <main style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px 80px" }}>
+        domain={domain}
+        scanCount={scans.length}
+        monthlyScans={monthlyScans}
+        scanLimit={scanLimit}
+        isImpersonating={isImpersonating}
+      >
 
           {/* ── PROFESSIONAL WELCOME BANNER (once after upgrade) ──────────── */}
           {showProWelcome && (
@@ -3205,51 +2995,15 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             </div>
           )}
 
-          {/* Phase A2 — Site-Wide-Metrics-Bar (Helikopter-Blick).
-              Rendert nur, wenn meta_json mindestens TTFB ODER WCAG-Score liefert
-              (legacy-Scans ohne die neuen meta-Felder zeigen die Bar nicht). */}
-          {!isNewScan && lastScan && (avgTtfbMs != null || wcagHeuristicScore != null) && (
-            <div style={{
-              display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18,
-              padding: "12px 18px",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              borderRadius: 12,
-              alignItems: "center",
-            }}>
-              {avgTtfbMs != null && (
-                <div title="Time to First Byte — Mittelwert über alle gecrawlten Seiten" style={{
-                  display: "flex", alignItems: "center", gap: 7,
-                  padding: "5px 12px", borderRadius: 20,
-                  background: avgTtfbMs < 200 ? "rgba(34,197,94,0.10)"
-                            : avgTtfbMs < 600 ? "rgba(251,191,36,0.10)"
-                            :                   "rgba(248,113,113,0.10)",
-                  border: `1px solid ${avgTtfbMs < 200 ? "rgba(34,197,94,0.30)"
-                                     : avgTtfbMs < 600 ? "rgba(251,191,36,0.30)"
-                                     :                   "rgba(248,113,113,0.30)"}`,
-                }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Ø TTFB</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: avgTtfbMs < 200 ? "#4ade80" : avgTtfbMs < 600 ? "#fbbf24" : "#f87171" }}>
-                    {avgTtfbMs} ms
-                  </span>
-                </div>
-              )}
-              {wcagHeuristicScore != null && (
-                <div title={`${wcagHeuristicLabel ?? "Heuristische Analyse"}. Struktureller Check — für rechtssichere Audits ist ein manueller Test/Headless-Audit erforderlich.`}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 7, cursor: "help",
-                    padding: "5px 12px", borderRadius: 20,
-                    background: "rgba(124,58,237,0.10)",
-                    border: "1px solid rgba(124,58,237,0.30)",
-                }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>WCAG-Heuristik</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: wcagHeuristicScore >= 80 ? "#4ade80" : wcagHeuristicScore >= 60 ? "#fbbf24" : "#f87171" }}>
-                    {wcagHeuristicScore}/100
-                  </span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>· {wcagHeuristicLabel ?? "Heuristik"}</span>
-                </div>
-              )}
-            </div>
+          {/* Phase 2: Shared MetricPillBar — Starter-Mode size="lg" für
+              Daten-Prominenz (Pricing-Argument: 29€ für Volldaten). */}
+          {!isNewScan && lastScan && (
+            <MetricPillBar
+              avgTtfbMs={avgTtfbMs}
+              wcagHeuristicScore={wcagHeuristicScore}
+              wcagHeuristicLabel={wcagHeuristicLabel}
+              size="lg"
+            />
           )}
 
           {/* ①a SCORE-VERLAUF — nur für Pro+ inline. Starter sieht den
@@ -4321,8 +4075,6 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             </p>
           </div>}
 
-        </main>
-
         {/* ── STICKY UPGRADE FOOTER BANNER (free only) ─────── */}
         {isFree && (
           <div style={{
@@ -4388,105 +4140,9 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             </div>
           </div>
         )}
-      </div>
 
-      {/* ══════════════════════════════════════════════════
-          PROJEKT-WECHSEL DIALOG
-      ══════════════════════════════════════════════════ */}
-      {projectDialogOpen && (
-        <div
-          onClick={() => setProjectDialogOpen(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.65)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "24px",
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "#0f1623",
-              border: `1px solid ${D.borderStrong}`,
-              borderRadius: D.radius,
-              padding: "32px 32px 28px",
-              maxWidth: 420, width: "100%",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
-            }}
-          >
-            {/* Icon */}
-            <div style={{
-              width: 44, height: 44, borderRadius: 11,
-              background: D.redBg, border: `1px solid ${D.redBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 24,
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke={D.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-            </div>
+      </DashboardShell>
 
-            <h2 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
-              Projekt wechseln?
-            </h2>
-            <p style={{ margin: "0 0 12px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
-              Im Free-Plan ist <strong style={{ color: D.text }}>1 Wechsel pro Monat</strong> inkludiert.
-            </p>
-            <div style={{
-              padding: "14px 16px", borderRadius: D.radiusXs, marginBottom: 24,
-              background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)",
-            }}>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(248,113,113,0.85)", lineHeight: 1.65, fontWeight: 500 }}>
-                Achtung: Alle Daten und Berichte der aktuellen Website werden dabei unwiderruflich gelöscht.
-              </p>
-            </div>
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setProjectDialogOpen(false)}
-                onMouseEnter={() => setCancelHover(true)}
-                onMouseLeave={() => setCancelHover(false)}
-                style={{
-                  flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
-                  border: `1px solid ${D.borderStrong}`,
-                  background: cancelHover ? "rgba(255,255,255,0.06)" : "transparent",
-                  color: cancelHover ? D.text : D.textSub,
-                  fontSize: 13, fontWeight: 600, cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "background 0.15s, color 0.15s",
-                }}
-              >
-                Abbrechen
-              </button>
-              <button
-                onClick={handleProjectSwitch}
-                onMouseEnter={() => setSwitchHover(true)}
-                onMouseLeave={() => setSwitchHover(false)}
-                disabled={switching}
-                style={{
-                  flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
-                  border: "none",
-                  background: switchHover ? "#ef4444" : D.red,
-                  color: "#fff",
-                  fontSize: 13, fontWeight: 700, cursor: switching ? "default" : "pointer",
-                  boxShadow: "0 4px 16px rgba(248,113,113,0.25)",
-                  fontFamily: "inherit",
-                  opacity: switching ? 0.7 : 1,
-                  transition: "background 0.15s, opacity 0.15s",
-                }}
-              >
-                {switching ? "Wird gelöscht..." : "Wechseln & Daten löschen"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── OPTIMIERUNGS-PLAN MODAL (Builder-Intelligence, Pro/Agency) ── */}
       {showOptPlan && (
@@ -4568,6 +4224,6 @@ export default function StarterDashboard(props: StarterDashboardProps) {
         </div>
       )}
 
-    </div>
+    </>
   );
 }
