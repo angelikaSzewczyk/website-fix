@@ -664,7 +664,12 @@ export default function AgencyPage() {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div className="integ-icon integ-icon-slack" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(192,132,252,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24"><g fill="#c084fc"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></g></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#E01E5A" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.522A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.52-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z"/>
+                    <path fill="#36C5F0" d="M8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.52 2.521 2.528 2.528 0 0 1-2.52 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z"/>
+                    <path fill="#2EB67D" d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312z"/>
+                    <path fill="#ECB22E" d="M15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                  </svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Slack</div>
@@ -691,7 +696,17 @@ export default function AgencyPage() {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div className="integ-icon integ-icon-jira" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#7aa6ff"><path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005zm5.723-5.756H5.757a5.215 5.215 0 0 0 5.214 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.001 1.001 0 0 0-1.021-1.005zM23.013 0H11.459a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.019 12.49V1.005A1.001 1.001 0 0 0 23.013 0z"/></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="wf-agency-jira-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%"   stopColor="#0052CC"/>
+                        <stop offset="100%" stopColor="#2684FF"/>
+                      </linearGradient>
+                    </defs>
+                    <path fill="url(#wf-agency-jira-grad)" d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005z"/>
+                    <path fill="#2684FF" d="M17.294 5.757H5.757a5.215 5.215 0 0 0 5.214 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.001 1.001 0 0 0-1.021-1.005z"/>
+                    <path fill="#0052CC" d="M23.013 0H11.459a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.019 12.49V1.005A1.001 1.001 0 0 0 23.013 0z"/>
+                  </svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Jira</div>
@@ -718,7 +733,11 @@ export default function AgencyPage() {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div className="integ-icon integ-icon-trello" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(0,121,191,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#5bb8fa"><path d="M21 0H3C1.343 0 0 1.343 0 3v18c0 1.656 1.343 3 3 3h18c1.656 0 3-1.344 3-3V3c0-1.657-1.344-3-3-3zM10.44 18.18c0 .795-.645 1.44-1.44 1.44H4.56c-.795 0-1.44-.645-1.44-1.44V4.56c0-.795.645-1.44 1.44-1.44H9c.795 0 1.44.645 1.44 1.44v13.62zm10.44-6c0 .794-.645 1.44-1.44 1.44H15c-.795 0-1.44-.646-1.44-1.44V4.56c0-.795.645-1.44 1.44-1.44h4.44c.795 0 1.44.645 1.44 1.44v7.62z"/></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="3" fill="#0079BF"/>
+                    <rect x="5" y="5" width="6"  height="13" rx="1" fill="#fff" opacity="0.95"/>
+                    <rect x="13" y="5" width="6" height="8"  rx="1" fill="#fff" opacity="0.95"/>
+                  </svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Trello</div>
@@ -745,7 +764,9 @@ export default function AgencyPage() {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div className="integ-icon integ-icon-zapier" style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, background: "rgba(255,80,10,0.1)", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s, background 0.2s" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#ff6d2d"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.83 14.5H13.5v4.33a1.5 1.5 0 0 1-3 0V14.5H6.17a1.5 1.5 0 0 1 0-3H10.5V7.17a1.5 1.5 0 0 1 3 0V11.5h4.33a1.5 1.5 0 0 1 0 3z"/></svg>
+                  <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true">
+                    <path fill="#FF4F00" d="M19.18 16.005a8.59 8.59 0 0 1-.563 3.063 8.6 8.6 0 0 1-3.061.564h-.022a8.6 8.6 0 0 1-3.062-.563 8.6 8.6 0 0 1-.564-3.061v-.012a8.6 8.6 0 0 1 .564-3.062 8.6 8.6 0 0 1 3.061-.564h.012a8.6 8.6 0 0 1 3.062.564 8.6 8.6 0 0 1 .564 3.062v.011zm10.55-2.044h-8.45l5.97-5.97a14.06 14.06 0 0 0-2.227-2.804v-.002a14.1 14.1 0 0 0-2.802-2.225l-5.97 5.97V.477A14.2 14.2 0 0 0 16.005.27h-.005a14.2 14.2 0 0 0-2.245.207v8.45L7.785 2.96A14.04 14.04 0 0 0 4.984 5.19l-.005.005a14.1 14.1 0 0 0-2.221 2.8l5.971 5.97H.270s-.207 1.475-.207 2.24v.005c0 .76.07 1.504.205 2.226h8.45l-5.97 5.97a14.13 14.13 0 0 0 5.025 5.029l5.97-5.97v8.45c.722.135 1.464.205 2.222.207h.027c.758-.002 1.5-.072 2.222-.207v-8.45l5.971 5.97a14.1 14.1 0 0 0 2.802-2.222l.003-.002a14.1 14.1 0 0 0 2.222-2.802l-5.97-5.97h8.452a14.2 14.2 0 0 0 .206-2.218v-.022a14.2 14.2 0 0 0-.207-2.226z"/>
+                  </svg>
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>Zapier</div>
