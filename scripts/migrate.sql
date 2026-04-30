@@ -78,3 +78,12 @@ CREATE INDEX IF NOT EXISTS saved_websites_is_customer_idx
 -- Phase 3 / Sprint 4: last_login_at für Admin-User-Liste.
 -- Wird im NextAuth-jwt-Callback bei jedem Login auf NOW() gesetzt.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+
+-- Phase 3 / Sprint 5: Plan-Strings auf kanonische Werte normalisieren.
+-- Der Code (lib/plans.ts) kennt 3 Canonical-Keys: starter, professional, agency.
+-- Legacy-Aliase aus Vor-Migrations-Phasen ('smart-guard', 'pro', 'agency-pro',
+-- 'agency-starter') werden hier hart umgesetzt — verhindert Drift in jedem
+-- Code-Pfad, der noch strict-equality nutzt (z.B. dashboard/layout.tsx).
+-- Idempotent: WHERE-Filter machen das Statement sicher mehrfach ausführbar.
+UPDATE users SET plan = 'professional' WHERE plan IN ('smart-guard', 'pro');
+UPDATE users SET plan = 'agency'       WHERE plan IN ('agency-pro', 'agency-starter');

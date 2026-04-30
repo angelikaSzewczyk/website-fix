@@ -6,7 +6,7 @@ import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
-import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue } from "@/lib/plans";
+import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue, isAgency, isAtLeastProfessional } from "@/lib/plans";
 import { touchLastSeen } from "@/lib/heartbeat";
 
 const SCAN_LIMIT = 3;
@@ -48,11 +48,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const userName  = session.user.name?.split(" ")[0] ?? session.user.email ?? "User";
   const userImage = session.user.image ?? null;
 
-  // starter → FreeSidebar dark UI; professional + agency → FreeSidebar with Pro stripe (or SidebarNav)
-  const isAuditPlan = plan === "starter" || plan === "professional";
-  const isPro       = plan === "professional" || plan === "agency";
-  const isAgencyPlan = plan === "agency";
-  const isStarterPlan = plan === "starter";
+  // Phase 3 Sprint 5 Bug-Fix: alle Plan-Checks über lib/plans-Helper, sonst
+  // matchen Legacy-Strings (smart-guard, agency-pro, agency-starter) NICHT
+  // strict equality → Drift zwischen Sidebar und Content (siehe Bug-Audit).
+  // Helper normalisieren intern via normalizePlan().
+  const canonical    = normalizePlan(plan) ?? "starter";
+  const isAgencyPlan = isAgency(plan);
+  const isPro        = isAtLeastProfessional(plan);
+  const isStarterPlan = canonical === "starter";
+  // isAuditPlan = "User mit FreeSidebar" — alle Nicht-Agency-Plans.
+  const isAuditPlan  = !isAgencyPlan;
   const theme = getPlanTheme(plan);
 
   // Load agency primary color for CSS variable injection (agency plans)
