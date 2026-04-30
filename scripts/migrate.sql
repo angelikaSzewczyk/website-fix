@@ -162,3 +162,92 @@ CREATE UNIQUE INDEX IF NOT EXISTS scheduled_reports_user_website_idx
 CREATE UNIQUE INDEX IF NOT EXISTS scheduled_reports_user_default_idx
   ON scheduled_reports(user_id)
   WHERE website_id IS NULL;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Phase 3 / Sprint 12 — WP-EXZELLENZ + LIVE-MONITOR + CMS-CONTEXT
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- CMS-Context: lib/fix-guides.ts liest diese Spalte, um kontextspezifische
+-- Anleitungen zu rendern (Elementor / Gutenberg / Divi / Astra / Klassisch).
+-- Wert wird beim Scan aus tech_fingerprint.builder gesetzt — Single-Source
+-- der Site-Architektur.
+ALTER TABLE website_checks ADD COLUMN IF NOT EXISTS cms_context TEXT;
+
+-- Plugins-Detected: Snapshot der erkannten WordPress-Plugins/Builder pro
+-- Check. Cron vergleicht aufeinanderfolgende Snapshots — neue Einträge
+-- triggern einen Plugin-Diff-Alarm in website_alerts.
+ALTER TABLE website_checks ADD COLUMN IF NOT EXISTS plugins_detected JSONB;
+
+-- WP-Health-Score: cached Aggregat aus lib/wp-health.computeWpHealthScore.
+-- Erlaubt der Kunden-Matrix, den Score ohne Re-Computation zu rendern.
+ALTER TABLE website_checks ADD COLUMN IF NOT EXISTS wp_health_score INTEGER;
+
+-- website_alerts: persistente Live-Monitor-Alarme. Cron-Job /api/cron/monitor
+-- schreibt hier rein, AgencyDashboard 2.0 rendert die offenen (acknowledged_at IS NULL)
+-- als Live-Monitor-Widget.
+--
+-- alert_type:
+--   plugin_added       — neues Plugin/Builder erkannt seit letztem Check
+--   plugin_removed     — Plugin verschwunden (Deaktivierung / Plugin-Update bricht Detection)
+--   speed_drop         — security_score oder Response-Time signifikant verschlechtert
+--   wp_outdated        — WordPress-Version zu alt
+--   ssl_expiring       — SSL läuft in <14d ab
+--   site_offline       — Seite nicht erreichbar
+CREATE TABLE IF NOT EXISTS website_alerts (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  website_id UUID REFERENCES saved_websites(id) ON DELETE CASCADE,
+  alert_type TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'warning',
+  title TEXT NOT NULL,
+  message TEXT,
+  payload JSONB,
+  acknowledged_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Häufigster Query: "alle offenen Alarme dieses Users, neueste zuerst".
+-- Partial-Index reduziert Index-Größe drastisch (nur unack rows).
+CREATE INDEX IF NOT EXISTS website_alerts_user_unack_idx
+  ON website_alerts(user_id, created_at DESC)
+  WHERE acknowledged_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS website_alerts_website_idx
+  ON website_alerts(website_id, created_at DESC);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Phase 3 / Sprint 12 — agency_settings: SMTP + WP-API-Key + Custom-Domain
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backend-Säulen für den Agency-Plan: eigene SMTP-Mailbox (damit
+-- Monatsreports vom Kunden-Absender kommen), WordPress-API-Key (für die
+-- "Heilung im Backend" — WP-Plugin liest die bereinigten SEO-Daten
+-- via /api/wp-bridge ab), Custom-Domain (white-label-Hosting des
+-- Lead-Widgets).
+--
+-- Sicherheits-relevante Felder werden ENCRYPTED gespeichert:
+--   smtp_pass_encrypted, api_key_wp_encrypted   = AES-256-GCM (lib/crypto)
+--
+-- Der Lookup-Index für /api/wp-bridge geht via api_key_wp_hash (SHA-256),
+-- weil verschlüsselte Werte keine deterministische WHERE-Suche erlauben.
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS smtp_host             TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS smtp_port             INTEGER;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS smtp_user             TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS smtp_pass_encrypted   TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS smtp_from_email       TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS white_label_logo_url  TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS custom_domain         TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS api_key_wp_encrypted  TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS api_key_wp_hash       TEXT;
+ALTER TABLE agency_settings ADD COLUMN IF NOT EXISTS api_key_wp_created_at TIMESTAMPTZ;
+
+-- Hash-Index für constant-time WP-Plugin-Lookup (vergleiche /api/wp-bridge).
+-- Der Hash leakt keinen Pre-Image und ist schnell durchsuchbar.
+CREATE UNIQUE INDEX IF NOT EXISTS agency_settings_api_key_wp_hash_idx
+  ON agency_settings(api_key_wp_hash)
+  WHERE api_key_wp_hash IS NOT NULL;
+
+-- Custom-Domain: muss UNIQUE sein (sonst zwei Agencies auf derselben Domain).
+-- WHERE-Klausel macht NULL ≠ NULL — Agencies ohne Custom-Domain kollidieren nicht.
+CREATE UNIQUE INDEX IF NOT EXISTS agency_settings_custom_domain_idx
+  ON agency_settings(LOWER(custom_domain))
+  WHERE custom_domain IS NOT NULL AND custom_domain <> '';

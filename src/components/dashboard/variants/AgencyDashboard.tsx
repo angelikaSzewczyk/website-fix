@@ -26,6 +26,8 @@ import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 import TeamWidget from "@/app/dashboard/components/team-widget";
 import { getPlanQuota, getMaxSubpages } from "@/lib/plans";
+import { computeWpHealthScore, WP_LAYER_META, type ClassifiableWpIssue } from "@/lib/wp-health";
+import { cmsContextLabel } from "@/lib/fix-guides";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
 const C = {
@@ -59,6 +61,9 @@ type ScanBrief = { id: string; url: string; type: string; created_at: string; is
 /**
  * Matrix-Row — vereinheitlichtes Schema für /dashboard und /dashboard/clients.
  * Eine Zeile = eine saved_websites-Zeile + ihr letzter Scan + Trend.
+ *
+ * Sprint 12: + cms_context (für Fix-Guide-Hint) + wp_layer_score-Felder
+ * (aus issues_json on-the-fly berechnet).
  */
 type MatrixRow = {
   id: string;
@@ -74,17 +79,32 @@ type MatrixRow = {
   security_score: number | null;
   platform: string | null;
   response_time_ms: number | null;
+  cms_context: string | null;
 
   last_scan_id: string | null;
   last_scan_at: string | null;
   last_issue_count: number | null;
   last_total_pages: number | null;
   last_speed_score: number | null;
+  /** issues_json des letzten Scans — Eingabe für computeWpHealthScore. */
+  last_issues_json: ClassifiableWpIssue[] | null;
 
   prev_issue_count: number | null;
   prev_speed_score: number | null;
 
   scan_count: number;
+};
+
+type AlertRow = {
+  id: number;
+  website_id: string | null;
+  alert_type: string;
+  severity: string;
+  title: string;
+  message: string | null;
+  created_at: string;
+  site_name: string | null;
+  site_url: string | null;
 };
 
 type Props = {
@@ -165,11 +185,13 @@ export default async function AgencyDashboard({
         wc.security_score,
         wc.platform,
         wc.response_time_ms,
+        wc.cms_context,
         s_latest.id::text     AS last_scan_id,
         s_latest.created_at::text AS last_scan_at,
         s_latest.issue_count  AS last_issue_count,
         s_latest.total_pages  AS last_total_pages,
         s_latest.speed_score  AS last_speed_score,
+        s_latest.issues_json  AS last_issues_json,
         s_prev.issue_count    AS prev_issue_count,
         s_prev.speed_score    AS prev_speed_score,
         (SELECT COUNT(*)::int FROM scans
@@ -177,14 +199,14 @@ export default async function AgencyDashboard({
         ) AS scan_count
       FROM saved_websites sw
       LEFT JOIN LATERAL (
-        SELECT ssl_days_left, security_score, platform, response_time_ms
+        SELECT ssl_days_left, security_score, platform, response_time_ms, cms_context
         FROM website_checks
         WHERE website_id = sw.id AND user_id = sw.user_id
         ORDER BY checked_at DESC
         LIMIT 1
       ) wc ON true
       LEFT JOIN LATERAL (
-        SELECT id, issue_count, total_pages, speed_score, created_at
+        SELECT id, issue_count, total_pages, speed_score, created_at, issues_json
         FROM scans
         WHERE url = sw.url AND user_id = sw.user_id AND is_superseded = FALSE
         ORDER BY created_at DESC
@@ -202,6 +224,26 @@ export default async function AgencyDashboard({
     ` as MatrixRow[];
   } catch (err) {
     console.error("[AgencyDashboard] matrix query failed:", err);
+  }
+
+  // ─── Live-Monitor: offene Alarme (acknowledged_at IS NULL) ──────────────
+  // Sprint 12: Plugin-Diff-Cron schreibt in website_alerts. Hier rendern
+  // wir die letzten 8 ungelesenen — der Agency-Owner sieht sofort, was
+  // sich seit dem letzten Login verändert hat.
+  let liveAlerts: AlertRow[] = [];
+  try {
+    liveAlerts = await sql`
+      SELECT a.id, a.website_id::text, a.alert_type, a.severity, a.title, a.message,
+             a.created_at::text,
+             sw.name AS site_name, sw.url AS site_url
+      FROM website_alerts a
+      LEFT JOIN saved_websites sw ON sw.id = a.website_id
+      WHERE a.user_id = ${userId} AND a.acknowledged_at IS NULL
+      ORDER BY a.created_at DESC
+      LIMIT 8
+    ` as AlertRow[];
+  } catch (err) {
+    console.error("[AgencyDashboard] alerts query failed:", err);
   }
 
   // ─── Activity-Feed + Trend-Sparkline + Scan-Health (parallel) ────────────
@@ -462,8 +504,24 @@ export default async function AgencyDashboard({
                 status === "critical"? { label: "Kritisch", color: C.red,   bg: C.redBg,   border: "rgba(248,113,113,0.30)" } :
                                        { label: "Prüfen",   color: C.amber, bg: C.amberBg, border: "rgba(251,191,36,0.30)" };
 
-              const score = deriveHealthScore(row);
+              // ── WP-Health-Score (Sprint 12) ────────────────────────────────
+              // Wenn issues_json vorhanden: berechne Layer-Sub-Scores, zeige den
+              // niedrigsten Layer-Wert als Hint (das ist der Engpass-Treiber).
+              // Sonst Fallback auf den klassischen Health-Score aus speed_score.
+              const wpHealth = Array.isArray(row.last_issues_json) && row.last_issues_json.length > 0
+                ? computeWpHealthScore(row.last_issues_json)
+                : null;
+              const score = wpHealth ? wpHealth.overall : deriveHealthScore(row);
               const scoreColor = score >= 75 ? C.green : score >= 50 ? C.amber : C.red;
+              // Schwächster Layer = der mit dem niedrigsten Score. Wird als
+              // kleiner Hint unter der Health-Zahl gezeigt: "Schwach: Plugins"
+              const weakestLayer = wpHealth
+                ? (Object.keys(wpHealth.layers) as Array<keyof typeof wpHealth.layers>)
+                    .reduce((min, k) => wpHealth.layers[k].score < wpHealth.layers[min].score ? k : min, "core" as keyof typeof wpHealth.layers)
+                : null;
+              const weakLayerLabel = weakestLayer && wpHealth && wpHealth.layers[weakestLayer].issues > 0
+                ? WP_LAYER_META[weakestLayer].shortLabel
+                : null;
 
               // Trend-Δ: Differenz zum vorletzten Scan. Issue-Count: niedriger
               // ist besser, also delta = prev - latest (positiv = Verbesserung).
@@ -549,8 +607,8 @@ export default async function AgencyDashboard({
                     {trendLabel}
                   </div>
 
-                  {/* Health */}
-                  <div>
+                  {/* Health (WP-Layer-aware) */}
+                  <div title={wpHealth ? `WP-Health: Core ${wpHealth.layers.core.score} · Plugins ${wpHealth.layers.plugins.score} · Themes ${wpHealth.layers.themes.score} · A11y ${wpHealth.layers.accessibility.score}` : "Score-Berechnung aus letztem Scan"}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                       <span style={{ fontSize: 15, fontWeight: 800, color: scoreColor, letterSpacing: "-0.02em", lineHeight: 1 }}>{score}</span>
                       <span style={{ fontSize: 10, color: C.textMuted }}>/100</span>
@@ -558,6 +616,11 @@ export default async function AgencyDashboard({
                     <div style={{ height: 4, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
                       <div style={{ height: "100%", borderRadius: 99, width: `${score}%`, background: scoreColor }} />
                     </div>
+                    {weakLayerLabel && (
+                      <div style={{ marginTop: 3, fontSize: 9.5, color: C.textMuted, letterSpacing: "0.04em" }}>
+                        Schwach: <span style={{ color: scoreColor, fontWeight: 700 }}>{weakLayerLabel}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Aktion */}

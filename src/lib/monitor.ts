@@ -1,7 +1,16 @@
 /**
  * Website Monitor — universelle Health-Checks
- * SSL, Uptime, Security Headers, Platform-Erkennung
+ * SSL, Uptime, Security Headers, Platform-Erkennung, WP-Plugin-Detection.
+ *
+ * Sprint 12 Erweiterung: liefert zusätzlich cms_context (Elementor/Divi/
+ * Gutenberg) und plugins_detected (lowercase-Slugs). Diese Werte landen in
+ * website_checks und werden vom Live-Monitor-Cron für Plugin-Diff-Alarms
+ * konsumiert.
  */
+
+import { buildFingerprintFromRaw } from "./tech-detector";
+import { buildRawWebsiteData } from "./tech-detector/fetcher";
+import { detectCmsContext, pluginsFromFingerprint } from "./wp-health";
 
 export type CheckAlert = {
   level: "critical" | "warning" | "info";
@@ -20,6 +29,10 @@ export type CheckResult = {
   security_score: number;
   security_headers: Record<string, boolean>;
   alerts: CheckAlert[];
+  /** Sprint 12: kanonischer CMS-Kontext für Fix-Guides ("elementor", "divi", …). */
+  cms_context: string | null;
+  /** Sprint 12: erkannte Plugins/Builder als flache Liste. Diff-Vergleich-Basis. */
+  plugins_detected: string[];
 };
 
 const SECURITY_HEADERS = [
@@ -151,6 +164,26 @@ export async function checkWebsite(url: string): Promise<CheckResult> {
     }
   }
 
+  // — CMS-Context + Plugin-Detection (Sprint 12) ——
+  // Gleiche Tech-Detect-Pipeline wie /api/scan/route — der Monitor MUSS
+  // identische Fingerprint-Werte schreiben, sonst driftet der CMS-Context
+  // zwischen Scan- und Cron-Pfad.
+  let cmsContext: string | null = null;
+  let pluginsDetected: string[] = [];
+  if (is_online && htmlBody) {
+    try {
+      // buildFingerprintFromRaw verlangt eine Response-ähnliche Struktur.
+      // Wir füttern es mit der Monitor-Response — dieselbe API, die /api/scan nutzt.
+      const fakeRes = new Response(htmlBody, { headers: responseHeaders, status: http_status ?? 200 });
+      const raw = buildRawWebsiteData({ url: normalizedUrl, response: fakeRes, html: htmlBody });
+      const fp = buildFingerprintFromRaw(raw);
+      cmsContext = detectCmsContext(fp);
+      pluginsDetected = pluginsFromFingerprint(fp);
+    } catch {
+      // Tech-Detect ist non-critical; Check soll trotzdem succeeden.
+    }
+  }
+
   return {
     is_online,
     response_time_ms,
@@ -162,5 +195,7 @@ export async function checkWebsite(url: string): Promise<CheckResult> {
     security_score: score,
     security_headers: securityHeaders,
     alerts,
+    cms_context: cmsContext,
+    plugins_detected: pluginsDetected,
   };
 }
