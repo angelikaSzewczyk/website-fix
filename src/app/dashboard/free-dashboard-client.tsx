@@ -21,6 +21,10 @@ export interface ParsedIssueProp {
   category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number; // actual number of errors this issue represents
   url?: string;   // page URL for per-page issues
+  // Phase A3: Engine-Aggregator-Felder. Optional — alte Scans ohne diese
+  // Felder rendern weiterhin als single-URL-Issue ohne Akkordeon.
+  affectedUrls?: string[];
+  scope?:        "global" | "local";
 }
 export interface ScanBriefProp {
   id: string;

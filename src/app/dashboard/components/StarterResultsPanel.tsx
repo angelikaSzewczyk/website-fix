@@ -14,6 +14,11 @@ export interface IssueProp {
   body: string;
   category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number;
+  /** Phase A3: Engine-Aggregator-Felder. Optional — alte Scans ohne diese
+   *  Felder rendern weiterhin als single-URL-Issue ohne Akkordeon. */
+  url?:          string;          // primary URL (legacy single-URL-Issue)
+  affectedUrls?: string[];        // konsolidierte Liste aller betroffenen URLs
+  scope?:        "global" | "local";  // 80%-Klassifikation aus dem Aggregator
 }
 
 /** Status der Integration-Provider, wie ihn lib/integrations.connectionStatus
@@ -351,6 +356,25 @@ function AccordionItem({
         <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
           {issue.title}
         </span>
+        {/* Phase A3: scope:"global"-Badge — signalisiert Template-Fehler.
+            "Eine Korrektur fixt alle Vorkommen." */}
+        {issue.scope === "global" && (
+          <span
+            title="Globales Template-Problem — auf >= 80% aller gecrawlten Seiten. Eine Korrektur im CMS-Template behebt alle Vorkommen auf einmal."
+            style={{
+              flexShrink: 0,
+              fontSize: 9, fontWeight: 800,
+              padding: "2px 8px", borderRadius: 10,
+              background: "rgba(124,58,237,0.12)",
+              border: "1px solid rgba(124,58,237,0.35)",
+              color: "#a78bfa",
+              letterSpacing: "0.06em",
+              cursor: "help",
+            }}
+          >
+            🌐 GLOBAL
+          </span>
+        )}
         {issue.count != null && issue.count > 1 && (
           <span style={{
             flexShrink: 0, fontSize: 10, fontWeight: 400,
@@ -373,6 +397,82 @@ function AccordionItem({
           <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.65 }}>
             {issue.body}
           </p>
+
+          {/* Phase A3: Akkordeon mit affectedUrls — nur rendern wenn > 1 URL,
+              sonst ist die einzelne URL schon im body-Text enthalten. Native
+              <details> für simple expand/collapse ohne JS-State. */}
+          {issue.affectedUrls && issue.affectedUrls.length > 1 && (
+            <details style={{
+              marginBottom: 14,
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 8,
+            }}>
+              <summary style={{
+                cursor: "pointer", userSelect: "none",
+                padding: "9px 14px",
+                fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)",
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+                Betroffene Seiten ({issue.affectedUrls.length})
+                {issue.scope === "global" && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    padding: "1px 7px", borderRadius: 9,
+                    background: "rgba(124,58,237,0.10)",
+                    color: "#a78bfa",
+                    letterSpacing: "0.04em",
+                  }}>
+                    Template-Fix
+                  </span>
+                )}
+              </summary>
+              <ul style={{
+                margin: 0, padding: "4px 14px 12px 14px",
+                listStyle: "none",
+                maxHeight: 240, overflowY: "auto",
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                fontSize: 11.5,
+              }}>
+                {issue.affectedUrls.map((url, i) => {
+                  let path = url;
+                  try { path = new URL(url).pathname || "/"; } catch { /* keep raw */ }
+                  return (
+                    <li key={`${url}-${i}`} style={{
+                      padding: "5px 0",
+                      borderBottom: i < (issue.affectedUrls!.length - 1) ? "1px dashed rgba(255,255,255,0.05)" : "none",
+                      color: "rgba(255,255,255,0.55)",
+                      display: "flex", alignItems: "center", gap: 8,
+                    }}>
+                      <span style={{ color: "rgba(255,255,255,0.25)", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={url}
+                        style={{
+                          color: "rgba(255,255,255,0.7)",
+                          textDecoration: "none",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {path}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          )}
+
           {/* Quick fix */}
           <div className="wf-quick-fix" style={{
             padding: "10px 14px", borderRadius: 8, marginBottom: 14,

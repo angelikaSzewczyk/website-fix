@@ -78,6 +78,9 @@ type ParsedIssue = {
   category: "recht" | "speed" | "technik" | "shop" | "builder";
   count?: number; // actual error count (e.g. 24 for 24 missing alt texts)
   url?: string;   // page URL for per-page issues
+  // Phase A3: Aggregator-Felder durchreichen für Akkordeon-Render im UI.
+  affectedUrls?: string[];
+  scope?:        "global" | "local";
 };
 
 // classifyCategory + parseIssues wurden in Phase B / Push 2 entfernt.

@@ -115,6 +115,8 @@ function inferIssueKind(title: string): IssueKind | undefined {
   if (t.includes("tote link") || t.includes("404"))             return "broken-links";
   if (t.includes("ohne interne verlinkung") || t.includes("orphan")) return "orphaned-pages";
   if (t.includes("4xx/5xx"))                                    return "page-not-reachable";
+  // Phase A3: SSL-Cert-Issues
+  if (t.includes("ssl-zertifikat") || t.includes("ssl certificate") || t.includes("zertifikat läuft")) return "ssl-expiring-soon";
   return undefined;
 }
 

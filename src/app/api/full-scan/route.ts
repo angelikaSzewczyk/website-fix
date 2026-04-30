@@ -41,6 +41,7 @@ import { MODELS } from "@/lib/ai-models";
 import { normalizePlan, isAgency } from "@/lib/plans";
 import { WebsiteAuditor } from "@/lib/scan-engine/auditor";
 import { consolidateScans } from "@/lib/scan-engine/aggregator";
+import { checkSslCert } from "@/lib/scan-engine/ssl-check";
 import type { PageAudit, SiteContext, ScanResult } from "@/lib/scan-engine/types";
 
 export const maxDuration = 300;
@@ -146,13 +147,25 @@ async function buildSiteContext(rootUrl: string, rootHtml: string): Promise<Site
     sitemapVorhanden = sitemapRes.res?.ok ?? false;
   } catch { /* probe-failure ist non-fatal */ }
 
+  // ── Phase A3: SSL-Cert-Inspection via tls.connect ──
+  // Hartes Timeout 4s (wir wollen keinen blockierten Scan wegen einer
+  // hängenden TLS-Verbindung). Failure → null, Aggregator generiert dann
+  // kein SSL-Issue. Funktioniert nur für https-URLs.
+  let sslExpiresAt: string | null = null;
+  try {
+    const ssl = await checkSslCert(rootUrl, 4000);
+    sslExpiresAt = ssl.expiresAt;
+  } catch (err) {
+    console.error("[full-scan] SSL-Check failed:", err);
+  }
+
   return {
     rootUrl,
     https:                rootUrl.startsWith("https://"),
     sitemapVorhanden,
     robotsBlockiertAlles,
     wpVersion:            extractWpVersion(rootHtml),
-    sslExpiresAt:         null,  // Phase A3: tls.connect()-Probe für Cert-Inspection
+    sslExpiresAt,
   };
 }
 

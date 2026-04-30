@@ -343,6 +343,38 @@ function buildSiteWideIssues(input: {
     });
   }
 
+  // ── Phase A3: SSL-Cert-Ablauf ──
+  // Schwellwert 14 Tage — genug Zeit für Renewal, aber dringlich genug, dass
+  // der User es nicht ignoriert. Severity: red bei <= 7 Tagen, sonst yellow.
+  if (siteContext.sslExpiresAt) {
+    const expiresAt = new Date(siteContext.sslExpiresAt);
+    if (!Number.isNaN(expiresAt.getTime())) {
+      const daysLeft = Math.floor((expiresAt.getTime() - Date.now()) / 86_400_000);
+      if (daysLeft >= 0 && daysLeft <= 14) {
+        issues.push({
+          kind:     "ssl-expiring-soon",
+          severity: daysLeft <= 7 ? "red" : "yellow",
+          title:    daysLeft === 0
+            ? `SSL-Zertifikat läuft heute ab`
+            : `SSL-Zertifikat läuft in ${daysLeft} Tag${daysLeft === 1 ? "" : "en"} ab`,
+          body:     `Zertifikat-Ablauf: ${expiresAt.toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}. Ab dem Ablaufdatum zeigen Browser sofort eine Sicherheits-Warnung — Besucher kommen nicht mehr durch und Google indexiert die Seite ab. Renewal über Hosting-Provider oder Let's Encrypt.`,
+          category: "technik",
+          count:    1,
+        });
+      } else if (daysLeft < 0) {
+        // Cert ist bereits abgelaufen — kritisch, immer red.
+        issues.push({
+          kind:     "ssl-expiring-soon",
+          severity: "red",
+          title:    `SSL-Zertifikat ist seit ${Math.abs(daysLeft)} Tag${Math.abs(daysLeft) === 1 ? "" : "en"} abgelaufen`,
+          body:     `Das Zertifikat ist seit ${expiresAt.toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })} ungültig. Browser blockieren die Seite mit einer Sicherheits-Warnung — niemand kommt mehr durch. Sofortiges Renewal nötig.`,
+          category: "technik",
+          count:    1,
+        });
+      }
+    }
+  }
+
   // ── Duplicate Titles ──
   if (duplicateTitles.length > 0) {
     const affectedUrls = duplicateTitles.flatMap(d => d.seiten);
