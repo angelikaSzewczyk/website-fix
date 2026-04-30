@@ -320,13 +320,6 @@ type PerfData = {
   }[];
 };
 
-const TABS: { key: TabType; label: string; badge?: string; tier?: string }[] = [
-  { key: "website",     label: "Website-Check",  tier: "Basis" },
-  { key: "wcag",        label: "Barrierefreiheit", tier: "Spezialisiert" },
-  { key: "performance", label: "Performance",    tier: "Spezialisiert" },
-  { key: "fullsite",    label: "Full-Site Crawl", badge: "Pro" },
-];
-
 const SCAN_STEPS: Record<TabType, string[]> = {
   wcag:        ["Browser startet...", "Seite wird geladen...", "WCAG 2.1 Analyse läuft...", "Kontraste & Farben prüfen...", "KI erstellt Diagnose..."],
   performance: ["PageSpeed Insights wird abgefragt...", "Core Web Vitals werden analysiert...", "LCP / CLS / FID messen...", "KI erstellt Diagnose..."],
@@ -397,7 +390,12 @@ export default function DashboardScanClient({
   monthlyScans?: number;
   scanLimit?: number;
 }) {
-  const [tab, setTab] = useState<TabType>("website");
+  // Hardcoded: alle Plans bekommen den Full-Site Deep-Scan (Pricing-konform).
+  // Die anderen Modi (wcag/performance/website) sind code-mäßig noch
+  // unterstützt — die Tabs sind nur UI-mäßig auf den Deep-Scan reduziert.
+  // useState hält den Typ auf TabType (statt Literal "fullsite"), damit
+  // bestehende `tab === "wcag"`-Branches type-safe bleiben.
+  const [tab] = useState<TabType>("fullsite");
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ScanState>("idle");
   const [scanStep, setScanStep] = useState(0);
@@ -653,7 +651,7 @@ export default function DashboardScanClient({
     ? "Scannt..."
     : projectUrl && url === projectUrl
       ? "Audit aktualisieren"
-      : "Live-Check starten";
+      : "Projekt-Audit starten (Deep-Scan)";
 
   // URL auto-correction on blur
   function handleUrlBlur() {
@@ -666,12 +664,6 @@ export default function DashboardScanClient({
       setTimeout(() => setUrlHint(null), 3000);
     }
   }
-
-  const TAB_HINTS: Partial<Record<TabType, string>> = {
-    wcag:        "Prüft Kontraste, ARIA-Labels, Tastatur-Navigation und Formular-Zugänglichkeit nach WCAG 2.1.",
-    performance: "Misst LCP, CLS und Server-Response-Time — die drei wichtigsten Google Core Web Vitals.",
-    fullsite:    "Crawlt alle Unterseiten via Sitemap und interne Links. Aggregierte Fehler-Übersicht für die gesamte Domain.",
-  };
 
   const hasValidUrl = url.trim().length > 0 && state !== "scanning";
 
@@ -742,84 +734,38 @@ export default function DashboardScanClient({
         marginBottom: 28,
       }}>
 
-        {/* TABS — pill segment style */}
+        {/* DEEP-SCAN HEADER — alle Plans bekommen den Full-Site-Crawl als
+            Single-Mode (Pricing-konform: Starter inkl.). Kein Mode-Picker
+            mehr — eine Audit-Tiefe für alle. */}
         <div style={{
-          display: "inline-flex", gap: 4, marginBottom: 24,
-          padding: 4, borderRadius: 10,
-          background: "rgba(255,255,255,0.03)",
-          border: `1px solid ${C.border}`,
+          display: "flex", alignItems: "center", gap: 12, marginBottom: 18,
+          padding: "12px 16px", borderRadius: 10,
+          background: "rgba(0,123,255,0.06)",
+          border: `1px solid ${C.blueBorder}`,
         }}>
-          {TABS.map(t => {
-            const isActive = tab === t.key;
-            const isLocked = t.key === "fullsite" && !isFullsiteEnabled;
-            return (
-              <button key={t.key}
-                onClick={() => { setTab(t.key); setState("idle"); setDiagnose(""); setError(""); setFsProgress(null); setFsResult(null); }}
-                style={{
-                  padding: "7px 16px", borderRadius: 7, border: "none", cursor: "pointer",
-                  fontSize: 12, fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "#fff" : C.textMuted,
-                  background: isActive ? C.blue : "transparent",
-                  boxShadow: isActive ? C.blueGlow : "none",
-                  transition: "all 0.15s",
-                  display: "flex", alignItems: "center", gap: 6,
-                  fontFamily: "inherit",
-                }}>
-                {t.label}
-                {isLocked && (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                    stroke={isActive ? "rgba(255,255,255,0.7)" : C.textMuted}
-                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                )}
-                {/* Tier badge — "Pro" for fullsite, or tier label for others */}
-                {t.badge && !isLocked && (
-                  <span style={{
-                    fontSize: 9, fontWeight: 800, padding: "1px 5px", borderRadius: 4,
-                    background: isActive ? "rgba(255,255,255,0.2)" : "rgba(251,191,36,0.15)",
-                    color: isActive ? "#fff" : C.amber,
-                    letterSpacing: "0.05em",
-                  }}>
-                    {t.badge}
-                  </span>
-                )}
-                {t.tier && !t.badge && (
-                  <span style={{
-                    fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 4,
-                    background: isActive ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)",
-                    color: isActive ? "rgba(255,255,255,0.85)" : C.textMuted,
-                    letterSpacing: "0.04em",
-                  }}>
-                    {t.tier}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab description — expert hint */}
-        {TAB_HINTS[tab] && (
           <div style={{
-            display: "flex", alignItems: "flex-start", gap: 8,
-            padding: "10px 14px", borderRadius: C.radiusSm, marginBottom: 18,
-            background: "rgba(0,123,255,0.05)",
-            border: `1px solid rgba(0,123,255,0.14)`,
-            animation: "wf-hint-in 0.2s ease both",
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: C.blue, boxShadow: C.blueGlow,
+            display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blueSoft}
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>
-              {TAB_HINTS[tab]}
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: "-0.01em" }}>
+              Projekt-Audit (Deep-Scan)
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
+              Crawlt alle Unterseiten via Sitemap und interne Links. Aggregierte Befunde, Performance-Metriken, Barrierefreiheits-Heuristik — komplettes Site-Audit in einem Lauf.
             </p>
           </div>
-        )}
+        </div>
 
-        {/* Device toggle (performance only) */}
+        {/* Device toggle (performance only) — durch Single-Mode-Cleanup
+            (Deep-Scan-only) faktisch unreachable, aber strukturell behalten
+            falls die Modi später wieder per Setting freigeschaltet werden. */}
         {tab === "performance" && (
           <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
             {(["mobile", "desktop"] as const).map(d => (

@@ -6,7 +6,6 @@ import { isAtLeastProfessional } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
 import IssueActionBar from "./issue-action-bar";
-import { UpgradeFold } from "./FeatureGate";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
@@ -406,15 +405,11 @@ function AccordionItem({
             {issue.body}
           </p>
 
-          {/* Phase A3: Akkordeon mit affectedUrls — nur rendern wenn > 1 URL.
-              Starter (gated=true): Liste auf URL_PREVIEW_LIMIT geschnitten,
-              Hidden-Tail wird durch Lock-Footer ersetzt. */}
-          {issue.affectedUrls && issue.affectedUrls.length > 1 && (() => {
-            const URL_PREVIEW_LIMIT = 2;
-            const totalUrls   = issue.affectedUrls.length;
-            const visibleUrls = gated ? issue.affectedUrls.slice(0, URL_PREVIEW_LIMIT) : issue.affectedUrls;
-            const hiddenUrls  = totalUrls - visibleUrls.length;
-            return (
+          {/* Phase A3: Akkordeon mit affectedUrls — nur rendern wenn > 1 URL,
+              sonst ist die einzelne URL schon im body-Text enthalten. Native
+              <details> für simple expand/collapse ohne JS-State.
+              Voller Zugriff für alle Plans (Starter inkl., siehe Pricing). */}
+          {issue.affectedUrls && issue.affectedUrls.length > 1 && (
             <details style={{
               marginBottom: 14,
               background: "rgba(255,255,255,0.02)",
@@ -431,7 +426,7 @@ function AccordionItem({
                   strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
-                Betroffene Seiten ({totalUrls}){gated && hiddenUrls > 0 && ` — Vorschau ${visibleUrls.length} von ${totalUrls}`}
+                Betroffene Seiten ({issue.affectedUrls.length})
                 {issue.scope === "global" && (
                   <span style={{
                     fontSize: 10, fontWeight: 700,
@@ -451,13 +446,13 @@ function AccordionItem({
                 fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                 fontSize: 11.5,
               }}>
-                {visibleUrls.map((url, i) => {
+                {issue.affectedUrls.map((url, i) => {
                   let path = url;
                   try { path = new URL(url).pathname || "/"; } catch { /* keep raw */ }
                   return (
                     <li key={`${url}-${i}`} style={{
                       padding: "5px 0",
-                      borderBottom: i < (visibleUrls.length - 1) ? "1px dashed rgba(255,255,255,0.05)" : "none",
+                      borderBottom: i < (issue.affectedUrls!.length - 1) ? "1px dashed rgba(255,255,255,0.05)" : "none",
                       color: "rgba(255,255,255,0.55)",
                       display: "flex", alignItems: "center", gap: 8,
                     }}>
@@ -483,31 +478,8 @@ function AccordionItem({
                   );
                 })}
               </ul>
-              {gated && hiddenUrls > 0 && (
-                <button
-                  type="button"
-                  onClick={onUpgradeClick}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    background: "rgba(16,185,129,0.06)",
-                    border: "none", borderTop: "1px dashed rgba(16,185,129,0.30)",
-                    color: "#10B981", fontSize: 11.5, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "inherit",
-                    textAlign: "left", display: "flex", alignItems: "center", gap: 8,
-                  }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                  + {hiddenUrls} weitere betroffene Seite{hiddenUrls === 1 ? "" : "n"} — im Pro-Plan freischalten
-                </button>
-              )}
             </details>
-            );
-          })()}
+          )}
 
           {/* Quick fix */}
           <div className="wf-quick-fix" style={{
@@ -551,23 +523,24 @@ function AccordionItem({
               <button
                 type="button"
                 onClick={onUpgradeClick}
-                title="Expert-Fix ist ein Professional-Feature"
+                title="KI-gestützte Schritt-für-Schritt-Anleitungen sind ab dem Professional-Plan verfügbar"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "7px 14px", borderRadius: 7,
                   background: "rgba(255,255,255,0.03)",
                   border: "1px dashed rgba(16,185,129,0.35)",
-                  color: "rgba(16,185,129,0.7)",
+                  color: "rgba(16,185,129,0.75)",
                   fontSize: 12, fontWeight: 700, cursor: "pointer",
                   fontFamily: "inherit",
                 }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Expert-Fix freischalten — Pro
+                KI-Guide freischalten — Pro
               </button>
             )}
             <button
@@ -910,18 +883,6 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
   const redIssues    = sorted.filter(i => i.severity === "red");
   const yellowIssues = sorted.filter(i => i.severity === "yellow");
 
-  // ── Content-Gating für Starter ───────────────────────────────────────────
-  // Starter sieht nur die Top-N Befunde aus dem priority-sortierten Array
-  // (Pflicht-Befunde zuerst). Die Issues unterhalb der Schwelle werden gar
-  // nicht erst gerendert — kein Daten-Leak im DOM, kein FOUC. Cut wird über
-  // sortedTotal getroffen, dann pro Severity gefiltert: in der Praxis sieht
-  // ein Starter mit 14 Red + 5 Yellow alle 10 als rot, der Rest fällt weg.
-  const STARTER_ISSUE_CAP = 10;
-  const visibleSorted = isPro ? sorted : sorted.slice(0, STARTER_ISSUE_CAP);
-  const visibleRed    = isPro ? redIssues    : redIssues.filter(i => visibleSorted.includes(i));
-  const visibleYellow = isPro ? yellowIssues : yellowIssues.filter(i => visibleSorted.includes(i));
-  const hiddenIssueCount = sorted.length - visibleSorted.length;
-
   // Index of the first Accessibility-Issue (Phase-3-Refactor: Display-Classifier
   // statt Daten-Kategorie 'recht', weil 'recht' jetzt sowohl A11y als auch
   // Best-Practices-Compliance enthält). Anchor wird vom UX-Hürden-Button
@@ -1201,12 +1162,12 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 8 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 3 }}>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: isPro ? "#10B981" : "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                {isPro ? "Vollständiges Audit" : "Schnell-Analyse — Vorschau"}
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Website Score
               </p>
               {isPro && (
                 <span
-                  title="Professional Edition — voller Audit-Zugriff inkl. Expert-Fixes, vollständiger URL-Listen und Site-Wide-Metrics."
+                  title="Professional Edition — KI-gestützte Expert-Guides für jedes Issue."
                   style={{
                     fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 9,
                     background: "rgba(16,185,129,0.12)",
@@ -1220,13 +1181,8 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               )}
             </div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-              {isPro ? "Vollständiges Website-Audit" : "Basis-Check"}
+              Analyse-Übersicht
             </h2>
-            {!isPro && (
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, maxWidth: 540 }}>
-                Einige tiefgreifende Analysen sind in dieser Version deaktiviert. Schalte die volle SEO-Power frei, um alle Befunde, Expert-Fixes und betroffene URLs zu sehen.
-              </p>
-            )}
           </div>
           {/* Export buttons */}
           <div className="wf-no-print" style={{ display: "flex", gap: 8 }}>
@@ -1533,15 +1489,10 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444", flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#EF4444", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Handlungsbedarf — {redIssues.length} {redIssues.length === 1 ? "Aufgabe" : "Aufgaben"}
-                {!isPro && visibleRed.length < redIssues.length && (
-                  <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.35)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>
-                    · Vorschau {visibleRed.length} von {redIssues.length}
-                  </span>
-                )}
               </p>
             </div>
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(192,112,112,0.15)", borderRadius: 12, overflow: "hidden" }}>
-              {visibleRed.map((issue, i) => {
+              {redIssues.map((issue, i) => {
                 const idx = sorted.indexOf(issue);
                 const isFirstRecht = idx === firstRechtSortedIdx;
                 return (
@@ -1581,37 +1532,30 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Optimierungshinweise — {yellowIssues.length} {yellowIssues.length === 1 ? "Aufgabe" : "Aufgaben"}
-                {!isPro && visibleYellow.length < yellowIssues.length && (
-                  <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.35)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>
-                    · Vorschau {visibleYellow.length} von {yellowIssues.length}
-                  </span>
-                )}
               </p>
             </div>
-            {visibleYellow.length > 0 && (
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, overflow: "hidden" }}>
-                {visibleYellow.map((issue, i) => {
-                  const idx = sorted.indexOf(issue);
-                  const isFirstRecht = idx === firstRechtSortedIdx;
-                  return (
-                    <AccordionItem
-                      key={`yellow-${i}`}
-                      issue={issue}
-                      index={idx}
-                      defaultOpen={visibleRed.length === 0 && i === 0}
-                      wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
-                      onAutoFix={() => setShowUpgrade(true)}
-                      builder={builderForGuidance}
-                      actionStatus={isPro ? integrationsStatus ?? null : null}
-                      scanUrl={scanUrl}
-                      scanId={scanId}
-                      gated={!isPro}
-                      onUpgradeClick={() => setShowUpgrade(true)}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, overflow: "hidden" }}>
+              {yellowIssues.map((issue, i) => {
+                const idx = sorted.indexOf(issue);
+                const isFirstRecht = idx === firstRechtSortedIdx;
+                return (
+                  <AccordionItem
+                    key={`yellow-${i}`}
+                    issue={issue}
+                    index={idx}
+                    defaultOpen={redIssues.length === 0 && i === 0}
+                    wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
+                    onAutoFix={() => setShowUpgrade(true)}
+                    builder={builderForGuidance}
+                    actionStatus={isPro ? integrationsStatus ?? null : null}
+                    scanUrl={scanUrl}
+                    scanId={scanId}
+                    gated={!isPro}
+                    onUpgradeClick={() => setShowUpgrade(true)}
+                  />
+                );
+              })}
+            </div>
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", marginBottom: 8, borderRadius: 10, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.18)" }}>
@@ -1623,14 +1567,6 @@ export default function StarterResultsPanel({ issues, redCount, yellowCount, spe
             </p>
           </div>
         )}
-
-        {/* ── Upgrade-Fold: zeigt wie viele Befunde Starter NICHT sieht ── */}
-        <UpgradeFold
-          hiddenCount={hiddenIssueCount}
-          currentPlan={plan}
-          onClick={() => setShowUpgrade(true)}
-          message={`${hiddenIssueCount} weitere Befunde sind in der Schnell-Analyse ausgeblendet — inkl. Expert-Fixes und vollständiger URL-Listen`}
-        />
       </div>
 
       {/* ④ FOCUS-MODE BACK BUTTON ──────────────────────────────────────────── */}
