@@ -442,15 +442,9 @@ function buildSiteWideIssues(input: {
 // ═════════════════════════════════════════════════════════════════════════════
 
 /**
- * Public re-export: ermöglicht /api/scan, die Konsolidierung surgical
- * anzuwenden, ohne den ganzen consolidateScans()-Flow zu nutzen (der bringt
- * site-wide-Issue-Generation mit, die /api/scan schon selbst macht).
- *
- * Use case in /api/scan:
- *   1. Bestehender buildIssuesJson() liefert raw ScanIssue[]
- *   2. inferIssueKind() Annotation pro Issue (title-prefix-matching)
- *   3. consolidatePerPageIssuesPublic() gruppiert per-page-Issues mit kind
- *   4. classifyScopesPublic() markiert scope:"global" bei >= 80% Page-Anteil
+ * Public re-export: ermöglicht /api/scan, einen weiteren Konsolidierungs-Pass
+ * zu fahren, nachdem post-engine WP/Builder/DSGVO-Issues angefügt wurden.
+ * Issues ohne kind bleiben ungrouped, kein Crash.
  */
 export const consolidatePerPageIssuesPublic = (issues: ScanIssue[]): ScanIssue[] =>
   consolidatePerPageIssues(issues);

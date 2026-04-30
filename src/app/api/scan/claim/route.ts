@@ -19,7 +19,9 @@ type Unterseite = {
   altMissingImages?: string[];
 };
 
-/** Build structured issues from the sessionStorage scan data (same logic as buildIssuesJson in route.ts) */
+/** Build structured issues from the sessionStorage scan data. Standalone — main
+ *  /api/scan uses the scan-engine aggregator, this route reconstructs issues
+ *  from a flat client payload (counts only, no per-page detail). */
 function buildIssuesFromClaim(body: {
   https?: boolean; hasTitle?: boolean; hasMeta?: boolean; hasH1?: boolean;
   hasSitemap?: boolean; robotsBlocked?: boolean; noIndex?: boolean;

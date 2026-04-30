@@ -16,6 +16,7 @@ import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrat
 import { sendScanSummaryToSlack } from "@/lib/slack";
 import { consolidateScans, consolidatePerPageIssuesPublic, classifyScopesPublic } from "@/lib/scan-engine/aggregator";
 import { generatePerPageIssues } from "@/lib/scan-engine/auditor";
+import { checkSslCert } from "@/lib/scan-engine/ssl-check";
 import type { IssueKind, PageAudit, SiteContext } from "@/lib/scan-engine/types";
 
 export const maxDuration = 60;
@@ -61,85 +62,21 @@ export type ScanIssue = {
   category: "recht" | "speed" | "technik" | "shop" | "builder"; // shop = WooCommerce, builder = Page-Builder/Theme
   url?: string; // per-page issues carry their URL
   count: number; // actual number of errors this issue represents (e.g. 24 for alt-missing)
-  /** kind/affectedUrls/scope werden von annotateAndConsolidate() befüllt
-   *  und vom Aggregator-Algorithmus genutzt. Optional, damit raw issues
-   *  aus buildIssuesJson() ohne diese Felder weiterhin valide sind. */
+  /** Vom Aggregator (consolidateScans) gesetzt. Optional, damit nachträglich
+   *  hinzugefügte WP/Builder/DSGVO-Issues ohne kind weiterhin valide sind. */
   kind?:         IssueKind;
   affectedUrls?: string[];
   scope?:        "global" | "local";
 };
 
-function classifyIssueCategory(text: string): ScanIssue["category"] {
-  const t = text.toLowerCase();
-  if (/bfsg|wcag|barriere|impressum|datenschutz|cookie|dsgvo|label|aria|alt.?text/.test(t)) return "recht";
-  if (/speed|lcp|cls|ladezeit|pagespeed|core web/.test(t)) return "speed";
-  return "technik";
-}
-
-/**
- * Phase B / Push 2: Title-Prefix-Matching → IssueKind.
- *
- * buildIssuesJson() generiert Issues mit menschlich lesbaren Titeln, aber
- * ohne IssueKind-Identifier. Der Aggregator braucht aber kind, um per-page
- * Issues über mehrere URLs zu gruppieren (z.B. "Alt-Text fehlt auf /a/b/c"
- * → ein konsolidierter Issue mit affectedUrls-Liste).
- *
- * Die Inferenz ist string-basiert (fragil-aber-pragmatisch). Unbekannte
- * Title-Patterns liefern undefined → Issue bleibt ungrouped, kein Crash.
- *
- * Wenn buildIssuesJson später kind selbst setzt, kann diese Inferenz weg.
- */
-function inferIssueKind(title: string): IssueKind | undefined {
-  const t = title.toLowerCase();
-  // Per-Page-Kinds (sind Konsolidierungs-Targets)
-  if (t.includes("alt-attribut") || t.includes("alt-text"))     return "alt-text-missing";
-  if (t.includes("h1-haupt") || t.includes("h1-überschrift"))   return "h1-missing";
-  if (t.includes("title-tag fehlt"))                            return "title-missing";
-  if (t.includes("meta-description fehlt"))                     return "meta-description-missing";
-  if (t.includes("noindex"))                                    return "noindex";
-  if (t.includes("formular-label") || t.includes("formularfelder")) return "form-label-missing";
-  if (t.includes("button") && t.includes("ohne") && t.includes("text")) return "form-button-text-missing";
-  // Phase A2 — neue Per-Page-Kinds
-  if (t.includes("opengraph") || t.includes("social-vorschau"))   return "og-missing";
-  if (t.includes("twitter") || t.includes("x-vorschau"))           return "twitter-card-missing";
-  if (t.includes("favicon"))                                       return "favicon-missing";
-  if (t.includes("sprache nicht definiert") || t.includes("html lang")) return "html-lang-missing";
-  if (t.includes("überschriften-hierarchie") || t.includes("heading-hierarchie")) return "heading-hierarchy-broken";
-  if (t.includes("security-header"))                               return "security-headers-missing";
-  // Site-Wide-Kinds (für scope-Klassifikation, nicht-konsolidierbar)
-  if (t.includes("https fehlt") || t.includes("verschlüsselte verbindung")) return "no-https";
-  if (t.includes("robots.txt blockiert"))                       return "robots-blocks-all";
-  if (t.includes("sitemap.xml fehlt"))                          return "sitemap-missing";
-  if (t.includes("wordpress veraltet"))                         return "wp-stale";
-  if (t.includes("identischer title-tag"))                      return "duplicate-titles";
-  if (t.includes("identische meta-description"))                return "duplicate-metas";
-  if (t.includes("tote link") || t.includes("404"))             return "broken-links";
-  if (t.includes("ohne interne verlinkung") || t.includes("orphan")) return "orphaned-pages";
-  if (t.includes("4xx/5xx"))                                    return "page-not-reachable";
-  // Phase A3: SSL-Cert-Issues
-  if (t.includes("ssl-zertifikat") || t.includes("ssl certificate") || t.includes("zertifikat läuft")) return "ssl-expiring-soon";
-  return undefined;
-}
-
-/**
- * Annotiert raw Issues mit kind, konsolidiert per-page-Duplikate (über
- * affectedUrls-Listen) und klassifiziert scope ("global" wenn >= 80% Pages
- * betroffen). Wird nach buildIssuesJson() + Builder/WP/DSGVO-Issues aufgerufen.
- */
-function annotateAndConsolidate(issues: ScanIssue[], totalPages: number): ScanIssue[] {
-  const annotated = issues.map(i => i.kind ? i : { ...i, kind: inferIssueKind(i.title) });
-  const consolidated = consolidatePerPageIssuesPublic(annotated);
-  return classifyScopesPublic(consolidated, totalPages);
-}
-
 // ═════════════════════════════════════════════════════════════════════════
 // PHASE A3.2 — scanData → PageAudit Mapper für Engine-Konsolidierung
 // ═════════════════════════════════════════════════════════════════════════
 //
-// Statt buildIssuesJson() + annotateAndConsolidate() rufen wir consolidateScans()
-// aus dem Aggregator auf. Dafür müssen die schon vorhandenen scanData/unterseiten-
-// Felder in PageAudit-Strukturen umgewickelt werden — DOM-Parsing ist bereits
-// passiert, kein zweites Parse nötig.
+// consolidateScans() aus dem Aggregator ist Single-Source-of-Truth für
+// issues_json. Die schon vorhandenen scanData/unterseiten-Felder werden
+// in PageAudit-Strukturen umgewickelt (DOM-Parsing ist bereits passiert,
+// kein zweites Parse nötig).
 //
 // Phase A2-Felder (ogTags, twitterCards, hasFavicon, htmlLang, headingHierarchy,
 // securityHeadersMissing) werden mit Default-False/Null gefüllt — der existing
@@ -231,18 +168,21 @@ function subpageToPageAudit(p: LegacyUnterseite, rootUrl: string): PageAudit {
   return audit;
 }
 
-/** Site-Context aus scanData ableiten — keine zusätzlichen Probes nötig,
- *  /api/scan hat https/sitemap/robots/wpVersion bereits selbst extracted. */
-function siteContextFromScanData(scanData: Record<string, unknown>, rootUrl: string): SiteContext {
+/** Site-Context aus scanData ableiten. SSL-Cert wird einmal pro Scan via
+ *  checkSslCert() extern geprobt (tls.connect, ~50-200ms), Result als
+ *  ISO-String hier injiziert. */
+function siteContextFromScanData(
+  scanData: Record<string, unknown>,
+  rootUrl: string,
+  sslExpiresAt: string | null,
+): SiteContext {
   return {
     rootUrl,
     https:                !!scanData.https,
     sitemapVorhanden:     !!scanData.sitemapVorhanden,
     robotsBlockiertAlles: !!scanData.robotsBlockiertAlles,
     wpVersion:            typeof scanData.wpVersion === "string" ? scanData.wpVersion : null,
-    // Phase A3.1 SSL-Check ist im /api/full-scan verkabelt; /api/scan
-    // bekommt Phase A4 die SSL-Probe (oder über shared Helper).
-    sslExpiresAt:         null,
+    sslExpiresAt,
   };
 }
 
@@ -261,97 +201,6 @@ function isWpStale(version: string | null | undefined): boolean {
   if (major < STALE_WP_THRESHOLD_MAJOR) return true;
   if (major === STALE_WP_THRESHOLD_MAJOR && minor < STALE_WP_THRESHOLD_MINOR) return true;
   return false;
-}
-
-/**
- * Build a deterministic, structured issues array directly from raw scan data.
- * This is the ground truth — saved as issues_json so the dashboard never has
- * to re-parse the AI text (which loses fidelity).
- */
-function buildIssuesJson(
-  scanData: Record<string, unknown>,
-  unterseiten: { url: string; erreichbar: boolean; title: string; h1: string; noindex: boolean; altMissing: number; metaDescription?: string; inputsWithoutLabel?: number; buttonsWithoutText?: number }[],
-  totalAltMissing: number,
-  totalImages: number,
-  duplicateTitles: { title: string; seiten: string[] }[],
-  duplicateMetas: { meta: string; seiten: string[] }[],
-  brokenLinks: { url: string; status: number }[],
-  orphanedPages: string[],
-): ScanIssue[] {
-  const issues: ScanIssue[] = [];
-  const toPath = (u: string) => { try { return new URL(u).pathname || "/"; } catch { return u; } };
-  const fc = scanData.formCheck as { inputsWithoutLabel?: number; buttonsWithoutText?: number } | undefined;
-
-  // ── Global issues ──
-  if (!scanData.https)
-    issues.push({ severity: "red", title: "Sicherheitsrisiko: Keine verschlüsselte Verbindung (HTTPS fehlt)", body: "Besucher sehen eine Browser-Warnung — Google stuft unverschlüsselte Seiten im Ranking ab und markiert sie als unsicher.", category: "technik", count: 1 });
-  if (!scanData.erreichbar)
-    issues.push({ severity: "red", title: "Kritischer Ausfall: Startseite nicht erreichbar (4xx/5xx)", body: "Die Startseite gibt einen Fehler zurück — Besucher und Google sehen nur eine Fehlerseite.", category: "technik", count: 1 });
-  if (!scanData.title)
-    issues.push({ severity: "red", title: "Unsichtbar bei Google: Title-Tag fehlt (Startseite)", body: "Ohne Title-Tag fehlt das wichtigste On-Page-SEO-Signal — kein Ranking-Snippet in der Suche möglich.", category: "technik", count: 1 });
-  if (!scanData.metaDescription)
-    issues.push({ severity: "yellow", title: "Schlechte Klickrate: Meta-Description fehlt (Startseite)", body: "Google wählt einen zufälligen Seitenausschnitt als Vorschautext — Klicks und Conversions sinken messbar. Das Snippet sollte gezielt formuliert sein.", category: "technik", count: 1 });
-  if (!scanData.h1)
-    issues.push({ severity: "red", title: "SEO-Schwäche: H1-Hauptüberschrift fehlt (Startseite)", body: "Ohne H1 fehlt das wichtigste Inhaltssignal für Google — das Ranking und die Nutzererfahrung leiden direkt darunter.", category: "technik", count: 1 });
-  if (scanData.robotsBlockiertAlles)
-    issues.push({ severity: "red", title: "Kritisch: robots.txt blockiert Google komplett", body: "Die gesamte Website ist für alle Suchmaschinen-Crawler gesperrt — kein Seiteninhalt wird indexiert.", category: "technik", count: 1 });
-  if (scanData.indexierungGesperrt)
-    issues.push({ severity: "red", title: "Kritisch: Startseite für Google unsichtbar (noindex gesetzt)", body: "Der noindex-Tag macht die Startseite für Suchmaschinen komplett unsichtbar — kein Traffic aus der organischen Suche möglich.", category: "technik", count: 1 });
-  if (!scanData.sitemapVorhanden)
-    issues.push({ severity: "yellow", title: "Langsame Indexierung: Sitemap.xml fehlt", body: "Ohne Sitemap findet Google neue Inhalte langsamer — besonders kritisch nach Relaunch oder bei neu veröffentlichten Seiten.", category: "technik", count: 1 });
-
-  // ── WordPress-Version-Staleness ──
-  // Nur wenn wpVersion erkennbar war (viele gehärtete WP-Sites blenden den
-  // Generator-Tag aus → null → kein Issue, kein false-positive).
-  const wpVer = typeof scanData.wpVersion === "string" ? scanData.wpVersion : null;
-  if (wpVer && isWpStale(wpVer)) {
-    issues.push({
-      severity: "yellow",
-      title: `WordPress veraltet: ${wpVer} (aktuell: ${LATEST_WP_VERSION})`,
-      body: `Die installierte WordPress-Version ${wpVer} liegt mehrere Minor-Releases hinter ${LATEST_WP_VERSION}. Jede Major-Version schließt Sicherheitslücken — veraltete Cores sind das #1 Einfallstor für Hack-Versuche und führen zu Plugin-Inkompatibilitäten. Empfehlung: Im WP-Admin unter "Updates" Core, Plugins und Themes aktualisieren.`,
-      category: "technik",
-      count: 1,
-    });
-  }
-
-  // ── BFSG / Accessibility ──
-  if (totalAltMissing > 0)
-    issues.push({ severity: "red", title: `Barrierefreiheits-Verstoß: ${totalAltMissing} Bilder für Screenreader unsichtbar (BFSG-Risiko)`, body: `${totalAltMissing} von ${totalImages} Bildern fehlt der Alt-Text — ab 06/2025 gesetzlich vorgeschrieben, konkrete Abmahngefahr.`, category: "recht", count: totalAltMissing });
-  if ((fc?.inputsWithoutLabel ?? 0) > 0)
-    issues.push({ severity: "red", title: `Barrierefreiheits-Verstoß: ${fc!.inputsWithoutLabel} Formularfelder nicht nutzbar für Screenreader (BFSG §3)`, body: "Formularfelder ohne Label-Verknüpfung — Screen-Reader können sie nicht vorlesen, Nutzer mit Behinderungen sind ausgeschlossen.", category: "recht", count: fc!.inputsWithoutLabel! });
-
-  // ── SEO-Duplikate ──
-  if (duplicateTitles.length > 0)
-    issues.push({ severity: "red", title: `Google-Verwirrung: ${duplicateTitles.length}× identischer Title-Tag (Ranking-Verlust)`, body: `Doppelte Titles führen zu Duplicate-Content-Problemen bei Google. Betroffen: ${duplicateTitles.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik", count: duplicateTitles.length });
-  if (duplicateMetas.length > 0)
-    issues.push({ severity: "yellow", title: `Schwache Klickrate: ${duplicateMetas.length}× identische Meta-Description`, body: `Identische Vorschautexte bei verschiedenen Seiten — Google ignoriert sie oder wählt beliebige Textausschnitte. Betroffen: ${duplicateMetas.slice(0, 3).flatMap(d => d.seiten).slice(0, 3).map(toPath).join(", ")}`, category: "technik", count: duplicateMetas.length });
-
-  // ── Broken Links / Orphans ──
-  if (brokenLinks.length > 0)
-    issues.push({ severity: "red", title: `Geschäftsschädigend: ${brokenLinks.length} tote Link${brokenLinks.length > 1 ? "s" : ""} (404) führen ins Leere`, body: `Fehlerhafte Links frustrieren Besucher, schaden dem Ranking und kosten Conversions: ${brokenLinks.slice(0, 3).map(b => toPath(b.url)).join(", ")}`, category: "technik", count: brokenLinks.length });
-  if (orphanedPages.length > 0)
-    issues.push({ severity: "yellow", title: `Versteckter Content: ${orphanedPages.length} Seite${orphanedPages.length > 1 ? "n" : ""} ohne interne Verlinkung (nicht auffindbar)`, body: `Keine internen Links zeigen auf diese Seiten — Google und Besucher finden sie kaum. Betroffen: ${orphanedPages.slice(0, 3).map(toPath).join(", ")}`, category: "technik", count: orphanedPages.length });
-
-  // ── Per-page issues ──
-  for (const p of unterseiten) {
-    const path = toPath(p.url);
-    if (!p.erreichbar)
-      issues.push({ severity: "red", title: `Toter Link: ${path} gibt 404/5xx zurück`, body: "Besucher und Crawler landen auf einer Fehlerseite — direkter UX-Schaden und Ranking-Verlust für diese URL.", category: "technik", url: p.url, count: 1 });
-    if (!p.title || p.title === "(kein Title)")
-      issues.push({ severity: "red", title: `Unsichtbar bei Google: Title-Tag fehlt auf ${path}`, body: "Fehlender Title-Tag verhindert ein Ranking-Snippet — diese Unterseite kann nicht ranken.", category: "technik", url: p.url, count: 1 });
-    if (!p.h1 || p.h1 === "(kein H1)")
-      issues.push({ severity: "yellow", title: `SEO-Schwäche: H1-Hauptüberschrift fehlt auf ${path}`, body: "Fehlende H1 schwächt das Keyword-Signal — Google bewertet diese Seite schlechter.", category: "technik", url: p.url, count: 1 });
-    if (p.noindex)
-      issues.push({ severity: "yellow", title: `Für Google gesperrt: noindex auf ${path}`, body: "Diese Unterseite ist für Suchmaschinen komplett unsichtbar — ist das beabsichtigt?", category: "technik", url: p.url, count: 1 });
-    if (p.altMissing > 0)
-      issues.push({ severity: "red", title: `BFSG-Verstoß: ${p.altMissing}× fehlendes Alt-Attribut auf ${path}`, body: `${p.altMissing} Bild${p.altMissing > 1 ? "er" : ""} ohne Alt-Text auf dieser Seite — Barrierefreiheitsgesetz ab 06/2025 verpflichtend.`, category: "recht", url: p.url, count: p.altMissing });
-    if (!p.metaDescription)
-      issues.push({ severity: "yellow", title: `Schlechte Klickrate: Meta-Description fehlt auf ${path}`, body: "Fehlende Meta-Description — Google wählt einen beliebigen Seitenausschnitt als Snippet in der Suche.", category: "technik", url: p.url, count: 1 });
-    if ((p.inputsWithoutLabel ?? 0) > 0)
-      issues.push({ severity: "red", title: `BFSG-Verstoß: ${p.inputsWithoutLabel} Formular-Label${(p.inputsWithoutLabel ?? 0) > 1 ? "s" : ""} fehlen auf ${path}`, body: "Formularfelder ohne sichtbares Label — Screen-Reader können sie nicht vorlesen (BFSG §3 Abs. 2).", category: "recht", url: p.url, count: p.inputsWithoutLabel! });
-  }
-
-  return issues;
 }
 
 // ── WordPress-spezifische Security / Performance Checks ───────────
@@ -1307,12 +1156,19 @@ export async function POST(req: NextRequest) {
         };
         const cachedAudit = cached.scanData.audit as CachedAudit | undefined;
         const cachedUnterseiten = cachedAudit?.unterseiten ?? [];
-        // Phase A3.2: Engine-Konsolidierung statt buildIssuesJson + annotateAndConsolidate.
-        // Mappt scanData/unterseiten → PageAudit[] und ruft consolidateScans auf —
-        // identisches issues_json-Format wie /api/full-scan.
+        // Engine-Konsolidierung: scanData/unterseiten → PageAudit[] →
+        // consolidateScans — identisches issues_json-Format wie /api/full-scan.
         const cachedRootAudit = rootScanDataToPageAudit(cached.scanData, targetUrl, null);
         const cachedSubAudits = cachedUnterseiten.map(p => subpageToPageAudit(p as LegacyUnterseite, targetUrl));
-        const cachedSiteCtx   = siteContextFromScanData(cached.scanData, targetUrl);
+        // Cert-Ablauf ist zeitkritisch — auch im Cache-Hit-Pfad frisch proben.
+        let cachedSslExpiresAt: string | null = null;
+        try {
+          const ssl = await checkSslCert(targetUrl, 4000);
+          cachedSslExpiresAt = ssl.expiresAt;
+        } catch (err) {
+          console.error("[scan] SSL check failed (cache):", err);
+        }
+        const cachedSiteCtx   = siteContextFromScanData(cached.scanData, targetUrl, cachedSslExpiresAt);
         const cachedScanResult = consolidateScans(
           [cachedRootAudit, ...cachedSubAudits],
           cachedSiteCtx,
@@ -1336,6 +1192,9 @@ export async function POST(req: NextRequest) {
             wooAudit: (cached.scanData?.wooAudit as WooAuditMeta | null | undefined) ?? null,
             builderAudit: (cached.scanData?.builderAudit as BuilderAuditMeta | null | undefined) ?? null,
             ttfbMs: typeof cached.scanData?.ttfbMs === "number" ? cached.scanData.ttfbMs : null,
+            avgTtfbMs:          cachedScanResult.avgTtfbMs,
+            wcagHeuristicScore: cachedScanResult.wcagHeuristicScore,
+            wcagHeuristicLabel: cachedScanResult.wcagHeuristicLabel,
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
@@ -1704,15 +1563,24 @@ PFLICHT-REGELN:
 
     // ── Async DB write + cache — never blocks the response ─
 
-    // ── Phase A3.2: Engine-Konsolidierung (statt buildIssuesJson) ────────
-    // Single Source of Truth — identische issues_json-Struktur wie /api/full-scan.
-    // Mapper baut PageAudit[] aus den schon vorhandenen scanData/unterseiten-
-    // Feldern (DOM-Parsing ist bereits passiert), Aggregator generiert
-    // Site-Wide-Issues (https/robots/sitemap/dups/brokenLinks/orphans),
-    // konsolidiert per-page-Duplikate über affectedUrls und klassifiziert scope.
+    // ── Engine-Konsolidierung — Single Source of Truth ─────────────────
+    // Identische issues_json-Struktur wie /api/full-scan. Mapper baut
+    // PageAudit[] aus scanData/unterseiten (DOM-Parsing ist bereits passiert),
+    // Aggregator generiert Site-Wide-Issues (https/robots/sitemap/dups/
+    // brokenLinks/orphans), konsolidiert per-page-Duplikate über affectedUrls
+    // und klassifiziert scope.
     const _rootAudit  = rootScanDataToPageAudit(scanData, targetUrl, ttfbMs ?? null);
     const _subAudits  = unterseiten.map(p => subpageToPageAudit(p as LegacyUnterseite, targetUrl));
-    const _siteCtx    = siteContextFromScanData(scanData, targetUrl);
+    // SSL-Probe: ein tls.connect, 4s Hard-Timeout. Liefert sslExpiresAt für
+    // den Aggregator (generiert SSL-Issues bei ≤14d / ≤7d / abgelaufen).
+    let _sslExpiresAt: string | null = null;
+    try {
+      const ssl = await checkSslCert(targetUrl, 4000);
+      _sslExpiresAt = ssl.expiresAt;
+    } catch (err) {
+      console.error("[scan] SSL check failed:", err);
+    }
+    const _siteCtx    = siteContextFromScanData(scanData, targetUrl, _sslExpiresAt);
     const _scanResult = consolidateScans(
       [_rootAudit, ..._subAudits],
       _siteCtx,
@@ -1720,11 +1588,7 @@ PFLICHT-REGELN:
     );
 
     // `let` weil WP/Builder/DSGVO-Issues unten noch angefügt werden.
-    // Existing duplicateTitles/duplicateMetas/brokenLinks/orphanedPages
-    // wurden bereits in _scanResult.issues vom Aggregator abgedeckt — die
-    // legacy buildIssuesJson()-Aufrufe sind jetzt obsolet.
     let issuesJson: ScanIssue[] = _scanResult.issues;
-    void totalAltMissing; void totalImages; void duplicateTitles; void duplicateMetas; void brokenLinks; void orphanedPages;
 
     // WordPress-spezifische Zusatz-Checks (nur wenn WordPress erkannt)
     if (techFingerprint.cms.value === "WordPress" && techFingerprint.cms.confidence >= 0.45) {
@@ -1796,14 +1660,13 @@ PFLICHT-REGELN:
       issuesJson.push(...dsgvoIssues);
     } catch { /* non-fatal */ }
 
-    // ── Phase B / Push 2: Engine-Konsolidierung anwenden ──────────────
-    // Nach allen Issue-Sammlern (buildIssuesJson + WP + Builder + DSGVO):
-    // 1. kind-Inferenz pro Issue (string-prefix-matching aus inferIssueKind)
-    // 2. consolidatePerPageIssues: gleichartige per-Seite-Issues mit
-    //    affectedUrls-Liste zusammenfassen (z.B. "Alt-Text fehlt auf 12 Seiten")
-    // 3. classifyScopes: scope:"global" wenn ≥ 80% der Seiten betroffen
-    //    (= Template-Fehler) → UI kann das als "Eine Korrektur fixt alle X" rendern
-    issuesJson = annotateAndConsolidate(issuesJson, audit.gescannteSeiten);
+    // Phase A3.3: nach Engine-Output kommen WP/Builder/DSGVO-Issues ohne kind
+    // dazu → noch ein Konsolidierungs-Pass (per-page-Dedupe + scope-Klassifikation).
+    // Issues ohne kind bleiben ungrouped, kein Crash.
+    issuesJson = classifyScopesPublic(
+      consolidatePerPageIssuesPublic(issuesJson),
+      audit.gescannteSeiten,
+    );
 
     // Actual sum of all errors (e.g. 24 missing alt texts = 24, not 1)
     const issueCount = issuesJson.reduce((acc, i) => acc + i.count, 0);
