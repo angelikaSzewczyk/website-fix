@@ -80,79 +80,11 @@ type ParsedIssue = {
   url?: string;   // page URL for per-page issues
 };
 
-function classifyCategory(text: string): ParsedIssue["category"] {
-  const t = text.toLowerCase();
-  if (/bfsg|wcag|barriere|impressum|datenschutz|cookie|dsgvo|recht|abmahn|label|aria/.test(t)) return "recht";
-  if (/speed|lcp|cls|fid|ladezeit|performance|pagespeed|core web|ladezeit/.test(t)) return "speed";
-  return "technik";
-}
-
-/**
- * Robust parser — handles any Haiku/Sonnet output style.
- * Matches 🔴/🟡/🟢 ANYWHERE in the line (not just at start).
- * Extracts body from same line (after "—") or following lines.
- */
-function parseIssues(text: string): ParsedIssue[] {
-  const issues: ParsedIssue[] = [];
-  let current: ParsedIssue | null = null;
-
-  for (const raw of text.split("\n")) {
-    const line = raw.trim();
-
-    // Skip empty lines and headers — but save current issue first
-    if (!line || /^#{1,3}\s/.test(line)) {
-      if (current) { issues.push(current); current = null; }
-      continue;
-    }
-
-    // Detect severity anywhere in the line
-    const hasRed    = line.includes("🔴");
-    const hasYellow = line.includes("🟡");
-    const hasGreen  = line.includes("🟢");
-
-    if (hasRed || hasYellow || hasGreen) {
-      if (current) issues.push(current);
-      const sev: ParsedIssue["severity"] = hasRed ? "red" : hasYellow ? "yellow" : "green";
-
-      // Strip markdown noise: **, *, leading bullets/dashes, emoji, keywords
-      const clean = line
-        .replace(/\*\*/g, "")
-        .replace(/^\s*[-*]\s*/, "")
-        .replace(/[🔴🟡🟢]/gu, "")
-        .replace(/^\s*(KRITISCH|WICHTIG|WARN|OK|INFO|HINWEIS)\s*/i, "")
-        .trim();
-
-      // Split on em-dash or " — " to get title vs body
-      const dashIdx = clean.search(/ [—–-]{1,2} /);
-      const title = dashIdx > 0 ? clean.slice(0, dashIdx).trim() : clean.slice(0, 80).trim();
-      const bodyInline = dashIdx > 0 ? clean.slice(dashIdx).replace(/^[\s—–-]+/, "").trim() : "";
-
-      current = {
-        severity: sev,
-        title: title || "Unbekanntes Problem",
-        body: bodyInline,
-        category: classifyCategory(title + " " + bodyInline),
-      };
-    } else if (current) {
-      // Continuation line — append to body (skip numbered-list markers)
-      if (!line.match(/^\d+\.\s/) && current.body.length < 160) {
-        current.body += (current.body ? " " : "") + line.replace(/\*\*/g, "");
-      }
-    }
-  }
-  if (current) issues.push(current);
-
-  // De-duplicate by title and drop green-only runs if reds exist
-  const seen = new Set<string>();
-  const filtered = issues.filter(i => {
-    const key = i.title.slice(0, 40).toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  return filtered.slice(0, 30);
-}
+// classifyCategory + parseIssues wurden in Phase B / Push 2 entfernt.
+// Sie waren der "fragile last resort" der Priority-Chain — Regex auf Claude-
+// AI-Prosa, der bei fehlenden 🔴/🟡/🟢-Markern stillschweigend 0 Issues lieferte
+// (genau der Trust-Bug aus dem Screenshot). issues_json ist jetzt die alleinige
+// Truth-Quelle, mit unterseiten_json als Fallback für legacy Scans.
 
 /**
  * Builds a full structured issue list directly from unterseiten_json crawler data.
@@ -235,15 +167,9 @@ function buildIssuesFromUnterseiten(
   return issues;
 }
 
-/**
- * Minimal fallback when neither issues_json nor unterseiten_json is available.
- */
-function buildTechFallback(
-  unterseiten: { url: string; erreichbar: boolean; title: string; noindex: boolean; altMissing: number }[],
-  issueCount: number | null,
-): ParsedIssue[] {
-  return buildIssuesFromUnterseiten(unterseiten, issueCount);
-}
+// buildTechFallback wurde in Phase B / Push 2 entfernt — war nur ein Wrap
+// um buildIssuesFromUnterseiten und wurde nur vom toten parseIssues-Pfad
+// genutzt. Die Priority-Chain ruft jetzt direkt buildIssuesFromUnterseiten.
 
 // ─── Fix Guide per CMS ─────────────────────────────────────────────────────────
 function getFixGuide(title: string, cms: string): string {
@@ -528,27 +454,25 @@ export default async function DashboardPage() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 
-  // Priority chain — stops at first source that yields actionable issues:
-  // 1. issues_json (structured, stored during scan — ground truth)
-  // 2. unterseiten_json (per-page crawler data — reliable even for older scans)
-  // 3. parseIssues(AI text) — fragile, last resort
+  // Priority chain (Phase B / Push 2 — auf 2 Stufen reduziert):
+  //   1. issues_json (structured, vom Scan persistiert — ground truth)
+  //   2. unterseiten_json (per-page crawler data — Fallback für alte Scans
+  //      ohne issues_json, z.B. legacy v1-Caches)
+  //
+  // Vorher gab es Stufe 3: parseIssues(AI-Prosa) mit Regex auf 🔴/🟡/🟢-Marker.
+  // Diese Stufe produzierte "Phantome" — wenn Claude-Text keine Marker
+  // generierte, kam 0 zurück → "Keine Probleme" trotz tatsächlicher Befunde.
+  // Genau der Trust-Bug aus dem Screenshot. Mit Push 1 schreiben beide
+  // Routes zuverlässig issues_json → Stufe 3 ist obsolet und ENTFERNT.
   const unterseiten4Issues = (lastScanUnterseiten ?? []) as { url: string; erreichbar: boolean; title: string; h1?: string; noindex: boolean; altMissing: number }[];
   let issues: ParsedIssue[];
 
   if (lastScanIssuesJson && lastScanIssuesJson.length > 0) {
-    // Ground truth from scan
     issues = lastScanIssuesJson;
   } else if (unterseiten4Issues.length > 0) {
-    // Build from raw crawler data — no text parsing needed
     issues = buildIssuesFromUnterseiten(unterseiten4Issues, lastScan?.issue_count ?? null);
   } else {
-    // Last resort: parse Claude text, with tech fallback if it yields nothing actionable
-    issues = lastScanResult ? parseIssues(lastScanResult) : [];
-    const aiHasActionable = issues.filter(i => i.severity !== "green").length;
-    if (aiHasActionable === 0) {
-      const fallback = buildTechFallback(unterseiten4Issues, lastScan?.issue_count ?? null);
-      if (fallback.length > 0) issues = fallback;
-    }
+    issues = [];
   }
 
   const cms = lastScanResult ? detectCMS(lastScanResult, lastScan?.url) : { label: "–" };

@@ -14,6 +14,8 @@ import { buildRawWebsiteData } from "@/lib/tech-detector/fetcher";
 import { normalizePlan, isAgency, isAtLeastProfessional, isPaidPlan, getPlanQuota } from "@/lib/plans";
 import { getIntegrationSettings, triggerZapierScanWebhook } from "@/lib/integrations";
 import { sendScanSummaryToSlack } from "@/lib/slack";
+import { consolidatePerPageIssuesPublic, classifyScopesPublic } from "@/lib/scan-engine/aggregator";
+import type { IssueKind } from "@/lib/scan-engine/types";
 
 export const maxDuration = 60;
 
@@ -47,6 +49,10 @@ function computeIssueCount(sd: Record<string, unknown>): number {
 }
 
 // ── Structured issue type (saved as issues_json) ────────────
+// Phase B / Push 2: kind + affectedUrls + scope sind die Aggregator-Felder
+// (lib/scan-engine/types.ts). Lokaler Type bleibt structural-kompatibel zum
+// Engine-Type, damit die hier generierten Issues durch consolidatePerPageIssues
+// und classifyScopes laufen können.
 export type ScanIssue = {
   severity: "red" | "yellow" | "green";
   title: string;
@@ -54,6 +60,12 @@ export type ScanIssue = {
   category: "recht" | "speed" | "technik" | "shop" | "builder"; // shop = WooCommerce, builder = Page-Builder/Theme
   url?: string; // per-page issues carry their URL
   count: number; // actual number of errors this issue represents (e.g. 24 for alt-missing)
+  /** kind/affectedUrls/scope werden von annotateAndConsolidate() befüllt
+   *  und vom Aggregator-Algorithmus genutzt. Optional, damit raw issues
+   *  aus buildIssuesJson() ohne diese Felder weiterhin valide sind. */
+  kind?:         IssueKind;
+  affectedUrls?: string[];
+  scope?:        "global" | "local";
 };
 
 function classifyIssueCategory(text: string): ScanIssue["category"] {
@@ -61,6 +73,53 @@ function classifyIssueCategory(text: string): ScanIssue["category"] {
   if (/bfsg|wcag|barriere|impressum|datenschutz|cookie|dsgvo|label|aria|alt.?text/.test(t)) return "recht";
   if (/speed|lcp|cls|ladezeit|pagespeed|core web/.test(t)) return "speed";
   return "technik";
+}
+
+/**
+ * Phase B / Push 2: Title-Prefix-Matching → IssueKind.
+ *
+ * buildIssuesJson() generiert Issues mit menschlich lesbaren Titeln, aber
+ * ohne IssueKind-Identifier. Der Aggregator braucht aber kind, um per-page
+ * Issues über mehrere URLs zu gruppieren (z.B. "Alt-Text fehlt auf /a/b/c"
+ * → ein konsolidierter Issue mit affectedUrls-Liste).
+ *
+ * Die Inferenz ist string-basiert (fragil-aber-pragmatisch). Unbekannte
+ * Title-Patterns liefern undefined → Issue bleibt ungrouped, kein Crash.
+ *
+ * Wenn buildIssuesJson später kind selbst setzt, kann diese Inferenz weg.
+ */
+function inferIssueKind(title: string): IssueKind | undefined {
+  const t = title.toLowerCase();
+  // Per-Page-Kinds (sind Konsolidierungs-Targets)
+  if (t.includes("alt-attribut") || t.includes("alt-text"))     return "alt-text-missing";
+  if (t.includes("h1-haupt") || t.includes("h1-überschrift"))   return "h1-missing";
+  if (t.includes("title-tag fehlt"))                            return "title-missing";
+  if (t.includes("meta-description fehlt"))                     return "meta-description-missing";
+  if (t.includes("noindex"))                                    return "noindex";
+  if (t.includes("formular-label") || t.includes("formularfelder")) return "form-label-missing";
+  if (t.includes("button") && t.includes("ohne") && t.includes("text")) return "form-button-text-missing";
+  // Site-Wide-Kinds (für scope-Klassifikation, nicht-konsolidierbar)
+  if (t.includes("https fehlt") || t.includes("verschlüsselte verbindung")) return "no-https";
+  if (t.includes("robots.txt blockiert"))                       return "robots-blocks-all";
+  if (t.includes("sitemap.xml fehlt"))                          return "sitemap-missing";
+  if (t.includes("wordpress veraltet"))                         return "wp-stale";
+  if (t.includes("identischer title-tag"))                      return "duplicate-titles";
+  if (t.includes("identische meta-description"))                return "duplicate-metas";
+  if (t.includes("tote link") || t.includes("404"))             return "broken-links";
+  if (t.includes("ohne interne verlinkung") || t.includes("orphan")) return "orphaned-pages";
+  if (t.includes("4xx/5xx"))                                    return "page-not-reachable";
+  return undefined;
+}
+
+/**
+ * Annotiert raw Issues mit kind, konsolidiert per-page-Duplikate (über
+ * affectedUrls-Listen) und klassifiziert scope ("global" wenn >= 80% Pages
+ * betroffen). Wird nach buildIssuesJson() + Builder/WP/DSGVO-Issues aufgerufen.
+ */
+function annotateAndConsolidate(issues: ScanIssue[], totalPages: number): ScanIssue[] {
+  const annotated = issues.map(i => i.kind ? i : { ...i, kind: inferIssueKind(i.title) });
+  const consolidated = consolidatePerPageIssuesPublic(annotated);
+  return classifyScopesPublic(consolidated, totalPages);
 }
 
 /** Aktuelle WordPress-Major-Version. Updaten wenn neue Releases rauskommen.
@@ -1116,15 +1175,19 @@ export async function POST(req: NextRequest) {
         };
         const cachedAudit = cached.scanData.audit as CachedAudit | undefined;
         const cachedUnterseiten = cachedAudit?.unterseiten ?? [];
-        const cachedIssuesJson = buildIssuesJson(
-          cached.scanData,
-          cachedUnterseiten,
-          cachedAudit?.altTexte?.fehlend ?? 0,
-          cachedAudit?.altTexte?.gesamt ?? 0,
-          cachedAudit?.duplicateTitles ?? [],
-          cachedAudit?.duplicateMetas ?? [],
-          cachedAudit?.brokenLinks ?? [],
-          cachedAudit?.verwaistSeiten ?? [],
+        const cachedTotalPages = cachedAudit?.gescannteSeiten ?? (cachedUnterseiten.length + 1);
+        const cachedIssuesJson = annotateAndConsolidate(
+          buildIssuesJson(
+            cached.scanData,
+            cachedUnterseiten,
+            cachedAudit?.altTexte?.fehlend ?? 0,
+            cachedAudit?.altTexte?.gesamt ?? 0,
+            cachedAudit?.duplicateTitles ?? [],
+            cachedAudit?.duplicateMetas ?? [],
+            cachedAudit?.brokenLinks ?? [],
+            cachedAudit?.verwaistSeiten ?? [],
+          ),
+          cachedTotalPages,
         );
         // Sum of all .count values = total optimisations (e.g. 241), not just issue types.
         const totalCachedIssues = cachedIssuesJson.reduce((a, i) => a + i.count, 0);
@@ -1511,8 +1574,11 @@ PFLICHT-REGELN:
 
     // ── Async DB write + cache — never blocks the response ─
 
-    // Build structured issues from raw data — this is the ground truth for the dashboard
-    const issuesJson = buildIssuesJson(
+    // Build structured issues from raw data — this is the ground truth for the dashboard.
+    // `let` weil wir am Ende mit annotateAndConsolidate() das Array durch die
+    // konsolidierte Version ersetzen (kind-Annotation, URL-Konsolidierung,
+    // 80%-Scope-Klassifikation aus dem Aggregator).
+    let issuesJson = buildIssuesJson(
       scanData,
       unterseiten,
       totalAltMissing,
@@ -1592,6 +1658,15 @@ PFLICHT-REGELN:
       const dsgvoIssues = await runDsgvoEmbedChecks(mainHtml);
       issuesJson.push(...dsgvoIssues);
     } catch { /* non-fatal */ }
+
+    // ── Phase B / Push 2: Engine-Konsolidierung anwenden ──────────────
+    // Nach allen Issue-Sammlern (buildIssuesJson + WP + Builder + DSGVO):
+    // 1. kind-Inferenz pro Issue (string-prefix-matching aus inferIssueKind)
+    // 2. consolidatePerPageIssues: gleichartige per-Seite-Issues mit
+    //    affectedUrls-Liste zusammenfassen (z.B. "Alt-Text fehlt auf 12 Seiten")
+    // 3. classifyScopes: scope:"global" wenn ≥ 80% der Seiten betroffen
+    //    (= Template-Fehler) → UI kann das als "Eine Korrektur fixt alle X" rendern
+    issuesJson = annotateAndConsolidate(issuesJson, audit.gescannteSeiten);
 
     // Actual sum of all errors (e.g. 24 missing alt texts = 24, not 1)
     const issueCount = issuesJson.reduce((acc, i) => acc + i.count, 0);
