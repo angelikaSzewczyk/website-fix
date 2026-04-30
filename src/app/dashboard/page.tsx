@@ -4,7 +4,14 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
-import FreeDashboardClient from "./free-dashboard-client";
+import StarterDashboard from "@/components/dashboard/variants/StarterDashboard";
+import ProDashboard     from "@/components/dashboard/variants/ProDashboard";
+// AgencyDashboard ist Phase-1-Stub (FreeDashboardClient-Equivalent mit
+// allen Sektionen). Der echte Agency-Layout-Render lebt unten als IIFE
+// (line ~646) und wird in einer kommenden Phase nach AgencyDashboard.tsx
+// extrahiert. Solange isAgency true ist, läuft die alte Logik.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import _AgencyDashboardStub from "@/components/dashboard/variants/AgencyDashboard";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, getPlanQuota } from "@/lib/plans";
 import { classifyDisplayCategory } from "@/lib/issue-categories";
 import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
@@ -607,36 +614,71 @@ export default async function DashboardPage() {
       {/* ══════════════════════════════════════════════════════════
           FREE / STARTER / PROFESSIONAL LAYOUT — PREMIUM DARK
           ══════════════════════════════════════════════════════════ */}
+      {/* Plan-Router (Phase 1): Starter und Pro/Professional bekommen
+          unterschiedliche Variants — dieselben Props, plan-spezifische
+          Sektionen. Agency hat einen eigenen Render-Pfad weiter unten
+          (IIFE, line ~646), der nicht durch diese Branch läuft. */}
       {!isAgency && (
         <Suspense>
-          <FreeDashboardClient
-            firstName={firstName}
-            plan={plan}
-            lastScan={lastScan}
-            lastScanResult={lastScanResult}
-            issues={issues}
-            redCount={redIssues.length}
-            yellowCount={yellowIssues.length}
-            performanceIssues={performanceIssues}
-            seoIssues={seoIssues}
-            bestPracticesIssues={bestPracticesIssues}
-            accessibilityIssues={accessibilityIssues}
-            cms={cms}
-            bfsgOk={bfsgOk}
-            speedScore={speedScore}
-            scans={scans}
-            monthlyScans={monthlyScans}
-            scanLimit={SCAN_LIMIT}
-            fingerprint={techFingerprint}
-            totalPages={lastScanTotalPages}
-            unterseiten={lastScanUnterseiten}
-            wooAudit={lastScanWooAudit}
-            builderAudit={lastScanBuilderAudit}
-            integrationsStatus={integrationsStatus}
-            avgTtfbMs={lastScanAvgTtfbMs}
-            wcagHeuristicScore={lastScanWcagScore}
-            wcagHeuristicLabel={lastScanWcagLabel}
-          />
+          {isAtLeastProfessional(plan) ? (
+            <ProDashboard
+              firstName={firstName}
+              plan={plan}
+              lastScan={lastScan}
+              lastScanResult={lastScanResult}
+              issues={issues}
+              redCount={redIssues.length}
+              yellowCount={yellowIssues.length}
+              performanceIssues={performanceIssues}
+              seoIssues={seoIssues}
+              bestPracticesIssues={bestPracticesIssues}
+              accessibilityIssues={accessibilityIssues}
+              cms={cms}
+              bfsgOk={bfsgOk}
+              speedScore={speedScore}
+              scans={scans}
+              monthlyScans={monthlyScans}
+              scanLimit={SCAN_LIMIT}
+              fingerprint={techFingerprint}
+              totalPages={lastScanTotalPages}
+              unterseiten={lastScanUnterseiten}
+              wooAudit={lastScanWooAudit}
+              builderAudit={lastScanBuilderAudit}
+              integrationsStatus={integrationsStatus}
+              avgTtfbMs={lastScanAvgTtfbMs}
+              wcagHeuristicScore={lastScanWcagScore}
+              wcagHeuristicLabel={lastScanWcagLabel}
+            />
+          ) : (
+            <StarterDashboard
+              firstName={firstName}
+              plan={plan}
+              lastScan={lastScan}
+              lastScanResult={lastScanResult}
+              issues={issues}
+              redCount={redIssues.length}
+              yellowCount={yellowIssues.length}
+              performanceIssues={performanceIssues}
+              seoIssues={seoIssues}
+              bestPracticesIssues={bestPracticesIssues}
+              accessibilityIssues={accessibilityIssues}
+              cms={cms}
+              bfsgOk={bfsgOk}
+              speedScore={speedScore}
+              scans={scans}
+              monthlyScans={monthlyScans}
+              scanLimit={SCAN_LIMIT}
+              fingerprint={techFingerprint}
+              totalPages={lastScanTotalPages}
+              unterseiten={lastScanUnterseiten}
+              wooAudit={lastScanWooAudit}
+              builderAudit={lastScanBuilderAudit}
+              integrationsStatus={integrationsStatus}
+              avgTtfbMs={lastScanAvgTtfbMs}
+              wcagHeuristicScore={lastScanWcagScore}
+              wcagHeuristicLabel={lastScanWcagLabel}
+            />
+          )}
         </Suspense>
       )}
 

@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import WfOnboardingTour from "./components/WfOnboardingTour";
-import WfProGuidedTour from "./components/WfProGuidedTour";
-import StarterResultsPanel from "./components/StarterResultsPanel";
-import LockedSection from "./components/locked-section";
-import HistoryChart from "./components/history-chart";
+import WfOnboardingTour from "@/app/dashboard/components/WfOnboardingTour";
+import WfProGuidedTour from "@/app/dashboard/components/WfProGuidedTour";
+import StarterResultsPanel from "@/app/dashboard/components/StarterResultsPanel";
+import LockedSection from "@/app/dashboard/components/locked-section";
+import HistoryChart from "@/app/dashboard/components/history-chart";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, isPaidPlan, normalizePlan } from "@/lib/plans";
@@ -47,7 +47,7 @@ export interface UnterseiteProp {
   /** Page that linked to this URL, or "sitemap" if discovered via sitemap.xml */
   foundVia?: string;
 }
-export interface FreeDashboardProps {
+export interface ProDashboardProps {
   firstName: string;
   plan: string;
   lastScan: ScanBriefProp | null;
@@ -2247,7 +2247,7 @@ function OptimizationPlanModal({ onClose, plan, builder, woo, speedScore, redCou
   );
 }
 
-export default function FreeDashboardClient(props: FreeDashboardProps) {
+export default function ProDashboard(props: ProDashboardProps) {
   const {
     firstName, plan,
     lastScan, lastScanResult, issues,
