@@ -6,22 +6,46 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Kunden-Websites — WebsiteFix",
+  title: "Kunden-Management — WebsiteFix",
   robots: { index: false },
+};
+
+// ─── Dark-Mode tokens (mirrored from variants/_shared) ───────────────────────
+const T = {
+  page:       "#0b0c10",
+  card:       "rgba(255,255,255,0.025)",
+  border:     "rgba(255,255,255,0.08)",
+  borderMid:  "rgba(255,255,255,0.12)",
+  divider:    "rgba(255,255,255,0.06)",
+  text:       "rgba(255,255,255,0.92)",
+  textSub:    "rgba(255,255,255,0.55)",
+  textMuted:  "rgba(255,255,255,0.4)",
+  textFaint:  "rgba(255,255,255,0.25)",
+  green:      "#4ade80",
+  greenBg:    "rgba(74,222,128,0.10)",
+  greenBdr:   "rgba(74,222,128,0.28)",
+  amber:      "#fbbf24",
+  amberBg:    "rgba(251,191,36,0.10)",
+  amberBdr:   "rgba(251,191,36,0.28)",
+  red:        "#f87171",
+  redBg:      "rgba(248,113,113,0.10)",
+  redBdr:     "rgba(248,113,113,0.28)",
+  purple:     "#a78bfa",
+  purpleBg:   "rgba(124,58,237,0.18)",
+  purpleBdr:  "rgba(124,58,237,0.40)",
+  purpleSolid:"rgba(124,58,237,0.85)",
 };
 
 type Website = {
   id: string;
   url: string;
   name: string | null;
-  // Monitoring (website_checks)
   last_check_at: string | null;
   last_check_status: string | null;
   ssl_days_left: number | null;
   security_score: number | null;
   platform: string | null;
   response_time_ms: number | null;
-  // Scans
   last_issue_count: number | null;
   last_scan_at: string | null;
   last_scan_type: string | null;
@@ -29,22 +53,27 @@ type Website = {
 };
 
 const statusColor = (s: string | null) =>
-  s === "ok" ? "#8df3d3" : s === "warning" ? "#ffd93d" : s === "critical" ? "#ff6b6b" : "rgba(255,255,255,0.25)";
-
+  s === "ok" ? T.green : s === "warning" ? T.amber : s === "critical" ? T.red : T.textFaint;
 const statusLabel = (s: string | null) =>
   s === "ok" ? "OK" : s === "warning" ? "Warnung" : s === "critical" ? "Kritisch" : "—";
-
 const sslColor = (d: number | null) =>
-  d === null ? "rgba(255,255,255,0.3)" : d <= 7 ? "#ff6b6b" : d <= 30 ? "#ffd93d" : "#8df3d3";
-
+  d === null ? T.textFaint : d <= 7 ? T.red : d <= 30 ? T.amber : T.green;
 const scoreColor = (n: number | null) =>
-  n === null ? "rgba(255,255,255,0.3)" : n >= 80 ? "#8df3d3" : n >= 50 ? "#ffd93d" : "#ff6b6b";
+  n === null ? T.textFaint : n >= 80 ? T.green : n >= 50 ? T.amber : T.red;
 
 const SCAN_TYPE_LABEL: Record<string, string> = {
   website: "Website-Check",
-  wcag: "WCAG",
+  wcag:    "WCAG",
   performance: "Performance",
 };
+
+// ─── KPI-Icon helpers ────────────────────────────────────────────────────────
+function IconGlobe()    { return <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></>; }
+function IconCheck()    { return <><polyline points="20 6 9 17 4 12"/></>; }
+function IconWarn()     { return <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>; }
+function IconEyeOff()   { return <><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>; }
+
+const TABLE_GRID = "1.6fr 1.2fr 110px 130px 130px 110px";
 
 export default async function ClientsPage() {
   const session = await auth();
@@ -96,169 +125,229 @@ export default async function ClientsPage() {
   const unmonitored = websites.filter(w => w.last_check_at === null).length;
 
   return (
-    <>
-      <main style={{ maxWidth: 1060, margin: "0 auto", padding: "40px 24px 80px" }}>
+    <main style={{ padding: "32px 32px 80px", color: T.text }}>
 
-        <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>Kunden-Websites</h1>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", margin: 0 }}>
-            Monitoring-Status und Scan-Ergebnisse aller gespeicherten Websites.
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div style={{
+        display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+        gap: 16, flexWrap: "wrap",
+        marginBottom: 24, paddingBottom: 18, borderBottom: `1px solid ${T.divider}`,
+      }}>
+        <div>
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            Agency · Kundenverwaltung
+          </p>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
+            Kunden-Management
+          </h1>
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: T.textSub, maxWidth: 620, lineHeight: 1.55 }}>
+            Alle gespeicherten Kunden-Websites auf einen Blick — Monitoring-Status, SSL-Restlaufzeit,
+            Security-Score und letzte Scan-Ergebnisse. Pro Zeile direkt einen Re-Scan starten.
           </p>
         </div>
+        <Link href="/dashboard#modal-new-client" style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "11px 22px", borderRadius: 10,
+          background: T.purpleSolid,
+          border: "1px solid rgba(167,139,250,0.55)",
+          color: "#fff",
+          fontWeight: 700, fontSize: 13, textDecoration: "none",
+          whiteSpace: "nowrap",
+          boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Neuen Kunden anlegen
+        </Link>
+      </div>
 
-        {/* STATS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 32 }}>
-          {[
-            { label: "Websites gesamt", value: total, color: "rgba(255,255,255,0.7)" },
-            { label: "Status OK", value: ok, color: "#8df3d3" },
-            { label: "Mit Problemen", value: issues, color: "#ff6b6b" },
-            { label: "Nicht überwacht", value: unmonitored, color: "rgba(255,255,255,0.3)" },
-          ].map(stat => (
-            <div key={stat.label} style={{
-              padding: "16px 18px", borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.07)",
-              background: "rgba(255,255,255,0.02)",
+      {/* ── KPI Row ────────────────────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
+        {([
+          { label: "Websites gesamt", value: total,       color: T.purple,    bg: T.purpleBg, bdr: T.purpleBdr, icon: <IconGlobe /> },
+          { label: "Status OK",       value: ok,          color: T.green,     bg: T.greenBg,  bdr: T.greenBdr,  icon: <IconCheck /> },
+          { label: "Mit Problemen",   value: issues,      color: T.red,       bg: T.redBg,    bdr: T.redBdr,    icon: <IconWarn /> },
+          { label: "Nicht überwacht", value: unmonitored, color: T.textMuted, bg: T.card,     bdr: T.border,    icon: <IconEyeOff /> },
+        ] as const).map(s => (
+          <div key={s.label} style={{
+            background: T.card, border: `1px solid ${T.border}`,
+            borderRadius: 12, padding: "14px 18px",
+            display: "flex", alignItems: "center", gap: 12,
+            backdropFilter: "blur(8px)",
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+              background: s.bg, border: `1px solid ${s.bdr}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: s.color,
             }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: stat.color, letterSpacing: "-0.02em" }}>{stat.value}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>{stat.label}</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {s.icon}
+              </svg>
             </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: s.color, letterSpacing: "-0.025em", lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4, letterSpacing: "0.02em" }}>{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Table ──────────────────────────────────────────────────────────── */}
+      <div style={{
+        background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 14, overflow: "hidden",
+        backdropFilter: "blur(8px)",
+      }}>
+        {/* Header — immer rendern, auch bei leerer Liste */}
+        <div style={{
+          display: "grid", gridTemplateColumns: TABLE_GRID, gap: 14,
+          padding: "12px 22px",
+          borderBottom: `1px solid ${T.divider}`,
+          background: "rgba(255,255,255,0.015)",
+        }}>
+          {["Kunde", "Domain", "Status", "SSL", "Security", "Aktion"].map(h => (
+            <span key={h} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              {h}
+            </span>
           ))}
         </div>
 
-        {/* LIST */}
         {websites.length === 0 ? (
-          <div style={{
-            padding: "56px 24px", textAlign: "center",
-            border: "1px dashed rgba(255,255,255,0.08)", borderRadius: 12,
-          }}>
-            <p style={{ margin: "0 0 16px", color: "rgba(255,255,255,0.35)", fontSize: 14 }}>
-              Noch keine Kunden-Websites gespeichert.
-            </p>
-            <Link href="/dashboard" style={{
-              padding: "10px 22px", borderRadius: 9, textDecoration: "none",
-              background: "#fff", color: "#0b0c10", fontWeight: 700, fontSize: 14,
+          /* Empty State — Quick-Start */
+          <div style={{ padding: "48px 28px", textAlign: "center" }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: 14, marginBottom: 18,
+              background: T.purpleBg,
+              border: `1px solid ${T.purpleBdr}`,
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
             }}>
-              Zum Dashboard
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3"  y="3"  width="7" height="7" rx="1.5"/>
+                <rect x="14" y="3"  width="7" height="7" rx="1.5"/>
+                <rect x="3"  y="14" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5" strokeDasharray="2.5 2"/>
+              </svg>
+            </div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800, color: T.text, letterSpacing: "-0.01em" }}>
+              Noch keine Kunden angelegt
+            </h3>
+            <p style={{ margin: "0 auto 22px", fontSize: 12.5, color: T.textSub, lineHeight: 1.65, maxWidth: 480 }}>
+              Pro Kunde speicherst du Domain, Branding-Hinweise und behältst SSL/Security/Scan-
+              Historie an einem Ort. Beim ersten Scan landet die Domain automatisch hier.
+            </p>
+            <Link href="/dashboard#modal-new-client" style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "11px 22px", borderRadius: 10,
+              background: T.purpleSolid,
+              border: "1px solid rgba(167,139,250,0.55)",
+              color: "#fff",
+              fontWeight: 700, fontSize: 13, textDecoration: "none",
+              boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Ersten Kunden anlegen
             </Link>
           </div>
         ) : (
-          <div style={{
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 12, overflow: "hidden",
-          }}>
-            {websites.map((site, i) => {
-              const dot = statusColor(site.last_check_status);
-              return (
-                <div key={site.id} style={{
-                  padding: "18px 20px",
-                  borderBottom: i < websites.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                  display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-                }}>
-
-                  {/* Status dot + name/url */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 200px", minWidth: 0 }}>
-                    <span style={{
-                      width: 8, height: 8, borderRadius: "50%",
-                      background: dot, flexShrink: 0,
-                      boxShadow: site.last_check_status ? `0 0 6px ${dot}80` : "none",
-                    }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {site.name ?? site.url}
-                      </div>
-                      {site.name && (
-                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {site.url}
-                        </div>
+          websites.map((site, i) => {
+            const dot = statusColor(site.last_check_status);
+            const issueColor = site.last_issue_count === 0 ? T.green : T.amber;
+            const displayName = site.name ?? (() => { try { return new URL(site.url).hostname.replace(/^www\./, ""); } catch { return site.url; } })();
+            return (
+              <div key={site.id} style={{
+                display: "grid", gridTemplateColumns: TABLE_GRID, gap: 14,
+                padding: "14px 22px", alignItems: "center",
+                borderBottom: i < websites.length - 1 ? `1px solid ${T.divider}` : "none",
+              }}>
+                {/* Kunde — Name + last-scan-meta darunter */}
+                <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: dot, flexShrink: 0,
+                    boxShadow: site.last_check_status ? `0 0 6px ${dot}80` : "none",
+                  }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {displayName}
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                      {site.last_scan_at
+                        ? `${SCAN_TYPE_LABEL[site.last_scan_type ?? ""] ?? site.last_scan_type} · ${new Date(site.last_scan_at).toLocaleDateString("de-DE")}`
+                        : "Noch nicht gescannt"}
+                      {site.last_issue_count !== null && (
+                        <> · <span style={{ color: issueColor }}>{site.last_issue_count === 0 ? "Keine Probleme" : `${site.last_issue_count} Issues`}</span></>
                       )}
                     </div>
                   </div>
-
-                  {/* Monitoring pills */}
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-
-                    {/* Check status */}
-                    <span style={{
-                      fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6,
-                      color: dot, border: `1px solid ${dot}30`, background: `${dot}0d`,
-                    }}>
-                      {statusLabel(site.last_check_status)}
-                    </span>
-
-                    {/* Platform */}
-                    {site.platform && (
-                      <span style={{
-                        fontSize: 11, padding: "3px 9px", borderRadius: 6,
-                        color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)",
-                      }}>
-                        {site.platform}
-                      </span>
-                    )}
-
-                    {/* SSL */}
-                    {site.ssl_days_left !== null && (
-                      <span style={{
-                        fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 6,
-                        color: sslColor(site.ssl_days_left),
-                        border: `1px solid ${sslColor(site.ssl_days_left)}30`,
-                      }}>
-                        SSL {site.ssl_days_left}d
-                      </span>
-                    )}
-
-                    {/* Security score */}
-                    {site.security_score !== null && (
-                      <span style={{
-                        fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 6,
-                        color: scoreColor(site.security_score),
-                        border: `1px solid ${scoreColor(site.security_score)}30`,
-                      }}>
-                        Sicherheit {site.security_score}/100
-                      </span>
-                    )}
-
-                    {/* Response time */}
-                    {site.response_time_ms !== null && (
-                      <span style={{
-                        fontSize: 11, padding: "3px 9px", borderRadius: 6,
-                        color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.07)",
-                      }}>
-                        {site.response_time_ms}ms
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Scan info */}
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0, textAlign: "right" }}>
-                    {site.last_scan_at ? (
-                      <>
-                        <div>{SCAN_TYPE_LABEL[site.last_scan_type ?? ""] ?? site.last_scan_type} · {new Date(site.last_scan_at).toLocaleDateString("de-DE")}</div>
-                        {site.last_issue_count !== null && (
-                          <div style={{ color: site.last_issue_count === 0 ? "#8df3d3" : "#ffd93d", marginTop: 2 }}>
-                            {site.last_issue_count === 0 ? "Keine Probleme" : `${site.last_issue_count} Probleme`}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div>Noch nicht gescannt</div>
-                    )}
-                    <div style={{ marginTop: 2 }}>{site.scan_count} Scan{site.scan_count !== 1 ? "s" : ""}</div>
-                  </div>
-
-                  {/* CTA */}
-                  <Link href={`/dashboard/scan?url=${encodeURIComponent(site.url)}`} style={{
-                    padding: "7px 14px", borderRadius: 8, textDecoration: "none",
-                    fontSize: 12, fontWeight: 600, flexShrink: 0,
-                    border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)",
-                  }}>
-                    Scannen
-                  </Link>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Domain */}
+                <div style={{ fontSize: 12, color: T.textSub, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {site.url}
+                  {site.platform && (
+                    <span style={{
+                      marginLeft: 8, fontSize: 10, fontWeight: 700,
+                      padding: "1px 7px", borderRadius: 8,
+                      background: T.card, border: `1px solid ${T.border}`,
+                      color: T.textMuted, letterSpacing: "0.04em",
+                    }}>
+                      {site.platform}
+                    </span>
+                  )}
+                </div>
+
+                {/* Status */}
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: "3px 9px", borderRadius: 6,
+                  color: dot,
+                  background: site.last_check_status ? `${dot}1a` : "transparent",
+                  border: `1px solid ${dot}3a`,
+                  justifySelf: "start",
+                  whiteSpace: "nowrap",
+                }}>
+                  {statusLabel(site.last_check_status)}
+                </span>
+
+                {/* SSL */}
+                <div style={{ fontSize: 11, color: sslColor(site.ssl_days_left), fontWeight: 700 }}>
+                  {site.ssl_days_left !== null ? `${site.ssl_days_left}d` : "—"}
+                  {site.response_time_ms !== null && (
+                    <span style={{ display: "block", color: T.textMuted, fontSize: 10, fontWeight: 500, marginTop: 2 }}>
+                      {site.response_time_ms} ms
+                    </span>
+                  )}
+                </div>
+
+                {/* Security */}
+                <div style={{ fontSize: 11, color: scoreColor(site.security_score), fontWeight: 700 }}>
+                  {site.security_score !== null ? `${site.security_score}/100` : "—"}
+                  <span style={{ display: "block", color: T.textMuted, fontSize: 10, fontWeight: 500, marginTop: 2 }}>
+                    {site.scan_count} {site.scan_count === 1 ? "Scan" : "Scans"}
+                  </span>
+                </div>
+
+                {/* Aktion */}
+                <Link href={`/dashboard/scan?url=${encodeURIComponent(site.url)}`} style={{
+                  justifySelf: "start",
+                  padding: "6px 12px", borderRadius: 7, textDecoration: "none",
+                  fontSize: 11.5, fontWeight: 700,
+                  background: T.purpleBg,
+                  border: `1px solid ${T.purpleBdr}`,
+                  color: T.purple,
+                  whiteSpace: "nowrap",
+                }}>
+                  Re-Scan →
+                </Link>
+              </div>
+            );
+          })
         )}
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
