@@ -60,3 +60,17 @@ ALTER TABLE scans ADD COLUMN IF NOT EXISTS issues_json JSONB;
 
 CREATE INDEX IF NOT EXISTS scans_user_id_idx ON scans(user_id);
 CREATE INDEX IF NOT EXISTS scans_created_at_idx ON scans(created_at DESC);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Phase 3 / Sprint 3: Multi-Tenancy für Agency-User
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Trennt eigene Projekte von Kunden-Projekten + bereitet Per-Projekt-
+-- White-Label vor (Custom-Logo pro Kunde, ergänzt das Agentur-weite
+-- agency_settings).
+ALTER TABLE saved_websites ADD COLUMN IF NOT EXISTS is_customer_project BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE saved_websites ADD COLUMN IF NOT EXISTS client_label TEXT;
+ALTER TABLE saved_websites ADD COLUMN IF NOT EXISTS client_logo_url TEXT;
+
+-- Index für den Power-Switcher: schnelles Filtern nach Kunden-Marker.
+CREATE INDEX IF NOT EXISTS saved_websites_is_customer_idx
+  ON saved_websites(user_id, is_customer_project);

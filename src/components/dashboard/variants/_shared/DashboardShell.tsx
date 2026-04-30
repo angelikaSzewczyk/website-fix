@@ -19,7 +19,7 @@
  * Sidebar lebt in dashboard/layout.tsx (über alle Variants identisch).
  */
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import WfOnboardingTour from "@/app/dashboard/components/WfOnboardingTour";
 import WfProGuidedTour from "@/app/dashboard/components/WfProGuidedTour";
@@ -74,9 +74,56 @@ export default function DashboardShell({
   monthlyScans, scanLimit, isImpersonating, children,
 }: Props) {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
-  const [cancelHover, setCancelHover] = useState(false);
-  const [switchHover, setSwitchHover] = useState(false);
-  const [switching, setSwitching] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState(false);
+
+  // Phase 3 Sprint 3: Power-Switcher mit Search + Tabs
+  type ProjectRow = {
+    id:                  string;
+    url:                 string;
+    name:                string | null;
+    is_customer_project: boolean;
+    client_label:        string | null;
+    client_logo_url:     string | null;
+    last_scan_id:        string | null;
+    last_scan_at:        string | null;
+    last_issue_count:    number | null;
+  };
+  const [projects, setProjects] = useState<ProjectRow[] | null>(null);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectTab, setProjectTab] = useState<"all" | "own" | "customer">("all");
+
+  // Lazy-fetch der Projektliste — erst beim Öffnen des Modals.
+  useEffect(() => {
+    if (!projectDialogOpen || projects !== null) return;
+    setProjectsLoading(true);
+    fetch("/api/websites")
+      .then(r => r.json())
+      .then(d => setProjects((d.websites as ProjectRow[]) ?? []))
+      .catch(() => setProjects([]))
+      .finally(() => setProjectsLoading(false));
+  }, [projectDialogOpen, projects]);
+
+  // Filter-Pipeline: Tab → Search.
+  const visibleProjects = useMemo(() => {
+    if (!projects) return [];
+    let list = projects;
+    if (projectTab === "own")      list = list.filter(p => !p.is_customer_project);
+    if (projectTab === "customer") list = list.filter(p =>  p.is_customer_project);
+    const q = projectSearch.trim().toLowerCase();
+    if (q) {
+      list = list.filter(p =>
+        p.url.toLowerCase().includes(q) ||
+        (p.name ?? "").toLowerCase().includes(q) ||
+        (p.client_label ?? "").toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [projects, projectTab, projectSearch]);
+
+  const ownCount      = projects?.filter(p => !p.is_customer_project).length ?? 0;
+  const customerCount = projects?.filter(p =>  p.is_customer_project).length ?? 0;
 
   const canonical = normalizePlan(plan);
   const isStarter = canonical === "starter";
@@ -97,14 +144,24 @@ export default function DashboardShell({
     : isPro              ? "Auf Agency →"
     :                      "Upgrade →";
 
-  async function handleProjectSwitch() {
-    if (switching) return;
-    setSwitching(true);
+  async function handleResetAll() {
+    if (resetting) return;
+    setResetting(true);
     try {
       await fetch("/api/clear-project", { method: "POST" });
     } catch { /* non-critical */ }
     setProjectDialogOpen(false);
     window.location.href = "/dashboard/scan";
+  }
+
+  function handleSelectProject(p: ProjectRow) {
+    setProjectDialogOpen(false);
+    // Mit letztem Scan → Scan-Detail-View; sonst frischen Scan starten.
+    if (p.last_scan_id) {
+      window.location.href = `/dashboard/scans/${p.last_scan_id}`;
+    } else {
+      window.location.href = `/dashboard/scan?url=${encodeURIComponent(p.url)}`;
+    }
   }
 
   return (
@@ -312,17 +369,17 @@ export default function DashboardShell({
         </main>
       </div>
 
-      {/* PROJEKT-WECHSEL DIALOG */}
+      {/* PROJEKT-POWER-SWITCHER (Phase 3 Sprint 3) */}
       {projectDialogOpen && (
         <div
-          onClick={() => setProjectDialogOpen(false)}
+          onClick={() => { setProjectDialogOpen(false); setResetConfirm(false); }}
           style={{
             position: "fixed", inset: 0, zIndex: 200,
             background: "rgba(0,0,0,0.65)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "24px",
+            display: "flex", alignItems: "flex-start", justifyContent: "center",
+            padding: "60px 24px 24px",
           }}
         >
           <div
@@ -331,77 +388,246 @@ export default function DashboardShell({
               background: "#0f1623",
               border: `1px solid ${D.borderStrong}`,
               borderRadius: D.radius,
-              padding: "32px 32px 28px",
-              maxWidth: 420, width: "100%",
+              padding: "20px 22px 18px",
+              maxWidth: 560, width: "100%",
+              maxHeight: "calc(100vh - 96px)",
+              display: "flex", flexDirection: "column",
               boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
             }}
           >
-            <div style={{
-              width: 44, height: 44, borderRadius: 11,
-              background: D.redBg, border: `1px solid ${D.redBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 24,
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke={D.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
+                Projekt wechseln
+              </h2>
+              <button
+                onClick={() => { setProjectDialogOpen(false); setResetConfirm(false); }}
+                aria-label="Schließen"
+                style={{
+                  width: 26, height: 26, borderRadius: 6,
+                  background: "transparent", border: `1px solid ${D.border}`,
+                  color: D.textMuted, cursor: "pointer", padding: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Search */}
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <input
+                type="text"
+                value={projectSearch}
+                onChange={e => setProjectSearch(e.target.value)}
+                placeholder="Suche nach Domain, Name oder Kunde…"
+                autoFocus
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  padding: "9px 12px 9px 34px", borderRadius: D.radiusSm,
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${D.border}`,
+                  color: D.text, fontSize: 13,
+                  fontFamily: "inherit", outline: "none",
+                }}
+              />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.textMuted}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)" }}>
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </div>
 
-            <h2 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
-              Projekt wechseln?
-            </h2>
-            <p style={{ margin: "0 0 12px", fontSize: 13, color: D.textSub, lineHeight: 1.75 }}>
-              Im Free-Plan ist <strong style={{ color: D.text }}>1 Wechsel pro Monat</strong> inkludiert.
-            </p>
-            <div style={{
-              padding: "14px 16px", borderRadius: D.radiusXs, marginBottom: 24,
-              background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)",
-            }}>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(248,113,113,0.85)", lineHeight: 1.65, fontWeight: 500 }}>
-                Achtung: Alle Daten und Berichte der aktuellen Website werden dabei unwiderruflich gelöscht.
-              </p>
+            {/* Tabs / Filter-Pills */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 12, padding: 4, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: `1px solid ${D.divider}` }}>
+              {([
+                { key: "all" as const,      label: "Alle",     count: projects?.length ?? 0 },
+                { key: "own" as const,      label: "Eigene",   count: ownCount },
+                { key: "customer" as const, label: "Kunden",   count: customerCount },
+              ]).map(t => {
+                const active = projectTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setProjectTab(t.key)}
+                    style={{
+                      flex: 1, padding: "5px 10px", borderRadius: 6,
+                      background: active ? D.blue : "transparent",
+                      border: "none",
+                      color: active ? "#fff" : D.textSub,
+                      fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer",
+                      fontFamily: "inherit",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      transition: "background 0.15s, color 0.15s",
+                    }}
+                  >
+                    {t.label}
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 8,
+                      background: active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
+                      color: active ? "#fff" : D.textMuted,
+                    }}>
+                      {t.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setProjectDialogOpen(false)}
-                onMouseEnter={() => setCancelHover(true)}
-                onMouseLeave={() => setCancelHover(false)}
-                style={{
-                  flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
-                  border: `1px solid ${D.borderStrong}`,
-                  background: cancelHover ? "rgba(255,255,255,0.06)" : "transparent",
-                  color: cancelHover ? D.text : D.textSub,
-                  fontSize: 13, fontWeight: 600, cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "background 0.15s, color 0.15s",
-                }}
-              >
-                Abbrechen
-              </button>
-              <button
-                onClick={handleProjectSwitch}
-                onMouseEnter={() => setSwitchHover(true)}
-                onMouseLeave={() => setSwitchHover(false)}
-                disabled={switching}
-                style={{
-                  flex: 1, padding: "10px 16px", borderRadius: D.radiusSm,
-                  border: "none",
-                  background: switchHover ? "#ef4444" : D.red,
-                  color: "#fff",
-                  fontSize: 13, fontWeight: 700, cursor: switching ? "default" : "pointer",
-                  boxShadow: "0 4px 16px rgba(248,113,113,0.25)",
-                  fontFamily: "inherit",
-                  opacity: switching ? 0.7 : 1,
-                  transition: "background 0.15s, opacity 0.15s",
-                }}
-              >
-                {switching ? "Wechsle..." : "Ja, wechseln"}
-              </button>
+            {/* Project list */}
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              border: `1px solid ${D.divider}`,
+              borderRadius: D.radiusSm,
+              background: "rgba(255,255,255,0.015)",
+              minHeight: 120,
+              maxHeight: 360,
+            }}>
+              {projectsLoading ? (
+                <div style={{ padding: 18, fontSize: 12, color: D.textMuted, textAlign: "center" }}>
+                  Lade Projekte…
+                </div>
+              ) : visibleProjects.length === 0 ? (
+                <div style={{ padding: 24, fontSize: 12, color: D.textMuted, textAlign: "center", lineHeight: 1.6 }}>
+                  {projectSearch
+                    ? "Keine Projekte gefunden für diese Suche."
+                    : projects && projects.length === 0
+                      ? "Du hast noch keine Projekte gespeichert."
+                      : projectTab === "customer"
+                        ? "Du hast noch keine Kunden-Projekte markiert."
+                        : "Keine Projekte in dieser Ansicht."
+                  }
+                </div>
+              ) : (
+                visibleProjects.map((p, i) => {
+                  let displayDomain = p.url;
+                  try { displayDomain = new URL(p.url).hostname.replace(/^www\./, ""); } catch { /* keep raw */ }
+                  const lastScanLabel = p.last_scan_at
+                    ? new Date(p.last_scan_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })
+                    : "–";
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => handleSelectProject(p)}
+                      style={{
+                        width: "100%", textAlign: "left",
+                        padding: "11px 14px",
+                        background: "transparent",
+                        border: "none",
+                        borderBottom: i < visibleProjects.length - 1 ? `1px solid ${D.divider}` : "none",
+                        color: D.text,
+                        cursor: "pointer", fontFamily: "inherit",
+                        display: "flex", alignItems: "center", gap: 11,
+                        transition: "background 0.12s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,123,255,0.06)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      {/* Avatar (Logo oder Initial) */}
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 7, flexShrink: 0,
+                        background: p.is_customer_project ? "rgba(124,58,237,0.18)" : "rgba(0,123,255,0.15)",
+                        border: `1px solid ${p.is_customer_project ? "rgba(124,58,237,0.32)" : D.blueBorder}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, fontWeight: 800,
+                        color: p.is_customer_project ? "#a78bfa" : D.blueSoft,
+                        overflow: "hidden",
+                      }}>
+                        {p.client_logo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.client_logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          (p.client_label ?? p.name ?? displayDomain).charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      {/* Name + Meta */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 1 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: D.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {p.client_label ?? p.name ?? displayDomain}
+                          </span>
+                          {p.is_customer_project && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 800, padding: "1px 6px", borderRadius: 8,
+                              background: "rgba(124,58,237,0.12)",
+                              border: "1px solid rgba(124,58,237,0.30)",
+                              color: "#a78bfa",
+                              letterSpacing: "0.05em",
+                              textTransform: "uppercase" as const,
+                              flexShrink: 0,
+                            }}>
+                              Kunde
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: 11, color: D.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          {displayDomain} · Letzter Scan: {lastScanLabel}
+                          {p.last_issue_count != null && ` · ${p.last_issue_count} Issues`}
+                        </span>
+                      </div>
+                      {/* Chevron */}
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={D.textMuted}
+                        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer: secondary danger action — Reset / Clear */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${D.divider}` }}>
+              {!resetConfirm ? (
+                <button
+                  onClick={() => setResetConfirm(true)}
+                  style={{
+                    width: "100%", padding: "8px 14px", borderRadius: D.radiusSm,
+                    background: "transparent",
+                    border: `1px dashed ${D.redBorder}`,
+                    color: "rgba(248,113,113,0.85)",
+                    fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Alle Scans löschen & neu starten…
+                </button>
+              ) : (
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ flex: 1, fontSize: 11.5, color: "rgba(248,113,113,0.9)", lineHeight: 1.5 }}>
+                    Alle Scan-Daten werden unwiderruflich gelöscht.
+                  </span>
+                  <button
+                    onClick={() => setResetConfirm(false)}
+                    style={{
+                      padding: "7px 12px", borderRadius: D.radiusSm,
+                      background: "transparent", border: `1px solid ${D.borderStrong}`,
+                      color: D.textSub, fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    onClick={handleResetAll}
+                    disabled={resetting}
+                    style={{
+                      padding: "7px 12px", borderRadius: D.radiusSm,
+                      background: D.red, border: "none",
+                      color: "#fff", fontSize: 11.5, fontWeight: 700,
+                      cursor: resetting ? "default" : "pointer",
+                      fontFamily: "inherit",
+                      opacity: resetting ? 0.7 : 1,
+                    }}
+                  >
+                    {resetting ? "Lösche…" : "Ja, alles löschen"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -6,14 +6,21 @@ export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
   const sql = neon(process.env.DATABASE_URL!);
+  // Phase 3 Sprint 3: Multi-Tenancy-Felder + last_scan_id für den
+  // Power-Switcher (Click → /dashboard/scans/[id]). last_scan_id::text,
+  // damit das uuid-Mapping im Client trivial ist.
   const websites = await sql`
     SELECT sw.id, sw.url, sw.name, sw.created_at,
+      sw.is_customer_project,
+      sw.client_label,
+      sw.client_logo_url,
+      (SELECT id::text FROM scans WHERE user_id = ${session.user.id} AND url = sw.url ORDER BY created_at DESC LIMIT 1) as last_scan_id,
       (SELECT issue_count FROM scans WHERE user_id = ${session.user.id} AND url = sw.url ORDER BY created_at DESC LIMIT 1) as last_issue_count,
       (SELECT created_at FROM scans WHERE user_id = ${session.user.id} AND url = sw.url ORDER BY created_at DESC LIMIT 1) as last_scan_at,
       (SELECT type FROM scans WHERE user_id = ${session.user.id} AND url = sw.url ORDER BY created_at DESC LIMIT 1) as last_scan_type
     FROM saved_websites sw
     WHERE sw.user_id = ${session.user.id}
-    ORDER BY sw.created_at DESC
+    ORDER BY sw.is_customer_project ASC, sw.created_at DESC
   `;
   return NextResponse.json({ websites });
 }
