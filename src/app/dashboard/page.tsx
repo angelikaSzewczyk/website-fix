@@ -613,6 +613,13 @@ export default async function DashboardPage({
           background: rgba(255,255,255,0.04) !important;
         }
 
+        /* Acknowledge-Button im Live-Monitor — green tint on hover. */
+        .agency-ack-btn:not(:disabled):hover {
+          background: rgba(74,222,128,0.14) !important;
+          border-color: rgba(74,222,128,0.35) !important;
+          color: #4ade80 !important;
+        }
+
         /* Live-Monitor Pulse-Glow bei aktiven Alarmen. Loop nur active wenn
            agency-monitor-pulse-Klasse gesetzt ist (= liveAlerts.length > 0). */
         @keyframes agency-monitor-pulse {

@@ -144,6 +144,15 @@ export async function GET(req: NextRequest) {
       //   b) security_score ist <50 (dem Plugin folgt schlechte Hygiene)
       //   c) ein bekanntes Heavy-Plugin (woocommerce, wpbakery, …) ist neu
       // Damit vermeiden wir Alarm-Spam für harmlose neue Plugins.
+      //
+      // WICHTIG — Erst-Run-Skip (01.05.2026 Patch):
+      // Wenn prevPlugins === null, ist das der erste Crawl für diese Site.
+      // diffPluginLists(null, [...]) markiert dann ALLES als "added" und
+      // bei security_score=0 (typisch beim Erst-Crawl) feuern alle Alerts.
+      // → 3-5 False-Positives pro neuer Site. Wir skippen den Alert-Pfad
+      //   im Erst-Run komplett; der Snapshot oben (website_checks INSERT)
+      //   liefert die Baseline für den nächsten Run.
+      const isFirstRun = prevPlugins === null;
       const HEAVY_PLUGINS = new Set(["woocommerce", "elementor", "divi", "wpbakery", "wpforms", "elementor-pro"]);
       const diff = diffPluginLists(prevPlugins, result.plugins_detected);
       const slowedDown =
@@ -151,7 +160,7 @@ export async function GET(req: NextRequest) {
         result.response_time_ms - prevResponseMs > 300;
       const unhealthyScore = result.security_score < 50;
 
-      for (const added of diff.added) {
+      for (const added of (isFirstRun ? [] : diff.added)) {
         const isHeavy = HEAVY_PLUGINS.has(added);
         // Nur loggen wenn: heavy ODER slowedDown ODER unhealthy. Sonst skip.
         if (!isHeavy && !slowedDown && !unhealthyScore) continue;
@@ -178,7 +187,8 @@ export async function GET(req: NextRequest) {
       }
 
       // Plugin entfernt → nur als info (kein Alarm-Spam, aber im Activity-Feed sichtbar).
-      for (const removed of diff.removed) {
+      // Auch hier Erst-Run-Skip: ohne Vor-Snapshot kann es kein "entfernt" geben.
+      for (const removed of (isFirstRun ? [] : diff.removed)) {
         try {
           await sql`
             INSERT INTO website_alerts (

@@ -25,6 +25,7 @@
 import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 import TeamWidget from "@/app/dashboard/components/team-widget";
+import AcknowledgeButton from "@/app/dashboard/components/AcknowledgeButton";
 import type { ClassifiableWpIssue } from "@/lib/wp-health";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
@@ -541,11 +542,14 @@ export default async function AgencyDashboard({
                     ? `/dashboard/clients?q=${encodeURIComponent((() => { try { return new URL(alert.site_url).hostname.replace(/^www\./, ""); } catch { return alert.site_url ?? ""; } })())}`
                     : "/dashboard/monitoring";
                   return (
-                    <li key={alert.id} style={{ listStyle: "none" }}>
+                    <li key={alert.id} style={{
+                      listStyle: "none",
+                      display: "flex", alignItems: "stretch",
+                      borderBottom: i < liveAlerts.length - 1 ? `1px solid ${C.divider}` : "none",
+                    }}>
                     <Link href={alertHref} className="agency-feed-item" style={{
                       display: "flex", alignItems: "flex-start", gap: 10,
-                      padding: "11px 18px",
-                      borderBottom: i < liveAlerts.length - 1 ? `1px solid ${C.divider}` : "none",
+                      padding: "11px 18px", flex: 1, minWidth: 0,
                       textDecoration: "none", color: "inherit",
                       transition: "background 0.18s ease",
                     }}>
@@ -579,6 +583,14 @@ export default async function AgencyDashboard({
                         </div>
                       </div>
                     </Link>
+                    {/* Acknowledge-Button: schließt den Alarm aus dem
+                        Live-Monitor (setzt acknowledged_at = NOW()).
+                        Geschwister vom Link, eigener Click-Handler mit
+                        stopPropagation — verhindert Drill-Down beim
+                        Bestätigen. */}
+                    <div style={{ display: "flex", alignItems: "center", paddingRight: 14, paddingLeft: 4 }}>
+                      <AcknowledgeButton alertId={alert.id} />
+                    </div>
                     </li>
                   );
                 })}
