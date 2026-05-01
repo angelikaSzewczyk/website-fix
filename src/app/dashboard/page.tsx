@@ -13,6 +13,7 @@ import { isAtLeastProfessional, isAgency as isAgencyPlan, getPlanQuota } from "@
 import { classifyDisplayCategory } from "@/lib/issue-categories";
 import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 import ModalCloseButton from "./components/ModalCloseButton";
+import ModalShell from "./components/ModalShell";
 import NewClientForm from "./components/new-client-form";
 
 export const dynamic = "force-dynamic";
@@ -598,6 +599,32 @@ export default async function DashboardPage({
         @media (max-width: 860px) {
           .agency-two-col { grid-template-columns: 1fr !important; }
         }
+
+        /* Stat-Tile Hover (klickbar — Drill-Down zu Portfolio/Reports). */
+        .agency-stat-tile:hover {
+          background: rgba(255,255,255,0.045) !important;
+          border-color: rgba(255,255,255,0.14) !important;
+          transform: translateY(-1px);
+        }
+
+        /* Feed-Item Hover (Live-Monitor / Activity / Lead-Ticker / Anstehende
+           Berichte) — gemeinsame agency-feed-item-Klasse). */
+        .agency-feed-item:hover {
+          background: rgba(255,255,255,0.04) !important;
+        }
+
+        /* Live-Monitor Pulse-Glow bei aktiven Alarmen. Loop nur active wenn
+           agency-monitor-pulse-Klasse gesetzt ist (= liveAlerts.length > 0). */
+        @keyframes agency-monitor-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.18); }
+          50%      { box-shadow: 0 0 18px 2px rgba(248,113,113,0.30); }
+        }
+        .agency-monitor-pulse {
+          animation: agency-monitor-pulse 3.5s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .agency-monitor-pulse { animation: none; }
+        }
         /* Professional: checkbox-based done state via :has() */
         .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
         .fix-details:has(.fix-done:checked) > summary .issue-title { text-decoration: line-through; color: ${C.textMuted} !important; }
@@ -708,21 +735,22 @@ export default async function DashboardPage({
       )}
 
       {/* ── New Client Modal (CSS :target Show + Client-Component-Form) ──
-          Wrapper bleibt CSS-:target gesteuert, damit Open/Close ohne
-          Re-Render des ganzen Tree-Wrappers funktioniert. Form ist jetzt
-          ein Client-Component (NewClientForm), das per fetch /api/websites
-          den Kundennamen persistent speichert, bevor es zum Scan navigiert. */}
-      <div id="modal-new-client" className="agency-modal">
-        <div style={{ background: C.card, borderRadius: 20, padding: "32px", maxWidth: 480, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", position: "relative" }}>
-          <ModalCloseButton ariaLabel="Modal schließen" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, lineHeight: 1 }}>×</ModalCloseButton>
-          <div style={{ marginBottom: 24 }}>
-            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>Neues Projekt</p>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>Kunden anlegen</h2>
-            <p style={{ margin: "6px 0 0", fontSize: 13, color: C.textSub }}>Füge einen neuen Kunden zur Kunden-Matrix hinzu.</p>
-          </div>
-          <NewClientForm />
+          Wrapper ist jetzt ModalShell — CSS-:target öffnet weiterhin, aber
+          Overlay-Click + ESC schließen das Modal sauber (vorher konnte man
+          NUR über die Buttons schließen). */}
+      <ModalShell
+        id="modal-new-client"
+        className="agency-modal"
+        innerStyle={{ background: C.card, borderRadius: 20, padding: "32px", maxWidth: 480, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", position: "relative" }}
+      >
+        <ModalCloseButton ariaLabel="Modal schließen" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, lineHeight: 1 }}>×</ModalCloseButton>
+        <div style={{ marginBottom: 24 }}>
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>Neues Projekt</p>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>Kunden anlegen</h2>
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: C.textSub }}>Füge einen neuen Kunden zur Kunden-Matrix hinzu.</p>
         </div>
-      </div>
+        <NewClientForm />
+      </ModalShell>
 
     </div>
   );

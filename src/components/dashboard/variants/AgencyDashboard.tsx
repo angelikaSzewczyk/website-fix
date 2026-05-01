@@ -339,26 +339,30 @@ export default async function AgencyDashboard({
         </a>
       </div>
 
-      {/* ── Stat Strip ── */}
+      {/* ── Stat Strip ──
+          Klickbar (Drill-Down): jede Kachel führt zu einer gefilterten
+          Sicht im Kunden-Portfolio bzw. ins Berichts-Archiv. */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 14 }}>
         {([
-          { value: matrixRows.length,                                              label: "Aktive Kunden",    color: C.blue,
+          { value: matrixRows.length,                                              label: "Aktive Kunden",    color: C.blue,   href: "/dashboard/clients",
             iconPath: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
-          { value: matrixRows.filter(r => r.is_customer_project).length,           label: "Kundenprojekte",   color: C.green,
+          { value: matrixRows.filter(r => r.is_customer_project).length,           label: "Kundenprojekte",   color: C.green,  href: "/dashboard/clients",
             iconPath: <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></> },
-          { value: matrixRows.filter(r => (r.last_issue_count ?? 0) > 5 || r.last_check_status === "critical").length, label: "Handlungsbedarf",  color: C.red,
+          { value: matrixRows.filter(r => (r.last_issue_count ?? 0) > 5 || r.last_check_status === "critical").length, label: "Handlungsbedarf",  color: C.red,    href: "/dashboard/clients?status=critical",
             iconPath: <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></> },
-          { value: scansThisWeek,                                                  label: "Scans · 7 Tage",   color: C.blue,
+          { value: scansThisWeek,                                                  label: "Scans · 7 Tage",   color: C.blue,   href: "/dashboard/reports",
             iconPath: <><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></>,
             sparkline: trendValues },
         ]).map(s => (
-          <div key={s.label} style={{
+          <Link key={s.label} href={s.href} className="agency-stat-tile" style={{
             background: C.card,
             border: `1px solid ${C.border}`,
             borderRadius: 14,
             padding: "16px 18px",
             backdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", gap: 12,
+            textDecoration: "none", color: "inherit",
+            transition: "background 0.18s ease, border-color 0.18s ease, transform 0.12s ease",
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8, flexShrink: 0,
@@ -377,7 +381,7 @@ export default async function AgencyDashboard({
             {"sparkline" in s && s.sparkline && (
               <Sparkline values={s.sparkline} color={s.color} width={56} height={20} />
             )}
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -445,7 +449,7 @@ export default async function AgencyDashboard({
               website_alerts mit acknowledged_at IS NULL. Wenn nichts da ist,
               rendern wir einen kompakten "Alles ruhig"-State mit Pulse-Dot,
               damit das Widget nie leer wirkt. */}
-          <div style={{
+          <div className={liveAlerts.length > 0 ? "agency-monitor-pulse" : undefined} style={{
             background: liveAlerts.length > 0 ? "rgba(248,113,113,0.06)" : C.card,
             border: `1px solid ${liveAlerts.length > 0 ? "rgba(248,113,113,0.22)" : C.border}`,
             borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)",
@@ -464,22 +468,26 @@ export default async function AgencyDashboard({
                 <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
                   Live-Monitor
                 </span>
+                {liveAlerts.length > 0 && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 800,
+                    padding: "2px 8px", borderRadius: 12,
+                    background: "rgba(248,113,113,0.16)",
+                    border: "1px solid rgba(248,113,113,0.35)",
+                    color: C.red, letterSpacing: "0.06em",
+                  }}>
+                    {liveAlerts.length} OFFEN
+                  </span>
+                )}
+                {liveAlerts.length === 0 && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.06em" }}>
+                    ALLES OK
+                  </span>
+                )}
               </div>
-              {liveAlerts.length > 0 ? (
-                <span style={{
-                  fontSize: 10, fontWeight: 800,
-                  padding: "2px 8px", borderRadius: 12,
-                  background: "rgba(248,113,113,0.16)",
-                  border: "1px solid rgba(248,113,113,0.35)",
-                  color: C.red, letterSpacing: "0.06em",
-                }}>
-                  {liveAlerts.length} OFFEN
-                </span>
-              ) : (
-                <span style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: "0.06em" }}>
-                  ALLES OK
-                </span>
-              )}
+              <Link href="/dashboard/monitoring" style={{ fontSize: 10.5, fontWeight: 700, color: "#a78bfa", textDecoration: "none", letterSpacing: "0.04em" }}>
+                Alle Alarme →
+              </Link>
             </div>
 
             {liveAlerts.length === 0 ? (
@@ -526,11 +534,20 @@ export default async function AgencyDashboard({
                       default:               return alert.alert_type;
                     }
                   })();
+                  // Drill-Down: Klick auf einen Alarm öffnet die Site im
+                  // Portfolio-Filter. Wenn keine site_url da ist (orphan
+                  // alert), fällt der Link auf die Monitoring-Übersicht zurück.
+                  const alertHref = alert.site_url
+                    ? `/dashboard/clients?q=${encodeURIComponent((() => { try { return new URL(alert.site_url).hostname.replace(/^www\./, ""); } catch { return alert.site_url ?? ""; } })())}`
+                    : "/dashboard/monitoring";
                   return (
-                    <li key={alert.id} style={{
+                    <li key={alert.id} style={{ listStyle: "none" }}>
+                    <Link href={alertHref} className="agency-feed-item" style={{
                       display: "flex", alignItems: "flex-start", gap: 10,
                       padding: "11px 18px",
                       borderBottom: i < liveAlerts.length - 1 ? `1px solid ${C.divider}` : "none",
+                      textDecoration: "none", color: "inherit",
+                      transition: "background 0.18s ease",
                     }}>
                       <span style={{
                         width: 8, height: 8, borderRadius: "50%",
@@ -561,6 +578,7 @@ export default async function AgencyDashboard({
                           <span style={{ fontSize: 10, color: C.textMuted }}>· {ago}</span>
                         </div>
                       </div>
+                    </Link>
                     </li>
                   );
                 })}
@@ -618,9 +636,11 @@ export default async function AgencyDashboard({
                   const scoreColor = score == null ? C.textMuted : score >= 75 ? C.green : score >= 50 ? C.amber : C.red;
                   const isComplete = !!lead.visitor_email;
                   return (
-                    <div key={lead.id} style={{
+                    <Link key={lead.id} href="/dashboard/lead-generator" className="agency-feed-item" style={{
                       background: C.card, padding: "14px 16px",
                       display: "flex", flexDirection: "column", gap: 6, minWidth: 0,
+                      textDecoration: "none", color: "inherit",
+                      transition: "background 0.18s ease",
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{
@@ -647,7 +667,7 @@ export default async function AgencyDashboard({
                           <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}</span>
                         </div>
                       )}
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -663,7 +683,9 @@ export default async function AgencyDashboard({
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>Activity-Feed</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Live</span>
+              {/* "AKTUELL" statt "LIVE" — kein Polling/WebSocket. Daten werden
+                  beim Page-Render gezogen (täglicher Cron + manuelle Scans). */}
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Aktuell</span>
             </div>
             {recentScans.length === 0 ? (
               <div style={{ padding: "32px 18px", textAlign: "center", fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
@@ -684,11 +706,16 @@ export default async function AgencyDashboard({
                     return ts.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
                   })();
                   const issueColor = r.issue_count === 0 ? C.green : r.issue_count != null && r.issue_count > 5 ? C.red : C.amber;
+                  // Drill-Down: Klick auf einen Scan-Eintrag öffnet die
+                  // Scan-Detail-Page. Kein Fallback — alle Recent-Scans haben id.
                   return (
-                    <li key={r.id} style={{
+                    <li key={r.id} style={{ listStyle: "none" }}>
+                    <Link href={`/dashboard/scans/${r.id}`} className="agency-feed-item" style={{
                       display: "flex", alignItems: "center", gap: 11,
                       padding: "10px 18px",
                       borderBottom: i < recentScans.length - 1 ? `1px solid ${C.divider}` : "none",
+                      textDecoration: "none", color: "inherit",
+                      transition: "background 0.18s ease",
                     }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: issueColor, flexShrink: 0, boxShadow: `0 0 6px ${issueColor}80` }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -704,6 +731,7 @@ export default async function AgencyDashboard({
                           )}
                         </div>
                       </div>
+                    </Link>
                     </li>
                   );
                 })}
@@ -775,10 +803,13 @@ export default async function AgencyDashboard({
                   {matrixRows.slice(0, 5).map((row, i) => {
                     const dom = (() => { try { return new URL(row.url.startsWith("http") ? row.url : `https://${row.url}`).hostname.replace(/^www\./, ""); } catch { return row.url; } })();
                     return (
-                      <li key={row.id} style={{
+                      <li key={row.id} style={{ listStyle: "none" }}>
+                      <Link href="/dashboard/reports" className="agency-feed-item" style={{
                         display: "flex", alignItems: "center", gap: 11,
                         padding: "10px 18px",
                         borderBottom: i < Math.min(matrixRows.length, 5) - 1 ? `1px solid ${C.divider}` : "none",
+                        textDecoration: "none", color: "inherit",
+                        transition: "background 0.18s ease",
                       }}>
                         <div style={{
                           width: 28, height: 28, borderRadius: 7, flexShrink: 0,
@@ -798,6 +829,7 @@ export default async function AgencyDashboard({
                           </div>
                           <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 2 }}>Monatsbericht · {fmt}</div>
                         </div>
+                      </Link>
                       </li>
                     );
                   })}
