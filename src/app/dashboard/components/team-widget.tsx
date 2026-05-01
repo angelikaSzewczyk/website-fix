@@ -355,7 +355,7 @@ export default function TeamWidget() {
       style={{
         background: "rgba(255,255,255,0.025)",
         border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 16,
+        borderRadius: 14,
         boxShadow: "none",
         overflow: "hidden",
         display: "flex", flexDirection: "column",

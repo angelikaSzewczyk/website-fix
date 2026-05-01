@@ -373,8 +373,8 @@ export default async function AgencyDashboard({
           <div key={s.label} style={{
             background: C.card,
             border: `1px solid ${C.border}`,
-            borderRadius: 12,
-            padding: "14px 16px",
+            borderRadius: 14,
+            padding: "16px 18px",
             backdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", gap: 12,
           }}>
@@ -389,8 +389,8 @@ export default async function AgencyDashboard({
               </svg>
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 3, letterSpacing: "0.02em" }}>{s.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: s.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 4, letterSpacing: "0.02em" }}>{s.label}</div>
             </div>
             {"sparkline" in s && s.sparkline && (
               <Sparkline values={s.sparkline} color={s.color} width={56} height={20} />
@@ -403,9 +403,9 @@ export default async function AgencyDashboard({
       <div className="wf-agency-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14, alignItems: "start" }}>
 
         {/* ── Kunden-Matrix ── */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", boxShadow: C.shadowMd }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadowMd }}>
 
-          <div style={{ padding: "14px 22px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
               <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.04em" }}>
@@ -419,7 +419,7 @@ export default async function AgencyDashboard({
 
           {/* Empty State */}
           {matrixRows.length === 0 && (
-            <div style={{ padding: "28px 22px 26px" }}>
+            <div style={{ padding: "28px 18px 26px" }}>
               <div style={{ marginBottom: 18 }}>
                 <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   Quick-Start
@@ -482,7 +482,7 @@ export default async function AgencyDashboard({
               <div style={{ minWidth: 760 }}>
 
                 <div className="agency-matrix-head" style={{
-                  padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`,
+                  padding: "9px 18px", background: C.bg, borderBottom: `1px solid ${C.divider}`,
                   display: "grid", gridTemplateColumns: "minmax(180px, 1.7fr) minmax(140px, 1.2fr) 100px 90px 110px 170px", gap: 12, alignItems: "center",
                 }}>
                   {["Kunde", "Domain", "Status", "Trend", "Health", "Aktion"].map(h => (
@@ -555,7 +555,7 @@ export default async function AgencyDashboard({
               return (
                 <div key={row.id} className="agency-client-row" style={{
                   display: "grid", gridTemplateColumns: "minmax(180px, 1.7fr) minmax(140px, 1.2fr) 100px 90px 110px 170px",
-                  gap: 12, alignItems: "center", padding: "13px 22px",
+                  gap: 12, alignItems: "center", padding: "13px 18px",
                   borderBottom: i < matrixRows.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent",
                 }}>
                   {/* Kunde */}
