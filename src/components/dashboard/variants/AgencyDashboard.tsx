@@ -25,9 +25,7 @@
 import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 import TeamWidget from "@/app/dashboard/components/team-widget";
-import { getPlanQuota, getMaxSubpages } from "@/lib/plans";
-import { computeWpHealthScore, WP_LAYER_META, type ClassifiableWpIssue } from "@/lib/wp-health";
-import { cmsContextLabel } from "@/lib/fix-guides";
+import type { ClassifiableWpIssue } from "@/lib/wp-health";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
 const C = {
@@ -139,25 +137,6 @@ function Sparkline({ values, color, width = 60, height = 18 }: { values: number[
   );
 }
 
-// Health-Score: bevorzugt persistierten speed_score, sonst aus issue_count abgeleitet.
-function deriveHealthScore(row: MatrixRow): number {
-  if (typeof row.last_speed_score === "number") return Math.max(0, Math.min(100, row.last_speed_score));
-  if (typeof row.last_issue_count === "number") return Math.max(0, 100 - row.last_issue_count * 4);
-  // Fallback: status-basiert (für Zeilen ohne Scan).
-  return row.last_check_status === "ok" ? 88 : row.last_check_status === "warning" ? 61 : 34;
-}
-
-const AGENCY_COLORS = ["#2563EB","#16A34A","#D97706","#7C3AED","#DC2626","#0891B2","#059669","#DB2777"];
-
-function PdfIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-    </svg>
-  );
-}
-
 // ─── Hauptkomponente ─────────────────────────────────────────────────────────
 export default async function AgencyDashboard({
   firstName, plan, badge, userId, agencyName, agencyLogoUrl, scans, usedSlots,
@@ -224,6 +203,21 @@ export default async function AgencyDashboard({
     ` as MatrixRow[];
   } catch (err) {
     console.error("[AgencyDashboard] matrix query failed:", err);
+  }
+
+  // ─── Lead-Ticker: letzte 3 widget_leads (Mission Control Highlight) ─────
+  type LeadRow = { id: string; visitor_email: string | null; scanned_url: string; score: number | null; status: string | null; created_at: string };
+  let recentLeads: LeadRow[] = [];
+  try {
+    recentLeads = await sql`
+      SELECT id::text, visitor_email, scanned_url, score, status, created_at::text
+      FROM widget_leads
+      WHERE agency_user_id = ${userId}
+      ORDER BY created_at DESC
+      LIMIT 3
+    ` as LeadRow[];
+  } catch (err) {
+    console.error("[AgencyDashboard] leads query failed:", err);
   }
 
   // ─── Live-Monitor: offene Alarme (acknowledged_at IS NULL) ──────────────
@@ -304,19 +298,7 @@ export default async function AgencyDashboard({
   const accentBorder = "var(--agency-accent-border)";
   const accentGlowS  = "var(--agency-accent-glow-soft)";
 
-  const clientSlotLimit = getPlanQuota(plan).projects;
-  // No-Drift-Garantie: getMaxSubpages ist die einzige Autorität. Wenn ein
-  // Scan weniger Seiten gecrawlt hat, markieren wir das in der Matrix und
-  // bieten einen Re-Scan-CTA an — die UI verfälscht keine Zahl mehr durch
-  // einen flachen Scan im "letzten Scan"-Slot.
-  const planMaxPages    = getMaxSubpages(plan);
-  // 90% Schwellenwert: ein Agency-Plan-User mit 8000 von 10000 erlaubten
-  // Seiten ist nicht "limited" — die Site hat eben nur 8000 Seiten. Erst
-  // wenn der Scan deutlich unter dem Plan-Cap liegt UND unter ~80% des
-  // bisherigen Maximums, sprechen wir von limited.
-  const limitedThreshold = Math.max(20, Math.floor(planMaxPages * 0.5));
-
-  void firstName; void agencyLogoUrl; void badge;
+  void firstName; void agencyLogoUrl; void badge; void plan; void usedSlots;
 
   return (
     <main style={{ padding: "28px 32px 80px" }}>
@@ -399,302 +381,65 @@ export default async function AgencyDashboard({
         ))}
       </div>
 
-      {/* ── Bento-Grid 2:1 ── */}
-      <div className="wf-agency-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14, alignItems: "start" }}>
+      {/* ── Mission-Control-Stack ──
+          Vertikales Layout: Live-Monitor (Hero, full-width) → Lead-Ticker
+          (Highlight) → 2-Spalten Activity+Team → 2-Spalten System+Anstehende.
+          Vorher 2-fr/1-fr-Bento mit Kunden-Matrix links — die Tabelle ist nach
+          /dashboard/clients (Kunden-Portfolio) gewandert; Mission-Control
+          fokussiert ausschließlich auf "Was passiert jetzt gerade?". */}
+      <div className="wf-agency-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* ── Kunden-Matrix ── */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", boxShadow: C.shadowMd }}>
-
-          <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Kunden-Matrix</span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.04em" }}>
-                LIVE · {usedSlots}/{clientSlotLimit}
-              </span>
+        {/* ── Empty-State (keine Kunden noch) — Quick-Start mit 3 Schritten ── */}
+        {matrixRows.length === 0 && (
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 14,
+            padding: "24px 22px", boxShadow: C.shadowMd,
+          }}>
+            <div style={{ marginBottom: 18 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                Quick-Start
+              </p>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+                Dein Agentur-Setup in 3 Schritten
+              </h3>
             </div>
-            <Link href="/dashboard/clients" style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", textDecoration: "none" }}>
-              Alle Kunden →
-            </Link>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {[
+                { n: "1", title: "Domain hinzufügen",        desc: "Lege deinen ersten Kunden mit Website-URL und Namen an.",         cta: "Kunden anlegen",  href: "#modal-new-client" },
+                { n: "2", title: "White-Label einrichten",    desc: "Lade dein Agentur-Logo hoch und setze die Brand-Farbe.",         cta: "Branding öffnen", href: "/dashboard/settings#branding" },
+                { n: "3", title: "Ersten Bericht versenden",  desc: "Aktiviere den automatischen Monats-Report im Berichts-Archiv.",  cta: "Berichte öffnen", href: "/dashboard/reports" },
+              ].map(step => (
+                <div key={step.n} style={{
+                  padding: "16px 18px", borderRadius: 11,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(124,58,237,0.18)",
+                  display: "flex", flexDirection: "column", gap: 9,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <span style={{
+                      width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                      background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.40)",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 800, color: "#a78bfa", lineHeight: 1,
+                    }}>{step.n}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>{step.title}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11.5, color: C.textSub, lineHeight: 1.55, flex: 1 }}>{step.desc}</p>
+                  <Link href={step.href} style={{
+                    alignSelf: "flex-start",
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    padding: "5px 10px", borderRadius: 6,
+                    background: "rgba(124,58,237,0.14)", border: "1px solid rgba(124,58,237,0.32)",
+                    color: "#a78bfa", fontSize: 11, fontWeight: 700, textDecoration: "none",
+                  }}>{step.cta} →</Link>
+                </div>
+              ))}
+            </div>
           </div>
+        )}
 
-          {/* Empty State */}
-          {matrixRows.length === 0 && (
-            <div style={{ padding: "28px 18px 26px" }}>
-              <div style={{ marginBottom: 18 }}>
-                <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  Quick-Start
-                </p>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
-                  Dein Agentur-Setup in 3 Schritten
-                </h3>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                {[
-                  { n: "1", title: "Domain hinzufügen",    desc: "Lege deinen ersten Kunden mit Website-URL und Namen an.", cta: "Kunden anlegen",  href: "#modal-new-client" },
-                  { n: "2", title: "White-Label einrichten", desc: "Lade dein Agentur-Logo hoch und setze die Brand-Farbe.", cta: "Branding öffnen", href: "/dashboard/settings#branding" },
-                  { n: "3", title: "Ersten Bericht versenden", desc: "Aktiviere den automatischen Monats-Report im Berichte-Archiv.", cta: "Berichte öffnen", href: "/dashboard/reports" },
-                ].map(step => (
-                  <div key={step.n} style={{
-                    padding: "16px 18px", borderRadius: 11,
-                    background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(124,58,237,0.18)",
-                    display: "flex", flexDirection: "column", gap: 9,
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                      <span style={{
-                        width: 24, height: 24, borderRadius: 7, flexShrink: 0,
-                        background: "rgba(124,58,237,0.18)",
-                        border: "1px solid rgba(124,58,237,0.40)",
-                        display: "inline-flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 11, fontWeight: 800, color: "#a78bfa", lineHeight: 1,
-                      }}>
-                        {step.n}
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
-                        {step.title}
-                      </span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: 11.5, color: C.textSub, lineHeight: 1.55, flex: 1 }}>{step.desc}</p>
-                    <Link href={step.href} style={{
-                      alignSelf: "flex-start",
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                      padding: "5px 10px", borderRadius: 6,
-                      background: "rgba(124,58,237,0.14)",
-                      border: "1px solid rgba(124,58,237,0.32)",
-                      color: "#a78bfa",
-                      fontSize: 11, fontWeight: 700, textDecoration: "none",
-                    }}>
-                      {step.cta} →
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Header + Rows in einem gemeinsamen Horizontal-Scroll-Wrapper.
-              minWidth 760px sichert, dass die 4 Fixed-Spalten (470px) + Gaps
-              + Padding nie die fr-Spalten auf 0 kollabieren — sonst überläuft
-              der flex-shrink:0 Avatar in die Domain-Spalte (sichtbar als Overlap
-              auf engen Bento-Karten zwischen 980-1100px Viewport-Breite). */}
-          {matrixRows.length > 0 && (
-            <div style={{ overflowX: "auto" }}>
-              <div style={{ minWidth: 760 }}>
-
-                <div className="agency-matrix-head" style={{
-                  padding: "9px 18px", background: C.bg, borderBottom: `1px solid ${C.divider}`,
-                  display: "grid", gridTemplateColumns: "minmax(180px, 1.7fr) minmax(140px, 1.2fr) 100px 90px 110px 170px", gap: 12, alignItems: "center",
-                }}>
-                  {["Kunde", "Domain", "Status", "Trend", "Health", "Aktion"].map(h => (
-                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
-                  ))}
-                </div>
-
-                {matrixRows.map((row, i) => {
-              const domain = (() => { try { return new URL(row.url.startsWith("http") ? row.url : `https://${row.url}`).hostname; } catch { return row.url; } })();
-              const label = row.client_label ?? row.name ?? domain;
-              const initials = label.replace(/https?:\/\//, "").replace(/\./g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "??";
-              const color = AGENCY_COLORS[i % AGENCY_COLORS.length];
-
-              const rawStatus = row.last_check_status ?? "ok";
-              const status: "ok" | "warning" | "critical" =
-                rawStatus === "critical" || rawStatus === "error"
-                  ? "critical"
-                  : rawStatus === "warning"
-                  ? "warning"
-                  : "ok";
-              const statusConf =
-                status === "ok"      ? { label: "Sicher",   color: C.green, bg: C.greenBg, border: "rgba(74,222,128,0.30)" } :
-                status === "critical"? { label: "Kritisch", color: C.red,   bg: C.redBg,   border: "rgba(248,113,113,0.30)" } :
-                                       { label: "Prüfen",   color: C.amber, bg: C.amberBg, border: "rgba(251,191,36,0.30)" };
-
-              // ── WP-Health-Score (Sprint 12) ────────────────────────────────
-              // Wenn issues_json vorhanden: berechne Layer-Sub-Scores, zeige den
-              // niedrigsten Layer-Wert als Hint (das ist der Engpass-Treiber).
-              // Sonst Fallback auf den klassischen Health-Score aus speed_score.
-              const wpHealth = Array.isArray(row.last_issues_json) && row.last_issues_json.length > 0
-                ? computeWpHealthScore(row.last_issues_json)
-                : null;
-              const score = wpHealth ? wpHealth.overall : deriveHealthScore(row);
-              const scoreColor = score >= 75 ? C.green : score >= 50 ? C.amber : C.red;
-              // Schwächster Layer = der mit dem niedrigsten Score. Wird als
-              // kleiner Hint unter der Health-Zahl gezeigt: "Schwach: Plugins"
-              const weakestLayer = wpHealth
-                ? (Object.keys(wpHealth.layers) as Array<keyof typeof wpHealth.layers>)
-                    .reduce((min, k) => wpHealth.layers[k].score < wpHealth.layers[min].score ? k : min, "core" as keyof typeof wpHealth.layers)
-                : null;
-              const weakLayerLabel = weakestLayer && wpHealth && wpHealth.layers[weakestLayer].issues > 0
-                ? WP_LAYER_META[weakestLayer].shortLabel
-                : null;
-
-              // Trend-Δ: Differenz zum vorletzten Scan. Issue-Count: niedriger
-              // ist besser, also delta = prev - latest (positiv = Verbesserung).
-              const issuesDelta =
-                row.last_issue_count != null && row.prev_issue_count != null
-                  ? row.prev_issue_count - row.last_issue_count
-                  : null;
-              const trendColor =
-                issuesDelta == null ? C.textMuted : issuesDelta > 0 ? C.green : issuesDelta < 0 ? C.red : C.textMuted;
-              const trendLabel =
-                issuesDelta == null ? "—" : issuesDelta === 0 ? "±0" : issuesDelta > 0 ? `−${issuesDelta}` : `+${-issuesDelta}`;
-
-              const detailHref = row.last_scan_id
-                ? `/dashboard/scans/${row.last_scan_id}`
-                : `/dashboard/scan?websiteId=${row.id}&url=${encodeURIComponent(row.url)}`;
-              const reScanHref = `/dashboard/scan?websiteId=${row.id}&url=${encodeURIComponent(row.url)}`;
-
-              // "Eingeschränkter Scan"-Marker: ein Scan ist limited, wenn er
-              // weit unter dem Plan-Cap liegt UND der vorherige Scan tiefer war.
-              // Damit triggern wir nicht bei Sites, die einfach klein sind.
-              const isLimited =
-                row.last_total_pages != null &&
-                row.last_total_pages > 0 &&
-                row.last_total_pages < limitedThreshold &&
-                planMaxPages > 200;
-
-              return (
-                <div key={row.id} className="agency-client-row" style={{
-                  display: "grid", gridTemplateColumns: "minmax(180px, 1.7fr) minmax(140px, 1.2fr) 100px 90px 110px 170px",
-                  gap: 12, alignItems: "center", padding: "13px 18px",
-                  borderBottom: i < matrixRows.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent",
-                }}>
-                  {/* Kunde */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: `${color}14`, border: `1px solid ${color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color }}>
-                      {initials}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {label}
-                      </div>
-                      <div style={{ fontSize: 11, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {row.last_scan_at
-                          ? `${new Date(row.last_scan_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })} · ${row.last_total_pages ?? "–"} Seiten`
-                          : "Noch nicht gescannt"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Domain + CMS-Pill (Sprint 12) */}
-                  <div style={{ minWidth: 0 }}>
-                    <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: accent, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: "none" }}>
-                      {domain}
-                    </a>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-                      {/* CMS-Context-Pill — zeigt Elementor/Divi/Gutenberg etc. */}
-                      {row.cms_context && (
-                        <span title={`Erkanntes WordPress-System: ${cmsContextLabel(row.cms_context)} — Fix-Anleitungen sind darauf zugeschnitten.`} style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          fontSize: 9.5, fontWeight: 700,
-                          padding: "1px 7px", borderRadius: 8,
-                          background: "rgba(124,58,237,0.10)",
-                          border: "1px solid rgba(124,58,237,0.28)",
-                          color: "#a78bfa", letterSpacing: "0.04em",
-                        }}>
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10"/>
-                          </svg>
-                          {cmsContextLabel(row.cms_context)}
-                        </span>
-                      )}
-                      {isLimited && (
-                        <span title={`Letzter Scan nur ${row.last_total_pages} Seiten — Plan-Cap ist ${planMaxPages}. Erneuter Scan empfohlen.`} style={{
-                          fontSize: 9.5, fontWeight: 700,
-                          padding: "1px 7px", borderRadius: 8,
-                          background: C.amberBg, border: "1px solid rgba(251,191,36,0.35)",
-                          color: C.amber, letterSpacing: "0.05em", textTransform: "uppercase",
-                        }}>
-                          Eingeschränkter Scan
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 9px", borderRadius: 20, color: statusConf.color, background: statusConf.bg, border: `1px solid ${statusConf.border}`, whiteSpace: "nowrap" }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: statusConf.color, display: "inline-block", flexShrink: 0 }} />
-                    {statusConf.label}
-                  </span>
-
-                  {/* Trend */}
-                  <div style={{ fontSize: 13, fontWeight: 700, color: trendColor, display: "flex", alignItems: "center", gap: 5 }} title={issuesDelta == null ? "Kein Vorscan zum Vergleich" : `${issuesDelta > 0 ? "Verbesserung" : issuesDelta < 0 ? "Verschlechterung" : "Unverändert"} ggü. letztem Scan`}>
-                    {issuesDelta != null && issuesDelta !== 0 && (
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        {issuesDelta > 0
-                          ? <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 5 5 12"/></>
-                          : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>}
-                      </svg>
-                    )}
-                    {trendLabel}
-                  </div>
-
-                  {/* Health (WP-Layer-aware) */}
-                  <div title={wpHealth ? `WP-Health: Core ${wpHealth.layers.core.score} · Plugins ${wpHealth.layers.plugins.score} · Themes ${wpHealth.layers.themes.score} · A11y ${wpHealth.layers.accessibility.score}` : "Score-Berechnung aus letztem Scan"}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontSize: 15, fontWeight: 800, color: scoreColor, letterSpacing: "-0.02em", lineHeight: 1 }}>{score}</span>
-                      <span style={{ fontSize: 10, color: C.textMuted }}>/100</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 99, width: `${score}%`, background: scoreColor }} />
-                    </div>
-                    {weakLayerLabel && (
-                      <div style={{ marginTop: 3, fontSize: 9.5, color: C.textMuted, letterSpacing: "0.04em" }}>
-                        Schwach: <span style={{ color: scoreColor, fontWeight: 700 }}>{weakLayerLabel}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Aktion */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {row.last_scan_id ? (
-                      <a
-                        href={`/api/export/pdf?scanId=${row.last_scan_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Als PDF exportieren"
-                        style={{
-                          display: "inline-flex", alignItems: "center", justifyContent: "center",
-                          width: 30, height: 30, borderRadius: 7,
-                          background: C.greenBg, border: `1px solid rgba(74,222,128,0.30)`,
-                          color: C.green, textDecoration: "none",
-                        }}
-                      >
-                        <PdfIcon />
-                      </a>
-                    ) : (
-                      <span aria-label="PDF nach erstem Scan verfügbar" title="Noch kein Scan vorhanden" style={{
-                        display: "inline-flex", alignItems: "center", justifyContent: "center",
-                        width: 30, height: 30, borderRadius: 7,
-                        background: C.divider, border: `1px solid ${C.border}`,
-                        color: C.textMuted, opacity: 0.55, cursor: "not-allowed",
-                      }}>
-                        <PdfIcon />
-                      </span>
-                    )}
-                    <Link href={isLimited ? reScanHref : detailHref} style={{
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      padding: "6px 12px", borderRadius: 8,
-                      background: isLimited ? C.amber : accent,
-                      color: "#fff",
-                      fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap",
-                      boxShadow: `0 1px 6px ${accentGlowS}`,
-                    }}>
-                      {isLimited ? "Re-Scan →" : row.last_scan_id ? "Bericht →" : "Scan starten →"}
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-
-              </div>
-            </div>
-          )}
-        </div>
-        {/* /Kunden-Matrix */}
-
-        {/* Right-Column-Stack */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <TeamWidget />
+        {/* Stack-Inhalte folgen unten — Live-Monitor (Hero), Lead-Ticker,
+            Activity+Team (2-Spalten), System-Status+Anstehende-Berichte. */}
 
           {/* ── Live-Monitor (Sprint 12) ──────────────────────────────────
               website_alerts mit acknowledged_at IS NULL. Wenn nichts da ist,
@@ -823,6 +568,97 @@ export default async function AgencyDashboard({
             )}
           </div>
 
+          {/* ── Lead-Ticker (NEU) ─────────────────────────────────────────
+              Letzte 3 Leads aus dem Widget. Mission Control "Highlight" —
+              zeigt sofort, ob Wachstums-Maschine läuft (Empty-State macht
+              die Lücke zum Lead-Generator-Hub deutlich sichtbar). */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
+            <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 2v6m0 0L8 5m4 3l4-3"/>
+                  <path d="M3 13a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6z"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>Lead-Ticker</span>
+                {recentLeads.length > 0 && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: accentBg, border: `1px solid ${accentBorder}`, color: accent, letterSpacing: "0.05em" }}>
+                    Letzte {recentLeads.length}
+                  </span>
+                )}
+              </div>
+              <Link href="/dashboard/lead-generator" style={{ fontSize: 10.5, fontWeight: 700, color: "#a78bfa", textDecoration: "none", letterSpacing: "0.04em" }}>
+                Lead-Generator →
+              </Link>
+            </div>
+            {recentLeads.length === 0 ? (
+              <div style={{ padding: "22px 18px 24px", fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+                Noch keine Leads aus dem Widget.{" "}
+                <Link href="/dashboard/lead-generator" style={{ color: accent, fontWeight: 600, textDecoration: "none" }}>
+                  Widget einbauen →
+                </Link>
+                <div style={{ marginTop: 4, color: C.textSub, fontSize: 11 }}>
+                  Das Lead-Widget liefert qualifizierte Anfragen direkt von den Sites deiner Kunden.
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(recentLeads.length, 3)}, 1fr)`, gap: 1, background: C.divider }}>
+                {recentLeads.map(lead => {
+                  const ts = new Date(lead.created_at);
+                  const ago = (() => {
+                    const diff = Date.now() - ts.getTime();
+                    const mins = Math.floor(diff / 60000);
+                    if (mins < 1)  return "gerade eben";
+                    if (mins < 60) return `vor ${mins} min`;
+                    const hrs = Math.floor(mins / 60);
+                    if (hrs < 24)  return `vor ${hrs} h`;
+                    return ts.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
+                  })();
+                  const dom = (() => { try { return new URL(lead.scanned_url).hostname.replace(/^www\./, ""); } catch { return lead.scanned_url; } })();
+                  const score = lead.score;
+                  const scoreColor = score == null ? C.textMuted : score >= 75 ? C.green : score >= 50 ? C.amber : C.red;
+                  const isComplete = !!lead.visitor_email;
+                  return (
+                    <div key={lead.id} style={{
+                      background: C.card, padding: "14px 16px",
+                      display: "flex", flexDirection: "column", gap: 6, minWidth: 0,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{
+                          width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                          background: isComplete ? C.green : C.amber,
+                          boxShadow: `0 0 6px ${(isComplete ? C.green : C.amber)}80`,
+                        }} />
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: C.textMuted, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                          {isComplete ? "Lead" : "Teaser"}
+                        </span>
+                        <span style={{ marginLeft: "auto", fontSize: 10, color: C.textMuted }}>{ago}</span>
+                      </div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {lead.visitor_email ?? "(keine E-Mail erfasst)"}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: C.textSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {dom}
+                      </div>
+                      {score != null && (
+                        <div style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                          <div style={{ flex: 1, height: 4, borderRadius: 99, background: C.divider, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${score}%`, background: scoreColor }} />
+                          </div>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          {/* /Lead-Ticker */}
+
+          {/* 2-Spalten: Activity-Feed (links, breiter) + Team-Widget (rechts).
+              Activity gibt das Was-ist-passiert, Team das Wer-ist-online. */}
+          <div className="agency-two-col" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start" }}>
+
           {/* Widget 1: Activity-Feed */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -875,6 +711,13 @@ export default async function AgencyDashboard({
             )}
           </div>
 
+            <TeamWidget />
+          </div>
+          {/* /2-col Activity+Team */}
+
+          {/* 2-Spalten: System-Status + Anstehende Berichte. */}
+          <div className="agency-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+
           {/* Widget 2: System-Status */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "14px 18px", backdropFilter: "blur(8px)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -910,53 +753,8 @@ export default async function AgencyDashboard({
             </div>
           </div>
 
-          {/* Widget 3: White-Label-Preview */}
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
-            <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>Branding-Preview</span>
-              <Link href="/dashboard/settings#branding" style={{ fontSize: 10.5, fontWeight: 700, color: "#a78bfa", textDecoration: "none", letterSpacing: "0.04em" }}>
-                Bearbeiten →
-              </Link>
-            </div>
-            <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Hero-Tile mit echter Brand-Farbe */}
-              <div style={{
-                padding: "16px 18px", borderRadius: 11,
-                background: `linear-gradient(135deg, ${accent}, ${accentBg})`,
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                {agencyLogoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={agencyLogoUrl}
-                    alt={agencyName ?? "Logo"}
-                    style={{ height: 30, maxWidth: 80, objectFit: "contain", filter: "brightness(0) invert(1)" }}
-                  />
-                ) : (
-                  <span style={{
-                    width: 30, height: 30, borderRadius: 8,
-                    background: "rgba(255,255,255,0.20)",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 13, fontWeight: 800, color: "#fff",
-                  }}>
-                    {(agencyName ?? "WF").charAt(0).toUpperCase()}
-                  </span>
-                )}
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.25)" }}>
-                    {agencyName ?? "Deine Agentur"}
-                  </div>
-                  <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.85)", marginTop: 2 }}>
-                    Erscheint so in PDF-Reports
-                  </div>
-                </div>
-              </div>
-              <div style={{ fontSize: 10.5, color: C.textMuted, lineHeight: 1.5 }}>
-                Logo, Brand-Farbe und Agenturname stammen direkt aus den
-                Settings → Branding. Änderungen sind hier sofort sichtbar.
-              </div>
-            </div>
-          </div>
+          {/* Branding-Preview entfernt — gehört in den Agency-Branding-Hub
+              (siehe /dashboard/settings#branding), nicht auf die Mission Control. */}
 
           {/* Widget 4: Anstehende Berichte */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
@@ -1007,8 +805,10 @@ export default async function AgencyDashboard({
               );
             })()}
           </div>
-        </div>
-        {/* /Right-Column-Stack */}
+
+          </div>
+          {/* /2-col System+Anstehende */}
+
       </div>
       {/* /wf-agency-grid */}
 

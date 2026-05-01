@@ -592,18 +592,11 @@ export default async function DashboardPage({
         /* Agency: new-client modal via CSS :target */
         .agency-modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .agency-modal:target { display: flex; }
-        .agency-client-row:hover { background: #F8FAFC !important; }
-        /* Agency matrix responsive */
+        /* Mission-Control: 2-Spalten-Sub-Grids (Activity+Team, System+Anstehende)
+           bei engen Viewports stacken. wf-agency-grid selbst ist flex-column
+           und braucht keinen Stack-Breakpoint mehr. */
         @media (max-width: 860px) {
-          .agency-matrix-head { display: none !important; }
-          .agency-client-row  { grid-template-columns: 1fr 1fr !important; grid-template-rows: auto auto !important; gap: 8px !important; padding: 14px 16px !important; }
-          .agency-client-row > *:nth-child(n+4) { display: none; }
-        }
-        /* 2-Spalten-Layout (Matrix + Team-Widget) auf engen Viewports stacken.
-           Breakpoint 980px statt 860px, weil bei <1024 die rechte 320px-Spalte
-           sonst die Matrix unter ~480px Breite drückt — unleserlich. */
-        @media (max-width: 980px) {
-          .wf-agency-grid { grid-template-columns: 1fr !important; }
+          .agency-two-col { grid-template-columns: 1fr !important; }
         }
         /* Professional: checkbox-based done state via :has() */
         .fix-details:has(.fix-done:checked) { background: #F0FDF4 !important; }
