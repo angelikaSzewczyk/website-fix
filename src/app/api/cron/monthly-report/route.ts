@@ -76,6 +76,26 @@ export async function GET(req: NextRequest) {
     } catch (err) {
       console.error(`Monatsbericht fehlgeschlagen für user ${user.id}:`, err);
       errors.push(`user ${user.id}: ${String(err)}`);
+      // Persist in activity_logs, damit der User den Fehlversuch im Dashboard
+      // sieht (sonst stirbt der Hinweis in Vercel-Function-Logs). Best-effort —
+      // ein Log-Insert-Failure darf den Cron-Loop für die anderen User nicht killen.
+      try {
+        await sql`
+          INSERT INTO activity_logs (agency_id, client_id, event_type, platform, metadata)
+          VALUES (
+            ${user.id},
+            NULL,
+            'monthly_report_failed',
+            'cron',
+            ${JSON.stringify({
+              month: prevMonth.toISOString().slice(0, 10),
+              error: err instanceof Error ? err.message : String(err),
+            })}::jsonb
+          )
+        `;
+      } catch (logErr) {
+        console.error("activity_logs insert failed:", logErr);
+      }
     }
   }
 
