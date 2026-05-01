@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ValueReportClient from "./value-report-client";
-import type { ReportBranding, ReportKPIs, ActivityItem, SavedSite, ScanHistoryItem } from "./page";
+import type { ReportBranding, ReportKPIs, ActivityItem, SavedSite, ScanHistoryItem, SendHistoryItem } from "./page";
 import { isAgency as isAgencyPlan, isAtLeastProfessional, normalizePlan } from "@/lib/plans";
 
 // ── Design tokens: DARK (Starter / Professional) ──────────────────────────────
@@ -513,7 +513,7 @@ function ProfessionalView({ scans, kpis, monthLabel }: { scans: ScanHistoryItem[
 
 // ── ③ AGENCY: Kunden-Kommandozentrale ─────────────────────────────────────────
 function AgencyView({
-  plan, branding, kpis, activities, monthLabel, savedSites,
+  plan, branding, kpis, activities, monthLabel, savedSites, sendHistory,
 }: {
   plan: string;
   branding: ReportBranding;
@@ -521,6 +521,7 @@ function AgencyView({
   activities: ActivityItem[];
   monthLabel: string;
   savedSites: SavedSite[];
+  sendHistory: SendHistoryItem[];
 }) {
   const [printing, setPrinting]           = useState(false);
   // autoReport spiegelt jetzt den echten DB-Zustand (scheduled_reports.is_active)
@@ -735,6 +736,91 @@ function AgencyView({
             {printing ? "Vorbereitung…" : "Als PDF speichern"}
           </button>
         </div>
+
+        {/* ── VERSAND-HISTORIE (Phase 5 High-End) ─────────────────────────
+            Pro Monatszeile Indikator, ob der Cron-Mailer den Bericht
+            erfolgreich versendet hat. Liest monthly_reports.sent_at
+            (success) + activity_logs(monthly_report_failed) — der Patch
+            in cron/monthly-report/route.ts schreibt failed-Events automatisch
+            mit metadata.month rein. */}
+        {sendHistory.length > 0 && (
+          <div style={{
+            background: L.card, border: `1px solid ${L.border}`,
+            borderRadius: 14, marginBottom: 24, overflow: "hidden",
+          }}>
+            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${L.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 800, color: L.text, letterSpacing: "-0.01em" }}>
+                  Versand-Historie
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: L.textMuted }}>
+                  Letzte 6 Monate · grün = via SMTP versendet, rot = fehlgeschlagen, grau = ausstehend
+                </p>
+              </div>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {sendHistory.map((h, i) => {
+                const conf =
+                  h.status === "sent"
+                    ? { dot: L.green, bg: L.greenBg, bdr: L.greenBdr, label: "Versendet via SMTP", icon: "✓" }
+                    : h.status === "failed"
+                    ? { dot: L.red,   bg: L.redBg,   bdr: L.redBdr,   label: "Versand fehlgeschlagen", icon: "✗" }
+                    : { dot: L.textMuted, bg: L.divider, bdr: L.border, label: "Ausstehend",            icon: "—" };
+                return (
+                  <li key={h.month} style={{
+                    padding: "12px 20px",
+                    borderBottom: i < sendHistory.length - 1 ? `1px solid ${L.divider}` : "none",
+                    display: "grid", gridTemplateColumns: "1fr auto auto",
+                    gap: 14, alignItems: "center",
+                  }}>
+                    {/* Monat + Status-Hint */}
+                    <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{
+                        width: 9, height: 9, borderRadius: "50%", flexShrink: 0,
+                        background: conf.dot,
+                        boxShadow: h.status !== "pending" ? `0 0 6px ${conf.dot}80` : "none",
+                      }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: L.text }}>
+                          {h.monthLbl}
+                        </div>
+                        <div style={{ fontSize: 11, color: L.textMuted, marginTop: 2 }}>
+                          {h.status === "sent" && h.sent_at
+                            ? `Versand am ${new Date(h.sent_at).toLocaleDateString("de-DE")} · ${h.websites} Website${h.websites !== 1 ? "s" : ""}`
+                            : h.status === "failed"
+                            ? (h.errorMsg ? `Fehler: ${h.errorMsg}` : "Cron-Versuch fehlgeschlagen")
+                            : "Cron lief noch nicht oder hat den User skipped"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status-Badge */}
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 700,
+                      padding: "3px 10px", borderRadius: 6,
+                      color: conf.dot,
+                      background: conf.bg,
+                      border: `1px solid ${conf.bdr}`,
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                      whiteSpace: "nowrap",
+                    }}>
+                      {conf.icon} {conf.label}
+                    </span>
+
+                    {/* Action-Hint (nur wenn failed) */}
+                    {h.status === "failed" ? (
+                      <span style={{ fontSize: 10.5, color: L.textMuted }}>
+                        Activity-Log prüfen
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 10.5, color: "transparent" }}>—</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
 
         {/* ── AUTO-SEND CARD ── */}
         <div style={{
@@ -1028,6 +1114,7 @@ export default function ReportsClient({
   activities,
   monthLabel,
   savedSites,
+  sendHistory,
 }: {
   plan:        string;
   scanHistory: ScanHistoryItem[];
@@ -1037,11 +1124,12 @@ export default function ReportsClient({
   monthLabel:  string;
   agencyId:    string;
   savedSites:  SavedSite[];
+  sendHistory: SendHistoryItem[];
 }) {
   const canonical = normalizePlan(plan);
   // starter (and any unknown) → StarterView
 
-  if (isAgencyPlan(plan)) return <AgencyView plan={plan} branding={branding} kpis={kpis} activities={activities} monthLabel={monthLabel} savedSites={savedSites} />;
+  if (isAgencyPlan(plan)) return <AgencyView plan={plan} branding={branding} kpis={kpis} activities={activities} monthLabel={monthLabel} savedSites={savedSites} sendHistory={sendHistory} />;
   if (canonical === "professional" || (isAtLeastProfessional(plan) && !isAgencyPlan(plan))) {
     return <ProfessionalView scans={scanHistory} kpis={kpis} monthLabel={monthLabel} />;
   }

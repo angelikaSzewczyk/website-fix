@@ -48,6 +48,24 @@ export type ReportKPIs = {
 
 export type SavedSite = { id: string; name: string | null; url: string };
 
+/**
+ * Versand-Historie pro Monat — Phase 5 High-End-Refactor.
+ * Status:
+ *   "sent"      = monthly_reports.sent_at vorhanden (Cron hat erfolgreich versendet)
+ *   "failed"    = activity_logs hat einen monthly_report_failed-Eintrag mit
+ *                 metadata.month == diesem Monat (Patch in cron/monthly-report/route.ts)
+ *   "pending"   = der Monat liegt im Vor-Vor-Monat oder älter und es gibt keinen
+ *                 der beiden Einträge (= Cron lief noch nicht oder hat den User skipped)
+ */
+export type SendHistoryItem = {
+  month:    string;            // ISO YYYY-MM-01
+  monthLbl: string;            // "April 2026"
+  status:   "sent" | "failed" | "pending";
+  sent_at:  string | null;
+  errorMsg: string | null;
+  websites: number;
+};
+
 export default async function ReportsPage() {
   const session = await auth();
   if (!session?.user?.email) redirect("/login");
@@ -82,6 +100,8 @@ export default async function ReportsPage() {
     leadStats,
     recentLeads,
     activityRows,
+    sentReportsRaw,
+    failedEventsRaw,
   ] = await Promise.all([
 
     // Scan archive — all plans (starter: 5, professional: 10, agency: 10)
@@ -153,7 +173,69 @@ export default async function ReportsPage() {
           ORDER BY created_at DESC LIMIT 5
         `
       : Promise.resolve([]),
+
+    // Versand-Historie der letzten 6 Monate — agency only
+    isAgency
+      ? sql`
+          SELECT month::text, sent_at::text, website_count
+          FROM monthly_reports
+          WHERE user_id = ${userId} AND website_id IS NULL
+          ORDER BY month DESC
+          LIMIT 6
+        `
+      : Promise.resolve([]),
+
+    // Failed-Cron-Events — agency only, letzte 6 Monate (Phase 5 Patch)
+    isAgency
+      ? sql`
+          SELECT metadata, created_at::text
+          FROM activity_logs
+          WHERE agency_id = ${userId}
+            AND event_type = 'monthly_report_failed'
+            AND created_at >= NOW() - INTERVAL '6 months'
+          ORDER BY created_at DESC
+        `
+      : Promise.resolve([]),
   ]);
+
+  const sentReports  = sentReportsRaw  as Array<{ month: string; sent_at: string; website_count: number | null }>;
+  const failedEvents = failedEventsRaw as Array<{ metadata: Record<string, string>; created_at: string }>;
+
+  // Versand-Historie für die letzten 6 Monate berechnen.
+  // - sentReports: erfolgreich versendete Monate
+  // - failedEvents: gescheiterte Cron-Versuche (metadata.month muss existieren)
+  // Alle anderen Monate sind 'pending' (Cron lief noch nicht ODER User wurde geskipped).
+  function buildSendHistory(): SendHistoryItem[] {
+    const sentMap = new Map<string, { sent_at: string; websites: number }>();
+    for (const r of sentReports) {
+      sentMap.set(r.month.slice(0, 7), { sent_at: r.sent_at, websites: r.website_count ?? 0 });
+    }
+    const failedMap = new Map<string, string>();
+    for (const e of failedEvents) {
+      const m = (e.metadata?.month ?? "").slice(0, 7);
+      if (m && !failedMap.has(m)) failedMap.set(m, e.metadata?.error ?? "Unbekannter Fehler");
+    }
+
+    const items: SendHistoryItem[] = [];
+    const today = new Date();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthKey = d.toISOString().slice(0, 7);
+      const monthIso = `${monthKey}-01`;
+      const lbl = d.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+
+      const sentRec = sentMap.get(monthKey);
+      if (sentRec) {
+        items.push({ month: monthIso, monthLbl: lbl, status: "sent",   sent_at: sentRec.sent_at, errorMsg: null, websites: sentRec.websites });
+      } else if (failedMap.has(monthKey)) {
+        items.push({ month: monthIso, monthLbl: lbl, status: "failed", sent_at: null, errorMsg: failedMap.get(monthKey) ?? null, websites: 0 });
+      } else {
+        items.push({ month: monthIso, monthLbl: lbl, status: "pending", sent_at: null, errorMsg: null, websites: 0 });
+      }
+    }
+    return items;
+  }
+  const sendHistory: SendHistoryItem[] = isAgency ? buildSendHistory() : [];
 
   // ── Assemble ────────────────────────────────────────────────────────────────
   const br = (brandingRows[0] ?? {}) as { primary_color: string; agency_name: string; logo_url: string; widget_views: number };
@@ -213,6 +295,7 @@ export default async function ReportsPage() {
       monthLabel={monthLabel}
       agencyId={agencyId}
       savedSites={savedSites}
+      sendHistory={sendHistory}
     />
   );
 }
