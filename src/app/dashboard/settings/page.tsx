@@ -1,11 +1,22 @@
+/**
+ * /dashboard/settings — Account, Abo, Passwort.
+ *
+ * STRIKT account-fokussiert. Branding, SMTP, Domain, API-Key und Workflow-
+ * Integrationen leben in /dashboard/agency-branding (eigene Route, kein
+ * Tab-Switcher). Kein Cross-Linking zwischen den beiden Pages.
+ *
+ * Plan-Routing:
+ *   - Free/Starter:   FreeSettingsClient (eigenständige minimal-Variante)
+ *   - Pro/Agency:     ProfileSettingsClient (Account/Abo/Passwort)
+ */
+
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
-import SettingsTabsClient from "./settings-tabs-client";
+import ProfileSettingsClient from "./profile-settings-client";
 import FreeSettingsClient from "./free-settings-client";
 import { hasBrandingAccess } from "@/lib/plans";
-import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
 
 export const metadata: Metadata = {
   title: "Einstellungen — WebsiteFix",
@@ -13,38 +24,8 @@ export const metadata: Metadata = {
 };
 
 const SCAN_LIMIT = 3;
-const FETCH_TIMEOUT_MS = 3000;
-
-type BrandingSettings = {
-  agency_name:    string;
-  agency_website: string;
-  logo_url:       string;
-  primary_color:  string;
-};
-
-const BRANDING_DEFAULTS: BrandingSettings = {
-  agency_name:    "",
-  agency_website: "",
-  logo_url:       "",
-  primary_color:  "#8df3d3",
-};
-
-/** Race a promise against a timeout. Wenn die Quelle (DB, OAuth, externe API)
- *  länger als ms braucht, rejecten wir mit einem deterministischen Fehler —
- *  Promise.allSettled fängt das ab und der Hub rendert mit Default-Werten,
- *  statt zu blocken. */
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`[settings] ${label} timed out after ${ms}ms`)), ms),
-    ),
-  ]);
-}
 
 export default async function SettingsPage() {
-  // Auth-Gate mit defensivem try/catch — Auth-Service-Fehler darf die
-  // Page nicht abstürzen lassen.
   let session;
   try {
     session = await auth();
@@ -57,82 +38,35 @@ export default async function SettingsPage() {
   const plan   = (session.user as { plan?: string }).plan ?? "starter";
   const userId = session.user.id;
 
-  // ── Pro+ / Agency: Settings-Hub mit Tabs (Profil / Branding / Integrationen) ──
+  // ── Pro+ / Agency: minimaler Account-Hub. KEIN Branding hier. ──
   if (hasBrandingAccess(plan)) {
-    type BrandingRow = {
-      agency_name: string | null; agency_website: string | null;
-      logo_url: string | null;    primary_color: string | null;
-    };
-
-    const sql = neon(process.env.DATABASE_URL!);
-
-    // Beide Quellen parallel + jeweils mit 3-s-Timeout. Eine hakelige Quelle
-    // (z. B. Neon-Rebalance, hängender OAuth-Refresh) blockiert nicht mehr
-    // den gesamten Hub-Render — der jeweils andere Tab rendert trotzdem.
-    const [brandingResult, integrationsResult] = await Promise.allSettled([
-      withTimeout(
-        sql`
-          SELECT agency_name, agency_website, logo_url, primary_color
-            FROM agency_settings
-           WHERE user_id = ${userId}
-           LIMIT 1
-        ` as unknown as Promise<BrandingRow[]>,
-        FETCH_TIMEOUT_MS,
-        "agency_settings query",
-      ),
-      withTimeout(
-        getIntegrationSettings(userId as string),
-        FETCH_TIMEOUT_MS,
-        "integration_settings query",
-      ),
-    ]);
-
-    let branding: BrandingSettings = { ...BRANDING_DEFAULTS };
-    if (brandingResult.status === "fulfilled") {
-      const row = brandingResult.value[0];
-      branding = {
-        agency_name:    row?.agency_name    ?? BRANDING_DEFAULTS.agency_name,
-        agency_website: row?.agency_website ?? BRANDING_DEFAULTS.agency_website,
-        logo_url:       row?.logo_url       ?? BRANDING_DEFAULTS.logo_url,
-        primary_color:  row?.primary_color  ?? BRANDING_DEFAULTS.primary_color,
-      };
-    } else {
-      console.error("[settings] agency_settings failed:", brandingResult.reason);
-    }
-
-    // Failure → null → IntegrationsTab zeigt leere Form mit "Status unbekannt".
-    // Der User kann trotzdem konfigurieren; das Speichern füllt die DB.
-    let integrationsSettings = null;
-    let integrationsStatus   = null;
-    if (integrationsResult.status === "fulfilled") {
-      const settings = integrationsResult.value;
-      integrationsSettings = settings ? {
-        jira_domain:      settings.jira_domain,
-        jira_email:       settings.jira_email,
-        jira_project_key: settings.jira_project_key,
-        trello_list_id:   settings.trello_list_id,
-        gsc_site_url:     settings.gsc_site_url,
-        ga_property_id:   settings.ga_property_id,
-      } : null;
-      integrationsStatus = settings ? connectionStatus(settings) : null;
-    } else {
-      console.error("[settings] integrations failed:", integrationsResult.reason);
+    // brandColor wird für den Stripe-Button-Style genutzt — wir lesen
+    // nur primary_color aus agency_settings, sonst nichts. Defensives
+    // try/catch, damit ein DB-Fehler nicht die Settings-Page killt.
+    let brandColor = "#8df3d3";
+    try {
+      const sql = neon(process.env.DATABASE_URL!);
+      const rows = await sql`
+        SELECT primary_color FROM agency_settings WHERE user_id = ${userId} LIMIT 1
+      ` as Array<{ primary_color: string | null }>;
+      if (rows[0]?.primary_color && /^#[0-9a-fA-F]{6}$/.test(rows[0].primary_color)) {
+        brandColor = rows[0].primary_color;
+      }
+    } catch (err) {
+      console.error("[settings] brand color query failed:", err);
     }
 
     return (
-      <SettingsTabsClient
+      <ProfileSettingsClient
         name={session.user.name ?? ""}
         email={session.user.email ?? ""}
         plan={plan}
-        userId={String(session.user.id)}
-        branding={branding}
-        integrationsStatus={integrationsStatus}
-        integrationsSettings={integrationsSettings}
+        brandColor={brandColor}
       />
     );
   }
 
-  // ── Starter / Free-Plan: einfache Settings-Seite (kein Tabs-System) ──
+  // ── Starter / Free: eigenständige Settings-Seite ──
   let projectUrl   = "";
   let monthlyScans = 0;
 

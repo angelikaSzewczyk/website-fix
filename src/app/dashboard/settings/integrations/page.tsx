@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 
 /**
- * Legacy-Route — wird seit dem Settings-Hub-Refactor (3 Tabs unter
- * /dashboard/settings) nur noch als Redirect genutzt. Alte Bookmarks,
- * Email-Links und externe Referenzen landen sauber auf dem neuen
- * Integrations-Tab.
+ * Legacy-Route — Integrations sind seit dem 01.05.-Refactor Bestandteil
+ * des Agency-Branding-Hubs (technisches Agentur-Setup). Alte Bookmarks
+ * werden permanent dorthin geleitet.
  */
 export default function LegacyIntegrationsRedirect() {
-  redirect("/dashboard/settings#integrationen");
+  redirect("/dashboard/agency-branding");
 }

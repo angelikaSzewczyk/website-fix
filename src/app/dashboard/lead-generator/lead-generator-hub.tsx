@@ -273,7 +273,7 @@ export default function LeadGeneratorHub({
           <div style={{ padding: "16px 18px" }}>
             <p style={{ margin: "0 0 10px", fontSize: 12, color: T.textSub, lineHeight: 1.55 }}>
               Füge dieses HTML in deine Agentur-Site ein. Branding-Farbe und Logo werden
-              automatisch aus deinen <Link href="/dashboard/settings#branding" style={{ color: T.purple, textDecoration: "none", fontWeight: 600 }}>Branding-Settings</Link> übernommen.
+              automatisch aus deinen <Link href="/dashboard/agency-branding" style={{ color: T.purple, textDecoration: "none", fontWeight: 600 }}>Branding-Settings</Link> übernommen.
             </p>
 
             <pre style={{

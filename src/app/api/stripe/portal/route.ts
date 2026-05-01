@@ -41,7 +41,7 @@ export async function POST() {
     const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer:   customerId,
-      return_url: `${baseUrl}/dashboard/settings#profil`,
+      return_url: `${baseUrl}/dashboard/settings`,
     });
     return NextResponse.json({ url: portalSession.url });
   } catch (err) {

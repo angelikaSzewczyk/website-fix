@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
   Zap,
@@ -17,25 +17,6 @@ import {
 import BrandLogo from "../../components/BrandLogo";
 import { isAgency as isAgencyPlan } from "@/lib/plans";
 
-/** Aktueller URL-Hash inkl. # (z. B. "#branding") — usePathname enthält
- *  ihn nie, deshalb eigener Hook. Reagiert auf hashchange UND popstate
- *  (Browser-Back/Forward), damit das Highlight in der Sidebar synchron
- *  zum Hub bleibt. */
-function useCurrentHash(): string {
-  const [hash, setHash] = useState("");
-  useEffect(() => {
-    const sync = () => setHash(window.location.hash || "");
-    sync();
-    window.addEventListener("hashchange", sync);
-    window.addEventListener("popstate",   sync);
-    return () => {
-      window.removeEventListener("hashchange", sync);
-      window.removeEventListener("popstate",   sync);
-    };
-  }, []);
-  return hash;
-}
-
 type NavItem = {
   href: string;
   label: string;
@@ -49,19 +30,18 @@ type NavItem = {
 
 // Plans that get the agency nav
 
-// Agency nav — High-End-Refactor:
-// Jeder Eintrag = einzigartige Mission. Widget-Konfigurator ist in den
-// Lead-Generator umgezogen, "White-Label & Branding" heißt jetzt
-// Agency-Branding (umfasst SMTP/Custom-Domain/API-Key + Logo/Color).
+// Agency nav — Strikte Page-Trennung (01.05.2026):
+// Agency-Branding und Einstellungen sind ZWEI unterschiedliche Routes,
+// kein Tab-Switcher mehr. Branding = technische Agentur-Setups
+// (Logo/Color/SMTP/Domain/API-Key/Integrationen). Einstellungen =
+// Account/Billing/Passwort.
 const AGENCY_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard",                    label: "Kommandozentrale",   icon: <LayoutDashboard size={16} />, exact: true },
   { href: "/dashboard/clients",            label: "Kunden-Portfolio",   icon: <Users size={16} /> },
   { href: "/dashboard/reports",            label: "Berichts-Archiv",    icon: <Archive size={16} /> },
   { href: "/dashboard/lead-generator",     label: "Lead-Generator",     icon: <Magnet size={16} /> },
-  // Settings-Hub: zwei Deep-Links auf dieselbe Route, unterschieden per Hash.
-  // isActive() unten matched den Hash exakt — beide leuchten NIE gleichzeitig.
-  { href: "/dashboard/settings#branding",  label: "Agency-Branding",    icon: <Palette size={16} /> },
-  { href: "/dashboard/settings#profil",    label: "Einstellungen",      icon: <Settings size={16} /> },
+  { href: "/dashboard/agency-branding",    label: "Agency-Branding",    icon: <Palette size={16} /> },
+  { href: "/dashboard/settings",           label: "Einstellungen",      icon: <Settings size={16} /> },
 ];
 
 // Nav for free / single plans
@@ -157,8 +137,7 @@ function SlimSidebar({ plan, userName, userImage, signOutButton, lastScanClean }
 }
 
 export default function SidebarNav({ plan, userName, userImage, signOutButton, lastScanClean }: Props) {
-  const pathname    = usePathname();
-  const currentHash = useCurrentHash();
+  const pathname  = usePathname();
   const planCfg   = PLAN_CONFIG[plan] ?? PLAN_CONFIG["starter"];
   const isAgency  = isAgencyPlan(plan);
   const isProPlan = isAgency; // all agency plans get white-label branding
@@ -170,21 +149,11 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
 
   const navItems = isAgency ? AGENCY_NAV_ITEMS : DEFAULT_NAV_ITEMS;
 
-  // Hash-aware Active-Logik. Kernregel: Wenn der Eintrag einen Hash im href
-  // trägt, MUSS er exakt mit dem aktuellen Hash übereinstimmen — sonst leuchten
-  // "Einstellungen" (#profil) und "White-Label" (#branding) gleichzeitig, weil
-  // beide auf /dashboard/settings zeigen.
-  //
-  //   href #profil   ∧ currentHash #profil    → aktiv
-  //   href #profil   ∧ currentHash #branding  → NICHT aktiv
-  //   href ohne #    ∧ pathname stimmt        → aktiv (klassisch)
-  const isActive = (item: NavItem) => {
-    const [base, itemHash] = item.href.split("#");
-    const pathMatches = item.exact ? pathname === base : pathname.startsWith(base);
-    if (!pathMatches) return false;
-    if (!itemHash)    return true;                    // generischer Eintrag ohne Hash
-    return currentHash === `#${itemHash}`;            // Hash-spezifischer Eintrag
-  };
+  // Pfad-basierte Active-Logik. Seit dem Routing-Refactor (01.05.2026) hat
+  // jede Sidebar-Position ihren eigenen Pfad — Hash-Tracking nicht mehr
+  // nötig. exact:true für /dashboard, sonst startsWith für nested Sub-Pages.
+  const isActive = (item: NavItem) =>
+    item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 12px" }}>

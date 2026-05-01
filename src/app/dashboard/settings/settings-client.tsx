@@ -320,7 +320,7 @@ export default function SettingsClient({ initial, plan, embedded = false }: { in
 
       {/* Integrations-Shortcut — Pro/Agency, nur in standalone-Modus */}
       {!embedded && (
-      <Link href="/dashboard/settings#integrationen" style={{
+      <Link href="/dashboard/agency-branding" style={{
         display: "flex", alignItems: "center", gap: 12, marginBottom: 32,
         padding: "14px 18px", borderRadius: 12,
         background: "linear-gradient(90deg, rgba(16,185,129,0.08), rgba(66,133,244,0.05))",

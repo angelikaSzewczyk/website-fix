@@ -342,7 +342,7 @@ function AgencyTopBar({ badge, usedSlots, slotsLabel, clientSlotLimit, logoUrl, 
         {/* White-label settings link — nutzt jetzt die Brand-CSS-Vars statt
             hartkodierter badge-Farben. Ein-Klick zur Branding-Sektion im Hub. */}
         <a
-          href="/dashboard/settings#branding"
+          href="/dashboard/agency-branding"
           style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             fontSize: 11, fontWeight: 700,

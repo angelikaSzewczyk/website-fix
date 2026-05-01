@@ -406,7 +406,7 @@ export default async function AgencyDashboard({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {[
                 { n: "1", title: "Domain hinzufügen",        desc: "Lege deinen ersten Kunden mit Website-URL und Namen an.",         cta: "Kunden anlegen",  href: "#modal-new-client" },
-                { n: "2", title: "White-Label einrichten",    desc: "Lade dein Agentur-Logo hoch und setze die Brand-Farbe.",         cta: "Branding öffnen", href: "/dashboard/settings#branding" },
+                { n: "2", title: "White-Label einrichten",    desc: "Lade dein Agentur-Logo hoch und setze die Brand-Farbe.",         cta: "Branding öffnen", href: "/dashboard/agency-branding" },
                 { n: "3", title: "Ersten Bericht versenden",  desc: "Aktiviere den automatischen Monats-Report im Berichts-Archiv.",  cta: "Berichte öffnen", href: "/dashboard/reports" },
               ].map(step => (
                 <div key={step.n} style={{
@@ -754,7 +754,7 @@ export default async function AgencyDashboard({
           </div>
 
           {/* Branding-Preview entfernt — gehört in den Agency-Branding-Hub
-              (siehe /dashboard/settings#branding), nicht auf die Mission Control. */}
+              (siehe /dashboard/agency-branding), nicht auf die Mission Control. */}
 
           {/* Widget 4: Anstehende Berichte */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>

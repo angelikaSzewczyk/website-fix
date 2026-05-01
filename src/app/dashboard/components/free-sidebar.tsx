@@ -242,8 +242,8 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
     { icon: "scan",       label: "Live Scan",               href: "/dashboard/scan",      exact: false, locked: false },
     { icon: "reports",    label: "Berichte",                href: "/dashboard/scans",     exact: true,  locked: false },
     isPro
-      ? { icon: "whitelabel", label: "White-Label & Branding", href: "/dashboard/settings#branding", exact: false, locked: false }
-      : { icon: "whitelabel", label: "White-Label & Branding", href: "/fuer-agenturen#pricing",      exact: false, locked: true  },
+      ? { icon: "whitelabel", label: "White-Label & Branding", href: "/dashboard/agency-branding", exact: false, locked: false }
+      : { icon: "whitelabel", label: "White-Label & Branding", href: "/fuer-agenturen#pricing",    exact: false, locked: true  },
   ];
 
   return (

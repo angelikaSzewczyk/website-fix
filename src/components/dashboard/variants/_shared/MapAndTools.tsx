@@ -262,7 +262,7 @@ export function GscInsightCard({ speedScore, domainUrl }: { speedScore: number; 
         )}
 
         {state === "not_configured" && (
-          <Link href="/dashboard/settings#integrationen" style={{
+          <Link href="/dashboard/agency-branding" style={{
             fontSize: 11, fontWeight: 700, color: "#4285F4",
             padding: "6px 13px", borderRadius: 6,
             background: "rgba(66,133,244,0.10)", border: "1px solid rgba(66,133,244,0.28)",
