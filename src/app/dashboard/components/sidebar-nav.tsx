@@ -11,7 +11,6 @@ import {
   Clock,
   Archive,
   Users,
-  Code2,
   Magnet,
   Palette,
 } from "lucide-react";
@@ -50,17 +49,19 @@ type NavItem = {
 
 // Plans that get the agency nav
 
-// Agency nav (same for both agency tiers)
+// Agency nav — High-End-Refactor:
+// Jeder Eintrag = einzigartige Mission. Widget-Konfigurator ist in den
+// Lead-Generator umgezogen, "White-Label & Branding" heißt jetzt
+// Agency-Branding (umfasst SMTP/Custom-Domain/API-Key + Logo/Color).
 const AGENCY_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard",                    label: "Kommandozentrale",        icon: <LayoutDashboard size={16} />, exact: true },
-  { href: "/dashboard/clients",            label: "Kundenliste",             icon: <Users size={16} /> },
-  { href: "/dashboard/reports",            label: "Berichte-Archiv",         icon: <Archive size={16} /> },
-  { href: "/dashboard/widget-config",      label: "Widget-Konfigurator",     icon: <Code2 size={16} /> },
-  { href: "/dashboard/lead-generator",     label: "Lead-Generator (Widget)", icon: <Magnet size={16} />, beta: true },
+  { href: "/dashboard",                    label: "Kommandozentrale",   icon: <LayoutDashboard size={16} />, exact: true },
+  { href: "/dashboard/clients",            label: "Kunden-Portfolio",   icon: <Users size={16} /> },
+  { href: "/dashboard/reports",            label: "Berichts-Archiv",    icon: <Archive size={16} /> },
+  { href: "/dashboard/lead-generator",     label: "Lead-Generator",     icon: <Magnet size={16} /> },
   // Settings-Hub: zwei Deep-Links auf dieselbe Route, unterschieden per Hash.
   // isActive() unten matched den Hash exakt — beide leuchten NIE gleichzeitig.
-  { href: "/dashboard/settings#branding",  label: "White-Label & Branding",  icon: <Palette size={16} /> },
-  { href: "/dashboard/settings#profil",    label: "Einstellungen",           icon: <Settings size={16} /> },
+  { href: "/dashboard/settings#branding",  label: "Agency-Branding",    icon: <Palette size={16} /> },
+  { href: "/dashboard/settings#profil",    label: "Einstellungen",      icon: <Settings size={16} /> },
 ];
 
 // Nav for free / single plans
