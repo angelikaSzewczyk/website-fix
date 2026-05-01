@@ -70,6 +70,7 @@ export default async function LeadGeneratorPage() {
       embedSnippet={embedSnippet}
       embedUrl={embedUrl}
       stats={stats}
+      agencyId={String(agencyId)}
     />
   );
 }

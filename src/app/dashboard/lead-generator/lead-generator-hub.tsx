@@ -73,11 +73,13 @@ export default function LeadGeneratorHub({
   embedSnippet,
   embedUrl,
   stats,
+  agencyId,
 }: {
   initialLeads: Lead[];
   embedSnippet: string;
   embedUrl:     string;
   stats:        Stats;
+  agencyId:     string;
 }) {
   const [leads, setLeads]       = useState(initialLeads);
   const [filter, setFilter]     = useState<"all" | "new" | "contacted" | "converted">("all");
@@ -87,6 +89,70 @@ export default function LeadGeneratorHub({
   const [, startTransition]     = useTransition();
 
   const filtered = filter === "all" ? leads : leads.filter(l => l.status === filter);
+
+  // ── CSV-Export ───────────────────────────────────────────────────────
+  // CRM-kompatible Header-Reihenfolge (siehe User-Spec 01.05.). Quote-Escaping
+  // nach RFC 4180: Felder mit Komma / Quote / Newline werden in "" gewrapped,
+  // interne Quotes verdoppelt. BOM (﻿) am Datei-Anfang sorgt dafür, dass
+  // Excel UTF-8 erkennt — sonst landet "ä" als "Ã¤" beim deutschen Office-User.
+  function csvEscape(value: string | number | null | undefined): string {
+    if (value === null || value === undefined) return "";
+    const str = String(value);
+    if (/[",\r\n]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  function exportLeadsToCsv() {
+    const headers = [
+      "First Name",
+      "Email",
+      "Website URL",
+      "Lead Source",
+      "Lead Score",
+      "Created At",
+      "Agency ID",
+    ];
+
+    const rows = filtered.map(l => {
+      // First Name: Local-Part vor dem @ als best-effort Heuristik
+      // (z.B. "max.mueller@kunde.de" → "max.mueller"). Leer wenn kein
+      // visitor_email — der CRM-Import füllt das bei Bedarf selbst.
+      const firstName = l.visitor_email
+        ? l.visitor_email.split("@")[0] ?? ""
+        : "";
+      // Created At: ISO-8601 ist universell parseable (Hubspot, Pipedrive,
+      // Salesforce, Excel). Deutsches Format würde manche Importer brechen.
+      const createdAt = new Date(l.created_at).toISOString();
+      const score = l.score != null ? `${l.score}/100` : "";
+
+      return [
+        firstName,
+        l.visitor_email ?? "",
+        l.scanned_url,
+        "WebsiteFix Widget",
+        score,
+        createdAt,
+        agencyId,
+      ].map(csvEscape).join(",");
+    });
+
+    const csv = "﻿" + [headers.map(csvEscape).join(","), ...rows].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const today = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `websitefix-leads-${today}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setToast(`${filtered.length} Lead${filtered.length === 1 ? "" : "s"} als CSV exportiert.`);
+    setTimeout(() => setToast(null), 3500);
+  }
 
   function copyEmbed() {
     navigator.clipboard.writeText(embedSnippet).then(() => {
@@ -237,18 +303,50 @@ export default function LeadGeneratorHub({
             <span style={{ fontSize: 13, fontWeight: 800, color: T.text, letterSpacing: "-0.01em" }}>
               Leads {filter !== "all" && <span style={{ color: T.textMuted, fontWeight: 600 }}>· {filtered.length}</span>}
             </span>
-            <div style={{ display: "flex", gap: 4 }}>
-              {(["all", "new", "contacted", "converted"] as const).map(f => (
-                <button key={f} onClick={() => setFilter(f)} style={{
-                  padding: "5px 11px", borderRadius: 7, cursor: "pointer",
-                  background: filter === f ? T.purpleBg : "transparent",
-                  border: `1px solid ${filter === f ? T.purpleBdr : T.border}`,
-                  color: filter === f ? T.purple : T.textSub,
-                  fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
-                }}>
-                  {f === "all" ? "Alle" : STATUS_CONFIG[f].label}
-                </button>
-              ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {(["all", "new", "contacted", "converted"] as const).map(f => (
+                  <button key={f} onClick={() => setFilter(f)} style={{
+                    padding: "5px 11px", borderRadius: 7, cursor: "pointer",
+                    background: filter === f ? T.purpleBg : "transparent",
+                    border: `1px solid ${filter === f ? T.purpleBdr : T.border}`,
+                    color: filter === f ? T.purple : T.textSub,
+                    fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
+                  }}>
+                    {f === "all" ? "Alle" : STATUS_CONFIG[f].label}
+                  </button>
+                ))}
+              </div>
+
+              {/* CSV-Export-Icon — glassmorph, oben rechts in der Card.
+                  Disabled bei 0 sichtbaren Leads (sonst leere CSV-Datei).
+                  Tooltip via native `title` (barrier-free + screen-reader-friendly). */}
+              <button
+                onClick={exportLeadsToCsv}
+                disabled={filtered.length === 0}
+                title={filtered.length === 0 ? "Keine Leads im aktuellen Filter" : "Leads als CSV exportieren"}
+                aria-label="Leads als CSV exportieren"
+                className="leadgen-csv-btn"
+                style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 30, height: 30, borderRadius: 8, padding: 0,
+                  background: "rgba(255,255,255,0.04)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  color: filtered.length === 0 ? T.textFaint : T.textSub,
+                  cursor: filtered.length === 0 ? "not-allowed" : "pointer",
+                  opacity: filtered.length === 0 ? 0.5 : 1,
+                  transition: "background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -358,6 +456,17 @@ export default function LeadGeneratorHub({
       <style>{`
         @media (max-width: 980px) {
           .agency-leadgen-grid { grid-template-columns: 1fr !important; }
+        }
+        /* Glassmorpher CSV-Export-Button — purple-tinted Hover als
+           dezenter Cue, dass der Button klickbar ist. */
+        .leadgen-csv-btn:not(:disabled):hover {
+          background: rgba(124,58,237,0.14) !important;
+          border-color: rgba(124,58,237,0.35) !important;
+          color: #a78bfa !important;
+          transform: translateY(-1px);
+        }
+        .leadgen-csv-btn:not(:disabled):active {
+          transform: translateY(0);
         }
       `}</style>
     </main>
