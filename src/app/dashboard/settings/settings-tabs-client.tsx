@@ -41,9 +41,14 @@ type IntegrationsVisible = {
 
 type TabId = "profil" | "branding" | "integrationen";
 
+// Tab-Labels nach High-End-Refactor (01.05.2026):
+//   profil        = Account & Billing (Einstellungen-Hub aus Sidebar)
+//   branding      = Agency-Branding-Hub (Identität & Technik: Logo, Color,
+//                   SMTP, Custom Domain, API-Key — alles in agency-config-client)
+//   integrationen = Externe Workflow-Hooks (Slack, Asana, Jira, Trello, GSC, GA)
 const TABS: { id: TabId; label: string }[] = [
-  { id: "profil",        label: "Profil & Abo" },
-  { id: "branding",      label: "Branding" },
+  { id: "profil",        label: "Einstellungen" },
+  { id: "branding",      label: "Agency-Branding" },
   { id: "integrationen", label: "Integrationen" },
 ];
 
