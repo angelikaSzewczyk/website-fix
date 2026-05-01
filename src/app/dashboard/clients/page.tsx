@@ -170,7 +170,7 @@ export default async function ClientsPage({
   const filtersActive = !!(cmsFilter || statusFilter || search);
 
   return (
-    <main style={{ padding: "32px 32px 80px", color: T.text }}>
+    <main style={{ padding: "32px 32px 80px", color: T.text, maxWidth: 1280, margin: "0 auto" }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
@@ -182,7 +182,7 @@ export default async function ClientsPage({
           <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
             Agency · Technische Inventur
           </p>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
             Kunden-Portfolio
           </h1>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: T.textSub, maxWidth: 620, lineHeight: 1.55 }}>

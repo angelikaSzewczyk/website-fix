@@ -197,7 +197,7 @@ export default function LeadGeneratorHub({
   }
 
   return (
-    <main style={{ padding: "32px 32px 80px", color: T.text }}>
+    <main style={{ padding: "32px 32px 80px", color: T.text, maxWidth: 1280, margin: "0 auto" }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
@@ -209,7 +209,7 @@ export default function LeadGeneratorHub({
           <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
             Agency · Wachstums-Maschine
           </p>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
             Lead-Generator
           </h1>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: T.textSub, maxWidth: 620, lineHeight: 1.55 }}>

@@ -301,7 +301,7 @@ export default async function AgencyDashboard({
   void firstName; void agencyLogoUrl; void badge; void plan; void usedSlots;
 
   return (
-    <main style={{ padding: "28px 32px 80px" }}>
+    <main style={{ padding: "28px 32px 80px", maxWidth: 1280, margin: "0 auto" }}>
 
       {/* ── Sticky Action-Bar ── */}
       <div style={{
@@ -319,7 +319,7 @@ export default async function AgencyDashboard({
           <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.12em", textTransform: "uppercase" }}>
             Kommandozentrale
           </p>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
             {agencyName ?? "Kunden-Übersicht"}
           </h1>
         </div>
