@@ -472,21 +472,25 @@ export default async function AgencyDashboard({
             </div>
           )}
 
-          {/* Header */}
+          {/* Header + Rows in einem gemeinsamen Horizontal-Scroll-Wrapper.
+              minWidth 760px sichert, dass die 4 Fixed-Spalten (470px) + Gaps
+              + Padding nie die fr-Spalten auf 0 kollabieren — sonst überläuft
+              der flex-shrink:0 Avatar in die Domain-Spalte (sichtbar als Overlap
+              auf engen Bento-Karten zwischen 980-1100px Viewport-Breite). */}
           {matrixRows.length > 0 && (
-            <div className="agency-matrix-head" style={{
-              padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`,
-              display: "grid", gridTemplateColumns: "1.7fr 1.2fr 100px 90px 110px 170px", gap: 12, alignItems: "center",
-            }}>
-              {["Kunde", "Domain", "Status", "Trend", "Health", "Aktion"].map(h => (
-                <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
-              ))}
-            </div>
-          )}
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ minWidth: 760 }}>
 
-          {/* Rows */}
-          <div style={{ overflowX: "auto" }}>
-            {matrixRows.map((row, i) => {
+                <div className="agency-matrix-head" style={{
+                  padding: "9px 22px", background: C.bg, borderBottom: `1px solid ${C.divider}`,
+                  display: "grid", gridTemplateColumns: "minmax(180px, 1.7fr) minmax(140px, 1.2fr) 100px 90px 110px 170px", gap: 12, alignItems: "center",
+                }}>
+                  {["Kunde", "Domain", "Status", "Trend", "Health", "Aktion"].map(h => (
+                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{h}</span>
+                  ))}
+                </div>
+
+                {matrixRows.map((row, i) => {
               const domain = (() => { try { return new URL(row.url.startsWith("http") ? row.url : `https://${row.url}`).hostname; } catch { return row.url; } })();
               const label = row.client_label ?? row.name ?? domain;
               const initials = label.replace(/https?:\/\//, "").replace(/\./g, " ").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "??";
@@ -550,7 +554,7 @@ export default async function AgencyDashboard({
 
               return (
                 <div key={row.id} className="agency-client-row" style={{
-                  display: "grid", gridTemplateColumns: "1.7fr 1.2fr 100px 90px 110px 170px",
+                  display: "grid", gridTemplateColumns: "minmax(180px, 1.7fr) minmax(140px, 1.2fr) 100px 90px 110px 170px",
                   gap: 12, alignItems: "center", padding: "13px 22px",
                   borderBottom: i < matrixRows.length - 1 ? `1px solid ${C.divider}` : "none", background: "transparent",
                 }}>
@@ -681,7 +685,10 @@ export default async function AgencyDashboard({
                 </div>
               );
             })}
-          </div>
+
+              </div>
+            </div>
+          )}
         </div>
         {/* /Kunden-Matrix */}
 
