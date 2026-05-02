@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
+import { checkWebsite } from "@/lib/monitor";
+
+export const runtime = "nodejs";
+export const maxDuration = 15;
 
 export async function GET() {
   const session = await auth();
@@ -73,7 +77,64 @@ export async function POST(req: NextRequest) {
     is_customer_project: boolean; client_label: string | null;
   }>;
 
-  return NextResponse.json({ success: true, website: rows[0] ?? null });
+  const website = rows[0] ?? null;
+
+  // ── First-Run Health-Check ──────────────────────────────────────────
+  // Vorher sah ein neu angelegter Kunde im Portfolio bis zum nächsten
+  // monitor-Cron (06:00 UTC, 1×/Tag) leer aus — CMS, SSL, Security und
+  // Status-Pill waren NULL, weil website_checks nur vom Cron befüllt wurde.
+  //
+  // Jetzt: nach dem INSERT in saved_websites führen wir SOFORT einen
+  // checkWebsite() aus und schreiben den ersten website_checks-Eintrag.
+  // Der User sieht beim Reload das vollständige Portfolio-Row.
+  //
+  // Defensiv: 8s-Timeout (Vercel-maxDuration: 15s lässt 7s Buffer für
+  // den INSERT + DB-Roundtrips). Wenn die Kunden-Site offline ist oder
+  // langsam antwortet, ignorieren wir das Failure — der Cron repariert
+  // den Eintrag morgen früh.
+  if (website) {
+    try {
+      const result = await Promise.race([
+        checkWebsite(cleanUrl),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("first-run health check timeout")), 8000)
+        ),
+      ]);
+      const status =
+        result.alerts.some(a => a.level === "critical") ? "critical"
+        : result.alerts.some(a => a.level === "warning") ? "warning"
+        : result.is_online ? "ok" : "offline";
+
+      await Promise.all([
+        sql`
+          INSERT INTO website_checks (
+            website_id, user_id, is_online, response_time_ms,
+            ssl_valid, ssl_expires_at, ssl_days_left,
+            platform, security_score, security_headers,
+            http_status, alerts,
+            cms_context, plugins_detected
+          ) VALUES (
+            ${website.id}::uuid, ${session.user.id}, ${result.is_online}, ${result.response_time_ms},
+            ${result.ssl_valid}, ${result.ssl_expires_at}, ${result.ssl_days_left},
+            ${result.platform}, ${result.security_score}, ${JSON.stringify(result.security_headers)},
+            ${result.http_status}, ${JSON.stringify(result.alerts)},
+            ${result.cms_context}, ${JSON.stringify(result.plugins_detected)}::jsonb
+          )
+        `,
+        sql`
+          UPDATE saved_websites
+          SET last_check_at = NOW(), last_check_status = ${status}
+          WHERE id = ${website.id}::uuid
+        `,
+      ]);
+    } catch (err) {
+      // Kein Fail — der nächste Cron-Run repariert das. Der INSERT in
+      // saved_websites ist bereits erfolgt, der User-Flow geht weiter.
+      console.error("[websites POST] first-run check failed:", err);
+    }
+  }
+
+  return NextResponse.json({ success: true, website });
 }
 
 export async function DELETE(req: NextRequest) {
