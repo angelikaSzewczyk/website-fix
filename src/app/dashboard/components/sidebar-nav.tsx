@@ -158,10 +158,22 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 12px" }}>
 
-      {/* Logo / Agency Pro placeholder */}
+      {/* Logo / Agency Pro placeholder.
+          Klickbar → führt direkt zum Agency-Branding-Hub (Logo-Upload-
+          Sektion). Hover-Tint signalisiert die Klickbarkeit. */}
       <div style={{ padding: "20px 8px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         {isProPlan ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link
+            href="/dashboard/agency-branding"
+            className="agency-logo-placeholder"
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "6px 8px", margin: "-6px -8px",
+              borderRadius: 10,
+              textDecoration: "none",
+              transition: "background 0.15s ease",
+            }}
+          >
             {/* Logo placeholder frame */}
             <div style={{
               width: 36, height: 36, borderRadius: 9, flexShrink: 0,
@@ -179,7 +191,7 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
               <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>Agentur-Logo</div>
               <div style={{ fontSize: 10, color: "rgba(167,139,250,0.7)", marginTop: 2, fontWeight: 500 }}>In Einstellungen setzen →</div>
             </div>
-          </div>
+          </Link>
         ) : (
           <BrandLogo href="/dashboard" />
         )}

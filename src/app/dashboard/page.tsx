@@ -613,6 +613,11 @@ export default async function DashboardPage({
           background: rgba(255,255,255,0.04) !important;
         }
 
+        /* Sidebar-Logo-Placeholder Hover (führt zu Agency-Branding-Hub). */
+        .agency-logo-placeholder:hover {
+          background: rgba(167,139,250,0.08);
+        }
+
         /* Acknowledge-Button im Live-Monitor — green tint on hover. */
         .agency-ack-btn:not(:disabled):hover {
           background: rgba(74,222,128,0.14) !important;
