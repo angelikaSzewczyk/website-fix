@@ -351,6 +351,31 @@ export async function GET(req: NextRequest) {
 
           const fetched = await Promise.all(batch.map(async (url) => {
             const { res, html, ttfbMs } = await fetchWithTtfb(url, 6000);
+
+            // ── Redirect-Detection ──────────────────────────────────────
+            // Wenn die Site /eventfotograf zur Home redirected (typisch
+            // bei kaputten WordPress-Permalinks), kriegt der Auditor sonst
+            // den Home-HTML zurück und speichert ihn unter /eventfotograf
+            // → identische Title/Form-Daten an dutzenden URLs.
+            //
+            // res.redirected === true wenn fetch() Redirects gefolgt ist.
+            // Wenn der finale Pfad ANDERS ist als der requested Pfad,
+            // ist es eine Cross-Path-Redirect → wir überspringen das Audit.
+            // (www→non-www, http→https, trailing-slash bleiben zugelassen,
+            //  weil dort der Pfad gleich bleibt.)
+            let isRedirectDuplicate = false;
+            if (res?.redirected) {
+              try {
+                const reqPath   = new URL(url).pathname.replace(/\/+$/, "") || "/";
+                const finalPath = new URL(res.url).pathname.replace(/\/+$/, "") || "/";
+                if (reqPath !== finalPath) isRedirectDuplicate = true;
+              } catch { /* malformed — fall through */ }
+            }
+
+            if (isRedirectDuplicate) {
+              return { audit: null, links: [] };
+            }
+
             const audit = await auditor.analyze({
               html:    html,
               url:     url,
@@ -363,7 +388,7 @@ export async function GET(req: NextRequest) {
           }));
 
           for (const { audit, links } of fetched) {
-            allPages.push(audit);
+            if (audit) allPages.push(audit);
             for (const l of links) {
               const n = normalize(l);
               if (!visited.has(n) && !queue.includes(n) && visited.size + queue.length < maxPages) {

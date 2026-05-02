@@ -513,7 +513,20 @@ export class WebsiteAuditor {
     inputsWithoutLabelFields: string[];
     buttonsWithoutText:   number;
   } {
-    // Sammle alle <label for="X">-IDs
+    // ── Sammle Inputs mit gültigem Label ────────────────────────────────
+    // WCAG erlaubt drei Muster:
+    //   (a) Explicit:   <label for="x">…</label>  +  <input id="x" …>
+    //   (b) Implicit:   <label>…<input …></label>            ← war nicht abgedeckt!
+    //   (c) ARIA:       <input aria-label="…" …>  oder aria-labelledby
+    //
+    // Vor diesem Patch erkannte der Detector NUR (a) und (c). Der häufige
+    // CF7-Pattern "<label>Name<br><input ...></label>" landete als
+    // False-Positive im Bericht — im Schnitt 5 falsche Form-Issues pro
+    // WordPress-Site mit Contact-Form-7-Plugin.
+    //
+    // Fix: Implicit-Label-Erkennung via greedy-aber-non-overlapping
+    // Block-Match. Inputs INNERHALB von <label>...</label> werden über
+    // ihre id ODER name erfasst; bei der Iteration unten skipen wir sie.
     const labelFor = new Set<string>();
     const labelMatches = html.match(/<label[^>]+for=["']([^"']+)["']/gi) ?? [];
     for (const m of labelMatches) {
@@ -521,7 +534,21 @@ export class WebsiteAuditor {
       if (idMatch) labelFor.add(idMatch[1]);
     }
 
-    // input/select/textarea ohne aria-label und ohne id-in-labelFor
+    // Inputs implicit-gelabelt — innerhalb eines <label>-Blocks.
+    const implicitLabelIds   = new Set<string>();
+    const implicitLabelNames = new Set<string>();
+    const labelBlocks = html.match(/<label\b[^>]*>[\s\S]*?<\/label>/gi) ?? [];
+    for (const block of labelBlocks) {
+      const innerInputs = block.match(/<(input|select|textarea)\b[^>]+>/gi) ?? [];
+      for (const inp of innerInputs) {
+        const id   = inp.match(/\sid\s*=\s*["']([^"']+)["']/i)?.[1];
+        const name = inp.match(/\sname\s*=\s*["']([^"']+)["']/i)?.[1];
+        if (id)   implicitLabelIds.add(id);
+        if (name) implicitLabelNames.add(name);
+      }
+    }
+
+    // input/select/textarea: nur die ohne ANY der drei Label-Methoden zählen
     const inputs = html.match(/<(input|select|textarea)\s[^>]+>/gi) ?? [];
     let inputsWithoutLabel = 0;
     const inputsWithoutLabelFields: string[] = [];
@@ -535,12 +562,17 @@ export class WebsiteAuditor {
 
       const idMatch = tag.match(/\sid\s*=\s*["']([^"']+)["']/i);
       const id = idMatch?.[1];
+      const name = tag.match(/\sname\s*=\s*["']([^"']+)["']/i)?.[1];
+
+      // (a) explicit label[for]
       if (id && labelFor.has(id)) continue;
+      // (b) implicit — input innerhalb eines <label>
+      if (id   && implicitLabelIds.has(id))     continue;
+      if (name && implicitLabelNames.has(name)) continue;
 
       inputsWithoutLabel++;
       if (inputsWithoutLabelFields.length < 10) {
         const placeholder = tag.match(/\splaceholder\s*=\s*["']([^"']+)["']/i)?.[1];
-        const name        = tag.match(/\sname\s*=\s*["']([^"']+)["']/i)?.[1];
         inputsWithoutLabelFields.push(placeholder ?? name ?? id ?? "(unnamed input)");
       }
     }
