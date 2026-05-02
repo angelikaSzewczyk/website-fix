@@ -289,7 +289,20 @@ type ScanState = "idle" | "scanning" | "done" | "error";
 type TabType = "website" | "wcag" | "performance" | "fullsite";
 
 // ─── Full-Site progress state ─────────────────────────────────────────────────
-type FullSitePhase = "crawling" | "analyzing" | "ai" | "done" | "error";
+// Phase-Strings müssen 1:1 mit den enqueue("phase", { phase: ... })-Events
+// in src/app/api/full-scan/route.ts übereinstimmen. Vorher fehlten "checking"
+// (Pre-Crawl-Reachability), "writing-summary" (KI-Generation) und "expert"
+// (Agency-Code-Fixes), wodurch der Stepper bei diesen Phasen keinen Schritt
+// markierte und alle Indikatoren grau blieben.
+type FullSitePhase =
+  | "checking"
+  | "crawling"
+  | "analyzing"
+  | "writing-summary"
+  | "expert"
+  | "ai"               // Legacy/Fallback — wird vom Server nicht emittiert
+  | "done"
+  | "error";
 type FullSiteProgress = {
   phase: FullSitePhase;
   message: string;
@@ -1012,28 +1025,51 @@ export default function DashboardScanClient({
       {state === "scanning" && tab === "fullsite" && fsProgress && (
         <div style={{ padding: "24px 28px", background: C.card, border: `1px solid ${C.border}`, borderRadius: C.radius, marginBottom: 24 }}>
           <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-            {(["crawling", "analyzing", "ai"] as const).map((ph, i) => {
-              const phaseOrder = ["crawling", "analyzing", "ai"];
-              const currentIdx = phaseOrder.indexOf(fsProgress.phase);
-              const isDone = i < currentIdx;
-              const isActive = ph === fsProgress.phase;
-              return (
-                <div key={ph} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{
-                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                    background: isDone ? C.green : isActive ? C.blue : C.border,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, color: isDone || isActive ? "#fff" : C.textMuted, fontWeight: 700,
-                  }}>
-                    {isDone ? "✓" : i + 1}
+            {/*
+              Phase-Mapping vom Server:
+                checking         → step 1 (Pre-Check vor dem Crawl)
+                crawling         → step 1
+                analyzing        → step 2 (Aggregator-Konsolidierung)
+                writing-summary  → step 3 (KI-Bericht-Generation)
+                expert           → step 3 (Agency-Bonus, Code-Fixes)
+                done             → alle done
+
+              Vorher matched der Stepper "ai" — das hat der Server aber NIE
+              gesendet. Folge: bei "writing-summary" war indexOf === -1, kein
+              Step aktiv. User sah "KI erstellt Bericht..." mit allen Steps grau.
+            */}
+            {(() => {
+              const phaseToStep: Record<string, 0 | 1 | 2> = {
+                "checking":        0,
+                "crawling":        0,
+                "analyzing":       1,
+                "writing-summary": 2,
+                "expert":          2,
+                "done":            2,
+              };
+              const currentStep = phaseToStep[fsProgress.phase] ?? 0;
+              const allDone     = fsProgress.phase === "done";
+              return (["crawling", "analyzing", "ai"] as const).map((ph, i) => {
+                const isDone   = allDone || i < currentStep;
+                const isActive = !allDone && i === currentStep;
+                return (
+                  <div key={ph} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                      background: isDone ? C.green : isActive ? C.blue : C.border,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, color: isDone || isActive ? "#fff" : C.textMuted, fontWeight: 700,
+                    }}>
+                      {isDone ? "✓" : i + 1}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 400, color: isActive ? C.text : isDone ? C.green : C.textMuted }}>
+                      {ph === "crawling" ? "Crawlen" : ph === "analyzing" ? "Analysieren" : "KI-Report"}
+                    </span>
+                    {i < 2 && <span style={{ color: C.textMuted, fontSize: 14, marginLeft: 2 }}>›</span>}
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 400, color: isActive ? C.text : isDone ? C.green : C.textMuted }}>
-                    {ph === "crawling" ? "Crawlen" : ph === "analyzing" ? "Analysieren" : "KI-Report"}
-                  </span>
-                  {i < 2 && <span style={{ color: C.textMuted, fontSize: 14, marginLeft: 2 }}>›</span>}
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
           <div style={{ padding: "12px 16px", background: C.blueBg, borderRadius: C.radiusSm, border: `1px solid ${C.blueBorder}`, marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
