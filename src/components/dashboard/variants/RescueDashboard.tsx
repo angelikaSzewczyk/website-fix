@@ -24,6 +24,8 @@ import { useState } from "react";
 import Link from "next/link";
 import type { ParsedIssueProp } from "./_shared/dashboard-types";
 import GuideUnlockModal from "./_shared/GuideUnlockModal";
+import OnboardingProblemModal from "./_shared/OnboardingProblemModal";
+import { humanizeIssue } from "@/lib/humanize";
 
 /** Kandidat für Pay-per-Guide-Match — wird vom Server pro Säule
  *  passend einsortiert (`guideByPillar`). */
@@ -195,13 +197,17 @@ export default function RescueDashboard({
 
   void speedScore; // Score-Berechnung läuft jetzt pro Säule, Top-Level nicht mehr genutzt
 
-  // Issues in die 3 Säulen gruppieren
+  // Issues in die 3 Säulen gruppieren — Klassifikation nach den ROHEN
+  // Issue-Texten (Tech-Keywords matchen so wie sie aus der Engine kommen).
+  // Erst beim Render-Output humanisieren wir die Strings — sonst würden
+  // unsere Keywords ("ttfb" etc.) in den ersetzten Strings nicht mehr
+  // gefunden werden.
   const grouped: Record<Pillar, ParsedIssueProp[]> = {
     visibility: [], health: [], speed: [],
   };
   for (const issue of issues) {
     const p = classifyIssue(issue);
-    if (p) grouped[p].push(issue);
+    if (p) grouped[p].push(humanizeIssue(issue));
   }
   // Innerhalb jeder Säule: rote vor gelben, dann nach count desc
   for (const k of Object.keys(grouped) as Pillar[]) {
@@ -529,6 +535,12 @@ export default function RescueDashboard({
           </button>
         )}
       </div>
+
+      {/* Onboarding-Problem-Selector — erscheint nur beim ersten Login
+          (localStorage-Flag "wf_onboarding_seen"). Wird mit dem
+          aktuellen lastScan-URL als default vorbefüllt, falls schon
+          eine Site angelegt wurde. */}
+      <OnboardingProblemModal defaultUrl={url} />
 
       {/* SOS-Modal (Pay-per-Guide-Unlock) */}
       {activeGuideModal && (

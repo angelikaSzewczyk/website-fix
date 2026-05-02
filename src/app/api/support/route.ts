@@ -34,8 +34,10 @@ type IncomingBody = {
     lastErrorLog?:     string;
     timestamp?:        string;
     plan?:             string;
+    requestType?:      string;
     screenshot?:       ScreenshotInput | null;
   };
+  requestType?:        string;
 };
 
 const MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024;
@@ -118,6 +120,11 @@ export async function POST(req: NextRequest) {
     lastErrorLog:     body.metadata?.lastErrorLog     ?? null,
     timestamp:        body.metadata?.timestamp        ?? new Date().toISOString(),
     plan:             body.metadata?.plan             ?? null,
+    // requestType-Marker für Lead-Qualifizierung im Admin-Dashboard.
+    // Aktuell genutzt: "agency-support" (RescueDashboard CTA "Agentur-Support
+    // anfordern" — Einzelunternehmer der Hilfe bei Umsetzung will → Lead
+    // für die Marktplatz-Phase).
+    requestType:      body.requestType ?? body.metadata?.requestType ?? "general-support",
     screenshot:       screenshot ? {
       name:    screenshot.name,
       type:    screenshot.type,
