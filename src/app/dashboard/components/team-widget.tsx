@@ -409,12 +409,15 @@ export default function TeamWidget() {
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ flex: 1, padding: "8px", minHeight: 140 }}>
+      {/* Body — flex column. Empty-/Error-State bekommen flex:1 +
+          justifyContent:center, damit sie sich vertikal zentrieren wenn
+          die Card vom Grid hochgezogen wird (alignItems:stretch). Liste
+          (usedSeats > 0) bleibt top-aligned (default flex-column). */}
+      <div style={{ flex: 1, padding: "8px", minHeight: 140, display: "flex", flexDirection: "column" }}>
         {loading && <Skeleton />}
 
         {!loading && error && (
-          <div style={{ padding: "20px 14px", textAlign: "center" }}>
+          <div style={{ flex: 1, padding: "20px 14px", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}>
             <p style={{ margin: 0, fontSize: 12, color: "#f87171", lineHeight: 1.5 }}>
               {error}
             </p>
@@ -422,7 +425,7 @@ export default function TeamWidget() {
         )}
 
         {isEmpty && (
-          <div style={{ padding: "28px 16px 22px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1, padding: "28px 16px 22px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 11,
               background: "var(--agency-accent-bg)",

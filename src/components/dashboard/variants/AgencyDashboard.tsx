@@ -688,8 +688,11 @@ export default async function AgencyDashboard({
           {/* /Lead-Ticker */}
 
           {/* 2-Spalten: Activity-Feed (links, breiter) + Team-Widget (rechts).
-              Activity gibt das Was-ist-passiert, Team das Wer-ist-online. */}
-          <div className="agency-two-col" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start" }}>
+              Activity gibt das Was-ist-passiert, Team das Wer-ist-online.
+              alignItems: stretch sorgt dafür, dass beide Cards die selbe
+              Höhe bekommen — sonst schrumpft das TeamWidget auf den Empty-
+              State zusammen, während der Activity-Feed auf 5 Items wächst. */}
+          <div className="agency-two-col" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "stretch" }}>
 
           {/* Widget 1: Activity-Feed */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
@@ -756,7 +759,7 @@ export default async function AgencyDashboard({
           {/* /2-col Activity+Team */}
 
           {/* 2-Spalten: System-Status + Anstehende Berichte. */}
-          <div className="agency-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+          <div className="agency-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "stretch" }}>
 
           {/* Widget 2: System-Status */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "14px 18px", backdropFilter: "blur(8px)" }}>
