@@ -5,6 +5,7 @@ import Link from "next/link";
 import IssueList, { type IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
 import { DrawerPanel } from "@/components/dashboard/variants/_shared/IssueDetailDrawer";
 import type { UnterseiteProp } from "@/components/dashboard/variants/_shared/dashboard-types";
+import DiagnoseReport from "../../scan/diagnose-report";
 import PrintButton from "./print-button";
 
 interface Props {
@@ -18,6 +19,13 @@ interface Props {
   scanId: string;
   integrationsStatus?: { asana: boolean; slack: boolean } | null;
   unterseiten?: UnterseiteProp[];
+  /** KI-Diagnose-Text (scan.result) — wird als Hero gerendert wie auf der
+   *  Live-Scan-Page direkt nach dem Scan. Vorher fehlte dieser Pfad: User
+   *  musste im Activity-Feed navigieren und sah dort eine andere View
+   *  (nur IssueList ohne Score-Ring). */
+  diagnose?: string;
+  totalPages?: number;
+  issueCount?: number;
 }
 
 const T = {
@@ -109,6 +117,9 @@ export default function ScanDetailClient({
   url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId,
   integrationsStatus = null,
   unterseiten: rawUnterseiten = [],
+  diagnose = "",
+  totalPages,
+  issueCount,
 }: Props) {
   const [drawerPageUrl, setDrawerPageUrl] = useState<string | null>(null);
   const [checkedUrls, setCheckedUrls] = useState<Set<string>>(new Set());
@@ -177,6 +188,23 @@ export default function ScanDetailClient({
           </h1>
           <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{date}</p>
         </div>
+
+        {/* ── KI-Site-Report (Hero) ──────────────────────────────────────
+            Identisch zur Live-Scan-Result-Page — Score-Ring + AI-Diagnose
+            + Stats (Pages / Issues). Vorher fehlte der ganze Block auf der
+            archivierten Detail-Page; der User sah nur die Issue-Liste,
+            keinen KI-Bericht und keinen Score. */}
+        {diagnose && (
+          <div style={{ marginTop: 24 }}>
+            <DiagnoseReport
+              diagnose={diagnose}
+              url={url}
+              totalPages={totalPages}
+              issueCount={issueCount}
+              scannedAt={createdAt}
+            />
+          </div>
+        )}
 
         {/* Results panel */}
         <IssueList

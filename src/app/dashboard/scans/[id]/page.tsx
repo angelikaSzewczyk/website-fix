@@ -24,6 +24,8 @@ type Scan = {
   issues_json: string | null;
   unterseiten_json: string | null;
   speed_score: number | null;
+  result: string | null;
+  total_pages: number | null;
 };
 
 // ─── Consolidation helpers ─────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
     SELECT id, url, type, created_at, issue_count,
            issues_json::text       AS issues_json,
            unterseiten_json::text  AS unterseiten_json,
-           speed_score
+           speed_score, result, total_pages
     FROM scans
     WHERE id = ${params.id} AND user_id = ${session.user.id}
     LIMIT 1
@@ -152,6 +154,9 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
       scanId={scan.id}
       integrationsStatus={integrationsStatus}
       unterseiten={unterseiten}
+      diagnose={scan.result ?? ""}
+      totalPages={scan.total_pages ?? unterseiten.length}
+      issueCount={scan.issue_count ?? panelIssues.reduce((s, i) => s + (i.count ?? 1), 0)}
     />
   );
 }
