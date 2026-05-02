@@ -463,22 +463,19 @@ export default function DashboardScanClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectUrl]);
 
+  // User-Feedback-Banner nach Scan-Completion. Kein Auto-Redirect mehr —
+  // der User soll selbst entscheiden, was er als nächstes tut (Result lesen,
+  // PDF exportieren, Detail-Drilldown, neuer Scan, oder Dashboard-Visit).
+  // Vorher: Auto-Redirect nach 5s riss den User aus der Result-Page raus,
+  // bevor er entschieden hatte was er tun will. Banner zeigt jetzt nur
+  // einen freiwilligen "Zum Dashboard"-Button.
   function startRedirectCountdown() {
-    setRedirectCountdown(5);
-    countdownRef.current = setInterval(() => {
-      setRedirectCountdown(prev => {
-        if (prev === null || prev <= 1) {
-          if (countdownRef.current) clearInterval(countdownRef.current);
-          window.location.href = "/dashboard?newScan=true";
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Banner einblenden ohne Countdown — wir nutzen das gleiche
+    // redirectCountdown-State, aber als boolean-Flag (1 = sichtbar).
+    setRedirectCountdown(1);
   }
 
   function cancelRedirect() {
-    if (countdownRef.current) clearInterval(countdownRef.current);
     setRedirectCountdown(null);
   }
 
@@ -920,7 +917,12 @@ export default function DashboardScanClient({
 
       </div>
 
-      {/* ── REDIRECT COUNTDOWN BANNER ──────────────────────── */}
+      {/* ── COMPLETION-BANNER ──────────────────────────────────────────
+          Positives Feedback nach Scan-Completion. Kein Auto-Redirect mehr
+          — der User soll in Ruhe das Result anschauen, PDF exportieren,
+          Detail-Drilldown nutzen. "Zum Dashboard" ist freiwillig + ein
+          dezenter "Schließen"-Button (×) blendet das Banner aus, falls
+          es im Weg ist. */}
       {redirectCountdown !== null && (
         <div style={{
           display: "flex", alignItems: "center", gap: 14,
@@ -936,7 +938,7 @@ export default function DashboardScanClient({
               Scan abgeschlossen — Daten wurden gespeichert
             </p>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: C.textSub }}>
-              Weiterleitung zum Dashboard in {redirectCountdown}s…
+              Schau dir den Bericht an, exportiere PDF oder kehre zum Dashboard zurück.
             </p>
           </div>
           <button
@@ -947,17 +949,21 @@ export default function DashboardScanClient({
               fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            Jetzt zum Dashboard →
+            Zum Dashboard →
           </button>
           <button
             onClick={cancelRedirect}
+            aria-label="Banner schließen"
+            title="Banner schließen"
             style={{
-              flexShrink: 0, padding: "8px 14px", borderRadius: C.radiusSm,
+              flexShrink: 0,
+              width: 28, height: 28, borderRadius: 6, padding: 0,
               background: "transparent", border: `1px solid ${C.border}`,
-              color: C.textMuted, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+              color: C.textMuted, fontSize: 16, lineHeight: 1, cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            Hier bleiben
+            ×
           </button>
         </div>
       )}
