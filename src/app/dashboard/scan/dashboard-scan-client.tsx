@@ -739,8 +739,8 @@ export default function DashboardScanClient({
         )}
         <p style={{ margin: 0, fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
           {projectDomain
-            ? `Wähle einen Scan-Modus für dein aktives Projekt.`
-            : "Wähle einen Scan-Modus und analysiere deine Ziel-URL in Echtzeit."}
+            ? `Starte einen Deep-Scan für dein aktives Projekt — Audit aller Unterseiten in einem Lauf.`
+            : "Trage eine URL ein und starte den Deep-Scan — Crawl + Audit + KI-Bericht in einem Lauf."}
         </p>
       </div>
 
