@@ -149,44 +149,98 @@ export default function ScanDetailClient({
     .filter(x => x.count > 0)
     .sort((a, b) => b.count - a.count);
 
-  return (
-    <div style={{ minHeight: "100vh", background: "#0b0c10", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 80px" }}>
+  // Domain für die Hero-Headline (kürzer als die volle URL).
+  const domain = (() => {
+    try { return new URL(url).hostname.replace(/^www\./, ""); }
+    catch { return url; }
+  })();
 
-        {/* Top bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 28, flexWrap: "wrap" }}>
+  // Severity-Counts für die Hero-Pills
+  const totalIssues = redCount + yellowCount;
+  const scoreColor  = speedScore >= 80 ? T.green : speedScore >= 60 ? T.amber : T.red;
+  const scoreLabel  = speedScore >= 80 ? "Gut aufgestellt" : speedScore >= 60 ? "Verbesserungspotenzial" : "Kritisch";
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0b0c10", color: T.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <main style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 32px 80px" }}>
+
+        {/* ── Top-Bar: zurück + Aktionen ────────────────────────────────── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
           <Link href="/dashboard/scans" style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)",
+            fontSize: 12.5, fontWeight: 600, color: T.textSub,
             textDecoration: "none", padding: "7px 14px", borderRadius: 8,
-            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+            background: T.card, border: `1px solid ${T.border}`,
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
             </svg>
-            Zurück zur Berichte-Übersicht
+            Zurück zur Übersicht
           </Link>
 
           <div className="no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <Link href="/dashboard/scan" style={{
-              padding: "9px 20px", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 700,
-              background: "#007BFF", color: "#fff", boxShadow: "0 2px 10px rgba(0,123,255,0.35)",
+            <Link href={`/dashboard/scan?url=${encodeURIComponent(url)}`} style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 16px", borderRadius: 8, textDecoration: "none", fontSize: 12.5, fontWeight: 700,
+              background: T.purpleBg, border: `1px solid ${T.purpleBdr}`, color: T.purple,
             }}>
-              Neues WordPress-Audit →
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+              Re-Scan
             </Link>
             <PrintButton url={url} type="WordPress-Audit" date={date} scanId={scanId} plan={plan} />
           </div>
         </div>
 
-        {/* Scan meta */}
-        <div style={{ marginBottom: 4 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            Archivierter Bericht
+        {/* ── Hero: Domain + Stats-Strip ─────────────────────────────────
+            Premium-Header analog zur Kommandozentrale: Eyebrow-Pre-Text,
+            Domain als prominentes h1, full URL + Datum als Sub-Line, Stats
+            als 4-Spalten-Strip darunter (Pages / Issues / Score / Datum). */}
+        <div style={{
+          marginBottom: 24, paddingBottom: 20,
+          borderBottom: `1px solid ${T.divider}`,
+        }}>
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            Audit-Bericht
           </p>
-          <h1 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", wordBreak: "break-all" }}>
-            {url}
+          <h1 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 800, color: T.text, letterSpacing: "-0.025em", wordBreak: "break-all" }}>
+            {domain}
           </h1>
-          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{date}</p>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.textSub, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+            {url}
+          </p>
+        </div>
+
+        {/* ── Stat-Strip ──────────────────────────────────────────────────── */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
+          marginBottom: 24,
+        }}>
+          {[
+            { label: "Seiten analysiert", value: String(totalPages ?? unterseiten.length), color: T.purple },
+            { label: "Issues gesamt",     value: String(totalIssues),                      color: totalIssues >= 10 ? T.red : totalIssues >= 3 ? T.amber : T.green },
+            { label: "Score",             value: `${speedScore}/100`,                     color: scoreColor, sub: scoreLabel },
+            { label: "Scan-Datum",        value: new Date(createdAt).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" }), color: T.textSub, sub: new Date(createdAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) },
+          ].map(s => (
+            <div key={s.label} style={{
+              padding: "16px 18px", borderRadius: 14,
+              background: T.card, border: `1px solid ${T.border}`,
+              backdropFilter: "blur(8px)",
+            }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: s.color, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                {s.value}
+              </div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 5, letterSpacing: "0.02em" }}>
+                {s.label}
+              </div>
+              {s.sub && (
+                <div style={{ fontSize: 10, color: T.textFaint, marginTop: 2 }}>
+                  {s.sub}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* ── KI-Site-Report (Hero) ──────────────────────────────────────
@@ -333,7 +387,7 @@ export default function ScanDetailClient({
             background: rgba(255,255,255,0.025);
           }
         `}</style>
-      </div>
+      </main>
     </div>
   );
 }
