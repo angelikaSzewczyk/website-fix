@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 import { guardRequest, isUrlAllowed } from "@/lib/scan-guard";
 import { checkIpRateLimit } from "@/lib/ip-rate-limit";
@@ -822,6 +823,14 @@ async function saveUserScan(params: {
       )
       RETURNING id::text
     ` as { id: string }[];
+
+    // Cache-Invalidierung — Mission Control / Portfolio / Scans-Übersicht
+    // bekommen frische Daten beim nächsten Visit (Next.js-Router-Cache wird
+    // sonst bei dynamic="force-dynamic"-Seiten clientseitig veraltet bleiben).
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/clients");
+    revalidatePath("/dashboard/scans");
+
     return rows[0]?.id ?? null;
   } catch (err) {
     console.error("DB write error:", err);

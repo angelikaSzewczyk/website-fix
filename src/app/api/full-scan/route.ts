@@ -30,6 +30,7 @@
  */
 
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 import { isUrlAllowed, guardRequest, isRealWebsiteContent } from "@/lib/scan-guard";
 import { auth } from "@/auth";
@@ -464,6 +465,15 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
               ${isSuperseded}
             )
           `;
+
+          // Cache-Invalidierung — Mission Control, Portfolio und Berichts-
+          // Archiv lesen frische Daten beim nächsten Visit. Vorher hatte der
+          // Next.js-Router-Cache veraltete SSR-Renders gehalten, deshalb
+          // tauchte ein frischer Scan erst nach einem Hard-Reload (Ctrl+R)
+          // im Activity-Feed auf.
+          revalidatePath("/dashboard");
+          revalidatePath("/dashboard/clients");
+          revalidatePath("/dashboard/scans");
         } catch (err) {
           // DB-Failure: scan ist trotzdem in der Cache und SSE — User sieht
           // das Result, aber es ist nicht historisch persistiert. Loggen + weiter.
