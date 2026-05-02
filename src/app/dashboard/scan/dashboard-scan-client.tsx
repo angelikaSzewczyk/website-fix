@@ -575,14 +575,23 @@ export default function DashboardScanClient({
     });
 
     es.addEventListener("complete", (ev) => {
-      const d = JSON.parse(ev.data) as FullSiteResult;
-      setFsResult(d);
-      setFsProgress({ phase: "done", message: `${d.totalPages} Seiten analysiert` });
-      setFromCache(d.fromCache === true);
-      setCachedAt(d.cachedAt ?? null);
-      setState("done");
-      startRedirectCountdown();
+      const d = JSON.parse(ev.data) as FullSiteResult & { scanId?: string };
       es.close();
+      // Direkter Redirect zur Detail-Page — kein zwischen-Display der
+      // Result-View mehr. User-Feedback: "diese View muss raus, gefällt
+      // nicht". Die Detail-Page (/dashboard/scans/[scanId]) ist die
+      // kompakte, fokussierte View mit IssueList + Subpage-Drilldown.
+      if (d.scanId) {
+        window.location.href = `/dashboard/scans/${d.scanId}`;
+      } else {
+        // Fallback wenn aus irgendeinem Grund keine scanId — alter Pfad
+        // mit Result-Display, damit der User wenigstens das Result sieht.
+        setFsResult(d);
+        setFsProgress({ phase: "done", message: `${d.totalPages} Seiten analysiert` });
+        setFromCache(d.fromCache === true);
+        setCachedAt(d.cachedAt ?? null);
+        setState("done");
+      }
     });
 
     es.addEventListener("error", (ev) => {
