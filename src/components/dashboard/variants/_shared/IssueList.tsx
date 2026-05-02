@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { isAtLeastProfessional } from "@/lib/plans";
+import { isAtLeastProfessional, isAgency } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
 import IssueActionBar from "@/app/dashboard/components/issue-action-bar";
@@ -762,6 +762,94 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── PluginSetupModal: Agency-Plan-Modal für "Auto-Fix via Plugin" ──────────
+// Statt Upgrade-Pfad zeigen wir Agency-Usern den Setup-Flow für das WP-Plugin
+// (das die Auto-Fixes via /api/wp-bridge auf der Kunden-Site ausführt).
+function PluginSetupModal({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      <div onClick={onClose} style={{
+        position: "fixed", inset: 0, zIndex: 1100,
+        background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
+      }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 1101,
+        width: "min(520px, calc(100vw - 32px))",
+        background: "linear-gradient(135deg, #0d1520 0%, #0f1a2e 100%)",
+        border: "1px solid rgba(167,139,250,0.30)",
+        borderRadius: 20, padding: "36px 32px 28px",
+        boxShadow: "0 32px 80px rgba(0,0,0,0.8)",
+        animation: "wf-sr-modal-in 0.3s cubic-bezier(0.22,1,0.36,1) both",
+      }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: "50%", margin: "0 auto 20px",
+          background: "rgba(167,139,250,0.10)", border: "1.5px solid rgba(167,139,250,0.30)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+            strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+
+        <h2 style={{ textAlign: "center", margin: "0 0 8px", fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
+          Auto-Fix via WordPress-Plugin
+        </h2>
+        <p style={{ textAlign: "center", margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}>
+          Das WebsiteFix-Plugin liest deine bereinigten SEO-Daten via{" "}
+          <code style={{ background: "rgba(167,139,250,0.14)", padding: "1px 6px", borderRadius: 4, fontSize: 11, color: "#a78bfa", fontFamily: "ui-monospace, SF Mono, Menlo, monospace" }}>
+            /api/wp-bridge
+          </code>{" "}
+          aus und appliziert Alt-Texte, Meta-Descriptions und Broken-Link-Redirects direkt in WordPress.
+        </p>
+
+        {/* 3-Schritte-Setup */}
+        <div style={{ marginBottom: 20 }}>
+          {[
+            { n: "1", title: "Plugin auf Kunden-Site installieren", body: "WordPress-Admin → Plugins → Neu hinzufügen → \"WebsiteFix Auto-Heal\" suchen und aktivieren." },
+            { n: "2", title: "API-Key generieren", body: "In WebsiteFix unter Agency-Branding → API-Key erstellen → einmalig kopieren (wird danach nur als Hash gespeichert)." },
+            { n: "3", title: "Key ins Plugin eintragen", body: "WordPress-Admin → WebsiteFix → Settings → API-Key einfügen → Speichern. Plugin pollt alle 6h und appliziert neue Fixes." },
+          ].map(step => (
+            <div key={step.n} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{
+                flexShrink: 0, width: 24, height: 24, borderRadius: 7,
+                background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 800, color: "#a78bfa",
+              }}>{step.n}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 3 }}>{step.title}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>{step.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Link href="/dashboard/agency-branding" style={{
+          display: "block", textAlign: "center",
+          padding: "13px 24px", borderRadius: 10,
+          background: "#a78bfa", color: "#0b0c10",
+          fontSize: 14, fontWeight: 800, textDecoration: "none",
+          boxShadow: "0 4px 24px rgba(167,139,250,0.3)",
+        }}>
+          API-Key in Agency-Branding generieren →
+        </Link>
+        <button onClick={onClose} style={{
+          display: "block", width: "100%", marginTop: 10,
+          background: "none", border: "none", cursor: "pointer",
+          fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "inherit",
+        }}>
+          Schließen
+        </button>
+      </div>
+    </>
+  );
+}
+
 // ─── Skeleton ring (shown while scores haven't loaded yet) ────────────────────
 function SkeletonRing({ label }: { label: string }) {
   return (
@@ -791,12 +879,22 @@ function SkeletonRing({ label }: { label: string }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 export default function IssueList({ issues, redCount, yellowCount, speedScore, plan, lastScan, focusMode, scanId, isWooCommerce = false, builderName = null, builderForGuidance = null, integrationsStatus = null, scanUrl, lockExpertFix, hideScoreRings = false, hideIssueGroups = false }: Props) {
-  const [showUpgrade, setShowUpgrade]   = useState(false);
-  const [showWLModal, setShowWLModal]   = useState(false);
-  const [showPdfHint, setShowPdfHint]   = useState(false);
-  const [showDetails, setShowDetails]   = useState(false);
-  const [openItems, setOpenItems]       = useState<Set<number>>(new Set());
+  const [showUpgrade, setShowUpgrade]     = useState(false);
+  const [showWLModal, setShowWLModal]     = useState(false);
+  const [showPdfHint, setShowPdfHint]     = useState(false);
+  const [showDetails, setShowDetails]     = useState(false);
+  const [showPluginSetup, setShowPluginSetup] = useState(false);
+  const [openItems, setOpenItems]         = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
+
+  // Agency-Plan ist Auto-Fix-via-Plugin berechtigt — der Klick auf den
+  // gelben Button zeigt dann den WP-Plugin-Setup-Pfad statt des
+  // Upgrade-Modals (Pro/Starter sehen weiterhin Upgrade).
+  const isAgencyPlan = isAgency(plan);
+  const onAutoFixClick = () => {
+    if (isAgencyPlan) setShowPluginSetup(true);
+    else              setShowUpgrade(true);
+  };
 
   // ── Executive Summary (Professional+) ────────────────────────────────────
   const isPro = isAtLeastProfessional(plan);
@@ -931,6 +1029,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
     <>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       {showWLModal  && <UpgradeModal onClose={() => setShowWLModal(false)} />}
+      {showPluginSetup && <PluginSetupModal onClose={() => setShowPluginSetup(false)} />}
 
       <style>{`
         @keyframes wf-sr-fadein {
@@ -1517,7 +1616,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                     index={idx}
                     defaultOpen={i === 0}
                     wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
-                    onAutoFix={() => setShowUpgrade(true)}
+                    onAutoFix={onAutoFixClick}
                     builder={builderForGuidance}
                     actionStatus={isPro ? integrationsStatus ?? null : null}
                     scanUrl={scanUrl}
@@ -1560,7 +1659,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                     index={idx}
                     defaultOpen={redIssues.length === 0 && i === 0}
                     wfAnchor={isFirstRecht ? "wf-recht-first" : undefined}
-                    onAutoFix={() => setShowUpgrade(true)}
+                    onAutoFix={onAutoFixClick}
                     builder={builderForGuidance}
                     actionStatus={isPro ? integrationsStatus ?? null : null}
                     scanUrl={scanUrl}

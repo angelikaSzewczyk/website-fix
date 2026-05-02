@@ -22,6 +22,7 @@ type Scan = {
   created_at: string;
   issue_count: number | null;
   issues_json: string | null;
+  unterseiten_json: string | null;
   speed_score: number | null;
 };
 
@@ -79,7 +80,10 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
 
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`
-    SELECT id, url, type, created_at, issue_count, issues_json::text AS issues_json, speed_score
+    SELECT id, url, type, created_at, issue_count,
+           issues_json::text       AS issues_json,
+           unterseiten_json::text  AS unterseiten_json,
+           speed_score
     FROM scans
     WHERE id = ${params.id} AND user_id = ${session.user.id}
     LIMIT 1
@@ -94,6 +98,22 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
   let rawIssues: ScanIssue[] = [];
   try {
     if (scan.issues_json) rawIssues = JSON.parse(scan.issues_json) as ScanIssue[];
+  } catch { /* malformed JSON — treat as empty */ }
+
+  // Parse unterseiten — die Per-Page-Daten für den Issue-Detail-Drawer
+  // (Liste der konkreten Bilder ohne Alt, Form-Felder ohne Label, etc.).
+  // Bei alten Scans ohne unterseiten_json bleibt das Array leer und der
+  // Client zeigt den Drawer nicht.
+  type UnterseiteRaw = {
+    url: string; erreichbar: boolean; title: string; h1?: string;
+    noindex: boolean; altMissing: number; altMissingImages?: string[];
+    metaDescription?: string;
+    inputsWithoutLabel?: number; inputsWithoutLabelFields?: string[];
+    buttonsWithoutText?: number; foundVia?: string;
+  };
+  let unterseiten: UnterseiteRaw[] = [];
+  try {
+    if (scan.unterseiten_json) unterseiten = JSON.parse(scan.unterseiten_json) as UnterseiteRaw[];
   } catch { /* malformed JSON — treat as empty */ }
 
   const panelIssues = consolidate(rawIssues);
@@ -131,6 +151,7 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
       speedScore={speedScore}
       scanId={scan.id}
       integrationsStatus={integrationsStatus}
+      unterseiten={unterseiten}
     />
   );
 }

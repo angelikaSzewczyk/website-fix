@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import IssueList, { type IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
+import { DrawerPanel } from "@/components/dashboard/variants/_shared/IssueDetailDrawer";
+import type { UnterseiteProp } from "@/components/dashboard/variants/_shared/dashboard-types";
 import PrintButton from "./print-button";
 
 interface Props {
@@ -13,16 +16,67 @@ interface Props {
   yellowCount: number;
   speedScore: number;
   scanId: string;
-  /** Integrations-Status für die Issue-Action-Bar — null wenn Free/Starter
-   *  oder Status nicht ladbar. Wird 1:1 an StarterResultsPanel weitergereicht. */
   integrationsStatus?: { asana: boolean; slack: boolean } | null;
+  unterseiten?: UnterseiteProp[];
 }
 
-export default function ScanDetailClient({ url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId, integrationsStatus = null }: Props) {
+const T = {
+  text:      "rgba(255,255,255,0.92)",
+  textSub:   "rgba(255,255,255,0.55)",
+  textMuted: "rgba(255,255,255,0.40)",
+  textFaint: "rgba(255,255,255,0.25)",
+  border:    "rgba(255,255,255,0.08)",
+  divider:   "rgba(255,255,255,0.06)",
+  card:      "rgba(255,255,255,0.025)",
+  red:       "#f87171",
+  amber:     "#fbbf24",
+  green:     "#4ade80",
+  purple:    "#a78bfa",
+  purpleBg:  "rgba(124,58,237,0.18)",
+  purpleBdr: "rgba(124,58,237,0.40)",
+};
+
+/** Pro-Subpage einen Issue-Count berechnen, damit wir nur die Seiten mit
+ *  Findings in der Liste zeigen. */
+function pageIssueCount(p: UnterseiteProp): number {
+  let n = 0;
+  if (!p.title || p.title === "(kein Title)") n++;
+  if (!p.h1    || p.h1    === "(kein H1)")    n++;
+  if (p.noindex)                              n++;
+  if (!p.metaDescription)                     n++;
+  n += p.altMissing ?? 0;
+  n += p.inputsWithoutLabel ?? 0;
+  n += p.buttonsWithoutText ?? 0;
+  if (!p.erreichbar)                          n++;
+  return n;
+}
+
+export default function ScanDetailClient({
+  url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId,
+  integrationsStatus = null,
+  unterseiten = [],
+}: Props) {
+  const [drawerPageUrl, setDrawerPageUrl] = useState<string | null>(null);
+  const [checkedUrls, setCheckedUrls] = useState<Set<string>>(new Set());
+
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
     day: "2-digit", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
+
+  function toggleChecked(u: string) {
+    setCheckedUrls(prev => {
+      const next = new Set(prev);
+      if (next.has(u)) next.delete(u); else next.add(u);
+      return next;
+    });
+  }
+
+  // Subpages mit ≥1 Issue, sortiert nach Issue-Count desc
+  const subpagesWithIssues = unterseiten
+    .map(p => ({ page: p, count: pageIssueCount(p) }))
+    .filter(x => x.count > 0)
+    .sort((a, b) => b.count - a.count);
 
   return (
     <div style={{ minHeight: "100vh", background: "#0b0c10", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -76,6 +130,121 @@ export default function ScanDetailClient({ url, createdAt, plan, issues, redCoun
           integrationsStatus={integrationsStatus}
           scanUrl={url}
         />
+
+        {/* ── Subpage-Drilldown ─────────────────────────────────────────────
+            Pro Subpage mit Issues ein Eintrag — Klick öffnet den DrawerPanel
+            mit konkreten Bildern (Alt-Text fehlt) und Form-Feldern (Label
+            fehlt). Vorher gab es diesen Drilldown-Pfad nur im ProDashboard,
+            nicht auf der archivierten Scan-Detail-Page. */}
+        {subpagesWithIssues.length > 0 && (
+          <div style={{
+            marginTop: 28, background: T.card, border: `1px solid ${T.border}`,
+            borderRadius: 14, overflow: "hidden",
+          }}>
+            <div style={{
+              padding: "14px 20px", borderBottom: `1px solid ${T.divider}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div>
+                <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 800, color: T.text, letterSpacing: "-0.01em" }}>
+                  Detail-Analyse pro Seite
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>
+                  Klick öffnet die Liste der konkreten Elemente (Bilder ohne Alt-Text,
+                  Formularfelder ohne Label, Buttons ohne Text)
+                </p>
+              </div>
+              <span style={{
+                fontSize: 10.5, fontWeight: 700,
+                padding: "3px 9px", borderRadius: 6,
+                background: T.purpleBg, border: `1px solid ${T.purpleBdr}`,
+                color: T.purple, letterSpacing: "0.04em",
+              }}>
+                {subpagesWithIssues.length} {subpagesWithIssues.length === 1 ? "Seite" : "Seiten"}
+              </span>
+            </div>
+
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {subpagesWithIssues.map(({ page, count }, i) => {
+                const path = (() => { try { return new URL(page.url).pathname || "/"; } catch { return page.url; } })();
+                const isChecked = checkedUrls.has(page.url);
+                return (
+                  <li key={page.url} style={{
+                    borderBottom: i < subpagesWithIssues.length - 1 ? `1px solid ${T.divider}` : "none",
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => setDrawerPageUrl(page.url)}
+                      style={{
+                        width: "100%", textAlign: "left",
+                        padding: "12px 20px", display: "flex", alignItems: "center", gap: 12,
+                        background: "transparent", border: "none", cursor: "pointer",
+                        color: "inherit", fontFamily: "inherit",
+                        transition: "background 0.15s ease",
+                      }}
+                      className="agency-subpage-row"
+                    >
+                      <span style={{
+                        width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                        background: !page.erreichbar ? T.red : count >= 3 ? T.amber : T.green,
+                        boxShadow: `0 0 6px ${(!page.erreichbar ? T.red : count >= 3 ? T.amber : T.green)}80`,
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {page.title && page.title !== "(kein Title)" ? page.title : path}
+                        </div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+                          {path}
+                        </div>
+                      </div>
+                      {isChecked && (
+                        <span title="Erledigt-Markierung gesetzt" style={{
+                          fontSize: 10, fontWeight: 700,
+                          padding: "2px 8px", borderRadius: 6,
+                          background: "rgba(74,222,128,0.10)", border: "1px solid rgba(74,222,128,0.28)",
+                          color: T.green,
+                        }}>
+                          ✓ erledigt
+                        </span>
+                      )}
+                      <span style={{
+                        fontSize: 11, fontWeight: 800,
+                        padding: "3px 10px", borderRadius: 6,
+                        background: count >= 3 ? "rgba(248,113,113,0.10)" : "rgba(251,191,36,0.10)",
+                        border: `1px solid ${count >= 3 ? "rgba(248,113,113,0.28)" : "rgba(251,191,36,0.28)"}`,
+                        color: count >= 3 ? T.red : T.amber,
+                        whiteSpace: "nowrap",
+                      }}>
+                        {count} {count === 1 ? "Issue" : "Issues"}
+                      </span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* DrawerPanel (rendert nur wenn drawerPageUrl gesetzt). Backdrop +
+            ESC werden vom Panel selbst gehandhabt. */}
+        {drawerPageUrl && unterseiten.length > 0 && (
+          <DrawerPanel
+            pageUrl={drawerPageUrl}
+            unterseiten={unterseiten}
+            onClose={() => setDrawerPageUrl(null)}
+            isChecked={checkedUrls.has(drawerPageUrl)}
+            onToggleChecked={() => toggleChecked(drawerPageUrl)}
+          />
+        )}
+
+        <style>{`
+          .agency-subpage-row:hover {
+            background: rgba(255,255,255,0.025);
+          }
+        `}</style>
       </div>
     </div>
   );
