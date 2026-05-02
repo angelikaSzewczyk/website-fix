@@ -770,6 +770,9 @@ async function saveUserScan(params: {
     //   3. neu >= bestehend → alle bisherigen Scans dieser URL mit kleinerer
     //      total_pages werden auf is_superseded=true gesetzt, der neue
     //      Scan ist die Wahrheit.
+    // Drift-Schutz aufgeweicht (siehe full-scan/route.ts): nur drastische
+    // Page-Drops (>50%) markieren den neuen Scan als veraltet. Sonst gewinnt
+    // immer der neue, alle alten werden auf is_superseded=true gesetzt.
     let isSuperseded = false;
     const newPages = params.totalPages ?? 0;
     try {
@@ -781,17 +784,18 @@ async function saveUserScan(params: {
           AND  is_superseded = FALSE
       ` as { max_pages: number }[];
       const existingMax = maxPagesRows[0]?.max_pages ?? 0;
-      if (newPages > 0 && existingMax > 0 && newPages < existingMax) {
+      const dropThreshold = Math.floor(existingMax * 0.5);
+
+      if (newPages > 0 && existingMax > 0 && newPages < dropThreshold) {
         isSuperseded = true;
-      } else if (newPages >= existingMax && existingMax > 0) {
-        // Neuer Scan ist mindestens so tief — alte werden gestempelt.
+      } else if (existingMax > 0) {
+        // Neuer Scan wird Master — alle alten für diese URL ablösen.
         await sql`
           UPDATE scans
           SET    is_superseded = TRUE
           WHERE  user_id = ${params.userId}
             AND  url     = ${params.url}
             AND  is_superseded = FALSE
-            AND  COALESCE(total_pages, 0) < ${newPages}
         `;
       }
     } catch (err) {

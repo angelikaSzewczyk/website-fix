@@ -454,10 +454,23 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
             ? JSON.stringify(scanResult.techFingerprint)
             : null;
 
-          // ── Depth-Validation (siehe lib/scan-cache + scan/route saveUserScan) ─
-          // Verhindert Drift, wenn ein flacherer Scan denselben URL-Eintrag
-          // im Dashboard verdrängt. Älterer-tieferer Scan bleibt Last-Scan,
-          // der neue Eintrag wird historisch gespeichert (is_superseded=true).
+          // ── Depth-Validation ──────────────────────────────────────────
+          // Schutz gegen Drift NUR für drastische Page-Drops (>50% Verlust).
+          // Vorher: jeder neue Scan mit weniger Pages als der alte wurde
+          // als veraltet markiert. Folge: nach dem Noise-Filter-Patch
+          // (9d2c644, der ~30% URLs als duplicate raus warf) wurden ALLE
+          // Re-Scans als superseded markiert, weil der alte 71-Pages-Scan
+          // (mit Date-Archive-Müll) als "tiefer" galt.
+          //
+          // Neue Logik:
+          //   - Wenn newPages < existingMax * 0.5  → neuer ist verdächtig
+          //     flach (z.B. Crawl-Failure, Plan-Cap-Drop), wird superseded
+          //   - Sonst wird der NEUE der Master, alle alten non-superseded
+          //     für diese URL werden auf is_superseded=TRUE gesetzt
+          //
+          // Damit gewinnt ein User-Re-Scan IMMER, solange er ähnlich tief
+          // crawlt — selbst wenn er etwas weniger Pages findet (z.B. weil
+          // ein Filter URLs deduplexiert oder eine Subpage entfernt wurde).
           let isSuperseded = false;
           const newPages   = scanResult.totalPages ?? 0;
           try {
@@ -469,16 +482,21 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
                 AND  is_superseded = FALSE
             ` as { max_pages: number }[];
             const existingMax = maxRows[0]?.max_pages ?? 0;
-            if (newPages > 0 && existingMax > 0 && newPages < existingMax) {
+            const dropThreshold = Math.floor(existingMax * 0.5);
+
+            if (newPages > 0 && existingMax > 0 && newPages < dropThreshold) {
+              // Drastischer Page-Drop (>50%) → neuer Scan ist verdächtig
               isSuperseded = true;
-            } else if (newPages >= existingMax && existingMax > 0) {
+            } else if (existingMax > 0) {
+              // Neuer Scan ist Master — alle alten für diese URL ablösen.
+              // (kein < ${newPages}-Filter mehr; der neue gewinnt auch bei
+              // gleicher oder leicht geringerer Tiefe)
               await sql`
                 UPDATE scans
                 SET    is_superseded = TRUE
                 WHERE  user_id = ${session.user!.id}
                   AND  url     = ${targetUrl}
                   AND  is_superseded = FALSE
-                  AND  COALESCE(total_pages, 0) < ${newPages}
               `;
             }
           } catch (err) {
