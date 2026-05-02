@@ -251,3 +251,133 @@ CREATE UNIQUE INDEX IF NOT EXISTS agency_settings_api_key_wp_hash_idx
 CREATE UNIQUE INDEX IF NOT EXISTS agency_settings_custom_domain_idx
   ON agency_settings(LOWER(custom_domain))
   WHERE custom_domain IS NOT NULL AND custom_domain <> '';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WP-Rescue-Guides — Pay-per-Guide-Monetarisierung (Phase 1, 03.05.2026)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Einzelunternehmer im Starter-Plan haben akute Probleme (Hosting langsam,
+-- Google findet sie nicht, WordPress kritischer Fehler). Statt sie per
+-- Plan-Upgrade abzukassieren, verkaufen wir 5-15-Min-Anleitungen für
+-- 9,90 € pro Guide (One-Time-Payment via Stripe Checkout).
+--
+-- Datenmodell:
+--   1. rescue_guides         — Globale Guide-Library (Admin-pflegbar)
+--   2. rescue_guide_triggers — Issue → Guide-Mapping (welcher Guide passt
+--                              zu welchem Scan-Befund)
+--   3. user_unlocked_guides  — Welche Guides hat ein User schon gekauft
+
+CREATE TABLE IF NOT EXISTS rescue_guides (
+  id              TEXT PRIMARY KEY,             -- "hosting-speed", "google-visibility", ...
+  title           TEXT NOT NULL,
+  problem_label   TEXT NOT NULL,                -- "Dein Hosting ist langsam"
+  preview         TEXT,                         -- 1-2 Sätze Teaser für das Modal
+  price_cents     INTEGER NOT NULL,             -- 990 = 9,90 €
+  stripe_price_id TEXT,                         -- Stripe-Price-ID (one-time)
+  estimated_minutes INTEGER,                    -- "5" — fürs "5-Min-Anleitung"-Wording
+  content_json    JSONB NOT NULL,               -- Steps + Hoster-Variants + Checkliste
+  active          BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Issue → Guide-Mapping (1 Issue kann mehrere Guides triggern via priority).
+-- match_type:
+--   'title_keyword' — issue.title enthält match_value (case-insensitive)
+--   'pillar'        — issue gehört zu einer der 3 Säulen (visibility/health/speed)
+--   'category'      — issue.category === match_value (z.B. "speed")
+CREATE TABLE IF NOT EXISTS rescue_guide_triggers (
+  id            SERIAL PRIMARY KEY,
+  guide_id      TEXT NOT NULL REFERENCES rescue_guides(id) ON DELETE CASCADE,
+  match_type    TEXT NOT NULL DEFAULT 'title_keyword',
+  match_value   TEXT NOT NULL,
+  priority      INTEGER NOT NULL DEFAULT 100
+);
+
+CREATE INDEX IF NOT EXISTS rescue_guide_triggers_guide_idx
+  ON rescue_guide_triggers(guide_id);
+
+-- User-Unlocks: persistenter Zugriff nach erfolgreichem Stripe-Payment.
+-- UNIQUE (user_id, guide_id) verhindert Doppel-Käufe; checklist_state
+-- speichert welche Items der User abgehakt hat (interaktive Checkliste
+-- im Guide-Renderer).
+CREATE TABLE IF NOT EXISTS user_unlocked_guides (
+  id                INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  guide_id          TEXT NOT NULL REFERENCES rescue_guides(id),
+  stripe_session_id TEXT,
+  paid_amount_cents INTEGER NOT NULL,
+  hoster            TEXT,                       -- vom User im Modal gewählt: "strato", "ionos", ...
+  checklist_state   JSONB DEFAULT '{}'::jsonb,  -- { "step-1": true, "step-2": false }
+  unlocked_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, guide_id)
+);
+
+CREATE INDEX IF NOT EXISTS user_unlocked_guides_user_idx
+  ON user_unlocked_guides(user_id);
+
+-- ── Seed: Erster Guide "hosting-speed" ──
+-- Content ist Stub — User schreibt den finalen Text in Phase 2.
+-- Hoster-Variants (default, strato, ionos, all-inkl, hostinger) sind als
+-- Slot vorbereitet; Phase 2 füllt die spezifischen Screenshots/Schritte.
+INSERT INTO rescue_guides (id, title, problem_label, preview, price_cents, estimated_minutes, content_json)
+VALUES (
+  'hosting-speed',
+  '5-Minuten-Hosting-Tuning',
+  'Dein Hosting bremst dich aus',
+  'Dein Server antwortet zu langsam — das kostet dich Besucher und Google-Ranking. Diese Anleitung zeigt dir die 5 typischen Stellschrauben, mit denen du die Antwortzeit halbierst.',
+  990,
+  5,
+  $${
+    "intro": "Dein Server antwortet zu langsam — hier die typischen Stellschrauben, mit denen du die Antwortzeit halbierst.",
+    "variants": {
+      "default": {
+        "steps": [
+          { "title": "PHP-Version prüfen", "body": "Veraltete PHP-Versionen sind oft 30-50% langsamer. Update auf PHP 8.2+.", "screenshot": null },
+          { "title": "GZIP/Brotli aktivieren", "body": "Komprimiert HTML/CSS/JS um 60-80%, reduziert Ladezeit drastisch.", "screenshot": null },
+          { "title": "Caching konfigurieren", "body": "WordPress-Plugin wie WP Rocket oder W3 Total Cache aktivieren.", "screenshot": null },
+          { "title": "Bilder optimieren", "body": "WebP-Format + lazy-loading reduzieren Bandbreite um Faktor 3-5.", "screenshot": null },
+          { "title": "DNS-TTL anpassen", "body": "Niedrige TTL (300s) für schnelle Updates, hohe TTL (3600s+) für Performance.", "screenshot": null }
+        ]
+      },
+      "strato": {
+        "steps": [
+          { "title": "Strato-Login öffnen", "body": "Logge dich auf https://www.strato.de/apps/CustomerService ein.", "screenshot": null },
+          { "title": "PHP-Version-Wechsel", "body": "Hosting → Domain auswählen → PHP-Version → 8.2 wählen → Speichern.", "screenshot": null },
+          { "title": "GZIP via .htaccess", "body": "Im File-Manager .htaccess editieren, mod_deflate-Block hinzufügen.", "screenshot": null }
+        ]
+      },
+      "ionos": {
+        "steps": [
+          { "title": "IONOS-Cloud-Panel", "body": "Login via https://login.ionos.de", "screenshot": null }
+        ]
+      },
+      "all-inkl": {
+        "steps": [
+          { "title": "All-Inkl-KAS öffnen", "body": "https://kas.all-inkl.com — Login mit Kunden-ID.", "screenshot": null }
+        ]
+      },
+      "hostinger": {
+        "steps": [
+          { "title": "Hostinger hPanel", "body": "https://hpanel.hostinger.com", "screenshot": null }
+        ]
+      }
+    },
+    "checklist": [
+      { "id": "php-update",   "text": "PHP-Version auf 8.2 oder höher aktualisiert" },
+      { "id": "gzip",         "text": "GZIP/Brotli-Kompression aktiviert" },
+      { "id": "cache",        "text": "Caching-Plugin installiert und konfiguriert" },
+      { "id": "images",       "text": "Bilder zu WebP konvertiert, lazy-loading aktiv" },
+      { "id": "dns-ttl",      "text": "DNS-TTL geprüft und angepasst" }
+    ]
+  }$$::jsonb
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Trigger für hosting-speed: bei TTFB- oder Speed-Issues vorschlagen.
+INSERT INTO rescue_guide_triggers (guide_id, match_type, match_value, priority) VALUES
+  ('hosting-speed', 'title_keyword', 'ttfb',         200),
+  ('hosting-speed', 'title_keyword', 'antwortzeit',  180),
+  ('hosting-speed', 'title_keyword', 'response time',150),
+  ('hosting-speed', 'title_keyword', 'langsam',      120),
+  ('hosting-speed', 'category',      'speed',        100)
+ON CONFLICT DO NOTHING;

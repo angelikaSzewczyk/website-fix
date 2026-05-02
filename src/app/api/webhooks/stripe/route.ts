@@ -54,6 +54,35 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // ── Branch-Routing per metadata.kind ──────────────────────────────
+    // mode === "payment" + metadata.kind === "rescue_guide" → User-Unlock
+    // mode === "subscription" → klassischer Plan-Upgrade (siehe unten)
+    if (session.mode === "payment" && session.metadata?.kind === "rescue_guide") {
+      const guideId = session.metadata.guide_id;
+      const userId  = session.metadata.user_id;
+      const hoster  = session.metadata.hoster ?? "default";
+      const paidCents = session.amount_total ?? 0;
+
+      if (!guideId || !userId) {
+        console.error("[stripe-webhook] rescue_guide payment missing metadata", session.id);
+        return NextResponse.json({ received: true });
+      }
+
+      try {
+        await sql`
+          INSERT INTO user_unlocked_guides (user_id, guide_id, stripe_session_id, paid_amount_cents, hoster)
+          VALUES (${userId}::int, ${guideId}, ${session.id}, ${paidCents}, ${hoster})
+          ON CONFLICT (user_id, guide_id) DO NOTHING
+        `;
+        console.log(`[stripe-webhook] guide unlocked: user=${userId} guide=${guideId} hoster=${hoster}`);
+      } catch (err) {
+        console.error("[stripe-webhook] guide unlock failed:", err);
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Subscription-Pfad (Plan-Upgrade) ──────────────────────────────
     const email = session.customer_details?.email;
     if (!email) return NextResponse.json({ received: true });
 

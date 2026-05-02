@@ -23,6 +23,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { ParsedIssueProp } from "./_shared/dashboard-types";
+import GuideUnlockModal from "./_shared/GuideUnlockModal";
+
+/** Kandidat für Pay-per-Guide-Match — wird vom Server pro Säule
+ *  passend einsortiert (`guideByPillar`). */
+export type RescueGuideMatch = {
+  id:                string;
+  title:             string;
+  problem_label:     string;
+  preview:           string | null;
+  price_cents:       number;
+  estimated_minutes: number | null;
+  unlocked:          boolean;
+  /** Vorschau-Items für das Modal — die ersten 5 Checklist-Punkte. */
+  checklistPreview:  string[];
+};
 
 interface Props {
   firstName: string;
@@ -36,6 +51,13 @@ interface Props {
   issues:     ParsedIssueProp[];
   redCount:   number;
   yellowCount: number;
+  /** Pro Säule der Top-Match-Guide (oder null). Server-side berechnet
+   *  via lib/rescue-guides.matchGuidesForIssues. */
+  guideByPillar?: {
+    visibility: RescueGuideMatch | null;
+    health:     RescueGuideMatch | null;
+    speed:      RescueGuideMatch | null;
+  };
 }
 
 // ─── Theme-Tokens ────────────────────────────────────────────────────────────
@@ -165,9 +187,13 @@ const PILLARS: Array<{
 export default function RescueDashboard({
   firstName, domain, url, lastScanId, lastScanAt,
   speedScore, issues, redCount, yellowCount,
+  guideByPillar,
 }: Props) {
   const [supportSent, setSupportSent] = useState(false);
   const [supportBusy, setSupportBusy] = useState(false);
+  const [activeGuideModal, setActiveGuideModal] = useState<RescueGuideMatch | null>(null);
+
+  void speedScore; // Score-Berechnung läuft jetzt pro Säule, Top-Level nicht mehr genutzt
 
   // Issues in die 3 Säulen gruppieren
   const grouped: Record<Pillar, ParsedIssueProp[]> = {
@@ -285,6 +311,11 @@ export default function RescueDashboard({
           const score = pillarScore(pillarIssues);
           const sCol  = scoreColor(score);
           const top3  = pillarIssues.slice(0, 3);
+          const guide = guideByPillar?.[p.id] ?? null;
+          // SOS-Button erscheint nur bei kritischer Säule (Score < 70)
+          // UND wenn ein passender Guide konfiguriert ist UND noch nicht
+          // unlocked. Sonst Standard-Detail-Link.
+          const showSosButton = guide && !guide.unlocked && score < 70 && pillarIssues.length > 0;
           return (
             <div key={p.id} style={{
               background: T.card, border: `1px solid ${T.border}`,
@@ -374,26 +405,71 @@ export default function RescueDashboard({
                 </div>
               )}
 
-              {/* Detail-Link */}
-              {lastScanId && pillarIssues.length > 0 && (
-                <Link
-                  href={`/dashboard/scans/${lastScanId}`}
-                  style={{
-                    marginTop: "auto",
-                    display: "inline-flex", alignItems: "center", justifyContent: "space-between", gap: 7,
-                    padding: "10px 14px", borderRadius: 9,
-                    background: p.bg, border: `1px solid ${p.bdr}`,
-                    color: p.color,
-                    fontSize: 12, fontWeight: 700, textDecoration: "none",
-                    paddingTop: pillarIssues.length > 0 ? "10px" : undefined,
-                  }}
-                >
-                  <span>Alle Details ansehen</span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                </Link>
-              )}
+              {/* Action-Bereich am unteren Card-Ende — SOS-Button bei
+                  kritischer Säule, sonst Standard-Detail-Link. Beide
+                  optional bei "alles ok"-State. */}
+              <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                {showSosButton && guide && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveGuideModal(guide)}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                      padding: "12px 14px", borderRadius: 10,
+                      background: "rgba(248,113,113,0.08)",
+                      border: "1.5px solid rgba(248,113,113,0.32)",
+                      color: T.red,
+                      fontSize: 12.5, fontWeight: 800,
+                      cursor: "pointer", fontFamily: "inherit",
+                      letterSpacing: "-0.005em",
+                      animation: "wf-sos-pulse 2.5s ease-in-out infinite",
+                    }}
+                    title="Sofort-Fix-Anleitung freischalten"
+                  >
+                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14 }}>🚨</span>
+                      <span>SOS-Fix anfordern</span>
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.text, opacity: 0.8 }}>
+                      {(guide.price_cents / 100).toFixed(2).replace(".", ",")} €
+                    </span>
+                  </button>
+                )}
+                {guide?.unlocked && (
+                  <Link
+                    href={`/dashboard/guides/${guide.id}`}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 7,
+                      padding: "10px 14px", borderRadius: 9,
+                      background: T.greenBg, border: `1px solid ${T.greenBdr}`,
+                      color: T.green,
+                      fontSize: 12, fontWeight: 700, textDecoration: "none",
+                    }}
+                  >
+                    <span>✓ Anleitung öffnen</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </Link>
+                )}
+                {lastScanId && pillarIssues.length > 0 && (
+                  <Link
+                    href={`/dashboard/scans/${lastScanId}`}
+                    style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "space-between", gap: 7,
+                      padding: "10px 14px", borderRadius: 9,
+                      background: p.bg, border: `1px solid ${p.bdr}`,
+                      color: p.color,
+                      fontSize: 12, fontWeight: 700, textDecoration: "none",
+                    }}
+                  >
+                    <span>Alle Details ansehen</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </Link>
+                )}
+              </div>
             </div>
           );
         })}
@@ -454,9 +530,24 @@ export default function RescueDashboard({
         )}
       </div>
 
+      {/* SOS-Modal (Pay-per-Guide-Unlock) */}
+      {activeGuideModal && (
+        <GuideUnlockModal
+          guide={activeGuideModal}
+          onClose={() => setActiveGuideModal(null)}
+        />
+      )}
+
       <style>{`
         @media (max-width: 980px) {
           .rescue-pillars { grid-template-columns: 1fr !important; }
+        }
+        @keyframes wf-sos-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.18); }
+          50%      { box-shadow: 0 0 16px 1px rgba(248,113,113,0.28); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          button[style*="wf-sos-pulse"] { animation: none !important; }
         }
       `}</style>
     </main>

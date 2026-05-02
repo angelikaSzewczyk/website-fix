@@ -1,0 +1,363 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import type { RescueGuide } from "@/lib/rescue-guides";
+
+const T = {
+  text:       "rgba(255,255,255,0.92)",
+  textSub:    "rgba(255,255,255,0.55)",
+  textMuted:  "rgba(255,255,255,0.40)",
+  border:     "rgba(255,255,255,0.10)",
+  divider:    "rgba(255,255,255,0.06)",
+  card:       "rgba(255,255,255,0.025)",
+  green:      "#4ade80",
+  greenBg:    "rgba(74,222,128,0.10)",
+  greenBdr:   "rgba(74,222,128,0.28)",
+  amber:      "#fbbf24",
+  blue:       "#7aa6ff",
+  purple:     "#a78bfa",
+  purpleBg:   "rgba(124,58,237,0.18)",
+  purpleBdr:  "rgba(124,58,237,0.40)",
+};
+
+export default function GuideRenderer({
+  guide,
+  unlocked: initialUnlocked,
+  hoster,
+  checklistState: initialChecklistState,
+  pendingSessionId,
+}: {
+  guide:           RescueGuide;
+  unlocked:        boolean;
+  hoster:          string;
+  checklistState:  Record<string, boolean>;
+  pendingSessionId: string | null;
+}) {
+  const [unlocked, setUnlocked] = useState(initialUnlocked);
+  const [pollState, setPollState] = useState<"idle" | "checking" | "failed" | "success">(
+    !initialUnlocked && pendingSessionId ? "checking" : "idle"
+  );
+  const [pollError, setPollError] = useState<string | null>(null);
+  const [checked, setChecked] = useState<Record<string, boolean>>(initialChecklistState);
+
+  // Polling-Fallback: Webhook könnte verzögert sein. Wenn der User mit
+  // ?session_id aus Stripe zurückkommt aber noch nicht unlocked ist,
+  // checken wir die Stripe-Session direkt.
+  useEffect(() => {
+    if (unlocked || !pendingSessionId) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 6; // 6×2s = 12s warten
+
+    async function poll() {
+      attempts++;
+      try {
+        const res = await fetch(`/api/guides/${guide.id}/verify-payment`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ sessionId: pendingSessionId }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.unlocked) {
+          setUnlocked(true);
+          setPollState("success");
+          // hard-reload damit Server-Component frische Daten bekommt
+          setTimeout(() => window.location.reload(), 800);
+          return;
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 2000);
+        } else {
+          setPollState("failed");
+          setPollError("Zahlung konnte nicht bestätigt werden — bitte Support kontaktieren.");
+        }
+      } catch {
+        if (cancelled) return;
+        if (attempts < maxAttempts) setTimeout(poll, 2000);
+        else { setPollState("failed"); setPollError("Verbindungsfehler beim Prüfen."); }
+      }
+    }
+    poll();
+    return () => { cancelled = true; };
+  }, [unlocked, pendingSessionId, guide.id]);
+
+  // Checkliste-Toggle
+  async function toggleItem(itemId: string) {
+    const newValue = !checked[itemId];
+    setChecked(prev => ({ ...prev, [itemId]: newValue }));
+    // Server-Sync (fire-and-forget)
+    fetch(`/api/guides/${guide.id}/checklist`, {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ itemId, checked: newValue }),
+    }).catch(() => { /* offline → state bleibt local */ });
+  }
+
+  // ── Polling-State (zwischen Stripe-Success und Webhook-Insert) ──
+  if (!unlocked && pollState === "checking") {
+    return (
+      <main style={pageStyle}>
+        <div style={containerStyle}>
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{
+              width: 56, height: 56, margin: "0 auto 24px",
+              borderRadius: "50%",
+              border: "3px solid rgba(124,58,237,0.20)",
+              borderTopColor: T.purple,
+              animation: "wf-guide-spin 0.9s linear infinite",
+            }} />
+            <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: T.text }}>
+              Zahlung wird bestätigt…
+            </h1>
+            <p style={{ margin: 0, fontSize: 13, color: T.textSub, lineHeight: 1.55 }}>
+              Stripe hat die Zahlung erfolgreich bearbeitet, wir schalten gerade<br/>deinen Zugang frei. Das dauert maximal 12 Sekunden.
+            </p>
+            <style>{`@keyframes wf-guide-spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!unlocked && pollState === "failed") {
+    return (
+      <main style={pageStyle}>
+        <div style={containerStyle}>
+          <div style={{
+            padding: "32px", borderRadius: 14,
+            background: "rgba(248,113,113,0.06)",
+            border: "1px solid rgba(248,113,113,0.28)",
+            textAlign: "center",
+          }}>
+            <h1 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 800, color: T.text }}>
+              Zahlung konnte nicht bestätigt werden
+            </h1>
+            <p style={{ margin: "0 0 18px", fontSize: 13, color: T.textSub, lineHeight: 1.55 }}>
+              {pollError ?? "Bitte kontaktiere den Support — wir lösen das schnell."}
+            </p>
+            <Link href="/kontakt" style={{
+              display: "inline-block", padding: "10px 22px", borderRadius: 9,
+              background: T.purpleBg, border: `1px solid ${T.purpleBdr}`,
+              color: T.purple, fontSize: 13, fontWeight: 700, textDecoration: "none",
+            }}>
+              Support kontaktieren →
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!unlocked) {
+    // Kein session_id, kein Unlock → User hat keinen Zugriff
+    return (
+      <main style={pageStyle}>
+        <div style={containerStyle}>
+          <div style={{ padding: "40px 20px", textAlign: "center" }}>
+            <h1 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 800, color: T.text }}>
+              Diese Anleitung ist gesperrt
+            </h1>
+            <p style={{ margin: "0 0 24px", fontSize: 13, color: T.textSub }}>
+              Du hast diesen Guide noch nicht freigeschaltet.
+            </p>
+            <Link href="/dashboard" style={{
+              display: "inline-block", padding: "10px 22px", borderRadius: 9,
+              background: T.purpleBg, border: `1px solid ${T.purpleBdr}`,
+              color: T.purple, fontSize: 13, fontWeight: 700, textDecoration: "none",
+            }}>
+              Zurück zum Dashboard
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Unlocked: Render Guide ──
+  const variant = guide.content_json.variants[hoster] ?? guide.content_json.variants["default"];
+  const steps = variant?.steps ?? [];
+  const checklist = guide.content_json.checklist ?? [];
+  const checkedCount = checklist.filter(c => checked[c.id]).length;
+  const progress = checklist.length > 0 ? Math.round((checkedCount / checklist.length) * 100) : 0;
+
+  return (
+    <main style={pageStyle}>
+      <div style={containerStyle}>
+
+        {/* ── Top-Bar ─────────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 24 }}>
+          <Link href="/dashboard" style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontSize: 12.5, fontWeight: 600, color: T.textSub,
+            textDecoration: "none", padding: "7px 14px", borderRadius: 8,
+            background: T.card, border: `1px solid ${T.border}`,
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Zurück zum Dashboard
+          </Link>
+        </div>
+
+        {/* ── Hero ────────────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 28, paddingBottom: 22, borderBottom: `1px solid ${T.divider}` }}>
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            Rescue-Guide
+            {hoster !== "default" && <span style={{ color: T.textMuted }}> · für {hosterLabel(hoster)}</span>}
+          </p>
+          <h1 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
+            {guide.title}
+          </h1>
+          <p style={{ margin: 0, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>
+            {guide.content_json.intro}
+          </p>
+        </div>
+
+        {/* ── Steps ───────────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ margin: "0 0 18px", fontSize: 14, fontWeight: 800, color: T.text, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            Anleitung — {steps.length} Schritte
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {steps.map((step, i) => (
+              <div key={i} style={{
+                background: T.card, border: `1px solid ${T.border}`,
+                borderRadius: 12, padding: "20px 22px",
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{
+                    flexShrink: 0, width: 32, height: 32, borderRadius: 9,
+                    background: T.purpleBg, border: `1px solid ${T.purpleBdr}`,
+                    color: T.purple,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, fontWeight: 800,
+                  }}>{i + 1}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: T.text }}>
+                      {step.title}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: 13.5, color: T.textSub, lineHeight: 1.65, whiteSpace: "pre-line" }}>
+                      {step.body}
+                    </p>
+                    {step.screenshot && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={step.screenshot}
+                        alt={`Screenshot ${step.title}`}
+                        style={{ marginTop: 14, maxWidth: "100%", borderRadius: 8, border: `1px solid ${T.border}` }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Checkliste ───────────────────────────────────────────────────── */}
+        {checklist.length > 0 && (
+          <div style={{
+            background: T.card, border: `1px solid ${T.border}`,
+            borderRadius: 14, padding: "22px 24px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: T.text, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                Deine Fortschritts-Checkliste
+              </h2>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: progress === 100 ? T.green : T.purple }}>
+                {checkedCount} / {checklist.length} erledigt · {progress}%
+              </span>
+            </div>
+            <div style={{ height: 5, borderRadius: 99, background: T.divider, overflow: "hidden", marginBottom: 18 }}>
+              <div style={{
+                height: "100%", width: `${progress}%`,
+                background: progress === 100 ? T.green : T.purple,
+                borderRadius: 99, transition: "width 0.4s ease",
+              }} />
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+              {checklist.map(item => {
+                const isChecked = !!checked[item.id];
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleItem(item.id)}
+                      style={{
+                        width: "100%", textAlign: "left",
+                        display: "flex", alignItems: "center", gap: 12,
+                        padding: "11px 14px", borderRadius: 9,
+                        background: isChecked ? T.greenBg : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${isChecked ? T.greenBdr : T.border}`,
+                        color: T.text, fontFamily: "inherit",
+                        cursor: "pointer", transition: "background 0.15s ease",
+                      }}
+                    >
+                      <span style={{
+                        flexShrink: 0, width: 20, height: 20, borderRadius: 5,
+                        background: isChecked ? T.green : "transparent",
+                        border: `1.5px solid ${isChecked ? T.green : T.border}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {isChecked && (
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0b0c10" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                      </span>
+                      <span style={{
+                        fontSize: 13.5, fontWeight: 600,
+                        textDecoration: isChecked ? "line-through" : "none",
+                        opacity: isChecked ? 0.6 : 1,
+                      }}>
+                        {item.text}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* ── Erfolg-Marker bei 100% ───────────────────────────────────────── */}
+        {progress === 100 && (
+          <div style={{
+            marginTop: 24, padding: "20px 24px", borderRadius: 14,
+            background: T.greenBg, border: `1px solid ${T.greenBdr}`,
+            textAlign: "center",
+          }}>
+            <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: T.green }}>
+              🎉 Alle Schritte erledigt!
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: T.textSub }}>
+              Starte einen neuen Scan, um die Verbesserungen zu messen.
+            </p>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+const pageStyle: React.CSSProperties = {
+  minHeight: "100vh", background: "#0b0c10", color: T.text,
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  padding: "32px 32px 80px",
+};
+const containerStyle: React.CSSProperties = {
+  maxWidth: 920, margin: "0 auto",
+};
+
+function hosterLabel(value: string): string {
+  const map: Record<string, string> = {
+    strato:    "Strato",
+    ionos:     "IONOS / 1&1",
+    "all-inkl": "All-Inkl",
+    hostinger: "Hostinger",
+    default:   "anderer Hoster",
+  };
+  return map[value] ?? value;
+}

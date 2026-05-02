@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import StarterDashboard from "@/components/dashboard/variants/StarterDashboard";
 import ProDashboard     from "@/components/dashboard/variants/ProDashboard";
-import RescueDashboard  from "@/components/dashboard/variants/RescueDashboard";
+import RescueDashboard, { type RescueGuideMatch } from "@/components/dashboard/variants/RescueDashboard";
+import { matchGuidesForIssues } from "@/lib/rescue-guides";
 // Phase 3 Sprint 5: Echtes Agency-Layout — vorher inline IIFE, jetzt
 // dedizierte Komponente. Plan-Router unten ruft sie für isAgency=true auf.
 import AgencyDashboard  from "@/components/dashboard/variants/AgencyDashboard";
@@ -686,19 +687,27 @@ export default async function DashboardPage({
           unterschiedliche Variants — dieselben Props, plan-spezifische
           Sektionen. Agency hat einen eigenen Render-Pfad weiter unten
           (IIFE, line ~646), der nicht durch diese Branch läuft. */}
-      {!isAgency && useRescueView && lastScan && (
-        <RescueDashboard
-          firstName={firstName}
-          domain={(() => { try { return new URL(lastScan.url).hostname.replace(/^www\./, ""); } catch { return lastScan.url; } })()}
-          url={lastScan.url}
-          lastScanId={String(lastScan.id)}
-          lastScanAt={lastScan.created_at}
-          speedScore={speedScore}
-          issues={issues}
-          redCount={redIssues.length}
-          yellowCount={yellowIssues.length}
-        />
-      )}
+      {!isAgency && useRescueView && lastScan && (() => {
+        // ── Guide-Matching pro Säule (Pay-per-Guide MVP, 03.05.) ──
+        // Wir klassifizieren die Issues genau wie das Client-Render
+        // im RescueDashboard (Title-Keywords + ScanIssue-category) und
+        // ziehen pro Säule den höchstrelevanten passenden Guide aus DB.
+        // Das passiert hier server-side — der Client kriegt fertige
+        // Match-Records und rendert nur noch den SOS-Button.
+        return (
+          <RescueDashboardWithGuides
+            firstName={firstName}
+            url={lastScan.url}
+            lastScanId={String(lastScan.id)}
+            lastScanAt={lastScan.created_at}
+            speedScore={speedScore}
+            issues={issues}
+            redCount={redIssues.length}
+            yellowCount={yellowIssues.length}
+            userId={String(session.user.id)}
+          />
+        );
+      })()}
       {!isAgency && useRescueView && !lastScan && (
         <RescueDashboard
           firstName={firstName}
@@ -811,5 +820,96 @@ export default async function DashboardPage({
       </ModalShell>
 
     </div>
+  );
+}
+
+// ─── RescueDashboardWithGuides ───────────────────────────────────────────────
+// Server-Wrapper, der die Guide-Matches berechnet und an den
+// RescueDashboard-Client weitergibt. Liegt außerhalb der Hauptkomponente
+// damit die guides-Query nicht im Top-Level-Render-Pfad läuft (nur wenn
+// useRescueView && lastScan).
+async function RescueDashboardWithGuides(props: {
+  firstName: string;
+  url: string;
+  lastScanId: string;
+  lastScanAt: string;
+  speedScore: number;
+  issues: ParsedIssue[];
+  redCount: number;
+  yellowCount: number;
+  userId: string;
+}) {
+  // Pillars: dieselbe Klassifikation wie im Client (Title-Keywords)
+  const VISIBILITY_KEYWORDS = ["title","meta-description","meta beschreib","h1","h2","noindex","sitemap","robots.txt","robots","canonical","indexier","google find","open graph","og:","twitter card","html-lang","alt-attribut","alt-text"];
+  const HEALTH_KEYWORDS = ["wordpress","wp-version","php","kritischer fehler","fatal","plugin","theme","security-header","csp","hsts","x-frame","ssl","https","cookie","wp-login","veraltet","outdated","update","schwachstelle","barriere","label","formular","bfsg","wcag"];
+  const SPEED_KEYWORDS = ["ttfb","antwortzeit","speed","geschwindigkeit","performance","largest contentful","lcp","fcp","cls","render-block","bilder","image-size","hosting","lazyload","preload","minify","compress"];
+
+  function classify(issue: ParsedIssue): "visibility" | "health" | "speed" | null {
+    const hay = `${issue.title} ${issue.body ?? ""}`.toLowerCase();
+    if (SPEED_KEYWORDS.some(k => hay.includes(k))) return "speed";
+    if (issue.category === "speed") return "speed";
+    if (HEALTH_KEYWORDS.some(k => hay.includes(k))) return "health";
+    if (issue.category === "technik" || issue.category === "recht") return "health";
+    if (VISIBILITY_KEYWORDS.some(k => hay.includes(k))) return "visibility";
+    return null;
+  }
+
+  // Pro Säule die Issues sammeln und die matchenden Guides aus der DB ziehen
+  const byPillar: Record<"visibility" | "health" | "speed", ParsedIssue[]> = {
+    visibility: [], health: [], speed: [],
+  };
+  for (const issue of props.issues) {
+    const p = classify(issue);
+    if (p) byPillar[p].push(issue);
+  }
+
+  async function topGuideForPillar(
+    issues: ParsedIssue[]
+  ): Promise<RescueGuideMatch | null> {
+    if (issues.length === 0) return null;
+    const matches = await matchGuidesForIssues(
+      issues.map(i => ({ title: i.title, body: i.body, category: i.category, severity: i.severity })),
+      props.userId,
+    );
+    if (matches.length === 0) return null;
+    const top = matches[0];
+    return {
+      id: top.guide.id,
+      title: top.guide.title,
+      problem_label: top.guide.problem_label,
+      preview: top.guide.preview,
+      price_cents: top.guide.price_cents,
+      estimated_minutes: top.guide.estimated_minutes,
+      unlocked: top.unlocked,
+      checklistPreview: top.guide.content_json.checklist?.slice(0, 5).map(c => c.text) ?? [],
+    };
+  }
+
+  const [visibilityGuide, healthGuide, speedGuide] = await Promise.all([
+    topGuideForPillar(byPillar.visibility),
+    topGuideForPillar(byPillar.health),
+    topGuideForPillar(byPillar.speed),
+  ]);
+
+  let domain = props.url;
+  try { domain = new URL(props.url).hostname.replace(/^www\./, ""); } catch { /* fallback */ }
+
+  return (
+    <RescueDashboard
+      firstName={props.firstName}
+      domain={domain}
+      url={props.url}
+      lastScanId={props.lastScanId}
+      lastScanAt={props.lastScanAt}
+      speedScore={props.speedScore}
+      issues={props.issues}
+      redCount={props.redCount}
+      yellowCount={props.yellowCount}
+      guideByPillar={{
+        visibility: visibilityGuide,
+        health:     healthGuide,
+        speed:      speedGuide,
+      }}
+    />
   );
 }
