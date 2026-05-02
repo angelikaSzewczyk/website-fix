@@ -33,6 +33,7 @@ import { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 import { isUrlAllowed, guardRequest, isRealWebsiteContent } from "@/lib/scan-guard";
+import { checkWebsite } from "@/lib/monitor";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { callWithRetry } from "@/lib/ai-retry";
@@ -520,6 +521,65 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
           revalidatePath("/dashboard");
           revalidatePath("/dashboard/clients");
           revalidatePath("/dashboard/scans");
+
+          // ── Health-Check für die Portfolio-Tabelle ────────────────────
+          // Der Cron monitor läuft 1×/Tag und schreibt website_checks
+          // (CMS, SSL, Security, Status). Ohne diesen Eintrag zeigt das
+          // Kunden-Portfolio "—" in den 4 rechten Spalten — bis zu 24h
+          // Wartezeit nach einem Re-Scan.
+          //
+          // Fix: bei jedem Scan auch website_checks befüllen. Idempotent
+          // gegenüber dem Cron — die Tabelle ist append-only, jeder Insert
+          // ein neuer Snapshot. saved_websites.id wird via URL-Lookup
+          // ermittelt (kein websiteId-Param im Scan-Flow).
+          try {
+            const swRows = await sql`
+              SELECT id::text FROM saved_websites
+              WHERE user_id = ${session.user!.id} AND url = ${targetUrl}
+              LIMIT 1
+            ` as Array<{ id: string }>;
+            const websiteId = swRows[0]?.id;
+            if (websiteId) {
+              const checkResult = await Promise.race([
+                checkWebsite(targetUrl),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("inline health check timeout")), 8000)
+                ),
+              ]);
+              const status =
+                checkResult.alerts.some(a => a.level === "critical") ? "critical"
+                : checkResult.alerts.some(a => a.level === "warning") ? "warning"
+                : checkResult.is_online ? "ok" : "offline";
+
+              await Promise.all([
+                sql`
+                  INSERT INTO website_checks (
+                    website_id, user_id, is_online, response_time_ms,
+                    ssl_valid, ssl_expires_at, ssl_days_left,
+                    platform, security_score, security_headers,
+                    http_status, alerts,
+                    cms_context, plugins_detected
+                  ) VALUES (
+                    ${websiteId}::uuid, ${session.user!.id}, ${checkResult.is_online}, ${checkResult.response_time_ms},
+                    ${checkResult.ssl_valid}, ${checkResult.ssl_expires_at}, ${checkResult.ssl_days_left},
+                    ${checkResult.platform}, ${checkResult.security_score}, ${JSON.stringify(checkResult.security_headers)},
+                    ${checkResult.http_status}, ${JSON.stringify(checkResult.alerts)},
+                    ${checkResult.cms_context}, ${JSON.stringify(checkResult.plugins_detected)}::jsonb
+                  )
+                `,
+                sql`
+                  UPDATE saved_websites
+                  SET last_check_at = NOW(), last_check_status = ${status}
+                  WHERE id = ${websiteId}::uuid
+                `,
+              ]);
+            }
+          } catch (err) {
+            // Health-Check ist optional — Scan-INSERT ist bereits committed.
+            // Failure (Site offline, Timeout) wird durch den Cron morgen
+            // früh repariert.
+            console.error("[full-scan] inline health check failed:", err);
+          }
         } catch (err) {
           // DB-Failure: scan ist trotzdem in der Cache und SSE — User sieht
           // das Result, aber es ist nicht historisch persistiert. Loggen + weiter.
