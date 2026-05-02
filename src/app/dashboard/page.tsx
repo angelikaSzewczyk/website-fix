@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import StarterDashboard from "@/components/dashboard/variants/StarterDashboard";
 import ProDashboard     from "@/components/dashboard/variants/ProDashboard";
+import RescueDashboard  from "@/components/dashboard/variants/RescueDashboard";
 // Phase 3 Sprint 5: Echtes Agency-Layout — vorher inline IIFE, jetzt
 // dedizierte Komponente. Plan-Router unten ruft sie für isAgency=true auf.
 import AgencyDashboard  from "@/components/dashboard/variants/AgencyDashboard";
@@ -379,6 +380,25 @@ export default async function DashboardPage({
   const isAgency  = layout === "agency";
   const isSingle  = layout === "single";
 
+  // ── Plan-basierte Detection für RescueDashboard (Single-Site-Rescue) ─────
+  // Starter-Plan landet IMMER im Rescue-View (Einzelunternehmer).
+  // Professional-Plan landet im Rescue-View, solange er nur EINE Site hat
+  // (typischer Pro-User mit eigenem Projekt). Sobald er ≥2 Sites hat,
+  // greift das normale ProDashboard mit Multi-Site-Logik.
+  // Agency-Plan bleibt IMMER auf Mission Control — die Mission ist anders
+  // (Multi-Tenancy, Lead-Generator, Branding-Hub).
+  let siteCount = 0;
+  try {
+    const cnt = await sql`
+      SELECT COUNT(*)::int AS c FROM saved_websites WHERE user_id = ${session.user.id}
+    ` as { c: number }[];
+    siteCount = cnt[0]?.c ?? 0;
+  } catch { /* Tabelle leer/fehlt → Default 0 */ }
+  const useRescueView = !isAgency && (
+    plan === "starter" ||
+    (isSingle && siteCount <= 1)
+  );
+
   // Phase 3 Sprint 4: ?project=<id> Active-Project-Scoping.
   // Wenn ein Projekt-Param mitkommt, schauen wir die zugehörige URL nach
   // (mit Ownership-Check) und scopen den scans-SELECT auf genau diese URL.
@@ -666,7 +686,33 @@ export default async function DashboardPage({
           unterschiedliche Variants — dieselben Props, plan-spezifische
           Sektionen. Agency hat einen eigenen Render-Pfad weiter unten
           (IIFE, line ~646), der nicht durch diese Branch läuft. */}
-      {!isAgency && (
+      {!isAgency && useRescueView && lastScan && (
+        <RescueDashboard
+          firstName={firstName}
+          domain={(() => { try { return new URL(lastScan.url).hostname.replace(/^www\./, ""); } catch { return lastScan.url; } })()}
+          url={lastScan.url}
+          lastScanId={String(lastScan.id)}
+          lastScanAt={lastScan.created_at}
+          speedScore={speedScore}
+          issues={issues}
+          redCount={redIssues.length}
+          yellowCount={yellowIssues.length}
+        />
+      )}
+      {!isAgency && useRescueView && !lastScan && (
+        <RescueDashboard
+          firstName={firstName}
+          domain="Noch keine Website"
+          url=""
+          lastScanId={null}
+          lastScanAt={null}
+          speedScore={0}
+          issues={[]}
+          redCount={0}
+          yellowCount={0}
+        />
+      )}
+      {!isAgency && !useRescueView && (
         <Suspense>
           {isAtLeastProfessional(plan) ? (
             <ProDashboard

@@ -40,6 +40,7 @@ function NavIco({ name, color }: { name: string; color: string }) {
   if (name === "scan")      return <svg {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
   if (name === "reports")   return <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
   if (name === "whitelabel") return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
+  if (name === "help")       return <svg {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
   return null;
 }
 
@@ -236,15 +237,25 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
       ? pathname === href
       : pathname === href || pathname.startsWith(href + "/");
 
-  // White-Label-Nav: Starter → gelockt mit Upgrade-CTA | Pro/Agency → aktiv
-  const NAV = [
-    { icon: "dashboard",  label: "Dashboard",              href: "/dashboard",           exact: true,  locked: false },
-    { icon: "scan",       label: "Live Scan",               href: "/dashboard/scan",      exact: false, locked: false },
-    { icon: "reports",    label: "Berichte",                href: "/dashboard/scans",     exact: true,  locked: false },
-    isPro
-      ? { icon: "whitelabel", label: "White-Label & Branding", href: "/dashboard/agency-branding", exact: false, locked: false }
-      : { icon: "whitelabel", label: "White-Label & Branding", href: "/fuer-agenturen#pricing",    exact: false, locked: true  },
-  ];
+  // Starter-Plan-Strategie: minimal-nav für Einzelunternehmer im Rettungs-
+  // Modus. Keine Agency-Items (Reports/Branding/Lead-Generator), die nur
+  // ablenken. Drei klare Punkte: Meine Website / Hilfe-Center / Account.
+  // White-Label-Tile bleibt nur für Pro/Agency, Starter sieht stattdessen
+  // einen "Hilfe"-Eintrag.
+  const NAV = isPro
+    ? [
+        { icon: "dashboard",  label: "Dashboard",              href: "/dashboard",          exact: true,  locked: false },
+        { icon: "scan",       label: "Live Scan",               href: "/dashboard/scan",     exact: false, locked: false },
+        { icon: "reports",    label: "Berichte",                href: "/dashboard/scans",    exact: true,  locked: false },
+        { icon: "whitelabel", label: "White-Label & Branding",  href: "/dashboard/agency-branding", exact: false, locked: false },
+      ]
+    : [
+        { icon: "dashboard", label: "Meine Website",      href: "/dashboard",       exact: true,  locked: false },
+        { icon: "scan",      label: "Neuer Scan",          href: "/dashboard/scan",  exact: false, locked: false },
+        // Hilfe-Center linkt auf /kontakt (existiert) — eigene
+        // /hilfe-Landing-Page kommt später als Phase-6-Material.
+        { icon: "help",      label: "Hilfe-Center",        href: "/kontakt",         exact: false, locked: false },
+      ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
