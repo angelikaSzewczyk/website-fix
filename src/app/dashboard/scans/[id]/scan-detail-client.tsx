@@ -51,10 +51,64 @@ function pageIssueCount(p: UnterseiteProp): number {
   return n;
 }
 
+/**
+ * HTML-Entity-Decode für vom Crawler raw gelesene Title/Meta-Strings.
+ * Der Auditor extrahiert Strings direkt aus DOM-Text und rendert sie
+ * weiter — Browser dekodieren `&amp;` etc. automatisch beim Anzeigen,
+ * aber unsere Server-Persistierung nicht. Ergebnis ohne diese Funktion:
+ * "ZODA Picture | Foto- &amp; Videoproduktion" statt "Foto- & Videoproduktion".
+ *
+ * Wir behandeln die häufigsten benannten Entities + numerische Form. Für
+ * Edge-Case-Entities (`&hellip;` etc.) nutzen wir DOMParser, der natürlich
+ * NUR im Browser verfügbar ist — daher das typeof-window-Guard.
+ */
+function decodeHtmlEntities(s: string | undefined | null): string {
+  if (!s) return "";
+  // Schnellpfad: ohne `&` ist nichts zu decoden.
+  if (!s.includes("&")) return s;
+  if (typeof window !== "undefined" && window.document) {
+    const ta = document.createElement("textarea");
+    ta.innerHTML = s;
+    return ta.value;
+  }
+  // SSR-Fallback: nur die häufigsten Entities — der Drawer ist Client-only,
+  // kommt also gar nicht hierhin. Defensive für ggf. Future-SSR-Pfade.
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+/**
+ * Normalisiert die unterseiten-Liste, die direkt aus scans.unterseiten_json
+ * kommt — der Auditor speichert PageAudit-Tupel mit `ok: boolean`, aber der
+ * UI-Code (DrawerPanel) erwartet `erreichbar: boolean`. Ohne dieses Mapping
+ * ist `page.erreichbar` IMMER undefined → `!undefined === true` → der
+ * Drawer rendert für JEDE Seite "Seite nicht erreichbar". Plus:
+ * Title/H1/Meta werden HTML-decoded.
+ */
+function normalizeUnterseiten(raw: UnterseiteProp[]): UnterseiteProp[] {
+  return raw.map(p => {
+    const okFlag = (p as { ok?: boolean }).ok;
+    return {
+      ...p,
+      erreichbar: typeof p.erreichbar === "boolean"
+        ? p.erreichbar
+        : typeof okFlag === "boolean" ? okFlag : true,
+      title:           decodeHtmlEntities(p.title),
+      h1:              p.h1 ? decodeHtmlEntities(p.h1) : p.h1,
+      metaDescription: p.metaDescription ? decodeHtmlEntities(p.metaDescription) : p.metaDescription,
+    };
+  });
+}
+
 export default function ScanDetailClient({
   url, createdAt, plan, issues, redCount, yellowCount, speedScore, scanId,
   integrationsStatus = null,
-  unterseiten = [],
+  unterseiten: rawUnterseiten = [],
 }: Props) {
   const [drawerPageUrl, setDrawerPageUrl] = useState<string | null>(null);
   const [checkedUrls, setCheckedUrls] = useState<Set<string>>(new Set());
@@ -63,6 +117,12 @@ export default function ScanDetailClient({
     day: "2-digit", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
+
+  // Normalisierung — fixt zwei Bugs auf einmal:
+  //   1. erreichbar wird aus PageAudit.ok abgeleitet (war vorher undefined
+  //      → "Seite nicht erreichbar" für jede Subpage)
+  //   2. Title/H1/Meta werden HTML-decoded ("&amp;" → "&")
+  const unterseiten = normalizeUnterseiten(rawUnterseiten);
 
   function toggleChecked(u: string) {
     setCheckedUrls(prev => {

@@ -92,6 +92,36 @@ async function fetchWithTtfb(url: string, ms = 7000): Promise<{
 // ── HTML-Helper für Crawl-Steuerung (NICHT für Audit — das macht die Engine) ─
 
 /** Internal-Links extrahieren — nur für die Crawl-Queue. Same-host, Skip-Ext. */
+/**
+ * URL-Patterns die NICHT gecrawlt werden sollen — WordPress-noise, der
+ * inhaltlich entweder duplicate oder leer ist und den 71-Pages-Bug
+ * verursacht hat (Date-Archives wie /magazin/2020/04/17/ wurden alle als
+ * eigenständige Subpages behandelt, redirected aber zur Home → identische
+ * Content-Daten an 60+ "verschiedenen" URLs).
+ */
+const NOISE_URL_PATTERNS: RegExp[] = [
+  // WordPress Date-Archives: /YYYY/, /YYYY/MM/, /YYYY/MM/DD/, mit optional
+  // path prefix (z.B. /magazin/2020/04/17/). Year-Bereich 2000-2099.
+  /\/20\d{2}\/(\d{1,2}\/)?(\d{1,2}\/?)?$/,
+  // WordPress Page-N (Pagination der Archive): /page/2/, /page/3/
+  /\/page\/\d+\/?$/,
+  // WordPress Tag/Category Archives als Multi-Page
+  /\/(tag|category|kategorie|schlagwort)\/[^/]+\/page\/\d+\/?$/,
+  // WordPress Author-Archives
+  /\/author\/[^/]+\/?$/,
+  // WordPress Feed/RSS
+  /\/feed\/?$/,
+  /\/comments\/feed\/?$/,
+  // WordPress JSON-API + WP-Admin
+  /\/wp-json(\/|$)/,
+  /\/wp-admin(\/|$)/,
+  /\/wp-login\.php/,
+];
+
+function isNoiseUrl(pathname: string): boolean {
+  return NOISE_URL_PATTERNS.some(re => re.test(pathname));
+}
+
 function extractCrawlLinks(html: string, baseUrl: string, host: string): string[] {
   const matches = html.match(/<a[^>]+href=["']([^"']+)["']/gi) ?? [];
   const links = new Set<string>();
@@ -103,6 +133,10 @@ function extractCrawlLinks(html: string, baseUrl: string, host: string): string[
       const abs = new URL(href, baseUrl);
       if (abs.host !== host) continue;
       if (SKIP_EXT.test(abs.pathname)) continue;
+      // WordPress-Date-Archives + Pagination + Feeds + Author-Pages
+      // werden ausgeschlossen — sie blähen den Crawl auf 60+ Seiten auf,
+      // ohne realen Audit-Wert (alle redirecten typically zur Home).
+      if (isNoiseUrl(abs.pathname)) continue;
       abs.hash = "";
       links.add(abs.toString());
     } catch { /* malformed — skip */ }
@@ -285,7 +319,19 @@ export async function GET(req: NextRequest) {
           const sitemapRes = await fetchWithTtfb(`https://${host}/sitemap.xml`, 5000);
           if (sitemapRes.res?.ok && sitemapRes.html) {
             const urls = extractSitemapUrls(sitemapRes.html)
-              .filter(u => { try { return !u.endsWith(".xml") && new URL(u).host === host; } catch { return false; } });
+              .filter(u => {
+                try {
+                  const parsed = new URL(u);
+                  if (parsed.host !== host) return false;
+                  if (u.endsWith(".xml"))   return false;
+                  // Sitemap-Seeding folgt demselben Noise-Filter wie der
+                  // BFS-Linkextraktor — sonst landen Date-Archives via
+                  // sitemap.xml in der Queue und der Filter im
+                  // extractCrawlLinks greift nicht für Seeds.
+                  if (isNoiseUrl(parsed.pathname)) return false;
+                  return true;
+                } catch { return false; }
+              });
             for (const u of urls) {
               const n = normalize(u);
               if (!visited.has(n) && !queue.includes(n)) queue.push(n);
