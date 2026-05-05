@@ -381,3 +381,147 @@ INSERT INTO rescue_guide_triggers (guide_id, match_type, match_value, priority) 
   ('hosting-speed', 'title_keyword', 'langsam',      120),
   ('hosting-speed', 'category',      'speed',        100)
 ON CONFLICT DO NOTHING;
+
+-- ── Seed: "google-visibility" ──
+-- 5-Punkte-Diagnose für "Google findet meine Seite nicht". Default-Variant
+-- only — die Schritte sind hoster-unabhängig (Search-Console-Setup,
+-- robots.txt, Sitemap, noindex, Title/Meta).
+INSERT INTO rescue_guides (id, title, problem_label, preview, price_cents, estimated_minutes, content_json)
+VALUES (
+  'google-visibility',
+  'Google findet deine Seite — 5-Punkte-Diagnose',
+  'Google findet deine Seite nicht',
+  'Deine Seite taucht nicht in der Google-Suche auf? In 5 systematischen Schritten findest du heraus, wo es klemmt — und behebst es selbst, ohne SEO-Agentur.',
+  990,
+  10,
+  $${
+    "intro": "Wenn Google deine Seite nicht zeigt, liegt es fast immer an einer von 5 Ursachen. Diese Anleitung führt dich nacheinander durch jede Prüfung — am Ende weißt du genau, was blockiert und wie du es löst.",
+    "variants": {
+      "default": {
+        "steps": [
+          {
+            "title": "Schritt 1 — Google Search Console einrichten (5 Min)",
+            "body": "Öffne https://search.google.com/search-console und logge dich mit deinem Google-Konto ein. Klick auf 'Property hinzufügen' und wähle 'URL-Präfix' (einfacher als 'Domain'). Trage deine vollständige URL ein (z.B. https://meine-seite.de) und bestätige den Besitz über die HTML-Tag-Methode: kopiere das angezeigte Meta-Tag und füge es im <head>-Bereich deiner Startseite ein. Bei WordPress: Plugin 'Insert Headers and Footers' → in den Header-Bereich kopieren. Dann zurück in der Search Console auf 'Bestätigen' klicken. Ohne Search Console hast du keinen Einblick was Google sieht — das ist Schritt 0 für alles weitere.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 2 — robots.txt prüfen (2 Min)",
+            "body": "Öffne im Browser https://deine-seite.de/robots.txt direkt. Wenn dort steht 'Disallow: /' — STOP, das blockiert Google komplett. Lösung: bei WordPress unter Einstellungen → Lesen prüfen, ob 'Suchmaschinen davon abhalten' deaktiviert ist. Bei statischen Seiten: die robots.txt-Datei im Webspace-Root suchen und 'Disallow: /' zu 'Allow: /' ändern oder die Zeile entfernen. Wenn die Datei nicht existiert, ist alles erlaubt — kein Problem. Wenn dort spezifische Pfade blockiert sind, prüfe ob davon wichtige Seiten betroffen sind.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 3 — Sitemap.xml einreichen (3 Min)",
+            "body": "Prüfe ob https://deine-seite.de/sitemap.xml oder /sitemap_index.xml existiert (im Browser direkt öffnen). Bei WordPress mit Yoast/Rank-Math wird sie automatisch erzeugt. Falls nicht: Plugin 'XML Sitemap & Google News' installieren. In der Search Console links auf 'Sitemaps' → URL eintragen → 'Senden'. Status sollte nach 24 Stunden 'Erfolgreich' anzeigen. Die Sitemap zeigt Google ALLE deine Seiten auf einen Blick — ohne sie crawlt Google nur durch interne Links und übersieht oft Inhalte.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 4 — noindex-Tags entfernen (5 Min)",
+            "body": "In der Search Console links auf 'Seiten' klicken. Wenn dort steht 'Durch noindex-Tag ausgeschlossen' — das ist die häufigste Sperre. Lösung: Bei WordPress → Yoast/Rank-Math → pro Seite oben rechts SEO-Box öffnen → 'Diese Seite in Suchergebnissen anzeigen' → JA. Bei manuellen Themes: im <head> nach <meta name=\"robots\" content=\"noindex\"> suchen und entfernen. Achtung: oft setzen WordPress-Einstellungen → Lesen den noindex global — dort den Haken 'Suchmaschinen davon abhalten' entfernen.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 5 — Title-Tag + Meta-Description prüfen (5 Min)",
+            "body": "Search Console → Leistung → Suchanfragen. Wenn du dort fast keine Impressions siehst, liegt es oft an leeren oder doppelten Titles. Pro wichtige Seite: Yoast-SEO-Box öffnen, ein eindeutiges 'SEO-Title' (max 60 Zeichen, mit Hauptkeyword vorne) und 'Meta-Description' (max 155 Zeichen, mit Call-to-Action) eintragen. Beispiel-Title: 'Webdesign München — Schnelle Websites für Kleinunternehmer'. Nach dem Speichern in der Search Console links auf 'URL-Prüfung' → URL eingeben → 'Indexierung beantragen' — beschleunigt die Neuerfassung von 1 Woche auf 1-2 Tage.",
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    "checklist": [
+      { "id": "search-console",   "text": "Google Search Console eingerichtet und Besitz bestätigt" },
+      { "id": "robots-txt",       "text": "robots.txt blockiert Google nicht" },
+      { "id": "sitemap",          "text": "Sitemap.xml in Search Console eingereicht und akzeptiert" },
+      { "id": "noindex",          "text": "Keine noindex-Tags auf wichtigen Seiten" },
+      { "id": "titles-metas",     "text": "Title-Tag und Meta-Description pro Seite eindeutig befüllt" }
+    ]
+  }$$::jsonb
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Trigger für google-visibility: bei Indexierungs-/Sichtbarkeits-Issues vorschlagen.
+INSERT INTO rescue_guide_triggers (guide_id, match_type, match_value, priority) VALUES
+  ('google-visibility', 'title_keyword', 'noindex',         220),
+  ('google-visibility', 'title_keyword', 'sitemap',         200),
+  ('google-visibility', 'title_keyword', 'robots.txt',      200),
+  ('google-visibility', 'title_keyword', 'unsichtbar',      180),
+  ('google-visibility', 'title_keyword', 'indexier',        180),
+  ('google-visibility', 'title_keyword', 'meta-description',150),
+  ('google-visibility', 'title_keyword', 'title-tag',       140),
+  ('google-visibility', 'title_keyword', 'h1',              120)
+ON CONFLICT DO NOTHING;
+
+-- ── Seed: "wp-critical-error" ──
+-- 6-Schritte-Notfall für die berüchtigte "Es gab einen kritischen Fehler"-
+-- Meldung von WordPress (weiße Seite, oft nach Plugin-/Theme-Update).
+-- Default-Variant — Schritte sind hoster-unabhängig, FTP-/File-Manager-
+-- Zugriff wird vorausgesetzt.
+INSERT INTO rescue_guides (id, title, problem_label, preview, price_cents, estimated_minutes, content_json)
+VALUES (
+  'wp-critical-error',
+  'WordPress-Notfall — Kritischer Fehler in 6 Schritten beheben',
+  'Dein WordPress zeigt einen kritischen Fehler',
+  'Weiße Seite oder die Meldung "Es gab einen kritischen Fehler auf deiner Website"? Diese 6 Schritte führen dich von der Fehler-Diagnose über die Plugin-Isolierung bis zur sicheren Wiederherstellung — ohne dass du Code anfassen musst.',
+  990,
+  15,
+  $${
+    "intro": "Der kritische Fehler in WordPress hat fast immer eine Ursache: ein Plugin-Konflikt nach Update, eine zu alte PHP-Version, ein kaputtes Theme oder ein abgelaufener Speicher. Diese Anleitung diagnostiziert das systematisch — beginne mit Schritt 1 und arbeite dich der Reihe nach durch.",
+    "variants": {
+      "default": {
+        "steps": [
+          {
+            "title": "Schritt 1 — Recovery-Mail prüfen (2 Min)",
+            "body": "WordPress sendet bei kritischen Fehlern automatisch eine E-Mail an die Admin-Adresse mit einem 'Recovery-Mode'-Link. Schau in dein Admin-Postfach (auch Spam!) nach einer Mail mit Betreff 'Auf deiner Website [...] gab es ein technisches Problem'. Klick den Link in der Mail — das öffnet das Backend im Recovery-Modus, in dem das fehlerhafte Plugin/Theme bereits markiert ist. Wenn du diese Mail hast, springe direkt zu Schritt 4. Keine Mail? Weiter mit Schritt 2.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 2 — Debug-Modus aktivieren um den Fehler zu sehen (5 Min)",
+            "body": "Verbinde dich per FTP (FileZilla) oder über den File-Manager deines Hosters mit deinem Webspace. Öffne die Datei wp-config.php im Hauptverzeichnis. Suche die Zeile define('WP_DEBUG', false); und ändere sie zu: define('WP_DEBUG', true); define('WP_DEBUG_LOG', true); define('WP_DEBUG_DISPLAY', false); — Datei speichern, Seite neu laden. Im Ordner wp-content/ entsteht jetzt eine Datei debug.log mit der genauen Fehlermeldung. Öffne sie — die letzte Zeile zeigt das verursachende Plugin/Theme samt Datei-Pfad. WICHTIG: nach erfolgreicher Reparatur unbedingt WP_DEBUG wieder auf false setzen.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 3 — Alle Plugins deaktivieren via FTP (3 Min)",
+            "body": "Wenn du nicht ins Backend kommst, kannst du Plugins über FTP komplett deaktivieren. Verbinde dich per FTP und navigiere zu wp-content/plugins/. Benenne den ganzen Ordner 'plugins' um in 'plugins_OFF'. WordPress findet jetzt keine Plugins mehr und deaktiviert ALLE auf einen Schlag — die Seite sollte wieder laden. Logge dich ins Backend ein, benenne den Ordner per FTP zurück in 'plugins'. Im Backend siehst du alle Plugins wieder, aber DEAKTIVIERT. Aktiviere jetzt eines nach dem anderen — sobald die Seite wieder bricht, hast du den Schuldigen.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 4 — Theme zurück auf Standard-Theme (3 Min)",
+            "body": "Wenn Plugin-Test nicht hilft, ist es das Theme. Im Backend unter Design → Themes sollte ein Standard-Theme wie 'Twenty Twenty-Four' liegen. Aktiviere es. Wenn du nicht ins Backend kommst: per FTP wp-content/themes/ öffnen, deinen aktiven Theme-Ordner umbenennen (z.B. 'mein-theme' → 'mein-theme_OFF'). WordPress fällt automatisch auf das Standard-Theme zurück. Wenn die Seite wieder läuft → Theme-Update beim Anbieter prüfen oder Theme-Support kontaktieren.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 5 — PHP-Version aktualisieren (5 Min)",
+            "body": "Wenn das debug.log Meldungen wie 'PHP Fatal error' oder 'syntax error' zeigt, ist die PHP-Version oft zu alt. WordPress 6+ braucht mindestens PHP 7.4, empfohlen ist PHP 8.2. Im Hoster-Backend (Strato, IONOS, All-Inkl, Hostinger): Domain-Verwaltung → PHP-Version → 8.2 wählen → Speichern. Nach 1-2 Minuten Seite neu laden. Falls die Seite jetzt einen ANDEREN Fehler zeigt, ist ein Plugin nicht PHP-8-kompatibel — dann das jeweilige Plugin updaten oder eine ältere PHP-Version (7.4) wählen bis das Plugin nachzieht.",
+            "screenshot": null
+          },
+          {
+            "title": "Schritt 6 — Backup wiederherstellen als letzte Rettung (10 Min)",
+            "body": "Wenn nichts hilft und du ein Backup hast (UpdraftPlus, BackWPup, Hoster-Backup), spiele den letzten funktionierenden Stand zurück. Hoster-Backup: bei Strato/IONOS/All-Inkl direkt im Kunden-Panel über 'Wiederherstellung' den letzten gesunden Tag wählen. UpdraftPlus: Plugin im Backend → 'Existierendes Backup wiederherstellen' → Datenbank + Plugins + Themes anhaken. Nach Wiederherstellung: WP_DEBUG ausschalten (Schritt 2 rückgängig), Seite testen. Falls kein Backup: Hoster-Support anrufen — viele Anbieter haben ein Snapshot-System der letzten 14 Tage, auch wenn du es nie selbst aktiviert hast.",
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    "checklist": [
+      { "id": "recovery-mail",  "text": "Recovery-Mail im Admin-Postfach geprüft" },
+      { "id": "debug-mode",     "text": "WP_DEBUG aktiviert und debug.log ausgewertet" },
+      { "id": "plugins-off",    "text": "Plugins via FTP deaktiviert und einzeln getestet" },
+      { "id": "theme-default",  "text": "Auf Standard-Theme zurückgewechselt zur Prüfung" },
+      { "id": "php-update",     "text": "PHP-Version auf 8.2 aktualisiert" },
+      { "id": "backup-restore", "text": "Backup-Wiederherstellung durchgeführt oder ausgeschlossen" }
+    ]
+  }$$::jsonb
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Trigger für wp-critical-error: bei Health-/Plugin-/PHP-Issues vorschlagen.
+INSERT INTO rescue_guide_triggers (guide_id, match_type, match_value, priority) VALUES
+  ('wp-critical-error', 'title_keyword', 'kritischer fehler', 240),
+  ('wp-critical-error', 'title_keyword', 'fatal',             220),
+  ('wp-critical-error', 'title_keyword', 'weiße seite',       200),
+  ('wp-critical-error', 'title_keyword', 'plugin',            180),
+  ('wp-critical-error', 'title_keyword', 'php',               170),
+  ('wp-critical-error', 'title_keyword', 'wordpress veraltet',160),
+  ('wp-critical-error', 'title_keyword', 'wp-version',        150),
+  ('wp-critical-error', 'title_keyword', 'theme',             130),
+  ('wp-critical-error', 'category',      'technik',           100)
+ON CONFLICT DO NOTHING;

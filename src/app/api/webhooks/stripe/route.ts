@@ -65,8 +65,19 @@ export async function POST(req: NextRequest) {
       const paidCents = session.amount_total ?? 0;
 
       if (!guideId || !userId) {
-        console.error("[stripe-webhook] rescue_guide payment missing metadata", session.id);
-        return NextResponse.json({ received: true });
+        // 400 statt 200 — Stripe retried den Webhook bei 4xx/5xx automatisch
+        // (Dunning-Flow, ~3 Tage). Bei 200 wäre der Unlock SILENT verloren.
+        // Wenn die metadata wirklich fehlen (Stripe-Console-Manipulation,
+        // Bug im checkout.create), wollen wir das in den Stripe-Logs sehen.
+        console.error("[stripe-webhook] CRITICAL: rescue_guide payment missing metadata — returning 400 to trigger Stripe retry", {
+          sessionId: session.id,
+          hasGuideId: Boolean(guideId),
+          hasUserId:  Boolean(userId),
+        });
+        return NextResponse.json(
+          { error: "missing_metadata", sessionId: session.id },
+          { status: 400 },
+        );
       }
 
       try {

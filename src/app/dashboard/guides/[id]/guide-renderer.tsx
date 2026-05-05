@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { RescueGuide } from "@/lib/rescue-guides";
+import type { RescueGuide, GuideStep } from "@/lib/rescue-guides";
+import { humanize } from "@/lib/humanize";
 
 const T = {
   text:       "rgba(255,255,255,0.92)",
@@ -176,8 +177,15 @@ export default function GuideRenderer({
   }
 
   // ── Unlocked: Render Guide ──
-  const variant = guide.content_json.variants[hoster] ?? guide.content_json.variants["default"];
-  const steps = variant?.steps ?? [];
+  // Hybrid-Renderer: default-Steps sind die Basis (jeder User sieht sie),
+  // hoster-spezifische Steps kommen darunter als Zusatz-Sektion. Verhindert
+  // dass User mit Stub-Variants (z.B. ionos = 1 Step) statt der vollen
+  // Anleitung nur einen einzigen Schritt sehen.
+  const defaultSteps: GuideStep[] = guide.content_json.variants["default"]?.steps ?? [];
+  const hosterVariantSteps: GuideStep[] =
+    hoster !== "default" && guide.content_json.variants[hoster]?.steps
+      ? guide.content_json.variants[hoster].steps
+      : [];
   const checklist = guide.content_json.checklist ?? [];
   const checkedCount = checklist.filter(c => checked[c.id]).length;
   const progress = checklist.length > 0 ? Math.round((checkedCount / checklist.length) * 100) : 0;
@@ -211,17 +219,17 @@ export default function GuideRenderer({
             {guide.title}
           </h1>
           <p style={{ margin: 0, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>
-            {guide.content_json.intro}
+            {humanize(guide.content_json.intro)}
           </p>
         </div>
 
-        {/* ── Steps ───────────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: 36 }}>
+        {/* ── Default-Steps (jeder User sieht sie) ───────────────────────── */}
+        <div style={{ marginBottom: hosterVariantSteps.length > 0 ? 28 : 36 }}>
           <h2 style={{ margin: "0 0 18px", fontSize: 14, fontWeight: 800, color: T.text, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            Anleitung — {steps.length} Schritte
+            Anleitung — {defaultSteps.length} Schritte
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {steps.map((step, i) => (
+            {defaultSteps.map((step, i) => (
               <div key={i} style={{
                 background: T.card, border: `1px solid ${T.border}`,
                 borderRadius: 12, padding: "20px 22px",
@@ -236,16 +244,16 @@ export default function GuideRenderer({
                   }}>{i + 1}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: T.text }}>
-                      {step.title}
+                      {humanize(step.title)}
                     </h3>
                     <p style={{ margin: 0, fontSize: 13.5, color: T.textSub, lineHeight: 1.65, whiteSpace: "pre-line" }}>
-                      {step.body}
+                      {humanize(step.body)}
                     </p>
                     {step.screenshot && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={step.screenshot}
-                        alt={`Screenshot ${step.title}`}
+                        alt={`Screenshot ${humanize(step.title)}`}
                         style={{ marginTop: 14, maxWidth: "100%", borderRadius: 8, border: `1px solid ${T.border}` }}
                       />
                     )}
@@ -255,6 +263,63 @@ export default function GuideRenderer({
             ))}
           </div>
         </div>
+
+        {/* ── Hoster-spezifische Zusatz-Steps (nur wenn Variant existiert) ── */}
+        {hosterVariantSteps.length > 0 && (
+          <div style={{ marginBottom: 36 }}>
+            <div style={{
+              padding: "14px 18px", marginBottom: 14, borderRadius: 10,
+              background: T.purpleBg, border: `1px solid ${T.purpleBdr}`,
+            }}>
+              <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                Speziell für {hosterLabel(hoster)}
+              </p>
+              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: T.text }}>
+                Klick-Pfade in deinem Hosting-Backend
+              </h2>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: T.textSub, lineHeight: 1.55 }}>
+                Diese Schritte ergänzen die Anleitung oben mit den exakten Pfaden für {hosterLabel(hoster)}.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {hosterVariantSteps.map((step, i) => (
+                <div key={`hv-${i}`} style={{
+                  background: T.card, border: `1px solid ${T.purpleBdr}`,
+                  borderLeft: `3px solid ${T.purple}`,
+                  borderRadius: 12, padding: "20px 22px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                    <div style={{
+                      flexShrink: 0, width: 32, height: 32, borderRadius: 9,
+                      background: T.purpleBg, border: `1px solid ${T.purpleBdr}`,
+                      color: T.purple,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 800,
+                    }}>
+                      {hosterLabel(hoster).slice(0, 1).toUpperCase()}{i + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 800, color: T.text }}>
+                        {humanize(step.title)}
+                      </h3>
+                      <p style={{ margin: 0, fontSize: 13.5, color: T.textSub, lineHeight: 1.65, whiteSpace: "pre-line" }}>
+                        {humanize(step.body)}
+                      </p>
+                      {step.screenshot && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={step.screenshot}
+                          alt={`Screenshot ${humanize(step.title)}`}
+                          style={{ marginTop: 14, maxWidth: "100%", borderRadius: 8, border: `1px solid ${T.border}` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Checkliste ───────────────────────────────────────────────────── */}
         {checklist.length > 0 && (

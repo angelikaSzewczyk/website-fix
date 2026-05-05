@@ -7,6 +7,7 @@ import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderN
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
 import IssueActionBar from "@/app/dashboard/components/issue-action-bar";
 import { LockIco } from "./UIHelpers";
+import { humanize } from "@/lib/humanize";
 
 // ─── Types (mirrored from free-dashboard-client) ──────────────────────────────
 export interface IssueProp {
@@ -374,7 +375,7 @@ function AccordionItem({
           {getLabel(issue.severity)}
         </span>
         <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-          {issue.title}
+          {humanize(issue.title)}
         </span>
         {/* Phase A3: scope:"global"-Badge — signalisiert Template-Fehler.
             "Eine Korrektur fixt alle Vorkommen." */}
@@ -415,7 +416,7 @@ function AccordionItem({
       {open && (
         <div style={{ padding: "0 20px 16px 20px" }}>
           <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.65 }}>
-            {issue.body}
+            {humanize(issue.body)}
           </p>
 
           {/* Phase A3: Akkordeon mit affectedUrls — nur rendern wenn > 1 URL,
@@ -576,7 +577,7 @@ function AccordionItem({
               Public Share-View lässt die Props weg → keine Bar. */}
           {actionStatus && scanUrl && (
             <IssueActionBar
-              issue={{ severity: issue.severity, title: issue.title, body: issue.body, count: issue.count }}
+              issue={{ severity: issue.severity, title: humanize(issue.title), body: humanize(issue.body), count: issue.count }}
               status={actionStatus}
               scanUrl={scanUrl}
               scanId={scanId}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { checkWebsite } from "@/lib/monitor";
+import { normalizePlan } from "@/lib/plans";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -53,6 +54,45 @@ export async function POST(req: NextRequest) {
   const clientLabel = body.clientLabel?.trim() || null;
 
   const sql = neon(process.env.DATABASE_URL!);
+
+  // ── Starter-Plan-Quota-Guard ────────────────────────────────────────
+  // Pay-per-Guide-Pivot: Starter-User dürfen genau 1 Website verwalten.
+  // Bei Versuch eine 2. anzulegen → 402 limit_reached, damit der Client
+  // das Upsell-Modal zum Professional-Plan zeigen kann. Re-Submit derselben
+  // URL ist erlaubt (UPSERT-Pfad bleibt unten greifbar).
+  const userRow = await sql`
+    SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1
+  ` as Array<{ plan: string | null }>;
+  const planKey = normalizePlan(userRow[0]?.plan);
+
+  if (planKey === "starter") {
+    const existing = await sql`
+      SELECT
+        COUNT(*)::int                                              AS total,
+        COUNT(*) FILTER (WHERE LOWER(url) = LOWER(${cleanUrl}))::int AS this_url
+      FROM saved_websites
+      WHERE user_id = ${session.user.id}
+    ` as Array<{ total: number; this_url: number }>;
+
+    const total   = existing[0]?.total   ?? 0;
+    const thisUrl = existing[0]?.this_url ?? 0;
+
+    // Limit greift nur wenn (a) schon eine Site existiert UND (b) die neue URL
+    // KEINE existierende Site ist (sonst würde der ON-CONFLICT-UPSERT geblockt).
+    if (total >= 1 && thisUrl === 0) {
+      return NextResponse.json(
+        {
+          error:        "limit_reached",
+          message:      "Starter-Plan ist auf 1 Website beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten.",
+          currentCount: total,
+          limit:        1,
+          plan:         "starter",
+          upgradeTo:    "professional",
+        },
+        { status: 402 },
+      );
+    }
+  }
   // RETURNING id::text — der New-Client-Modal-Flow muss die neue ID
   // sofort wissen, um danach auf /dashboard/scan?websiteId=<id> zu redirecten.
   // Bei Conflict (URL existiert schon) → existierende ID zurückgeben, damit
