@@ -151,6 +151,20 @@ export default function ScanPage() {
         }
       }
     } catch { /* localStorage not available */ }
+
+    // Onboarding-Brücke (05.05.2026): wenn der User mit ?problem=<pillar>
+    // hierherkommt (Klick auf eine SEO-Card auf der Landingpage), persistieren
+    // wir die Auswahl in localStorage. Das OnboardingProblemModal im Dashboard
+    // liest wf_focus_pillar beim ersten Mount und prefilled die Säule —
+    // damit endet der Funnel-Personalisierungs-Pfad nicht im Scan-Result.
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const problem = sp.get("problem");
+      if (problem === "visibility" || problem === "health" || problem === "speed") {
+        localStorage.setItem("wf_focus_pillar", problem);
+      }
+    } catch { /* localStorage / URL parsing failed — silent fail */ }
+
     setMounted(true);
   }, []);
 

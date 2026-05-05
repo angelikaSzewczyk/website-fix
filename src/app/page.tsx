@@ -130,9 +130,9 @@ const PLANS = [
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "3 Projekte", highlight: true },
-      { text: "Deep-Scan aller Unterseiten", highlight: true },
-      { text: "SEO, Performance & UX-Analyse", highlight: false },
+      { text: "1 Projekt", highlight: true },
+      { text: "5 Scans / Monat", highlight: true },
+      { text: "Pay-per-Fix Guides (9,90 € pro Stück)", highlight: false },
       { text: "Interaktive Site-Map mit Fehler-Übersicht", highlight: false },
       { text: "Basis Fix-Tipps (ohne KI-Guide)", highlight: false },
     ],
@@ -359,9 +359,9 @@ export default function Page() {
             Direkt unter Hero — ohne Divider — damit die Top-3 GSC-Queries
             (warum findet google meine homepage nicht / wordpress kritischer
             fehler / mein webhosting ist langsam) sofort als matchende
-            Antworten sichtbar sind. Panik-Sprache, kurzer Body-Text,
-            jeweils CTA zum problemfokussierten /scan-Pfad. */}
-        <section id="seo-anchors" className="wf-seo-anchors" style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 24px 40px" }}>
+            Antworten sichtbar sind. Layout-Styles in globals.css unter
+            .wf-seo-anchors / .wf-seo-grid. */}
+        <section id="seo-anchors" className="wf-seo-anchors">
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.14em" }}>
               Sofort-Hilfe statt Warteschleife
@@ -374,11 +374,7 @@ export default function Page() {
             </p>
           </div>
 
-          <div className="wf-seo-grid" style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
-            gap: 18,
-          }}>
+          <div className="wf-seo-grid">
             {/* Card 1 — WordPress Kritischer Fehler */}
             <article style={{
               padding: "28px 26px", borderRadius: 16,

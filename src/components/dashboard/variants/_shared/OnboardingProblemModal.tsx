@@ -93,6 +93,11 @@ export default function OnboardingProblemModal({
   // Im Claim-Fall hat der User bereits Issues gesehen und sein Problem
   // implizit benannt — das Modal wäre eine UX-Doppelung. Wir markieren das
   // Onboarding direkt als gesehen und zeigen es nicht.
+  //
+  // Onboarding-Brücke (05.05.2026): Wenn der User über eine SEO-Card auf
+  // der Landingpage gekommen ist, hat /scan/page.tsx bereits wf_focus_pillar
+  // gesetzt. Wir lesen es hier und setzen es als initial selected — der
+  // User muss nicht nochmal klicken, was er schon ausgewählt hat.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const seen = window.localStorage.getItem(STORAGE_KEY);
@@ -102,6 +107,11 @@ export default function OnboardingProblemModal({
     if (claimedScan) {
       window.localStorage.setItem(STORAGE_KEY, new Date().toISOString());
       return;
+    }
+
+    const focusPillar = window.localStorage.getItem("wf_focus_pillar");
+    if (focusPillar === "visibility" || focusPillar === "health" || focusPillar === "speed") {
+      setSelected(focusPillar);
     }
 
     setOpen(true);

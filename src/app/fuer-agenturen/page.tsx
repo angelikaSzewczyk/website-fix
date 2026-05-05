@@ -16,8 +16,20 @@ const BellAlertIcon = BellDot;
 const ShieldAlertIcon = ShieldAlert;
 
 export const metadata: Metadata = {
-  title: { absolute: "Für Agenturen | Mehr Marge mit automatisierter WordPress-Wartung" },
+  title:       { absolute: "Für Agenturen | Mehr Marge mit automatisierter WordPress-Wartung" },
   description: "Skalieren Sie Ihre Agentur mit website-fix. Smart-Fix Drawer, Lead-Magnet Widget, White-Label Reports und Workflow-Automatisierung für Web-Agenturen.",
+  alternates:  { canonical: "https://website-fix.com/fuer-agenturen" },
+  openGraph: {
+    title:       "Für Agenturen | Mehr Marge mit automatisierter WordPress-Wartung",
+    description: "Skalieren Sie Ihre Agentur mit website-fix. Smart-Fix Drawer, Lead-Magnet Widget, White-Label Reports und Workflow-Automatisierung für Web-Agenturen.",
+    url:         "https://website-fix.com/fuer-agenturen",
+    type:        "website",
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "Für Agenturen | Mehr Marge mit automatisierter WordPress-Wartung",
+    description: "Skalieren Sie Ihre Agentur mit website-fix. Smart-Fix Drawer, Lead-Magnet Widget, White-Label Reports und Workflow-Automatisierung für Web-Agenturen.",
+  },
 };
 
 const PLANS = [
@@ -29,9 +41,9 @@ const PLANS = [
     desc: "Für erste Schritte & Einzelprojekte",
     accent: "#60a5fa",
     features: [
-      { text: "3 Scans / Monat", highlight: true },
+      { text: "1 Projekt · 5 Scans / Monat", highlight: true },
       { text: "SEO, Technik & Sicherheits-Check", highlight: true },
-      { text: "PDF-Export (Standard)", highlight: false },
+      { text: "Pay-per-Fix Guides (9,90 € pro Stück)", highlight: false },
       { text: "Kein White-Label", highlight: false, locked: true },
       { text: "Kein Client Tracking", highlight: false, locked: true },
       { text: "Kein Executive Summary", highlight: false, locked: true },
@@ -70,7 +82,7 @@ const PLANS = [
     desc: "Full White-Label · die Empfehlung für etablierte Agenturen",
     accent: "#7C3AED",
     features: [
-      { text: "Unlimitierte Scans · keine monatlichen Limits", highlight: true, key: true },
+      { text: "Bis zu 50 Projekte inklusive", highlight: true, key: true },
       { text: "Eigenes Branding im Lead-Widget (Farbe, Logo, Domain)", highlight: true, key: true },
       { text: "PDF-Export für Kunden — komplett unter deiner Marke", highlight: true, key: true },
       { text: "API-Zugriff für eigene Workflows & Integrationen", highlight: true, key: true },

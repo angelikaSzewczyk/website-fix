@@ -83,7 +83,11 @@ export interface PlanQuota {
 }
 
 export const PLAN_QUOTAS: Record<PlanKey, PlanQuota> = {
-  starter:      { monthlyScans: 5,        monthlyScansLabel: "5 Scans",       projects: 3,  projectsLabel: "3 Projekte" },
+  // Pay-per-Guide-Pivot (05.05.2026): Starter ist Single-Site. 5 Scans/Monat
+  // reichen für Re-Scans nach Fixes. Wer 2+ Sites braucht, soll auf
+  // Professional upgraden — der Server-Guard in /api/websites/route.ts
+  // erzwingt diese Grenze (402 limit_reached).
+  starter:      { monthlyScans: 5,        monthlyScansLabel: "5 Scans",       projects: 1,  projectsLabel: "1 Projekt" },
   professional: { monthlyScans: 25,       monthlyScansLabel: "25 Scans",      projects: 10, projectsLabel: "10 Projekte" },
   // Agency: technisches Anti-Abuse-Cap bei 500 Scans/Monat. UI rendert "Flatrate" /
   // "∞" damit der User nicht zählt. Wer 500 wirklich erreicht (extrem unwahrscheinlich)
