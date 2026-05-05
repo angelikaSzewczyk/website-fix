@@ -605,7 +605,7 @@ export default function ScanPage() {
                 <>
                   Analysiere Ranking-Blocker und BFSG-Konformität in Echtzeit.{" "}
                   <span style={{ color: "rgba(255,255,255,0.75)" }}>Erhalte eine detaillierte Vorschau deines Potenzials</span>{" "}
-                  — bis zu 25 Seiten, Ergebnis in 60 Sekunden.
+                  — bis zu 10 Seiten im Free-Scan, Ergebnis in 60 Sekunden.
                 </>
               )
             }

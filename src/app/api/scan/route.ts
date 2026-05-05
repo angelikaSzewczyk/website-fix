@@ -1116,10 +1116,17 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     const userId  = session?.user?.id as string | undefined;
-    const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? "starter";
-    // isPaidPlan() normalisiert Legacy-Strings (smart-guard, agency-starter, agency-pro, free)
-    // → kanonischer Plan. Vorher: hartkodierte Liste, in der "agency" UND "free" fehlten →
-    // canonical-Agency-User wurden fälschlich als unbezahlt behandelt (15 statt 50 Broken-Link-Checks).
+    // Anonyme User bekommen "anon" als Plan-String, nicht "starter".
+    // Effekt:
+    // (a) eigener Cache-Slot — anon-Snapshot kollidiert nicht mit Starter,
+    //     beide können nebeneinander koexistieren ohne Cross-Drift.
+    // (b) getMaxSubpages("anon") fällt auf 10 Seiten zurück (statt 50 für
+    //     Starter) — sichtbarer Unterschied zwischen Free-Scan und Plan.
+    // (c) isPaidPlan/isAtLeastProfessional/isAgency liefern weiterhin false
+    //     (normalizePlan("anon") === null), keine ungewollten Pro-Features.
+    const userPlan = userId
+      ? ((session?.user as { plan?: string } | undefined)?.plan ?? "starter")
+      : "anon";
     const isPaid = isPaidPlan(userPlan);
 
     // ── Admin test-bypass cookie: skips IP rate limit ──────────
