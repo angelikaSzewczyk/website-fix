@@ -571,6 +571,10 @@ export default function ScanPage() {
 
           {/* H1: pillar-spezifisch oder Default. Lead bleibt weiß, Highlight
               im pillar-Gradient (Amber/Blau/Cyan). */}
+          {/* Gradient-Text-Style: zusätzlich zum Webkit-Prefix auch
+              standard backgroundClip + box-decoration-break: clone, sonst
+              greift der Text-Clip nicht über Zeilenumbrüche und der User
+              sieht eine rohe Gradient-Box statt des Textes. */}
           {focusPillar ? (
             <h1 style={{
               fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
@@ -579,7 +583,12 @@ export default function ScanPage() {
               {PROBLEM_VARIANTS[focusPillar].h1Lead}{" "}
               <span style={{
                 background: PROBLEM_VARIANTS[focusPillar].h1Gradient,
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                color: "transparent",
+                boxDecorationBreak: "clone",
+                WebkitBoxDecorationBreak: "clone",
               }}>
                 {PROBLEM_VARIANTS[focusPillar].h1Highlight}
               </span>
@@ -590,7 +599,15 @@ export default function ScanPage() {
               margin: "0 0 16px", letterSpacing: "-0.035em",
             }}>
               Professionelle System-Analyse:{" "}
-              <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <span style={{
+                background: "linear-gradient(90deg,#7aa6ff,#8df3d3)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                color: "transparent",
+                boxDecorationBreak: "clone",
+                WebkitBoxDecorationBreak: "clone",
+              }}>
                 Sichtbarkeits-Blocker aufdecken.
               </span>
             </h1>
