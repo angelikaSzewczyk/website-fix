@@ -571,25 +571,18 @@ export default function ScanPage() {
 
           {/* H1: pillar-spezifisch oder Default. Lead bleibt weiß, Highlight
               im pillar-Gradient (Amber/Blau/Cyan). */}
-          {/* Gradient-Text-Style: zusätzlich zum Webkit-Prefix auch
-              standard backgroundClip + box-decoration-break: clone, sonst
-              greift der Text-Clip nicht über Zeilenumbrüche und der User
-              sieht eine rohe Gradient-Box statt des Textes. */}
+          {/* Pillar-Highlight als Solid-Color statt Gradient-Text-Trick.
+              background-clip:text + WebkitTextFillColor:transparent ist
+              fragil bei Multi-Line + manchen Tailwind-Setups (Resultat:
+              farbige Box ohne Text). Solid-Color in der Pillar-Farbe ist
+              robust, funktioniert in jedem Browser, sieht klar aus. */}
           {focusPillar ? (
             <h1 style={{
               fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
               margin: "0 0 16px", letterSpacing: "-0.035em",
             }}>
               {PROBLEM_VARIANTS[focusPillar].h1Lead}{" "}
-              <span style={{
-                background: PROBLEM_VARIANTS[focusPillar].h1Gradient,
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "transparent",
-                boxDecorationBreak: "clone",
-                WebkitBoxDecorationBreak: "clone",
-              }}>
+              <span style={{ color: PROBLEM_VARIANTS[focusPillar].badgeColor }}>
                 {PROBLEM_VARIANTS[focusPillar].h1Highlight}
               </span>
             </h1>
@@ -599,15 +592,7 @@ export default function ScanPage() {
               margin: "0 0 16px", letterSpacing: "-0.035em",
             }}>
               Professionelle System-Analyse:{" "}
-              <span style={{
-                background: "linear-gradient(90deg,#7aa6ff,#8df3d3)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "transparent",
-                boxDecorationBreak: "clone",
-                WebkitBoxDecorationBreak: "clone",
-              }}>
+              <span style={{ color: "#8df3d3" }}>
                 Sichtbarkeits-Blocker aufdecken.
               </span>
             </h1>
