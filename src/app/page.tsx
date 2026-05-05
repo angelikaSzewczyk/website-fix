@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
 import FaqAccordion from "./components/faq-accordion";
 import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
@@ -7,6 +10,71 @@ import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import TestimonialDots from "./components/testimonial-dots";
 import SiteFooter from "./components/SiteFooter";
+
+// ── Pflicht-Artikel (Blog-Teaser im Experten-Logbuch) ──────────────────
+// Diese 5 Posts spiegeln die GSC-Top-Queries und sind unsere primären
+// Conversion-Hebel. Der Logbuch-Teaser auf der Landingpage zeigt jeweils
+// den jüngsten dieser 5 — sortiert nach frontmatter.date descending.
+// Bei neuen Pflicht-Artikeln einfach den Slug hier ergänzen.
+const PFLICHT_SLUGS = [
+  "wordpress-critical-error",
+  "warum-findet-google-meine-homepage-nicht",
+  "website-laedt-extrem-langsam",
+  "agentur-skalieren-wartung-automatisieren",
+  "89-euro-pro-monat-vs-totalausfall",
+] as const;
+
+type PflichtPost = {
+  slug:        string;
+  title:       string;
+  description: string;
+  category:    string;
+  date:        string;
+};
+
+/** Liest die Frontmatter aller Pflicht-Posts und gibt den jüngsten zurück.
+ *  Server-side — fs läuft beim Build, kein Runtime-Overhead. Bei Datei-
+ *  Fehler (z.B. Slug umbenannt) wird der Eintrag stumm übersprungen.
+ *  Returnt null wenn kein Post lesbar ist — der Caller fällt dann auf
+ *  einen statischen Default zurück. */
+function getLatestPflichtPost(): PflichtPost | null {
+  const blogDir = path.join(process.cwd(), "content/blog");
+  const posts: PflichtPost[] = [];
+
+  for (const slug of PFLICHT_SLUGS) {
+    try {
+      const filePath = path.join(blogDir, `${slug}.md`);
+      const fileContent = fs.readFileSync(filePath, "utf8");
+      const { data } = matter(fileContent);
+      if (typeof data.title !== "string" || typeof data.date !== "string") continue;
+      posts.push({
+        slug,
+        title:       data.title,
+        description: typeof data.description === "string" ? data.description : "",
+        category:    typeof data.category    === "string" ? data.category    : "wordpress",
+        date:        data.date,
+      });
+    } catch { /* file missing / unreadable — skip */ }
+  }
+
+  if (posts.length === 0) return null;
+
+  // sort by date descending, take first
+  posts.sort((a, b) => b.date.localeCompare(a.date));
+  return posts[0];
+}
+
+/** Mappt category-Strings auf Anzeige-Label + Theme-Farbe für das
+ *  Logbuch-Card-Badge. Default-Theme wenn category unbekannt. */
+function categoryTheme(category: string): { label: string; color: string; bg: string; border: string } {
+  switch (category.toLowerCase()) {
+    case "agency":      return { label: "Agentur · Skalierung", color: "#10B981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.30)"  };
+    case "performance": return { label: "Hosting · Speed",       color: "#22d3ee", bg: "rgba(34,211,238,0.12)",  border: "rgba(34,211,238,0.30)"  };
+    case "seo":         return { label: "Google · Sichtbarkeit", color: "#7aa6ff", bg: "rgba(122,166,255,0.12)", border: "rgba(122,166,255,0.30)" };
+    case "wordpress":   return { label: "WordPress · Notfall",   color: "#fbbf24", bg: "rgba(251,191,36,0.12)",  border: "rgba(251,191,36,0.30)"  };
+    default:            return { label: "Experten-Wissen",       color: "#7aa6ff", bg: "rgba(122,166,255,0.12)", border: "rgba(122,166,255,0.20)" };
+  }
+}
 
 export const metadata: Metadata = {
   title: { absolute: "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen" },
@@ -212,6 +280,10 @@ const FAQ = [
 ];
 
 export default function Page() {
+  // Dynamischer Blog-Teaser — jüngster der 5 Pflicht-Artikel.
+  // Server-side ausgewertet beim Build, kein Client-Roundtrip.
+  const latestPost = getLatestPflichtPost();
+
   return (
     <>
       {/* NAV */}
@@ -1202,47 +1274,70 @@ export default function Page() {
             </Link>
           </div>
 
-          <Link href="/blog/bfsg-2025-agenturen" style={{ textDecoration: "none", display: "block" }}>
-            <div style={{
-              padding: "28px 32px",
-              border: "1px solid rgba(122,166,255,0.15)",
-              borderRadius: 14,
-              background: "rgba(122,166,255,0.04)",
-              display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap",
-              transition: "border-color 0.2s ease, background 0.2s ease",
-            }} className="wf-blog-card">
-              <div style={{
-                width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                background: "rgba(122,166,255,0.12)", border: "1px solid rgba(122,166,255,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              <div style={{ flex: 1, minWidth: 240 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-                    background: "rgba(122,166,255,0.12)", color: "#7aa6ff",
-                    border: "1px solid rgba(122,166,255,0.2)", letterSpacing: "0.05em",
+          {/* Dynamischer Teaser: jüngster der PFLICHT_SLUGS. Fallback auf
+              den BFSG-Klassiker, wenn aus irgendeinem Grund keine Pflicht-
+              Datei lesbar ist (defensive). */}
+          {(() => {
+            const teaser = latestPost ?? {
+              slug:        "bfsg-2025-agenturen",
+              title:       "Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen",
+              description: "Wie Agenturen das Thema Barrierefreiheit als Qualitätsmerkmal positionieren und damit höhere Wartungspauschalen rechtfertigen.",
+              category:    "agency",
+              date:        "2025-05-12",
+            };
+            const theme = categoryTheme(teaser.category);
+            const dateLabel = (() => {
+              try {
+                return new Date(teaser.date).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
+              } catch {
+                return teaser.date;
+              }
+            })();
+            return (
+              <Link href={`/blog/${teaser.slug}`} style={{ textDecoration: "none", display: "block" }}>
+                <div style={{
+                  padding: "28px 32px",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 14,
+                  background: theme.bg.replace("0.12", "0.04"),
+                  display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap",
+                  transition: "border-color 0.2s ease, background 0.2s ease",
+                }} className="wf-blog-card">
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                    background: theme.bg,
+                    border: `1px solid ${theme.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    BFSG · WCAG
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 240 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
+                        background: theme.bg, color: theme.color,
+                        border: `1px solid ${theme.border}`, letterSpacing: "0.05em",
+                      }}>
+                        {theme.label}
+                      </span>
+                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{dateLabel}</span>
+                    </div>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.3 }}>
+                      {teaser.title}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
+                      {teaser.description}
+                    </p>
+                  </div>
+                  <span style={{ fontSize: 13, color: theme.color, fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center" }}>
+                    Jetzt lesen →
                   </span>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>5 Min. Lesezeit</span>
                 </div>
-                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.3 }}>
-                  Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen
-                </h3>
-                <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
-                  Wie Agenturen das Thema Barrierefreiheit als Qualitätsmerkmal positionieren und damit höhere Wartungspauschalen rechtfertigen.
-                </p>
-              </div>
-              <span style={{ fontSize: 13, color: "#7aa6ff", fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center" }}>
-                Jetzt lesen →
-              </span>
-            </div>
-          </Link>
+              </Link>
+            );
+          })()}
         </section>
 
         {/* DIVIDER */}
@@ -1276,7 +1371,7 @@ export default function Page() {
               </p>
             </div>
             <div className="wf-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
-              <Link href="/scan" style={{
+              <Link href="/scan?problem=visibility" style={{
                 padding: "15px 36px", borderRadius: 11, fontWeight: 800, fontSize: 16,
                 background: "linear-gradient(90deg, #007BFF, #0057b8)",
                 color: "#fff", textDecoration: "none", whiteSpace: "nowrap",
@@ -1286,7 +1381,7 @@ export default function Page() {
                 Ranking-Check starten →
               </Link>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", paddingLeft: 4 }}>
-                Ergebnis in unter 60 Sekunden. Voller Funktionsumfang ab 29€/Monat.
+                Ergebnis in unter 60 Sekunden. Einmal-Fix ab 9,90 € oder Sorglos-Flatrate.
               </span>
             </div>
           </div>
