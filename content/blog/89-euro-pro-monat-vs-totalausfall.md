@@ -12,8 +12,8 @@ tags:
   - "WordPress Wartungsvertrag"
   - "Website-Fix Professional"
 status: "published"
-thumbnail: "/blog/panik-stopper.webp"
-ogImage: "/blog/panik-stopper.webp"
+thumbnail: "/blog/sorglos-flatrate.png"
+ogImage: "/blog/sorglos-flatrate.png"
 faq:
   - q: "Was kostet ein WordPress-Totalausfall im Schnitt?"
     a: "Konservative Schätzung für einen 4-Stunden-Ausfall einer mittleren Business-Website: 200–600 € entgangener Umsatz (Kontaktformular, Anrufe, Social-Traffic), 150–400 € Notfall-Hilfe (Stundensatz 80–150 € deutsch), 50–200 € Re-Indexierungs-Aufwand (SEO-Cleanup nach 4xx/5xx-Spike). Summe: typisch 400–1.200 € pro Ausfall. Bei E-Commerce mit aktivem Traffic deutlich mehr."
@@ -29,7 +29,7 @@ faq:
     a: "Sofort nach dem Upgrade siehst du den passenden Rescue-Guide entsperrt im Dashboard (Inklusiv-Fixes-Sektion) — ohne Stripe-Roundtrip, ohne Wartezeit. Plus den KI-Smart-Fix-Drawer mit page-builder-spezifischen Schritten. Ein User berichtete: 11 Minuten von Upgrade bis funktionierende Site."
 ---
 
-![Sorglos-Flatrate vs. Totalausfall — die Mathematik hinter 89 €/Monat](/blog/panik-stopper.webp)
+![Sorglos-Flatrate vs. Totalausfall — die Mathematik hinter 89 €/Monat](/blog/sorglos-flatrate.png)
 
 > **Die Wahrheit über WordPress-Kosten:** Ein einziger Totalausfall — sechs Stunden weiße Seite, kein Kontakt-Formular, keine Bestellungen — kostet im Schnitt das Vierfache eines Jahres-Pro-Plans. Trotzdem kalkuliert kaum jemand mit dem Risiko. Hier die Zahlen, die deine Pricing-Entscheidung treffen.
 
