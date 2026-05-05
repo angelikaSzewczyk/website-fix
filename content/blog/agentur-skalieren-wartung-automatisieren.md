@@ -12,8 +12,8 @@ tags:
   - "Agentur Workflow Asana"
   - "WP-Plugin Remote Management"
 status: "published"
-thumbnail: "/blog/builder-friede.webp"
-ogImage: "/blog/builder-friede.webp"
+thumbnail: "/blog/agentur-skalieren.png"
+ogImage: "/blog/agentur-skalieren.png"
 faq:
   - q: "Ab wie vielen Wartungskunden lohnt sich der Professional-Plan?"
     a: "Ab dem zweiten zahlenden Wartungs-Auftrag. Der Pro-Plan kostet 89 €/Monat. Ein einziger gewonnener Wartungs-Auftrag bei 79 €/Monat amortisiert das Tool fast komplett — ab dem zweiten Kunden ist die Marge positiv. Wer schon 5+ Kunden hat und manuell arbeitet, gewinnt sofort 8-15 Stunden Arbeitszeit pro Monat zurück."
@@ -29,7 +29,7 @@ faq:
     a: "Nein. Saved Websites + historische Scans bleiben in deinem Account. Du verlierst nur den Zugriff auf neue Pro-Features (Smart-Fix-Drawer, Score-History, Integration-Bar) — Lese-Zugriff auf bestehende Daten bleibt. Ein Wechsel zurück zu Starter behält dein Setup."
 ---
 
-![Agentur skalieren — Wartungskunden in 2 Stunden statt 2 Stunden pro Kunde](/blog/builder-friede.webp)
+![Agentur skalieren — Wartungskunden in 2 Stunden statt 2 Stunden pro Kunde](/blog/agentur-skalieren.png)
 
 > **Die brutale Skalierungs-Wahrheit:** Lineare Wartungs-Arbeit frisst dein Wachstum. Bei 5 Kunden machbar. Bei 15 zahlst du drauf, weil deine Stunden teurer sind als der Wartungsbeitrag. Der Ausweg ist nicht "mehr Personal" — sondern ein Tool, das die repetitive Arbeit automatisiert.
 
