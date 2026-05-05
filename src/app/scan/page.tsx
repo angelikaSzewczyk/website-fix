@@ -29,6 +29,71 @@ const FREE_SCAN_KEY = "wf_free_scan_ts";
 const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 const MAX_FREE_PAGES = 10;
 
+// ── Problem-Pillar-Hero-Varianten (Funnel-Personalisierung) ─────────────
+// Der ?problem=<pillar>-Param kommt aus den SEO-Cards der Landingpage.
+// Wenn vorhanden, rendern wir einen pillar-spezifischen Hero — User
+// erkennt sofort: "Ich bin auf der richtigen Seite". Ohne Param fällt
+// die Page auf das generische Default-Wording zurück.
+type ProblemPillar = "health" | "visibility" | "speed";
+
+const PROBLEM_VARIANTS: Record<ProblemPillar, {
+  badge: string; badgeBg: string; badgeBorder: string; badgeColor: string; badgeDot: string;
+  h1Lead: string; h1Highlight: string; h1Gradient: string;
+  sub: React.ReactNode;
+}> = {
+  health: {
+    badge: "WordPress · Notfall",
+    badgeBg: "rgba(251,191,36,0.08)",
+    badgeBorder: "rgba(251,191,36,0.30)",
+    badgeColor: "#fbbf24",
+    badgeDot: "#fbbf24",
+    h1Lead: "Kritischer Fehler?",
+    h1Highlight: "Wir finden ihn — und liefern den Fix.",
+    h1Gradient: "linear-gradient(90deg,#fbbf24,#f59e0b)",
+    sub: (
+      <>
+        Plugin-Konflikt, PHP-Crash oder weiße Seite —{" "}
+        <span style={{ color: "rgba(255,255,255,0.75)" }}>der Scanner identifiziert die Ursache in 60 Sekunden.</span>{" "}
+        Inklusive Schritt-für-Schritt-Anleitung für Recovery-Modus, FTP-Plugin-Diff und PHP-Update.
+      </>
+    ),
+  },
+  visibility: {
+    badge: "Google · Sichtbarkeit",
+    badgeBg: "rgba(122,166,255,0.08)",
+    badgeBorder: "rgba(122,166,255,0.30)",
+    badgeColor: "#7aa6ff",
+    badgeDot: "#7aa6ff",
+    h1Lead: "Google ignoriert deine Seite?",
+    h1Highlight: "Wir zeigen dir warum.",
+    h1Gradient: "linear-gradient(90deg,#7aa6ff,#a78bfa)",
+    sub: (
+      <>
+        Indexierungs-Status, robots.txt, Sitemap, noindex-Tags und leere Title-Tags —{" "}
+        <span style={{ color: "rgba(255,255,255,0.75)" }}>alle 5 typischen Sichtbarkeits-Blocker auf einen Blick.</span>{" "}
+        Mit konkretem Fix-Plan, nicht nur einer Fehlerliste.
+      </>
+    ),
+  },
+  speed: {
+    badge: "Hosting · Ladezeit",
+    badgeBg: "rgba(34,211,238,0.08)",
+    badgeBorder: "rgba(34,211,238,0.30)",
+    badgeColor: "#22d3ee",
+    badgeDot: "#22d3ee",
+    h1Lead: "Webhosting zu langsam?",
+    h1Highlight: "Wir messen, wo's wirklich hängt.",
+    h1Gradient: "linear-gradient(90deg,#22d3ee,#8df3d3)",
+    sub: (
+      <>
+        Server-Antwortzeit, DOM-Tiefe, Plugin-Bloat und Bilder —{" "}
+        <span style={{ color: "rgba(255,255,255,0.75)" }}>der Scanner findet den echten Bremsklotz.</span>{" "}
+        Inklusive hoster-spezifischer Fix-Anleitung für Strato, IONOS, All-Inkl und Hostinger.
+      </>
+    ),
+  },
+};
+
 // ── Progress steps data ───────────────────────────────────────────────────────
 const STEPS: { phase: ScanPhase; label: string; sub?: string }[] = [
   { phase: "step1", label: "Startseite & Sub-Pages werden geladen…", sub: "Crawler verbindet sich mit der Zieldomain" },
@@ -129,6 +194,7 @@ export default function ScanPage() {
   const [notifyNextJs, setNotifyNextJs] = useState(false);
   const [showSystemInput, setShowSystemInput] = useState(false);
   const [systemInput, setSystemInput] = useState("");
+  const [focusPillar, setFocusPillar] = useState<ProblemPillar | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const crawlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -155,13 +221,17 @@ export default function ScanPage() {
     // Onboarding-Brücke (05.05.2026): wenn der User mit ?problem=<pillar>
     // hierherkommt (Klick auf eine SEO-Card auf der Landingpage), persistieren
     // wir die Auswahl in localStorage. Das OnboardingProblemModal im Dashboard
-    // liest wf_focus_pillar beim ersten Mount und prefilled die Säule —
-    // damit endet der Funnel-Personalisierungs-Pfad nicht im Scan-Result.
+    // liest wf_focus_pillar beim ersten Mount und prefilled die Säule.
+    //
+    // Funnel-Personalisierung Stufe B (05.05.): zusätzlich setzen wir den
+    // focusPillar-State, der den Hero-Block der Scan-Page pillar-spezifisch
+    // rendert (Wording-Match) — und später die Result-Sortierung steuert.
     try {
       const sp = new URLSearchParams(window.location.search);
       const problem = sp.get("problem");
       if (problem === "visibility" || problem === "health" || problem === "speed") {
         localStorage.setItem("wf_focus_pillar", problem);
+        setFocusPillar(problem);
       }
     } catch { /* localStorage / URL parsing failed — silent fail */ }
 
@@ -470,37 +540,73 @@ export default function ScanPage() {
       <main>
         <section style={{ maxWidth: 760, margin: "0 auto", padding: "96px 24px 64px", textAlign: "center" }}>
 
-          {/* Deep Scan badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 28,
-            padding: "5px 14px", borderRadius: 20,
-            border: "1px solid rgba(141,243,211,0.25)",
-            background: "rgba(141,243,211,0.06)",
-            fontSize: 12, color: "#8df3d3", fontWeight: 700, letterSpacing: "0.08em",
-          }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: "50%",
-              background: "#8df3d3", flexShrink: 0,
-              boxShadow: "0 0 6px #8df3d3",
-              animation: "pulseDot 1.5s ease-in-out infinite",
-            }} />
-            Deep-Scan
-          </div>
+          {/* Hero-Badge: pillar-spezifisch wenn ?problem=<pillar> kam,
+              sonst Default "Deep-Scan". Färbung + Wording matchen die
+              Card auf der Landingpage, von der der User geklickt hat. */}
+          {(() => {
+            const variant = focusPillar ? PROBLEM_VARIANTS[focusPillar] : null;
+            const badgeBg     = variant?.badgeBg     ?? "rgba(141,243,211,0.06)";
+            const badgeBorder = variant?.badgeBorder ?? "rgba(141,243,211,0.25)";
+            const badgeColor  = variant?.badgeColor  ?? "#8df3d3";
+            const badgeDot    = variant?.badgeDot    ?? "#8df3d3";
+            const badgeText   = variant?.badge       ?? "Deep-Scan";
+            return (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 28,
+                padding: "5px 14px", borderRadius: 20,
+                border: `1px solid ${badgeBorder}`,
+                background: badgeBg,
+                fontSize: 12, color: badgeColor, fontWeight: 700, letterSpacing: "0.08em",
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: badgeDot, flexShrink: 0,
+                  boxShadow: `0 0 6px ${badgeDot}`,
+                  animation: "pulseDot 1.5s ease-in-out infinite",
+                }} />
+                {badgeText}
+              </div>
+            );
+          })()}
 
-          <h1 style={{
-            fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
-            margin: "0 0 16px", letterSpacing: "-0.035em",
-          }}>
-            Professionelle System-Analyse:{" "}
-            <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Sichtbarkeits-Blocker aufdecken.
-            </span>
-          </h1>
+          {/* H1: pillar-spezifisch oder Default. Lead bleibt weiß, Highlight
+              im pillar-Gradient (Amber/Blau/Cyan). */}
+          {focusPillar ? (
+            <h1 style={{
+              fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
+              margin: "0 0 16px", letterSpacing: "-0.035em",
+            }}>
+              {PROBLEM_VARIANTS[focusPillar].h1Lead}{" "}
+              <span style={{
+                background: PROBLEM_VARIANTS[focusPillar].h1Gradient,
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              }}>
+                {PROBLEM_VARIANTS[focusPillar].h1Highlight}
+              </span>
+            </h1>
+          ) : (
+            <h1 style={{
+              fontSize: "clamp(28px, 4.5vw, 50px)", fontWeight: 800, lineHeight: 1.1,
+              margin: "0 0 16px", letterSpacing: "-0.035em",
+            }}>
+              Professionelle System-Analyse:{" "}
+              <span style={{ background: "linear-gradient(90deg,#7aa6ff,#8df3d3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Sichtbarkeits-Blocker aufdecken.
+              </span>
+            </h1>
+          )}
 
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 580, margin: "0 auto 40px" }}>
-            Analysiere Ranking-Blocker und BFSG-Konformität in Echtzeit.{" "}
-            <span style={{ color: "rgba(255,255,255,0.75)" }}>Erhalte eine detaillierte Vorschau deines Potenzials</span>{" "}
-            — bis zu 25 Seiten, Ergebnis in 60 Sekunden.
+            {focusPillar
+              ? PROBLEM_VARIANTS[focusPillar].sub
+              : (
+                <>
+                  Analysiere Ranking-Blocker und BFSG-Konformität in Echtzeit.{" "}
+                  <span style={{ color: "rgba(255,255,255,0.75)" }}>Erhalte eine detaillierte Vorschau deines Potenzials</span>{" "}
+                  — bis zu 25 Seiten, Ergebnis in 60 Sekunden.
+                </>
+              )
+            }
           </p>
 
           {/* ── INPUT FORM / BLOCKED STATE ── */}

@@ -259,6 +259,117 @@ function ProtoPanelContent({ p, tier = "anon" }: {
   if (formCount  > 0) chips.push({ label: `${formCount} Formular-Optimierungen`,  color: AMBER });
   if (seoCount   > 0) chips.push({ label: `${seoCount} SEO-Optimierungen`,        color: AMBER });
 
+  // Funnel-Personalisierung Stufe B (05.05.2026):
+  // Wenn der User von einer SEO-Card mit ?problem=<pillar> kam, hat /scan
+  // den Pillar in localStorage.wf_focus_pillar persistiert. Hier lesen wir
+  // ihn, um die Befunde-Liste pillar-spezifisch zu sortieren — die match-
+  // Befunde kommen unter einem hervorgehobenen Section-Header zuerst,
+  // andere Befunde darunter unter "Weitere Befunde".
+  const [focusPillar, setFocusPillar] = useState<"visibility" | "health" | "speed" | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("wf_focus_pillar");
+    if (stored === "visibility" || stored === "health" || stored === "speed") {
+      setFocusPillar(stored);
+    }
+  }, []);
+
+  // Befunde-Sammlung als Array — jeder Eintrag mit Pillar-Tag.
+  // Erlaubt es uns, je nach focusPillar zu sortieren ohne die JSX-Switches
+  // zu verlieren. Speed-Befunde gibt's hier nicht (sind im Backend-Scan,
+  // nicht im StoredScan-Snapshot) — User mit ?problem=speed sieht daher
+  // alle Befunde + einen Hinweis-Banner.
+  type Pillar = "visibility" | "health" | "recht";
+  const findings: Array<{ pillar: Pillar; el: React.ReactElement }> = [];
+
+  if (isUnreachable) findings.push({ pillar: "health", el: (
+    <ProtoRow key="unreachable" severity="red" tier={tier}
+      title="HTTP: Seite nicht erreichbar"
+      detail={`GET ${p.path} → 404 Not Found / Connection Timeout`}
+      law="Wachstums-Bremse: verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen"
+      manualHint="Prüfe Server-Status und richte eine 301-Weiterleitung auf die korrekte URL ein"
+    />
+  )});
+  if (p.missingH1) findings.push({ pillar: "visibility", el: (
+    <ProtoRow key="h1" severity="red" tier={tier}
+      title="<h1>-Tag fehlt"
+      detail="Überschriften-Hierarchie fehlt — Screenreader verlieren Seitenstruktur"
+      law="SEO-Ranking: Seitenstruktur für Google-Crawler und Nutzer essentiell"
+      manualHint='Füge <h1>Dein Seitenthema</h1> einmalig pro Seite in den Seiteninhalt ein'
+    />
+  )});
+  if (p.missingTitle) findings.push({ pillar: "visibility", el: (
+    <ProtoRow key="title" severity="yellow" tier={tier}
+      title="<title>-Tag fehlt"
+      detail="Kein Seitentitel — erscheint namenlos in Suchergebnissen"
+      law="SEO-Grundlage: Seitenname fehlt in Suchergebnissen — direkter Klick-Verlust"
+      manualHint='Ergänze <title>Seitenname | Deine Marke</title> im WordPress-SEO-Plugin (Yoast/Rank Math)'
+    />
+  )});
+  if (p.missingMeta) findings.push({ pillar: "visibility", el: (
+    <ProtoRow key="meta" severity="yellow" tier={tier}
+      title="Meta-Description fehlt"
+      detail="Google wählt beliebigen Text als Snippet — CTR sinkt"
+      law="SEO-Best Practice"
+      manualHint="Öffne die Seite im Editor → SEO-Plugin → Meta-Beschreibung ausfüllen (120–160 Zeichen)"
+    />
+  )});
+  altImages.forEach((img, idx) => findings.push({ pillar: "recht", el: (
+    <ProtoRow key={`img-named-${idx}`} severity="red" tier={tier}
+      title={`<img alt=""> fehlt`}
+      detail={img}
+      law="SEO-Potenzial: Bilder ohne Alt-Text sind für Google unsichtbar — verschenkt Bild-Ranking"
+      manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
+    />
+  )}));
+  Array.from({ length: extraAlt }, (_, i) => findings.push({ pillar: "recht", el: (
+    <ProtoRow key={`img-extra-${i}`} severity="red" tier={tier}
+      title={`<img alt=""> fehlt`}
+      detail="Dateiname nicht ermittelt"
+      law="SEO-Potenzial: Bilder ohne Alt-Text sind für Google unsichtbar — verschenkt Bild-Ranking"
+      manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
+    />
+  )}));
+  Array.from({ length: p.inputsWithoutLabel ?? 0 }, (_, i) => findings.push({ pillar: "recht", el: (
+    <ProtoRow key={`label-${i}`} severity="red" tier={tier}
+      title={`<label> fehlt für Formularfeld #${i + 1}`}
+      detail="<input>-Element ohne zugeordnetes <label> oder aria-label"
+      law="UX-Hürde: Formularfelder ohne Label senken Conversion-Rate"
+      manualHint='Füge <label for="feldId">Beschreibung</label> vor dem Input ein oder setze aria-label="..."'
+    />
+  )}));
+  Array.from({ length: p.buttonsWithoutText ?? 0 }, (_, i) => findings.push({ pillar: "recht", el: (
+    <ProtoRow key={`btn-${i}`} severity="red" tier={tier}
+      title={`<button> ohne sichtbaren Text #${i + 1}`}
+      detail="Button-Element ohne Beschriftung oder aria-label"
+      law="UX-Hürde: Buttons ohne Text schaden Konvertierung und Nutzer-Vertrauen"
+      manualHint='Füge aria-label="Aktion beschreiben" zum <button>-Tag hinzu'
+    />
+  )}));
+  if (p.noindex) findings.push({ pillar: "visibility", el: (
+    <ProtoRow key="noindex" severity="yellow" tier={tier}
+      title={`<meta name="robots" content="noindex"> aktiv`}
+      detail="Seite explizit von Google-Indexierung ausgeschlossen"
+      law="Kein organischer Traffic · direkter Umsatzverlust"
+      manualHint='Entferne content="noindex" im SEO-Plugin (Yoast: "Suchmaschinen-Sichtbarkeit" aktivieren)'
+    />
+  )});
+
+  // Pillar-Mapping für die Section-Headers + Theme-Farben
+  const PILLAR_META: Record<NonNullable<typeof focusPillar>, { label: string; color: string; bg: string; bdr: string; matchPillars: Pillar[] }> = {
+    visibility: { label: "Sichtbarkeit",  color: "#7aa6ff", bg: "rgba(122,166,255,0.08)", bdr: "rgba(122,166,255,0.30)", matchPillars: ["visibility"] },
+    health:     { label: "Gesundheit",    color: "#fbbf24", bg: "rgba(251,191,36,0.08)",  bdr: "rgba(251,191,36,0.30)",  matchPillars: ["health"] },
+    speed:      { label: "Speed",         color: "#22d3ee", bg: "rgba(34,211,238,0.08)",  bdr: "rgba(34,211,238,0.30)",  matchPillars: [] /* keine Speed-Befunde im StoredScan */ },
+  };
+
+  // Wenn focusPillar gesetzt: matching zuerst, Rest darunter. Sonst Default-Reihenfolge.
+  const matchingFindings = focusPillar
+    ? findings.filter(f => PILLAR_META[focusPillar].matchPillars.includes(f.pillar))
+    : [];
+  const otherFindings = focusPillar
+    ? findings.filter(f => !PILLAR_META[focusPillar].matchPillars.includes(f.pillar))
+    : findings;
+
   return (
     <div style={{ padding: "14px 20px 16px", background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
       {/* Header + breakdown chips */}
@@ -278,91 +389,48 @@ function ProtoPanelContent({ p, tier = "anon" }: {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
 
-        {/* 1. Seite nicht erreichbar — counts as 1 */}
-        {isUnreachable && (
-          <ProtoRow severity="red" tier={tier}
-            title="HTTP: Seite nicht erreichbar"
-            detail={`GET ${p.path} → 404 Not Found / Connection Timeout`}
-            law="Wachstums-Bremse: verschenkt wertvolles SEO-Ranking und Nutzer-Vertrauen"
-            manualHint="Prüfe Server-Status und richte eine 301-Weiterleitung auf die korrekte URL ein"
-          />
+        {/* Pillar-spezifische Sektion: Match-Befunde mit hervorgehobenem Header */}
+        {focusPillar && matchingFindings.length > 0 && (
+          <div style={{
+            padding: "8px 12px", marginBottom: 4, borderRadius: 7,
+            background: PILLAR_META[focusPillar].bg,
+            border: `1px solid ${PILLAR_META[focusPillar].bdr}`,
+            display: "flex", alignItems: "center", gap: 7,
+          }}>
+            <span style={{ fontSize: 11 }}>🎯</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: PILLAR_META[focusPillar].color, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              Deine {PILLAR_META[focusPillar].label}-Befunde — {matchingFindings.length} gefunden
+            </span>
+          </div>
+        )}
+        {matchingFindings.map(f => f.el)}
+
+        {/* Speed-Sonderfall: kein Match-Befund im StoredScan, aber wir
+            bestätigen dem User, dass der Backend-Scan die Speed-Werte
+            erfasst hat — sonst fühlt er sich nicht abgeholt. */}
+        {focusPillar === "speed" && (
+          <div style={{
+            padding: "10px 14px", marginBottom: 4, borderRadius: 7,
+            background: PILLAR_META.speed.bg,
+            border: `1px dashed ${PILLAR_META.speed.bdr}`,
+            fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.55,
+          }}>
+            <strong style={{ color: PILLAR_META.speed.color }}>Speed-Werte deiner Seite</strong> wurden im Hintergrund-Scan gemessen (Server-Antwortzeit, DOM-Tiefe, Asset-Größen) — du siehst sie im vollen Bericht im Dashboard. Hier sind die anderen Befunde, die wir auf der Seite gefunden haben:
+          </div>
         )}
 
-        {/* 2. Kein H1 — counts as 1 */}
-        {p.missingH1 && (
-          <ProtoRow severity="red" tier={tier}
-            title="<h1>-Tag fehlt"
-            detail="Überschriften-Hierarchie fehlt — Screenreader verlieren Seitenstruktur"
-            law="SEO-Ranking: Seitenstruktur für Google-Crawler und Nutzer essentiell"
-            manualHint='Füge <h1>Dein Seitenthema</h1> einmalig pro Seite in den Seiteninhalt ein'
-          />
+        {/* Trenner + Section-Header für "Weitere Befunde" — nur wenn fokussiert
+            UND es einen Match-Block + andere Befunde gibt */}
+        {focusPillar && matchingFindings.length > 0 && otherFindings.length > 0 && (
+          <div style={{
+            padding: "6px 12px", marginTop: 6, marginBottom: 2,
+            fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+            letterSpacing: "0.08em", textTransform: "uppercase",
+          }}>
+            Weitere Befunde — {otherFindings.length}
+          </div>
         )}
-
-        {/* 3. Kein Title — counts as 1 */}
-        {p.missingTitle && (
-          <ProtoRow severity="yellow" tier={tier}
-            title="<title>-Tag fehlt"
-            detail="Kein Seitentitel — erscheint namenlos in Suchergebnissen"
-            law="SEO-Grundlage: Seitenname fehlt in Suchergebnissen — direkter Klick-Verlust"
-            manualHint='Ergänze <title>Seitenname | Deine Marke</title> im WordPress-SEO-Plugin (Yoast/Rank Math)'
-          />
-        )}
-
-        {/* 4. Keine Meta-Description — counts as 1 */}
-        {p.missingMeta && (
-          <ProtoRow severity="yellow" tier={tier}
-            title="Meta-Description fehlt"
-            detail="Google wählt beliebigen Text als Snippet — CTR sinkt"
-            law="SEO-Best Practice"
-            manualHint="Öffne die Seite im Editor → SEO-Plugin → Meta-Beschreibung ausfüllen (120–160 Zeichen)"
-          />
-        )}
-
-        {/* 5+. Alt-missing images — each image = 1 entry */}
-        {altImages.map((img, idx) => (
-          <ProtoRow key={`img-named-${idx}`} severity="red" tier={tier}
-            title={`<img alt=""> fehlt`}
-            detail={img}
-            law="SEO-Potenzial: Bilder ohne Alt-Text sind für Google unsichtbar — verschenkt Bild-Ranking"
-            manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
-          />
-        ))}
-        {Array.from({ length: extraAlt }, (_, i) => (
-          <ProtoRow key={`img-extra-${i}`} severity="red" tier={tier}
-            title={`<img alt=""> fehlt`}
-            detail="Dateiname nicht ermittelt"
-            law="SEO-Potenzial: Bilder ohne Alt-Text sind für Google unsichtbar — verschenkt Bild-Ranking"
-            manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
-          />
-        ))}
-
-        {/* Form labels — each missing label = 1 entry */}
-        {(p.inputsWithoutLabel ?? 0) > 0 && Array.from({ length: p.inputsWithoutLabel! }, (_, i) => (
-          <ProtoRow key={`label-${i}`} severity="red" tier={tier}
-            title={`<label> fehlt für Formularfeld #${i + 1}`}
-            detail="<input>-Element ohne zugeordnetes <label> oder aria-label"
-            law="UX-Hürde: Formularfelder ohne Label senken Conversion-Rate"
-            manualHint='Füge <label for="feldId">Beschreibung</label> vor dem Input ein oder setze aria-label="..."'
-          />
-        ))}
-        {(p.buttonsWithoutText ?? 0) > 0 && Array.from({ length: p.buttonsWithoutText! }, (_, i) => (
-          <ProtoRow key={`btn-${i}`} severity="red" tier={tier}
-            title={`<button> ohne sichtbaren Text #${i + 1}`}
-            detail="Button-Element ohne Beschriftung oder aria-label"
-            law="UX-Hürde: Buttons ohne Text schaden Konvertierung und Nutzer-Vertrauen"
-            manualHint='Füge aria-label="Aktion beschreiben" zum <button>-Tag hinzu'
-          />
-        ))}
-
-        {/* Last. noindex — counts as 1 */}
-        {p.noindex && (
-          <ProtoRow severity="yellow" tier={tier}
-            title={`<meta name="robots" content="noindex"> aktiv`}
-            detail="Seite explizit von Google-Indexierung ausgeschlossen"
-            law="Kein organischer Traffic · direkter Umsatzverlust"
-            manualHint='Entferne content="noindex" im SEO-Plugin (Yoast: "Suchmaschinen-Sichtbarkeit" aktivieren)'
-          />
-        )}
+        {otherFindings.map(f => f.el)}
 
       </div>
 
