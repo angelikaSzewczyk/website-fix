@@ -7,6 +7,24 @@
  */
 
 import { neon } from "@neondatabase/serverless";
+import { isAtLeastProfessional } from "@/lib/plans";
+
+/** Liest den aktuellen Plan eines Users aus users.plan und prüft, ob er
+ *  Pro-oder-höher ist. Single-Source für den Guide-Flatrate-Bypass —
+ *  jeder Pro/Agency-User hat alle aktiven Guides automatisch entsperrt,
+ *  ohne Stripe-Checkout, ohne user_unlocked_guides-Eintrag.
+ *
+ *  Hinweis: nutzt eine eigene neon-Instance statt einer durchgereichten —
+ *  die NeonQueryFunction-Generics (false,false vs. boolean,boolean) sind
+ *  nicht kompatibel und führen zu TS2345. neon poolt intern, kein
+ *  Performance-Issue durch die zweite Connection. */
+async function userHasFlatrate(userId: string | number): Promise<boolean> {
+  const sql = neon(process.env.DATABASE_URL!);
+  const rows = await sql`
+    SELECT plan FROM users WHERE id = ${userId} LIMIT 1
+  ` as Array<{ plan: string | null }>;
+  return isAtLeastProfessional(rows[0]?.plan ?? null);
+}
 
 export type RescueGuide = {
   id:                string;
@@ -117,6 +135,11 @@ export async function matchGuidesForIssues(
     active: boolean;
   }>;
 
+  // Flatrate-Check: Pro/Agency haben alle aktiven Guides automatisch
+  // unlocked — überspringen den user_unlocked_guides-Lookup nicht (wir
+  // wollen die unlockId behalten falls schon mal gekauft wurde, z.B. als
+  // Starter), aber der unlocked-Flag ist bei Flatrate-Plans immer true.
+  const hasFlatrate = await userHasFlatrate(userId);
   const unlocks = await sql`
     SELECT id, guide_id FROM user_unlocked_guides
     WHERE user_id = ${userId} AND guide_id = ANY(${guideIds}::text[])
@@ -127,7 +150,7 @@ export async function matchGuidesForIssues(
     .map(g => ({
       guide:     g as RescueGuide,
       relevance: relevance.get(g.id) ?? 0,
-      unlocked:  unlockMap.has(g.id),
+      unlocked:  hasFlatrate || unlockMap.has(g.id),
       unlockId:  unlockMap.get(g.id),
     }))
     .sort((a, b) => b.relevance - a.relevance);
@@ -164,6 +187,11 @@ export async function getGuideForUser(
 
   if (guides.length === 0) return null;
 
+  // Flatrate-Bypass: Pro/Agency erhalten unlocked=true ohne user_unlocked_guides-
+  // Eintrag. Falls der User vor dem Plan-Upgrade schon mal als Starter gekauft
+  // hat, lesen wir den existierenden Hoster + Checklist-State weiter aus —
+  // sonst Defaults (default-Hoster, leerer Checklist-State).
+  const hasFlatrate = await userHasFlatrate(userId);
   const unlocks = await sql`
     SELECT id, hoster, checklist_state
     FROM user_unlocked_guides
@@ -173,7 +201,7 @@ export async function getGuideForUser(
 
   return {
     guide: guides[0] as RescueGuide,
-    unlocked: unlocks.length > 0,
+    unlocked: hasFlatrate || unlocks.length > 0,
     unlockId: unlocks[0]?.id ?? null,
     hoster:   unlocks[0]?.hoster ?? null,
     checklistState: unlocks[0]?.checklist_state ?? {},

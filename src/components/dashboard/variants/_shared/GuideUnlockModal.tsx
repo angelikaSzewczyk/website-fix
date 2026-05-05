@@ -35,14 +35,23 @@ const T = {
  *   3. Preis + "Jetzt freischalten" → POST /api/guides/[id]/checkout
  *   4. Bei alreadyUnlocked → direkter Redirect zur Guide-Page
  *
+ * Sorglos-Flatrate (Pro/Agency): wenn `flatrate` true ist, ersetzt
+ * das Modal den Preis-Block durch einen "Im Plan enthalten"-Hinweis
+ * und schickt den User per Klick direkt zur Guide-Page (Server-API
+ * macht keinen Stripe-Call, sondern liefert den /dashboard/guides/-URL).
+ *
  * ESC + Overlay-Click + ×-Button schließen das Modal (alle drei).
  */
 export default function GuideUnlockModal({
   guide,
   onClose,
+  flatrate = false,
 }: {
   guide: GuideMeta;
   onClose: () => void;
+  /** True wenn der eingeloggte User Pro/Agency ist — Modal zeigt
+   *  "Im Plan enthalten" statt Preis und überspringt Stripe. */
+  flatrate?: boolean;
 }) {
   const [hoster, setHoster] = useState<string>("default");
   const [busy, setBusy]     = useState(false);
@@ -206,19 +215,39 @@ export default function GuideUnlockModal({
         }}>
           <span>✓ Sofortiger Zugriff</span>
           <span>✓ Lebenslang verfügbar</span>
-          <span>✓ Sichere Stripe-Zahlung</span>
+          <span>{flatrate ? "✓ Ohne Zusatzkosten" : "✓ Sichere Stripe-Zahlung"}</span>
         </div>
 
-        {/* Price + CTA */}
+        {/* Price + CTA — Pro/Agency sehen "Im Plan enthalten" statt Preis */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: T.text, letterSpacing: "-0.02em", lineHeight: 1 }}>
-              {priceLabel}
+          {flatrate ? (
+            <div>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "6px 11px", borderRadius: 7,
+                background: T.greenBg, border: `1px solid ${T.greenBdr}`,
+                fontSize: 11, fontWeight: 800, color: T.green,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                In deinem Plan enthalten
+              </div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
+                Sorglos-Flatrate · keine Einzelkäufe
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>
-              einmalig · inkl. MwSt
+          ) : (
+            <div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: T.text, letterSpacing: "-0.02em", lineHeight: 1 }}>
+                {priceLabel}
+              </div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>
+                einmalig · inkl. MwSt
+              </div>
             </div>
-          </div>
+          )}
           <button
             type="button"
             onClick={unlock}
@@ -235,7 +264,9 @@ export default function GuideUnlockModal({
               minWidth: 220, whiteSpace: "nowrap",
             }}
           >
-            {busy ? "Weiterleitung zu Stripe…" : "Jetzt freischalten →"}
+            {busy
+              ? (flatrate ? "Öffne Anleitung…" : "Weiterleitung zu Stripe…")
+              : (flatrate ? "Guide jetzt öffnen →" : "Jetzt freischalten →")}
           </button>
         </div>
 

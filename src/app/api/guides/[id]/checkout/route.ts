@@ -18,6 +18,7 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { HOSTER_OPTIONS } from "@/lib/rescue-guides";
+import { isAtLeastProfessional } from "@/lib/plans";
 
 export const runtime = "nodejs";
 
@@ -50,6 +51,24 @@ export async function POST(
     return NextResponse.json({ error: "Guide nicht gefunden" }, { status: 404 });
   }
   const guide = guides[0];
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
+
+  // ── Sorglos-Flatrate-Bypass (Pro/Agency) ────────────────────────────
+  // Pro+-User durchlaufen NIE den Stripe-Checkout. Direkter Redirect zur
+  // Guide-Page; getGuideForUser auf der Ziel-Seite returnt ohnehin
+  // unlocked=true für diese Pläne (lib/rescue-guides Flatrate-Check).
+  // Kein DB-Write hier — wir verbrauchen keinen user_unlocked_guides-Slot
+  // für etwas, das via Plan-Membership zugesichert ist.
+  const userRow = await sql`
+    SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1
+  ` as Array<{ plan: string | null }>;
+  if (isAtLeastProfessional(userRow[0]?.plan ?? null)) {
+    return NextResponse.json({
+      url:           `${baseUrl}/dashboard/guides/${guideId}`,
+      flatrate:      true,
+      alreadyUnlocked: true,
+    });
+  }
 
   // Idempotenz — User hat schon unlocked → direkt zur Guide-Page
   const existingUnlock = await sql`
@@ -59,7 +78,6 @@ export async function POST(
   ` as Array<{ id: number }>;
 
   if (existingUnlock.length > 0) {
-    const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
     return NextResponse.json({
       url: `${baseUrl}/dashboard/guides/${guideId}`,
       alreadyUnlocked: true,
@@ -73,7 +91,6 @@ export async function POST(
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
 
   try {
     const checkoutSession = await stripe.checkout.sessions.create({

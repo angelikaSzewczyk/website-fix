@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
-import { isAgency } from "@/lib/plans";
+import { isAgency, isAtLeastProfessional, getPlanQuota, normalizePlan } from "@/lib/plans";
 import { cmsContextLabel } from "@/lib/fix-guides";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -99,7 +99,16 @@ export default async function ClientsPage({
   if (!session?.user) redirect("/login");
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!isAgency(plan)) redirect("/dashboard");
+  // Sorglos-Flatrate-Pivot (05.05.): Portfolio-Übersicht ist jetzt für
+  // Pro+ offen, nicht mehr Agency-only. Pro-User dürfen max. 10 Projekte
+  // anzeigen (PLAN_QUOTAS.professional.projects), Agency 50.
+  if (!isAtLeastProfessional(plan)) redirect("/dashboard");
+  const planKey         = normalizePlan(plan) ?? "starter";
+  const isAgencyPlan    = isAgency(plan);
+  const projectLimit    = getPlanQuota(plan).projects; // 10 / 50
+  const planLabel       = isAgencyPlan ? "Agency" : "Professional";
+  const planAccentColor = isAgencyPlan ? T.purple : "#10B981"; // Pro-Grün
+  void planKey;
 
   const sp = (await searchParams) ?? {};
   const cmsFilter    = sp.cms?.trim()    || "";
@@ -108,9 +117,21 @@ export default async function ClientsPage({
 
   const sql = neon(process.env.DATABASE_URL!);
 
+  // Total-Site-Count vor dem LIMIT — damit wir cap-Banner zeigen können
+  // wenn ein Pro-User mehr Sites hat als sein Plan erlaubt (Legacy-Edge-Case
+  // oder Plan-Downgrade). Wert wird unten in der Header-Sektion gerendert.
+  const totalSitesRow = await sql`
+    SELECT COUNT(*)::int AS c
+    FROM saved_websites
+    WHERE user_id = ${session.user.id}
+  ` as Array<{ c: number }>;
+  const totalSitesAll = totalSitesRow[0]?.c ?? 0;
+  const isOverLimit   = totalSitesAll > projectLimit;
+
   // SQL-seitiges Filtern — performant und stabil bei großen Portfolios.
   // CMS- und Status-Filter werden direkt in den WHERE-Block hinein geliefert,
-  // q-Suche per ILIKE auf Name + URL.
+  // q-Suche per ILIKE auf Name + URL. LIMIT ${projectLimit} setzt das
+  // Plan-Quota hart durch (Pro=10, Agency=50) — nichts darüber wird angezeigt.
   const allWebsites = (await sql`
     SELECT
       sw.id::text,
@@ -144,6 +165,7 @@ export default async function ClientsPage({
     ) s_latest ON true
     WHERE sw.user_id = ${session.user.id}
     ORDER BY GREATEST(sw.last_check_at, s_latest.created_at) DESC NULLS LAST
+    LIMIT ${projectLimit}
   `) as Website[];
 
   // Filter-Application — in JS, weil die Filter clientseitig im URL liegen
@@ -179,17 +201,27 @@ export default async function ClientsPage({
         marginBottom: 22, paddingBottom: 18, borderBottom: `1px solid ${T.divider}`,
       }}>
         <div>
-          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            Agency · Technische Inventur
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: planAccentColor, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            {planLabel} · Portfolio-Übersicht
           </p>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text, letterSpacing: "-0.025em" }}>
-            Kunden-Portfolio
+            {isAgencyPlan ? "Kunden-Portfolio" : "Deine Projekte auf einen Blick"}
           </h1>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: T.textSub, maxWidth: 620, lineHeight: 1.55 }}>
-            Vollständige Liste deiner Kunden-Sites — CMS, SSL-Restlaufzeit, Security-Score
-            und Issue-Stand auf einen Blick. Filter eingrenzen, dann pro Zeile direkt
-            Re-Scan starten.
+            {isAgencyPlan
+              ? "Vollständige Liste deiner Kunden-Sites — CMS, SSL-Restlaufzeit, Security-Score und Issue-Stand auf einen Blick. Filter eingrenzen, dann pro Zeile direkt Re-Scan starten."
+              : `Alle deine ${projectLimit} Projekte zentral verwaltet — CMS, SSL-Restlaufzeit, Security-Score und Issue-Stand pro Site. Im Professional-Plan inklusive.`}
           </p>
+          {isOverLimit && (
+            <p style={{
+              margin: "10px 0 0", padding: "8px 12px", borderRadius: 7,
+              background: T.amberBg, border: `1px solid ${T.amberBdr}`,
+              fontSize: 11.5, color: T.amber, fontWeight: 600,
+              maxWidth: 620, lineHeight: 1.5,
+            }}>
+              Du hast {totalSitesAll} Sites angelegt, dein Plan zeigt davon {projectLimit}. {isAgencyPlan ? "Wende dich an den Support für Enterprise-Kontingente." : "Upgrade auf Agency, um alle Sites zu verwalten."}
+            </p>
+          )}
         </div>
         <Link href="/dashboard#modal-new-client" style={{
           display: "inline-flex", alignItems: "center", gap: 8,

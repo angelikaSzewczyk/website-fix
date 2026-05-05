@@ -382,12 +382,10 @@ export default async function DashboardPage({
   const isSingle  = layout === "single";
 
   // ── Plan-basierte Detection für RescueDashboard (Single-Site-Rescue) ─────
-  // Starter-Plan landet IMMER im Rescue-View (Einzelunternehmer).
-  // Professional-Plan landet im Rescue-View, solange er nur EINE Site hat
-  // (typischer Pro-User mit eigenem Projekt). Sobald er ≥2 Sites hat,
-  // greift das normale ProDashboard mit Multi-Site-Logik.
-  // Agency-Plan bleibt IMMER auf Mission Control — die Mission ist anders
-  // (Multi-Tenancy, Lead-Generator, Branding-Hub).
+  // Sorglos-Flatrate-Pivot (05.05.): Pro/Agency dürfen NIE im RescueDashboard
+  // landen — sie haben für KI-Smart-Fix-Drawer, Score-History und Multi-Site-
+  // Portfolio bezahlt. Selbst mit 1 Site sehen Pro-User das ProDashboard.
+  // Nur Starter (Pay-per-Guide-Pivot) bekommt den 3-Säulen-Rescue-View.
   let siteCount = 0;
   try {
     const cnt = await sql`
@@ -395,10 +393,8 @@ export default async function DashboardPage({
     ` as { c: number }[];
     siteCount = cnt[0]?.c ?? 0;
   } catch { /* Tabelle leer/fehlt → Default 0 */ }
-  const useRescueView = !isAgency && (
-    plan === "starter" ||
-    (isSingle && siteCount <= 1)
-  );
+  void siteCount; // bleibt im Scope für künftige Plan-Differenzierungen
+  const useRescueView = !isAgency && plan === "starter";
 
   // Phase 3 Sprint 4: ?project=<id> Active-Project-Scoping.
   // Wenn ein Projekt-Param mitkommt, schauen wir die zugehörige URL nach

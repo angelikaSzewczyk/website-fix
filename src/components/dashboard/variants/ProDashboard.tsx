@@ -840,7 +840,7 @@ export default function ProDashboard(props: ProDashboardProps) {
           <Card style={{ padding: "28px 32px", marginBottom: 12 }} accent="#007BFF">
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
               <div>
-                <SectionLabel color={D.blueSoft}>Letzter Website-Audit</SectionLabel>
+                <SectionLabel color="#10B981">Professional · Sorglos-Flatrate</SectionLabel>
                 <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: D.text, letterSpacing: "-0.025em" }}>
                   {domain !== "—" ? domain : "Noch keine Website gescannt"}
                 </h1>
@@ -928,6 +928,50 @@ export default function ProDashboard(props: ProDashboardProps) {
               </div>
             </div>
           </Card>
+
+          {/* ② SEO-Themen-Strip — adressiert die häufigsten Such-Anfragen
+                der Zielgruppe (Search Console: "wordpress kritischer fehler",
+                "google findet meine seite nicht", "webhosting langsam") und
+                macht den Pro-Wert "alles inklusive" sofort spürbar. */}
+          {isAtLeastProfessional(plan) && (
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 12, marginBottom: 28,
+            }}>
+              {[
+                {
+                  label: "WordPress Kritischer Fehler",
+                  body:  "Plugin-Diff, PHP-Warnungen, Recovery-Anleitungen — komplett inklusive, kein Einzelkauf.",
+                  color: "#fbbf24", bg: "rgba(251,191,36,0.08)", bdr: "rgba(251,191,36,0.28)",
+                },
+                {
+                  label: "Google Sichtbarkeit",
+                  body:  "Indexierungs-Status, Sitemap, robots.txt, noindex-Detection — täglich überwacht und in der KI-Smart-Fix-Anleitung erklärt.",
+                  color: "#7aa6ff", bg: "rgba(122,166,255,0.08)", bdr: "rgba(122,166,255,0.28)",
+                },
+                {
+                  label: "Hosting & Ladezeit",
+                  body:  "Server-Antwortzeit, Bilder-Optimierung, Caching-Plugins — Behebung Schritt-für-Schritt im Pro-Plan enthalten.",
+                  color: "#22d3ee", bg: "rgba(34,211,238,0.08)", bdr: "rgba(34,211,238,0.28)",
+                },
+              ].map(t => (
+                <div key={t.label} style={{
+                  padding: "14px 16px", borderRadius: D.radiusSm,
+                  background: t.bg, border: `1px solid ${t.bdr}`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.color }} />
+                    <span style={{ fontSize: 11, fontWeight: 800, color: t.color, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                      {t.label}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.55 }}>
+                    {t.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* ① TIER CONTEXT BANNERS ─────────────────────── */}
           {/* Starter: prominent upgrade banner for Smart-Fix */}
@@ -1308,9 +1352,9 @@ export default function ProDashboard(props: ProDashboardProps) {
           {/* ─── EBENE 4: PERFORMANCE & SEARCH CARDS ───────────────────────── */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <SectionLabel>Scan · Sichtbarkeit &amp; Performance</SectionLabel>
+              <SectionLabel>Google-Sichtbarkeit &amp; Hosting-Performance</SectionLabel>
             </div>
-            <SectionHead>Search &amp; Performance</SectionHead>
+            <SectionHead>Wird deine Seite bei Google gefunden?</SectionHead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
               {((): Array<{
                 label: string; value: string; sub: string; color: string;
