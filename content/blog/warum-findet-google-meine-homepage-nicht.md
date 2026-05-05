@@ -277,6 +277,10 @@ Für die meisten der 5 Fehler nicht. Noindex-Tag entfernen, Sitemap einreichen, 
 
 ---
 
-**Bereit, das Sichtbarkeitsproblem zu lösen?**
+### Welcher der 5 Gründe trifft auf deine Seite zu?
 
-👉 **[Jetzt Gratis-Scan starten — 60 Sekunden zum Ergebnis →](/)**
+Den manuell durchzuchecken kostet 30 Minuten. Der **WebsiteFix-Sichtbarkeits-Scanner** prüft alle 5 Ursachen automatisch — Search-Console-Setup, robots.txt, Sitemap-Status, noindex-Tags und Title/Meta-Vollständigkeit auf jeder Unterseite. Du bekommst in 60 Sekunden eine klare Antwort, woran's hakt — und einen konkreten Schritt-für-Schritt-Fix-Plan.
+
+👉 **[Sichtbarkeit jetzt prüfen — 60 Sekunden zum Ergebnis →](/scan?problem=visibility)**
+
+*Mit konkretem Fix-Plan, nicht nur einer Fehlerliste. Kein Login, keine Kreditkarte.*

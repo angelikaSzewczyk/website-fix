@@ -243,6 +243,10 @@ Stundensatz für WordPress-Notfall-Hilfe in Deutschland: 80–150 € netto. Pau
 
 ---
 
-**Deine Seite zeigt gerade den kritischen Fehler? Verschwende keine Zeit mit manueller Suche.**
+### Du steckst gerade im Crash?
 
-👉 **[Jetzt kostenlos scannen — in 60 Sekunden zur Diagnose →](/)**
+Statt selbst Plugin für Plugin abzuschalten: Lass den **WebsiteFix-Scanner** in 60 Sekunden alle 6 Schritte automatisch durchgehen. Recovery-Mail, Plugin-Diff, PHP-Version, Theme-Status — alles auf einen Blick. Du bekommst sofort die exakte Schritt-für-Schritt-Anleitung für deinen Fall, inklusive hoster-spezifischer Klick-Pfade für Strato, IONOS, All-Inkl und Hostinger.
+
+👉 **[Jetzt kostenlos prüfen — Diagnose in 60 Sekunden →](/scan?problem=health)**
+
+*Kein Login, kein Plugin, keine Kreditkarte. Mit konkretem Fix-Plan, nicht nur einer Fehlerliste.*

@@ -329,6 +329,10 @@ Schlanker Code, klar. Google bewertet Core Web Vitals (LCP, CLS, INP) — und di
 
 ---
 
-**Deine Seite hängt? Lass uns den wahren Bremsklotz finden.**
+### Bist du sicher, dass dein Hoster die Bremse ist?
 
-👉 **[Webhosting-Vergleich-Performance war gestern — heute scannst du den Code →](/)**
+Bevor du den Anbieter wechselst (und 1-2 Tage Migrations-Risiko fährst): Lass den **WebsiteFix-Speed-Scanner** in 60 Sekunden messen, ob das Problem im Hosting oder in deinem Code liegt — Server-Antwortzeit, DOM-Tiefe, Plugin-Bloat, Bild-Größen, Cache-Status auf einen Blick. Inklusive hoster-spezifischer Klick-Anleitung für Strato, IONOS, All-Inkl und Hostinger.
+
+👉 **[Ladezeit jetzt messen — 60 Sekunden zum Ergebnis →](/scan?problem=speed)**
+
+*Mit konkretem Fix-Plan, nicht nur einer Fehlerliste. Kein Login, keine Kreditkarte.*
