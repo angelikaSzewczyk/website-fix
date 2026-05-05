@@ -720,7 +720,7 @@ export default async function DashboardPage({
       {!isAgency && !useRescueView && (
         <Suspense>
           {isAtLeastProfessional(plan) ? (
-            <ProDashboard
+            <ProDashboardWithGuides
               firstName={firstName}
               plan={plan}
               lastScan={lastScan}
@@ -747,6 +747,7 @@ export default async function DashboardPage({
               avgTtfbMs={lastScanAvgTtfbMs}
               wcagHeuristicScore={lastScanWcagScore}
               wcagHeuristicLabel={lastScanWcagLabel}
+              userId={String(session.user.id)}
             />
           ) : (
             <StarterDashboard
@@ -908,4 +909,41 @@ async function RescueDashboardWithGuides(props: {
       }}
     />
   );
+}
+
+// ─── ProDashboardWithGuides ──────────────────────────────────────────────────
+// Pro/Agency-Wrapper: matchGuidesForIssues läuft server-side, das Resultat
+// wird als `inclusiveGuides` an ProDashboard durchgereicht. Pro/Agency haben
+// alle aktiven Guides automatisch unlocked (Flatrate-Bypass in
+// lib/rescue-guides.userHasFlatrate). UI rendert eine "Inklusiv-Fixes"-
+// Sektion, die für Pro genau das einlöst, was die Pricing-Card verspricht.
+async function ProDashboardWithGuides(
+  props: React.ComponentProps<typeof ProDashboard> & { userId: string },
+) {
+  const inclusiveGuides = props.lastScan && props.issues.length > 0
+    ? (await matchGuidesForIssues(
+        props.issues.map(i => ({
+          title: i.title, body: i.body,
+          category: i.category, severity: i.severity,
+        })),
+        props.userId,
+      ))
+        .slice(0, 3)
+        .map(m => ({
+          id:                m.guide.id,
+          title:             m.guide.title,
+          problem_label:     m.guide.problem_label,
+          preview:           m.guide.preview,
+          price_cents:       m.guide.price_cents,
+          estimated_minutes: m.guide.estimated_minutes,
+          unlocked:          m.unlocked,
+          checklistPreview:  m.guide.content_json.checklist?.slice(0, 5).map(c => c.text) ?? [],
+        }))
+    : [];
+
+  // userId aus props nicht weiterreichen — ProDashboard erwartet ihn nicht.
+  const { userId: _ignored, ...rest } = props;
+  void _ignored;
+
+  return <ProDashboard {...rest} inclusiveGuides={inclusiveGuides} />;
 }

@@ -162,7 +162,7 @@ const PLANS = [
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
     features: [
-      { text: "Unlimited Projekte", highlight: true },
+      { text: "Bis zu 50 Projekte inklusive", highlight: true },
       { text: "KI-Mass-Fixer für alle Kunden-Sites", highlight: true },
       { text: "Full Integration Suite (Slack / Jira / Zapier)", highlight: true },
       { text: "WP-Plugin Anbindung — Fixes per API", highlight: true },
@@ -315,6 +315,137 @@ export default function Page() {
               </div>
             </div>
 
+          </div>
+        </section>
+
+        {/* DIVIDER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+        {/* ── GSC-SEO-MODULE ── (05.05.2026)
+            Spiegeln die Top-Search-Console-Queries aus 28-Tage-Daten:
+            "warum findet google meine homepage nicht" (240 Impressions),
+            "wordpress kritischer fehler" (85), "webhosting langsam" (57).
+            Jedes Modul hat eigene H2 + 3-Punkt-Erklärblock + direktem
+            CTA zu /scan, damit der GSC-Traffic nicht im Hero verpufft. */}
+        <section id="seo-anchors" className="wf-seo-anchors" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px 40px" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.14em" }}>
+              Konkrete Probleme · Konkrete Lösungen
+            </p>
+            <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
+              Welches Problem hast du gerade?
+            </h2>
+            <p style={{ fontSize: "clamp(14px, 1.6vw, 16px)", color: "rgba(255,255,255,0.55)", maxWidth: 620, margin: "0 auto", lineHeight: 1.65 }}>
+              Drei der häufigsten Notfall-Situationen — wir scannen sofort und liefern die passende Schritt-für-Schritt-Anleitung.
+            </p>
+          </div>
+
+          <div className="wf-seo-grid" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
+            gap: 18,
+          }}>
+            {/* Modul A — WordPress Kritischer Fehler */}
+            <article style={{
+              padding: "28px 26px", borderRadius: 16,
+              background: "linear-gradient(180deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02))",
+              border: "1px solid rgba(251,191,36,0.22)",
+              display: "flex", flexDirection: "column", gap: 14,
+            }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 10px", borderRadius: 8, background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.30)", alignSelf: "flex-start" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fbbf24" }} />
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", letterSpacing: "0.08em", textTransform: "uppercase" }}>WordPress · Notfall</span>
+              </div>
+              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.25 }}>
+                WordPress Kritischer Fehler
+              </h3>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
+                Weiße Seite oder &quot;Es gab einen kritischen Fehler&quot;? Meist ein Plugin-Konflikt nach Update, eine alte PHP-Version oder ein kaputtes Theme. In 6 Schritten zur funktionierenden Seite.
+              </p>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                <li>· Recovery-Mail prüfen + Debug-Modus</li>
+                <li>· Plugin-Konflikte per FTP isolieren</li>
+                <li>· PHP-Update auf 8.2 + Theme-Reset</li>
+              </ul>
+              <Link
+                href="/scan?problem=health"
+                style={{
+                  marginTop: "auto", padding: "11px 18px", borderRadius: 9,
+                  background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.40)",
+                  color: "#fbbf24", fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none",
+                }}
+              >
+                Jetzt kostenlos scannen →
+              </Link>
+            </article>
+
+            {/* Modul B — Google Sichtbarkeit */}
+            <article style={{
+              padding: "28px 26px", borderRadius: 16,
+              background: "linear-gradient(180deg, rgba(122,166,255,0.06), rgba(122,166,255,0.02))",
+              border: "1px solid rgba(122,166,255,0.22)",
+              display: "flex", flexDirection: "column", gap: 14,
+            }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 10px", borderRadius: 8, background: "rgba(122,166,255,0.12)", border: "1px solid rgba(122,166,255,0.30)", alignSelf: "flex-start" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7aa6ff" }} />
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#7aa6ff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Google · Sichtbarkeit</span>
+              </div>
+              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.25 }}>
+                Warum wird meine Seite bei Google nicht gefunden?
+              </h3>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
+                Deine Seite taucht in der Google-Suche nicht auf? Fast immer eine von 5 Ursachen — falsche robots.txt, fehlende Sitemap, noindex-Tag oder leere Title-Tags. Die 5-Punkte-Diagnose findet es heraus.
+              </p>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                <li>· Search-Console-Setup + robots.txt-Check</li>
+                <li>· Sitemap.xml erkennen + einreichen</li>
+                <li>· noindex-Tags und leere Titles aufdecken</li>
+              </ul>
+              <Link
+                href="/scan?problem=visibility"
+                style={{
+                  marginTop: "auto", padding: "11px 18px", borderRadius: 9,
+                  background: "rgba(122,166,255,0.15)", border: "1px solid rgba(122,166,255,0.40)",
+                  color: "#7aa6ff", fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none",
+                }}
+              >
+                Jetzt kostenlos scannen →
+              </Link>
+            </article>
+
+            {/* Modul C — Ladezeit-Optimierung */}
+            <article style={{
+              padding: "28px 26px", borderRadius: 16,
+              background: "linear-gradient(180deg, rgba(34,211,238,0.06), rgba(34,211,238,0.02))",
+              border: "1px solid rgba(34,211,238,0.22)",
+              display: "flex", flexDirection: "column", gap: 14,
+            }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 10px", borderRadius: 8, background: "rgba(34,211,238,0.12)", border: "1px solid rgba(34,211,238,0.30)", alignSelf: "flex-start" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22d3ee" }} />
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#22d3ee", letterSpacing: "0.08em", textTransform: "uppercase" }}>Hosting · Ladezeit</span>
+              </div>
+              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.25 }}>
+                Mein Webhosting ist langsam — was tun?
+              </h3>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
+                Server-Antwortzeit über 2 Sekunden? Bei Strato, IONOS, All-Inkl, Hostinger gibt es konkrete Stellschrauben — PHP-Version, GZIP, Caching, Bilder. Wir messen kostenlos und liefern den hoster-spezifischen Fix.
+              </p>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                <li>· Server-Antwortzeit messen + bewerten</li>
+                <li>· PHP-Version + GZIP/Brotli prüfen</li>
+                <li>· Bilder-Optimierung + Caching-Plugin</li>
+              </ul>
+              <Link
+                href="/scan?problem=speed"
+                style={{
+                  marginTop: "auto", padding: "11px 18px", borderRadius: 9,
+                  background: "rgba(34,211,238,0.15)", border: "1px solid rgba(34,211,238,0.40)",
+                  color: "#22d3ee", fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none",
+                }}
+              >
+                Jetzt kostenlos scannen →
+              </Link>
+            </article>
           </div>
         </section>
 

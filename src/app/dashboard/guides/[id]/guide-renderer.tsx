@@ -193,6 +193,31 @@ export default function GuideRenderer({
   return (
     <main style={pageStyle}>
       <div style={containerStyle}>
+        {/* Mobile-Layout — bei Smartphones <450px: Step-Cards mit kompakten
+            Paddings, Icon+Body stacken vertikal damit der Inhalt nicht
+            zwischen Step-Number und linken Border eingeklemmt wird.
+            Hoster-Zusatzschritte erben dasselbe Verhalten. */}
+        <style>{`
+          @media (max-width: 450px) {
+            .wf-default-step,
+            .wf-hoster-step {
+              padding: 14px 14px !important;
+            }
+            .wf-default-step > div,
+            .wf-hoster-step > div {
+              flex-direction: column !important;
+              gap: 10px !important;
+            }
+            .wf-default-step h3,
+            .wf-hoster-step h3 {
+              font-size: 15px !important;
+            }
+            .wf-default-step p,
+            .wf-hoster-step p {
+              font-size: 13px !important;
+            }
+          }
+        `}</style>
 
         {/* ── Top-Bar ─────────────────────────────────────────────────────── */}
         <div style={{ marginBottom: 24 }}>
@@ -230,7 +255,7 @@ export default function GuideRenderer({
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {defaultSteps.map((step, i) => (
-              <div key={i} style={{
+              <div key={i} className="wf-default-step" style={{
                 background: T.card, border: `1px solid ${T.border}`,
                 borderRadius: 12, padding: "20px 22px",
               }}>
@@ -283,7 +308,7 @@ export default function GuideRenderer({
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {hosterVariantSteps.map((step, i) => (
-                <div key={`hv-${i}`} style={{
+                <div key={`hv-${i}`} className="wf-hoster-step" style={{
                   background: T.card, border: `1px solid ${T.purpleBdr}`,
                   borderLeft: `3px solid ${T.purple}`,
                   borderRadius: 12, padding: "20px 22px",

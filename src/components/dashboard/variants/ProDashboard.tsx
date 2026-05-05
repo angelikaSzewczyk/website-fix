@@ -13,6 +13,7 @@ import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { D, Card, SectionLabel, SectionHead, Pill, BtnPrimary, BtnGhost, Divider, SevBadge, LockIco, hexToRgb } from "./_shared/UIHelpers";
 import { DrawerCard, DrawerPanel, OptimizationPlanModal } from "./_shared/IssueDetailDrawer";
+import GuideUnlockModal from "./_shared/GuideUnlockModal";
 import { WordPressPluginsBlock, WooCommerceSection, BuilderIntelligenceSection } from "./_shared/IntegrationSections";
 import type { PluginDetected } from "./_shared/IntegrationSections";
 import { DeepScanMap, GscInsightCard, InlineStat } from "./_shared/MapAndTools";
@@ -73,6 +74,20 @@ export interface ProDashboardProps {
   avgTtfbMs?:          number | null;
   wcagHeuristicScore?: number | null;
   wcagHeuristicLabel?: string | null;
+  /** Sorglos-Flatrate (05.05.): die ersten 3 Top-Match-Guides, server-seitig
+   *  ermittelt via lib/rescue-guides.matchGuidesForIssues. Für Pro/Agency
+   *  immer als unlocked geliefert (userHasFlatrate-Bypass). UI rendert
+   *  eine "Deine Inklusiv-Fixes"-Sektion mit "✓ Im Plan enthalten"-Pill. */
+  inclusiveGuides?: Array<{
+    id:                string;
+    title:             string;
+    problem_label:     string;
+    preview:           string | null;
+    price_cents:       number;
+    estimated_minutes: number | null;
+    unlocked:          boolean;
+    checklistPreview:  string[];
+  }>;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -167,7 +182,13 @@ export default function ProDashboard(props: ProDashboardProps) {
     avgTtfbMs = null,
     wcagHeuristicScore = null,
     wcagHeuristicLabel = null,
+    inclusiveGuides = [],
   } = props;
+
+  // Inklusiv-Guide-Modal-State — Click auf einen Guide-Card öffnet das
+  // GuideUnlockModal mit flatrate=true. Modal triggert Server-Endpoint,
+  // der für Pro+ direkt zur Guide-Page leitet (kein Stripe).
+  const [activeInclusiveGuide, setActiveInclusiveGuide] = useState<typeof inclusiveGuides[number] | null>(null);
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
   const totalErrors = issues.reduce((acc, i) => acc + (i.count ?? 1), 0);
@@ -970,6 +991,82 @@ export default function ProDashboard(props: ProDashboardProps) {
                   </p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ②a INKLUSIV-FIXES — Pro/Agency sehen die Top-Match-Guides für
+                ihre konkrete Site, alle als "Im Plan enthalten" markiert.
+                Klick öffnet GuideUnlockModal mit flatrate=true; Modal-Submit
+                geht via /api/guides/[id]/checkout (Pro-Bypass) direkt zur
+                Guide-Page, KEIN Stripe-Roundtrip. Löst das Marketing-
+                Versprechen "KI-gestützte Smart-Fix Guides" konkret ein. */}
+          {isAtLeastProfessional(plan) && inclusiveGuides.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ marginBottom: 14 }}>
+                <SectionLabel color="#10B981">In deinem Plan enthalten</SectionLabel>
+                <SectionHead>Deine Inklusiv-Fixes</SectionHead>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: D.textSub, lineHeight: 1.55, maxWidth: 640 }}>
+                  Diese Schritt-für-Schritt-Anleitungen passen genau zu deinen aktuellen Befunden — ohne Einzelkauf, ohne Wartezeit.
+                </p>
+              </div>
+              <div className="pro-inclusive-grid" style={{
+                display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: 12,
+              }}>
+                {inclusiveGuides.map(g => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setActiveInclusiveGuide(g)}
+                    style={{
+                      textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+                      padding: "16px 18px", borderRadius: D.radiusSm,
+                      background: "rgba(16,185,129,0.06)",
+                      border: "1px solid rgba(16,185,129,0.28)",
+                      color: D.text, display: "flex", flexDirection: "column", gap: 8,
+                      transition: "background 0.15s ease, border-color 0.15s ease",
+                    }}
+                  >
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      padding: "3px 9px", borderRadius: 7,
+                      background: "rgba(16,185,129,0.15)",
+                      border: "1px solid rgba(16,185,129,0.35)",
+                      fontSize: 9.5, fontWeight: 800, color: "#10B981",
+                      letterSpacing: "0.06em", textTransform: "uppercase",
+                      alignSelf: "flex-start",
+                    }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Inklusive
+                    </span>
+                    <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 800, color: D.text, lineHeight: 1.35 }}>
+                      {g.title}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.5 }}>
+                      {g.problem_label}
+                      {g.estimated_minutes && (
+                        <span style={{ color: D.textFaint }}> · {g.estimated_minutes} Min</span>
+                      )}
+                    </p>
+                    <span style={{
+                      marginTop: 4, fontSize: 12, fontWeight: 700, color: "#10B981",
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                    }}>
+                      Anleitung öffnen
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <style>{`
+                @media (max-width: 480px) {
+                  .pro-inclusive-grid { grid-template-columns: 1fr !important; }
+                }
+              `}</style>
             </div>
           )}
 
@@ -2406,6 +2503,15 @@ export default function ProDashboard(props: ProDashboardProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── INKLUSIV-GUIDE MODAL (Pro/Agency-Flatrate) ──────────────────── */}
+      {activeInclusiveGuide && (
+        <GuideUnlockModal
+          guide={activeInclusiveGuide}
+          flatrate
+          onClose={() => setActiveInclusiveGuide(null)}
+        />
       )}
 
     </>

@@ -46,6 +46,17 @@ function formatEuro(cents: number): string {
   return (cents / 100).toFixed(2).replace(".", ",") + " €";
 }
 
+/** Stripe-Standard-Gebühren EU: 2,9% + 0,30 € pro erfolgreicher Transaktion.
+ *  Annahme: One-Time-Guides = N Transaktionen mit jeweils 0,30 €-Sockel.
+ *  Subscriptions = monatlich 1 Transaktion pro aktivem Kunden — d.h. der
+ *  Sockel-Anteil pro Cycle ist count*0,30 €.
+ *  Quelle: stripe.com/de/pricing — bei Custom-Rates später anpassen. */
+function stripeFees(grossCents: number, transactionCount: number): number {
+  const percentageFee = Math.round(grossCents * 0.029);
+  const fixedFee      = transactionCount * 30;
+  return percentageFee + fixedFee;
+}
+
 export default async function FinancePage() {
   const session = await auth();
   if (!session?.user?.email) redirect("/login");
@@ -108,6 +119,17 @@ export default async function FinancePage() {
   // bei stabiler Kundenanzahl)
   const total30dCents = sales.cents_30d + mrrCents;
 
+  // ── Stripe-Fees + Netto-Gewinn (30-Tage-Fenster) ───────────────────────
+  // Transaktions-Count: One-Time-Sales (sales.sales_30d) plus eine Transaktion
+  // pro aktivem Subscription-Cycle (Summe planDist.count über alle Plans).
+  const subscriberCount    = planDist.reduce((acc, p) => acc + p.count, 0);
+  const transactionCount30d = sales.sales_30d + subscriberCount;
+  const stripeFees30dCents  = stripeFees(total30dCents, transactionCount30d);
+  const net30dCents         = total30dCents - stripeFees30dCents;
+  const netMarginPct        = total30dCents > 0
+    ? Math.round((net30dCents / total30dCents) * 100)
+    : 100;
+
   return (
     <main style={{ minHeight: "100vh", background: T.page, color: T.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: "32px 32px 80px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -158,6 +180,23 @@ export default async function FinancePage() {
             </div>
             <p style={{ margin: "8px 0 0", fontSize: 11, color: T.textMuted }}>
               {formatEuro(mrrCents)} Subs + {formatEuro(sales.cents_30d)} Guides
+            </p>
+          </div>
+
+          {/* Netto-Gewinn (nach Stripe-Fees) */}
+          <div style={{
+            background: "rgba(74,222,128,0.06)",
+            border: `1px solid ${T.greenBdr}`,
+            borderRadius: 14, padding: "18px 20px",
+          }}>
+            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, color: T.green, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              Netto · nach Gebühren
+            </p>
+            <div style={{ fontSize: 30, fontWeight: 800, color: T.green, letterSpacing: "-0.025em", lineHeight: 1 }}>
+              {formatEuro(net30dCents)}
+            </div>
+            <p style={{ margin: "8px 0 0", fontSize: 11, color: T.textMuted }}>
+              − {formatEuro(stripeFees30dCents)} Stripe-Fees · {netMarginPct}% Marge
             </p>
           </div>
 

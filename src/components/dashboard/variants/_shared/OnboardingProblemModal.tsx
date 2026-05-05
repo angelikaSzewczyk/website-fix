@@ -88,11 +88,23 @@ export default function OnboardingProblemModal({
   const [urlValue, setUrlValue] = useState(defaultUrl);
   const [open, setOpen] = useState(false);
 
-  // Beim Mount: prüfen ob Modal schon gesehen wurde
+  // Beim Mount: prüfen ob Modal schon gesehen wurde ODER ob der User
+  // gerade einen anonymen Scan geclaimed hat (sessionStorage.wf_scan_result).
+  // Im Claim-Fall hat der User bereits Issues gesehen und sein Problem
+  // implizit benannt — das Modal wäre eine UX-Doppelung. Wir markieren das
+  // Onboarding direkt als gesehen und zeigen es nicht.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const seen = window.localStorage.getItem(STORAGE_KEY);
-    if (!seen) setOpen(true);
+    if (seen) return;
+
+    const claimedScan = window.sessionStorage.getItem("wf_scan_result");
+    if (claimedScan) {
+      window.localStorage.setItem(STORAGE_KEY, new Date().toISOString());
+      return;
+    }
+
+    setOpen(true);
   }, []);
 
   function dismiss() {

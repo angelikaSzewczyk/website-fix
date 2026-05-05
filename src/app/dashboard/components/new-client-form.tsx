@@ -22,6 +22,7 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import ModalCloseButton from "./ModalCloseButton";
 
 const C = {
@@ -35,15 +36,29 @@ const C = {
   red:       "#f87171",
 };
 
+/** Server-Antwort bei 402 limit_reached — siehe /api/websites/route.ts. */
+type LimitReachedPayload = {
+  error:        "limit_reached";
+  message:      string;
+  currentCount: number;
+  limit:        number;
+  plan:         string;
+  upgradeTo:    string;
+};
+
 export default function NewClientForm() {
-  const [name, setName]       = useState("");
-  const [url, setUrl]         = useState("");
-  const [busy, setBusy]       = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [name, setName]               = useState("");
+  const [url, setUrl]                 = useState("");
+  const [busy, setBusy]               = useState(false);
+  const [error, setError]             = useState<string | null>(null);
+  /** Wenn gesetzt, ersetzt das Form das normale Submit durch eine
+   *  Upsell-Card. Wird vom 402-Handler befüllt. */
+  const [limitInfo, setLimitInfo] = useState<LimitReachedPayload | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setLimitInfo(null);
 
     const cleanName = name.trim();
     let cleanUrl    = url.trim();
@@ -68,6 +83,14 @@ export default function NewClientForm() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        // 402 = Plan-Quota überschritten — statt Generic-Error rendern wir
+        // ein attraktives Upsell-Element, damit der User den Pivot sofort
+        // versteht und den Upgrade-Pfad direkt klicken kann.
+        if (res.status === 402 && err?.error === "limit_reached") {
+          setLimitInfo(err as LimitReachedPayload);
+          setBusy(false);
+          return;
+        }
         setError(typeof err.error === "string" ? err.error : "Speichern fehlgeschlagen.");
         setBusy(false);
         return;
@@ -87,6 +110,74 @@ export default function NewClientForm() {
       setError("Verbindung zum Server unterbrochen.");
       setBusy(false);
     }
+  }
+
+  // Upsell-Card statt Form-Submit, wenn Server 402 limit_reached zurückgibt.
+  // User sieht sofort den Upgrade-Pfad mit konkreten Vorteilen — kein
+  // generischer "Bitte upgrade"-Text. CTA linkt zur Pricing-Sektion.
+  if (limitInfo) {
+    return (
+      <div style={{
+        background: "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(122,166,255,0.04))",
+        border: "1px solid rgba(16,185,129,0.32)",
+        borderRadius: 14, padding: "26px 24px",
+        display: "flex", flexDirection: "column", gap: 16,
+      }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 11px", borderRadius: 8, background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.35)", alignSelf: "flex-start" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#10B981", letterSpacing: "0.06em", textTransform: "uppercase" }}>Limit erreicht</span>
+        </div>
+        <div>
+          <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+            Bereit für mehr Sites?
+          </h3>
+          <p style={{ margin: 0, fontSize: 13.5, color: C.textSub, lineHeight: 1.6 }}>
+            Dein Starter-Plan deckt 1 Website ab. Mit <strong style={{ color: C.text }}>Professional (89 €/Monat)</strong> verwaltest du bis zu <strong style={{ color: C.text }}>10 Projekte</strong>, bekommst <strong style={{ color: C.text }}>alle Rescue-Guides inklusive</strong> und nutzt das volle Portfolio-Dashboard.
+          </p>
+        </div>
+        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+          {[
+            "10 Projekte statt 1",
+            "Alle Smart-Fix-Anleitungen ohne Einzelkauf (sonst 9,90 € pro Stück)",
+            "KI-Smart-Fix-Drawer + Score-Verlauf + Asana/Slack-Integration",
+            "25 Scans/Monat statt 5",
+          ].map(b => (
+            <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: C.text, lineHeight: 1.5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link
+            href="/?plan=professional#pricing"
+            style={{
+              flex: 1, minWidth: 200, padding: "12px 18px", borderRadius: 10,
+              background: "#10B981", border: "1px solid rgba(16,185,129,0.55)",
+              color: "#0b0c10", fontSize: 13.5, fontWeight: 800,
+              textAlign: "center", textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(16,185,129,0.35)",
+            }}
+          >
+            Auf Professional upgraden →
+          </Link>
+          <button
+            type="button"
+            onClick={() => { setLimitInfo(null); setUrl(""); }}
+            style={{
+              padding: "12px 16px", borderRadius: 10,
+              background: "transparent", border: `1px solid ${C.border}`,
+              color: C.textSub, fontSize: 12.5, fontWeight: 600,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            Vielleicht später
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
