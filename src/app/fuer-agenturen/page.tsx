@@ -4,8 +4,9 @@ import { Suspense } from "react";
 import {
   Layers, BellDot, Globe, ShieldCheck, Zap, Server, Palette,
   Headphones, Magnet, Crown, Check,
-  Wallet, Briefcase, Users, GitBranch, MessageSquare, Bell, Lock, FileText, AlertTriangle,
+  Wallet, Users, Bell, Lock, FileText, AlertTriangle,
 } from "lucide-react";
+import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "../components/BrandIcons";
 import FaqAccordion from "../components/faq-accordion";
 import RoiCalculator from "../components/roi-calculator";
 import CheckoutButton from "../components/checkout-button";
@@ -144,11 +145,13 @@ const PLANS: Plan[] = [
 ];
 
 // ─── Workflow-Integrationen (Logo-Strip) ────────────────────────────────────
-const WORKFLOW_INTEGRATIONS = [
-  { name: "Jira",    desc: "Issues werden automatisch als Tickets im richtigen Sprint angelegt.",        icon: GitBranch },
-  { name: "Asana",   desc: "Befunde landen direkt im richtigen Projekt mit Verantwortlichem.",            icon: Layers },
-  { name: "Trello",  desc: "Karten werden mit Severity-Label im konfigurierten Board erstellt.",          icon: Briefcase },
-  { name: "Slack",   desc: "60-Sekunden-Watchdog meldet Ausfall sofort im konfigurierten Channel.",       icon: MessageSquare },
+// Brand-SVGs aus components/BrandIcons. Wenn neue Integrationen hinzukommen
+// (Linear, ClickUp, Notion …): dort Component ergänzen + hier eintragen.
+const WORKFLOW_INTEGRATIONS: Array<{ name: string; desc: string; Icon: (props: { size?: number }) => React.ReactElement }> = [
+  { name: "Jira",    desc: "Issues werden automatisch als Tickets im richtigen Sprint angelegt.",        Icon: JiraIcon },
+  { name: "Asana",   desc: "Befunde landen direkt im richtigen Projekt mit Verantwortlichem.",            Icon: AsanaIcon },
+  { name: "Trello",  desc: "Karten werden mit Severity-Label im konfigurierten Board erstellt.",          Icon: TrelloIcon },
+  { name: "Slack",   desc: "60-Sekunden-Watchdog meldet Ausfall sofort im konfigurierten Channel.",       Icon: SlackIcon },
 ];
 
 // ─── FAQ — überarbeitet auf Agency-Inhaber-Perspektive ──────────────────────
@@ -768,20 +771,24 @@ export default function AgencyPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
               {WORKFLOW_INTEGRATIONS.map(w => {
-                const Icon = w.icon;
+                const Icon = w.Icon;
                 return (
                   <div key={w.name} style={{
                     padding: "20px 20px", borderRadius: 14,
                     background: T.card, border: `1px solid ${T.border}`,
                     display: "flex", flexDirection: "column", gap: 10,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      {/* Brand-SVG ohne Color-Tile — Original-Brand-Farben
+                          würden vom lila Backdrop verfälscht. Quadratischer
+                          weißer Container für Slack/Jira/Trello/Asana. */}
                       <div style={{
-                        width: 34, height: 34, borderRadius: 9,
-                        background: T.scaleBg, border: `1px solid ${T.scaleBorder}`,
+                        width: 38, height: 38, borderRadius: 9,
+                        background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`,
                         display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0,
                       }}>
-                        <Icon size={16} color={T.scale} strokeWidth={2.2} />
+                        <Icon size={22} />
                       </div>
                       <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{w.name}</span>
                     </div>

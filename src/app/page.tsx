@@ -11,6 +11,7 @@ import InlineScan from "./components/inline-scan";
 import TestimonialDots from "./components/testimonial-dots";
 import SiteFooter from "./components/SiteFooter";
 import MaintenanceBanner from "./components/MaintenanceBanner";
+import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 
 // ── Pflicht-Artikel (Blog-Teaser im Experten-Logbuch) ──────────────────
 // Diese 5 Posts spiegeln die GSC-Top-Queries und sind unsere primären
@@ -743,50 +744,19 @@ export default function Page() {
 
                 {/* Tool logos */}
                 <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                  {/* Slack */}
-                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                    <svg width="28" height="28" viewBox="0 0 54 54" fill="none">
-                      <path d="M19.7 33.3c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4h4v4z" fill="#E01E5A"/>
-                      <path d="M21.7 33.3c0-2.2 1.8-4 4-4s4 1.8 4 4v10c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10z" fill="#E01E5A"/>
-                      <path d="M25.7 19.7c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4v4h-4z" fill="#36C5F0"/>
-                      <path d="M25.7 21.7c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10c-2.2 0-4-1.8-4-4s1.8-4 4-4h10z" fill="#36C5F0"/>
-                      <path d="M39.3 25.7c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4h-4v-4z" fill="#2EB67D"/>
-                      <path d="M37.3 25.7c0 2.2-1.8 4-4 4s-4-1.8-4-4v-10c0-2.2 1.8-4 4-4s4 1.8 4 4v10z" fill="#2EB67D"/>
-                      <path d="M33.3 39.3c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4v-4h4z" fill="#ECB22E"/>
-                      <path d="M33.3 37.3c-2.2 0-4-1.8-4-4s1.8-4 4-4h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-10z" fill="#ECB22E"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Slack</span>
-                  </div>
-                  {/* Jira */}
-                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <defs>
-                        <linearGradient id="jg1" x1="17.8" y1="15.4" x2="10.9" y2="22.3" gradientUnits="userSpaceOnUse"><stop offset=".18" stopColor="#0052cc"/><stop offset="1" stopColor="#2684ff"/></linearGradient>
-                        <linearGradient id="jg2" x1="14.2" y1="16.6" x2="21.1" y2="9.7" gradientUnits="userSpaceOnUse"><stop offset=".18" stopColor="#0052cc"/><stop offset="1" stopColor="#2684ff"/></linearGradient>
-                      </defs>
-                      <path d="M15.9 2.1L2.1 15.9a1.4 1.4 0 000 2l6.1 6.1 7.7-7.7L22.7 10l-6.8-7.9z" fill="url(#jg1)"/>
-                      <path d="M16.1 29.9L29.9 16.1a1.4 1.4 0 000-2l-6.1-6.1-7.7 7.7-6.8 6.4 6.8 7.8z" fill="url(#jg2)"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Jira</span>
-                  </div>
-                  {/* Trello */}
-                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <rect width="32" height="32" rx="6" fill="#0079BF"/>
-                      <rect x="5" y="5" width="9" height="19" rx="2" fill="white"/>
-                      <rect x="18" y="5" width="9" height="13" rx="2" fill="white"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Trello</span>
-                  </div>
-                  {/* Asana */}
-                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="10" r="6" fill="#F06A6A"/>
-                      <circle cx="7" cy="22" r="6" fill="#F06A6A"/>
-                      <circle cx="25" cy="22" r="6" fill="#F06A6A"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Asana</span>
-                  </div>
+                  {/* Brand-SVGs aus shared components/BrandIcons — KEEP SYNCED
+                      mit /fuer-agenturen Workflow-Integration-Sektion. */}
+                  {[
+                    { name: "Slack",  Icon: SlackIcon },
+                    { name: "Jira",   Icon: JiraIcon },
+                    { name: "Trello", Icon: TrelloIcon },
+                    { name: "Asana",  Icon: AsanaIcon },
+                  ].map(({ name, Icon }) => (
+                    <div key={name} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                      <Icon size={28} />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{name}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Flow status */}
