@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
+import PluginDownloadCard from "./_shared/PluginDownloadCard";
 import IssueList from "@/components/dashboard/variants/_shared/IssueList";
 import ScoreRingSection from "./_shared/ScoreRingSection";
 import ScoreHistoryChart from "./_shared/ScoreHistoryChart";
@@ -743,6 +744,13 @@ export default function ProDashboard(props: ProDashboardProps) {
               </button>
             </div>
           )}
+
+          {/* Plugin-Download-Card (Read-Only-Variante für Pro). Plan-aware
+              — bei Pro Standard-Branding, bei Agency erscheint die White-
+              Label-Variante (siehe AgencyDashboard). */}
+          <div style={{ marginBottom: 20 }}>
+            <PluginDownloadCard plan={plan} />
+          </div>
 
           {/* ── NEW-SCAN SUCCESS BANNER ─────────────────── */}
           {isNewScan && lastScan && (

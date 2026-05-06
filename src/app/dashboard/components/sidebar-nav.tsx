@@ -13,6 +13,7 @@ import {
   Users,
   Magnet,
   Palette,
+  Download,
 } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 import { isAgency as isAgencyPlan, isAtLeastProfessional } from "@/lib/plans";
@@ -41,6 +42,7 @@ const AGENCY_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/reports",            label: "Berichts-Archiv",    icon: <Archive size={16} /> },
   { href: "/dashboard/lead-generator",     label: "Lead-Generator",     icon: <Magnet size={16} /> },
   { href: "/dashboard/agency-branding",    label: "Agency-Branding",    icon: <Palette size={16} /> },
+  { href: "/plugin",                       label: "Plugin (White-Label)", icon: <Download size={16} />, beta: true },
   { href: "/dashboard/settings",           label: "Einstellungen",      icon: <Settings size={16} /> },
 ];
 
@@ -50,6 +52,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/scan",      label: "Scan starten", icon: <Zap size={16} /> },
   { href: "/dashboard/monitoring",label: "Monitoring",   icon: <Clock size={16} /> },
   { href: "/dashboard/reports",   label: "Berichte",     icon: <FileText size={16} /> },
+  { href: "/plugin",              label: "Plugin",       icon: <Download size={16} />, beta: true },
 ];
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {

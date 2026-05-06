@@ -9,6 +9,7 @@ import InlineScan from "./components/inline-scan";
 import SiteFooter from "./components/SiteFooter";
 import MaintenanceBanner from "./components/MaintenanceBanner";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
+import PluginInfobox from "./components/PluginInfobox";
 
 // Blog-Teaser-Loader siehe src/lib/blog-loader.ts.
 // Auf der Homepage zeigen wir den jüngsten END-USER-Post (alles außer
@@ -153,6 +154,7 @@ const PLANS = [
     // KEEP SYNCED with /fuer-agenturen PLANS Starter — wortgleich, gleiche Reihenfolge.
     features: [
       { text: "Bis zu 3 Projekte · wöchentlicher Deep-Scan",         highlight: true },
+      { text: "🔒 Inkl. Deep-Scan Plugin (Read-Only)",               highlight: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true },
       { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: true },
       { text: "SEO-, Technik- & Sicherheits-Check",                  highlight: false },
@@ -180,6 +182,7 @@ const PLANS = [
     // KEEP SYNCED with /fuer-agenturen PLANS Professional — wortgleich, gleiche Reihenfolge.
     features: [
       { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true },
+      { text: "🔒 Deep-Scan Plugin · KI-Analyse aller Befunde",              highlight: true },
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true },
       { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
@@ -206,6 +209,7 @@ const PLANS = [
     // KEEP SYNCED with /fuer-agenturen PLANS Agency Scale — wortgleich, gleiche Reihenfolge.
     features: [
       { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                 highlight: true },
+      { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true },
@@ -232,6 +236,10 @@ const FAQ = [
   {
     q: "Muss ich euch mein WordPress-Passwort geben oder etwas installieren?",
     a: "Nein. Der Scan läuft komplett von außen — du gibst nur deine URL ein, wir crawlen die Seite wie ein normaler Besucher. Kein Login, kein FTP, kein Plugin nötig. Ab dem Starter-Plan (29 €/Monat) kannst du optional unser Read-Only-Plugin installieren: Es liest WordPress-internen Status (Plugin-Versionen, Datenbank-Health, geplante Aktualisierungen), schreibt aber NIE etwas zurück. Read-Only heißt wirklich Read-Only — wir können deine Seite gar nicht verändern. Das Plugin gibt uns einfach tiefere Diagnose ohne Sicherheitsrisiko.",
+  },
+  {
+    q: "Warum brauche ich das Plugin überhaupt? Reicht der externe Scan nicht?",
+    a: "Für maximale Sicherheit und Tiefe. Ein externer Scan sieht nur, was deine Website öffentlich rausgibt — Title-Tags, Meta-Daten, sichtbare Links, Bilder. Was er NICHT sieht: PHP-Fehler im Error-Log, langsame Datenbank-Queries, Plugin-Versions-Konflikte, Cron-Jobs, die nie laufen, gehackte Theme-Dateien. Genau das liest unser Read-Only-Plugin aus — ohne Schreibzugriff, ohne dass du uns dein WP-Passwort geben musst. Das Ergebnis ist ein Diagnose-Tiefe, die kein billiger Online-Scanner liefern kann. Ab Starter-Plan inklusive.",
   },
   {
     q: "Was ist der Unterschied zwischen dem 9,90 € Einzel-Fix und einem Abo?",
@@ -1168,6 +1176,13 @@ export default function Page() {
             hier wieder einsetzen, jeder Quote mit URL/Branche, Logos als
             <img> nicht als Text. AgencyStats-Komponente (oben im Hero) bleibt
             als quantifizierte Trust-Quelle bis dahin. */}
+
+        {/* DIVIDER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+        {/* Read-Only-Plugin Verkaufsblock — Kern-Differenzierung gegenüber
+            billigen Online-Scannern. KEEP SYNCED mit /fuer-agenturen. */}
+        <PluginInfobox />
 
         {/* DIVIDER */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />

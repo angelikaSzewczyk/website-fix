@@ -18,6 +18,7 @@ import SiteFooter from "../components/SiteFooter";
 import MaintenanceBanner from "../components/MaintenanceBanner";
 import CancelBanner from "./CancelBanner";
 import { getLatestAgencyPost, categoryTheme } from "@/lib/blog-loader";
+import PluginInfobox from "../components/PluginInfobox";
 
 // ─── SEO-Metadata ────────────────────────────────────────────────────────────
 // Reframing zu "Profit-Center" — Such-Intention "WordPress-Agentur skalieren",
@@ -83,6 +84,7 @@ const PLANS: Plan[] = [
     accent: "#60a5fa",
     features: [
       { text: "Bis zu 3 Projekte · wöchentlicher Deep-Scan",         highlight: true, key: true },
+      { text: "🔒 Inkl. Deep-Scan Plugin (Read-Only)",               highlight: true, key: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true, key: true },
       { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: true },
       { text: "SEO-, Technik- & Sicherheits-Check",                  highlight: false },
@@ -106,6 +108,7 @@ const PLANS: Plan[] = [
     accent: "#10B981",
     features: [
       { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true, key: true },
+      { text: "🔒 Deep-Scan Plugin · KI-Analyse aller Befunde",              highlight: true, key: true },
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true, key: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true, key: true },
       { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
@@ -129,6 +132,7 @@ const PLANS: Plan[] = [
     accent: "#A78BFA",
     features: [
       { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                 highlight: true, key: true },
+      { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true, key: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true, key: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
@@ -168,6 +172,10 @@ const FAQ = [
   {
     q: "Was macht das Read-Only-Plugin und ist es sicher für Mandanten-Sites?",
     a: "Das Plugin ist explizit Read-Only: Es liest WordPress-internen Status (Plugin-Versionen, Datenbank-Health, Theme-Konflikte, geplante Aktualisierungen, .maintenance-Flags), schreibt aber NIE etwas zurück. Kein Schreibzugriff auf wp_options, keine FTP-Aktionen, keine Cron-Manipulation. Rechtlich sauber für Wartungsverträge, weil der Endkunde keine \"unkontrollierte Drittsoftware\" installiert. Ab Starter (29 €/Monat) inklusive — auf Agency Scale per One-Click-Installation auf alle Mandanten ausrollbar. Vorteil gegenüber rein externer Analyse: tiefere Diagnose ohne dass Sie Mandanten-Passwörter durch Ihre Agentur reichen müssen.",
+  },
+  {
+    q: "Warum brauche ich das Plugin überhaupt? Reicht der externe Scan nicht?",
+    a: "Für maximale Sicherheit und Tiefe gegenüber Mandanten. Ein externer Crawl sieht nur, was die Website öffentlich preisgibt — Title-Tags, sichtbare Links, Bilder. Was er NICHT sieht: PHP-Error-Logs, langsame Datenbank-Queries, Plugin-Versions-Konflikte, fehlerhafte Cron-Jobs, kompromittierte Theme-Dateien. Genau das liest unser Read-Only-Plugin aus — ohne Schreibzugriff, ohne dass Sie Mandanten-Passwörter durch Ihre Agentur reichen müssen. Auf Agency Scale läuft das Plugin unter IHREM Branding (eigenes Logo + Agentur-Domain), sodass der Endkunde es als integralen Teil Ihres Wartungsvertrags wahrnimmt. Konfiguration unter Dashboard → Agency-Branding.",
   },
   {
     q: "Wie funktioniert das Mandanten-Portal unter eigener Subdomain?",
@@ -1090,6 +1098,9 @@ export default function AgencyPage() {
             </p>
           </div>
         </section>
+
+        {/* Read-Only-Plugin Verkaufsblock — KEEP SYNCED mit /. */}
+        <PluginInfobox />
 
         {/* ─── EXPERTEN-LOGBUCH (Agency-Post) ────────────────────────────────
             Jüngster Blog-Post mit category="agency" — wenn keiner gefunden,

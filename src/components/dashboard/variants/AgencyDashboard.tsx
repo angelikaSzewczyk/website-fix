@@ -29,6 +29,7 @@ import AcknowledgeButton from "@/app/dashboard/components/AcknowledgeButton";
 import type { ClassifiableWpIssue } from "@/lib/wp-health";
 import { computeDelegationStats } from "@/lib/issue-delegation";
 import DelegationWidget from "./_shared/DelegationWidget";
+import PluginDownloadCard from "./_shared/PluginDownloadCard";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
 const C = {
@@ -310,7 +311,8 @@ export default async function AgencyDashboard({
   const accentBorder = "var(--agency-accent-border)";
   const accentGlowS  = "var(--agency-accent-glow-soft)";
 
-  void firstName; void agencyLogoUrl; void badge; void plan; void usedSlots;
+  // plan + agencyLogoUrl werden jetzt von PluginDownloadCard konsumiert.
+  void firstName; void badge; void usedSlots;
 
   return (
     <main style={{ padding: "28px 32px 80px", maxWidth: 1280, margin: "0 auto" }}>
@@ -401,6 +403,14 @@ export default async function AgencyDashboard({
           Zeigt dem Agentur-Inhaber, wie viel Senior-Lohnkosten er pro Monat
           an Junior-Delegation sparen kann. Null-render wenn keine Issues. */}
       <DelegationWidget stats={delegationStats} />
+
+      {/* ── PLUGIN-DOWNLOAD-CARD (Plan-aware) ──
+          Agency-Variante: Hinweis auf White-Label-Branding + Logo-Upload-Pfad.
+          Wird IMMER gerendert (nicht conditional) — der Plugin-Download ist
+          ein Kern-Touchpoint für jeden bezahlten Plan. */}
+      <div style={{ marginBottom: 16 }}>
+        <PluginDownloadCard plan={plan} agencyLogoUrl={agencyLogoUrl} />
+      </div>
 
       {/* ── Mission-Control-Stack ──
           Vertikales Layout: Live-Monitor (Hero, full-width) → Lead-Ticker

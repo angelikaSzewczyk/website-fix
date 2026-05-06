@@ -8,6 +8,7 @@ import ScoreRingSection from "./_shared/ScoreRingSection";
 import LockedSection from "@/app/dashboard/components/locked-section";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
+import PluginDownloadCard from "./_shared/PluginDownloadCard";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, isPaidPlan, normalizePlan } from "@/lib/plans";
@@ -612,6 +613,15 @@ export default function StarterDashboard(props: StarterDashboardProps) {
         scanLimit={scanLimit}
         isImpersonating={isImpersonating}
       >
+
+          {/* Plugin-Download-Card — Read-Only-Plugin ist ab Starter inklusive,
+              gibt diesem Tier ein konkretes Power-User-Feature jenseits vom
+              wöchentlichen Scan. */}
+          {isPaidPlan(plan) && (
+            <div style={{ marginBottom: 20 }}>
+              <PluginDownloadCard plan={plan} />
+            </div>
+          )}
 
           {/* ── PROFESSIONAL WELCOME BANNER (once after upgrade) ──────────── */}
           {showProWelcome && (
