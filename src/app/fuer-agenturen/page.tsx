@@ -156,14 +156,21 @@ const WORKFLOW_INTEGRATIONS: Array<{ name: string; desc: string; Icon: (props: {
 ];
 
 // ─── FAQ — überarbeitet auf Agency-Inhaber-Perspektive ──────────────────────
+// "Sie"-Form, B2B-Wording (Haftung, Mandanten, Marge, Delegation). Pricing
+// vollständig: 9,90 € Pay-per-Fix, 29 € Starter, 89 € Pro, 249 € Agency
+// Scale. Read-Only-Plugin + Hoster-Kompatibilität explizit beantwortet.
 const FAQ = [
   {
     q: "Wie genau spare ich Senior-Lohnkosten — was kann ein Junior wirklich übernehmen?",
-    a: "Etwa 60–75 % aller Befunde, die unsere Engine findet, lassen sich im WordPress-Backend ohne Code-Eingriff lösen: Alt-Texte, Meta-Descriptions, Title-Tags, Sitemap-Toggles, Cookie-Banner-Konfig, Yoast/Rank-Math-Settings, Image-Alt im Medien-Manager. Unsere Smart-Fix-Guides sind so geschrieben, dass ein Werkstudent mit 3 Monaten WP-Erfahrung sie umsetzen kann. Im Agency-Dashboard sehen Sie pro Mandant exakt: \"X von Y Issues durch Junior lösbar\" — inkl. konkreter Lohnkosten-Ersparnis.",
+    a: "Etwa 60–75 % aller Befunde, die unsere Engine findet, lassen sich im WordPress-Backend ohne Code-Eingriff lösen: Alt-Texte, Meta-Descriptions, Title-Tags, Sitemap-Toggles, Cookie-Banner-Konfig, Yoast/Rank-Math-Settings, Image-Alt im Medien-Manager. Unsere Smart-Fix-Guides sind so geschrieben, dass ein Werkstudent mit 3 Monaten WP-Erfahrung sie umsetzen kann. Im Agency-Dashboard sehen Sie pro Mandant exakt: \"X von Y Issues durch Junior lösbar\" — inkl. konkreter Lohnkosten-Ersparnis. Bei 50 Mandanten und 3 Junior-lösbaren Fixes pro Monat ergibt das rechnerisch eine Marge-Steigerung von ca. 9.750 €/Monat (Senior 100 €/h vs. Junior 35 €/h, je 1 h pro Fix).",
+  },
+  {
+    q: "Was macht das Read-Only-Plugin und ist es sicher für Mandanten-Sites?",
+    a: "Das Plugin ist explizit Read-Only: Es liest WordPress-internen Status (Plugin-Versionen, Datenbank-Health, Theme-Konflikte, geplante Aktualisierungen, .maintenance-Flags), schreibt aber NIE etwas zurück. Kein Schreibzugriff auf wp_options, keine FTP-Aktionen, keine Cron-Manipulation. Rechtlich sauber für Wartungsverträge, weil der Endkunde keine \"unkontrollierte Drittsoftware\" installiert. Ab Starter (29 €/Monat) inklusive — auf Agency Scale per One-Click-Installation auf alle Mandanten ausrollbar. Vorteil gegenüber rein externer Analyse: tiefere Diagnose ohne dass Sie Mandanten-Passwörter durch Ihre Agentur reichen müssen.",
   },
   {
     q: "Wie funktioniert das Mandanten-Portal unter eigener Subdomain?",
-    a: "Sie hinterlegen einmalig ein CNAME-Record in Ihrem DNS (z. B. portal.ihre-agentur.de → wf-portal.vercel.app). Wir provisionieren ein TLS-Zertifikat automatisch. Ihre Endkunden sehen dann ausschließlich Ihr Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool. Inkl. eigener SMTP-Adresse für Auto-Reports.",
+    a: "Sie hinterlegen einmalig ein CNAME-Record in Ihrem DNS (z. B. portal.ihre-agentur.de → wf-portal.vercel.app). Wir provisionieren ein TLS-Zertifikat automatisch. Ihre Endkunden sehen dann ausschließlich Ihr Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool. Inkl. eigener SMTP-Adresse für Auto-Reports. Full White-Label heißt: Endkunde sieht Sie als Anbieter, nicht uns.",
   },
   {
     q: "Was bringt mir der 60-Sekunden-Watchdog im Vergleich zu täglichem Monitoring?",
@@ -187,7 +194,11 @@ const FAQ = [
   },
   {
     q: "Können meine Endkunden den 9,90-€-Pay-per-Fix nutzen, ohne dass ich für jeden ein Konto anlegen muss?",
-    a: "Ja — und das ist ein eigener Lead-Magnet für Sie. Der Pay-per-Fix-Flow läuft komplett anonym: Endkunde scannt seine Seite, wählt einen Fix-Guide, gibt seine E-Mail ein, zahlt 9,90 € via Stripe — fertig. Account-Provisionierung passiert automatisch im Hintergrund nach erfolgreicher Zahlung. Wenn Sie das Lead-Magnet-Widget auf Ihrer eigenen Marketing-Site einbinden, ziehen Sie Endkunden in Ihren Funnel und können sie später auf Wartungsverträge upgraden.",
+    a: "Ja — und das ist ein eigener Lead-Magnet für Sie. Der Pay-per-Fix-Flow läuft komplett anonym: Endkunde scannt seine Seite, wählt einen Fix-Guide, gibt seine E-Mail ein, zahlt 9,90 € via Stripe — fertig. Account-Provisionierung passiert automatisch im Hintergrund nach erfolgreicher Zahlung; der Käufer bekommt eine Bestätigungs-Mail mit Passwort-setzen-Link. Wenn Sie das Lead-Magnet-Widget auf Ihrer eigenen Marketing-Site einbinden, ziehen Sie Endkunden in Ihren Funnel und können sie später auf Wartungsverträge upgraden.",
+  },
+  {
+    q: "Funktioniert WebsiteFix mit dem Hoster meiner Mandanten (Strato, IONOS, All-Inkl)?",
+    a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Für die deutschen Top-Hoster liefern wir hoster-spezifische Optimierungs-Pfade in jedem Smart-Fix-Guide: Strato, IONOS / 1&1, All-Inkl, Hostinger und Hetzner. Heißt: Wenn Ihr Junior einen Fix-Guide öffnet, sieht er nicht nur die generische WordPress-Anleitung, sondern die exakten Klick-Pfade fürs Hoster-Backend des konkreten Mandanten (Hoster wird automatisch aus dem Scan erkannt). Bei Spezial-Hostern wie Cloudways, Kinsta oder WP Engine greift die Standard-Anleitung — wir ergänzen Hoster-Spezial-Pfade laufend nach Mandanten-Verteilung.",
   },
   {
     q: "Kann ich den Plan jederzeit kündigen?",

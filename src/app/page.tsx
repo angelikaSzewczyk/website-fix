@@ -225,16 +225,30 @@ const PLANS = [
 
 // FAQ — End-User-Audience (schnelle Hilfe, Sicherheit, Kosten).
 // Bewusst "du"-Form. Pricing-Reality klar abgebildet: 9,90 € Pay-per-Fix,
-// 29 € Starter, 89 € Pro, 249 € Agency Scale. Für B2B-Tiefe siehe
-// /fuer-agenturen — eigener FAQ-Block, "Sie"-Form, B2B-Wording.
+// 29 € Starter, 89 € Pro, 249 € Agency Scale. Read-Only-Plugin-Frage und
+// Hoster-Kompatibilität explizit beantwortet — beide sind häufige Verkaufs-
+// Blocker. Für B2B-Tiefe siehe /fuer-agenturen — eigener FAQ-Block,
+// "Sie"-Form, B2B-Wording (Haftung, Mandanten, Skalierung).
 const FAQ = [
   {
-    q: "Muss ich ein Abo abschließen oder kann ich einen einzelnen Fehler einzeln bezahlen?",
-    a: "Nein, kein Abo nötig. Mit unserem Pay-per-Fix bekommst du genau einen Schritt-für-Schritt-Guide für 9,90 € — einmalige Zahlung, kein Konto vorab erforderlich, lebenslanger Zugriff. Nach dem Scan wählst du den passenden Guide, gibst deine E-Mail ein und bezahlst sicher per Stripe. Wenn du regelmäßig prüfen willst, lohnt sich ein Abo ab dem 3. Problem pro Monat.",
+    q: "Muss ich euch mein WordPress-Passwort geben oder etwas installieren?",
+    a: "Nein. Der Scan läuft komplett von außen — du gibst nur deine URL ein, wir crawlen die Seite wie ein normaler Besucher. Kein Login, kein FTP, kein Plugin nötig. Ab dem Starter-Plan (29 €/Monat) kannst du optional unser Read-Only-Plugin installieren: Es liest WordPress-internen Status (Plugin-Versionen, Datenbank-Health, geplante Aktualisierungen), schreibt aber NIE etwas zurück. Read-Only heißt wirklich Read-Only — wir können deine Seite gar nicht verändern. Das Plugin gibt uns einfach tiefere Diagnose ohne Sicherheitsrisiko.",
+  },
+  {
+    q: "Was ist der Unterschied zwischen dem 9,90 € Einzel-Fix und einem Abo?",
+    a: "Der 9,90 €-Pay-per-Fix ist eine Einmalzahlung für GENAU EINEN Schritt-für-Schritt-Guide — ideal, wenn du ein konkretes akutes Problem hast. Kein Abo, kein Konto vorab nötig. Ein Abo lohnt sich ab dem 3. Problem pro Monat (Starter rechnet sich dann), oder sofort wenn du mehrere Websites betreust (Pro/Agency Scale). Faustregel: Ein Fix → Pay-per-Fix. Regelmäßige Kontrolle oder mehrere Seiten → Starter (29 €). Vollständig delegieren mit Team und White-Label → Agency Scale (249 €).",
+  },
+  {
+    q: "Was passiert nach dem Kauf eines 9,90 €-Guides?",
+    a: "Direkt nach Stripe-Zahlung wirst du auf eine Bestätigungsseite weitergeleitet. Wir legen automatisch ein kostenloses Konto mit deiner E-Mail an (kein Passwort vorab erforderlich) und schicken dir einen Link, mit dem du das Passwort setzt und sofort auf deinen Guide zugreifst. Du hast lebenslangen Zugriff — der Guide bleibt in deinem Account, auch wenn du nie ein Abo abschließt. Bei Fragen: support@website-fix.com.",
   },
   {
     q: "Was kostet WebsiteFix in der Übersicht?",
-    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (bis zu 3 Projekte, wöchentlicher Deep-Scan, 5 Guides inklusive). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (bis zu 50 Mandanten, Mandanten-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog). Alle Abos monatlich kündbar.",
+    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (bis zu 3 Projekte, wöchentlicher Deep-Scan, 5 Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (bis zu 50 Mandanten, Mandanten-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog). Alle Abos monatlich kündbar.",
+  },
+  {
+    q: "Funktioniert WebsiteFix mit meinem Hoster?",
+    a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Für die deutschen Top-Hoster haben wir hoster-spezifische Optimierungs-Anleitungen: Strato, IONOS / 1&1, All-Inkl, Hostinger, Hetzner. Das heißt: wenn du einen Fix-Guide kaufst, bekommst du nicht nur die generische WordPress-Anleitung, sondern zusätzlich die exakten Klick-Pfade für DEIN Hoster-Backend (.htaccess-Editor, PHP-Versions-Wechsel, SSL-Toggle etc.). Bei Spezial-Hostern (Cloudways, Kinsta, WP Engine) funktioniert die Standard-Anleitung — wir ergänzen die Hoster-Spezial-Pfade laufend.",
   },
   {
     q: "Was genau prüft der Deep-Scan?",
@@ -245,16 +259,12 @@ const FAQ = [
     a: "Der Smart-Fix Drawer öffnet sich per Klick auf einen gefundenen Fehler. Er zeigt dir eine Schritt-für-Schritt-Anleitung, die exakt erklärt, wo du in Gutenberg, Elementor oder Divi klicken musst, um das Problem zu beheben — kein Entwickler-Wissen nötig. In der Regel dauert ein Fix weniger als 5 Minuten.",
   },
   {
-    q: "Muss ich ein Plugin installieren?",
-    a: "Für den Scan nicht. Deine URL genügt — kein Hosting-Zugang, kein Login nötig. Unser Cloud-Crawler analysiert deine Website von außen und liefert Ergebnisse in unter 60 Sekunden. Das optionale Agency-Plugin hilft dir aber, Fixes per API direkt auf deine Kunden-Seiten zu übertragen — ohne manuelles Copy-Paste.",
-  },
-  {
     q: "Was unterscheidet WebsiteFix von kostenlosen Scannern?",
     a: "WebsiteFix ist kein oberflächlicher Scanner, sondern eine KI-gestützte Workflow-Lösung für Agenturen und Profis. Während kostenlose Tools nur die Startseite prüfen und rohe Fehlerlisten ausgeben, crawlt WebsiteFix alle Unterseiten, erstellt eine interaktive Site-Map und liefert für jeden Befund eine konkrete, page-builder-spezifische Fix-Anleitung — direkt umsetzbar, kein Entwickler-Wissen nötig.",
   },
   {
     q: "Wie sicher sind meine Daten?",
-    a: "Hosting in Frankfurt, EU-only Datenfluss, TLS-verschlüsselt. Wir speichern deine Scan-Ergebnisse, aber keine Login-Daten oder sensiblen Inhalte deiner Seite — der Scan läuft vollständig von außen wie ein normaler Besucher. DSGVO-AVV bekommst du im Account-Bereich.",
+    a: "Hosting in Frankfurt, EU-only Datenfluss, TLS-verschlüsselt. Wir speichern deine Scan-Ergebnisse, aber keine Login-Daten oder sensiblen Inhalte deiner Seite — der Scan läuft vollständig von außen wie ein normaler Besucher. Selbst das optionale Read-Only-Plugin hat keinen Schreibzugriff auf deine Datenbank oder Dateien. DSGVO-AVV bekommst du im Account-Bereich.",
   },
   {
     q: "Kann ich WebsiteFix für Kunden-Websites nutzen (Agenturen)?",
