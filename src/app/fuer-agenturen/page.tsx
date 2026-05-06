@@ -189,7 +189,6 @@ const FAQ = [
 
 // ─── Theme-Tokens (lokal, damit die Page eigenständig bleibt) ───────────────
 const T = {
-  bgDeep:      "#070811",
   card:        "rgba(255,255,255,0.03)",
   cardHover:   "rgba(255,255,255,0.05)",
   border:      "rgba(255,255,255,0.08)",
@@ -254,7 +253,10 @@ export default function AgencyPage() {
         </div>
       </nav>
 
-      <main style={{ background: T.bgDeep, color: T.text }}>
+      {/* Kein eigener Background auf <main> — erbt body-Background (#0b0c10
+          aus globals.css) wie die Homepage. Sonst wirkt /fuer-agenturen
+          dunkler als / und der Tab-Wechsel zwischen den Seiten flickert. */}
+      <main style={{ color: T.text }}>
 
         {/* ─── HERO ────────────────────────────────────────────────────────── */}
         <section style={{
