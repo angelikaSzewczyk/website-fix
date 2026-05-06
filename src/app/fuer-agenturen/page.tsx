@@ -134,6 +134,7 @@ const PLANS: Plan[] = [
       { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                 highlight: true, key: true },
       { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true, key: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
+      { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true, key: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true, key: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
       { text: "60-Sekunden-Watchdog mit Slack-/E-Mail-Alarm bei Ausfall",                highlight: true, key: true },
@@ -200,6 +201,10 @@ const FAQ = [
   {
     q: "Warum 249 € statt 89 €? Was ist der Hauptunterschied?",
     a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: Mandanten-Portal unter eigener Subdomain, Team-Rollen-Logik, 60-Sekunden-Watchdog, Workflow-API, DSGVO-AVV. Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
+  },
+  {
+    q: "Kann ich Website-Fix zur Neukundengewinnung nutzen?",
+    a: "Ja — das ist sogar ein Kern-Feature des Agency-Scale-Plans. Du bekommst einen iframe-Embed-Code für deine Marketing-Site, der unseren Scanner unter DEINEM Logo + DEINER Brand-Farbe + DEINEM Agentur-Namen zeigt. Besucher geben ihre URL ein, sehen einen Teaser-Score und müssen für den Vollreport ihre Email hinterlassen. Dieser Lead landet sofort in deinem Dashboard unter \"Lead-Generator\" — du kannst ihn mit einem Klick als Mandantenprojekt anlegen. Die Übergabe vom Lead zum Wartungsvertrag wird damit zur Routine, nicht zum Zufall. Setup: 2 Minuten (Snippet kopieren, in WordPress/Webflow/Wix einfügen, fertig).",
   },
   {
     q: "Können meine Endkunden den 9,90-€-Pay-per-Fix nutzen, ohne dass ich für jeden ein Konto anlegen muss?",
@@ -848,6 +853,129 @@ export default function AgencyPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ─── LEAD-MAGNET-WIDGET (eigene Sektion, Sprint 06.05.2026) ────────
+            Embeddable Scanner mit Agentur-Branding. Komplette Backend-Strecke
+            existiert: /widget/[agencyId] + /api/widget/* + /dashboard/lead-
+            generator. Diese Sektion verkauft das Feature den Inhabern. */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 720, marginInline: "auto" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.scale, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              Dein eigener Lead-Magnet
+            </p>
+            <h2 style={{ margin: "0 0 16px", fontSize: "clamp(26px, 3.5vw, 42px)", fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
+              Generiere Neukunden im Schlaf
+            </h2>
+            <p style={{ margin: 0, fontSize: 15, color: T.textSub, lineHeight: 1.7 }}>
+              Binde unseren Profi-Scanner mit deinem Logo auf deiner Agentur-Website ein.
+              Besucher scannen ihre Seite — du bekommst die qualifizierten Leads im Dashboard.
+              Kein „Hi, wir machen Websites"-Cold-Call mehr.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 28, alignItems: "center", marginBottom: 32 }}>
+
+            {/* Linke Spalte: Erklärtext + Bullets */}
+            <div>
+              <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
+                {[
+                  { title: "Self-Service-Scan auf deiner Domain", body: "Besucher gibt URL ein, sieht in 60 Sek. einen Teaser-Score — komplett unter deinem Logo." },
+                  { title: "Email = Vollreport-Trigger", body: "Für den vollständigen Bericht hinterlässt der Besucher eine Email. Dein Mandanten-Funnel ist befüllt." },
+                  { title: "Lead landet sofort in deinem Dashboard", body: "Ein Klick: Lead → Mandantenprojekt. Du startest die erste Wartungs-Pitch in unter 30 Sekunden." },
+                  { title: "iframe-Embed in 2 Minuten", body: "Copy-Paste eines <iframe>-Snippets. Funktioniert mit jedem CMS — WordPress, Webflow, Wix, Static." },
+                ].map(b => (
+                  <li key={b.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <Check size={16} color={T.scale} strokeWidth={3} style={{ flexShrink: 0, marginTop: 3 }} />
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 2 }}>{b.title}</div>
+                      <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.55 }}>{b.body}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <CheckoutButton
+                plan="agency"
+                label="Agency Scale starten →"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "12px 24px", borderRadius: 10,
+                  background: "linear-gradient(90deg,#7C3AED,#A78BFA)",
+                  color: "#fff", fontSize: 14, fontWeight: 800,
+                  border: "none", cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(124,58,237,0.32)",
+                }}
+              />
+            </div>
+
+            {/* Rechte Spalte: Widget-Mockup */}
+            <div style={{
+              padding: "26px 24px", borderRadius: 16,
+              background: T.card, border: `1px solid ${T.border}`,
+              boxShadow: "0 12px 50px rgba(124,58,237,0.10)",
+            }}>
+              {/* Browser-Frame */}
+              <div style={{
+                background: "rgba(0,0,0,0.30)",
+                border: `1px solid ${T.border}`,
+                borderRadius: 10,
+                overflow: "hidden",
+              }}>
+                <div style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: 6, borderBottom: `1px solid ${T.border}`, background: "rgba(255,255,255,0.02)" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.20)" }} />
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.20)" }} />
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.20)" }} />
+                  <span style={{ marginLeft: 12, fontSize: 11, color: T.textMuted, fontFamily: "monospace" }}>portal.deine-agentur.de</span>
+                </div>
+                <div style={{ padding: "26px 22px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 14 }}>
+                  {/* Logo-Placeholder */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    background: "linear-gradient(135deg,#7C3AED,#A78BFA)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em",
+                  }}>
+                    A
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4 }}>
+                      Kostenloser Website-Check
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>
+                      powered by Deine Agentur
+                    </div>
+                  </div>
+                  <div style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8,
+                    background: "rgba(0,0,0,0.40)", border: `1px solid ${T.border}`,
+                    fontSize: 12, color: T.textFaint, fontFamily: "monospace", textAlign: "left",
+                  }}>
+                    https://kunde-website.de
+                  </div>
+                  <button type="button" disabled aria-disabled="true" style={{
+                    width: "100%", padding: "9px 16px", borderRadius: 8,
+                    background: "linear-gradient(90deg,#7C3AED,#A78BFA)",
+                    color: "#fff", fontSize: 13, fontWeight: 800,
+                    border: "none", cursor: "not-allowed",
+                    boxShadow: "0 3px 12px rgba(124,58,237,0.30)",
+                  }}>
+                    Jetzt kostenlos prüfen →
+                  </button>
+                </div>
+              </div>
+
+              {/* Embed-Code-Hint */}
+              <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 7, background: "rgba(0,0,0,0.30)", border: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>
+                  Embed-Code (im Dashboard)
+                </div>
+                <code style={{ fontSize: 11, color: T.textSub, fontFamily: "monospace", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  &lt;iframe src=&quot;.../widget/[deine-id]&quot; ...&gt;
+                </code>
+              </div>
+            </div>
+
           </div>
         </section>
 

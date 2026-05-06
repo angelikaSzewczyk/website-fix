@@ -211,6 +211,7 @@ const PLANS = [
       { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                 highlight: true },
       { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true },
+      { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true },
       { text: "60-Sekunden-Watchdog mit Slack-/E-Mail-Alarm bei Ausfall",                highlight: true },
@@ -275,7 +276,7 @@ const FAQ = [
   },
   {
     q: "Kann ich WebsiteFix für Kunden-Websites nutzen (Agenturen)?",
-    a: "Absolut. Im Agency-Scale-Plan (249 €/Monat) verwaltest du bis zu 50 Mandanten, nutzt Full White-Label mit eigenem Branding und Mandanten-Portal unter deiner Subdomain. Mehr Details findest du auf der eigenen Agentur-Seite.",
+    a: "Absolut. Im Agency-Scale-Plan (249 €/Monat) verwaltest du bis zu 50 Mandanten, nutzt Full White-Label mit eigenem Branding und Mandanten-Portal unter deiner Subdomain. Inklusive: Embeddable Lead-Generator — ein Scanner mit deinem Logo zum Einbauen auf deiner Marketing-Site, der eingehende Leads direkt in dein Dashboard schiebt. Mehr Details auf der Agentur-Seite.",
   },
 ];
 
