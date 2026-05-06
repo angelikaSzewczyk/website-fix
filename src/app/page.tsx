@@ -188,22 +188,36 @@ const BENEFITS = [
   },
 ];
 
+// ─── PLANS ───────────────────────────────────────────────────────────────────
+// Single Source für die Homepage-Pricing-Sektion. KEEP SYNCED with
+// src/app/fuer-agenturen/page.tsx — beide Pages müssen Inhalt + Audience
+// + Badges identisch zeigen, sonst Vertrauensbruch beim Tab-Wechsel.
+//
+// Stripe-Mapping: planKey → STRIPE_PRICE_<UPPERCASE>-Env-Var
+// (siehe priceIdToPlan in /api/webhooks/stripe). In Vercel:
+//   STRIPE_PRICE_STARTER       → "starter"
+//   STRIPE_PRICE_PROFESSIONAL  → "professional"
+//   STRIPE_PRICE_AGENCY        → "agency"
+// Pay-per-Fix (9,90 €) läuft NICHT über die PLANS — eigener anon-checkout-
+// Flow (siehe /api/guides/[id]/anon-checkout).
 const PLANS = [
   {
     name: "Starter",
+    planKey: "starter",
     price: "29",
     per: "/Monat",
-    desc: "Für Einzelunternehmer & kleine Websites",
+    desc: "Für kleine Portfolios bis 3 Projekte",
+    audienceFootnote: "Ideal für Selbstständige mit eigener Website + 1–2 Kundenprojekten.",
     badge: null,
     accent: "#475569",
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     features: [
-      { text: "1 Projekt", highlight: true },
-      { text: "5 Scans / Monat", highlight: true },
-      { text: "Pay-per-Fix Guides (9,90 € pro Stück)", highlight: false },
-      { text: "Interaktive Site-Map mit Fehler-Übersicht", highlight: false },
-      { text: "Basis Fix-Tipps (ohne KI-Guide)", highlight: false },
+      { text: "Bis zu 3 Projekte",                                   highlight: true },
+      { text: "Wöchentlicher Deep-Scan",                             highlight: true },
+      { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true },
+      { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: false },
+      { text: "Interaktive Site-Map mit Fehler-Übersicht",           highlight: false },
     ],
     cta: "Starter wählen",
     href: "/register?plan=starter",
@@ -213,19 +227,21 @@ const PLANS = [
   },
   {
     name: "Professional",
+    planKey: "professional",
     price: "89",
     per: "/Monat",
-    desc: "Für wachsende Projekte & kleine Agenturen",
-    badge: "★ EMPFOHLEN",
+    desc: "Effizienz für Selbst-Macher & Freelancer",
+    audienceFootnote: "Für Freelancer und wachsende Web-Projekte mit bis zu 10 Mandanten.",
+    badge: "★ Beliebtestes Paket",
     accent: "#2563EB",
     accentBg: "#EFF6FF",
     accentBorder: "#BFDBFE",
     features: [
-      { text: "10 Projekte", highlight: true },
-      { text: "KI-gestützte Smart-Fix Guides", highlight: true },
-      { text: "Slack-Alerts & 24/7 Monitoring", highlight: true },
-      { text: "Score-Verlauf & monatlicher PDF-Bericht", highlight: true },
-      { text: "Täglicher Deep-Scan (500 Seiten)", highlight: false },
+      { text: "10 Projekte · unbegrenzte Scans",                     highlight: true },
+      { text: "KI-Auto-Fix (Copy-Paste-Code im Drawer)",             highlight: true },
+      { text: "Täglicher Deep-Scan + Slack-Alerts",                  highlight: true },
+      { text: "White-Label PDF + monatlicher Report",                highlight: true },
+      { text: "Score-Verlauf · Client-Tracking · 24/7-Monitoring",   highlight: false },
     ],
     cta: "Professional starten",
     href: "/register?plan=professional",
@@ -234,23 +250,26 @@ const PLANS = [
     scale: false,
   },
   {
-    name: "Agency",
+    name: "Agency Scale",
+    planKey: "agency",
     price: "249",
     per: "/Monat",
-    desc: "White-Label für Agenturen mit Mandantenverwaltung",
-    badge: "FÜR AGENTUREN",
+    desc: "Infrastruktur & Profit-Maximierung für Inhaber",
+    audienceFootnote: "Für Agentur-Inhaber, die Wartung profitabel skalieren wollen.",
+    badge: "💎 Bester ROI",
     accent: "#7C3AED",
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
     features: [
-      { text: "Bis zu 50 Projekte inklusive", highlight: true },
-      { text: "KI-Mass-Fixer für alle Kunden-Sites", highlight: true },
-      { text: "Full Integration Suite (Slack / Jira / Zapier)", highlight: true },
-      { text: "WP-Plugin Anbindung — Fixes per API", highlight: true },
-      { text: "Lead-Magnet Widget + White-Label", highlight: false },
+      { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                  highlight: true },
+      { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",             highlight: true },
+      { text: "Mandanten-Portal unter Ihrer Subdomain",                                   highlight: true },
+      { text: "Team-Rollen Admin / Editor / Viewer + Audit-Log",                          highlight: true },
+      { text: "Workflow-API: Jira, Asana, Trello, Slack — bidirektional",                 highlight: false },
+      { text: "Haftungs-Dokumentation + DSGVO-AVV",                                       highlight: false },
     ],
-    cta: "Agency-Account erstellen",
-    href: "/fuer-agenturen",
+    cta: "Agentur-Marge skalieren →",
+    href: "/register?plan=agency",
     recommended: false,
     enterprise: false,
     scale: true,
@@ -959,15 +978,66 @@ export default function Page() {
         <section id="pricing" style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
               <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(74,222,128,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
               <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
                 Einfach. Transparent. Ehrlich.
               </h2>
               <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)" }}>
-                Keine versteckten Kosten. Monatlich kündbar. DSGVO-konform.
+                Starte mit einem Einzel-Fix oder wähle eine Flatrate für dauerhafte Sicherheit.
               </p>
             </div>
+
+            {/* ─── PAY-PER-FIX HIGHLIGHT-BANNER ──────────────────────────────
+                Vorgelagertes Notfall-Angebot: 9,90 €, kein Abo, anonymer
+                Checkout. Dient als Cashflow-Mitnahme für User mit akutem
+                Einzelproblem — stört den Abo-Vergleich darunter nicht. */}
+            <div style={{
+              maxWidth: 920, margin: "0 auto 36px",
+              padding: "20px 28px", borderRadius: 16,
+              background: "linear-gradient(135deg, rgba(251,191,36,0.10), rgba(245,158,11,0.05))",
+              border: "1px solid rgba(251,191,36,0.32)",
+              boxShadow: "0 0 36px rgba(251,191,36,0.08)",
+              display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap",
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                background: "rgba(251,191,36,0.16)",
+                border: "1px solid rgba(251,191,36,0.40)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }} aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </div>
+              <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 8px", background: "rgba(251,191,36,0.14)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 999 }}>
+                    ⚡ Notfall · ohne Abo
+                  </span>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                    Pay-per-Fix · 9,90 € einmalig
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
+                  Konkretes Problem auf deiner Seite? Hol dir den passenden Fix-Guide einmalig — anonymer Checkout, kein Konto vorab nötig, lebenslanger Zugriff nach Zahlung.
+                </p>
+              </div>
+              <Link href="/scan" style={{
+                flexShrink: 0,
+                padding: "12px 24px", borderRadius: 10,
+                background: "linear-gradient(90deg,#F59E0B,#FBBF24)",
+                color: "#1a1300", fontSize: 14, fontWeight: 800,
+                textDecoration: "none", whiteSpace: "nowrap",
+                boxShadow: "0 4px 16px rgba(251,191,36,0.40)",
+              }}>
+                Jetzt fixen →
+              </Link>
+            </div>
+
+            <p style={{ margin: "0 auto 18px", maxWidth: 720, textAlign: "center", fontSize: 12.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
+              Ein Abo lohnt sich ab dem <strong style={{ color: "rgba(255,255,255,0.65)" }}>3. Problem pro Monat</strong> (Starter), oder sofort, wenn mehrere Seiten betreut werden.
+            </p>
 
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
               {PLANS.map(plan => (
@@ -990,38 +1060,34 @@ export default function Page() {
                   position: "relative",
                 }}>
 
-                  {/* Top stripe — uniform height across all cards */}
+                  {/* Top stripe — Badge aus plan.badge.
+                      Starter hat kein Badge → neutrale Spacer-Stripe für
+                      einheitliche Card-Höhe (kein Layout-Shift). */}
                   {(() => {
                     const isBlue   = plan.recommended;
-                    const isPurple = plan.scale;
-                    const isAgency = plan.name === "Agency Starter";
+                    const isPurple = "scale" in plan && plan.scale;
                     const bg = isBlue
                       ? "linear-gradient(90deg,#1d4ed8,#2563EB)"
                       : isPurple
                         ? "linear-gradient(90deg,#6d28d9,#7C3AED)"
-                        : isAgency
-                          ? "linear-gradient(90deg,#5b21b6,#7C3AED)"
-                          : "rgba(255,255,255,0.03)";
-                    const textColor = (isBlue || isPurple || isAgency) ? "#fff" : "rgba(255,255,255,0.22)";
-                    const label = isBlue ? "★ BESTSELLER"
-                      : isPurple ? "⚡ FULL WHITE-LABEL"
-                      : isAgency ? "🏢 FÜR AGENTUREN"
-                      : "KOSTENLOS TESTEN";
+                        : "rgba(255,255,255,0.03)";
+                    const textColor = (isBlue || isPurple) ? "#fff" : "rgba(255,255,255,0.30)";
+                    const label = plan.badge ?? "Basis-Schutz";
                     return (
                       <div style={{
                         padding: "9px 24px",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         background: bg,
-                        borderBottom: (isBlue || isPurple || isAgency)
+                        borderBottom: (isBlue || isPurple)
                           ? "none"
                           : "1px solid rgba(255,255,255,0.06)",
                         boxShadow: isBlue
                           ? "inset 0 -1px 0 rgba(255,255,255,0.1)"
-                          : (isPurple || isAgency)
+                          : isPurple
                             ? "inset 0 -1px 0 rgba(255,255,255,0.08)"
                             : "none",
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: textColor }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: textColor }}>
                           {label}
                         </span>
                       </div>
@@ -1074,6 +1140,19 @@ export default function Page() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Audience-Footnote — "Für wen ist das?"-Hinweis */}
+                    {plan.audienceFootnote && (
+                      <div style={{
+                        padding: "10px 12px", marginBottom: 16, borderRadius: 8,
+                        background: "rgba(0,0,0,0.25)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        fontSize: 11.5, color: "rgba(255,255,255,0.55)",
+                        lineHeight: 1.55, fontStyle: "italic",
+                      }}>
+                        {plan.audienceFootnote}
+                      </div>
+                    )}
 
                     {/* CTA button */}
                     <div style={{ paddingBottom: 28 }}>

@@ -44,14 +44,29 @@ export const metadata: Metadata = {
 //   • Agency Scale — Infrastruktur / Management: Chef-Perspektive, delegiert + skaliert
 // Die Feature-Listen pro Tier folgen dieser Logik und vermeiden, dass Agency
 // Scale wie "Pro mit doppelt so vielen Slots" wirkt.
+// KEEP SYNCED with src/app/page.tsx — beide Pages müssen Inhalt + Audience
+// + Badges identisch zeigen, sonst Vertrauensbruch beim Tab-Wechsel.
+//
+// Stripe-Mapping: planKey → STRIPE_PRICE_<UPPERCASE>-Env-Var
+// (siehe priceIdToPlan in /api/webhooks/stripe). In Vercel:
+//   STRIPE_PRICE_STARTER       → "starter"
+//   STRIPE_PRICE_PROFESSIONAL  → "professional"
+//   STRIPE_PRICE_AGENCY        → "agency"
+// Pay-per-Fix (9,90 €) läuft NICHT über die PLANS — eigener anon-checkout-
+// Flow (siehe /api/guides/[id]/anon-checkout).
 type PlanFeature = { text: string; highlight: boolean; locked?: boolean; key?: boolean };
 type Plan = {
   name: string; planKey: string; price: string; per: string;
   desc: string; audience: string; accent: string;
   features: PlanFeature[];
   audienceFootnote?: string;
-  cta: string; href: string | undefined;
-  recommended: boolean; enterprise: boolean;
+  cta: string;
+  /** Set this for non-Stripe CTAs (z.B. Starter → /scan für Pay-per-Fix-Lead) */
+  href: string | undefined;
+  recommended: boolean;
+  enterprise: boolean;
+  /** Optional Badge-Text für die Top-Stripe ("★ Beliebtestes Paket" usw.) */
+  badge?: string;
 };
 
 const PLANS: Plan[] = [
@@ -60,18 +75,20 @@ const PLANS: Plan[] = [
     planKey: "starter",
     price: "29",
     per: "/Monat",
-    desc: "Für Einsteiger & Einzelprojekte",
-    audience: "Solo-Macher",
+    desc: "Für kleine Portfolios bis 3 Projekte",
+    audience: "Selbstständige · 1–2 Kundenprojekte",
     accent: "#60a5fa",
     features: [
-      { text: "1 Projekt · 5 Scans / Monat",                         highlight: true },
-      { text: "SEO-, Technik- & Sicherheits-Check",                  highlight: true },
-      { text: "Pay-per-Fix Guides (9,90 € pro Stück)",               highlight: false },
+      { text: "Bis zu 3 Projekte · wöchentlicher Deep-Scan",         highlight: true, key: true },
+      { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true, key: true },
+      { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: true },
+      { text: "SEO-, Technik- & Sicherheits-Check",                  highlight: false },
       { text: "Kein White-Label",                                    highlight: false, locked: true },
       { text: "Keine Team-Rollen",                                   highlight: false, locked: true },
       { text: "Kein Mandanten-Portal",                               highlight: false, locked: true },
     ],
-    cta: "Starter testen",
+    audienceFootnote: "Ideal für Selbstständige mit eigener Website + 1–2 Kundenprojekten.",
+    cta: "Starter wählen",
     href: undefined,
     recommended: false,
     enterprise: false,
@@ -81,46 +98,48 @@ const PLANS: Plan[] = [
     planKey: "professional",
     price: "89",
     per: "/Monat",
-    desc: "Effizienz für den Selbst-Macher",
+    desc: "Effizienz für Selbst-Macher & Freelancer",
     audience: "Owner-Operator · Solo-Pro",
     accent: "#10B981",
     features: [
-      { text: "10 WordPress-Projekte · täglicher Deep-Scan",                 highlight: true, key: true },
+      { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true, key: true },
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true, key: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true, key: true },
       { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
       { text: "Score-Verlauf · Client-Tracking · 24/7-Monitoring",           highlight: true },
       { text: "Executive Summary für Endkunden-Reports",                     highlight: false },
     ],
-    audienceFootnote: "Du fixt selbst und willst weniger Stunden für die gleiche Qualität — Pro liefert dir das schnellste Drawer-zu-Code-Tool im Tool-Stack.",
-    cta: "Professional für 89 € starten →",
+    audienceFootnote: "Für Freelancer und wachsende Web-Projekte mit bis zu 10 Mandanten.",
+    cta: "Professional starten",
     href: undefined,
-    recommended: false,
+    recommended: true,
     enterprise: false,
+    badge: "★ Beliebtestes Paket",
   },
   {
     name: "Agency Scale",
     planKey: "agency",
     price: "249",
     per: "/Monat",
-    desc: "Infrastruktur & Management für Agentur-Inhaber",
+    desc: "Infrastruktur & Profit-Maximierung für Inhaber",
     audience: "Agentur-Chef · Mandantengeschäft",
     accent: "#A78BFA",
     features: [
       { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                 highlight: true, key: true },
+      { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true, key: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
       { text: "60-Sekunden-Watchdog mit Slack-/E-Mail-Alarm bei Ausfall",                highlight: true, key: true },
-      { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true, key: true },
+      { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
       { text: "DSGVO-AVV, Audit-Log + Haftungs-Dokumentation",                           highlight: true },
-      { text: "Lead-Magnet-Widget für Neukunden-Akquise",                                highlight: false },
       { text: "Priority-Onboarding: 60-Min-Setup-Call mit Account-Manager",              highlight: false },
     ],
-    audienceFootnote: "Sie selbst fixen nichts mehr. Sie delegieren an Ihr Team, dokumentieren gegenüber Endkunden und rechtfertigen damit höhere Wartungspauschalen.",
+    audienceFootnote: "Für Agentur-Inhaber, die Wartung profitabel skalieren wollen.",
     cta: "Agentur-Marge jetzt skalieren →",
     href: undefined,
-    recommended: true,
+    recommended: false,
     enterprise: false,
+    badge: "💎 Bester ROI",
   },
 ];
 
@@ -871,7 +890,7 @@ export default function AgencyPage() {
         {/* ─── PRICING ─────────────────────────────────────────────────────── */}
         <section id="pricing" style={{ padding: "96px 24px" }}>
           <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 720, marginInline: "auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 32, maxWidth: 720, marginInline: "auto" }}>
               <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.scale, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 Plan-Vergleich
               </p>
@@ -879,10 +898,58 @@ export default function AgencyPage() {
                 Welche Rolle spielen Sie in Ihrer Agentur?
               </h2>
               <p style={{ margin: 0, fontSize: 15, color: T.textSub, lineHeight: 1.7 }}>
-                Pro = Sie machen es selbst, schneller. Scale = Sie machen es nicht mehr selbst,
-                sondern delegieren und skalieren das Geschäft.
+                Starte mit einem Einzel-Fix oder wähle eine Flatrate für dauerhafte Sicherheit.
+                Pro = Selbst-Macher, Scale = Inhaber, der delegiert und skaliert.
               </p>
             </div>
+
+            {/* ─── PAY-PER-FIX HIGHLIGHT-BANNER ──────────────────────────────
+                Vorgelagertes Notfall-Angebot oberhalb der 3 Abo-Cards. KEEP
+                SYNCED with der Banner-Variante auf src/app/page.tsx. */}
+            <div style={{
+              maxWidth: 920, margin: "0 auto 36px",
+              padding: "20px 28px", borderRadius: 16,
+              background: "linear-gradient(135deg, rgba(251,191,36,0.10), rgba(245,158,11,0.05))",
+              border: `1px solid ${T.amberBorder}`,
+              boxShadow: "0 0 36px rgba(251,191,36,0.08)",
+              display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap",
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                background: "rgba(251,191,36,0.16)", border: `1px solid ${T.amberBorder}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }} aria-hidden="true">
+                <Zap size={22} color={T.amber} strokeWidth={2.4} />
+              </div>
+              <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: T.amber, letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 8px", background: T.amberBg, border: `1px solid ${T.amberBorder}`, borderRadius: 999 }}>
+                    ⚡ Notfall · ohne Abo
+                  </span>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: T.text, letterSpacing: "-0.01em" }}>
+                    Pay-per-Fix · 9,90 € einmalig
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: T.textSub, lineHeight: 1.55 }}>
+                  Für den Endkunden mit akutem Einzelproblem: anonymer Checkout, kein Konto vorab nötig,
+                  lebenslanger Zugriff nach Zahlung. Perfekter Lead-Magnet für Agenturen.
+                </p>
+              </div>
+              <Link href="/scan" style={{
+                flexShrink: 0,
+                padding: "12px 24px", borderRadius: 10,
+                background: "linear-gradient(90deg,#F59E0B,#FBBF24)",
+                color: "#1a1300", fontSize: 14, fontWeight: 800,
+                textDecoration: "none", whiteSpace: "nowrap",
+                boxShadow: "0 4px 16px rgba(251,191,36,0.40)",
+              }}>
+                Jetzt fixen →
+              </Link>
+            </div>
+
+            <p style={{ margin: "0 auto 24px", maxWidth: 720, textAlign: "center", fontSize: 12.5, color: T.textFaint, lineHeight: 1.6 }}>
+              Ein Abo lohnt sich ab dem <strong style={{ color: T.textSub }}>3. Problem pro Monat</strong> (Starter), oder sofort, wenn mehrere Mandanten betreut werden.
+            </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
               {PLANS.map(p => {
@@ -900,16 +967,21 @@ export default function AgencyPage() {
                       boxShadow: isScale ? "0 12px 60px rgba(124,58,237,0.18)" : "none",
                     }}
                   >
-                    {p.recommended && (
+                    {p.badge && (
                       <div style={{
                         position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)",
                         padding: "5px 16px", borderRadius: 999,
-                        background: "linear-gradient(90deg,#7C3AED,#A78BFA)",
+                        background: isScale
+                          ? "linear-gradient(90deg,#7C3AED,#A78BFA)"
+                          : "linear-gradient(90deg,#1d4ed8,#2563EB)",
                         fontSize: 10.5, fontWeight: 800, color: "#fff",
-                        letterSpacing: "0.1em", textTransform: "uppercase",
+                        letterSpacing: "0.08em", textTransform: "uppercase",
                         whiteSpace: "nowrap",
+                        boxShadow: isScale
+                          ? "0 4px 14px rgba(124,58,237,0.40)"
+                          : "0 4px 14px rgba(37,99,235,0.35)",
                       }}>
-                        ★ Empfohlen für Inhaber
+                        {p.badge}
                       </div>
                     )}
 
