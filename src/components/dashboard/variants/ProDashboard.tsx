@@ -6,6 +6,8 @@ import Link from "next/link";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
+import OnboardingChecklist from "./_shared/OnboardingChecklist";
+import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 import IssueList from "@/components/dashboard/variants/_shared/IssueList";
 import ScoreRingSection from "./_shared/ScoreRingSection";
 import ScoreHistoryChart from "./_shared/ScoreHistoryChart";
@@ -744,6 +746,13 @@ export default function ProDashboard(props: ProDashboardProps) {
               </button>
             </div>
           )}
+
+          {/* Onboarding-Checkliste (3 Pro-Steps). State + Auto-Detection
+              werden client-seitig aus /api/onboarding geholt. */}
+          {(() => {
+            const planKey = normalizeOnboardingPlan(plan);
+            return planKey ? <OnboardingChecklist plan={planKey} /> : null;
+          })()}
 
           {/* Plugin-Download-Card (Read-Only-Variante für Pro). Plan-aware
               — bei Pro Standard-Branding, bei Agency erscheint die White-

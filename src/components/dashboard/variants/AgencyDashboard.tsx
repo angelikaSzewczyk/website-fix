@@ -30,6 +30,8 @@ import type { ClassifiableWpIssue } from "@/lib/wp-health";
 import { computeDelegationStats } from "@/lib/issue-delegation";
 import DelegationWidget from "./_shared/DelegationWidget";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
+import OnboardingChecklist from "./_shared/OnboardingChecklist";
+import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
 const C = {
@@ -398,6 +400,14 @@ export default async function AgencyDashboard({
           </Link>
         ))}
       </div>
+
+      {/* Onboarding-Checkliste (3 Agency-Schritte: Branding · Team · Workflow).
+          Auto-Detection erkennt bereits-erledigte Steps (Logo gesetzt, Team-
+          Member da) im /api/onboarding-GET serverseitig + persistiert sie. */}
+      {(() => {
+        const planKey = normalizeOnboardingPlan(plan);
+        return planKey ? <OnboardingChecklist plan={planKey} /> : null;
+      })()}
 
       {/* ── DELEGATIONS-WIDGET (Profit-Center-Hebel) ──
           Zeigt dem Agentur-Inhaber, wie viel Senior-Lohnkosten er pro Monat

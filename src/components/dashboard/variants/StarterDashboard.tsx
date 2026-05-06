@@ -9,6 +9,8 @@ import LockedSection from "@/app/dashboard/components/locked-section";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
+import OnboardingChecklist from "./_shared/OnboardingChecklist";
+import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, isPaidPlan, normalizePlan } from "@/lib/plans";
@@ -613,6 +615,13 @@ export default function StarterDashboard(props: StarterDashboardProps) {
         scanLimit={scanLimit}
         isImpersonating={isImpersonating}
       >
+
+          {/* Onboarding-Checkliste (3 Schritte). Auto-Detection läuft im
+              GET-Endpoint, dismiss persistiert in users.onboarding_state. */}
+          {(() => {
+            const planKey = normalizeOnboardingPlan(plan);
+            return planKey ? <OnboardingChecklist plan={planKey} /> : null;
+          })()}
 
           {/* Plugin-Download-Card — Read-Only-Plugin ist ab Starter inklusive,
               gibt diesem Tier ein konkretes Power-User-Feature jenseits vom
