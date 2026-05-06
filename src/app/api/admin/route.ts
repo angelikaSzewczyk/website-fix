@@ -157,12 +157,18 @@ export async function POST(req: NextRequest) {
   const adminEmail = session.user?.email ?? "unknown";
 
   const body = await req.json() as {
-    action: "add_credits" | "change_plan" | "rescan" | "reset_rate_limit" | "list_rate_limits";
-    userId?: string;
-    credits?: number;
-    plan?: string;
-    url?: string;
-    ip?: string;
+    action: "add_credits" | "change_plan" | "rescan" | "reset_rate_limit" | "list_rate_limits" | "unlock_guide";
+    userId?:    string;
+    credits?:   number;
+    plan?:      string;
+    url?:       string;
+    ip?:        string;
+    /** unlock_guide: User-Email für Lookup (oder userId direkt). */
+    email?:     string;
+    /** unlock_guide: Guide-ID aus rescue_guides-Tabelle. */
+    guideId?:   string;
+    /** unlock_guide: optionaler Hoster-Wert (default "default"). */
+    hoster?:    string;
   };
 
   const sql = neon(process.env.DATABASE_URL!);
@@ -218,6 +224,55 @@ export async function POST(req: NextRequest) {
       LIMIT 100
     `;
     return NextResponse.json({ ok: true, rows });
+  }
+
+  // ── unlock_guide — manueller Notfall-Unlock bei Webhook-Hänger ────────────
+  // Schreibt einen user_unlocked_guides-Eintrag, als hätte Stripe den Webhook
+  // erfolgreich verarbeitet. Idempotent (ON CONFLICT DO NOTHING). Nutzbar via
+  // Email ODER userId — Email ist im Admin-UI komfortabler nach anonymer
+  // Bezahlung (man hat nur die Käufer-Email, nicht die User-ID).
+  if (body.action === "unlock_guide") {
+    if (!body.guideId)              return NextResponse.json({ error: "guideId required" }, { status: 400 });
+    if (!body.email && !body.userId) return NextResponse.json({ error: "email or userId required" }, { status: 400 });
+
+    let userId = body.userId;
+    if (!userId && body.email) {
+      const found = await sql`
+        SELECT id FROM users WHERE email = ${body.email.trim().toLowerCase()} LIMIT 1
+      ` as Array<{ id: string | number }>;
+      if (!found[0]?.id) {
+        return NextResponse.json({ error: `User mit Email ${body.email} nicht gefunden` }, { status: 404 });
+      }
+      userId = String(found[0].id);
+    }
+
+    // Prüfen, dass der Guide existiert
+    const guideExists = await sql`
+      SELECT id FROM rescue_guides WHERE id = ${body.guideId} LIMIT 1
+    ` as Array<{ id: string }>;
+    if (!guideExists[0]) {
+      return NextResponse.json({ error: `Guide ${body.guideId} nicht gefunden` }, { status: 404 });
+    }
+
+    const validHoster = body.hoster?.trim() || "default";
+    // ON CONFLICT verhindert Doppel-Unlock — admin kann den Action also wiederholen
+    // ohne Fehler (z.B. wenn er nicht sicher ist, ob der Webhook doch noch kam).
+    const result = await sql`
+      INSERT INTO user_unlocked_guides (user_id, guide_id, stripe_session_id, paid_amount_cents, hoster)
+      VALUES (${userId}::int, ${body.guideId}, ${'admin-manual-' + Date.now()}, 0, ${validHoster})
+      ON CONFLICT (user_id, guide_id) DO NOTHING
+      RETURNING id
+    ` as Array<{ id: number }>;
+
+    const wasInserted = result.length > 0;
+    await auditLog("unlock_guide", adminEmail, userId ?? null, {
+      guide_id: body.guideId,
+      email:    body.email ?? null,
+      hoster:   validHoster,
+      created:  wasInserted,
+      reason:   wasInserted ? "manual unlock" : "already unlocked (idempotent)",
+    });
+    return NextResponse.json({ ok: true, created: wasInserted, userId });
   }
 
   // ── reset_rate_limit — einzelne IP oder alle zurücksetzen ─────────────────

@@ -24,6 +24,12 @@ export type AdminUser = {
   scan_count: number;
   saved_websites_count: number;  // Phase 3 Sprint 4
   last_login_at: string | null;  // Phase 3 Sprint 4 (null wenn nie eingeloggt seit Migration)
+  /** Stripe-Customer-ID (cus_xxx) — vom Webhook gepflegt. NULL für User die nie
+   *  bezahlt haben oder grandfathered sind. (Sprint 06.05.2026) */
+  stripe_customer_id:     string | null;
+  /** Stripe-Subscription-ID (sub_xxx) — gesetzt nur bei aktiven Abos. NULL bei
+   *  Pay-per-Fix-only-Käufern oder gekündigten Abos. */
+  stripe_subscription_id: string | null;
 };
 
 export type ScanLogRow = {
@@ -97,6 +103,10 @@ export default async function AdminPage() {
       // All users with scan count + saved_websites count + last login (Phase 3 Sprint 4).
       // last_login_at::text gibt NULL für User, die seit der Migration noch nicht
       // eingeloggt waren — Frontend rendert "—" statt Datum.
+      // Stripe-Felder (06.05.2026): customer_id + subscription_id direkt aus users-
+      // Tabelle (vom Webhook gepflegt). Damit erkennt der Admin sofort ob ein
+      // "starter"-User ein echtes Abo hat (subscription_id gesetzt) oder
+      // grandfathered/manuell auf den Plan gehoben wurde (subscription_id NULL).
       sql`
         SELECT
           u.id::text, u.email, u.name, u.plan,
@@ -104,11 +114,14 @@ export default async function AdminPage() {
           COALESCE(u.bonus_scans, 0)::int AS bonus_scans,
           COUNT(DISTINCT s.id)::int  AS scan_count,
           COUNT(DISTINCT sw.id)::int AS saved_websites_count,
-          u.last_login_at::text       AS last_login_at
+          u.last_login_at::text       AS last_login_at,
+          u.stripe_customer_id        AS stripe_customer_id,
+          u.stripe_subscription_id    AS stripe_subscription_id
         FROM users u
         LEFT JOIN scans          s  ON s.user_id  = u.id
         LEFT JOIN saved_websites sw ON sw.user_id = u.id
-        GROUP BY u.id, u.email, u.name, u.plan, u.created_at, u.bonus_scans, u.last_login_at
+        GROUP BY u.id, u.email, u.name, u.plan, u.created_at, u.bonus_scans,
+                 u.last_login_at, u.stripe_customer_id, u.stripe_subscription_id
         ORDER BY u.created_at DESC
         LIMIT 500
       `,

@@ -32,6 +32,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ plan: "starter", paid: false });
     }
 
+    // Owner-Check (Hardening 06.05.2026): Stripe-Session muss zur eingeloggten
+    // User-Identität gehören. Sonst könnte User A mit Session-ID von User B
+    // dessen Account upgraden. metadata.userId wird in /api/checkout gesetzt.
+    // Fallback: customer_details.email vergleichen — für sehr alte Sessions
+    // ohne metadata.userId.
+    const sessionUserId = String(session.user.id ?? "");
+    const metaUserId    = String(checkoutSession.metadata?.userId ?? "");
+    const stripeEmail   = checkoutSession.customer_details?.email?.toLowerCase() ?? "";
+    const userEmail     = session.user.email.toLowerCase();
+    const matchesUserId = metaUserId && sessionUserId && metaUserId === sessionUserId;
+    const matchesEmail  = !metaUserId && stripeEmail && stripeEmail === userEmail;
+    if (!matchesUserId && !matchesEmail) {
+      console.error(`[verify-checkout] Owner mismatch: session=${userEmail} stripe=${stripeEmail} meta.userId=${metaUserId}`);
+      return NextResponse.json({ error: "Session-Owner stimmt nicht überein" }, { status: 403 });
+    }
+
     const priceId = checkoutSession.line_items?.data?.[0]?.price?.id;
     const PRICE_TO_PLAN: Record<string, string> = {
       [process.env.STRIPE_PRICE_STARTER        ?? ""]: "starter",

@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { isAgency, normalizePlan } from "@/lib/plans";
-import { ensureTeamSchema } from "@/lib/team-schema";
+import { ensureTeamSchema, TEAM_ROLES, type TeamRole } from "@/lib/team-schema";
 import { logAudit } from "@/lib/audit";
 import { sendInviteEmail } from "@/lib/team-mailer";
 
@@ -106,20 +106,29 @@ export async function POST(req: Request) {
   const email = String(body.email ?? "").toLowerCase().trim();
   if (!email.includes("@")) return NextResponse.json({ error: "Ungültige E-Mail." }, { status: 400 });
 
+  // Rollen-Validierung gegen Whitelist aus team-schema.ts. Default = "editor"
+  // (kompatibel mit dem Marketing-Versprechen: Editor-Rolle ist die häufigste).
+  // Server-side validation verhindert dass per API ein Fremd-String ins
+  // CHECK-Constraint einsickert.
+  const requestedRole = String(body.role ?? "editor").toLowerCase().trim();
+  const role: TeamRole = (TEAM_ROLES as readonly string[]).includes(requestedRole)
+    ? (requestedRole as TeamRole)
+    : "editor";
+
   // Token-Generierung server-side mit crypto.randomBytes — 256 Bit Entropie,
   // brute-force-resistent. Expires_at = NOW + 7 Tage.
   const inviteToken = generateInviteToken();
 
-  // INSERT mit Token. Bei ON CONFLICT (gleiche owner_id + email) updaten wir
-  // den Token (Re-Invite überschreibt alten Token, alte URL wird invalide).
-  // Erfordert UNIQUE(owner_id, member_email) — falls das Constraint fehlt,
-  // greift ON CONFLICT DO NOTHING und kein Re-Invite ist möglich. Beides safe.
+  // INSERT mit Token + Role. Bei ON CONFLICT (gleiche owner_id + email) updaten
+  // wir Token UND Rolle (Re-Invite kann Rollen-Wechsel erzwingen — z.B. Editor
+  // → Admin nach Trust-Aufbau). Erfordert UNIQUE(owner_id, member_email).
   const inserted = await sql`
-    INSERT INTO team_members (owner_id, member_email, invite_token, token_expires_at)
-    VALUES (${session.user.id}, ${email}, ${inviteToken}, NOW() + INTERVAL '7 days')
+    INSERT INTO team_members (owner_id, member_email, invite_token, token_expires_at, role)
+    VALUES (${session.user.id}, ${email}, ${inviteToken}, NOW() + INTERVAL '7 days', ${role})
     ON CONFLICT (owner_id, member_email) DO UPDATE SET
       invite_token     = EXCLUDED.invite_token,
-      token_expires_at = EXCLUDED.token_expires_at
+      token_expires_at = EXCLUDED.token_expires_at,
+      role             = EXCLUDED.role
     RETURNING id
   ` as { id: number }[];
 

@@ -290,6 +290,49 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
   const [rateLimitLoading, setRateLimitLoading] = useState(false);
   const [rateLimitMsg, setRateLimitMsg]         = useState<string | null>(null);
 
+  // ── Manueller Guide-Unlock (Notfall bei Webhook-Hänger) ────────────────────
+  // Schreibt einen user_unlocked_guides-Eintrag, als hätte Stripe den Webhook
+  // erfolgreich verarbeitet. ON CONFLICT DO NOTHING auf API-Seite — wiederholbar.
+  const [unlockEmail,   setUnlockEmail]   = useState("");
+  const [unlockGuideId, setUnlockGuideId] = useState("");
+  const [unlockHoster,  setUnlockHoster]  = useState("default");
+  const [unlockLoading, setUnlockLoading] = useState(false);
+  const [unlockMsg,     setUnlockMsg]     = useState<{ ok: boolean; text: string } | null>(null);
+
+  const unlockGuide = useCallback(async () => {
+    setUnlockLoading(true);
+    setUnlockMsg(null);
+    try {
+      const res = await fetch("/api/admin", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          action:  "unlock_guide",
+          email:   unlockEmail.trim(),
+          guideId: unlockGuideId.trim(),
+          hoster:  unlockHoster.trim() || "default",
+        }),
+      });
+      const data = await res.json() as { ok?: boolean; created?: boolean; userId?: string; error?: string };
+      if (!res.ok) {
+        setUnlockMsg({ ok: false, text: data.error ?? "Unbekannter Fehler" });
+      } else {
+        setUnlockMsg({
+          ok: true,
+          text: data.created
+            ? `✓ Guide ${unlockGuideId} freigeschaltet für User ${data.userId} (${unlockEmail})`
+            : `ℹ Guide ${unlockGuideId} war bereits unlocked für User ${data.userId} (idempotent)`,
+        });
+        setUnlockEmail("");
+        setUnlockGuideId("");
+      }
+    } catch (err) {
+      setUnlockMsg({ ok: false, text: `Netzwerkfehler: ${err instanceof Error ? err.message : "unknown"}` });
+    } finally {
+      setUnlockLoading(false);
+    }
+  }, [unlockEmail, unlockGuideId, unlockHoster]);
+
   const loadRateLimits = useCallback(async () => {
     setRateLimitLoading(true);
     try {
@@ -646,7 +689,10 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       </div>
                     </div>
 
-                    {/* Plan badge */}
+                    {/* Plan badge + Stripe-Status (Sprint 06.05.2026):
+                        Subscription-aktiv = grüner "✓ Stripe"-Hinweis darunter.
+                        Pay-per-Fix-only Käufer haben customer_id aber keine sub.
+                        Grandfathered/manuell = beides null. */}
                     <div>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
@@ -655,6 +701,17 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                       }}>
                         {user.plan}
                       </span>
+                      <div
+                        title={user.stripe_customer_id ? `cus: ${user.stripe_customer_id}${user.stripe_subscription_id ? ` · sub: ${user.stripe_subscription_id}` : ""}` : "Kein Stripe-Eintrag"}
+                        style={{
+                          fontSize: 9, marginTop: 4, fontWeight: 700, letterSpacing: "0.04em",
+                          color: user.stripe_subscription_id ? D.green : user.stripe_customer_id ? D.amber : D.muted,
+                        }}
+                      >
+                        {user.stripe_subscription_id ? "✓ Sub aktiv"
+                          : user.stripe_customer_id     ? "● One-Time"
+                          : "—"}
+                      </div>
                     </div>
 
                     {/* Scan count */}
@@ -1278,6 +1335,79 @@ export default function AdminClient({ kpi, growth, users, cache, widgetLeads, sc
                 ));
               })()}
               {scanLogs.length === 0 && <p style={{ color: D.muted, fontSize: 13 }}>Noch keine Logs.</p>}
+            </div>
+
+            {/* Manueller Guide-Unlock (Notfall) ─────────────────────────────
+                Wird gebraucht wenn ein Stripe-Webhook hängt (Resend-Domain
+                nicht verifiziert, Stripe-Endpoint Fehler etc.) und der Käufer
+                seinen Guide nicht bekommt. Wir suchen per Email den User,
+                schreiben den Unlock manuell. ON CONFLICT DO NOTHING — Action
+                ist wiederholbar wenn unklar ob Webhook doch noch durchkam. */}
+            <div style={{
+              gridColumn: "1 / -1",
+              padding: "24px", background: D.surface,
+              border: `1px solid ${D.border}`, borderRadius: 14,
+              marginBottom: 16,
+            }}>
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: D.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  Notfall · Guide manuell freischalten
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: D.sub }}>
+                  Wenn ein Stripe-Webhook hängt: User-Email + Guide-ID eingeben → schreibt user_unlocked_guides direkt. Idempotent.
+                </p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr auto", gap: 10, alignItems: "stretch" }}>
+                <input
+                  type="email"
+                  value={unlockEmail}
+                  onChange={e => setUnlockEmail(e.target.value)}
+                  placeholder="käufer@email.de"
+                  style={{ padding: "9px 12px", fontSize: 13, borderRadius: 8, border: `1px solid ${D.border}`, background: "rgba(0,0,0,0.3)", color: "#fff", outline: "none" }}
+                />
+                <input
+                  type="text"
+                  value={unlockGuideId}
+                  onChange={e => setUnlockGuideId(e.target.value)}
+                  placeholder="guide-id (z.B. wp-critical-error)"
+                  style={{ padding: "9px 12px", fontSize: 13, borderRadius: 8, border: `1px solid ${D.border}`, background: "rgba(0,0,0,0.3)", color: "#fff", outline: "none", fontFamily: "monospace" }}
+                />
+                <select
+                  value={unlockHoster}
+                  onChange={e => setUnlockHoster(e.target.value)}
+                  style={{ padding: "9px 12px", fontSize: 13, borderRadius: 8, border: `1px solid ${D.border}`, background: "rgba(0,0,0,0.3)", color: "#fff", outline: "none" }}
+                >
+                  <option value="default">Anderer Hoster</option>
+                  <option value="strato">Strato</option>
+                  <option value="ionos">IONOS</option>
+                  <option value="all-inkl">All-Inkl</option>
+                  <option value="hostinger">Hostinger</option>
+                </select>
+                <button
+                  onClick={unlockGuide}
+                  disabled={unlockLoading || !unlockEmail || !unlockGuideId}
+                  style={{
+                    padding: "0 18px", borderRadius: 8, fontSize: 12.5, fontWeight: 700,
+                    background: "rgba(74,222,128,0.15)", color: "#4ade80",
+                    border: "1px solid rgba(74,222,128,0.3)", cursor: "pointer",
+                    opacity: (unlockLoading || !unlockEmail || !unlockGuideId) ? 0.4 : 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {unlockLoading ? "läuft…" : "Freischalten"}
+                </button>
+              </div>
+              {unlockMsg && (
+                <div style={{
+                  marginTop: 12, padding: "8px 12px", borderRadius: 7,
+                  fontSize: 12,
+                  background: unlockMsg.ok ? "rgba(74,222,128,0.10)" : "rgba(239,68,68,0.10)",
+                  border:     unlockMsg.ok ? "1px solid rgba(74,222,128,0.30)" : "1px solid rgba(239,68,68,0.30)",
+                  color:      unlockMsg.ok ? "#4ade80" : "#fca5a5",
+                }}>
+                  {unlockMsg.text}
+                </div>
+              )}
             </div>
 
             {/* Rate Limit Manager */}

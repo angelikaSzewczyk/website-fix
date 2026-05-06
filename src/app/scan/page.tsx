@@ -817,8 +817,10 @@ export default function ScanPage() {
 
                   {/* Pricing hint */}
                   <p style={{ margin: "10px 0 0", fontSize: 12, color: "rgba(255,255,255,0.22)", textAlign: "center" }}>
-                    Voller Report und Smart-Fix Guides ab{" "}
-                    <span style={{ color: "rgba(255,255,255,0.45)" }}>29€/Monat</span>
+                    Voller Report ab{" "}
+                    <span style={{ color: "rgba(255,255,255,0.45)" }}>9,90 € einmalig</span>
+                    {" "}oder{" "}
+                    <span style={{ color: "rgba(255,255,255,0.45)" }}>29 €/Monat (Flatrate)</span>
                   </p>
                 </form>
               )}
@@ -1217,7 +1219,7 @@ export default function ScanPage() {
                 Plan wählen &amp; starten →
               </Link>
               <p style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-                Ab 29€/Monat · Jederzeit kündbar
+                Pay-per-Fix ab 9,90 € · Flatrate ab 29 €/Monat · Jederzeit kündbar
               </p>
             </div>
           </div>

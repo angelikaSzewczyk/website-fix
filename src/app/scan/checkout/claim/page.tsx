@@ -58,6 +58,55 @@ function ClaimInner() {
             setEmail(data.email ?? null);
             setIsNewAccount(data.isNewAccount ?? true);
             setVerified("ok");
+
+            // Anon-Scan-Claim-Bridge (Sprint 06.05.2026): der gerade gekaufte
+            // Guide bezieht sich auf den anonymen Scan im sessionStorage.
+            // Wir kopieren ihn nach localStorage — sobald der User sein
+            // Passwort gesetzt hat und ins Dashboard kommt, fängt
+            // PendingClaimHandler den Eintrag ab und ruft /api/scan/claim,
+            // damit der Scan dem frischen Account angehängt wird.
+            try {
+              const raw = sessionStorage.getItem("wf_scan_result");
+              if (raw) {
+                const scan = JSON.parse(raw) as {
+                  url?: string; diagnose?: string; issueCount?: number;
+                  techFingerprint?: unknown; unterseiten?: unknown[];
+                  pages?: number; altMissingCount?: number;
+                  brokenLinksCount?: number; duplicateTitlesCount?: number;
+                  duplicateMetasCount?: number; hasUnreachable?: boolean;
+                  orphanedPagesCount?: number; noIndex?: boolean;
+                  hasTitle?: boolean; hasMeta?: boolean; hasH1?: boolean;
+                  hasSitemap?: boolean; robotsBlocked?: boolean; https?: boolean;
+                };
+                if (scan?.url) {
+                  // Form-Match mit /api/scan/claim-Body. Felder die fehlen
+                  // werden im Endpoint mit Defaults belegt.
+                  const claimPayload = {
+                    url:                  scan.url,
+                    diagnose:             scan.diagnose ?? "",
+                    issueCount:           scan.issueCount ?? 0,
+                    techFingerprint:      scan.techFingerprint ?? null,
+                    unterseiten:          scan.unterseiten ?? [],
+                    totalPages:           scan.pages ?? null,
+                    altMissingCount:      scan.altMissingCount ?? 0,
+                    brokenLinksCount:     scan.brokenLinksCount ?? 0,
+                    duplicateTitlesCount: scan.duplicateTitlesCount ?? 0,
+                    duplicateMetasCount:  scan.duplicateMetasCount ?? 0,
+                    hasUnreachable:       scan.hasUnreachable ?? false,
+                    orphanedPagesCount:   scan.orphanedPagesCount ?? 0,
+                    https:                scan.https ?? true,
+                    hasTitle:             scan.hasTitle ?? true,
+                    hasMeta:              scan.hasMeta ?? true,
+                    hasH1:                scan.hasH1 ?? true,
+                    hasSitemap:           scan.hasSitemap ?? true,
+                    robotsBlocked:        scan.robotsBlocked ?? false,
+                    noIndex:              scan.noIndex ?? false,
+                  };
+                  localStorage.setItem("wf_pending_anon_claim", JSON.stringify(claimPayload));
+                }
+              }
+            } catch { /* sessionStorage / parse error — silent fail */ }
+
             return;
           }
         }

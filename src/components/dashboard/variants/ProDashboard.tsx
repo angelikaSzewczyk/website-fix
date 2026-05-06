@@ -2424,6 +2424,52 @@ export default function ProDashboard(props: ProDashboardProps) {
           </div>
         )}
 
+        {/* ── AGENCY-SCALE-TEASER (Sprint 06.05.2026) ─────────────────────────
+            Pro-User sehen das Delegations-Widget nicht — exklusiv im Agency-
+            Scale-Tier. Wir teasern es hier als Empty-State-Card, sodass der
+            Pro-Owner erkennt, was er bei Skalierung gewinnt: konkrete Junior-
+            Lohnkosten-Ersparnis, Mandanten-Portal, Team-Rollen. Kein Hard-
+            Sell — informativer Footer-Block. */}
+        <div style={{
+          marginTop: 40, padding: "24px 26px", borderRadius: 16,
+          background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(251,191,36,0.04))",
+          border: "1px solid rgba(167,139,250,0.28)",
+          display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap",
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+            background: "rgba(167,139,250,0.14)", border: "1px solid rgba(167,139,250,0.34)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <path d="M20 8v6"/><path d="M23 11h-6"/>
+            </svg>
+          </div>
+          <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#A78BFA", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              Skalieren mit Agency Scale
+            </p>
+            <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+              Delegations-Hebel: bis zu 9.750 €/Monat Lohnkosten-Ersparnis
+            </h3>
+            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+              Auf Agency Scale (249 €/Monat) siehst du im Dashboard pro Mandant: „X von Y Issues durch Junior lösbar" — inkl. konkreter €-Ersparnis-Rechnung. Plus: Mandanten-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog, Workflow-API zu Jira/Asana/Trello/Slack.
+            </p>
+          </div>
+          <Link href="/fuer-agenturen#pricing" style={{
+            flexShrink: 0,
+            padding: "11px 22px", borderRadius: 10,
+            background: "linear-gradient(90deg,#7C3AED,#A78BFA)",
+            color: "#fff", fontSize: 13, fontWeight: 800,
+            textDecoration: "none", whiteSpace: "nowrap",
+            boxShadow: "0 4px 16px rgba(124,58,237,0.32)",
+          }}>
+            Marge skalieren →
+          </Link>
+        </div>
+
       </DashboardShell>
 
       {showOptPlan && (

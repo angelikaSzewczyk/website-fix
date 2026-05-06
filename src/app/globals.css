@@ -4015,11 +4015,16 @@ html, body {
   }
 }
 
-/* ===== SITE FOOTER — 3-column layout ===== */
+/* ===== SITE FOOTER — 4-column layout (Brand · Produkt · Wissensbasis · Rechtliches) ===== */
 .wf-footer-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
-  gap: 40px;
+  grid-template-columns: 1.4fr 1fr 1.2fr 1fr;
+  gap: 36px;
+}
+@media (max-width: 1024px) {
+  .wf-footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .wf-nav-link:hover {

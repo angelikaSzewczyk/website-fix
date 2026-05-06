@@ -13,7 +13,7 @@ export default function SiteFooter() {
       {/* Same max-width + padding as all page sections → perfect alignment */}
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
 
-        {/* 3-column grid */}
+        {/* 4-column grid (Wissensbasis als neue Spalte für SEO + Funnel) */}
         <div className="wf-footer-grid">
 
           {/* Col 1: Brand */}
@@ -45,7 +45,27 @@ export default function SiteFooter() {
             </nav>
           </div>
 
-          {/* Col 3: Rechtliches */}
+          {/* Col 3: Wissensbasis — die 5 Pflicht-Posts (GSC-Top-Queries).
+              Direkt-Verlinkung statt nur generischem /blog gibt Crawler-Hub-
+              Signal + spart End-Usern den Klick durch die Index-Seite. */}
+          <div>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+              Wissensbasis
+            </p>
+            <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { href: "/blog/wordpress-critical-error",            label: "WordPress Critical Error" },
+                { href: "/blog/warum-findet-google-meine-homepage-nicht", label: "Google findet mich nicht" },
+                { href: "/blog/website-laedt-extrem-langsam",        label: "Website lädt zu langsam" },
+                { href: "/blog/agentur-skalieren-wartung-automatisieren", label: "Agentur skalieren" },
+                { href: "/blog/89-euro-pro-monat-vs-totalausfall",   label: "Wartung vs. Totalausfall" },
+              ].map(({ href, label }) => (
+                <Link key={href} href={href} className="wf-footer-link">{label}</Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Col 4: Rechtliches */}
           <div>
             <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Rechtliches

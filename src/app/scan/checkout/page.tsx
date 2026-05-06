@@ -17,6 +17,7 @@
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BrandLogo from "../../components/BrandLogo";
 import MobileNav from "../../components/MobileNav";
 import SiteFooter from "../../components/SiteFooter";
@@ -60,6 +61,12 @@ function buildIssuesFromScan(scan: StoredScan): Array<{ title: string; severity?
 }
 
 function CheckoutInner() {
+  // ?cancelled=<guide_id> kommt aus Stripe-Cancel-URL des anon-checkouts.
+  // Wir zeigen einen Hinweis-Banner, damit der Nutzer weiß, dass die Zahlung
+  // nicht abgeschlossen wurde — und nicht annimmt, der Scan sei kaputt.
+  const params           = useSearchParams();
+  const cancelledGuideId = params.get("cancelled");
+
   const [scan, setScan]               = useState<StoredScan | null>(null);
   const [scanLoaded, setScanLoaded]   = useState(false);
   const [guides, setGuides]           = useState<AnonGuide[]>([]);
@@ -181,6 +188,32 @@ function CheckoutInner() {
       <Nav />
       <main style={{ background: "#0b0c10", minHeight: "calc(100vh - 58px)", padding: "48px 24px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
+
+          {/* Stripe-Cancel-Banner: Stripe redirected zu /scan/checkout?cancelled=<guideId>
+              wenn der User die Zahlung abbricht. Ohne diesen Hinweis sähe der
+              User nur die normale Checkout-Page und würde annehmen, der Klick
+              hätte gar nichts ausgelöst. */}
+          {cancelledGuideId && (
+            <div role="status" aria-live="polite" style={{
+              marginBottom: 24, padding: "14px 18px", borderRadius: 11,
+              background: "rgba(251,191,36,0.08)",
+              border: "1px solid rgba(251,191,36,0.32)",
+              display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#FBBF24", marginBottom: 2 }}>
+                  Checkout abgebrochen — keine Belastung erfolgt
+                </div>
+                <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
+                  Du kannst jederzeit einen neuen Versuch starten. Falls etwas am Stripe-Formular gehakt hat: melde dich bei <a href="mailto:support@website-fix.com" style={{ color: "#FBBF24", textDecoration: "underline", textUnderlineOffset: 2 }}>support@website-fix.com</a> — wir helfen direkt.
+                </div>
+              </div>
+            </div>
+          )}
+
           <div style={{ marginBottom: 32 }}>
             <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.1em", textTransform: "uppercase" }}>
               Einzel-Fix · 9,90 €

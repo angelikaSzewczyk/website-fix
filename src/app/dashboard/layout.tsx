@@ -6,6 +6,7 @@ import SidebarNav from "./components/sidebar-nav";
 import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
+import PendingClaimHandler from "./components/PendingClaimHandler";
 import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue, isAgency, isAtLeastProfessional } from "@/lib/plans";
 import { touchLastSeen } from "@/lib/heartbeat";
 
@@ -251,6 +252,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           </span>
         </header>
       )}
+
+      {/* Anon-Pay-per-Fix-Käufer: wenn ein localStorage-Eintrag von der
+          /scan/checkout/claim-Page liegt, hängen wir den Scan jetzt an den
+          frischen Account. Idempotent — Komponente gibt null zurück. */}
+      <PendingClaimHandler />
 
       {/* CONTENT */}
       <div className="dashboard-content" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, background: "#0b0c10", minHeight: "100vh" }}>

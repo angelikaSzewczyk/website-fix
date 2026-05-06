@@ -76,25 +76,42 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // Find-or-create: bei existierender Email re-use, sonst INSERT mit NULL password.
-        // password_hash IS NULL = der existierende /api/auth/register-Flow (Zeile 118)
-        // erkennt das später als "Account ohne Passwort" und linkt das Passwort
-        // beim ersten Register-Versuch (oder via /forgot-password).
-        const existing = await sql`SELECT id FROM users WHERE email = ${buyerEmail} LIMIT 1` as Array<{ id: string | number }>;
+        // Find-or-create — race-safe.
+        // Bei zwei parallelen Webhook-Deliveries gleicher Email würde der naive
+        // SELECT-then-INSERT-Ansatz beim Second auf UNIQUE(email) crashen. Lösung:
+        // INSERT … ON CONFLICT (email) DO NOTHING RETURNING id liefert bei Race
+        // einen leeren Result-Set; das fangen wir mit einem Fallback-SELECT ab.
+        // password_hash IS NULL = der existierende /api/auth/register-Flow erkennt
+        // das später als "Account ohne Passwort" und linkt das Passwort beim
+        // ersten Register-Versuch (oder via /forgot-password).
+        const defaultName = buyerEmail.split("@")[0];
+        const inserted = await sql`
+          INSERT INTO users (name, email, password_hash, "emailVerified")
+          VALUES (${defaultName}, ${buyerEmail}, NULL, NOW())
+          ON CONFLICT (email) DO NOTHING
+          RETURNING id
+        ` as Array<{ id: string | number }>;
+
         let userId: string;
-        let isNewAccount = false;
-        if (existing[0]?.id) {
-          userId = String(existing[0].id);
-        } else {
-          // Email-Local-Part als Default-Name (wird beim ersten Login überschrieben)
-          const defaultName = buyerEmail.split("@")[0];
-          const inserted = await sql`
-            INSERT INTO users (name, email, password_hash, "emailVerified")
-            VALUES (${defaultName}, ${buyerEmail}, NULL, NOW())
-            RETURNING id
-          ` as Array<{ id: string | number }>;
-          userId = String(inserted[0].id);
+        let isNewAccount: boolean;
+        if (inserted[0]?.id) {
+          // INSERT erfolgreich → frischer Account.
+          userId       = String(inserted[0].id);
           isNewAccount = true;
+        } else {
+          // ON CONFLICT triggered → User existiert bereits (entweder vorher angelegt
+          // ODER paralleler Webhook-Trigger war schneller). Fallback-SELECT liefert
+          // den existierenden id. Idempotent in beide Richtungen.
+          const existing = await sql`
+            SELECT id FROM users WHERE email = ${buyerEmail} LIMIT 1
+          ` as Array<{ id: string | number }>;
+          if (!existing[0]?.id) {
+            // Sollte praktisch nie passieren (ON CONFLICT (email) ohne match wäre Bug
+            // im UNIQUE-Index). Trotzdem defensiv: 500 → Stripe retried.
+            throw new Error(`anon user resolution failed for email=${buyerEmail}`);
+          }
+          userId       = String(existing[0].id);
+          isNewAccount = false;
         }
 
         await sql`

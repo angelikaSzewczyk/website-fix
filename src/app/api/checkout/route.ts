@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: session.user.email ?? undefined,
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout-success?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen?checkout=cancelled`,
       locale: "de",
       allow_promotion_codes: true,
       // Trial: Stripe Subscription Trial-Days. Wir setzen es nur, wenn explizit
@@ -82,30 +82,39 @@ export async function GET(req: NextRequest) {
 }
 
 // ── POST: Bleibt für CheckoutButton (eingeloggte User auf Pricing-Seite) ──
+// Hardening (06.05.2026): Auth jetzt zwingend, Plan gegen Whitelist validiert.
+// Vorher: jeder konnte ohne Auth POSTen → unauthenticated Stripe-Sessions
+// erzeugen (DoS-Vektor + Stripe-Test-Calls auf unsere Quota).
 export async function POST(req: NextRequest) {
   const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Bitte erst einloggen." }, { status: 401 });
+  }
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
   try {
-    const { plan } = await req.json();
-    const priceId = PLAN_PRICE_MAP[plan as string];
-
+    const { plan } = await req.json() as { plan?: string };
+    if (!plan || typeof plan !== "string") {
+      return NextResponse.json({ error: "Plan-Parameter fehlt." }, { status: 400 });
+    }
+    const priceId = PLAN_PRICE_MAP[plan];
     if (!priceId) {
-      return NextResponse.json({ error: "Plan nicht gefunden." }, { status: 400 });
+      return NextResponse.json({ error: `Unbekannter Plan: ${plan}` }, { status: 400 });
     }
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: session?.user?.email ?? undefined,
+      customer_email: session.user.email,
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout-success?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/fuer-agenturen?checkout=cancelled`,
       locale: "de",
       allow_promotion_codes: true,
       metadata: {
         plan,
-        userId: session?.user?.id ?? "",
+        userId: session.user.id ?? "",
       },
     });
 

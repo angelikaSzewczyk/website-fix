@@ -1,5 +1,5 @@
 /**
- * Schema-Ensures für Team + Audit (Phase 9).
+ * Schema-Ensures für Team + Audit (Phase 9, erweitert um Rollen 06.05.2026).
  *
  * Idempotente ALTER/CREATE-Statements im Pattern aus lib/integrations.ts:
  * pro Server-Instanz wird der Ensure-Call genau einmal gefeuert (modul-
@@ -8,6 +8,10 @@
  *   team_members:
  *     - invite_token       (TEXT, UNIQUE) — der per Email versendete Token
  *     - token_expires_at   (TIMESTAMPTZ)  — Replay-Schutz, default 7 Tage
+ *     - role               (TEXT)         — admin | editor | viewer
+ *                                            (default editor, Owner ist nicht in
+ *                                             team_members → der ist immer Admin
+ *                                             via implicit owner_id-Match)
  *
  *   agency_audit_logs (NEW):
  *     - Append-only Protokoll: Owner X hat Member Y mit Aktion Z verändert.
@@ -16,6 +20,11 @@
  */
 
 import { neon } from "@neondatabase/serverless";
+
+/** Whitelist für Rollen — Single Source. Backend-Validation gegen diese Liste,
+ *  damit kein Fremd-String per API ins CHECK-constraint einsickern kann. */
+export const TEAM_ROLES = ["admin", "editor", "viewer"] as const;
+export type TeamRole = typeof TEAM_ROLES[number];
 
 let schemaReady = false;
 
@@ -26,6 +35,31 @@ export async function ensureTeamSchema(): Promise<void> {
   // ── team_members: Token-Spalten ──────────────────────────────────────────
   await sql`ALTER TABLE team_members ADD COLUMN IF NOT EXISTS invite_token       TEXT`;
   await sql`ALTER TABLE team_members ADD COLUMN IF NOT EXISTS token_expires_at   TIMESTAMPTZ`;
+
+  // ── team_members.role — Granular-Rollen-Differenzierung (06.05.2026) ─────
+  // ADD COLUMN IF NOT EXISTS ist idempotent. CHECK-Constraint per separater
+  // ALTER-Statement, damit ältere Postgres-Versionen ohne ADD-COLUMN-CHECK-
+  // Combo das auch verkraften. Existing rows bekommen 'editor' als Default
+  // (kompatibel mit pre-Roles-Verhalten — niemand hat bisher Admin-Rechte
+  // außerhalb des Owners, der ohnehin nicht in team_members steht).
+  await sql`ALTER TABLE team_members ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'editor'`;
+  // CHECK-Constraint anbringen falls noch nicht vorhanden. Catch-and-ignore,
+  // weil DROP-CONSTRAINT-IF-EXISTS in PG13+ nicht mit ADD CONSTRAINT IF NOT EXISTS
+  // kombinierbar ist — und ein doppeltes ADD wirft duplicate_object error.
+  try {
+    await sql`
+      ALTER TABLE team_members
+      ADD CONSTRAINT team_members_role_check
+      CHECK (role IN ('admin', 'editor', 'viewer'))
+    `;
+  } catch (err) {
+    // Vermutlich "constraint already exists" — bei jedem Re-Run der Fall.
+    // Nur loggen wenn es etwas ANDERES als duplicate_object ist.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/already exists|duplicate/i.test(msg)) {
+      console.error("[team-schema] role CHECK constraint failed:", msg);
+    }
+  }
   // UNIQUE-Constraint via partial Index — verhindert dubletten Token-Wert.
   // Partial weil NULL-Werte (alte Datensätze, gelöschte Tokens) erlaubt sein müssen.
   await sql`

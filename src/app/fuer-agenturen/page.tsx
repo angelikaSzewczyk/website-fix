@@ -16,6 +16,7 @@ import MobileNav from "../components/MobileNav";
 import AgencyStats from "../components/agency-stats";
 import SiteFooter from "../components/SiteFooter";
 import MaintenanceBanner from "../components/MaintenanceBanner";
+import CancelBanner from "./CancelBanner";
 import { getLatestAgencyPost, categoryTheme } from "@/lib/blog-loader";
 
 // ─── SEO-Metadata ────────────────────────────────────────────────────────────
@@ -245,6 +246,10 @@ export default function AgencyPage() {
 
       {/* Soft-Launch-Hinweis bis Stripe-Live + Resend-Verify komplett sind */}
       <MaintenanceBanner />
+
+      {/* Stripe-Cancel-Banner: rendert nur bei ?checkout=cancelled. Suspense
+          required wegen useSearchParams im Client-Component. */}
+      <Suspense fallback={null}><CancelBanner /></Suspense>
 
       {/* ─── NAV ──────────────────────────────────────────────────────────── */}
       <nav style={{
@@ -1220,7 +1225,7 @@ export default function AgencyPage() {
                   boxShadow: "0 8px 32px rgba(124,58,237,0.50)",
                 }}
               />
-              <Link href="mailto:hello@website-fix.com?subject=Agency%20Scale%20Onboarding-Call" style={{
+              <Link href="mailto:support@website-fix.com?subject=Agency%20Scale%20Onboarding-Call" style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "16px 28px", borderRadius: 14,
                 background: T.card, border: `1px solid ${T.borderStrong}`,
