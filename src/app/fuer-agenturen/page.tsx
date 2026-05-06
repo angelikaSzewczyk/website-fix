@@ -16,6 +16,7 @@ import MobileNav from "../components/MobileNav";
 import AgencyStats from "../components/agency-stats";
 import SiteFooter from "../components/SiteFooter";
 import MaintenanceBanner from "../components/MaintenanceBanner";
+import { getLatestAgencyPost, categoryTheme } from "@/lib/blog-loader";
 
 // ─── SEO-Metadata ────────────────────────────────────────────────────────────
 // Reframing zu "Profit-Center" — Such-Intention "WordPress-Agentur skalieren",
@@ -185,6 +186,10 @@ const FAQ = [
     a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: Mandanten-Portal unter eigener Subdomain, Team-Rollen-Logik, 60-Sekunden-Watchdog, Workflow-API, DSGVO-AVV. Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
   },
   {
+    q: "Können meine Endkunden den 9,90-€-Pay-per-Fix nutzen, ohne dass ich für jeden ein Konto anlegen muss?",
+    a: "Ja — und das ist ein eigener Lead-Magnet für Sie. Der Pay-per-Fix-Flow läuft komplett anonym: Endkunde scannt seine Seite, wählt einen Fix-Guide, gibt seine E-Mail ein, zahlt 9,90 € via Stripe — fertig. Account-Provisionierung passiert automatisch im Hintergrund nach erfolgreicher Zahlung. Wenn Sie das Lead-Magnet-Widget auf Ihrer eigenen Marketing-Site einbinden, ziehen Sie Endkunden in Ihren Funnel und können sie später auf Wartungsverträge upgraden.",
+  },
+  {
     q: "Kann ich den Plan jederzeit kündigen?",
     a: "Ja. Monatliche Kündigung, keine Mindestlaufzeit. Abrechnung über Stripe. Nach der Kündigung haben Sie noch Zugang bis zum Ende des bezahlten Zeitraums.",
   },
@@ -216,6 +221,12 @@ const T = {
 } as const;
 
 export default function AgencyPage() {
+  // Experten-Logbuch-Teaser — jüngster Post mit Kategorie "agency".
+  // Server-side beim Build evaluiert (fs liest content/blog/*.md).
+  // Bei null (kein Agency-Post vorhanden) blendet sich die Sektion
+  // einfach aus — kein leerer Card-Slot.
+  const latestAgencyPost = getLatestAgencyPost();
+
   return (
     <>
       {/* AutoCheckout fängt ?checkout=<plan>-Param vom Google-OAuth-Rückweg ab */}
@@ -1063,6 +1074,79 @@ export default function AgencyPage() {
             </p>
           </div>
         </section>
+
+        {/* ─── EXPERTEN-LOGBUCH (Agency-Post) ────────────────────────────────
+            Jüngster Blog-Post mit category="agency" — wenn keiner gefunden,
+            blendet sich die ganze Sektion aus (kein leerer Card-Slot). */}
+        {latestAgencyPost && (() => {
+          const theme = categoryTheme(latestAgencyPost.category);
+          return (
+            <section>
+              <div style={{ maxWidth: 920, margin: "0 auto", padding: "80px 24px" }}>
+                <div style={{ textAlign: "center", marginBottom: 32, maxWidth: 720, marginInline: "auto" }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.scale, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    Experten-Logbuch
+                  </p>
+                  <h2 style={{ margin: "0 0 12px", fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.18 }}>
+                    Frisches Fachwissen für Agentur-Inhaber
+                  </h2>
+                  <p style={{ margin: 0, fontSize: 14.5, color: T.textSub, lineHeight: 1.65 }}>
+                    Tiefenbeitrag aus unserer Redaktion — Wartungsmodelle,
+                    Haftungsthemen, Skalierungs-Patterns für Web-Agenturen.
+                  </p>
+                </div>
+
+                <Link
+                  href={`/blog/${latestAgencyPost.slug}`}
+                  style={{
+                    display: "block", textDecoration: "none", color: "inherit",
+                    padding: "26px 28px", borderRadius: 16,
+                    background: `linear-gradient(135deg, ${theme.bg}, ${T.scaleBg})`,
+                    border: `1px solid ${theme.border}`,
+                    boxShadow: "0 12px 40px rgba(124,58,237,0.10)",
+                    transition: "transform 0.18s ease, box-shadow 0.18s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "4px 12px", borderRadius: 999,
+                      background: theme.bg, border: `1px solid ${theme.border}`,
+                      fontSize: 11, fontWeight: 800, color: theme.color,
+                      letterSpacing: "0.06em", textTransform: "uppercase",
+                    }}>
+                      {theme.label}
+                    </span>
+                    <span style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace" }}>
+                      {new Date(latestAgencyPost.date).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}
+                    </span>
+                  </div>
+                  <h3 style={{ margin: "0 0 10px", fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.02em", color: T.text, lineHeight: 1.3 }}>
+                    {latestAgencyPost.title}
+                  </h3>
+                  {latestAgencyPost.description && (
+                    <p style={{ margin: "0 0 16px", fontSize: 13.5, color: T.textSub, lineHeight: 1.65 }}>
+                      {latestAgencyPost.description}
+                    </p>
+                  )}
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    fontSize: 13, fontWeight: 700, color: T.scale,
+                  }}>
+                    Beitrag öffnen →
+                  </span>
+                </Link>
+
+                <p style={{ margin: "16px auto 0", maxWidth: 600, textAlign: "center", fontSize: 12, color: T.textFaint }}>
+                  Mehr Beiträge aus dem Agentur-Logbuch im{" "}
+                  <Link href="/blog" style={{ color: T.scale, textDecoration: "none", fontWeight: 700 }}>
+                    Blog →
+                  </Link>
+                </p>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ─── FAQ ─────────────────────────────────────────────────────────── */}
         <section>

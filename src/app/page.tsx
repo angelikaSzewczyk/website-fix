@@ -1,8 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
+import { getLatestEndUserPost, categoryTheme } from "@/lib/blog-loader";
 import FaqAccordion from "./components/faq-accordion";
 import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
@@ -13,70 +11,10 @@ import SiteFooter from "./components/SiteFooter";
 import MaintenanceBanner from "./components/MaintenanceBanner";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 
-// ── Pflicht-Artikel (Blog-Teaser im Experten-Logbuch) ──────────────────
-// Diese 5 Posts spiegeln die GSC-Top-Queries und sind unsere primären
-// Conversion-Hebel. Der Logbuch-Teaser auf der Landingpage zeigt jeweils
-// den jüngsten dieser 5 — sortiert nach frontmatter.date descending.
-// Bei neuen Pflicht-Artikeln einfach den Slug hier ergänzen.
-const PFLICHT_SLUGS = [
-  "wordpress-critical-error",
-  "warum-findet-google-meine-homepage-nicht",
-  "website-laedt-extrem-langsam",
-  "agentur-skalieren-wartung-automatisieren",
-  "89-euro-pro-monat-vs-totalausfall",
-] as const;
-
-type PflichtPost = {
-  slug:        string;
-  title:       string;
-  description: string;
-  category:    string;
-  date:        string;
-};
-
-/** Liest die Frontmatter aller Pflicht-Posts und gibt den jüngsten zurück.
- *  Server-side — fs läuft beim Build, kein Runtime-Overhead. Bei Datei-
- *  Fehler (z.B. Slug umbenannt) wird der Eintrag stumm übersprungen.
- *  Returnt null wenn kein Post lesbar ist — der Caller fällt dann auf
- *  einen statischen Default zurück. */
-function getLatestPflichtPost(): PflichtPost | null {
-  const blogDir = path.join(process.cwd(), "content/blog");
-  const posts: PflichtPost[] = [];
-
-  for (const slug of PFLICHT_SLUGS) {
-    try {
-      const filePath = path.join(blogDir, `${slug}.md`);
-      const fileContent = fs.readFileSync(filePath, "utf8");
-      const { data } = matter(fileContent);
-      if (typeof data.title !== "string" || typeof data.date !== "string") continue;
-      posts.push({
-        slug,
-        title:       data.title,
-        description: typeof data.description === "string" ? data.description : "",
-        category:    typeof data.category    === "string" ? data.category    : "wordpress",
-        date:        data.date,
-      });
-    } catch { /* file missing / unreadable — skip */ }
-  }
-
-  if (posts.length === 0) return null;
-
-  // sort by date descending, take first
-  posts.sort((a, b) => b.date.localeCompare(a.date));
-  return posts[0];
-}
-
-/** Mappt category-Strings auf Anzeige-Label + Theme-Farbe für das
- *  Logbuch-Card-Badge. Default-Theme wenn category unbekannt. */
-function categoryTheme(category: string): { label: string; color: string; bg: string; border: string } {
-  switch (category.toLowerCase()) {
-    case "agency":      return { label: "Agentur · Skalierung", color: "#10B981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.30)"  };
-    case "performance": return { label: "Hosting · Speed",       color: "#22d3ee", bg: "rgba(34,211,238,0.12)",  border: "rgba(34,211,238,0.30)"  };
-    case "seo":         return { label: "Google · Sichtbarkeit", color: "#7aa6ff", bg: "rgba(122,166,255,0.12)", border: "rgba(122,166,255,0.30)" };
-    case "wordpress":   return { label: "WordPress · Notfall",   color: "#fbbf24", bg: "rgba(251,191,36,0.12)",  border: "rgba(251,191,36,0.30)"  };
-    default:            return { label: "Experten-Wissen",       color: "#7aa6ff", bg: "rgba(122,166,255,0.12)", border: "rgba(122,166,255,0.20)" };
-  }
-}
+// Blog-Teaser-Loader siehe src/lib/blog-loader.ts.
+// Auf der Homepage zeigen wir den jüngsten END-USER-Post (alles außer
+// Kategorie "agency") — der Endkunde soll Lösungen für seine Website sehen,
+// nicht Skalierungs-Tipps für Agenturen.
 
 export const metadata: Metadata = {
   title: { absolute: "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen" },
@@ -285,7 +223,19 @@ const PLANS = [
   },
 ];
 
+// FAQ — End-User-Audience (schnelle Hilfe, Sicherheit, Kosten).
+// Bewusst "du"-Form. Pricing-Reality klar abgebildet: 9,90 € Pay-per-Fix,
+// 29 € Starter, 89 € Pro, 249 € Agency Scale. Für B2B-Tiefe siehe
+// /fuer-agenturen — eigener FAQ-Block, "Sie"-Form, B2B-Wording.
 const FAQ = [
+  {
+    q: "Muss ich ein Abo abschließen oder kann ich einen einzelnen Fehler einzeln bezahlen?",
+    a: "Nein, kein Abo nötig. Mit unserem Pay-per-Fix bekommst du genau einen Schritt-für-Schritt-Guide für 9,90 € — einmalige Zahlung, kein Konto vorab erforderlich, lebenslanger Zugriff. Nach dem Scan wählst du den passenden Guide, gibst deine E-Mail ein und bezahlst sicher per Stripe. Wenn du regelmäßig prüfen willst, lohnt sich ein Abo ab dem 3. Problem pro Monat.",
+  },
+  {
+    q: "Was kostet WebsiteFix in der Übersicht?",
+    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (bis zu 3 Projekte, wöchentlicher Deep-Scan, 5 Guides inklusive). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (bis zu 50 Mandanten, Mandanten-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog). Alle Abos monatlich kündbar.",
+  },
   {
     q: "Was genau prüft der Deep-Scan?",
     a: "Der Scanner crawlt alle öffentlich erreichbaren Unterseiten deiner WordPress-Website und prüft jede einzeln auf: fehlende Alt-Texte, Meta-Daten, kaputte Links (404), HTTPS-Status, Ladezeit und Formular-Zugänglichkeit. Alle Ergebnisse erscheinen auf einer interaktiven Site-Map mit konkreten Fix-Anleitungen.",
@@ -303,15 +253,21 @@ const FAQ = [
     a: "WebsiteFix ist kein oberflächlicher Scanner, sondern eine KI-gestützte Workflow-Lösung für Agenturen und Profis. Während kostenlose Tools nur die Startseite prüfen und rohe Fehlerlisten ausgeben, crawlt WebsiteFix alle Unterseiten, erstellt eine interaktive Site-Map und liefert für jeden Befund eine konkrete, page-builder-spezifische Fix-Anleitung — direkt umsetzbar, kein Entwickler-Wissen nötig.",
   },
   {
+    q: "Wie sicher sind meine Daten?",
+    a: "Hosting in Frankfurt, EU-only Datenfluss, TLS-verschlüsselt. Wir speichern deine Scan-Ergebnisse, aber keine Login-Daten oder sensiblen Inhalte deiner Seite — der Scan läuft vollständig von außen wie ein normaler Besucher. DSGVO-AVV bekommst du im Account-Bereich.",
+  },
+  {
     q: "Kann ich WebsiteFix für Kunden-Websites nutzen (Agenturen)?",
-    a: "Absolut. Im Agency-Plan verwaltest du bis zu 50 Projekte, nutzt Full White-Label mit eigenem Branding und setzt das Lead-Magnet Widget ein, um direkt auf Kunden-Websites neue Interessenten zu gewinnen.",
+    a: "Absolut. Im Agency-Scale-Plan (249 €/Monat) verwaltest du bis zu 50 Mandanten, nutzt Full White-Label mit eigenem Branding und Mandanten-Portal unter deiner Subdomain. Mehr Details findest du auf der eigenen Agentur-Seite.",
   },
 ];
 
 export default function Page() {
-  // Dynamischer Blog-Teaser — jüngster der 5 Pflicht-Artikel.
-  // Server-side ausgewertet beim Build, kein Client-Roundtrip.
-  const latestPost = getLatestPflichtPost();
+  // Dynamischer Blog-Teaser — jüngster Post EXKLUSIVE Kategorie "agency".
+  // End-User-Audience: Notfall, Sichtbarkeit, Speed, Compliance — keine
+  // Agentur-Skalierungs-Themen (die landen auf /fuer-agenturen).
+  // Server-side beim Build evaluiert, kein Client-Roundtrip.
+  const latestPost = getLatestEndUserPost();
 
   return (
     <>
