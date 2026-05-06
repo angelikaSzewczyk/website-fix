@@ -84,6 +84,17 @@ async function detectAutoCompletions(
       ` as Array<{ cnt: number }>;
       if ((sites[0]?.cnt ?? 0) >= 2) detected.push("pro_bulk_import");
     } catch { /* skip */ }
+    // Pro hat White-Label-PDF — Logo gesetzt = Branding-Setup durchlaufen,
+    // Voraussetzung für den ersten White-Label-Bericht. Wir markieren
+    // pro_first_report als done sobald sowohl Logo als auch Scans existieren
+    // (User hat alles was er braucht, um den PDF-Export zu triggern).
+    try {
+      const branding = await sql`
+        SELECT agency_logo_url FROM agency_settings WHERE user_id = ${userId} LIMIT 1
+      ` as Array<{ agency_logo_url: string | null }>;
+      const scans = await sql`SELECT 1 FROM scans WHERE user_id = ${userId} LIMIT 1` as Array<unknown>;
+      if (branding[0]?.agency_logo_url && scans.length > 0) detected.push("pro_first_report");
+    } catch { /* skip — agency_settings/scans-Query darf das Onboarding nicht killen */ }
   }
 
   if (plan === "agency") {

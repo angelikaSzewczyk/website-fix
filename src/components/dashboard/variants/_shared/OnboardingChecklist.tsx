@@ -23,6 +23,21 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ONBOARDING_STEPS, type OnboardingPlanKey } from "@/lib/onboarding-steps";
 
+/** Plausible/GA-Tracking-Helper. Identisch zur Variante in /scan/results/page.tsx —
+ *  könnte später in lib/track.ts zentralisiert werden. Silent fail wenn Plausible
+ *  oder gtag nicht geladen sind (z.B. Cookie-Consent abgelehnt). */
+function trackEvent(event: string, props: Record<string, string>): void {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as {
+    plausible?: (event: string, opts?: { props?: Record<string, string> }) => void;
+    gtag?:      (cmd: string, event: string, params?: Record<string, string>) => void;
+  };
+  try {
+    w.plausible?.(event, { props });
+    w.gtag?.("event", event.toLowerCase().replace(/\s+/g, "_"), props);
+  } catch { /* tracker not ready */ }
+}
+
 type State = {
   completed_steps: string[];
   dismissed:       boolean;
@@ -51,7 +66,13 @@ export default function OnboardingChecklist({ plan }: Props) {
   const [state, setState] = useState<State | null>(null); // null = noch nicht geladen
   const [open,  setOpen]  = useState(true);
   const [allDoneFlash, setAllDoneFlash] = useState(false);
+  /** First-Run-Pulse: animierte Border + Scroll-into-View beim ersten Mount,
+   *  wenn der User die Card noch nie gesehen hat (keine completed_steps + nicht
+   *  dismissed). Schaltet sich nach 6 s automatisch ab — das soll den ersten
+   *  Blick lenken, nicht permanent blinken. */
+  const [pulse, setPulse] = useState(false);
   const flashTriggeredRef = useRef(false);
+  const cardRef           = useRef<HTMLDivElement | null>(null);
 
   // Initial-Fetch: lädt State aus DB inkl. Auto-Detection für diesen Plan
   useEffect(() => {
@@ -60,7 +81,21 @@ export default function OnboardingChecklist({ plan }: Props) {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (cancelled || !data?.state) return;
-        setState(data.state as State);
+        const loaded = data.state as State;
+        setState(loaded);
+        // First-Run-Detection: keine completed_steps + nicht dismissed → Pulse
+        // + scroll in den Viewport (smooth, falls die Card noch außerhalb).
+        if (loaded.completed_steps.length === 0 && !loaded.dismissed) {
+          setPulse(true);
+          requestAnimationFrame(() => {
+            cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+          // Pulse-Auto-Off nach 6s
+          setTimeout(() => setPulse(false), 6000);
+          trackEvent("Onboarding Shown", { plan, fresh: "true" });
+        } else if (!loaded.dismissed) {
+          trackEvent("Onboarding Shown", { plan, fresh: "false" });
+        }
       })
       .catch(() => { /* network error → Component bleibt unsichtbar */ });
     return () => { cancelled = true; };
@@ -84,8 +119,9 @@ export default function OnboardingChecklist({ plan }: Props) {
   const totalCount = config.steps.length;
   const allDone   = doneCount === totalCount;
 
-  async function completeStep(stepId: string) {
+  async function completeStep(stepId: string, source: "manual" | "link" = "manual") {
     if (!state || state.completed_steps.includes(stepId)) return;
+    trackEvent("Onboarding Step Complete", { plan, step: stepId, source });
     setState(prev => prev ? { ...prev, completed_steps: [...prev.completed_steps, stepId] } : prev);
     fetch("/api/onboarding", {
       method:  "POST",
@@ -95,6 +131,14 @@ export default function OnboardingChecklist({ plan }: Props) {
   }
 
   async function dismiss() {
+    const wasComplete = state ? config.steps.every(s => state.completed_steps.includes(s.id)) : false;
+    trackEvent("Onboarding Dismissed", {
+      plan,
+      // "auto" = Auto-Dismiss nach Allen-Done-Flash. "manual" = User hat
+      // "Verstanden" geklickt. Hilft uns, drop-off vs. completion zu trennen.
+      reason: wasComplete ? "auto_complete" : "manual_skip",
+      completed_steps: String(state?.completed_steps.length ?? 0),
+    });
     setState(prev => prev ? { ...prev, dismissed: true } : prev);
     fetch("/api/onboarding", {
       method:  "POST",
@@ -103,10 +147,20 @@ export default function OnboardingChecklist({ plan }: Props) {
     }).catch(() => { /* silent */ });
   }
 
+  function trackStepClick(stepId: string) {
+    // Wird beim Link-Click gefeuert (User navigiert zum Step-Ziel) — nicht
+    // identisch mit complete_step, weil Klick != Erledigung. Hilft beim
+    // Funnel-Verständnis: welche Steps werden geöffnet, welche manuell
+    // abgehakt, welche per Auto-Detect erledigt.
+    trackEvent("Onboarding Step Clicked", { plan, step: stepId });
+  }
+
   return (
     <section
+      ref={cardRef}
       role="region"
       aria-label="Onboarding-Checkliste"
+      className={pulse ? "wf-onboarding-pulse" : undefined}
       style={{
         marginBottom: 20,
         padding: "18px 22px",
@@ -114,8 +168,20 @@ export default function OnboardingChecklist({ plan }: Props) {
         background: allDoneFlash ? `linear-gradient(135deg, ${C.greenBg}, ${C.bg})` : C.bg,
         border: `1px solid ${allDoneFlash ? "rgba(34,197,94,0.35)" : C.border}`,
         transition: "background 0.5s, border-color 0.5s",
+        position: "relative",
       }}
     >
+      {/* First-Run-Pulse: animierter Outer-Ring, schaltet sich nach 6 s ab.
+          Pure CSS — kein JS-Animation-Frame, keine Layout-Reflows. */}
+      <style>{`
+        @keyframes wf-onb-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(122,166,255,0.0); }
+          50%      { box-shadow: 0 0 0 6px rgba(122,166,255,0.18); }
+        }
+        .wf-onboarding-pulse {
+          animation: wf-onb-pulse 1.6s ease-in-out 3;
+        }
+      `}</style>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button
@@ -261,7 +327,11 @@ export default function OnboardingChecklist({ plan }: Props) {
             return (
               <li key={s.id}>
                 {isLink && !done ? (
-                  <Link href={s.href} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+                  <Link
+                    href={s.href}
+                    onClick={() => trackStepClick(s.id)}
+                    style={{ display: "block", textDecoration: "none", color: "inherit" }}
+                  >
                     {inner}
                   </Link>
                 ) : inner}
