@@ -6,7 +6,6 @@ import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
-import TestimonialDots from "./components/testimonial-dots";
 import SiteFooter from "./components/SiteFooter";
 import MaintenanceBanner from "./components/MaintenanceBanner";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
@@ -1161,121 +1160,14 @@ export default function Page() {
         {/* DIVIDER */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
 
-        {/* TESTIMONIALS */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px 0" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-              Kundenstimmen
-            </p>
-            <h2 style={{ margin: 0, fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
-              Was unsere Kunden sagen
-            </h2>
-          </div>
-
-          <div className="wf-testimonial-wrapper">
-          <div className="wf-testimonial-grid">
-            {[
-              {
-                initial: "M",
-                gradient: "linear-gradient(135deg,#2563EB,#7C3AED)",
-                name: "Michael R.",
-                role: "Inhaber, Online-Shop für Bio-Feinkost",
-                plan: "Professional",
-                planColor: "#FBBF24",
-                quote: <>Die Investition hat sich nach dem ersten Fix amortisiert. Der Smart-Fix Drawer hat mir gezeigt, <strong style={{ color: "#fff", fontStyle: "normal" }}>wie ich in Elementor in 3 Minuten etwas fixe, wofür ich sonst einen Entwickler gebraucht hätte</strong>.</>,
-              },
-              {
-                initial: "J",
-                gradient: "linear-gradient(135deg,#059669,#0891B2)",
-                name: "Julia S.",
-                role: "Marketing-Leitung, Mittelstands-GmbH",
-                plan: "Agency",
-                planColor: "#a78bfa",
-                quote: <>Endlich ein Tool ohne komplizierte Installation. <strong style={{ color: "#fff", fontStyle: "normal" }}>URL eingegeben, Scan läuft</strong> – und die automatisierten Reports geben mir das Gefühl, dass technisch alles perfekt ist.</>,
-              },
-              {
-                initial: "T",
-                gradient: "linear-gradient(135deg,#D97706,#DC2626)",
-                name: "Dr. Thomas W.",
-                role: "Betreiber einer Gemeinschaftspraxis",
-                plan: "Starter",
-                planColor: "#60a5fa",
-                quote: <>Früher habe ich Stunden damit verbracht, Fehler zu suchen. <strong style={{ color: "#fff", fontStyle: "normal" }}>WebsiteFix findet sie sofort und informiert mich per E-Mail</strong>. Absolute Empfehlung für jeden, der sich auf sein Kerngeschäft konzentrieren will.</>,
-              },
-            ].map(t => (
-              <div key={t.name} className="wf-testimonial-card" style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 16,
-                padding: "28px 28px 24px",
-                display: "flex", flexDirection: "column", gap: 20,
-              }}>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {[1,2,3,4,5].map(i => (
-                    <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                  ))}
-                </div>
-                <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontStyle: "italic", flex: 1 }}>
-                  "{t.quote}"
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: "auto" }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                    background: t.gradient,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 16, fontWeight: 700, color: "#fff",
-                  }}>{t.initial}</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{t.name}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>{t.role}</div>
-                    <div style={{ fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ color: "rgba(255,255,255,0.25)" }}>Nutzt:</span>
-                      <span style={{ color: t.planColor, fontWeight: 700 }}>{t.plan}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>{/* end grid */}
-          </div>{/* end wrapper */}
-
-          {/* Swipe indicator — mobile only */}
-          <TestimonialDots count={3} />
-
-          {/* Logo band */}
-          <div style={{ marginTop: 56, paddingBottom: 64 }}>
-            <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 28 }}>
-              Agenturen, die uns vertrauen
-            </p>
-            <div style={{
-              display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", alignItems: "center",
-            }}>
-              {[
-                "Pixelwerk Agentur",
-                "Studio Nord GmbH",
-                "Webagentur Rheinland",
-                "Digitalhaus München",
-                "Kreativbüro Berlin",
-                "WebFactory Hamburg",
-              ].map(name => (
-                <div key={name} style={{
-                  padding: "10px 20px",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: 8,
-                  background: "rgba(255,255,255,0.02)",
-                  fontSize: 13, fontWeight: 600,
-                  color: "rgba(255,255,255,0.22)",
-                  letterSpacing: "0.01em",
-                  whiteSpace: "nowrap",
-                }}>
-                  {name}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* Soft-Launch (06.05.2026): Komplette Testimonials-Sektion + Agency-
+            Trust-Strip entfernt — alle Namen, Quotes und Agentur-Bezeichnungen
+            waren Platzhalter (Michael R., Julia S., Dr. Thomas W., Pixelwerk
+            etc.). Im B2B-Kontext ist Fake-Social-Proof aktiver Trust-Killer.
+            Sobald echte Pilot-Kunden-Zitate + freigegebene Logos vorliegen:
+            hier wieder einsetzen, jeder Quote mit URL/Branche, Logos als
+            <img> nicht als Text. AgencyStats-Komponente (oben im Hero) bleibt
+            als quantifizierte Trust-Quelle bis dahin. */}
 
         {/* DIVIDER */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />

@@ -53,25 +53,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Testimonial */}
-        <div style={{
-          position: "relative",
-          padding: "20px 22px",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 12,
-        }}>
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.55)", fontStyle: "italic", lineHeight: 1.65 }}>
-            {`\u201EWebsiteFix hat unsere Report-Erstellung von 20 Stunden auf Null reduziert. Unsere Kunden sind begeistert.\u201C`}
-          </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#7C3AED)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>M</div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Markus T.</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Pixelwerk Agentur</div>
-            </div>
-          </div>
-        </div>
+        {/* Soft-Launch (06.05.2026): Platzhalter-Testimonial entfernt
+            (Markus T. / Pixelwerk Agentur war fiktiv). Sobald echte
+            Pilot-Kunden-Quotes verf\u00FCgbar sind, hier ein <blockquote>
+            mit nachpr\u00FCfbarer Quelle einsetzen. */}
       </div>
 
       {/* RIGHT — white login panel */}
