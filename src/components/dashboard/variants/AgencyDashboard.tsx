@@ -27,6 +27,8 @@ import { neon } from "@neondatabase/serverless";
 import TeamWidget from "@/app/dashboard/components/team-widget";
 import AcknowledgeButton from "@/app/dashboard/components/AcknowledgeButton";
 import type { ClassifiableWpIssue } from "@/lib/wp-health";
+import { computeDelegationStats } from "@/lib/issue-delegation";
+import DelegationWidget from "./_shared/DelegationWidget";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
 const C = {
@@ -293,6 +295,15 @@ export default async function AgencyDashboard({
   const scansThisWeek = trendValues.reduce((s, v) => s + v, 0);
   const healthPct = scanHealth.total > 0 ? Math.round((scanHealth.ok / scanHealth.total) * 100) : null;
 
+  // Delegations-Stats aggregieren über ALLE Kunden-Sites des Agentur-Inhabers.
+  // Quelle: last_issues_json pro Matrix-Row (bereits in der LATERAL-Query
+  // mitgeladen). Klassifizierung: senior | junior konservativ via lib/issue-
+  // delegation. Wenn keine Issues vorhanden → Widget rendert null.
+  const allOpenIssues: ClassifiableWpIssue[] = matrixRows
+    .flatMap(r => r.last_issues_json ?? [])
+    .filter((i): i is ClassifiableWpIssue => Boolean(i?.title));
+  const delegationStats = computeDelegationStats(allOpenIssues);
+
   // CSS-Variablen kommen aus dashboard/layout.tsx (Brand-Cascade).
   const accent       = "var(--agency-accent)";
   const accentBg     = "var(--agency-accent-bg)";
@@ -385,6 +396,11 @@ export default async function AgencyDashboard({
           </Link>
         ))}
       </div>
+
+      {/* ── DELEGATIONS-WIDGET (Profit-Center-Hebel) ──
+          Zeigt dem Agentur-Inhaber, wie viel Senior-Lohnkosten er pro Monat
+          an Junior-Delegation sparen kann. Null-render wenn keine Issues. */}
+      <DelegationWidget stats={delegationStats} />
 
       {/* ── Mission-Control-Stack ──
           Vertikales Layout: Live-Monitor (Hero, full-width) → Lead-Ticker
