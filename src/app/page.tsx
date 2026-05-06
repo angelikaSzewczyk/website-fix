@@ -212,12 +212,15 @@ const PLANS = [
     accent: "#475569",
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
+    // KEEP SYNCED with /fuer-agenturen PLANS Starter — wortgleich, gleiche Reihenfolge.
     features: [
-      { text: "Bis zu 3 Projekte",                                   highlight: true },
-      { text: "Wöchentlicher Deep-Scan",                             highlight: true },
+      { text: "Bis zu 3 Projekte · wöchentlicher Deep-Scan",         highlight: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true },
-      { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: false },
-      { text: "Interaktive Site-Map mit Fehler-Übersicht",           highlight: false },
+      { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: true },
+      { text: "SEO-, Technik- & Sicherheits-Check",                  highlight: false },
+      { text: "Kein White-Label",                                    highlight: false, locked: true },
+      { text: "Keine Team-Rollen",                                   highlight: false, locked: true },
+      { text: "Kein Mandanten-Portal",                               highlight: false, locked: true },
     ],
     cta: "Starter wählen",
     href: "/register?plan=starter",
@@ -236,12 +239,14 @@ const PLANS = [
     accent: "#2563EB",
     accentBg: "#EFF6FF",
     accentBorder: "#BFDBFE",
+    // KEEP SYNCED with /fuer-agenturen PLANS Professional — wortgleich, gleiche Reihenfolge.
     features: [
-      { text: "10 Projekte · unbegrenzte Scans",                     highlight: true },
-      { text: "KI-Auto-Fix (Copy-Paste-Code im Drawer)",             highlight: true },
-      { text: "Täglicher Deep-Scan + Slack-Alerts",                  highlight: true },
-      { text: "White-Label PDF + monatlicher Report",                highlight: true },
-      { text: "Score-Verlauf · Client-Tracking · 24/7-Monitoring",   highlight: false },
+      { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true },
+      { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true },
+      { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true },
+      { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
+      { text: "Score-Verlauf · Client-Tracking · 24/7-Monitoring",           highlight: true },
+      { text: "Executive Summary für Endkunden-Reports",                     highlight: false },
     ],
     cta: "Professional starten",
     href: "/register?plan=professional",
@@ -260,15 +265,18 @@ const PLANS = [
     accent: "#7C3AED",
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
+    // KEEP SYNCED with /fuer-agenturen PLANS Agency Scale — wortgleich, gleiche Reihenfolge.
     features: [
-      { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                  highlight: true },
-      { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",             highlight: true },
-      { text: "Mandanten-Portal unter Ihrer Subdomain",                                   highlight: true },
-      { text: "Team-Rollen Admin / Editor / Viewer + Audit-Log",                          highlight: true },
-      { text: "Workflow-API: Jira, Asana, Trello, Slack — bidirektional",                 highlight: false },
-      { text: "Haftungs-Dokumentation + DSGVO-AVV",                                       highlight: false },
+      { text: "Bis zu 50 Mandanten · unbegrenzte Scans",                                 highlight: true },
+      { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true },
+      { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true },
+      { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true },
+      { text: "60-Sekunden-Watchdog mit Slack-/E-Mail-Alarm bei Ausfall",                highlight: true },
+      { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
+      { text: "DSGVO-AVV, Audit-Log + Haftungs-Dokumentation",                           highlight: true },
+      { text: "Priority-Onboarding: 60-Min-Setup-Call mit Account-Manager",              highlight: false },
     ],
-    cta: "Agentur-Marge skalieren →",
+    cta: "Agentur-Marge jetzt skalieren →",
     href: "/register?plan=agency",
     recommended: false,
     enterprise: false,
@@ -1116,29 +1124,45 @@ export default function Page() {
                     {/* Divider */}
                     <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
 
-                    {/* Feature list */}
+                    {/* Feature list — locked: true rendert "✕" in grau (Upsell-
+                        Delta-Hinweis, z.B. "Kein White-Label" in Starter-Card) */}
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                      {plan.features.map(f => (
-                        <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{
-                            width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                            background: f.highlight
-                              ? (plan.recommended ? "#2563EB" : ("scale" in plan && plan.scale) ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
-                              : "rgba(255,255,255,0.07)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12"/>
-                            </svg>
+                      {plan.features.map(f => {
+                        const locked = "locked" in f && f.locked;
+                        return (
+                          <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{
+                              width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                              background: locked
+                                ? "rgba(255,255,255,0.04)"
+                                : f.highlight
+                                  ? (plan.recommended ? "#2563EB" : ("scale" in plan && plan.scale) ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
+                                  : "rgba(255,255,255,0.07)",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                            }}>
+                              {locked ? (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18"/>
+                                  <line x1="6"  y1="6" x2="18" y2="18"/>
+                                </svg>
+                              ) : (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              )}
+                            </div>
+                            <span style={{
+                              fontSize: 13,
+                              fontWeight: locked ? 400 : f.highlight ? 600 : 400,
+                              color: locked
+                                ? "rgba(255,255,255,0.30)"
+                                : f.highlight ? "#fff" : "rgba(255,255,255,0.4)",
+                            }}>
+                              {f.text}
+                            </span>
                           </div>
-                          <span style={{
-                            fontSize: 13, fontWeight: f.highlight ? 600 : 400,
-                            color: f.highlight ? "#fff" : "rgba(255,255,255,0.4)",
-                          }}>
-                            {f.text}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Audience-Footnote — "Für wen ist das?"-Hinweis */}
