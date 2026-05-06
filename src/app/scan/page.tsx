@@ -8,6 +8,7 @@ import MobileNav from "../components/MobileNav";
 import NavAuthLink from "../components/nav-auth-link";
 import SiteFooter from "../components/SiteFooter";
 import { saveScanToStorage } from "@/lib/scan-storage";
+import { isScanBlocked, recordScan, recordRateLimit, formatTimeRemaining as fmtScanGate, FREE_SCAN_LIMIT_MS as SCAN_LIMIT_MS } from "@/lib/scan-gate";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type ScanPhase =
@@ -25,8 +26,9 @@ type ScanResult = {
   pagesScanned: number;
 };
 
-const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000; // 24 Stunden
+// FREE_SCAN_KEY + LIMIT zentralisiert in lib/scan-gate.ts (URL-spezifisches Gate
+// statt globaler Block — Nutzer dürfen weiter neue Domains scannen).
+const FREE_SCAN_LIMIT_MS = SCAN_LIMIT_MS;
 const MAX_FREE_PAGES = 10;
 
 // ── Problem-Pillar-Hero-Varianten (Funnel-Personalisierung) ─────────────
@@ -204,19 +206,20 @@ export default function ScanPage() {
   const scanStartRef = useRef<number>(0);
   const phaseRef = useRef<ScanPhase>("idle");
 
-  // ── Check localStorage 24h gate on mount ───────────────────
+  // ── 24h gate auf mount: pre-fill nur bei ?url= oder Legacy-Block ──────
+  // Per-URL-Gate: solange wir keine konkrete URL kennen, blocken wir NICHT.
+  // Bei ?url=... aus dem Pre-fill-Flow zeigen wir den Block sofort, wenn die
+  // gleiche URL in <24h gescannt wurde. Legacy-Globalblock (alter Format)
+  // bleibt aktiv bis zum natürlichen Ablauf.
   useEffect(() => {
-    try {
-      const ts = localStorage.getItem(FREE_SCAN_KEY);
-      if (ts) {
-        const elapsed = Date.now() - parseInt(ts);
-        if (elapsed < FREE_SCAN_LIMIT_MS) {
-          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
-          setScanBlocked({ blocked: true, nextScanMs: nextMs });
-          setTimeRemaining(formatTimeRemaining(nextMs));
-        }
-      }
-    } catch { /* localStorage not available */ }
+    const sp = (typeof window !== "undefined") ? new URLSearchParams(window.location.search) : null;
+    const prefill = sp?.get("url") ?? "";
+    const gate = isScanBlocked(prefill || undefined);
+    if (gate.blocked) {
+      setScanBlocked({ blocked: true, nextScanMs: gate.nextMs });
+      setTimeRemaining(fmtScanGate(gate.nextMs));
+    }
+    if (prefill) setUrl(prefill);
 
     // Onboarding-Brücke (05.05.2026): wenn der User mit ?problem=<pillar>
     // hierherkommt (Klick auf eine SEO-Card auf der Landingpage), persistieren
@@ -227,8 +230,7 @@ export default function ScanPage() {
     // focusPillar-State, der den Hero-Block der Scan-Page pillar-spezifisch
     // rendert (Wording-Match) — und später die Result-Sortierung steuert.
     try {
-      const sp = new URLSearchParams(window.location.search);
-      const problem = sp.get("problem");
+      const problem = sp?.get("problem");
       if (problem === "visibility" || problem === "health" || problem === "speed") {
         localStorage.setItem("wf_focus_pillar", problem);
         setFocusPillar(problem);
@@ -341,21 +343,18 @@ export default function ScanPage() {
     e.preventDefault();
     if (!url || phase !== "idle") return;
 
-    // Fresh localStorage check — catches stale component state (e.g. after SSR hydration)
-    try {
-      const ts = localStorage.getItem(FREE_SCAN_KEY);
-      if (ts) {
-        const elapsed = Date.now() - parseInt(ts);
-        if (elapsed < FREE_SCAN_LIMIT_MS) {
-          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
-          setScanBlocked({ blocked: true, nextScanMs: nextMs });
-          setTimeRemaining(formatTimeRemaining(nextMs));
-          return;
-        }
-      }
-    } catch { /* localStorage unavailable */ }
-
-    if (scanBlocked.blocked) return;
+    // Fresh gate-check — URL-spezifisch. Andere URLs dürfen weiter gescannt werden.
+    const gate = isScanBlocked(url);
+    if (gate.blocked) {
+      setScanBlocked({ blocked: true, nextScanMs: gate.nextMs });
+      setTimeRemaining(fmtScanGate(gate.nextMs));
+      return;
+    }
+    // State-Reset: falls vorheriger Block für andere URL noch aktiv war, freigeben
+    if (scanBlocked.blocked && !gate.blocked) {
+      setScanBlocked({ blocked: false, nextScanMs: 0 });
+      setTimeRemaining("");
+    }
 
     clearTimers();
     apiDone.current = false;
@@ -412,14 +411,12 @@ export default function ScanPage() {
       apiDone.current = true;
 
       if (data.success) {
-        // Save scan timestamp to localStorage for 24h gate + update in-component state
-        try {
-          const now = Date.now();
-          localStorage.setItem(FREE_SCAN_KEY, now.toString());
-          const nextMs = now + FREE_SCAN_LIMIT_MS;
-          setScanBlocked({ blocked: true, nextScanMs: nextMs });
-          setTimeRemaining(formatTimeRemaining(nextMs));
-        } catch { /* ignore */ }
+        // Per-URL Gate-Eintrag schreiben — andere URLs bleiben scanbar.
+        const now = Date.now();
+        recordScan(url, now);
+        const nextMs = now + FREE_SCAN_LIMIT_MS;
+        setScanBlocked({ blocked: true, nextScanMs: nextMs });
+        setTimeRemaining(fmtScanGate(nextMs));
 
         setPhase("done");
         // Store scan result for /scan/results (canonical writer)
@@ -430,14 +427,16 @@ export default function ScanPage() {
           router.push(`/scan/results?url=${encodeURIComponent(url)}`);
         }, 900);
       } else if (data.errorCode === "RATE_LIMITED") {
-        // Server confirmed the IP is rate-limited — sync localStorage + blocked state
+        // Server-Rate-Limit ist die echte Anti-Abuse-Schicht (IP-basiert).
+        // Wir spiegeln nur den Cooldown ins lokale Gate, damit der UI-Counter
+        // matcht. URL-Argument: same URL → gleicher Block-Eintrag.
         clearTimers();
         apiDone.current = true;
         const now = Date.now();
         const nextMs = data.retryAfterMs ? now + data.retryAfterMs : now + FREE_SCAN_LIMIT_MS;
-        try { localStorage.setItem(FREE_SCAN_KEY, (nextMs - FREE_SCAN_LIMIT_MS).toString()); } catch { /* ignore */ }
+        recordRateLimit(url, nextMs);
         setScanBlocked({ blocked: true, nextScanMs: nextMs });
-        setTimeRemaining(formatTimeRemaining(nextMs));
+        setTimeRemaining(fmtScanGate(nextMs));
         setPhase("idle");
       } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
         clearTimers();

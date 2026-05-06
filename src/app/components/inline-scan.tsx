@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { saveScanToStorage } from "@/lib/scan-storage";
+import { isScanBlocked, recordScan, recordRateLimit, formatTimeRemaining as fmtScanGate, FREE_SCAN_LIMIT_MS } from "@/lib/scan-gate";
 
 type ScanPhase = "idle" | "scanning" | "done" | "error" | "not_wordpress";
-
-const FREE_SCAN_KEY = "wf_free_scan_ts";
-const FREE_SCAN_LIMIT_MS = 24 * 60 * 60 * 1000;
 
 // Timing constants for the crawl animation
 const SETUP_DELAY_MS = 3_000;  // before first page check
@@ -20,16 +18,7 @@ function getPathname(u: string): string {
   try { const p = new URL(u).pathname; return p === "/" ? "(Startseite)" : p; } catch { return u; }
 }
 
-function formatTimeRemaining(nextMs: number): string {
-  const remaining = nextMs - Date.now();
-  if (remaining <= 0) return "0h 0m";
-  const hours   = Math.floor(remaining / 3_600_000);
-  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-  const seconds = Math.floor((remaining % 60_000) / 1_000);
-  if (hours > 0)   return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
-}
+// formatTimeRemaining ist jetzt in lib/scan-gate.ts zentralisiert (fmtScanGate-Alias).
 
 export default function InlineScan({
   placeholder = "https://deine-website.de",
@@ -56,19 +45,14 @@ export default function InlineScan({
   // Real discovered page count — set once /api/scan/discover returns
   const pageTotalRef        = useRef<number | null>(null);
 
-  // ── 24h gate check — runs before first paint ──────────────
+  // ── 24h gate auf mount: Per-URL — Inline-Scan kennt die URL noch nicht,
+  // also nur Legacy-Globalblock prüfen (rec.url === "*" für alte Einträge).
   useEffect(() => {
-    try {
-      const ts = localStorage.getItem(FREE_SCAN_KEY);
-      if (ts) {
-        const elapsed = Date.now() - parseInt(ts);
-        if (elapsed < FREE_SCAN_LIMIT_MS) {
-          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
-          setScanBlocked({ blocked: true, nextMs });
-          setTimeRemaining(formatTimeRemaining(nextMs));
-        }
-      }
-    } catch { /* localStorage unavailable */ }
+    const gate = isScanBlocked();
+    if (gate.blocked) {
+      setScanBlocked({ blocked: true, nextMs: gate.nextMs });
+      setTimeRemaining(fmtScanGate(gate.nextMs));
+    }
     setMounted(true);
   }, []);
 
@@ -81,7 +65,7 @@ export default function InlineScan({
         setScanBlocked({ blocked: false, nextMs: 0 });
         clearInterval(id);
       } else {
-        setTimeRemaining(formatTimeRemaining(scanBlocked.nextMs));
+        setTimeRemaining(fmtScanGate(scanBlocked.nextMs));
       }
     }, 1_000);
     return () => clearInterval(id);
@@ -235,21 +219,16 @@ export default function InlineScan({
     e.preventDefault();
     if (!url || phase === "scanning") return;
 
-    // Fresh localStorage check
-    try {
-      const ts = localStorage.getItem(FREE_SCAN_KEY);
-      if (ts) {
-        const elapsed = Date.now() - parseInt(ts);
-        if (elapsed < FREE_SCAN_LIMIT_MS) {
-          const nextMs = parseInt(ts) + FREE_SCAN_LIMIT_MS;
-          setScanBlocked({ blocked: true, nextMs });
-          setTimeRemaining(formatTimeRemaining(nextMs));
-          return;
-        }
-      }
-    } catch { /* localStorage unavailable */ }
-
-    if (scanBlocked.blocked) return;
+    // URL-spezifischer Gate-Check — andere URLs dürfen weiter gescannt werden.
+    const gate = isScanBlocked(url);
+    if (gate.blocked) {
+      setScanBlocked({ blocked: true, nextMs: gate.nextMs });
+      setTimeRemaining(fmtScanGate(gate.nextMs));
+      return;
+    }
+    if (scanBlocked.blocked && !gate.blocked) {
+      setScanBlocked({ blocked: false, nextMs: 0 });
+    }
 
     cleanup();
     pageTotalRef.current = null;  // reset discover state
@@ -287,15 +266,10 @@ export default function InlineScan({
       const data = await res.json();
 
       if (data.success) {
-        // Set 24h gate — BUT do NOT switch phase yet (avoids rate-limit flash during redirect)
-        try {
-          const now   = Date.now();
-          const nextMs = now + FREE_SCAN_LIMIT_MS;
-          localStorage.setItem(FREE_SCAN_KEY, now.toString());
-          // We do NOT call setScanBlocked here — phase is still "scanning",
-          // so the blocked panel cannot render. It will show correctly after
-          // next page load / component remount.
-        } catch { /* ignore */ }
+        // Per-URL Gate-Eintrag schreiben — andere URLs bleiben scanbar.
+        // setScanBlocked NICHT hier setzen — phase ist noch "scanning",
+        // wir wollen das Block-Panel erst beim nächsten Mount zeigen.
+        recordScan(url);
 
         // Store scan result for /scan/results (canonical writer)
         saveScanToStorage(url, data);
@@ -307,11 +281,11 @@ export default function InlineScan({
         cleanup();
         const now   = Date.now();
         const nextMs = data.retryAfterMs ? now + data.retryAfterMs : now + FREE_SCAN_LIMIT_MS;
-        try { localStorage.setItem(FREE_SCAN_KEY, (nextMs - FREE_SCAN_LIMIT_MS).toString()); } catch { /* ignore */ }
+        recordRateLimit(url, nextMs);
         // Phase → idle FIRST, then set blocked — so the panel only renders in idle
         setPhase("idle");
         setScanBlocked({ blocked: true, nextMs });
-        setTimeRemaining(formatTimeRemaining(nextMs));
+        setTimeRemaining(fmtScanGate(nextMs));
 
       } else if (data.errorCode === "ERR_NOT_WORDPRESS") {
         cleanup();
