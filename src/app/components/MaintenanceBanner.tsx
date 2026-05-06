@@ -39,10 +39,10 @@ export default function MaintenanceBanner() {
       <strong style={{ fontWeight: 700, color: "#FBBF24" }}>Soft-Launch · Wartungsarbeiten:</strong>{" "}
       Bezahlsystem (Stripe) und Aktivierungs-Mails werden gerade fertiggestellt. Beim Start der ersten paar Kunden bitte direkt per Mail melden:{" "}
       <Link
-        href="mailto:hello@website-fix.com?subject=Soft-Launch%20Anfrage"
+        href="mailto:support@websitefix.com?subject=Soft-Launch%20Anfrage"
         style={{ color: "#FBBF24", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 }}
       >
-        hello@website-fix.com
+        support@websitefix.com
       </Link>
       {" — wir richten Sie persönlich ein."}
     </div>
