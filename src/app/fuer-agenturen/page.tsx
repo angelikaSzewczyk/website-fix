@@ -171,8 +171,6 @@ const FAQ = [
 // ─── Theme-Tokens (lokal, damit die Page eigenständig bleibt) ───────────────
 const T = {
   bgDeep:      "#070811",
-  bgPanel:     "#0d0e15",
-  bgPanelAlt:  "#0a0c14",
   card:        "rgba(255,255,255,0.03)",
   cardHover:   "rgba(255,255,255,0.05)",
   border:      "rgba(255,255,255,0.08)",
@@ -323,7 +321,7 @@ export default function AgencyPage() {
         {/* Direkter €-Vergleich Senior vs. Junior — der wichtigste psychologische
             Hook für Inhaber. Konservative Annahmen (1 h/Issue), damit der
             Vergleich nicht wie Marketing-Sales-Math wirkt. */}
-        <section style={{ background: T.bgPanel, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <section>
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.amber, letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -571,7 +569,7 @@ export default function AgencyPage() {
         {/* ─── DELEGATIONS-DASHBOARD MOCKUP ────────────────────────────────── */}
         {/* Beweis-Sektion: zeigt, wie der "Aha-Moment" im Dashboard aussieht.
             Das Mockup spiegelt das echte DelegationWidget aus AgencyDashboard. */}
-        <section style={{ background: T.bgPanelAlt, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <section>
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 48, alignItems: "center" }}>
               {/* Linke Spalte: Erklärtext */}
@@ -728,7 +726,7 @@ export default function AgencyPage() {
         </section>
 
         {/* ─── WORKFLOW-INTEGRATION ────────────────────────────────────────── */}
-        <section style={{ background: T.bgPanel, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <section>
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
             <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 720, marginInline: "auto" }}>
               <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.scale, letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -856,7 +854,7 @@ export default function AgencyPage() {
         </section>
 
         {/* ─── ROI-CALCULATOR ──────────────────────────────────────────────── */}
-        <section style={{ background: T.bgPanelAlt, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <section>
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
               <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.amber, letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -986,7 +984,7 @@ export default function AgencyPage() {
         </section>
 
         {/* ─── FAQ ─────────────────────────────────────────────────────────── */}
-        <section style={{ background: T.bgPanel, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <section>
           <div style={{ maxWidth: 820, margin: "0 auto", padding: "80px 24px" }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
               <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.amber, letterSpacing: "0.1em", textTransform: "uppercase" }}>
