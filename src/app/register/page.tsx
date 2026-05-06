@@ -67,6 +67,25 @@ const PLAN_CONTENT: Record<string, {
   "agency-starter": { headline: <>Der<br />Agentur-Autopilot.</>,       sub: "Agency-Plan.",       bullets: ["Alle Agency-Features", "White-Label Berichte", "Mass-Fix"] },
 };
 
+// ─── Intent-driven content (z.B. von /scan/results "9,90€ Einzel-Fix" CTA) ───
+// "guide" = User will einen einzelnen 9,90€-Guide kaufen, kein Abo. Macht das
+// Versprechen der Landing-Page ("Einmal-Fix ab 9,90 €") explizit auf der Register-Seite.
+const INTENT_CONTENT: Record<string, {
+  headline: React.ReactNode;
+  sub: string;
+  bullets: string[];
+}> = {
+  guide: {
+    headline: <>Konto kostenlos.<br />Fix einmalig 9,90 €.</>,
+    sub: "Erstelle dein Konto in 30 Sekunden — danach wählst du deinen Fix-Guide. Kein Abo, keine versteckten Kosten.",
+    bullets: [
+      "Einzelne Guides ab 9,90 € · Einmalzahlung",
+      "Schritt-für-Schritt-Anleitung (hoster-spezifisch)",
+      "Lebenslanger Zugriff auf gekaufte Guides",
+    ],
+  },
+};
+
 // Fallback: kein Plan in URL → zur Preisseite schicken (kein Free-Zugang)
 const DEFAULT_CONTENT = {
   headline: <>Plan wählen &amp;<br />loslegen.</>,
@@ -90,6 +109,14 @@ function isValidInviteToken(t: string | null): boolean {
 function RegisterContent() {
   const searchParams = useSearchParams();
   const plan         = searchParams.get("plan")  ?? "";
+  // Intent-Param: "guide" = von /scan/results "9,90€ Einzel-Fix"-CTA. Steuert
+  // Headline-Copy + Post-Register-Redirect (zur /scan/checkout statt zum
+  // Stripe-Sub-Checkout). Whitelist-Check verhindert Render-Inject.
+  const intent       = (() => {
+    const i = searchParams.get("intent") ?? "";
+    return i in INTENT_CONTENT ? i : "";
+  })();
+  const isGuideIntent = intent === "guide";
   // Trial-Param (z.B. ?trial=7 für Agency 7-Tage-Test) wird durchgereicht ans
   // Stripe-Checkout. Der eigentliche Trial-Mode wird von der Stripe-API gesetzt,
   // nicht clientseitig — wir reichen ihn nur weiter.
@@ -113,8 +140,10 @@ function RegisterContent() {
   // status === "authenticated" — alles andere zeigt das Formular.
   const { status: sessionStatus } = useSession();
 
-  const content    = PLAN_CONTENT[plan] ?? DEFAULT_CONTENT;
-  const isPaidPlan = plan && plan !== "free";
+  // Intent gewinnt vor Plan — wenn der User mit ?intent=guide kommt, sehen
+  // wir die Guide-Copy egal welcher Plan-Param noch in der URL hängt.
+  const content    = isGuideIntent ? INTENT_CONTENT.guide : (PLAN_CONTENT[plan] ?? DEFAULT_CONTENT);
+  const isPaidPlan = !isGuideIntent && plan && plan !== "free";
 
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState(isInviteFlow ? inviteEmailParam : "");
@@ -246,7 +275,11 @@ function RegisterContent() {
         //   2. signIn() die Session-Cookie gesetzt hat (Bedingung: signInRes.ok)
         // → erst jetzt darf auf den Plan zugegriffen werden. Trial-Tage werden
         //   per Query-Param weitergereicht (Stripe setzt den eigentlichen Trial-Mode).
-        if (isPaidPlan) {
+        if (isGuideIntent) {
+          // Guide-Intent: direkt zur Guide-Checkout-Page mit dem Scan-Kontext.
+          // Der Scan ist via /api/scan/claim oben bereits dem User zugeordnet.
+          window.location.href = "/scan/checkout";
+        } else if (isPaidPlan) {
           window.location.href = checkoutUrlFor(plan);
         } else {
           // Kein Plan → zur Preisseite, nie zum Dashboard
@@ -269,12 +302,18 @@ function RegisterContent() {
     setLoading(true);
     // Hash-Fragmente (#...) sind in HTTP-Redirects nicht erlaubt → NextAuth rejectet sie.
     // Stattdessen: AutoCheckout liest ?checkout= und ?trial= params auf /fuer-agenturen.
-    const params = new URLSearchParams();
-    if (isPaidPlan) params.set("checkout", plan);
-    if (trialDays > 0) params.set("trial", String(trialDays));
-    const callbackUrl = params.toString()
-      ? `/fuer-agenturen?${params.toString()}`
-      : "/fuer-agenturen";
+    let callbackUrl: string;
+    if (isGuideIntent) {
+      // Guide-Intent: nach Google-Auth direkt zur Guide-Checkout-Page.
+      callbackUrl = "/scan/checkout";
+    } else {
+      const params = new URLSearchParams();
+      if (isPaidPlan) params.set("checkout", plan);
+      if (trialDays > 0) params.set("trial", String(trialDays));
+      callbackUrl = params.toString()
+        ? `/fuer-agenturen?${params.toString()}`
+        : "/fuer-agenturen";
+    }
     await signIn("google", { callbackUrl });
   }
 
@@ -349,11 +388,15 @@ function RegisterContent() {
               ? agencyName
                 ? `${agencyName} hat dich eingeladen`
                 : "Team-Einladung annehmen"
-              : "Account erstellen"}
+              : isGuideIntent
+                ? "Konto kostenlos · Fix 9,90 €"
+                : "Account erstellen"}
           </h1>
           <p style={{ fontSize: 14, color: "#64748B", margin: "0 0 24px", lineHeight: 1.6 }}>
             {isInviteFlow
               ? `Erstelle deinen Account mit ${inviteEmailParam}, um ${agencyName ? `dem Team von ${agencyName}` : "deinem Team"} auf WebsiteFix beizutreten.`
+              : isGuideIntent
+              ? "Erstelle dein kostenloses Konto. Im nächsten Schritt wählst du deinen Fix-Guide und zahlst einmalig 9,90 €. Kein Abo."
               : isPaidPlan
               ? trialDays > 0
                 ? `Konto erstellen — ${trialDays} Tage kostenlos testen, danach automatisch der ${plan === "agency" ? "Agency" : "Professional"}-Plan.`

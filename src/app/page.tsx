@@ -10,6 +10,7 @@ import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import TestimonialDots from "./components/testimonial-dots";
 import SiteFooter from "./components/SiteFooter";
+import MaintenanceBanner from "./components/MaintenanceBanner";
 
 // ── Pflicht-Artikel (Blog-Teaser im Experten-Logbuch) ──────────────────
 // Diese 5 Posts spiegeln die GSC-Top-Queries und sind unsere primären
@@ -286,6 +287,9 @@ export default function Page() {
 
   return (
     <>
+      {/* Soft-Launch-Hinweis bis Stripe-Live + Resend-Verify komplett sind */}
+      <MaintenanceBanner />
+
       {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,

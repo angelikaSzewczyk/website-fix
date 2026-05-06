@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
 import MobileNav from "../../components/MobileNav";
 import SiteFooter from "../../components/SiteFooter";
+import MaintenanceBanner from "../../components/MaintenanceBanner";
 
 import { type StoredScan, saveScanToStorage, loadScanFromStorage } from "@/lib/scan-storage";
 import { normalizePlan } from "@/lib/plans";
@@ -75,19 +76,6 @@ function computeIssueCount(d: StoredScan): number {
   ].filter(Boolean).length;
 }
 
-function liabilityLevel(score: number, crit: number): string {
-  if (score < 55 || crit >= 6) return "HOCH";
-  if (score < 80 || crit >= 3) return "MITTEL";
-  return "GERING";
-}
-
-function liabilityColor(level: string): string {
-  if (level === "HOCH")   return "#f59e0b";
-  if (level === "MITTEL") return "#c9820a";
-  return "#22c55e";
-}
-
-
 // ── Feed/XML filter for display ───────────────────────────────────────────────
 const FEED_URL_PATTERN = /\/(feed|feed\/atom|feed\/rss|rss)(\/|$)|\.(xml|txt|json)(\?|#|$)/i;
 
@@ -144,11 +132,29 @@ function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
   return { base, items };
 }
 
+// ── Plausible/GA tracking helper ─────────────────────────────────────────────
+// Single Source für CTA-Events auf der Result-Page. Verwendung: trackCta("Click X", "location-id").
+// no-op wenn Plausible/gtag nicht geladen — silent fail bei try-catch.
+function trackCta(event: string, location: string): void {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as {
+    plausible?: (event: string, opts?: { props?: Record<string, string> }) => void;
+    gtag?:      (cmd: string, event: string, params?: Record<string, string>) => void;
+  };
+  try {
+    w.plausible?.(event, { props: { location } });
+    w.gtag?.("event", event.toLowerCase().replace(/\s+/g, "_"), { location });
+  } catch { /* tracker not ready */ }
+}
+
 // ── Demo constants ────────────────────────────────────────────────────────────
 const DEMO_DOMAIN  = "beispiel-agentur.de";
 const DEMO_SCORE   = 48;
-const DEMO_PAGES   = 42;
-const DEMO_CRIT    = 21; // sum of DEMO_PAGES_LIST errors: 3+5+2+4+1+3+2+1
+// DEMO_PAGES muss zur DEMO_PAGES_LIST.length passen (sonst zeigt Hero "X analysiert"
+// und die Tabelle eine andere Anzahl). Bei Erweiterung der Liste hier mitziehen.
+const DEMO_PAGES   = 14;
+// Sum of DEMO_PAGES_LIST errors: 3+5+0+2+0+4+0+1+0+3+2+0+1+0 = 21
+const DEMO_CRIT    = 21;
 const DEMO_PAGES_LIST: PageItem[] = [
   { path: "/",                    fullUrl: `https://${DEMO_DOMAIN}/`,                  errors: 3, erreichbar: true, altMissing: 3, noindex: false, isSkipped: false },
   { path: "/leistungen",          fullUrl: `https://${DEMO_DOMAIN}/leistungen`,        errors: 5, erreichbar: true, altMissing: 5, noindex: false, isSkipped: false },
@@ -238,11 +244,21 @@ function ProtoRow({ severity, title, detail, law, tier = "anon", manualHint }: {
   );
 }
 
+// Funnel-Personalisierung Stufe B (05.05.2026): wenn der User von einer SEO-Card
+// mit ?problem=<pillar> kam, hat /scan den Pillar in localStorage.wf_focus_pillar
+// persistiert. Wir lesen ihn EINMAL im Parent (ResultsInner) und reichen ihn als
+// Prop runter — damit ProtoPanelContent nicht pro expandierter Zeile neu liest.
+type FocusPillar = "visibility" | "health" | "speed" | null;
+
 // ── Beweis-Modus: expandable panel — entry count ALWAYS equals header "N Fehler" ──
-function ProtoPanelContent({ p, tier = "anon" }: {
+function ProtoPanelContent({ p, tier = "anon", focusPillar = null, speedPreview = null }: {
   p: PageItem;
   /** "anon" = filenames hidden | "free" = filenames + manual hints | "paid" = everything */
   tier?: "anon" | "free" | "paid";
+  /** Vom Parent durchgereicht — vermeidet localStorage-Read pro Zeile. */
+  focusPillar?: FocusPillar;
+  /** Speed-Werte aus builderAudit für die ?problem=speed-Personalisierung. */
+  speedPreview?: { domDepth: number; stylesheetCount: number; googleFonts: number } | null;
 }) {
   const isUnreachable = !p.erreichbar;
   const altImages     = p.altMissingImages ?? [];
@@ -258,21 +274,6 @@ function ProtoPanelContent({ p, tier = "anon" }: {
   if (imgCount   > 0) chips.push({ label: `${imgCount} Bild-Optimierungen`,       color: "#f59e0b" });
   if (formCount  > 0) chips.push({ label: `${formCount} Formular-Optimierungen`,  color: AMBER });
   if (seoCount   > 0) chips.push({ label: `${seoCount} SEO-Optimierungen`,        color: AMBER });
-
-  // Funnel-Personalisierung Stufe B (05.05.2026):
-  // Wenn der User von einer SEO-Card mit ?problem=<pillar> kam, hat /scan
-  // den Pillar in localStorage.wf_focus_pillar persistiert. Hier lesen wir
-  // ihn, um die Befunde-Liste pillar-spezifisch zu sortieren — die match-
-  // Befunde kommen unter einem hervorgehobenen Section-Header zuerst,
-  // andere Befunde darunter unter "Weitere Befunde".
-  const [focusPillar, setFocusPillar] = useState<"visibility" | "health" | "speed" | null>(null);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("wf_focus_pillar");
-    if (stored === "visibility" || stored === "health" || stored === "speed") {
-      setFocusPillar(stored);
-    }
-  }, []);
 
   // Befunde-Sammlung als Array — jeder Eintrag mit Pillar-Tag.
   // Erlaubt es uns, je nach focusPillar zu sortieren ohne die JSX-Switches
@@ -314,7 +315,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
       manualHint="Öffne die Seite im Editor → SEO-Plugin → Meta-Beschreibung ausfüllen (120–160 Zeichen)"
     />
   )});
-  altImages.forEach((img, idx) => findings.push({ pillar: "recht", el: (
+  altImages.forEach((img, idx) => findings.push({ pillar: "visibility", el: (
     <ProtoRow key={`img-named-${idx}`} severity="red" tier={tier}
       title={`<img alt=""> fehlt`}
       detail={img}
@@ -322,7 +323,7 @@ function ProtoPanelContent({ p, tier = "anon" }: {
       manualHint='Füge alt="[Bildbeschreibung]" zum <img>-Tag hinzu — im WordPress-Medien-Manager unter "Alternativtext"'
     />
   )}));
-  Array.from({ length: extraAlt }, (_, i) => findings.push({ pillar: "recht", el: (
+  Array.from({ length: extraAlt }, (_, i) => findings.push({ pillar: "visibility", el: (
     <ProtoRow key={`img-extra-${i}`} severity="red" tier={tier}
       title={`<img alt=""> fehlt`}
       detail="Dateiname nicht ermittelt"
@@ -405,17 +406,41 @@ function ProtoPanelContent({ p, tier = "anon" }: {
         )}
         {matchingFindings.map(f => f.el)}
 
-        {/* Speed-Sonderfall: kein Match-Befund im StoredScan, aber wir
-            bestätigen dem User, dass der Backend-Scan die Speed-Werte
-            erfasst hat — sonst fühlt er sich nicht abgeholt. */}
-        {focusPillar === "speed" && (
+        {/* Speed-Sonderfall: StoredScan hat keine Lighthouse-Werte, aber
+            builderAudit liefert echte Speed-Indikatoren (DOM-Tiefe, Stylesheets,
+            Google-Fonts). Wir zeigen diese als Preview, damit der Speed-Klicker
+            nicht mit einem leeren Versprechen abgespeist wird. */}
+        {focusPillar === "speed" && speedPreview && (
           <div style={{
-            padding: "10px 14px", marginBottom: 4, borderRadius: 7,
+            padding: "12px 14px", marginBottom: 6, borderRadius: 7,
             background: PILLAR_META.speed.bg,
-            border: `1px dashed ${PILLAR_META.speed.bdr}`,
-            fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.55,
+            border: `1px solid ${PILLAR_META.speed.bdr}`,
           }}>
-            <strong style={{ color: PILLAR_META.speed.color }}>Speed-Werte deiner Seite</strong> wurden im Hintergrund-Scan gemessen (Server-Antwortzeit, DOM-Tiefe, Asset-Größen) — du siehst sie im vollen Bericht im Dashboard. Hier sind die anderen Befunde, die wir auf der Seite gefunden haben:
+            <div style={{ fontSize: 11, fontWeight: 800, color: PILLAR_META.speed.color, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 8 }}>
+              Deine Speed-Werte
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+              {[
+                { label: "DOM-Tiefe", value: speedPreview.domDepth, ok: speedPreview.domDepth <= 15, hint: speedPreview.domDepth > 15 ? "über Google-Limit" : "im grünen Bereich" },
+                { label: "Stylesheets", value: speedPreview.stylesheetCount, ok: speedPreview.stylesheetCount <= 8, hint: speedPreview.stylesheetCount > 8 ? "Render-Stau möglich" : "akzeptabel" },
+                { label: "Google-Fonts", value: speedPreview.googleFonts, ok: speedPreview.googleFonts === 0, hint: speedPreview.googleFonts > 0 ? "blockierende Requests" : "lokal/keine" },
+              ].map(m => (
+                <div key={m.label} style={{
+                  padding: "8px 10px", borderRadius: 6,
+                  background: "rgba(0,0,0,0.25)",
+                  border: `1px solid ${m.ok ? "rgba(74,222,128,0.25)" : "rgba(245,158,11,0.3)"}`,
+                }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: m.ok ? "#4ade80" : "#f59e0b", lineHeight: 1 }}>
+                    {m.value}
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 3, fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontSize: 10, color: m.ok ? "rgba(74,222,128,0.7)" : "rgba(245,158,11,0.75)", marginTop: 2 }}>{m.hint}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 9, lineHeight: 1.5 }}>
+              Lighthouse-Score (FCP, LCP, CLS, TTFB) und volle Speed-Roadmap im Dashboard nach Freischaltung.
+            </div>
           </div>
         )}
 
@@ -451,7 +476,11 @@ function ProtoPanelContent({ p, tier = "anon" }: {
           </div>
           <a
             href="#pricing"
-            onClick={e => { e.preventDefault(); document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }); }}
+            onClick={e => {
+              e.preventDefault();
+              trackCta("Click Plan Anchor", "proto-panel-anon");
+              document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+            }}
             style={{
               fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
               background: "rgba(251,191,36,0.12)", color: "#FBBF24",
@@ -478,11 +507,15 @@ function ProtoPanelContent({ p, tier = "anon" }: {
               KI-Auto-Fix (fertiger Code, Copy-Paste-bereit) im Professional Plan
             </span>
           </div>
-          <Link href="/register?plan=professional" style={{
-            fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
-            background: "rgba(251,191,36,0.12)", color: "#FBBF24",
-            border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
-          }}>
+          <Link
+            href="/register?plan=professional"
+            onClick={() => trackCta("Click Professional", "proto-panel-free")}
+            style={{
+              fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 7,
+              background: "rgba(251,191,36,0.12)", color: "#FBBF24",
+              border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", whiteSpace: "nowrap",
+            }}
+          >
             Professional freischalten →
           </Link>
         </div>
@@ -494,7 +527,9 @@ function ProtoPanelContent({ p, tier = "anon" }: {
 // ── Ring chart ────────────────────────────────────────────────────────────────
 function HealthRing({ score, displayScore }: { score: number; displayScore: number }) {
   const r = 52, circ = 2 * Math.PI * r;
-  const color = score >= 80 ? "#FBBF24" : score >= 55 ? "#f59e0b" : "#f59e0b";
+  // Color is fixed to the target score, not the animated displayScore — verhindert Color-Flash
+  // beim Hochzählen, wenn der finale Wert eine andere Farbstufe erreicht als Zwischenwerte.
+  const color = score >= 80 ? "#FBBF24" : score >= 55 ? "#f59e0b" : "#ef4444";
   const fill = (displayScore / 100) * circ;
   return (
     <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: "rotate(-90deg)" }}>
@@ -752,9 +787,38 @@ function FullReportLockedCTA({ tier }: { tier: "anon" | "free" | "paid" }) {
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-          {/* Starter — 29 € */}
+          {/* Pay-per-Fix — 9,90 € (matched mit Landing-Versprechen, kein Abo) */}
+          <Link
+            href="/scan/checkout"
+            onClick={() => trackCta("Click Pay-per-Fix", "full-report-locked")}
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "16px 20px", borderRadius: 12,
+              background: "rgba(251,191,36,0.10)",
+              border: "1px solid rgba(251,191,36,0.45)",
+              textDecoration: "none", color: "#fff",
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2, letterSpacing: "-0.01em" }}>
+                Nur diesen Fehler beheben? Einzel-Guide für 9,90 €
+              </div>
+              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>
+                Einmalzahlung · kein Abo · sofortiger Schritt-für-Schritt-Fix
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </Link>
+
+          {/* Starter — 29 € (Sorglos-Flatrate) */}
           <Link
             href="/register?plan=starter"
+            onClick={() => trackCta("Click Starter Plan", "full-report-locked")}
             style={{
               display: "flex", alignItems: "center", gap: 12,
               padding: "16px 20px", borderRadius: 12,
@@ -770,10 +834,10 @@ function FullReportLockedCTA({ tier }: { tier: "anon" | "free" | "paid" }) {
             </svg>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2, letterSpacing: "-0.01em" }}>
-                Vollen Bericht für 29 € freischalten
+                Sorglos-Flatrate für 29 €/Monat
               </div>
               <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
-                Starter-Plan · 5 Scans/Monat · alle Issues sichtbar · monatlich kündbar
+                Starter-Plan · alle Guides inklusive · 5 Scans/Monat · monatlich kündbar
               </div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -784,6 +848,7 @@ function FullReportLockedCTA({ tier }: { tier: "anon" | "free" | "paid" }) {
           {/* Agency — 7 Tage Test */}
           <Link
             href="/register?plan=agency&trial=7"
+            onClick={() => trackCta("Click Agency Trial", "full-report-locked")}
             style={{
               display: "flex", alignItems: "center", gap: 12,
               padding: "16px 20px", borderRadius: 12,
@@ -860,18 +925,37 @@ function LockedOverlay({ children, tier, ctaHref = "/register?plan=starter" }: {
             Detail-Befunde im vollen Bericht
           </p>
           <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, maxWidth: 320 }}>
-            Konkrete Issues, Lösungs-Snippets und builder-spezifische Anleitungen — ab 29 €/Monat.
+            Konkrete Issues, Lösungs-Snippets und builder-spezifische Anleitungen — Einzel-Guide ab 9,90 € oder Flatrate ab 29 €/Monat.
           </p>
         </div>
-        <Link href={ctaHref} style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          padding: "8px 16px", borderRadius: 8,
-          background: "linear-gradient(90deg, #059669, #10B981)",
-          color: "#fff", fontSize: 12, fontWeight: 800, textDecoration: "none",
-          boxShadow: "0 4px 14px rgba(16,185,129,0.35)",
-        }}>
-          Jetzt freischalten →
-        </Link>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          <Link
+            href="/scan/checkout"
+            onClick={() => trackCta("Click Pay-per-Fix", "locked-overlay")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 14px", borderRadius: 8,
+              background: "rgba(251,191,36,0.12)", color: "#FBBF24",
+              border: "1px solid rgba(251,191,36,0.35)",
+              fontSize: 12, fontWeight: 800, textDecoration: "none",
+            }}
+          >
+            Einzel-Fix 9,90 €
+          </Link>
+          <Link
+            href={ctaHref}
+            onClick={() => trackCta("Click Unlock Plan", "locked-overlay")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 16px", borderRadius: 8,
+              background: "linear-gradient(90deg, #059669, #10B981)",
+              color: "#fff", fontSize: 12, fontWeight: 800, textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(16,185,129,0.35)",
+            }}
+          >
+            Flatrate 29 € →
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -884,6 +968,10 @@ function ResultsInner() {
 
   const [scan, setScan]         = useState<StoredScan | null>(null);
   const [loaded, setLoaded]     = useState(false);
+  // Cache-Miss-Flag: true wenn urlParam vorhanden ist, aber weder Storage
+  // noch /api/scan/cached den Scan finden konnten. Triggert einen eigenen
+  // "Scan abgelaufen"-State statt stillschweigend in Demo-Mode zu fallen.
+  const [scanMissing, setScanMissing] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   // "anon" | "free" | "paid" — determines what's shown in the error panel
   const [userTier, setUserTier] = useState<"anon" | "free" | "paid">("anon");
@@ -894,6 +982,20 @@ function ResultsInner() {
   // ── Unlock animation: anon → free/paid tier transition ───────────────────
   const [unlocking, setUnlocking] = useState(false);
   const tierFirstLoad = useRef<"anon" | "free" | "paid" | null>(null);
+  // ── Focus-Pillar: wird einmal in ResultsInner aus localStorage gelesen
+  // und pro ProtoPanelContent durchgereicht (vermeidet N localStorage-Reads
+  // bei vielen expandierten Reihen). Quelle: /scan setzt wf_focus_pillar bei
+  // ?problem=<pillar>, siehe scan/page.tsx:230-234.
+  const [focusPillar, setFocusPillar] = useState<FocusPillar>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem("wf_focus_pillar");
+      if (stored === "visibility" || stored === "health" || stored === "speed") {
+        setFocusPillar(stored);
+      }
+    } catch { /* localStorage unavailable */ }
+  }, []);
 
   useEffect(() => {
     const norm = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
@@ -915,10 +1017,18 @@ function ResultsInner() {
             // Re-hydrate storage from cache (read-only — no scan token consumed)
             saveScanToStorage(urlParam, { scanData: cached.scanData as never, diagnose: cached.diagnose });
             const reloaded = loadScanFromStorage();
-            if (reloaded) setScan(reloaded);
+            if (reloaded) {
+              setScan(reloaded);
+            } else {
+              // Cache hit but re-hydration failed — treat as miss, eigene Error-State.
+              setScanMissing(true);
+            }
+          } else {
+            // urlParam vorhanden, aber kein Cache-Treffer → expliziter Error-State.
+            setScanMissing(true);
           }
         })
-        .catch(() => { /* cache miss or network error — demo mode */ })
+        .catch(() => { setScanMissing(true); })
         .finally(() => setLoaded(true));
     } else {
       setLoaded(true);
@@ -994,9 +1104,86 @@ function ResultsInner() {
     </div>
   );
 
+  // Cache-Miss: User hat eine URL angefragt, aber Scan ist nicht (mehr) verfügbar.
+  // Verhindert den verwirrenden silent-fallback in den Demo-Modus.
+  if (scanMissing && !scan) return (
+    <>
+      <MaintenanceBanner />
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <BrandLogo />
+          <MobileNav />
+        </div>
+      </nav>
+      <main style={{ background: "#0b0c10", minHeight: "calc(100vh - 58px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
+        <div style={{
+          maxWidth: 480, textAlign: "center",
+          padding: "32px 28px", borderRadius: 16,
+          background: "rgba(122,166,255,0.04)", border: "1px solid rgba(122,166,255,0.20)",
+        }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 13, margin: "0 auto 16px",
+            background: "rgba(122,166,255,0.10)", border: "1px solid rgba(122,166,255,0.30)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h1 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
+            Scan-Ergebnis nicht mehr verfügbar
+          </h1>
+          <p style={{ margin: "0 0 20px", fontSize: 13.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+            Wir konnten den Scan für <strong style={{ color: "#fff" }}>{urlParam || "diese URL"}</strong> nicht laden — wahrscheinlich wurde er aus dem Kurzzeit-Cache entfernt (24 h Lebensdauer) oder du hast den Link in einem neuen Browser geöffnet. Starte den Scan einfach neu — er dauert weniger als eine Minute.
+          </p>
+          <Link
+            href={urlParam ? `/scan?url=${encodeURIComponent(urlParam)}` : "/scan"}
+            onClick={() => trackCta("Click Rescan", "cache-miss")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "11px 22px", borderRadius: 10,
+              background: "linear-gradient(90deg, #059669, #10B981)",
+              color: "#fff", fontSize: 13.5, fontWeight: 800,
+              textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(16,185,129,0.32)",
+            }}
+          >
+            Diese Seite erneut scannen →
+          </Link>
+        </div>
+      </main>
+      <SiteFooter />
+    </>
+  );
+
   // ── Derive display values ────────────────────────────────────────────────
   const isDemo       = !scan;
   const displayDomain = isDemo ? DEMO_DOMAIN : (() => { try { return new URL(scan!.url).host; } catch { return scan!.url; } })();
+
+  // ── Detect hoster from techFingerprint (Strato/IONOS/Kinsta/etc.) ────────
+  // Wird im Hero als Vertrauens-Badge ausgespielt: "Optimierung für [Hoster]
+  // erkannt" — der User sieht sofort, dass wir SEINE Infrastruktur kennen,
+  // nicht nur generische SEO-Floskeln liefern.
+  const detectedHoster = (() => {
+    if (isDemo) return null;
+    const fp = scan?.techFingerprint as { hosting?: { value?: string | null; confidence?: number } } | null | undefined;
+    const value = fp?.hosting?.value;
+    const confidence = fp?.hosting?.confidence ?? 0;
+    if (!value || confidence < 0.5) return null;
+    return value;
+  })();
+
+  // Speed-Preview-Werte für ?problem=speed-User: aus builderAudit ableiten
+  // (echte Datenpunkte statt nur "Wert kommt im vollen Bericht"-Versprechen).
+  const speedPreview = !isDemo && scan?.builderAudit ? {
+    domDepth:        scan.builderAudit.maxDomDepth ?? 0,
+    stylesheetCount: scan.builderAudit.stylesheetCount ?? 0,
+    googleFonts:     scan.builderAudit.googleFontFamilies?.length ?? 0,
+  } : null;
   const score        = isDemo ? DEMO_SCORE   : computeScore(scan!);
   const scoreColor   = score >= 80 ? "#FBBF24" : score >= 55 ? "#f59e0b" : "#ef4444";
   const scoreLabel   = score >= 80 ? "Gut" : score >= 55 ? "Verbesserungsbedarf" : "Kritisch";
@@ -1014,8 +1201,6 @@ function ResultsInner() {
 
   // critErrors is the total sum — NOT a boolean type-count
   const critErrors   = isDemo ? DEMO_CRIT : (totalTableErrors > 0 ? totalTableErrors : computeIssueCount(scan!));
-  const liability    = isDemo ? "HOCH"    : liabilityLevel(score, critErrors > 0 ? Math.min(critErrors, 13) : 0);
-  const liabColor    = liabilityColor(liability);
 
   // Context strings for discovered vs analysed
   const entdeckteUrls  = scan?.entdeckteUrls  ?? 0;
@@ -1036,6 +1221,7 @@ function ResultsInner() {
 
   return (
     <>
+      <MaintenanceBanner />
       {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
@@ -1053,19 +1239,7 @@ function ResultsInner() {
             <div className="hide-sm" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
               <Link
                 href="/checkout?plan=starter"
-                onClick={() => {
-                  // Plausible-Event (no-op wenn Plausible nicht geladen)
-                  if (typeof window !== "undefined") {
-                    const w = window as unknown as {
-                      plausible?: (event: string, opts?: { props?: Record<string, string> }) => void;
-                      gtag?: (cmd: string, event: string, params?: Record<string, string>) => void;
-                    };
-                    try {
-                      w.plausible?.("Click Optimize Button", { props: { location: "scan-header" } });
-                      w.gtag?.("event", "click_optimize_button", { location: "scan-header" });
-                    } catch { /* tracker not ready */ }
-                  }
-                }}
+                onClick={() => trackCta("Click Optimize Button", "scan-header")}
                 className="wf-optimize-cta"
                 style={{
                   fontSize: 13, padding: "8px 20px", borderRadius: 8, fontWeight: 700,
@@ -1140,6 +1314,24 @@ function ResultsInner() {
                 </div>
               )}
               <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° Audit-Protokoll</span>
+              {/* Hoster-Personalisierung: signalisiert sofort, dass wir die Infrastruktur
+                  des Users kennen — Hebel für Vertrauen + spätere Pay-per-Fix-Conversion
+                  ("Strato-spezifischer Fix für 9,90€"). */}
+              {detectedHoster && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "4px 12px", borderRadius: 20,
+                  fontSize: 11, fontWeight: 700, color: "#7aa6ff",
+                  background: "rgba(122,166,255,0.10)", border: "1px solid rgba(122,166,255,0.30)",
+                  letterSpacing: "0.04em",
+                }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+                  </svg>
+                  Optimierung für {detectedHoster} erkannt
+                </span>
+              )}
             </div>
             <h1 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff", lineHeight: 1.15 }}>
               Website-Analyse für{" "}
@@ -1626,10 +1818,10 @@ function ResultsInner() {
                     userTier === "anon" ? (
                       <div style={{ padding: "14px 20px 18px" }}>
                         <LockedOverlay tier={userTier}>
-                          <ProtoPanelContent p={p} tier={userTier} />
+                          <ProtoPanelContent p={p} tier={userTier} focusPillar={focusPillar} speedPreview={speedPreview} />
                         </LockedOverlay>
                       </div>
-                    ) : <ProtoPanelContent p={p} tier={userTier} />
+                    ) : <ProtoPanelContent p={p} tier={userTier} focusPillar={focusPillar} speedPreview={speedPreview} />
                   )}
                 </div>
               );
@@ -1651,7 +1843,11 @@ function ResultsInner() {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
-              <Link href="/register" style={{ fontSize: 13, color: "#FBBF24", textDecoration: "none", fontWeight: 700 }}>
+              <Link
+                href="/register"
+                onClick={() => trackCta("Click Map Footer", "deep-scan-map")}
+                style={{ fontSize: 13, color: "#FBBF24", textDecoration: "none", fontWeight: 700 }}
+              >
                 Schritt-für-Schritt SEO-Fixes + vollständige Analyse freischalten →
               </Link>
             </div>
@@ -1728,7 +1924,11 @@ function ResultsInner() {
                     </div>
                   ))}
                 </div>
-                <Link href="/register?plan=starter" style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                <Link
+                  href="/register?plan=starter"
+                  onClick={() => trackCta("Click Starter Plan", "pricing-tiers")}
+                  style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 700, textDecoration: "none" }}
+                >
                   Starter wählen
                 </Link>
               </div>
@@ -1751,7 +1951,11 @@ function ResultsInner() {
                     </div>
                   ))}
                 </div>
-                <Link href="/register?plan=professional" style={{ display: "block", textAlign: "center", padding: "11px 20px", borderRadius: 10, background: "#FBBF24", color: "#000", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
+                <Link
+                  href="/register?plan=professional"
+                  onClick={() => trackCta("Click Professional Plan", "pricing-tiers")}
+                  style={{ display: "block", textAlign: "center", padding: "11px 20px", borderRadius: 10, background: "#FBBF24", color: "#000", fontSize: 13, fontWeight: 800, textDecoration: "none" }}
+                >
                   Professional starten →
                 </Link>
               </div>
@@ -1771,7 +1975,11 @@ function ResultsInner() {
                     </div>
                   ))}
                 </div>
-                <Link href="/register?plan=agency&trial=7" style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.45)", color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none", boxShadow: "0 3px 14px rgba(124,58,237,0.28)" }}>
+                <Link
+                  href="/register?plan=agency&trial=7"
+                  onClick={() => trackCta("Click Agency Trial", "pricing-tiers")}
+                  style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 10, background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.45)", color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none", boxShadow: "0 3px 14px rgba(124,58,237,0.28)" }}
+                >
                   7 Tage kostenlos testen →
                 </Link>
               </div>
@@ -1785,12 +1993,59 @@ function ResultsInner() {
 
         {/* ── RE-SCAN LINK ── */}
         <div style={{ textAlign: "center", padding: "40px 24px 72px" }}>
-          <Link href="/scan" style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>
-            ← Neue URL scannen
+          <Link
+            href="/scan"
+            onClick={() => trackCta("Click Rescan", "results-footer")}
+            style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", textDecoration: "none" }}
+          >
+            ← Andere Seite scannen
           </Link>
         </div>
 
       </main>
+
+      {/* ── MOBILE STICKY CTA ── */}
+      {/* Auf <768px ist der Top-Optimize-CTA versteckt (hide-sm). Damit mobile
+          User nicht ohne sichtbaren Conversion-Touchpoint scrollen, blenden
+          wir hier einen Sticky-Bottom-Bar ein. Nur für anon/free, nicht paid. */}
+      {!isDemo && userTier !== "paid" && (
+        <div className="wf-mobile-sticky-cta" style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60,
+          padding: "10px 16px",
+          background: "rgba(11,12,16,0.96)", backdropFilter: "blur(12px)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          display: "none",
+          gap: 8,
+        }}>
+          <Link
+            href="/scan/checkout"
+            onClick={() => trackCta("Click Pay-per-Fix", "mobile-sticky")}
+            style={{
+              flex: 1, textAlign: "center",
+              padding: "10px 12px", borderRadius: 9,
+              background: "rgba(251,191,36,0.12)", color: "#FBBF24",
+              border: "1px solid rgba(251,191,36,0.35)",
+              fontSize: 12, fontWeight: 800, textDecoration: "none",
+            }}
+          >
+            9,90 € Einzel-Fix
+          </Link>
+          <Link
+            href="/register?plan=starter"
+            onClick={() => trackCta("Click Starter Plan", "mobile-sticky")}
+            style={{
+              flex: 1.2, textAlign: "center",
+              padding: "10px 12px", borderRadius: 9,
+              background: "linear-gradient(90deg, #059669, #10B981)",
+              color: "#fff",
+              fontSize: 12, fontWeight: 800, textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(16,185,129,0.32)",
+            }}
+          >
+            29 € Flatrate →
+          </Link>
+        </div>
+      )}
 
       <SiteFooter />
 
@@ -1830,6 +2085,10 @@ function ResultsInner() {
           .wf-scan-row > div:first-child { grid-column: 1 / 3; }
           .wf-scan-status { width: auto !important; text-align: left !important; justify-self: start; }
           .wf-scan-errors { width: auto !important; text-align: right !important; }
+          /* Sticky Mobile CTA einblenden — auf Desktop versteckt durch display:none */
+          .wf-mobile-sticky-cta { display: flex !important; }
+          /* Footer-Padding, damit der Re-Scan-Link nicht hinter dem Sticky-Bar verschwindet */
+          main { padding-bottom: 72px; }
         }
         @keyframes wf-pulse-hint {
           0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); border-color: rgba(251,191,36,0.4); }

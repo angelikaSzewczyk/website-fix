@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { neon } from "@neondatabase/serverless";
+import { Resend } from "resend";
 
 /** Invalidiert den scan_cache für alle URLs, die dieser User schonmal gescannt hat.
  *  Wird bei JEDEM Plan-Wechsel gerufen — sonst sieht ein frisch upgegradeter
@@ -54,6 +55,110 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // ── Anon-Guide-Branch ─────────────────────────────────────────────
+    // Käufer hat ohne Login bezahlt. Wir müssen erst den User anlegen
+    // (oder existierenden by-email finden) und dann den Unlock schreiben.
+    // Idempotent: doppelter Webhook-Trigger erzeugt keine Duplikate.
+    if (session.mode === "payment" && session.metadata?.kind === "rescue_guide_anon") {
+      const guideId   = session.metadata.guide_id;
+      const hoster    = session.metadata.hoster ?? "default";
+      const paidCents = session.amount_total ?? 0;
+      // Quellpriorität: Stripe-eingegebene Email → metadata-Fallback (sollte nie greifen)
+      const buyerEmail = (session.customer_details?.email ?? session.metadata.email ?? "")
+        .trim().toLowerCase();
+
+      if (!guideId || !buyerEmail) {
+        console.error("[stripe-webhook] CRITICAL: rescue_guide_anon missing guideId or email", {
+          sessionId: session.id, hasGuideId: Boolean(guideId), hasEmail: Boolean(buyerEmail),
+        });
+        return NextResponse.json({ error: "missing_metadata", sessionId: session.id }, { status: 400 });
+      }
+
+      try {
+        // Find-or-create: bei existierender Email re-use, sonst INSERT mit NULL password.
+        // password_hash IS NULL = der existierende /api/auth/register-Flow (Zeile 118)
+        // erkennt das später als "Account ohne Passwort" und linkt das Passwort
+        // beim ersten Register-Versuch (oder via /forgot-password).
+        const existing = await sql`SELECT id FROM users WHERE email = ${buyerEmail} LIMIT 1` as Array<{ id: string | number }>;
+        let userId: string;
+        let isNewAccount = false;
+        if (existing[0]?.id) {
+          userId = String(existing[0].id);
+        } else {
+          // Email-Local-Part als Default-Name (wird beim ersten Login überschrieben)
+          const defaultName = buyerEmail.split("@")[0];
+          const inserted = await sql`
+            INSERT INTO users (name, email, password_hash, "emailVerified")
+            VALUES (${defaultName}, ${buyerEmail}, NULL, NOW())
+            RETURNING id
+          ` as Array<{ id: string | number }>;
+          userId = String(inserted[0].id);
+          isNewAccount = true;
+        }
+
+        await sql`
+          INSERT INTO user_unlocked_guides (user_id, guide_id, stripe_session_id, paid_amount_cents, hoster)
+          VALUES (${userId}::int, ${guideId}, ${session.id}, ${paidCents}, ${hoster})
+          ON CONFLICT (user_id, guide_id) DO NOTHING
+        `;
+        console.log(`[stripe-webhook] anon guide unlocked: user=${userId} (new=${isNewAccount}) guide=${guideId} email=${buyerEmail}`);
+
+        // Resend-Mail: Claim-Link mit kurzer Erklärung, wie der Käufer auf den Guide
+        // kommt. Bei isNewAccount: Hinweis auf "Passwort setzen via Forgot-Password".
+        // Bei existing: Hinweis auf normalen Login. Failure ist nicht kritisch — der
+        // User landet ohnehin nach Stripe auf der Claim-Page.
+        if (process.env.RESEND_API_KEY) {
+          try {
+            const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
+            const claimUrl = isNewAccount
+              ? `${baseUrl}/forgot-password?email=${encodeURIComponent(buyerEmail)}`
+              : `${baseUrl}/login?callbackUrl=${encodeURIComponent(`/dashboard/guides/${guideId}`)}`;
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            await resend.emails.send({
+              from:    "WebsiteFix <noreply@website-fix.com>",
+              to:      buyerEmail,
+              subject: "Dein Fix-Guide ist freigeschaltet ✓",
+              html: `
+                <div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0F172A;">
+                  <h2 style="margin:0 0 12px;font-size:20px;">Dein Fix-Guide ist bereit.</h2>
+                  <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
+                    Vielen Dank für deinen Kauf. Dein Fix-Guide ist mit deiner E-Mail-Adresse
+                    <strong>${buyerEmail}</strong> verknüpft und steht ab sofort zur Verfügung.
+                  </p>
+                  ${isNewAccount ? `
+                  <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
+                    Wir haben dir ein kostenloses Konto erstellt. Setze dein Passwort, um den
+                    Guide aufzurufen — danach hast du lebenslangen Zugriff auf deine gekauften Guides.
+                  </p>
+                  <a href="${claimUrl}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
+                    Passwort setzen &amp; Guide öffnen
+                  </a>
+                  ` : `
+                  <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
+                    Logge dich mit deiner bekannten E-Mail-Adresse ein, um den Guide zu öffnen.
+                  </p>
+                  <a href="${claimUrl}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
+                    Zum Guide
+                  </a>
+                  `}
+                  <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
+                    Beleg: Stripe-Session ${session.id} · Betrag ${(paidCents/100).toFixed(2).replace(".",",")} €
+                  </p>
+                </div>
+              `,
+            });
+          } catch (mailErr) {
+            console.error("[stripe-webhook] anon guide claim mail failed:", mailErr);
+          }
+        }
+      } catch (err) {
+        console.error("[stripe-webhook] anon guide unlock failed:", err);
+        // 500 → Stripe retried (3-4 mal über Tage). Wir wollen den Unlock nicht verlieren.
+        return NextResponse.json({ error: "anon_unlock_failed", sessionId: session.id }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
 
     // ── Branch-Routing per metadata.kind ──────────────────────────────
     // mode === "payment" + metadata.kind === "rescue_guide" → User-Unlock

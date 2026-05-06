@@ -157,6 +157,67 @@ export async function matchGuidesForIssues(
 }
 
 /**
+ * Anon-Variante von matchGuidesForIssues — kein userId, alle Guides als unlocked=false.
+ * Wird vom anonymen Guide-Checkout-Flow (/scan/checkout) verwendet, damit ein
+ * nicht-eingeloggter Besucher die zu seinem Scan passenden Guides sieht und
+ * direkt einen davon einzeln (9,90 €) kaufen kann.
+ *
+ * Gleiche Trigger-Logik wie matchGuidesForIssues, nur ohne userHasFlatrate-
+ * Lookup und ohne user_unlocked_guides-Join — beides für anon irrelevant.
+ */
+export async function matchGuidesForIssuesAnon(
+  issues: ScanIssueLike[],
+): Promise<Array<{ guide: RescueGuide; relevance: number }>> {
+  if (issues.length === 0) return [];
+  const sql = neon(process.env.DATABASE_URL!);
+
+  type TriggerRow = { guide_id: string; match_type: string; match_value: string; priority: number };
+  const triggers = await sql`
+    SELECT guide_id, match_type, match_value, priority
+    FROM rescue_guide_triggers
+    WHERE guide_id IN (SELECT id FROM rescue_guides WHERE active = TRUE)
+  ` as TriggerRow[];
+
+  const relevance = new Map<string, number>();
+  for (const issue of issues) {
+    const haystack = `${issue.title} ${issue.body ?? ""}`.toLowerCase();
+    const severityBoost = issue.severity === "red" ? 50 : issue.severity === "yellow" ? 20 : 0;
+    for (const t of triggers) {
+      let matched = false;
+      if (t.match_type === "title_keyword" && haystack.includes(t.match_value.toLowerCase())) matched = true;
+      else if (t.match_type === "category" && issue.category === t.match_value)             matched = true;
+      if (matched) {
+        const score = t.priority + severityBoost;
+        const prev  = relevance.get(t.guide_id) ?? 0;
+        if (score > prev) relevance.set(t.guide_id, score);
+      }
+    }
+  }
+
+  if (relevance.size === 0) return [];
+
+  const guideIds = Array.from(relevance.keys());
+  const guides = await sql`
+    SELECT id, title, problem_label, preview, price_cents, stripe_price_id,
+           estimated_minutes, content_json, active
+    FROM rescue_guides
+    WHERE id = ANY(${guideIds}::text[]) AND active = TRUE
+  ` as Array<{
+    id: string; title: string; problem_label: string; preview: string | null;
+    price_cents: number; stripe_price_id: string | null;
+    estimated_minutes: number | null; content_json: RescueGuideContent;
+    active: boolean;
+  }>;
+
+  return guides
+    .map(g => ({
+      guide:     g as RescueGuide,
+      relevance: relevance.get(g.id) ?? 0,
+    }))
+    .sort((a, b) => b.relevance - a.relevance);
+}
+
+/**
  * Lädt einen Guide per ID inkl. Unlock-Status für den aktuellen User.
  * Returnt null wenn der Guide nicht existiert oder inactive ist.
  */
