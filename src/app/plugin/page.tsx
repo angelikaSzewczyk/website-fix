@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { isPaidPlan } from "@/lib/plans";
 
 export const metadata = {
   title: "WebsiteFix Connector-Plugin – Setup",
@@ -22,9 +21,6 @@ const C = {
   amber:       "#FBBF24",
   amberBg:     "rgba(251,191,36,0.10)",
   amberBorder: "rgba(251,191,36,0.30)",
-  scale:       "#A78BFA",
-  scaleBg:     "rgba(167,139,250,0.10)",
-  scaleBorder: "rgba(167,139,250,0.32)",
 } as const;
 
 const PLUGIN_VERSION = "1.2.1";
@@ -32,16 +28,15 @@ const ZIP_HREF       = "/api/plugin/download";
 const PHP_HREF       = "/api/plugin/download/php";
 const README_HREF    = "/api/plugin/download/readme";
 
-type RenderMode = "anon" | "free" | "paid";
+type RenderMode = "anon" | "paid";
 
+// Eingeloggte User haben per Definition einen aktiven Plan — es gibt keine
+// "Free"-Tier. Daher reichen zwei Modi: nicht-eingeloggt (Marketing-Variante)
+// vs. eingeloggt (echter Download). Der API-Endpoint behält den Plan-Check
+// als Defensive für edge-cases (NULL plan-Spalte etc.).
 export default async function PluginPage() {
   const session = await auth();
-  const user = session?.user as { plan?: string } | undefined;
-  const mode: RenderMode = !user
-    ? "anon"
-    : isPaidPlan(user.plan)
-      ? "paid"
-      : "free";
+  const mode: RenderMode = session?.user ? "paid" : "anon";
 
   return (
     <main style={{
@@ -89,9 +84,8 @@ export default async function PluginPage() {
         </div>
 
         {/* ── Mode-spezifischer Content-Block ─────────────────────────────── */}
-        {mode === "anon"  && <AnonBlock />}
-        {mode === "free"  && <FreeBlock />}
-        {mode === "paid"  && <PaidBlock />}
+        {mode === "anon" && <AnonBlock />}
+        {mode === "paid" && <PaidBlock />}
 
         {/* ── Security note (alle Modi) ───────────────────────────────────── */}
         <div style={{
@@ -113,7 +107,7 @@ export default async function PluginPage() {
 
         {/* ── Footer-Link (kontextabhängig) ───────────────────────────────── */}
         <div style={{ textAlign: "center" }}>
-          {mode === "anon" && (
+          {mode === "anon" ? (
             <>
               <Link href="/" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600, marginRight: 16 }}>
                 ← Zurück zur Startseite
@@ -122,18 +116,7 @@ export default async function PluginPage() {
                 Login →
               </Link>
             </>
-          )}
-          {mode === "free" && (
-            <>
-              <Link href="/dashboard" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600, marginRight: 16 }}>
-                ← Zurück zum Dashboard
-              </Link>
-              <Link href="/fuer-agenturen#pricing" style={{ fontSize: 13, color: C.scale, textDecoration: "none", fontWeight: 700 }}>
-                Plan wählen →
-              </Link>
-            </>
-          )}
-          {mode === "paid" && (
+          ) : (
             <Link href="/dashboard" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600 }}>
               ← Zurück zum Dashboard
             </Link>
@@ -224,59 +207,6 @@ function AnonBlock() {
         </ul>
       </div>
     </>
-  );
-}
-
-// ─── Render-Block: Eingeloggt aber kostenlos / kein Plan ──────────────────────
-function FreeBlock() {
-  return (
-    <div style={{
-      background: C.cardSolid,
-      border: `1px solid ${C.scaleBorder}`,
-      borderRadius: 18,
-      padding: "26px 28px",
-      marginBottom: 18,
-      boxShadow: "0 12px 40px rgba(167,139,250,0.10)",
-    }}>
-      <span aria-hidden="true" style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: 36, height: 36, borderRadius: 10, marginBottom: 12,
-        background: C.scaleBg, border: `1px solid ${C.scaleBorder}`, color: C.scale,
-      }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </span>
-      <h2 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
-        Plugin ist im Plan inkludiert — ab Starter
-      </h2>
-      <p style={{ margin: "0 0 16px", fontSize: 13.5, color: C.textSub, lineHeight: 1.65 }}>
-        Du bist eingeloggt, hast aktuell aber keinen aktiven Plan. Das Plugin schaltet
-        den <strong style={{ color: C.text }}>Hybrid-Scan-Mode</strong> in deinem Dashboard
-        frei — bei Starter (29 €/Mo) oder höher inklusive.
-      </p>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <Link href="/fuer-agenturen#pricing" style={{
-          padding: "11px 22px", borderRadius: 10,
-          background: "linear-gradient(90deg,#7C3AED,#A78BFA)",
-          color: "#fff", fontSize: 13.5, fontWeight: 800,
-          textDecoration: "none",
-          boxShadow: "0 4px 16px rgba(124,58,237,0.34)",
-        }}>
-          Plan wählen →
-        </Link>
-        <Link href="/dashboard" style={{
-          padding: "11px 22px", borderRadius: 10,
-          background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${C.borderStr}`,
-          color: C.text, fontSize: 13.5, fontWeight: 700,
-          textDecoration: "none",
-        }}>
-          Zurück zum Dashboard
-        </Link>
-      </div>
-    </div>
   );
 }
 
