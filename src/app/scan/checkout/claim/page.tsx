@@ -23,6 +23,7 @@ import { useSearchParams } from "next/navigation";
 import BrandLogo from "../../../components/BrandLogo";
 import MobileNav from "../../../components/MobileNav";
 import SiteFooter from "../../../components/SiteFooter";
+import MaintenanceBanner from "../../../components/MaintenanceBanner";
 
 function ClaimInner() {
   const params       = useSearchParams();
@@ -123,6 +124,7 @@ function ClaimInner() {
 
   return (
     <>
+      <MaintenanceBanner />
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 58, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <BrandLogo />

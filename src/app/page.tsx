@@ -7,6 +7,7 @@ import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import SiteFooter from "./components/SiteFooter";
+import MaintenanceBanner from "./components/MaintenanceBanner";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 import PluginInfobox from "./components/PluginInfobox";
 
@@ -289,6 +290,7 @@ export default function Page() {
   return (
     <>
       {/* Soft-Launch-Hinweis bis Stripe-Live + Resend-Verify komplett sind */}
+      <MaintenanceBanner />
 
       {/* NAV */}
       <nav style={{

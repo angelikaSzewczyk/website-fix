@@ -15,6 +15,7 @@ import BrandLogo from "../components/BrandLogo";
 import MobileNav from "../components/MobileNav";
 import AgencyStats from "../components/agency-stats";
 import SiteFooter from "../components/SiteFooter";
+import MaintenanceBanner from "../components/MaintenanceBanner";
 import CancelBanner from "./CancelBanner";
 import ComparisonToggle from "./ComparisonToggle";
 import PricingFeatureTable from "./PricingFeatureTable";
@@ -261,6 +262,7 @@ export default function AgencyPage() {
       <Suspense fallback={null}><AutoCheckout /></Suspense>
 
       {/* Soft-Launch-Hinweis bis Stripe-Live + Resend-Verify komplett sind */}
+      <MaintenanceBanner />
 
       {/* Stripe-Cancel-Banner: rendert nur bei ?checkout=cancelled. Suspense
           required wegen useSearchParams im Client-Component. */}
