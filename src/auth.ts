@@ -11,6 +11,12 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PostgresAdapter(pool),
   session: { strategy: "jwt" },
+  // Auth.js v5 lehnt sonst Requests von custom-domains auf Vercel ab
+  // ("UntrustedHost"). Auf Vercel mit eigener Domain (website-fix.com)
+  // muss der Host explizit getrusted werden — Code-Setting ist robuster
+  // als die ENV-Var AUTH_TRUST_HOST, die beim Sensitive-Toggle leer
+  // werden kann.
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,

@@ -3,6 +3,8 @@ import Google from "next-auth/providers/google";
 
 // Edge-kompatible Auth-Config ohne pg-Adapter — nur für Middleware
 export const { auth } = NextAuth({
+  // Custom-Domain auf Vercel — siehe auth.ts für Begründung.
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
