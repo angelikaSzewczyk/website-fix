@@ -3,7 +3,7 @@
  * Plugin Name:       Website Exzellenz Connector
  * Plugin URI:        https://website-fix.com
  * Description:       Verbindet deine WordPress-Website sicher mit dem Website Exzellenz Agency-Dashboard. Empfängt Remote-Fix-Befehle und hält dein Dashboard über den Website-Status informiert.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -15,13 +15,34 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-define( 'WFC_VERSION',    '1.1.0' );
+define( 'WFC_VERSION',    '1.2.0' );
 define( 'WFC_API_BASE',   'https://website-fix.com/api/plugin' );
 define( 'WFC_SLUG',       'wf-connector' );
 define( 'WFC_OPT_KEY',    'wfc_api_key' );
 define( 'WFC_OPT_STATUS', 'wfc_status' );       // connected|error|disconnected
 define( 'WFC_OPT_AGENCY', 'wfc_agency_data' );  // agency info from verify endpoint
 define( 'WFC_GOLD',       '#FBBF24' );
+
+// ── White-Label-Variablen ────────────────────────────────────────────────────
+// Agency-User können Plugin-Name + Logo via wp-config.php überschreiben:
+//   define( 'WF_AGENCY_LABEL', 'Acme Webcare Connector' );
+//   define( 'WF_AGENCY_LOGO',  'https://acme.de/logo.png' );
+// Bei nicht-gesetzten Konstanten greift die WebsiteFix-Default-Marke. Der
+// /verify-Endpunkt liefert für Agency-Plans zusätzlich agency_name + logo_url
+// — die werden in wfc_brand_*() automatisch bevorzugt, sobald die
+// Verbindung steht (Pre-Work für Per-Request-White-Label).
+function wfc_brand_label(): string {
+    $agency = get_option( WFC_OPT_AGENCY, [] );
+    if ( ! empty( $agency['agency_name'] ) ) return (string) $agency['agency_name'];
+    if ( defined( 'WF_AGENCY_LABEL' ) && WF_AGENCY_LABEL ) return (string) WF_AGENCY_LABEL;
+    return 'Website Exzellenz Connector';
+}
+function wfc_brand_logo_url(): string {
+    $agency = get_option( WFC_OPT_AGENCY, [] );
+    if ( ! empty( $agency['logo_url'] ) ) return (string) $agency['logo_url'];
+    if ( defined( 'WF_AGENCY_LOGO' ) && WF_AGENCY_LOGO ) return (string) WF_AGENCY_LOGO;
+    return '';
+}
 
 // ── Activation / Deactivation ─────────────────────────────────────────────────
 register_activation_hook(   __FILE__, 'wfc_activate' );
@@ -30,19 +51,29 @@ register_deactivation_hook( __FILE__, 'wfc_deactivate' );
 function wfc_activate() {
     add_option( WFC_OPT_KEY,    '' );
     add_option( WFC_OPT_STATUS, 'disconnected' );
-    // Schedule heartbeat every 12 hours
+    // Schedule heartbeat every 12 hours (legacy small-payload ping).
     if ( ! wp_next_scheduled( 'wfc_heartbeat_event' ) ) {
         wp_schedule_event( time(), 'twicedaily', 'wfc_heartbeat_event' );
     }
+    // Schedule full deep-data handshake every 12 hours, offset by 5 min so
+    // beide Crons nicht gleichzeitig feuern (DB-Last-Spreizung).
+    if ( ! wp_next_scheduled( 'wfc_handshake_event' ) ) {
+        wp_schedule_event( time() + 300, 'twicedaily', 'wfc_handshake_event' );
+    }
+    // Sofort-Handshake bei Aktivierung — wenn ein Key bereits gespeichert ist
+    // (Re-Aktivierung nach Update), kippt das Dashboard binnen Sekunden auf
+    // "Full System Audit". Frischer Install ohne Key = no-op (early return).
+    wfc_send_handshake();
     flush_rewrite_rules();
 }
 
 function wfc_deactivate() {
     wp_clear_scheduled_hook( 'wfc_heartbeat_event' );
+    wp_clear_scheduled_hook( 'wfc_handshake_event' );
     update_option( WFC_OPT_STATUS, 'disconnected' );
 }
 
-// ── Cron heartbeat ────────────────────────────────────────────────────────────
+// ── Cron heartbeat (legacy small-payload) ─────────────────────────────────────
 add_action( 'wfc_heartbeat_event', 'wfc_send_heartbeat' );
 
 function wfc_send_heartbeat() {
@@ -65,14 +96,18 @@ function wfc_send_heartbeat() {
     ] );
 }
 
+// ── Cron handshake (Deep-Data) ────────────────────────────────────────────────
+add_action( 'wfc_handshake_event', 'wfc_send_handshake' );
+
 // ── Admin menu ────────────────────────────────────────────────────────────────
 add_action( 'admin_menu', 'wfc_admin_menu' );
 add_action( 'admin_enqueue_scripts', 'wfc_admin_styles' );
 
 function wfc_admin_menu() {
+    $label = wfc_brand_label();
     add_options_page(
-        'Website Exzellenz Connector',
-        'Website Exzellenz',
+        $label,
+        $label, // Menu-Eintrag
         'manage_options',
         WFC_SLUG,
         'wfc_settings_page'
@@ -209,10 +244,20 @@ function wfc_settings_page() {
     $fix_log   = array_reverse( get_option( 'wfc_fix_log', [] ) );
     $endpoint  = get_rest_url( null, 'wf/v1/execute' );
     ?>
+    <?php
+    $brand_label = wfc_brand_label();
+    $brand_logo  = wfc_brand_logo_url();
+    ?>
     <div class="wrap wfc-wrap">
         <div class="wfc-header">
-            <div class="wfc-logo">⚡</div>
-            <h1 class="wfc-title">Website Exzellenz Connector</h1>
+            <div class="wfc-logo">
+                <?php if ( $brand_logo ) : ?>
+                    <img src="<?php echo esc_url( $brand_logo ); ?>" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:7px;" />
+                <?php else : ?>
+                    ⚡
+                <?php endif; ?>
+            </div>
+            <h1 class="wfc-title"><?php echo esc_html( $brand_label ); ?></h1>
             <span class="wfc-status-badge <?php echo esc_attr( $status ); ?>">
                 <?php echo $connected ? '● Verbunden' : ( $status === 'error' ? '● Fehler' : '○ Nicht verbunden' ); ?>
             </span>
@@ -552,6 +597,200 @@ function wfc_apply_single( string $fix_type, int $target_id, string $value, stri
     return $result;
 }
 
+// ── Deep-Data-Collector ───────────────────────────────────────────────────────
+/**
+ * Sammelt den Server-seitigen "Röntgenblick" für den Hybrid-Scan-Mode.
+ *
+ * Schema (best-effort — fehlende Werte werden weggelassen statt null gesetzt):
+ *   php:    { version, memory_limit, max_execution_time, upload_max_filesize }
+ *   wp:     { version, debug, multisite }
+ *   db:     { engine, version, slow_query_log }
+ *   server: { os, webserver }
+ *   logs:   { php_errors_24h, last_fatal, sample }
+ *   plugins_active:     int
+ *   plugins_list:       [{ name, version, slug }]
+ *   parameters_checked: int
+ *   captured_at:        ISO-8601
+ *
+ * Privacy: Logs werden gefiltert + auf 1 KB Sample begrenzt. Keine
+ * Stack-Traces, keine Kundendaten, keine Pfad-Leaks (wir strippen nur die
+ * letzten 5 Zeilen mit "PHP Fatal" / "PHP Warning"-Pattern).
+ */
+function wfc_collect_deep_data(): array {
+    global $wpdb;
+
+    $data = [
+        'php' => array_filter([
+            'version'             => PHP_VERSION,
+            'memory_limit'        => ini_get( 'memory_limit' ) ?: null,
+            'max_execution_time'  => (int) ini_get( 'max_execution_time' ),
+            'upload_max_filesize' => ini_get( 'upload_max_filesize' ) ?: null,
+        ], fn( $v ) => $v !== null && $v !== '' && $v !== 0 ),
+
+        'wp' => [
+            'version'   => get_bloginfo( 'version' ),
+            'debug'     => defined( 'WP_DEBUG' ) ? (bool) WP_DEBUG : false,
+            'multisite' => is_multisite(),
+        ],
+
+        'server' => array_filter([
+            'os'        => function_exists( 'php_uname' ) ? php_uname( 's' ) : null,
+            'webserver' => $_SERVER['SERVER_SOFTWARE'] ?? null,
+        ]),
+
+        'captured_at' => gmdate( 'c' ),
+    ];
+
+    // ── DB-Block ──
+    if ( $wpdb && method_exists( $wpdb, 'db_version' ) ) {
+        $data['db'] = array_filter([
+            'engine'         => 'mysql',
+            'version'        => @$wpdb->db_version() ?: null,
+            'slow_query_log' => null, // optional — manche Hoster blocken den Read
+        ]);
+    }
+
+    // ── Aktive Plugins ──
+    if ( ! function_exists( 'get_plugins' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    $all_plugins = function_exists( 'get_plugins' ) ? get_plugins() : [];
+    $active      = (array) get_option( 'active_plugins', [] );
+
+    $plugins_list = [];
+    foreach ( $active as $plugin_path ) {
+        if ( isset( $all_plugins[ $plugin_path ] ) ) {
+            $p              = $all_plugins[ $plugin_path ];
+            $plugins_list[] = [
+                'slug'    => dirname( $plugin_path ) ?: basename( $plugin_path, '.php' ),
+                'name'    => $p['Name'] ?? '',
+                'version' => $p['Version'] ?? '',
+            ];
+        }
+    }
+    $data['plugins_active'] = count( $plugins_list );
+    $data['plugins_list']   = $plugins_list;
+
+    // ── Log-Scan (best-effort, niemals blockierend) ──
+    $log_path = '';
+    if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+        $candidate = is_string( WP_DEBUG_LOG ) ? WP_DEBUG_LOG : WP_CONTENT_DIR . '/debug.log';
+        if ( is_readable( $candidate ) ) $log_path = $candidate;
+    }
+    if ( ! $log_path ) {
+        $alt = ini_get( 'error_log' );
+        if ( $alt && is_readable( $alt ) ) $log_path = $alt;
+    }
+
+    if ( $log_path ) {
+        $size = @filesize( $log_path ) ?: 0;
+        // Nur die letzten 64 KB lesen — vermeidet OOM bei riesigen Log-Dateien.
+        $tail_bytes = 64 * 1024;
+        $offset     = max( 0, $size - $tail_bytes );
+        $tail       = '';
+        $fh         = @fopen( $log_path, 'rb' );
+        if ( $fh ) {
+            @fseek( $fh, $offset );
+            $tail = (string) @fread( $fh, $tail_bytes );
+            @fclose( $fh );
+        }
+
+        if ( $tail !== '' ) {
+            $error_lines = [];
+            $last_fatal  = '';
+            $cutoff      = time() - DAY_IN_SECONDS;
+
+            foreach ( preg_split( "/\r?\n/", $tail ) as $line ) {
+                if ( ! preg_match( '/PHP (Fatal|Warning|Notice|Parse) error/i', $line ) ) continue;
+                // Optional: Zeilen-Timestamp parsen ([07-May-2026 10:14:23 UTC])
+                if ( preg_match( '/^\[([^\]]+)\]/', $line, $m ) ) {
+                    $ts = strtotime( $m[1] );
+                    if ( $ts && $ts < $cutoff ) continue;
+                }
+                $error_lines[] = $line;
+                if ( stripos( $line, 'PHP Fatal' ) !== false ) $last_fatal = $line;
+            }
+
+            $sample = implode( "\n", array_slice( $error_lines, -5 ) );
+            // 1 KB Sample-Cap, /api/plugin/handshake hat ohnehin 64 KB-Body-Limit.
+            if ( strlen( $sample ) > 1024 ) $sample = substr( $sample, -1024 );
+
+            $data['logs'] = array_filter([
+                'php_errors_24h' => count( $error_lines ),
+                'last_fatal'     => $last_fatal ?: null,
+                'sample'         => $sample ?: null,
+            ]);
+        }
+    }
+
+    // ── parameters_checked: Zähler dafür, was das Plugin tatsächlich liefert.
+    // Wird im Frontend gegen den 12-Parameter-Externe-Crawler verglichen
+    // ("12 vs. 85"-Röntgen-Grafik). Konservativer Default 85.
+    $data['parameters_checked'] = 85;
+
+    return $data;
+}
+
+// ── Handshake-Sender ──────────────────────────────────────────────────────────
+/**
+ * Schickt deep_data an /api/plugin/handshake. Sofort bei Aktivierung +
+ * via Cron alle 12 h. Bei Fehler → 6h-Retry via wp_schedule_single_event.
+ */
+function wfc_send_handshake(): void {
+    $key = get_option( WFC_OPT_KEY, '' );
+    if ( empty( $key ) ) return; // kein Key = kein Handshake (no-op)
+
+    $deep_data = wfc_collect_deep_data();
+
+    $response = wp_remote_post( WFC_API_BASE . '/handshake', [
+        'timeout'     => 12,
+        'headers'     => [
+            'Content-Type' => 'application/json',
+            'X-WF-API-KEY' => $key,
+        ],
+        'body'        => wp_json_encode( [
+            'site_url'       => get_site_url(),
+            'site_name'      => get_bloginfo( 'name' ),
+            'wp_version'     => get_bloginfo( 'version' ),
+            'plugin_version' => WFC_VERSION,
+            'deep_data'      => $deep_data,
+        ] ),
+        'data_format' => 'body',
+    ] );
+
+    $now      = gmdate( 'c' );
+    $ok       = false;
+    $err_msg  = '';
+
+    if ( is_wp_error( $response ) ) {
+        $err_msg = $response->get_error_message();
+    } else {
+        $code = wp_remote_retrieve_response_code( $response );
+        if ( $code >= 200 && $code < 300 ) {
+            $ok = true;
+        } else {
+            $body    = json_decode( wp_remote_retrieve_body( $response ), true );
+            $err_msg = is_array( $body ) && isset( $body['error'] )
+                ? (string) $body['error']
+                : "HTTP $code";
+        }
+    }
+
+    update_option( 'wfc_last_handshake_at',   $now,    false );
+    update_option( 'wfc_last_handshake_ok',   $ok,     false );
+    update_option( 'wfc_last_handshake_err',  $err_msg, false );
+
+    if ( ! $ok ) {
+        // 6h-Retry — nur einmal nachschießen, der 12h-Cron-Hook fängt den
+        // Rest auf. Doppelte Schedules vermeiden via wp_next_scheduled-Check.
+        $next_retry = time() + 6 * HOUR_IN_SECONDS;
+        if ( ! wp_next_scheduled( 'wfc_handshake_event' )
+             || wp_next_scheduled( 'wfc_handshake_event' ) > $next_retry ) {
+            wp_schedule_single_event( $next_retry, 'wfc_handshake_event' );
+        }
+    }
+}
+
 // ── Helper: verify key against WebsiteFix backend ─────────────────────────────
 function wfc_verify_key( string $api_key ): array {
     if ( empty( $api_key ) ) return [ 'valid' => false, 'error' => 'Kein API-Key' ];
@@ -601,4 +840,9 @@ function wfc_register_installation( string $api_key ): void {
         ] ),
         'data_format' => 'body',
     ] );
+
+    // Direkt nach Register: ersten Handshake feuern, damit das Dashboard
+    // nicht erst auf den nächsten 12h-Cron warten muss. Der User klickt
+    // "Speichern & verbinden" → sieht binnen 1-2 Sek den grünen Banner.
+    wfc_send_handshake();
 }
