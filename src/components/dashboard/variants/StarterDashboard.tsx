@@ -1673,8 +1673,12 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑧ WP-PLUGIN ANBINDUNG — hidden in focus mode */}
-          {!isNewScan && <div style={{ marginBottom: 28 }}>
+          {/* ⑧ WP-PLUGIN ANBINDUNG — Pro+ only.
+              Starter sieht stattdessen den HybridScanBanner + die XrayCompare-
+              Card oben + den Plugin-Download via /plugin. Diese Section ist
+              spezifisch das Mass-Fixer/White-Label-Setup, das nur ab Pro
+              relevant ist (mit Agency-Upsell für Pro-User). */}
+          {!isNewScan && isProfessionalPlus && <div style={{ marginBottom: 28 }}>
             <SectionLabel color={isAgency ? "#a78bfa" : D.blueSoft}>
               {isAgency ? "Agency · Exklusiv" : "Agency Feature"}
             </SectionLabel>

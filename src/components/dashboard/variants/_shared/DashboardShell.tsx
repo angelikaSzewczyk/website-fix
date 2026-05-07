@@ -24,7 +24,7 @@ import Link from "next/link";
 import WfOnboardingTour from "@/app/dashboard/components/WfOnboardingTour";
 import WfProGuidedTour from "@/app/dashboard/components/WfProGuidedTour";
 import WebsiteSettingsModal, { type WebsiteSettingsTarget } from "./WebsiteSettingsModal";
-import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan } from "@/lib/plans";
+import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan, getPlanQuota } from "@/lib/plans";
 
 // ── Design tokens (mirrored from Variants) ───────────────────────────────────
 const D = {
@@ -142,19 +142,28 @@ export default function DashboardShell({
   const isPro     = isAtLeastProfessional(plan);
   const isAgency  = isAgencyPlan(plan);
 
-  // Slot-Label per Plan. Agency = "Unlimited", sonst kanonisches Limit.
+  // Slot-Label aus Source-of-Truth (lib/plans.ts:PLAN_QUOTAS) statt hardcoded.
+  // Vorher stand "3 Slots" für Starter — Drift gegenüber dem echten Limit (1).
   const slotLabel = isAgency
     ? "Unlimited"
-    : isStarter
-      ? "3 Slots"
-      : isPro
-        ? "10 Slots"
-        : "1 / 1";
+    : getPlanQuota(plan).projectsLabel;
 
-  // Upgrade-CTA-Label per Plan. Agency = keine höhere Stufe → kein Button.
-  const upgradeLabel = isAgency ? null
-    : isPro              ? "Auf Agency →"
-    :                      "Upgrade →";
+  // Upgrade-CTA — Plan-aware:
+  //   Starter (Solo) → "Auf Pro →" (nicht direkt Agency, das wäre Über-Sprung)
+  //   Pro            → "Auf Agency →"
+  //   Agency         → kein Button
+  const upgradeLabel = isAgency
+    ? null
+    : isPro
+      ? "Auf Agency →"
+      : "Auf Professional →";
+
+  // Plan-aware Upgrade-Ziel: Starter → #pricing-Anker mit Pro-Highlight,
+  // Pro → Agency-Anker. Beide Varianten landen auf /fuer-agenturen#pricing,
+  // aber ein Plan-Param hilft analytisch zu trennen wo der Klick herkommt.
+  const upgradeHref = isPro
+    ? "/fuer-agenturen?upgrade=agency#pricing"
+    : "/fuer-agenturen?upgrade=professional#pricing";
 
   async function handleResetAll() {
     if (resetting) return;
@@ -364,13 +373,16 @@ export default function DashboardShell({
               )}
             </div>
 
-            {/* Upgrade CTA — nur wenn nicht Agency */}
+            {/* Upgrade CTA — nur wenn nicht Agency. Plan-aware Ziel:
+                Starter → Pro, Pro → Agency. Kein Über-Sprung von Starter
+                direkt auf Agency (würde Solo-User abschrecken). */}
             {upgradeLabel && (
-              <Link href="/fuer-agenturen#pricing" style={{
+              <Link href={upgradeHref} style={{
                 padding: "6px 16px", borderRadius: D.radiusSm,
-                background: D.blue, color: "#fff",
+                background: isPro ? "linear-gradient(90deg,#7C3AED,#A78BFA)" : D.blue,
+                color: "#fff",
                 fontSize: 12, fontWeight: 700, textDecoration: "none",
-                boxShadow: D.blueGlow,
+                boxShadow: isPro ? "0 4px 14px rgba(124,58,237,0.40)" : D.blueGlow,
               }}>
                 {upgradeLabel}
               </Link>

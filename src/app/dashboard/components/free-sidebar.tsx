@@ -347,14 +347,16 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           <span style={{ fontSize: 9, fontWeight: 800, color: "#7aa6ff", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>
             Starter
           </span>
-          <Link href="/fuer-agenturen#pricing" style={{
+          {/* Upgrade-Link gezielt auf Pro (nicht direkt Agency) — Solo-User
+              soll erst die nächste Tier-Stufe sehen, kein 8x-Sprung. */}
+          <Link href="/fuer-agenturen?upgrade=professional#pricing" style={{
             display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800,
             color: "#10B981", letterSpacing: "0.06em", textDecoration: "none",
           }}>
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 12 12 4 4 12"/><line x1="12" y1="20" x2="12" y2="4"/>
             </svg>
-            UPGRADE
+            AUF PRO
           </Link>
         </div>
       )}
@@ -468,6 +470,14 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               Nur noch {remaining} {remaining === 1 ? "Scan" : "Scans"} diesen Monat — Professional entsperrt <strong style={{ color: "#10B981" }}>25/Monat</strong>.
             </p>
           )}
+          {limitReached && !isAgencyPlan && (
+            <p style={{ margin: "8px 0 0", fontSize: 10, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+              Reset am 1. des Monats. Mehr Scans:{" "}
+              <Link href="/fuer-agenturen?upgrade=professional#pricing" style={{ color: "#10B981", textDecoration: "none", fontWeight: 700 }}>
+                auf Pro upgraden →
+              </Link>
+            </p>
+          )}
         </div>
       </div>
 
@@ -574,8 +584,13 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               {firstName.charAt(0).toUpperCase()}
             </span>
           </div>
-          <div style={{ flex: 1, textAlign: "left", minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: S.text, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+          <div style={{ flex: 1, textAlign: "left", minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Name + Plan-Badge gestapelt, damit der Name bei knapper Sidebar-
+                Breite nicht abgeschnitten wird ("Angeli…"). Vertikaler Stack
+                + min-width: 0 erzwingt sauberes ellipsis nur wenn wirklich nötig. */}
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: S.text,
+                        lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis",
+                        whiteSpace: "nowrap", maxWidth: "100%" }}>
               {firstName}
             </p>
             <PlanBadge canonical={canonical} />

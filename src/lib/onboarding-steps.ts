@@ -72,14 +72,16 @@ export const ONBOARDING_STEPS: Record<OnboardingPlanKey, {
         id:    "pro_bulk_import",
         label: "Mehrere Projekte hinzufügen",
         hint:  "Bis zu 10 Sites parallel — jede mit eigenem Score-Verlauf.",
-        href:  "/dashboard",
+        href:  "/dashboard/scan",
         icon:  "📁",
       },
       {
         id:    "pro_deep_analysis",
         label: "Code-Analyse verstehen",
         hint:  "Anders als der Basis-Scan zeigt der Drawer Copy-Paste-fertige Fixes.",
-        href:  "/dashboard",
+        // Anker auf das DeepData-Grid im Dashboard — Browser scrollt smooth
+        // dorthin und der User sieht die Plugin-only Detail-Metriken.
+        href:  "/dashboard#deep-data-section",
         icon:  "🔍",
       },
       {

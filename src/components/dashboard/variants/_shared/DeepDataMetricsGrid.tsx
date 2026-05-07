@@ -330,11 +330,13 @@ export default function DeepDataMetricsGrid({ pluginActive, deepData }: Props) {
 
   return (
     <section
+      id="deep-data-section"
       data-testid={pluginActive && deepData ? "deep-data-grid" : "deep-data-grid-locked"}
       style={{
         marginBottom: 18,
         display: "grid", gap: 12,
         gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+        scrollMarginTop: 80, // damit der Sticky-Header beim Anker-Scroll nicht überdeckt
       }}
     >
       {liveCards}

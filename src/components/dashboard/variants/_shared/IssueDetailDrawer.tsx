@@ -394,7 +394,9 @@ export function DrawerPanel({
             pageUrl={pageUrl}
           />
 
-          {/* ① 404 notice banner — framed as a fixable opportunity */}
+          {/* ① 404 notice banner — entschärft formuliert (Scan-Zeitpunkt-
+              Snapshot kann temporäre Server-Fehler / Cloudflare-Challenges /
+              User-Agent-Blocks fangen). User soll selbst verifizieren können. */}
           {is404 && (
             <div style={{
               borderRadius: 8,
@@ -402,14 +404,37 @@ export function DrawerPanel({
               border: "1px solid rgba(245,158,11,0.3)",
               padding: "12px 16px",
               marginBottom: 14,
-              display: "flex", gap: 10,
+              display: "flex", flexDirection: "column", gap: 10,
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.amber} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.amber, lineHeight: 1.55 }}>
-                Seite nicht erreichbar: Diese URL ist verlinkt, gibt aber 404 zurück — eine einfache Weiterleitung behebt das Problem.
-              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={D.amber} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: D.amber, lineHeight: 1.55 }}>
+                  Zum Scan-Zeitpunkt nicht erreichbar (HTTP 4xx/5xx). Wenn die Seite jetzt
+                  funktioniert, war es ein temporärer Fehler oder Cloudflare-Challenge —
+                  bitte unten verifizieren.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, paddingLeft: 28, flexWrap: "wrap" }}>
+                <a
+                  href={pageUrl}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 11.5, fontWeight: 700,
+                    padding: "5px 11px", borderRadius: 6,
+                    background: "rgba(245,158,11,0.10)",
+                    border: `1px solid ${D.amberBorder}`,
+                    color: D.amber, textDecoration: "none",
+                  }}
+                >
+                  Im neuen Tab öffnen ↗
+                </a>
+                <span style={{ fontSize: 11, color: D.textMuted, alignSelf: "center" }}>
+                  Bei Erfolg: Issue beim nächsten Scan automatisch entfernt.
+                </span>
+              </div>
             </div>
           )}
 
@@ -497,11 +522,12 @@ export function DrawerPanel({
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* 404 fix card shown alongside source card */}
+                {/* 404 fix card shown alongside source card — Wording: nur
+                    wenn nach Verifikation oben tatsächlich tot. */}
                 {is404 && (
                   <DrawerCard
                     fixKey="404"
-                    label="Seite nicht erreichbar — Weiterleitung einrichten"
+                    label="Falls dauerhaft tot: Weiterleitung einrichten"
                     kind="warning"
                   />
                 )}
