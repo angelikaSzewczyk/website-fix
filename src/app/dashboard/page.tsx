@@ -701,6 +701,7 @@ export default async function DashboardPage({
           <RescueDashboardWithGuides
             firstName={firstName}
             url={lastScan.url}
+            plan={plan}
             lastScanId={String(lastScan.id)}
             lastScanAt={lastScan.created_at}
             speedScore={speedScore}
@@ -716,6 +717,7 @@ export default async function DashboardPage({
           firstName={firstName}
           domain="Noch keine Website"
           url=""
+          plan={plan}
           lastScanId={null}
           lastScanAt={null}
           speedScore={0}
@@ -844,6 +846,7 @@ export default async function DashboardPage({
 async function RescueDashboardWithGuides(props: {
   firstName: string;
   url: string;
+  plan: string;
   lastScanId: string;
   lastScanAt: string;
   speedScore: number;
@@ -912,6 +915,7 @@ async function RescueDashboardWithGuides(props: {
       firstName={props.firstName}
       domain={domain}
       url={props.url}
+      plan={props.plan}
       lastScanId={props.lastScanId}
       lastScanAt={props.lastScanAt}
       speedScore={props.speedScore}

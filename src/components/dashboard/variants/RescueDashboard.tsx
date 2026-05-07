@@ -45,6 +45,8 @@ interface Props {
   firstName: string;
   domain:    string;
   url:       string;
+  /** Plan-String — wird in den Support-Anfragen als Metadata mitgeschickt. */
+  plan?:     string;
   /** Letzte Scan-ID — für den Drilldown-Link zum Detail-Bericht. */
   lastScanId: string | null;
   /** ISO-String des letzten Scans, oder null wenn noch nicht gescannt. */
@@ -187,7 +189,7 @@ const PILLARS: Array<{
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function RescueDashboard({
-  firstName, domain, url, lastScanId, lastScanAt,
+  firstName, domain, url, plan, lastScanId, lastScanAt,
   speedScore, issues, redCount, yellowCount,
   guideByPillar,
 }: Props) {
@@ -231,6 +233,8 @@ export default function RescueDashboard({
       // Reuse den existierenden Support-Endpoint mit einem speziellen
       // "agency-support-request"-Marker. Backend kann das später als
       // separate Mail-Vorlage rendern.
+      // Metadata vollständig: Plan + Projekt-URL + Timestamp, damit das
+      // Admin-Mail-Template nicht "—" zeigt (Bug 07.05.2026).
       await fetch("/api/support", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -238,6 +242,12 @@ export default function RescueDashboard({
           subject: `Agentur-Support angefragt für ${domain}`,
           message: `Hallo Team, ich bräuchte Hilfe bei der Umsetzung der Empfehlungen für ${url}. Letzter Scan: ${lastScanLabel}, ${totalIssues} Issues offen.`,
           requestType: "agency-support",
+          metadata: {
+            activeProjectUrl: url || null,
+            plan:             plan ?? null,
+            timestamp:        new Date().toISOString(),
+            requestType:      "agency-support",
+          },
         }),
       }).catch(() => {});
       setSupportSent(true);
