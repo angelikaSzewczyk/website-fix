@@ -762,17 +762,18 @@ function PremiumStep({ index, step, accent }: {
             <CodeBlock language={step.code.language} snippet={step.code.snippet} />
           )}
 
-          {/* Screenshot oder Placeholder */}
-          {screenshotUrl ? (
+          {/* Screenshot — nur wenn echte URL vorhanden. Placeholder-Boxen
+              bewusst entfernt (07.05.2026) — sie haben Layout aufgeblasen
+              ohne Wert zu liefern. Sobald wir echte Screenshots schießen,
+              greift dieser Branch automatisch. */}
+          {screenshotUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={screenshotUrl}
               alt={screenshotAlt}
               style={{ marginTop: 14, maxWidth: "100%", borderRadius: 8, border: `1px solid ${T.border}` }}
             />
-          ) : screenshotAlt && screenshotAlt !== `Screenshot ${humanize(step.title)}` ? (
-            <ScreenshotPlaceholder alt={screenshotAlt} />
-          ) : null}
+          )}
         </div>
       </div>
     </div>

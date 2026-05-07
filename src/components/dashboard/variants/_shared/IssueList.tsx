@@ -682,6 +682,22 @@ function AccordionItem({
 }
 
 // ─── Upgrade Modal ────────────────────────────────────────────────────────────
+/**
+ * UpgradeModal — zwei klar getrennte Lösungs-Pfade:
+ *
+ *   1. "Einzel-Fix für 9,90 €" (Pay-per-Fix) — One-Time, kein Abo, Sofort-Anleitung
+ *      mit allen Hoster-Variants und Code-Snippets.
+ *   2. "Pro-Flatrate für 89 €/Mo" — alle Guides inklusive, plus KI-Auto-Fix
+ *      via Plugin, Score-Verlauf, White-Label-PDF.
+ *
+ * Kein "Auto-Fix via Plugin"-Wording mehr im Header — das war verwirrend, weil
+ * das Read-Only-Plugin AB STARTER inklusive ist (Diagnose). Auto-Fix-Features
+ * (KI) sind hier explizit Pro-Tier zugeordnet.
+ *
+ * Bei "Schritt-für-Schritt-Anleitung freischalten" und "Auto-Fix via Plugin"
+ * wird derselbe Modal gezeigt — der User soll beide Pfade nebeneinander sehen
+ * und entscheiden.
+ */
 function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
     <>
@@ -693,10 +709,11 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         position: "fixed", top: "50%", left: "50%",
         transform: "translate(-50%, -50%)",
         zIndex: 1101,
-        width: "min(480px, calc(100vw - 32px))",
+        width: "min(560px, calc(100vw - 32px))",
+        maxHeight: "90vh", overflowY: "auto",
         background: "linear-gradient(135deg, #0d1520 0%, #0f1a2e 100%)",
         border: "1px solid rgba(251,191,36,0.25)",
-        borderRadius: 20, padding: "36px 32px 28px",
+        borderRadius: 20, padding: "32px 28px 24px",
         boxShadow: "0 32px 80px rgba(0,0,0,0.8)",
         animation: "wf-sr-modal-in 0.3s cubic-bezier(0.22,1,0.36,1) both",
       }}>
@@ -707,59 +724,101 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
           }
         `}</style>
 
-        {/* Icon */}
-        <div style={{
-          width: 56, height: 56, borderRadius: "50%", margin: "0 auto 20px",
-          background: "rgba(251,191,36,0.08)", border: "1.5px solid rgba(251,191,36,0.25)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FBBF24"
-            strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-          </svg>
-        </div>
-
-        <h2 style={{ textAlign: "center", margin: "0 0 8px", fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-          Auto-Fix via Plugin
+        <h2 style={{ textAlign: "center", margin: "0 0 6px", fontSize: 19, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
+          Anleitung freischalten
         </h2>
-        <p style={{ textAlign: "center", margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
-          Das WebsiteFix WordPress-Plugin behebt Alt-Texte, Meta-Descriptions und<br/>
-          kaputte Links automatisch — direkt in deiner WordPress-Installation.
+        <p style={{ textAlign: "center", margin: "0 0 22px", fontSize: 12.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.6 }}>
+          Zwei Wege zur Lösung — wähl den, der zu deinem Bedarf passt.
         </p>
 
-        {/* Feature list */}
-        {[
-          "1-Klick Alt-Text-Generierung via KI",
-          "Automatische Meta-Descriptions",
-          "Redirect-Manager für 404-Seiten",
-          "Unlimitierte Scans & Echtzeit-Monitoring",
-        ].map(f => (
-          <div key={f} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "7px 0",
-            borderBottom: "1px solid rgba(255,255,255,0.04)",
-          }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E"
-              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{f}</span>
-          </div>
-        ))}
-
-        <Link href="/fuer-agenturen#pricing" style={{
-          display: "block", textAlign: "center",
-          marginTop: 24, padding: "13px 24px", borderRadius: 10,
-          background: "#FBBF24", color: "#0b0c10",
-          fontSize: 14, fontWeight: 800, textDecoration: "none",
-          boxShadow: "0 4px 24px rgba(251,191,36,0.3)",
+        {/* ── Option 1: Pay-per-Fix 9,90 € ─────────────────────────────────── */}
+        <div style={{
+          padding: "16px 18px", borderRadius: 12, marginBottom: 12,
+          background: "rgba(251,191,36,0.05)",
+          border: "1px solid rgba(251,191,36,0.30)",
         }}>
-          Auf Professional upgraden →
-        </Link>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.10em", textTransform: "uppercase" }}>
+              ⚡ Notfall · einmalig
+            </span>
+            <span style={{ fontSize: 18, fontWeight: 900, color: "#FBBF24" }}>9,90 €</span>
+          </div>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>
+            Einzel-Fix-Guide für genau diesen Fehler
+          </p>
+          <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+            {["Schritt-für-Schritt mit Hoster-Variants", "Copy-Paste-fertige Code-Snippets", "Lebenslanger Zugriff", "Kein Abo"].map(f => (
+              <li key={f} style={{ display: "flex", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+                <span style={{ color: "#FBBF24", fontWeight: 700 }}>✓</span>
+                {f}
+              </li>
+            ))}
+          </ul>
+          <Link href="/dashboard" style={{
+            display: "block", textAlign: "center",
+            padding: "10px 20px", borderRadius: 9,
+            background: "linear-gradient(90deg,#F59E0B,#FBBF24)",
+            color: "#0b0c10", fontSize: 13, fontWeight: 800, textDecoration: "none",
+          }}>
+            Einzel-Guide auswählen →
+          </Link>
+        </div>
+
+        {/* ── Option 2: Pro-Flatrate ───────────────────────────────────────── */}
+        <div style={{
+          padding: "16px 18px", borderRadius: 12, marginBottom: 14,
+          background: "rgba(16,185,129,0.06)",
+          border: "1px solid rgba(16,185,129,0.32)",
+        }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", letterSpacing: "0.10em", textTransform: "uppercase" }}>
+              ★ Empfohlen · Flatrate
+            </span>
+            <span style={{ fontSize: 18, fontWeight: 900, color: "#10B981" }}>89 €/Mo</span>
+          </div>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>
+            Professional — alle Anleitungen + KI-Auto-Fix
+          </p>
+          <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              "Alle Schritt-für-Schritt-Guides inklusive",
+              "KI-Auto-Fix via Plugin (Alt-Text, Meta, 404)",
+              "10 Projekte · 25 Deep-Scans/Monat",
+              "Score-Verlauf + White-Label-PDF",
+            ].map(f => (
+              <li key={f} style={{ display: "flex", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+                <span style={{ color: "#10B981", fontWeight: 700 }}>✓</span>
+                {f}
+              </li>
+            ))}
+          </ul>
+          <Link href="/fuer-agenturen?upgrade=professional#pricing" style={{
+            display: "block", textAlign: "center",
+            padding: "10px 20px", borderRadius: 9,
+            background: "linear-gradient(90deg,#059669,#10B981)",
+            color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none",
+            boxShadow: "0 4px 16px rgba(16,185,129,0.32)",
+          }}>
+            Auf Professional upgraden →
+          </Link>
+        </div>
+
+        {/* ── Plugin-Klarstellung ──────────────────────────────────────────── */}
+        <p style={{
+          margin: "0 0 14px", padding: "10px 12px", borderRadius: 9,
+          background: "rgba(122,166,255,0.05)",
+          border: "1px solid rgba(122,166,255,0.20)",
+          fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.6,
+        }}>
+          💡 <strong style={{ color: "rgba(255,255,255,0.75)" }}>Hinweis:</strong> Das Read-Only-Plugin
+          (Hybrid-Scan-Diagnose) ist bereits ab Starter inklusive.
+          Auto-Fix-Funktionen via KI sind ab Professional verfügbar.
+        </p>
+
         <button onClick={onClose} style={{
-          display: "block", width: "100%", marginTop: 10,
+          display: "block", width: "100%",
           background: "none", border: "none", cursor: "pointer",
-          fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "inherit",
+          fontSize: 12, color: "rgba(255,255,255,0.30)", fontFamily: "inherit",
         }}>
           Schließen
         </button>
