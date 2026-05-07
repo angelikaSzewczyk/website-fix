@@ -1475,7 +1475,7 @@ function ResultsInner() {
                         </p>
                       </div>
                       <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.32)", lineHeight: 1.45 }}>
-                        Im Gratis-Scan werden nur die wichtigsten Blocker geprüft. Title-Tag-Strukturen, Meta-Description-Coverage und H1-Hierarchie über alle Unterseiten analysieren wir im vollen Bericht.
+                        Wir haben deine Seite gescannt — die priorisierte Schritt-für-Schritt-Anleitung mit Code-Snippets und Builder-Variants schalten wir im vollen Bericht frei.
                       </p>
                     </div>
                   )}
@@ -1916,9 +1916,9 @@ function ResultsInner() {
                   <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>29€</span>
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für Einzelunternehmer & kleine Websites</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für Selbstständige · 1 eigene Website</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
-                  {["3 Projekte", "Wöchentlicher Deep-Scan", "Smart-Fix Anleitungen", "Score-Verlauf (7 Tage)"].map(f => (
+                  {["1 Projekt · 5 Deep-Scans/Monat", "SEO, Technik, Performance, BFSG", "🔒 Read-Only Plugin (Hybrid-Scan)", "5 Smart-Fix-Guides inklusive"].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
                       <span style={{ color: "#FBBF24", fontSize: 11 }}>✓</span> {f}
                     </div>
@@ -1943,9 +1943,9 @@ function ResultsInner() {
                   <span style={{ fontSize: 36, fontWeight: 800, color: "#FBBF24", letterSpacing: "-0.04em" }}>89€</span>
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für wachsende Projekte & Agenturen</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für Owner-Operators · Solo-Pro</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
-                  {["10 Projekte", "Täglicher Deep-Scan", "Smart-Fix Drawer (vollständig)", "KI-Auto-Fix (Copy-Paste-fertig)", "24/7 Monitoring + E-Mail-Alerts", "Monatlicher PDF-Bericht"].map(f => (
+                  {["10 Projekte · 25 Deep-Scans/Monat", "Smart-Fix Drawer (vollständig)", "KI-Auto-Fix (Copy-Paste-fertig)", "Score-Verlauf · 24/7-Monitoring", "White-Label PDF (Logo + Brand)", "Alle Smart-Fix-Guides inklusive"].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                       <span style={{ color: "#FBBF24", fontSize: 11 }}>✓</span> {f}
                     </div>
@@ -1967,9 +1967,9 @@ function ResultsInner() {
                   <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>249€</span>
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>White-Label für Agenturen mit Mandantenverwaltung</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Agentur-Chef · Mandantengeschäft · 50 Sites</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
-                  {["Unlimited Projekte", "Full White-Label (eigene Domain)", "Lead-Magnet Widget für Neukunden", "Auto-Report an Endkunden", "Kunden-Logins + Mandantenverwaltung"].map(f => (
+                  {["50 Mandanten · Scan-Flatrate", "🔒 White-Label Plugin (dein Branding)", "Lead-Magnet Widget für Neukunden", "60-Sek-Watchdog + Slack/Email-Alerts", "Team-Rollen + Delegations-Hebel"].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
                       <span style={{ color: "#a78bfa", fontSize: 11 }}>✓</span> {f}
                     </div>
