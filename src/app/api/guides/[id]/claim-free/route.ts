@@ -28,8 +28,10 @@ export const runtime = "nodejs";
 /** Anzahl der Guides, die ein Starter-User kostenlos freischalten kann.
  *  Synchron mit Pricing-Card-Bullet "5 inklusive". Bei Änderung hier
  *  parallel die PLANS-Arrays in app/page.tsx, fuer-agenturen/page.tsx
- *  und scan/results/page.tsx anpassen. */
-export const STARTER_FREE_QUOTA = 5;
+ *  und scan/results/page.tsx anpassen.
+ *  Nicht exportieren — Next.js erlaubt in route.ts nur HTTP-Methods +
+ *  Config-Felder als Exports. */
+const STARTER_FREE_QUOTA = 5;
 
 export async function POST(
   _req: Request,

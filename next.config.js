@@ -4,9 +4,12 @@ const nextConfig = {
   // statisch ausgeliefert werden — der /api/plugin/download-Endpoint
   // streamt sie nach Auth-Check. Vercel muss den Ordner trotzdem in den
   // Serverless-Function-Bundle aufnehmen, sonst ENOENT zur Laufzeit.
-  outputFileTracingIncludes: {
-    "/api/plugin/download": ["./private-assets/plugin/**/*"],
-    "/api/plugin/download/[file]": ["./private-assets/plugin/**/*"],
+  // In Next.js 14 unter experimental — wird in 15 promotet.
+  experimental: {
+    outputFileTracingIncludes: {
+      "/api/plugin/download": ["./private-assets/plugin/**/*"],
+      "/api/plugin/download/[file]": ["./private-assets/plugin/**/*"],
+    },
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
