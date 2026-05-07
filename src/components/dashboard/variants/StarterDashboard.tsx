@@ -1888,11 +1888,12 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#a78bfa" }}>Plugin herunterladen</p>
                   </div>
                   <p style={{ margin: "0 0 16px", fontSize: 12, color: D.textMuted, lineHeight: 1.7, flex: 1 }}>
-                    Lade das <strong style={{ color: "rgba(255,255,255,0.6)" }}>website-fix-helper.zip</strong> herunter, installiere es in WordPress (Plugins → Installieren → Plugin hochladen) und trage deinen API-Key ein.
+                    Lade das <strong style={{ color: "rgba(255,255,255,0.6)" }}>websitefix-connector.zip</strong> herunter, installiere es in WordPress (Plugins → Installieren → Plugin hochladen) und trage deinen API-Key ein.
                   </p>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <a
-                      href="/downloads/website-fix-helper.zip"
+                      href="/downloads/websitefix-connector.zip"
+                      download
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "9px 18px", borderRadius: 8,
