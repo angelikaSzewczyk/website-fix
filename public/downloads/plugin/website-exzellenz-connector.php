@@ -3,7 +3,7 @@
  * Plugin Name:       Website Exzellenz Connector
  * Plugin URI:        https://website-fix.com
  * Description:       Verbindet deine WordPress-Website sicher mit dem Website Exzellenz Agency-Dashboard. Empfängt Remote-Fix-Befehle und hält dein Dashboard über den Website-Status informiert.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -14,8 +14,30 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║ WHITE-LABEL CONFIG — für Agency-Scale-Kunden                             ║
+// ╠══════════════════════════════════════════════════════════════════════════╣
+// ║ Trage hier dein Agentur-Branding ein, bevor du das Plugin an deine       ║
+// ║ Mandanten-Site ausrollst. Beide Werte leer lassen = Default-Branding     ║
+// ║ ("Website Exzellenz Connector").                                         ║
+// ║                                                                          ║
+// ║ Sobald die Verbindung mit einem Agency-Plan-Key steht, übernimmt das     ║
+// ║ Plugin AUTOMATISCH agency_name + logo_url aus dem /verify-Endpunkt       ║
+// ║ — dieses Array ist nur der Pre-Connect-Fallback (Plugin zeigt schon vor  ║
+// ║ dem ersten Save dein Branding).                                          ║
+// ║                                                                          ║
+// ║ Override per wp-config.php möglich:                                      ║
+// ║   define( 'WFC_WHITE_LABEL_CONFIG', [ 'agency_name' => '…', … ] );       ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+if ( ! defined( 'WFC_WHITE_LABEL_CONFIG' ) ) {
+    define( 'WFC_WHITE_LABEL_CONFIG', [
+        'agency_name'     => '', // z.B. "Acme Webcare Connector"
+        'custom_logo_url' => '', // z.B. "https://acme.de/assets/logo.png"
+    ] );
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
-define( 'WFC_VERSION',    '1.2.0' );
+define( 'WFC_VERSION',    '1.2.1' );
 define( 'WFC_API_BASE',   'https://website-fix.com/api/plugin' );
 define( 'WFC_SLUG',       'wf-connector' );
 define( 'WFC_OPT_KEY',    'wfc_api_key' );
@@ -23,24 +45,38 @@ define( 'WFC_OPT_STATUS', 'wfc_status' );       // connected|error|disconnected
 define( 'WFC_OPT_AGENCY', 'wfc_agency_data' );  // agency info from verify endpoint
 define( 'WFC_GOLD',       '#FBBF24' );
 
-// ── White-Label-Variablen ────────────────────────────────────────────────────
-// Agency-User können Plugin-Name + Logo via wp-config.php überschreiben:
-//   define( 'WF_AGENCY_LABEL', 'Acme Webcare Connector' );
-//   define( 'WF_AGENCY_LOGO',  'https://acme.de/logo.png' );
-// Bei nicht-gesetzten Konstanten greift die WebsiteFix-Default-Marke. Der
-// /verify-Endpunkt liefert für Agency-Plans zusätzlich agency_name + logo_url
-// — die werden in wfc_brand_*() automatisch bevorzugt, sobald die
-// Verbindung steht (Pre-Work für Per-Request-White-Label).
+/**
+ * Liest den Anzeige-Namen für die White-Label-Branding-Logik.
+ *
+ * Priorität (high → low):
+ *   1. Agency-Daten aus /verify (sobald verbunden — Live-Update bei
+ *      jedem Save).
+ *   2. WFC_WHITE_LABEL_CONFIG['agency_name'] (statisches Pre-Connect-
+ *      Branding aus dieser Datei oder via wp-config-Override).
+ *   3. Default-Marke "Website Exzellenz Connector".
+ */
 function wfc_brand_label(): string {
     $agency = get_option( WFC_OPT_AGENCY, [] );
     if ( ! empty( $agency['agency_name'] ) ) return (string) $agency['agency_name'];
-    if ( defined( 'WF_AGENCY_LABEL' ) && WF_AGENCY_LABEL ) return (string) WF_AGENCY_LABEL;
+
+    $cfg = defined( 'WFC_WHITE_LABEL_CONFIG' ) ? WFC_WHITE_LABEL_CONFIG : [];
+    if ( is_array( $cfg ) && ! empty( $cfg['agency_name'] ) ) return (string) $cfg['agency_name'];
+
     return 'Website Exzellenz Connector';
 }
+
+/**
+ * Liefert die Logo-URL für die Settings-Page-Anzeige + WordPress-Menü.
+ * Gleiche Priorität wie wfc_brand_label(). Leerstring = Plugin nutzt
+ * den ⚡-Emoji-Default.
+ */
 function wfc_brand_logo_url(): string {
     $agency = get_option( WFC_OPT_AGENCY, [] );
     if ( ! empty( $agency['logo_url'] ) ) return (string) $agency['logo_url'];
-    if ( defined( 'WF_AGENCY_LOGO' ) && WF_AGENCY_LOGO ) return (string) WF_AGENCY_LOGO;
+
+    $cfg = defined( 'WFC_WHITE_LABEL_CONFIG' ) ? WFC_WHITE_LABEL_CONFIG : [];
+    if ( is_array( $cfg ) && ! empty( $cfg['custom_logo_url'] ) ) return (string) $cfg['custom_logo_url'];
+
     return '';
 }
 
@@ -49,7 +85,10 @@ register_activation_hook(   __FILE__, 'wfc_activate' );
 register_deactivation_hook( __FILE__, 'wfc_deactivate' );
 
 function wfc_activate() {
-    add_option( WFC_OPT_KEY,    '' );
+    // autoload='no' für Secret-Felder: API-Key + Agency-Daten landen NICHT
+    // im autoload-Cache (sonst stehen sie in jedem Memory-Dump). Wird erst
+    // bei expliziter get_option-Abfrage aus der DB geladen.
+    add_option( WFC_OPT_KEY,    '', '', 'no' );
     add_option( WFC_OPT_STATUS, 'disconnected' );
     // Schedule heartbeat every 12 hours (legacy small-payload ping).
     if ( ! wp_next_scheduled( 'wfc_heartbeat_event' ) ) {
@@ -191,11 +230,11 @@ function wfc_settings_page() {
         if ( $action === 'save_key' ) {
             $raw = sanitize_text_field( wp_unslash( $_POST['wfc_api_key'] ?? '' ) );
             if ( str_starts_with( $raw, 'wf_live_' ) && strlen( $raw ) >= 20 ) {
-                update_option( WFC_OPT_KEY, $raw );
+                update_option( WFC_OPT_KEY, $raw, 'no' );
                 $verify = wfc_verify_key( $raw );
                 if ( $verify['valid'] ?? false ) {
                     update_option( WFC_OPT_STATUS, 'connected' );
-                    update_option( WFC_OPT_AGENCY,  $verify );
+                    update_option( WFC_OPT_AGENCY,  $verify, 'no' );
                     // Register this installation with our backend
                     wfc_register_installation( $raw );
                     echo '<div class="notice notice-success is-dismissible"><p>
@@ -217,10 +256,22 @@ function wfc_settings_page() {
         }
 
         if ( $action === 'disconnect' ) {
-            update_option( WFC_OPT_KEY,    '' );
+            update_option( WFC_OPT_KEY,    '', 'no' );
             update_option( WFC_OPT_STATUS, 'disconnected' );
             delete_option( WFC_OPT_AGENCY );
             echo '<div class="notice notice-info is-dismissible"><p>Verbindung getrennt.</p></div>';
+        }
+
+        if ( $action === 'resync' ) {
+            // Manueller Handshake-Trigger — bypassed den 12h-Cron für sofortigen Re-Sync.
+            wfc_send_handshake();
+            $ok = get_option( 'wfc_last_handshake_ok', false );
+            if ( $ok ) {
+                echo '<div class="notice notice-success is-dismissible"><p>✓ Handshake erfolgreich — Dashboard wurde aktualisiert.</p></div>';
+            } else {
+                $err = (string) get_option( 'wfc_last_handshake_err', 'Unbekannter Fehler' );
+                echo '<div class="notice notice-error is-dismissible"><p>✗ Handshake fehlgeschlagen: ' . esc_html( $err ) . '</p></div>';
+            }
         }
 
         if ( $action === 'test' ) {
@@ -228,7 +279,7 @@ function wfc_settings_page() {
             $result = wfc_verify_key( $key );
             if ( $result['valid'] ?? false ) {
                 update_option( WFC_OPT_STATUS, 'connected' );
-                update_option( WFC_OPT_AGENCY,  $result );
+                update_option( WFC_OPT_AGENCY,  $result, 'no' );
                 echo '<div class="notice notice-success is-dismissible"><p>✓ Verbindung aktiv.</p></div>';
             } else {
                 update_option( WFC_OPT_STATUS, 'error' );
@@ -329,6 +380,64 @@ function wfc_settings_page() {
                 </div>
             </form>
         </div>
+
+        <!-- ── Deep-Scan Handshake Status (Moment-of-Truth-Indikator) ── -->
+        <?php
+        $hs_at  = get_option( 'wfc_last_handshake_at', '' );
+        $hs_ok  = get_option( 'wfc_last_handshake_ok', false );
+        $hs_err = get_option( 'wfc_last_handshake_err', '' );
+        if ( $hs_at || $connected ) :
+            // Lokale Anzeige im WP-Admin-Format (server-zeitzone-bewusst)
+            $hs_label = $hs_at
+                ? wp_date( 'd. M Y · H:i', strtotime( $hs_at ) ) . ' UTC'
+                : '— noch keiner —';
+        ?>
+        <div class="wfc-card">
+            <p class="wfc-card-title">Deep-Scan-Handshake</p>
+            <p class="wfc-card-desc">
+                Sobald das Plugin Server-Telemetrie an dein Dashboard sendet, springt es dort
+                automatisch von <strong>"Oberflächen-Check"</strong> auf <strong>"Full System Audit"</strong>.
+            </p>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.04em;
+                    <?php echo $hs_ok
+                        ? 'background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;'
+                        : ( $hs_at ? 'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;' : 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;' ); ?>
+                ">
+                    <?php echo $hs_ok ? '● OK' : ( $hs_at ? '● Fehler' : '○ Wartet' ); ?>
+                </span>
+                <div style="flex:1;min-width:180px;">
+                    <div style="font-size:11px;color:#94a3b8;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:2px;">
+                        Letzter erfolgreicher Handshake
+                    </div>
+                    <div style="font-size:13px;color:#0f172a;font-weight:700;font-family:monospace;">
+                        <?php echo esc_html( $hs_label ); ?>
+                    </div>
+                </div>
+                <?php if ( $connected ) : ?>
+                <form method="post" action="" style="margin:0;">
+                    <?php wp_nonce_field( 'wfc_nonce' ); ?>
+                    <button type="submit" name="wfc_action" value="resync"
+                            class="wfc-btn wfc-btn-ghost" style="padding:7px 14px;font-size:12px;">
+                        ↻ Jetzt synchronisieren
+                    </button>
+                </form>
+                <?php endif; ?>
+            </div>
+            <?php if ( ! $hs_ok && $hs_err ) : ?>
+            <p style="margin:10px 0 0;font-size:11.5px;color:#dc2626;font-family:monospace;">
+                Letzter Fehler: <?php echo esc_html( $hs_err ); ?>
+            </p>
+            <?php endif; ?>
+            <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;line-height:1.55;">
+                Plan: alle 12 h automatischer Sync via WP-Cron. Bei Fehler 6h-Retry. Nächster Cron-Run:
+                <code><?php
+                    $next = wp_next_scheduled( 'wfc_handshake_event' );
+                    echo $next ? esc_html( wp_date( 'd. M H:i', $next ) ) : 'nicht geplant';
+                ?></code>
+            </p>
+        </div>
+        <?php endif; ?>
 
         <!-- ── REST Endpoint info ── -->
         <div class="wfc-card">
@@ -818,7 +927,7 @@ function wfc_verify_key( string $api_key ): array {
     }
 
     if ( $body['valid'] ?? false ) {
-        update_option( 'wfc_connected_at', gmdate( 'c' ) );
+        update_option( 'wfc_connected_at', gmdate( 'c' ), 'no' );
     }
 
     return $body;
