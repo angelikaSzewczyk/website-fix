@@ -56,6 +56,14 @@ export default function GuideUnlockModal({
   const [hoster, setHoster] = useState<string>("default");
   const [busy, setBusy]     = useState(false);
   const [error, setError]   = useState<string | null>(null);
+  // Starter-Quota-State: pollen wir lazy beim Mount via GET claim-free.
+  // Wenn applicable + remaining > 0 → "Inklusiv freischalten"-Card oben.
+  const [quotaState, setQuotaState] = useState<{
+    applicable: boolean;
+    remaining:  number;
+    quota:      number;
+  } | null>(null);
+  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
@@ -63,7 +71,46 @@ export default function GuideUnlockModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Quota-Status laden (nur für Starter relevant — Pro/Agency haben Flatrate)
+  useEffect(() => {
+    if (flatrate) return;
+    let cancelled = false;
+    fetch(`/api/guides/${guide.id}/claim-free`).then(r => r.json()).then(data => {
+      if (cancelled) return;
+      if (data.applicable && typeof data.remaining === "number") {
+        setQuotaState({ applicable: true, remaining: data.remaining, quota: data.quota });
+      } else {
+        setQuotaState({ applicable: false, remaining: 0, quota: data.quota ?? 5 });
+      }
+    }).catch(() => { /* silent — bei Fehler einfach Pay-per-Fix-Pfad zeigen */ });
+    return () => { cancelled = true; };
+  }, [guide.id, flatrate]);
+
   const priceLabel = (guide.price_cents / 100).toFixed(2).replace(".", ",") + " €";
+  const canClaimFree = quotaState?.applicable === true && quotaState.remaining > 0;
+
+  async function claimFree() {
+    if (claiming) return;
+    setClaiming(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/guides/${guide.id}/claim-free`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        setError(data.error ?? data.hint ?? "Freischaltung fehlgeschlagen");
+        setClaiming(false);
+        return;
+      }
+      // Erfolg → direkt zur Guide-Page. Server hat den Eintrag in
+      // user_unlocked_guides geschrieben, getGuideForUser liefert unlocked=true.
+      window.location.href = `/dashboard/guides/${guide.id}`;
+    } catch {
+      setError("Verbindungsfehler — bitte erneut versuchen");
+      setClaiming(false);
+    }
+  }
 
   async function unlock() {
     setBusy(true);
@@ -170,6 +217,61 @@ export default function GuideUnlockModal({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* ── Starter-Quota-Card: 'Inklusiv freischalten' — Pre-Stripe-Pfad ──
+            Nur sichtbar wenn der eingeloggte User Starter-Plan hat UND noch
+            Quota frei ist. Dominiert den Pay-per-Fix-Pfad — User klickt 1×,
+            kein Stripe, direkt zur Guide-Page. */}
+        {!flatrate && canClaimFree && quotaState && (
+          <div style={{
+            marginBottom: 22, padding: "16px 18px", borderRadius: 12,
+            background: "linear-gradient(135deg, rgba(34,197,94,0.10), rgba(34,197,94,0.04))",
+            border: "1px solid rgba(34,197,94,0.40)",
+            boxShadow: "0 4px 18px rgba(34,197,94,0.12)",
+          }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: T.green, letterSpacing: "0.10em", textTransform: "uppercase" }}>
+                ✓ Starter-Inklusiv-Quota
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.green, fontVariantNumeric: "tabular-nums" }}>
+                {quotaState.quota - quotaState.remaining} / {quotaState.quota} verbraucht
+              </span>
+            </div>
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: T.text, lineHeight: 1.55 }}>
+              Du hast in deinem Starter-Plan noch <strong>{quotaState.remaining}</strong> {quotaState.remaining === 1 ? "Guide" : "Guides"} kostenlos freischaltbar.
+              Diesen Guide jetzt einlösen — kein Stripe, direkter Zugriff.
+            </p>
+            <button
+              type="button"
+              onClick={claimFree}
+              disabled={claiming}
+              style={{
+                display: "block", width: "100%",
+                padding: "12px 22px", borderRadius: 10,
+                background: claiming ? "rgba(34,197,94,0.20)" : "linear-gradient(90deg, #16a34a, #22c55e)",
+                color: "#fff", fontSize: 14, fontWeight: 800,
+                border: "none", cursor: claiming ? "wait" : "pointer", fontFamily: "inherit",
+                boxShadow: claiming ? "none" : "0 4px 16px rgba(34,197,94,0.40)",
+              }}
+            >
+              {claiming ? "Wird freigeschaltet…" : `Inklusiv freischalten (${quotaState.remaining} ${quotaState.remaining === 1 ? "verbleibt" : "verbleiben"}) →`}
+            </button>
+          </div>
+        )}
+
+        {/* ── Quota-aufgebraucht-Hinweis — Pay-per-Fix bleibt verfügbar ── */}
+        {!flatrate && quotaState?.applicable && quotaState.remaining === 0 && (
+          <div style={{
+            marginBottom: 18, padding: "12px 14px", borderRadius: 10,
+            background: "rgba(251,191,36,0.06)",
+            border: "1px solid rgba(251,191,36,0.30)",
+          }}>
+            <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.65)", lineHeight: 1.55 }}>
+              <strong style={{ color: "#fbbf24" }}>Inklusiv-Quota aufgebraucht</strong> — du hast alle {quotaState.quota} Starter-Guides bereits freigeschaltet.
+              Diesen Guide gibts für 9,90 € einzeln, oder ab Professional sind alle Guides Flatrate.
+            </p>
           </div>
         )}
 
