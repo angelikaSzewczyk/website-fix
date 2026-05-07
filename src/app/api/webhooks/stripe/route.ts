@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
+import { renderGuidePdfBuffer } from "@/lib/pdf/render-guide-pdf";
+import type { RescueGuide } from "@/lib/rescue-guides";
 
 /** Invalidiert den scan_cache für alle URLs, die dieser User schonmal gescannt hat.
  *  Wird bei JEDEM Plan-Wechsel gerufen — sonst sieht ein frisch upgegradeter
@@ -121,16 +123,44 @@ export async function POST(req: NextRequest) {
         `;
         console.log(`[stripe-webhook] anon guide unlocked: user=${userId} (new=${isNewAccount}) guide=${guideId} email=${buyerEmail}`);
 
-        // Resend-Mail: Claim-Link mit kurzer Erklärung, wie der Käufer auf den Guide
-        // kommt. Bei isNewAccount: Hinweis auf "Passwort setzen via Forgot-Password".
-        // Bei existing: Hinweis auf normalen Login. Failure ist nicht kritisch — der
-        // User landet ohnehin nach Stripe auf der Claim-Page.
+        // Resend-Mail mit PDF-Anhang: Claim-Link + Guide als PDF zur Sicherung.
+        // PDF ist der "Lebenslang-Beleg" — User hat den Inhalt im Postfach,
+        // unabhängig von WebsiteFix-Server-Status. Failure ist nicht kritisch
+        // — der User landet ohnehin nach Stripe auf der Claim-Page.
         if (process.env.RESEND_API_KEY) {
           try {
             const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
             const claimUrl = isNewAccount
               ? `${baseUrl}/forgot-password?email=${encodeURIComponent(buyerEmail)}`
               : `${baseUrl}/login?callbackUrl=${encodeURIComponent(`/dashboard/guides/${guideId}`)}`;
+
+            // ── PDF-Anhang generieren (best-effort, Mail geht trotzdem raus
+            // wenn PDF-Render scheitert — wir wollen den Käufer nicht blocken) ──
+            let pdfAttachment: { filename: string; content: Buffer } | null = null;
+            try {
+              const guideRows = await sql`
+                SELECT id, title, problem_label, preview, price_cents,
+                       stripe_price_id, estimated_minutes, content_json, active
+                FROM rescue_guides WHERE id = ${guideId} LIMIT 1
+              ` as Array<RescueGuide>;
+              if (guideRows[0]) {
+                const buffer = await renderGuidePdfBuffer({
+                  guide:           guideRows[0],
+                  hoster,
+                  buyerEmail,
+                  stripeSessionId: session.id,
+                });
+                const safeId = guideId.replace(/[^a-z0-9-]/gi, "");
+                pdfAttachment = {
+                  filename: `WebsiteFix-Guide-${safeId}.pdf`,
+                  content:  buffer,
+                };
+              }
+            } catch (pdfErr) {
+              console.error("[stripe-webhook] anon guide PDF render failed:", pdfErr);
+              // Keine PDF — Mail geht ohne Anhang raus. User hat noch Online-Zugriff.
+            }
+
             const resend = new Resend(process.env.RESEND_API_KEY);
             await resend.emails.send({
               from:    "WebsiteFix <noreply@website-fix.com>",
@@ -143,17 +173,26 @@ export async function POST(req: NextRequest) {
                     Vielen Dank für deinen Kauf. Dein Fix-Guide ist mit deiner E-Mail-Adresse
                     <strong>${buyerEmail}</strong> verknüpft und steht ab sofort zur Verfügung.
                   </p>
+                  ${pdfAttachment ? `
+                  <div style="margin:14px 0 18px;padding:12px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;">
+                    <p style="margin:0;font-size:13px;color:#166534;">
+                      📎 <strong>Anbei als PDF:</strong> die komplette Anleitung zum Speichern oder Drucken.
+                      Der Online-Zugriff über das Dashboard bleibt unbegrenzt erhalten.
+                    </p>
+                  </div>
+                  ` : ""}
                   ${isNewAccount ? `
                   <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
                     Wir haben dir ein kostenloses Konto erstellt. Setze dein Passwort, um den
-                    Guide aufzurufen — danach hast du lebenslangen Zugriff auf deine gekauften Guides.
+                    Guide online aufzurufen — der Zugriff über das Dashboard bleibt erhalten,
+                    solange WebsiteFix verfügbar ist.
                   </p>
                   <a href="${claimUrl}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
                     Passwort setzen &amp; Guide öffnen
                   </a>
                   ` : `
                   <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
-                    Logge dich mit deiner bekannten E-Mail-Adresse ein, um den Guide zu öffnen.
+                    Logge dich mit deiner bekannten E-Mail-Adresse ein, um den Guide online zu öffnen.
                   </p>
                   <a href="${claimUrl}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
                     Zum Guide
@@ -164,6 +203,7 @@ export async function POST(req: NextRequest) {
                   </p>
                 </div>
               `,
+              attachments: pdfAttachment ? [pdfAttachment] : undefined,
             });
           } catch (mailErr) {
             console.error("[stripe-webhook] anon guide claim mail failed:", mailErr);
@@ -209,6 +249,77 @@ export async function POST(req: NextRequest) {
           ON CONFLICT (user_id, guide_id) DO NOTHING
         `;
         console.log(`[stripe-webhook] guide unlocked: user=${userId} guide=${guideId} hoster=${hoster}`);
+
+        // Auch eingeloggte Käufer bekommen die Mail mit PDF-Anhang —
+        // Lebenslang-Beleg unabhängig vom Server-Status.
+        if (process.env.RESEND_API_KEY) {
+          try {
+            const userRows = await sql`
+              SELECT email FROM users WHERE id = ${userId}::int LIMIT 1
+            ` as Array<{ email: string }>;
+            const buyerEmail = userRows[0]?.email;
+            if (!buyerEmail) {
+              console.warn(`[stripe-webhook] no email for user=${userId} — skipping confirmation mail`);
+            } else {
+              const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
+              let pdfAttachment: { filename: string; content: Buffer } | null = null;
+              try {
+                const guideRows = await sql`
+                  SELECT id, title, problem_label, preview, price_cents,
+                         stripe_price_id, estimated_minutes, content_json, active
+                  FROM rescue_guides WHERE id = ${guideId} LIMIT 1
+                ` as Array<RescueGuide>;
+                if (guideRows[0]) {
+                  const buffer = await renderGuidePdfBuffer({
+                    guide:           guideRows[0],
+                    hoster,
+                    buyerEmail,
+                    stripeSessionId: session.id,
+                  });
+                  const safeId = guideId.replace(/[^a-z0-9-]/gi, "");
+                  pdfAttachment = {
+                    filename: `WebsiteFix-Guide-${safeId}.pdf`,
+                    content:  buffer,
+                  };
+                }
+              } catch (pdfErr) {
+                console.error("[stripe-webhook] guide PDF render failed:", pdfErr);
+              }
+
+              const resend = new Resend(process.env.RESEND_API_KEY);
+              await resend.emails.send({
+                from:    "WebsiteFix <noreply@website-fix.com>",
+                to:      buyerEmail,
+                subject: "Dein Fix-Guide ist freigeschaltet ✓",
+                html: `
+                  <div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0F172A;">
+                    <h2 style="margin:0 0 12px;font-size:20px;">Dein Fix-Guide ist bereit.</h2>
+                    <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
+                      Vielen Dank für deinen Kauf. Der Guide ist in deinem Dashboard freigeschaltet.
+                    </p>
+                    ${pdfAttachment ? `
+                    <div style="margin:14px 0 18px;padding:12px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;">
+                      <p style="margin:0;font-size:13px;color:#166534;">
+                        📎 <strong>Anbei als PDF:</strong> die komplette Anleitung zum Speichern oder Drucken.
+                        Online-Zugriff über das Dashboard bleibt unbegrenzt erhalten.
+                      </p>
+                    </div>
+                    ` : ""}
+                    <a href="${baseUrl}/dashboard/guides/${guideId}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
+                      Zum Guide →
+                    </a>
+                    <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
+                      Beleg: Stripe-Session ${session.id} · Betrag ${(paidCents/100).toFixed(2).replace(".",",")} €
+                    </p>
+                  </div>
+                `,
+                attachments: pdfAttachment ? [pdfAttachment] : undefined,
+              });
+            }
+          } catch (mailErr) {
+            console.error("[stripe-webhook] guide confirmation mail failed:", mailErr);
+          }
+        }
       } catch (err) {
         console.error("[stripe-webhook] guide unlock failed:", err);
       }

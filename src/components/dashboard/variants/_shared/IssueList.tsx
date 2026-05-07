@@ -747,7 +747,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
             Einzel-Fix-Guide für genau diesen Fehler
           </p>
           <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-            {["Schritt-für-Schritt mit Hoster-Variants", "Copy-Paste-fertige Code-Snippets", "Lebenslanger Zugriff", "Kein Abo"].map(f => (
+            {["Schritt-für-Schritt mit Hoster-Variants", "Copy-Paste-fertige Code-Snippets", "PDF-Anhang per E-Mail", "Kein Abo · einmalige Zahlung"].map(f => (
               <li key={f} style={{ display: "flex", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
                 <span style={{ color: "#FBBF24", fontWeight: 700 }}>✓</span>
                 {f}

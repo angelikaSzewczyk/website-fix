@@ -379,6 +379,49 @@ export default function AgbPage() {
         30 Tagen erhalten, um die Reaktivierung zu ermöglichen.
       </p>
 
+      <p style={{ ...SMALL, fontWeight: 700, color: "rgba(255,255,255,0.6)", margin: "16px 0 8px" }}>
+        5.6 Pay-per-Fix Einzelguides &amp; Bedeutung von &bdquo;lebenslangem Zugriff&ldquo;
+      </p>
+      <p style={P}>
+        Pay-per-Fix-Käufe (Einzelguides für 9,90 €) sind <strong style={{ color: "#fff" }}>einmalige
+        digitale Leistungen ohne Abonnement</strong>. Mit dem Begriff &bdquo;lebenslanger Zugriff&ldquo;
+        sind zwei voneinander unabhängige Zugangswege gemeint:
+      </p>
+      <ol style={{ ...P, paddingLeft: 22, marginTop: 4 }}>
+        <li style={{ marginBottom: 6 }}>
+          <strong style={{ color: "#fff" }}>Online-Zugriff über das WebsiteFix-Dashboard:</strong>{" "}
+          Solange WebsiteFix als Dienst betrieben wird (Mindestbetriebsdauer 24 Monate ab Kaufdatum
+          gem. § 327c BGB Zusage zur Bereitstellung digitaler Inhalte), kann der Nutzer den Guide
+          nach Login jederzeit aufrufen. Bei Einstellung des Dienstes erhält der Nutzer mindestens
+          30 Tage vor Abschaltung eine schriftliche Vorabinformation per E-Mail.
+        </li>
+        <li>
+          <strong style={{ color: "#fff" }}>Offline-Zugriff via PDF-Anhang:</strong>{" "}
+          Unmittelbar nach erfolgreicher Zahlung versendet die Anbieterin eine
+          Bestätigungs-E-Mail, die den vollständigen Guide-Inhalt als PDF-Anhang enthält. Der
+          Nutzer ist verantwortlich für die dauerhafte Speicherung dieses PDFs in seinem Postfach
+          oder lokalen System; ein erneuter Versand ist innerhalb von 24 Monaten ab Kauf möglich.
+          Diese Variante ist von der Verfügbarkeit des Online-Dienstes unabhängig.
+        </li>
+      </ol>
+      <p style={P}>
+        Der Begriff &bdquo;lebenslang&ldquo; schließt insbesondere folgende Fälle nicht ein und
+        begründet keinen weitergehenden Anspruch: höhere Gewalt, Insolvenz der Anbieterin,
+        gesetzliche Anordnungen zur Einstellung des Dienstes, oder die in § 327c Abs. 6 BGB
+        genannten Ausnahmen. Inhaltliche Aktualisierungen einzelner Guides können dazu führen,
+        dass spätere Käufer eine inhaltlich überarbeitete Version erhalten; der Anspruch des
+        ursprünglichen Käufers auf die ihm bereitgestellte Fassung bleibt davon unberührt.
+      </p>
+      <p style={P}>
+        Eine Erstattung der Kaufsumme ist im Pay-per-Fix-Modell nach erfolgter Bereitstellung
+        ausgeschlossen, da es sich gem. § 356 Abs. 5 BGB um einen sofort vollzogenen
+        Vertrag über die Lieferung digitaler Inhalte handelt. Mit Klick auf &bdquo;Bezahlen&ldquo;
+        und Erhalt der PDF-Bestätigungsmail erklärt der Nutzer ausdrücklich seinen Verzicht
+        auf das gesetzliche Widerrufsrecht für digitale Inhalte. Bei technischen Problemen mit
+        dem Erhalt der Leistung kontaktiert der Nutzer support@website-fix.com — die Anbieterin
+        bemüht sich um eine zeitnahe Lösung.
+      </p>
+
       <hr style={DIVIDER} />
 
       {/* ── § 6 ── */}

@@ -316,7 +316,7 @@ export default function GuideUnlockModal({
           fontSize: 11, color: T.green, fontWeight: 600,
         }}>
           <span>✓ Sofortiger Zugriff</span>
-          <span>✓ Lebenslang verfügbar</span>
+          <span>✓ Online + PDF-Anhang</span>
           <span>{flatrate ? "✓ Ohne Zusatzkosten" : "✓ Sichere Stripe-Zahlung"}</span>
         </div>
 
