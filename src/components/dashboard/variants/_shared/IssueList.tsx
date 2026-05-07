@@ -533,7 +533,12 @@ function AccordionItem({
                 {showSolution ? "Lösung ausblenden" : `So löst du das${builder ? ` in ${builder}` : ""}`}
               </button>
             )}
-            {solution && gated && (
+            {/* Konsistente Lock-Pill für ALLE gated Issues (07.05.2026) —
+                nicht nur die mit explizitem `solution`-Eintrag. Vorher
+                fehlte der Button bei Issues ohne Expert-Vorlage → der
+                User sah dann NUR "Auto-Fix via Plugin" und fragte sich
+                warum manche Issues mehr Hilfe bekommen. */}
+            {gated && (
               <button
                 type="button"
                 onClick={onUpgradeClick}

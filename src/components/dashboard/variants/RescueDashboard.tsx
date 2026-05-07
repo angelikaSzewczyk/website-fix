@@ -413,8 +413,10 @@ export default function RescueDashboard({
 
               {/* Action-Bereich am unteren Card-Ende — SOS-Button bei
                   kritischer Säule, sonst Standard-Detail-Link. Beide
-                  optional bei "alles ok"-State. */}
-              <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                  optional bei "alles ok"-State.
+                  Min-Abstand 16px nach oben zur Issue-Liste, damit "Anleitung
+                  öffnen" nicht direkt am Text klebt (Layout-Bug 07.05.2026). */}
+              <div style={{ marginTop: "auto", paddingTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                 {showSosButton && guide && (
                   <button
                     type="button"

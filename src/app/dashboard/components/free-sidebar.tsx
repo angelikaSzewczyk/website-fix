@@ -257,9 +257,10 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
     : [
         { icon: "dashboard", label: "Meine Website",      href: "/dashboard",       exact: true,  locked: false },
         { icon: "scan",      label: "Neuer Scan",          href: "/dashboard/scan",  exact: false, locked: false },
-        // Hilfe-Center linkt auf /kontakt (existiert) — eigene
-        // /hilfe-Landing-Page kommt später als Phase-6-Material.
-        { icon: "help",      label: "Hilfe-Center",        href: "/kontakt",         exact: false, locked: false },
+        // Label "Kontakt" statt "Hilfe-Center" — vermeidet Redundanz mit dem
+        // "Hilfe & Support"-Button am Sidebar-Bottom (öffnet Modal).
+        // Nav-Item linkt auf /kontakt (existiert).
+        { icon: "help",      label: "Kontakt",             href: "/kontakt",         exact: false, locked: false },
       ];
 
   return (
