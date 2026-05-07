@@ -20,6 +20,7 @@ import { generateOptimizationPlan, getBuilderTheme } from "./builder-utils";
 import type { BuilderAuditProp, WooAuditProp } from "./builder-utils";
 import type { ParsedIssueProp, UnterseiteProp } from "./dashboard-types";
 import SmartFixSection from "./SmartFixSection";
+import FatalErrorAlert from "./FatalErrorAlert";
 import type { DeepData } from "@/lib/plugin-status";
 
 export const DRAWER_FIX_STEPS: Record<string, string[]> = {
@@ -373,9 +374,18 @@ export function DrawerPanel({
         {/* ── Body ── */}
         <div style={{ padding: "16px 18px 28px", flex: 1 }}>
 
+          {/* ⓪ FATAL ERROR ALERT — pulsierende rote Box, wenn deepData.logs.last_fatal
+              vorhanden ist. Steht ÜBER allem anderen im Body, weil ein Fatal-Error
+              die anderen Hinweise irrelevant macht: erst den Brand löschen, dann SEO. */}
+          <FatalErrorAlert
+            deepData={deepData}
+            userPlan={userPlan}
+            pageUrl={pageUrl}
+          />
+
           {/* ⓪ Smart-Fix-Section — "Deep-Data Locked" oder "Präzisions-Diagnose"
-              je nachdem ob ein aktives Plugin Deep-Data liefert. Steht GANZ oben
-              im Body, weil es den Diagnose-Modus für die ganze Seite framed. */}
+              je nachdem ob ein aktives Plugin Deep-Data liefert. Steht direkt unter
+              dem Fatal-Error-Alert, weil es den Diagnose-Modus für die Seite framed. */}
           <SmartFixSection
             pluginActive={pluginActive}
             deepData={deepData}
