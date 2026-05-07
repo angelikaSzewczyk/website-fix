@@ -30,6 +30,8 @@ import type { ClassifiableWpIssue } from "@/lib/wp-health";
 import { computeDelegationStats } from "@/lib/issue-delegation";
 import DelegationWidget from "./_shared/DelegationWidget";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
+import HybridScanBanner from "./_shared/HybridScanBanner";
+import XrayCompareCard from "./_shared/XrayCompareCard";
 import OnboardingChecklist from "./_shared/OnboardingChecklist";
 import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 
@@ -122,6 +124,10 @@ type Props = {
   scans: ScanBrief[];
   /** Belegte Slots — wird aus dem Page-Wrapper für die Stat-Pill übergeben. */
   usedSlots: number;
+  /** Hybrid-Scan-Status (07.05.2026). */
+  pluginActive?:          boolean;
+  pluginLastHandshakeAt?: string | null;
+  pluginDeepData?:        import("@/lib/plugin-status").DeepData | null;
 };
 
 // ─── Sparkline ───────────────────────────────────────────────────────────────
@@ -146,6 +152,7 @@ function Sparkline({ values, color, width = 60, height = 18 }: { values: number[
 // ─── Hauptkomponente ─────────────────────────────────────────────────────────
 export default async function AgencyDashboard({
   firstName, plan, badge, userId, agencyName, agencyLogoUrl, scans, usedSlots,
+  pluginActive = false, pluginLastHandshakeAt = null, pluginDeepData = null,
 }: Props) {
   const sql = neon(process.env.DATABASE_URL!);
 
@@ -414,6 +421,15 @@ export default async function AgencyDashboard({
           an Junior-Delegation sparen kann. Null-render wenn keine Issues. */}
       <DelegationWidget stats={delegationStats} />
 
+      {/* ── HYBRID-SCAN-BANNER ──
+          Basis-Scan vs. Full-System-Audit. Agency-Owner sieht den Status
+          aggregiert für seinen Account (mindestens eine seiner verbundenen
+          Mandanten-Sites mit aktivem Plugin → "Deep-Scan aktiv"). */}
+      <HybridScanBanner
+        pluginActive={pluginActive}
+        lastHandshakeAt={pluginLastHandshakeAt}
+      />
+
       {/* ── PLUGIN-DOWNLOAD-CARD (Plan-aware) ──
           Agency-Variante: Hinweis auf White-Label-Branding + Logo-Upload-Pfad.
           Wird IMMER gerendert (nicht conditional) — der Plugin-Download ist
@@ -421,6 +437,14 @@ export default async function AgencyDashboard({
       <div style={{ marginBottom: 16 }}>
         <PluginDownloadCard plan={plan} agencyLogoUrl={agencyLogoUrl} />
       </div>
+
+      {/* ── RÖNTGEN-VERGLEICH ──
+          12 (extern) vs. 85 (mit Plugin) Parameter — quantifiziert dem Agency-
+          Owner, was er an seine Endkunden weitergeben kann. */}
+      <XrayCompareCard
+        pluginActive={pluginActive}
+        deepData={pluginDeepData}
+      />
 
       {/* ── Mission-Control-Stack ──
           Vertikales Layout: Live-Monitor (Hero, full-width) → Lead-Ticker

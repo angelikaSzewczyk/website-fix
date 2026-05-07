@@ -19,6 +19,8 @@ import { D, hexToRgb } from "./UIHelpers";
 import { generateOptimizationPlan, getBuilderTheme } from "./builder-utils";
 import type { BuilderAuditProp, WooAuditProp } from "./builder-utils";
 import type { ParsedIssueProp, UnterseiteProp } from "./dashboard-types";
+import SmartFixSection from "./SmartFixSection";
+import type { DeepData } from "@/lib/plugin-status";
 
 export const DRAWER_FIX_STEPS: Record<string, string[]> = {
   alt:     ["Öffne WordPress-Dashboard → Medien → Bibliothek.", "Klicke auf ein Bild ohne Alt-Text → befülle das Feld 'Alternativtext' (kurze inhaltliche Beschreibung, z.B. 'Teamfoto Büro München').", "Für Bilder direkt auf Seiten: Editor öffnen → Bild anklicken → Alt-Text-Feld in der Seitenleiste.", "Dekorative Bilder dürfen ein leeres alt-Attribut (alt=\"\") erhalten."],
@@ -243,6 +245,13 @@ export function DrawerPanel({
   onClose,
   isChecked,
   onToggleChecked,
+  // Hybrid-Scan-Props (07.05.2026): wenn pluginActive=false rendert die
+  // Drawer-Kopf-Sektion eine "Deep-Data Locked"-Box mit Plugin-CTA. Wenn
+  // pluginActive=true und deepData verfügbar, wechselt sie auf die
+  // "Präzisions-Diagnose" mit Code-Snippet + Copy/Delegate-Buttons.
+  pluginActive = false,
+  deepData     = null,
+  userPlan     = null,
 }: {
   pageUrl: string;
   unterseiten: UnterseiteProp[];
@@ -250,6 +259,9 @@ export function DrawerPanel({
   onClose: () => void;
   isChecked: boolean;
   onToggleChecked: () => void;
+  pluginActive?: boolean;
+  deepData?:     DeepData | null;
+  userPlan?:     string | null;
 }) {
   // Swipe-to-close for mobile bottom-sheet
   const touchStartY = useRef<number>(0);
@@ -360,6 +372,17 @@ export function DrawerPanel({
 
         {/* ── Body ── */}
         <div style={{ padding: "16px 18px 28px", flex: 1 }}>
+
+          {/* ⓪ Smart-Fix-Section — "Deep-Data Locked" oder "Präzisions-Diagnose"
+              je nachdem ob ein aktives Plugin Deep-Data liefert. Steht GANZ oben
+              im Body, weil es den Diagnose-Modus für die ganze Seite framed. */}
+          <SmartFixSection
+            pluginActive={pluginActive}
+            deepData={deepData}
+            userPlan={userPlan}
+            topIssue={entries[0] ? { fixKey: entries[0].fixKey, label: entries[0].label, severity: entries[0].kind } : null}
+            pageUrl={pageUrl}
+          />
 
           {/* ① 404 notice banner — framed as a fixable opportunity */}
           {is404 && (

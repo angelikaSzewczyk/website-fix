@@ -14,6 +14,7 @@ import AgencyDashboard  from "@/components/dashboard/variants/AgencyDashboard";
 import { isAtLeastProfessional, isAgency as isAgencyPlan, getPlanQuota } from "@/lib/plans";
 import { classifyDisplayCategory } from "@/lib/issue-categories";
 import { getIntegrationSettings, connectionStatus } from "@/lib/integrations";
+import { getPluginStatus } from "@/lib/plugin-status";
 import ModalCloseButton from "./components/ModalCloseButton";
 import ModalShell from "./components/ModalShell";
 import NewClientForm from "./components/new-client-form";
@@ -590,6 +591,12 @@ export default async function DashboardPage({
     }
   }
 
+  // Hybrid-Scan-Status: pluginActive entscheidet zwischen Basis-Scan-Banner
+  // (gelb) und Full-System-Audit-Banner (grün). deepData wird in den
+  // IssueDetailDrawer gereicht, damit dieser die Präzisions-Diagnose mit
+  // echten Server-Werten rendern kann.
+  const pluginStatus = await getPluginStatus(session.user.id);
+
   return (
     <div style={{
       // Phase 3 Sprint 6: Dark-Mode für alle Plans (vorher: Agency hatte
@@ -747,6 +754,9 @@ export default async function DashboardPage({
               avgTtfbMs={lastScanAvgTtfbMs}
               wcagHeuristicScore={lastScanWcagScore}
               wcagHeuristicLabel={lastScanWcagLabel}
+              pluginActive={pluginStatus.pluginActive}
+              pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
+              pluginDeepData={pluginStatus.deepData}
               userId={String(session.user.id)}
             />
           ) : (
@@ -777,6 +787,9 @@ export default async function DashboardPage({
               avgTtfbMs={lastScanAvgTtfbMs}
               wcagHeuristicScore={lastScanWcagScore}
               wcagHeuristicLabel={lastScanWcagLabel}
+              pluginActive={pluginStatus.pluginActive}
+              pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
+              pluginDeepData={pluginStatus.deepData}
             />
           )}
         </Suspense>
@@ -795,6 +808,9 @@ export default async function DashboardPage({
           agencyLogoUrl={agencyLogoUrl}
           scans={scans}
           usedSlots={usedSlots}
+          pluginActive={pluginStatus.pluginActive}
+          pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
+          pluginDeepData={pluginStatus.deepData}
         />
       )}
 

@@ -9,7 +9,11 @@ import LockedSection from "@/app/dashboard/components/locked-section";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
+import HybridScanBanner from "./_shared/HybridScanBanner";
+import XrayCompareCard from "./_shared/XrayCompareCard";
+import WhyWebsitefixCard from "./_shared/WhyWebsitefixCard";
 import OnboardingChecklist from "./_shared/OnboardingChecklist";
+import type { DeepData } from "@/lib/plugin-status";
 import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
@@ -69,6 +73,12 @@ export interface StarterDashboardProps {
   avgTtfbMs?:          number | null;
   wcagHeuristicScore?: number | null;
   wcagHeuristicLabel?: string | null;
+  /** Hybrid-Scan-Status (07.05.2026): pluginActive=true wenn ein WordPress-
+   *  Plugin innerhalb der letzten 7 Tage einen Handshake gemacht hat.
+   *  deepData = Server-Telemetrie (PHP-Logs, DB-Last, memory_limit, …). */
+  pluginActive?:          boolean;
+  pluginLastHandshakeAt?: string | null;
+  pluginDeepData?:        DeepData | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -97,6 +107,9 @@ export default function StarterDashboard(props: StarterDashboardProps) {
     avgTtfbMs = null,
     wcagHeuristicScore = null,
     wcagHeuristicLabel = null,
+    pluginActive = false,
+    pluginLastHandshakeAt = null,
+    pluginDeepData = null,
   } = props;
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
@@ -623,6 +636,19 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             return planKey ? <OnboardingChecklist plan={planKey} /> : null;
           })()}
 
+          {/* "Warum WebsiteFix?"-Reminder — 3 Key-Points (Code-Fix · PHP-Logs ·
+              Haftungsschutz). Plan-aware: Starter sieht 2 + Agency-Hint, Pro
+              alle 3 als Vorgeschmack auf Agency-Upgrade. */}
+          <WhyWebsitefixCard plan={plan} />
+
+          {/* Hybrid-Scan-Banner (External Mode vs. Full System Audit). Steht
+              direkt über der Plugin-Download-Card, weil der CTA dort hin
+              verlinkt — User-Flow: Banner sehen → Plugin-Card sehen → klicken. */}
+          <HybridScanBanner
+            pluginActive={pluginActive}
+            lastHandshakeAt={pluginLastHandshakeAt}
+          />
+
           {/* Plugin-Download-Card — Read-Only-Plugin ist ab Starter inklusive,
               gibt diesem Tier ein konkretes Power-User-Feature jenseits vom
               wöchentlichen Scan. */}
@@ -631,6 +657,15 @@ export default function StarterDashboard(props: StarterDashboardProps) {
               <PluginDownloadCard plan={plan} />
             </div>
           )}
+
+          {/* Röntgen-Vergleich: 12 (extern) vs. 85 (mit Plugin) Parameter.
+              Einziger Ort, an dem der quantitative Mehrwert des Plugins als
+              direkter Zahlenvergleich sichtbar wird. */}
+          <XrayCompareCard
+            pluginActive={pluginActive}
+            deepData={pluginDeepData}
+          />
+
 
           {/* ── PROFESSIONAL WELCOME BANNER (once after upgrade) ──────────── */}
           {showProWelcome && (
@@ -1204,6 +1239,9 @@ export default function StarterDashboard(props: StarterDashboardProps) {
               onClose={() => setDrawerPageUrl(null)}
               isChecked={checkedUrls.has(drawerPageUrl)}
               onToggleChecked={() => toggleChecked(drawerPageUrl)}
+              pluginActive={pluginActive}
+              deepData={pluginDeepData}
+              userPlan={plan}
             />
           )}
 

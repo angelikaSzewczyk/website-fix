@@ -6,7 +6,11 @@ import Link from "next/link";
 import DashboardShell from "./_shared/DashboardShell";
 import MetricPillBar from "./_shared/MetricPillBar";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
+import HybridScanBanner from "./_shared/HybridScanBanner";
+import XrayCompareCard from "./_shared/XrayCompareCard";
+import WhyWebsitefixCard from "./_shared/WhyWebsitefixCard";
 import OnboardingChecklist from "./_shared/OnboardingChecklist";
+import type { DeepData } from "@/lib/plugin-status";
 import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 import IssueList from "@/components/dashboard/variants/_shared/IssueList";
 import ScoreRingSection from "./_shared/ScoreRingSection";
@@ -91,6 +95,11 @@ export interface ProDashboardProps {
     unlocked:          boolean;
     checklistPreview:  string[];
   }>;
+  /** Hybrid-Scan-Status (07.05.2026): pluginActive=true wenn ein WordPress-
+   *  Plugin innerhalb der letzten 7 Tage einen Handshake gemacht hat. */
+  pluginActive?:          boolean;
+  pluginLastHandshakeAt?: string | null;
+  pluginDeepData?:        DeepData | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -186,6 +195,9 @@ export default function ProDashboard(props: ProDashboardProps) {
     wcagHeuristicScore = null,
     wcagHeuristicLabel = null,
     inclusiveGuides = [],
+    pluginActive = false,
+    pluginLastHandshakeAt = null,
+    pluginDeepData = null,
   } = props;
 
   // Inklusiv-Guide-Modal-State — Click auf einen Guide-Card öffnet das
@@ -754,12 +766,29 @@ export default function ProDashboard(props: ProDashboardProps) {
             return planKey ? <OnboardingChecklist plan={planKey} /> : null;
           })()}
 
+          {/* "Warum WebsiteFix?"-Reminder mit 3 Key-Points. Pro sieht alle 3,
+              inkl. Haftungsschutz als Vorgeschmack auf Agency-Upgrade. */}
+          <WhyWebsitefixCard plan={plan} />
+
+          {/* Hybrid-Scan-Banner (Basis-Scan vs. Full System Audit). */}
+          <HybridScanBanner
+            pluginActive={pluginActive}
+            lastHandshakeAt={pluginLastHandshakeAt}
+          />
+
           {/* Plugin-Download-Card (Read-Only-Variante für Pro). Plan-aware
               — bei Pro Standard-Branding, bei Agency erscheint die White-
               Label-Variante (siehe AgencyDashboard). */}
           <div style={{ marginBottom: 20 }}>
             <PluginDownloadCard plan={plan} />
           </div>
+
+          {/* Röntgen-Vergleich: 12 (extern) vs. 85 (mit Plugin). */}
+          <XrayCompareCard
+            pluginActive={pluginActive}
+            deepData={pluginDeepData}
+          />
+
 
           {/* ── NEW-SCAN SUCCESS BANNER ─────────────────── */}
           {isNewScan && lastScan && (
@@ -1458,6 +1487,9 @@ export default function ProDashboard(props: ProDashboardProps) {
               onClose={() => setDrawerPageUrl(null)}
               isChecked={checkedUrls.has(drawerPageUrl)}
               onToggleChecked={() => toggleChecked(drawerPageUrl)}
+              pluginActive={pluginActive}
+              deepData={pluginDeepData}
+              userPlan={plan}
             />
           )}
 

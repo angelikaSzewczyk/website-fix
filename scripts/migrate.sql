@@ -525,3 +525,53 @@ INSERT INTO rescue_guide_triggers (guide_id, match_type, match_value, priority) 
   ('wp-critical-error', 'title_keyword', 'theme',             130),
   ('wp-critical-error', 'category',      'technik',           100)
 ON CONFLICT DO NOTHING;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Hybrid-Scan / Deep-Data (07.05.2026)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Defensive CREATE für plugin_installations — die Tabelle wurde historisch
+-- manuell in Neon angelegt und ist hier in migrate.sql noch nicht versioniert.
+-- IF NOT EXISTS macht den Block idempotent gegen bestehende Installationen.
+CREATE TABLE IF NOT EXISTS plugin_installations (
+  id              SERIAL PRIMARY KEY,
+  user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  site_url        TEXT NOT NULL,
+  site_name       TEXT,
+  wp_version      TEXT,
+  plugin_version  TEXT,
+  active          BOOLEAN NOT NULL DEFAULT TRUE,
+  last_seen       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, site_url)
+);
+CREATE INDEX IF NOT EXISTS plugin_installations_user_idx ON plugin_installations(user_id);
+
+-- Das WordPress-Plugin sendet beim Handshake Server-seitige Telemetrie
+-- (PHP-Logs, DB-Status, memory_limit, max_execution_time, …). Diese Daten
+-- liegen pro Installation als JSONB in plugin_installations.deep_data.
+--
+-- Schema-Erwartung (best-effort, kein DB-CHECK — Plugin-Versionen entwickeln
+-- sich unabhängig):
+--   {
+--     php: { version: "8.2.10", memory_limit: "256M", max_execution_time: 30 },
+--     wp:  { version: "6.5.2", debug: false, multisite: false },
+--     db:  { engine: "mysql", version: "8.0.36", size_mb: 124, slow_query_log: true },
+--     server: { os: "Linux", webserver: "nginx/1.24" },
+--     logs: { php_errors_24h: 12, last_fatal: "2026-05-06T22:14:03Z", sample: "..." },
+--     plugins_active: 14,
+--     parameters_checked: 85,
+--     captured_at: "2026-05-07T10:11:22Z"
+--   }
+--
+-- handshake_count + last_handshake_at separat, weil last_seen schon vom
+-- Heartbeat-Cron geschrieben wird und wir wissen wollen, wann das Plugin
+-- ZULETZT echte Deep-Data hochgeladen hat (vs. nur Heartbeat).
+ALTER TABLE plugin_installations ADD COLUMN IF NOT EXISTS deep_data         JSONB;
+ALTER TABLE plugin_installations ADD COLUMN IF NOT EXISTS last_handshake_at TIMESTAMPTZ;
+ALTER TABLE plugin_installations ADD COLUMN IF NOT EXISTS handshake_count   INTEGER NOT NULL DEFAULT 0;
+
+-- Häufigster Query: "hat dieser User aktuelle Deep-Data?" → Index auf
+-- (user_id, last_handshake_at DESC) WHERE active=true.
+CREATE INDEX IF NOT EXISTS plugin_installations_user_handshake_idx
+  ON plugin_installations(user_id, last_handshake_at DESC)
+  WHERE active = true;

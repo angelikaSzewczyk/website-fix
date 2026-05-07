@@ -17,6 +17,8 @@ import AgencyStats from "../components/agency-stats";
 import SiteFooter from "../components/SiteFooter";
 import MaintenanceBanner from "../components/MaintenanceBanner";
 import CancelBanner from "./CancelBanner";
+import ComparisonToggle from "./ComparisonToggle";
+import PricingFeatureTable from "./PricingFeatureTable";
 import { getLatestAgencyPost, categoryTheme } from "@/lib/blog-loader";
 import PluginInfobox from "../components/PluginInfobox";
 
@@ -380,6 +382,12 @@ export default function AgencyPage() {
             </div>
           </div>
         </section>
+
+        {/* ─── INTERAKTIVER VERGLEICH (Tab-Toggle) ─────────────────────────────
+            Standard-Scanner vs. WebsiteFix Agency — direkter Tab-Switcher
+            mit Werte-Toggle in der Tabelle. Conversion-Hebel: macht den
+            Mehrwert sofort sichtbar bevor der User zur Pricing-Sektion scrollt. */}
+        <ComparisonToggle />
 
         {/* ─── LOHNKOSTEN-HEBEL ────────────────────────────────────────────── */}
         {/* Direkter €-Vergleich Senior vs. Junior — der wichtigste psychologische
@@ -1224,6 +1232,11 @@ export default function AgencyPage() {
             <p style={{ margin: "26px auto 0", maxWidth: 600, textAlign: "center", fontSize: 12, color: T.textFaint, lineHeight: 1.6 }}>
               Alle Pläne: monatliche Kündigung · keine Mindestlaufzeit · Stripe-Abrechnung · DSGVO-AVV. Steuern (USt) gemäß Reverse-Charge oder deutscher MwSt., je nach Land.
             </p>
+
+            {/* ── Feature-by-Feature Tabelle Pro vs. Agency Scale ─────────────
+                Macht den Unterschied der zwei Tier-Stufen explizit sichtbar
+                und enthält die "Wartungs-Marge verdoppeln"-Box (9.750 € ROI). */}
+            <PricingFeatureTable />
           </div>
         </section>
 
