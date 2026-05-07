@@ -559,7 +559,7 @@ CREATE INDEX IF NOT EXISTS plugin_installations_user_idx ON plugin_installations
 --     server: { os: "Linux", webserver: "nginx/1.24" },
 --     logs: { php_errors_24h: 12, last_fatal: "2026-05-06T22:14:03Z", sample: "..." },
 --     plugins_active: 14,
---     parameters_checked: 85,
+--     parameters_checked: 92,
 --     captured_at: "2026-05-07T10:11:22Z"
 --   }
 --

@@ -19,6 +19,7 @@ import MaintenanceBanner from "../components/MaintenanceBanner";
 import CancelBanner from "./CancelBanner";
 import ComparisonToggle from "./ComparisonToggle";
 import PricingFeatureTable from "./PricingFeatureTable";
+import Q3RoadmapSection from "./Q3RoadmapSection";
 import { getLatestAgencyPost, categoryTheme } from "@/lib/blog-loader";
 import PluginInfobox from "../components/PluginInfobox";
 
@@ -1242,6 +1243,13 @@ export default function AgencyPage() {
                 Macht den Unterschied der zwei Tier-Stufen explizit sichtbar
                 und enthält die "Wartungs-Marge verdoppeln"-Box (9.750 € ROI). */}
             <PricingFeatureTable />
+
+            {/* ── Q3-Roadmap mit Beta-Pricing-Hook ────────────────────────────
+                Drei kommende Agency-Scale-exklusive Module: Core-Checksum,
+                60s-Watchdog, Visual-Regression-Archive. Bestandskunden-Preis
+                wird vor dem Update zugesichert — Conversion-Treiber für die
+                aktuelle Pricing-Stufe. */}
+            <Q3RoadmapSection />
           </div>
         </section>
 

@@ -439,7 +439,7 @@ export default async function AgencyDashboard({
       </div>
 
       {/* ── RÖNTGEN-VERGLEICH ──
-          12 (extern) vs. 85 (mit Plugin) Parameter — quantifiziert dem Agency-
+          12 (extern) vs. 92 (mit Plugin) Parameter — quantifiziert dem Agency-
           Owner, was er an seine Endkunden weitergeben kann. */}
       <XrayCompareCard
         pluginActive={pluginActive}

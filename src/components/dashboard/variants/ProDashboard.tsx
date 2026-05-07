@@ -784,7 +784,7 @@ export default function ProDashboard(props: ProDashboardProps) {
             <PluginDownloadCard plan={plan} />
           </div>
 
-          {/* Röntgen-Vergleich: 12 (extern) vs. 85 (mit Plugin). */}
+          {/* Röntgen-Vergleich: 12 (extern) vs. 92 (mit Plugin). */}
           <XrayCompareCard
             pluginActive={pluginActive}
             deepData={pluginDeepData}

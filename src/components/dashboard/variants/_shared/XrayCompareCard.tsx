@@ -3,7 +3,7 @@
  *
  * Zeigt zwei Bars nebeneinander:
  *   1. Geprüfte Parameter von außen: 12  (Basis-Scan, immer)
- *   2. Geprüfte Parameter mit Plugin: 85 (real wenn deepData.parameters_checked
+ *   2. Geprüfte Parameter mit Plugin: 92 (real wenn deepData.parameters_checked
  *      gesetzt ist, sonst statisch — der Plugin-Wert ist die *Versprechung*,
  *      die der User nach Installation einlöst)
  *

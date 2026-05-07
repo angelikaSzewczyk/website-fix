@@ -659,7 +659,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             </div>
           )}
 
-          {/* Röntgen-Vergleich: 12 (extern) vs. 85 (mit Plugin) Parameter.
+          {/* Röntgen-Vergleich: 12 (extern) vs. 92 (mit Plugin) Parameter.
               Einziger Ort, an dem der quantitative Mehrwert des Plugins als
               direkter Zahlenvergleich sichtbar wird. */}
           <XrayCompareCard
