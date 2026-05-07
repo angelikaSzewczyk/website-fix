@@ -38,16 +38,74 @@ export type RescueGuide = {
   active:            boolean;
 };
 
+/**
+ * Premium-Schema (07.05.2026): jeder Guide rendert in 3 Säulen statt einer
+ * flachen Step-Liste. Backwards-kompatibel — wenn `pillars` nicht gesetzt
+ * ist, fällt der Renderer auf die alte `variants.default.steps`-Struktur
+ * zurück (keine User-facing-Regression).
+ *
+ * Säulen:
+ *   1. band_aid    — Sofort-Fix (3 Schritte mit Code)
+ *   2. diagnosis   — tiefe Ursache + Plugin-Upsell-Hinweis
+ *   3. pro_tools   — Senior-Dev-Skripte (SQL/CLI/PHP-Snippets)
+ */
 export type RescueGuideContent = {
-  intro:    string;
-  variants: Record<string, { steps: GuideStep[] }>;
+  /** 2-Satz-TL;DR ganz oben — lila/gold Infobox. Optional für Backward-Compat. */
+  tldr?:     string;
+  intro:     string;
+  variants:  Record<string, { steps: GuideStep[] }>;
   checklist: GuideChecklistItem[];
+  /** Premium-3-Säulen-Struktur. Optional → alte Guides ohne pillars rendern fallback. */
+  pillars?: {
+    band_aid:  GuidePillar;
+    diagnosis: GuideDiagnosis;
+    pro_tools: GuideProTools;
+  };
+  /** "Immer noch nicht gelöst?"-Sektion am Ende. */
+  not_solved?: {
+    title: string;
+    body:  string;
+  };
+  /** Psychologischer Abschluss vor der Checkliste — Pro-Upsell. */
+  psychological_close?: string;
 };
 
 export type GuideStep = {
-  title:      string;
-  body:       string;
-  screenshot: string | null;
+  title:           string;
+  body:            string;
+  /** Legacy-Feld (string-URL oder null). NEU: bevorzugt screenshot_url + screenshot_alt. */
+  screenshot:      string | null;
+  /** Premium-Schema: explizite URL (oder null = Renderer zeigt Placeholder). */
+  screenshot_url?: string | null;
+  /** Beschreibender Alt-Text für Placeholder-Rendering wenn url=null. */
+  screenshot_alt?: string;
+  /** Optional: Code-Snippet zum Copy-Pasten direkt im Step. */
+  code?:           { language: string; snippet: string };
+};
+
+export type GuidePillar = {
+  title: string;
+  steps: GuideStep[];
+};
+
+export type GuideDiagnosis = {
+  title:        string;
+  body:         string;
+  /** Hint, der den Plugin-Hybrid-Scan-Mode upselled. */
+  plugin_hint?: string;
+};
+
+export type GuideProTools = {
+  title: string;
+  /** Senior-Dev-Snippets. Kein narrativer Body, nur Tools. */
+  items: Array<{
+    label:    string;
+    /** Mehrzeiliger Code-Block. */
+    code:     string;
+    language: string;
+    /** Optional: 1-Satz-Kontext was das Snippet tut. */
+    note?:    string;
+  }>;
 };
 
 export type GuideChecklistItem = {
