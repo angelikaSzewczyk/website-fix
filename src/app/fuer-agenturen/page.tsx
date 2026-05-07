@@ -1128,11 +1128,16 @@ export default function AgencyPage() {
             </div>
 
             <p style={{ margin: "0 auto 24px", maxWidth: 720, textAlign: "center", fontSize: 12.5, color: T.textFaint, lineHeight: 1.6 }}>
-              Ein Abo lohnt sich ab dem <strong style={{ color: T.textSub }}>3. Problem pro Monat</strong> (Starter), oder sofort, wenn mehrere Mandanten betreut werden.
+              Pro = Selbst-Macher mit eigenem Portfolio · Scale = Agentur-Inhaber, der delegiert und skaliert.
             </p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-              {PLANS.map(p => {
+            {/* Nur Professional + Agency Scale rendern. Starter ist auf der
+                Agentur-Page nicht relevant — die Audience hier sind
+                Owner-Operators und Agency-Chefs, nicht Solo-Selbstständige
+                mit 1-2 Projekten. PLANS-Array bleibt intakt für andere
+                Render-Pfade (z.B. /). */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, maxWidth: 820, marginInline: "auto" }}>
+              {PLANS.filter(p => p.planKey !== "starter").map(p => {
                 const isScale = p.planKey === "agency";
                 return (
                   <div
