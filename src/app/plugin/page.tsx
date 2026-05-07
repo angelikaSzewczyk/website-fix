@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { auth } from "@/auth";
+import { isPaidPlan } from "@/lib/plans";
 
 export const metadata = {
-  title: "WebsiteFix Connector-Plugin – Download",
-  description: "Verbinde deine WordPress-Seite sicher mit dem WebsiteFix Dashboard. ZIP-Download v1.2.1 mit Deep-Scan-Handshake.",
+  title: "WebsiteFix Connector-Plugin – Setup",
+  description: "Verbinde deine WordPress-Seite sicher mit dem WebsiteFix Dashboard. Read-Only, DSGVO-konform, ab Starter inklusive.",
 };
 
 const C = {
@@ -20,14 +22,27 @@ const C = {
   amber:       "#FBBF24",
   amberBg:     "rgba(251,191,36,0.10)",
   amberBorder: "rgba(251,191,36,0.30)",
+  scale:       "#A78BFA",
+  scaleBg:     "rgba(167,139,250,0.10)",
+  scaleBorder: "rgba(167,139,250,0.32)",
 } as const;
 
 const PLUGIN_VERSION = "1.2.1";
-const ZIP_HREF       = "/downloads/websitefix-connector.zip";
-const PHP_HREF       = "/downloads/plugin/website-exzellenz-connector.php";
-const README_HREF    = "/downloads/plugin/readme.txt";
+const ZIP_HREF       = "/api/plugin/download";
+const PHP_HREF       = "/api/plugin/download/php";
+const README_HREF    = "/api/plugin/download/readme";
 
-export default function PluginPage() {
+type RenderMode = "anon" | "free" | "paid";
+
+export default async function PluginPage() {
+  const session = await auth();
+  const user = session?.user as { plan?: string } | undefined;
+  const mode: RenderMode = !user
+    ? "anon"
+    : isPaidPlan(user.plan)
+      ? "paid"
+      : "free";
+
   return (
     <main style={{
       minHeight: "100vh",
@@ -38,7 +53,7 @@ export default function PluginPage() {
     }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
 
-        {/* Hero */}
+        {/* ── Hero (alle Modi gleich) ────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 16, margin: "0 auto 20px",
@@ -73,111 +88,12 @@ export default function PluginPage() {
           </p>
         </div>
 
-        {/* Primary download card */}
-        <div style={{
-          background: C.cardSolid,
-          border: `1px solid ${C.greenBorder}`,
-          borderRadius: 18,
-          padding: "26px 28px",
-          marginBottom: 18,
-          boxShadow: "0 12px 40px rgba(34,197,94,0.10)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <span style={{
-              width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-              background: C.greenBg, border: `1px solid ${C.greenBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: C.green,
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
-                ZIP-Download für WordPress
-              </p>
-              <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>
-                Direkt im WP-Backend hochladbar
-              </p>
-            </div>
-          </div>
+        {/* ── Mode-spezifischer Content-Block ─────────────────────────────── */}
+        {mode === "anon"  && <AnonBlock />}
+        {mode === "free"  && <FreeBlock />}
+        {mode === "paid"  && <PaidBlock />}
 
-          <a
-            href={ZIP_HREF}
-            download
-            style={{
-              display: "block", textAlign: "center",
-              padding: "13px 24px", borderRadius: 11,
-              background: "linear-gradient(90deg,#16a34a,#22c55e)",
-              color: "#fff", fontSize: 14.5, fontWeight: 800,
-              textDecoration: "none",
-              boxShadow: "0 6px 20px rgba(34,197,94,0.35)",
-              marginBottom: 12,
-            }}
-          >
-            websitefix-connector-{PLUGIN_VERSION}.zip ↓
-          </a>
-
-          {/* Setup-Steps */}
-          <ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 8 }}>
-            {[
-              <>WordPress-Backend → <strong style={{ color: C.text }}>Plugins → Installieren</strong> → <strong style={{ color: C.text }}>Plugin hochladen</strong> → ZIP wählen → installieren.</>,
-              <>Aktiviere das Plugin über die Plugin-Liste.</>,
-              <>Gehe zu <strong style={{ color: C.text }}>Einstellungen → Website Exzellenz</strong>, kopiere deinen API-Key aus dem <Link href="/dashboard/integrations" style={{ color: C.green, textDecoration: "none", fontWeight: 700 }}>WebsiteFix-Dashboard</Link>, einfügen, <em>"Speichern &amp; verbinden"</em>.</>,
-              <>Dashboard refreshen — Banner kippt von gelb auf <strong style={{ color: C.green }}>"Full System Audit aktiv"</strong>.</>,
-            ].map((step, i) => (
-              <li key={i} style={{ fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        {/* Alternative: Direct PHP for FTP install */}
-        <details style={{
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          borderRadius: 12,
-          padding: "16px 20px",
-          marginBottom: 18,
-        }}>
-          <summary style={{
-            cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.textSub,
-            listStyle: "none",
-          }}>
-            Alternative: Plugin via FTP installieren →
-          </summary>
-          <div style={{ paddingTop: 14, fontSize: 12.5, color: C.textSub, lineHeight: 1.7 }}>
-            <p style={{ margin: "0 0 10px" }}>
-              Wenn dein Hoster den ZIP-Upload blockiert, kannst du die Datei direkt per FTP/SFTP hochladen.
-              Erstelle den Ordner <code style={{ background: "rgba(0,0,0,0.32)", padding: "1px 6px", borderRadius: 4, fontSize: 11.5 }}>/wp-content/plugins/websitefix-connector/</code> und
-              lade beide Dateien hinein:
-            </p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-              <a href={PHP_HREF} download style={{
-                fontSize: 11.5, padding: "6px 12px", borderRadius: 7,
-                background: "rgba(255,255,255,0.04)",
-                border: `1px solid ${C.borderStr}`,
-                color: C.text, textDecoration: "none", fontFamily: "monospace",
-              }}>
-                website-exzellenz-connector.php ↓
-              </a>
-              <a href={README_HREF} download style={{
-                fontSize: 11.5, padding: "6px 12px", borderRadius: 7,
-                background: "rgba(255,255,255,0.04)",
-                border: `1px solid ${C.borderStr}`,
-                color: C.text, textDecoration: "none", fontFamily: "monospace",
-              }}>
-                readme.txt ↓
-              </a>
-            </div>
-          </div>
-        </details>
-
-        {/* Security note */}
+        {/* ── Security note (alle Modi) ───────────────────────────────────── */}
         <div style={{
           background: C.amberBg,
           border: `1px solid ${C.amberBorder}`,
@@ -195,15 +111,278 @@ export default function PluginPage() {
           </p>
         </div>
 
-        {/* Back link */}
+        {/* ── Footer-Link (kontextabhängig) ───────────────────────────────── */}
         <div style={{ textAlign: "center" }}>
-          <Link href="/dashboard" style={{
-            fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600,
-          }}>
-            ← Zurück zum Dashboard
-          </Link>
+          {mode === "anon" && (
+            <>
+              <Link href="/" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600, marginRight: 16 }}>
+                ← Zurück zur Startseite
+              </Link>
+              <Link href="/login?next=%2Fplugin" style={{ fontSize: 13, color: C.green, textDecoration: "none", fontWeight: 700 }}>
+                Login →
+              </Link>
+            </>
+          )}
+          {mode === "free" && (
+            <>
+              <Link href="/dashboard" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600, marginRight: 16 }}>
+                ← Zurück zum Dashboard
+              </Link>
+              <Link href="/fuer-agenturen#pricing" style={{ fontSize: 13, color: C.scale, textDecoration: "none", fontWeight: 700 }}>
+                Plan wählen →
+              </Link>
+            </>
+          )}
+          {mode === "paid" && (
+            <Link href="/dashboard" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none", fontWeight: 600 }}>
+              ← Zurück zum Dashboard
+            </Link>
+          )}
         </div>
       </div>
     </main>
+  );
+}
+
+// ─── Render-Block: Anonym (nicht eingeloggt) ──────────────────────────────────
+function AnonBlock() {
+  return (
+    <>
+      {/* Locked-Download-Card */}
+      <div style={{
+        background: C.cardSolid,
+        border: `1px dashed ${C.borderStr}`,
+        borderRadius: 18,
+        padding: "26px 28px",
+        marginBottom: 18,
+        textAlign: "center",
+      }}>
+        <span aria-hidden="true" style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: 44, height: 44, borderRadius: 12, marginBottom: 14,
+          background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${C.borderStr}`,
+          color: C.textMuted,
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <h2 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+          Plugin nur mit Account
+        </h2>
+        <p style={{ margin: "0 0 18px", fontSize: 13.5, color: C.textSub, lineHeight: 1.65, maxWidth: 420, marginInline: "auto" }}>
+          Der Download ist an deinen WebsiteFix-Account gebunden — pro Account ein API-Key,
+          pro API-Key dein Dashboard. So bleibt jede verbundene Site eindeutig zuordenbar.
+        </p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link href="/login?next=%2Fplugin" style={{
+            padding: "11px 22px", borderRadius: 10,
+            background: "linear-gradient(90deg,#16a34a,#22c55e)",
+            color: "#fff", fontSize: 13.5, fontWeight: 800,
+            textDecoration: "none",
+            boxShadow: "0 4px 16px rgba(34,197,94,0.32)",
+          }}>
+            Login → Plugin laden
+          </Link>
+          <Link href="/fuer-agenturen#pricing" style={{
+            padding: "11px 22px", borderRadius: 10,
+            background: "rgba(255,255,255,0.04)",
+            border: `1px solid ${C.borderStr}`,
+            color: C.text, fontSize: 13.5, fontWeight: 700,
+            textDecoration: "none",
+          }}>
+            Pläne ab 29 €
+          </Link>
+        </div>
+      </div>
+
+      {/* Feature-Liste — was kriegt man, wenn man's hat? */}
+      <div style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: 12,
+        padding: "16px 20px",
+        marginBottom: 18,
+      }}>
+        <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color: C.textMuted, letterSpacing: "0.10em", textTransform: "uppercase" }}>
+          Was das Plugin liefert
+        </p>
+        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            ["Hybrid-Scan", "Externer Crawler + Server-seitige Telemetrie (PHP-Logs, DB-Status)"],
+            ["Smart-Fix-Drawer", "Code-Snippets aus echten Server-Werten — z. B. exakter memory_limit-Wert"],
+            ["12-Stunden-Sync", "Automatischer Cron + 6 h Retry bei Fehler"],
+            ["White-Label (Agency)", "Plugin-Menü unter deinem Logo, Plugin-Settings unter deiner Domain"],
+          ].map(([t, d]) => (
+            <li key={t} style={{ fontSize: 13, color: C.textSub, lineHeight: 1.6, display: "flex", gap: 10 }}>
+              <span style={{ color: C.green, fontWeight: 800, flexShrink: 0 }}>✓</span>
+              <span><strong style={{ color: C.text }}>{t}:</strong> {d}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
+
+// ─── Render-Block: Eingeloggt aber kostenlos / kein Plan ──────────────────────
+function FreeBlock() {
+  return (
+    <div style={{
+      background: C.cardSolid,
+      border: `1px solid ${C.scaleBorder}`,
+      borderRadius: 18,
+      padding: "26px 28px",
+      marginBottom: 18,
+      boxShadow: "0 12px 40px rgba(167,139,250,0.10)",
+    }}>
+      <span aria-hidden="true" style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: 36, height: 36, borderRadius: 10, marginBottom: 12,
+        background: C.scaleBg, border: `1px solid ${C.scaleBorder}`, color: C.scale,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </span>
+      <h2 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+        Plugin ist im Plan inkludiert — ab Starter
+      </h2>
+      <p style={{ margin: "0 0 16px", fontSize: 13.5, color: C.textSub, lineHeight: 1.65 }}>
+        Du bist eingeloggt, hast aktuell aber keinen aktiven Plan. Das Plugin schaltet
+        den <strong style={{ color: C.text }}>Hybrid-Scan-Mode</strong> in deinem Dashboard
+        frei — bei Starter (29 €/Mo) oder höher inklusive.
+      </p>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <Link href="/fuer-agenturen#pricing" style={{
+          padding: "11px 22px", borderRadius: 10,
+          background: "linear-gradient(90deg,#7C3AED,#A78BFA)",
+          color: "#fff", fontSize: 13.5, fontWeight: 800,
+          textDecoration: "none",
+          boxShadow: "0 4px 16px rgba(124,58,237,0.34)",
+        }}>
+          Plan wählen →
+        </Link>
+        <Link href="/dashboard" style={{
+          padding: "11px 22px", borderRadius: 10,
+          background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${C.borderStr}`,
+          color: C.text, fontSize: 13.5, fontWeight: 700,
+          textDecoration: "none",
+        }}>
+          Zurück zum Dashboard
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ─── Render-Block: Eingeloggt + bezahlter Plan (echter Download) ──────────────
+function PaidBlock() {
+  return (
+    <>
+      <div style={{
+        background: C.cardSolid,
+        border: `1px solid ${C.greenBorder}`,
+        borderRadius: 18,
+        padding: "26px 28px",
+        marginBottom: 18,
+        boxShadow: "0 12px 40px rgba(34,197,94,0.10)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <span style={{
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: C.greenBg, border: `1px solid ${C.greenBorder}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: C.green,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+              ZIP-Download für WordPress
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>
+              Direkt im WP-Backend hochladbar
+            </p>
+          </div>
+        </div>
+
+        <a
+          href={ZIP_HREF}
+          style={{
+            display: "block", textAlign: "center",
+            padding: "13px 24px", borderRadius: 11,
+            background: "linear-gradient(90deg,#16a34a,#22c55e)",
+            color: "#fff", fontSize: 14.5, fontWeight: 800,
+            textDecoration: "none",
+            boxShadow: "0 6px 20px rgba(34,197,94,0.35)",
+            marginBottom: 12,
+          }}
+        >
+          websitefix-connector-{PLUGIN_VERSION}.zip ↓
+        </a>
+
+        <ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            <>WordPress-Backend → <strong style={{ color: C.text }}>Plugins → Installieren</strong> → <strong style={{ color: C.text }}>Plugin hochladen</strong> → ZIP wählen → installieren.</>,
+            <>Aktiviere das Plugin über die Plugin-Liste.</>,
+            <>Gehe zu <strong style={{ color: C.text }}>Einstellungen → Website Exzellenz</strong>, kopiere deinen API-Key aus dem <Link href="/dashboard/integrations" style={{ color: C.green, textDecoration: "none", fontWeight: 700 }}>WebsiteFix-Dashboard</Link>, einfügen, <em>&quot;Speichern &amp; verbinden&quot;</em>.</>,
+            <>Dashboard refreshen — Banner kippt von gelb auf <strong style={{ color: C.green }}>&quot;Full System Audit aktiv&quot;</strong>.</>,
+          ].map((step, i) => (
+            <li key={i} style={{ fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <details style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: 12,
+        padding: "16px 20px",
+        marginBottom: 18,
+      }}>
+        <summary style={{
+          cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.textSub,
+          listStyle: "none",
+        }}>
+          Alternative: Plugin via FTP installieren →
+        </summary>
+        <div style={{ paddingTop: 14, fontSize: 12.5, color: C.textSub, lineHeight: 1.7 }}>
+          <p style={{ margin: "0 0 10px" }}>
+            Wenn dein Hoster den ZIP-Upload blockiert, kannst du die Datei direkt per FTP/SFTP hochladen.
+            Erstelle den Ordner <code style={{ background: "rgba(0,0,0,0.32)", padding: "1px 6px", borderRadius: 4, fontSize: 11.5 }}>/wp-content/plugins/websitefix-connector/</code> und
+            lade beide Dateien hinein:
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <a href={PHP_HREF} style={{
+              fontSize: 11.5, padding: "6px 12px", borderRadius: 7,
+              background: "rgba(255,255,255,0.04)",
+              border: `1px solid ${C.borderStr}`,
+              color: C.text, textDecoration: "none", fontFamily: "monospace",
+            }}>
+              website-exzellenz-connector.php ↓
+            </a>
+            <a href={README_HREF} style={{
+              fontSize: 11.5, padding: "6px 12px", borderRadius: 7,
+              background: "rgba(255,255,255,0.04)",
+              border: `1px solid ${C.borderStr}`,
+              color: C.text, textDecoration: "none", fontFamily: "monospace",
+            }}>
+              readme.txt ↓
+            </a>
+          </div>
+        </div>
+      </details>
+    </>
   );
 }

@@ -2140,8 +2140,7 @@ export default function ProDashboard(props: ProDashboardProps) {
                   </p>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <a
-                      href="/downloads/websitefix-connector.zip"
-                      download
+                      href="/api/plugin/download"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "9px 18px", borderRadius: 8,

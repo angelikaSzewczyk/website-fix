@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Plugin-Download-Assets liegen außerhalb von public/, damit sie nicht
+  // statisch ausgeliefert werden — der /api/plugin/download-Endpoint
+  // streamt sie nach Auth-Check. Vercel muss den Ordner trotzdem in den
+  // Serverless-Function-Bundle aufnehmen, sonst ENOENT zur Laufzeit.
+  outputFileTracingIncludes: {
+    "/api/plugin/download": ["./private-assets/plugin/**/*"],
+    "/api/plugin/download/[file]": ["./private-assets/plugin/**/*"],
+  },
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = [
