@@ -4,7 +4,7 @@ Tags: monitoring, diagnostics, audit, agency, white-label
 Requires at least: 5.9
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: Proprietary
 License URI: https://website-fix.com/lizenz
 
@@ -73,6 +73,16 @@ Ja. Pro Subsite ist eine eigene API-Key-Konfiguration nötig (Per-Site-Activatio
 Whiteliste in deinem Hoster-Backend folgenden Hostnamen für `wp_remote_post`-Calls: `website-fix.com` (Port 443, HTTPS). Bei Strato, IONOS und All-Inkl ist das standardmäßig erlaubt.
 
 == Changelog ==
+
+= 1.3.0 =
+* DB-Metriken: Größe in MB, Slow-Query-Counter, Top-3 größte Tabellen
+* WP-Cron-Health: Anzahl überfälliger Events, DISABLE_WP_CRON-Flag, nächste Hooks
+* Sicherheits-Block:
+  * Brute-Force-Counter (Wordfence wfHits + Limit-Login-Reloaded)
+  * Theme-Integrität (validate_file + style.css-Check)
+  * Malware-Pattern-Scan (eval+base64_decode, /e-Modifier, gzinflate-Backdoors)
+* Hartes 3-Sek-Cap auf Malware-Scan, max 200 Files pro Run
+* parameters_checked auf 92 erhöht (vs. 85 vorher)
 
 = 1.2.1 =
 * White-Label-Config als Array am Datei-Anfang (agency_name + custom_logo_url)

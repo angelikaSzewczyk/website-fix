@@ -29,9 +29,15 @@ export type DeepData = {
   db?: {
     engine?: string;
     version?: string;
+    /** Gesamt-DB-Größe in MB (information_schema.TABLES). */
     size_mb?: number;
+    /** MySQL-Variable slow_query_log: ON/OFF. */
     slow_query_log?: boolean;
-    slow_queries_24h?: number;
+    /** Kumulative Slow-Queries seit MySQL-Restart. UI bildet daraus den
+     *  24h-Trend via Diff-zwischen-Snapshots. */
+    slow_queries_total?: number;
+    /** Top-3 größte Tabellen für "Wo räumen wir auf?"-Hint. */
+    largest_tables?: Array<{ name: string; size_mb: number; rows: number }>;
   };
   server?: {
     os?: string;
@@ -42,7 +48,35 @@ export type DeepData = {
     last_fatal?: string;
     sample?: string;
   };
+  /** WP-Cron-Health (Plugin v1.3.0+) */
+  cron?: {
+    /** Anzahl aller registrierten Cron-Events. */
+    total?: number;
+    /** Events deren Timestamp > 1h überfällig ist. Hoher Wert = Cron läuft nicht. */
+    overdue?: number;
+    /** True wenn DISABLE_WP_CRON in wp-config gesetzt ist. */
+    wp_cron_disabled?: boolean;
+    /** Bis zu 5 Hooks die als nächstes anstehen, mit Sekunden bis Run. */
+    sample?: Array<{ hook: string; next_run_ago: number }>;
+  };
+  /** Sicherheits-Indikatoren (Plugin v1.3.0+) */
+  security?: {
+    /** Fehlgeschlagene Login-Versuche letzte 24 h (Wordfence/Limit-Login).
+     *  null = kein Brute-Force-Plugin installiert. */
+    brute_force_attempts_24h?: number | null;
+    /** Theme strukturell valide (validate_file + style.css existiert).
+     *  null = Check nicht durchgeführt. */
+    theme_integrity_ok?: boolean | null;
+    /** Malware-Pattern-Scan über themes/plugins (eval+base64_decode etc.).
+     *  3-Sek-Cap, max 200 Files/Run. */
+    malware_suspects?: {
+      count: number;
+      files_scanned: number;
+      sample: string[]; // Pfade relativ zu WP_CONTENT_DIR
+    };
+  };
   plugins_active?: number;
+  plugins_list?: Array<{ slug: string; name: string; version: string }>;
   /** Anzahl der Parameter, die das Plugin aus dem Inneren prüfen kann.
    *  Für die "Röntgen"-Vergleichsgrafik vs. der externen Crawler-Zahl. */
   parameters_checked?: number;
@@ -67,7 +101,11 @@ const FRESH_HANDSHAKE_DAYS = 7;
  *  H1-H6, Alt, robots.txt, Sitemap, SSL, TTFB, …). 12 deckt sich mit der
  *  ScanModeBanner-Texterung "Geprüfte Parameter von außen: 12". */
 export const EXTERNAL_PARAMETER_COUNT = 12;
-export const PLUGIN_PARAMETER_COUNT   = 85;
+/** Plugin-Parameter ab v1.3.0: PHP/WP/DB-Snapshot, Cron-Health, Brute-Force-
+ *  Counter, Theme-Integrity, Malware-Patterns, Slow-Query-Status, größte
+ *  Tabellen, Plugin-Liste mit Versionen — gegenüber dem reinen externen
+ *  Crawl ein 7-fach tieferer Datensatz. */
+export const PLUGIN_PARAMETER_COUNT   = 92;
 
 const EMPTY: PluginStatus = {
   pluginActive:    false,

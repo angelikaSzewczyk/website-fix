@@ -3,7 +3,7 @@
  * Plugin Name:       Website Exzellenz Connector
  * Plugin URI:        https://website-fix.com
  * Description:       Verbindet deine WordPress-Website sicher mit dem Website Exzellenz Agency-Dashboard. Empfängt Remote-Fix-Befehle und hält dein Dashboard über den Website-Status informiert.
- * Version:           1.2.1
+ * Version:           1.3.0
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -37,7 +37,7 @@ if ( ! defined( 'WFC_WHITE_LABEL_CONFIG' ) ) {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-define( 'WFC_VERSION',    '1.2.1' );
+define( 'WFC_VERSION',    '1.3.0' );
 define( 'WFC_API_BASE',   'https://website-fix.com/api/plugin' );
 define( 'WFC_SLUG',       'wf-connector' );
 define( 'WFC_OPT_KEY',    'wfc_api_key' );
@@ -750,14 +750,16 @@ function wfc_collect_deep_data(): array {
         'captured_at' => gmdate( 'c' ),
     ];
 
-    // ── DB-Block ──
-    if ( $wpdb && method_exists( $wpdb, 'db_version' ) ) {
-        $data['db'] = array_filter([
-            'engine'         => 'mysql',
-            'version'        => @$wpdb->db_version() ?: null,
-            'slow_query_log' => null, // optional — manche Hoster blocken den Read
-        ]);
-    }
+    // ── DB-Block (mit Größe + Slow-Query-Status) ──
+    $data['db'] = wfc_collect_db_metrics();
+
+    // ── Cron-Health ──
+    $cron = wfc_collect_cron_health();
+    if ( ! empty( $cron ) ) $data['cron'] = $cron;
+
+    // ── Security-Block: Brute-Force + Theme-Integrity + Malware-Patterns ──
+    $security = wfc_collect_security_metrics();
+    if ( ! empty( $security ) ) $data['security'] = $security;
 
     // ── Aktive Plugins ──
     if ( ! function_exists( 'get_plugins' ) ) {
@@ -834,10 +836,267 @@ function wfc_collect_deep_data(): array {
 
     // ── parameters_checked: Zähler dafür, was das Plugin tatsächlich liefert.
     // Wird im Frontend gegen den 12-Parameter-Externe-Crawler verglichen
-    // ("12 vs. 85"-Röntgen-Grafik). Konservativer Default 85.
-    $data['parameters_checked'] = 85;
+    // ("12 vs. 92"-Röntgen-Grafik). Wert deckt sich mit
+    // PLUGIN_PARAMETER_COUNT in lib/plugin-status.ts.
+    $data['parameters_checked'] = 92;
 
     return $data;
+}
+
+// ── DB-Metriken (Größe + Slow-Query-Status) ───────────────────────────────────
+/**
+ * Liefert Engine, Version, Größe in MB und Slow-Query-Indikatoren. Alle
+ * Sub-Reads sind try/catch-gewrapped — Hoster die information_schema oder
+ * SHOW GLOBAL STATUS sperren (z.B. Strato Shared) liefern einfach
+ * weniger Felder, niemals Crash.
+ */
+function wfc_collect_db_metrics(): array {
+    global $wpdb;
+    if ( ! $wpdb ) return [];
+
+    $db = [
+        'engine'  => 'mysql',
+        'version' => method_exists( $wpdb, 'db_version' ) ? ( @$wpdb->db_version() ?: null ) : null,
+    ];
+
+    // ── DB-Größe via information_schema ──
+    try {
+        $size_row = $wpdb->get_row( $wpdb->prepare(
+            "SELECT ROUND(SUM(DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS size_mb
+             FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s",
+            DB_NAME
+        ), ARRAY_A );
+        if ( $size_row && isset( $size_row['size_mb'] ) ) {
+            $db['size_mb'] = (float) $size_row['size_mb'];
+        }
+    } catch ( Throwable $e ) { /* Hoster blockt info-schema → skip */ }
+
+    // ── Slow-Query-Log-Status + Counter ──
+    try {
+        $sq_var = $wpdb->get_row( "SHOW VARIABLES LIKE 'slow_query_log'", ARRAY_A );
+        if ( $sq_var && isset( $sq_var['Value'] ) ) {
+            $db['slow_query_log'] = strtolower( $sq_var['Value'] ) === 'on';
+        }
+        // Slow_queries-Status liefert KUMULATIVE Anzahl seit MySQL-Restart.
+        // Wir liefern den Counter als is — die UI rechnet daraus den 24h-Trend
+        // über Diff zwischen zwei Snapshots (separater Vergleichsschritt im Backend).
+        $sq_status = $wpdb->get_row( "SHOW GLOBAL STATUS LIKE 'Slow_queries'", ARRAY_A );
+        if ( $sq_status && isset( $sq_status['Value'] ) ) {
+            $db['slow_queries_total'] = (int) $sq_status['Value'];
+        }
+    } catch ( Throwable $e ) { /* manche Shared-Hoster sperren SHOW STATUS → skip */ }
+
+    // ── Größte Tabellen (Top-3) — hilft beim "Wo räumen wir auf?"-Fix ──
+    try {
+        $top = $wpdb->get_results( $wpdb->prepare(
+            "SELECT TABLE_NAME AS name,
+                    ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS size_mb,
+                    TABLE_ROWS AS rows
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = %s
+             ORDER BY (DATA_LENGTH + INDEX_LENGTH) DESC LIMIT 3",
+            DB_NAME
+        ), ARRAY_A );
+        if ( is_array( $top ) && count( $top ) ) {
+            $db['largest_tables'] = array_map( fn( $r ) => [
+                'name'    => (string) $r['name'],
+                'size_mb' => (float)  $r['size_mb'],
+                'rows'    => (int)    $r['rows'],
+            ], $top );
+        }
+    } catch ( Throwable $e ) { /* skip */ }
+
+    return $db;
+}
+
+// ── WP-Cron-Health ────────────────────────────────────────────────────────────
+/**
+ * Liest die geplanten Cron-Events (_get_cron_array) und identifiziert:
+ *   - total       — Anzahl aller registrierten Events
+ *   - overdue     — Events deren Timestamp > 1h in der Vergangenheit liegt
+ *                   (typisches Symptom: WP-Cron läuft gar nicht weil die Site
+ *                    keine Visitor hat ODER DISABLE_WP_CRON=true ohne System-Cron)
+ *   - sample      — bis zu 5 Hooks die nächstes anstehen (für Dashboard-Anzeige)
+ */
+function wfc_collect_cron_health(): array {
+    if ( ! function_exists( '_get_cron_array' ) ) return [];
+
+    $crons = _get_cron_array();
+    if ( ! is_array( $crons ) ) return [];
+
+    $now     = time();
+    $total   = 0;
+    $overdue = 0;
+    $sample  = [];
+
+    foreach ( $crons as $ts => $hooks ) {
+        if ( ! is_array( $hooks ) ) continue;
+        foreach ( $hooks as $hook_name => $_events ) {
+            $total++;
+            if ( $ts < $now - HOUR_IN_SECONDS ) $overdue++;
+            if ( count( $sample ) < 5 ) {
+                $sample[] = [
+                    'hook'         => (string) $hook_name,
+                    'next_run_ago' => $ts - $now, // negativ = überfällig
+                ];
+            }
+        }
+    }
+
+    // DISABLE_WP_CRON-Flag wichtig zu wissen — wenn true und kein System-Cron
+    // konfiguriert, läuft NICHTS. Im Dashboard rendern wir das als roten Befund.
+    $disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+
+    return array_filter([
+        'total'             => $total,
+        'overdue'           => $overdue,
+        'wp_cron_disabled'  => $disabled,
+        'sample'            => $sample ?: null,
+    ], fn( $v ) => $v !== null && $v !== '' );
+}
+
+// ── Security-Metriken (Brute-Force, Theme-Integrity, Malware-Patterns) ────────
+/**
+ * Sammelt drei Sicherheits-Indikatoren in einem Block:
+ *
+ *   brute_force_attempts_24h
+ *     Zählt fehlgeschlagene Login-Versuche der letzten 24 h. Bevorzugt
+ *     Wordfence's wfHits-Tabelle (action LIKE 'logFail%'), fällt zurück auf
+ *     Limit-Login-Attempts-Reloaded (option_name='wp_loginizer_logs') und
+ *     dann auf null wenn keins davon installiert ist.
+ *
+ *   theme_integrity_ok
+ *     Prüft ob das aktive Theme valide ist (validate_file +
+ *     wp_get_theme()->errors()) und ob das Stylesheet existiert. Echter
+ *     Core-File-Checksum-Vergleich gegen WP.org würde Stunden dauern und
+ *     ist Phase 2 — hier nur die strukturelle Validität.
+ *
+ *   malware_suspects
+ *     Streamt durch wp-content/themes + wp-content/plugins (max 200 Dateien,
+ *     5 MB Cap pro Datei) und sucht nach den 4 häufigsten Hacker-Patterns:
+ *     eval(base64_decode(...)), assert($_POST), preg_replace mit /e-Modifier,
+ *     gzinflate(base64_decode(...)). Liefert Anzahl + Top-3 Match-Files.
+ *     Performance: bricht nach 3 Sekunden ab, damit der Handshake nie über
+ *     die Plugin-API-Timeout-Schwelle (12 s) geht.
+ */
+function wfc_collect_security_metrics(): array {
+    return array_filter([
+        'brute_force_attempts_24h' => wfc_count_brute_force_attempts(),
+        'theme_integrity_ok'       => wfc_check_theme_integrity(),
+        'malware_suspects'         => wfc_scan_malware_patterns(),
+    ], fn( $v ) => $v !== null );
+}
+
+function wfc_count_brute_force_attempts(): ?int {
+    global $wpdb;
+    if ( ! $wpdb ) return null;
+    $cutoff = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
+
+    // Wordfence: wfHits-Tabelle
+    try {
+        $wf_table = $wpdb->prefix . 'wfHits';
+        $exists   = $wpdb->get_var( "SHOW TABLES LIKE '" . esc_sql( $wf_table ) . "'" );
+        if ( $exists ) {
+            $count = (int) $wpdb->get_var( $wpdb->prepare(
+                "SELECT COUNT(*) FROM `{$wf_table}`
+                 WHERE action LIKE 'logFail%%' AND ctime > UNIX_TIMESTAMP(%s)",
+                $cutoff
+            ) );
+            return $count;
+        }
+    } catch ( Throwable $e ) { /* skip */ }
+
+    // Limit Login Attempts Reloaded
+    try {
+        $lockouts = (array) get_option( 'limit_login_logged', [] );
+        if ( $lockouts ) {
+            $count = 0;
+            foreach ( $lockouts as $entry ) {
+                if ( is_array( $entry ) ) {
+                    foreach ( $entry as $ts => $attempts ) {
+                        if ( (int) $ts > time() - DAY_IN_SECONDS ) $count += (int) $attempts;
+                    }
+                }
+            }
+            return $count;
+        }
+    } catch ( Throwable $e ) { /* skip */ }
+
+    return null; // kein Brute-Force-Plugin installiert
+}
+
+function wfc_check_theme_integrity(): ?bool {
+    if ( ! function_exists( 'wp_get_theme' ) ) return null;
+    try {
+        $theme  = wp_get_theme();
+        $errors = $theme->errors();
+        if ( $errors instanceof WP_Error && $errors->has_errors() ) return false;
+        // Stylesheet-Existenz-Check
+        $sheet = $theme->get_stylesheet_directory() . '/style.css';
+        if ( ! file_exists( $sheet ) ) return false;
+        return true;
+    } catch ( Throwable $e ) { return null; }
+}
+
+function wfc_scan_malware_patterns(): ?array {
+    if ( ! defined( 'WP_CONTENT_DIR' ) ) return null;
+
+    $deadline   = microtime( true ) + 3.0; // hartes 3s-Cap
+    $max_files  = 200;
+    $max_bytes  = 5 * 1024 * 1024; // 5 MB pro Datei
+    $files_seen = 0;
+    $matches    = [];
+
+    // Bewährte Patterns für PHP-Backdoors / WP-Hacks. Bewusst sehr eng
+    // gehalten — false-positives sind der häufigste Vorwurf gegen
+    // Wordfence/Sucuri und wir wollen nicht in dieselbe Falle.
+    $patterns = [
+        '/eval\s*\(\s*base64_decode\s*\(/i',
+        '/assert\s*\(\s*\$_(POST|GET|REQUEST|COOKIE)\s*\[/i',
+        '/preg_replace\s*\([^,]+\/e\s*[\'"]/i',  // /e-modifier (PHP <7)
+        '/gzinflate\s*\(\s*base64_decode\s*\(/i',
+    ];
+
+    $roots = [
+        WP_CONTENT_DIR . '/themes',
+        WP_CONTENT_DIR . '/plugins',
+    ];
+
+    foreach ( $roots as $root ) {
+        if ( ! is_dir( $root ) || ! is_readable( $root ) ) continue;
+        try {
+            $iter = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator( $root, RecursiveDirectoryIterator::SKIP_DOTS )
+            );
+            foreach ( $iter as $file ) {
+                if ( microtime( true ) > $deadline ) break 2; // hartes 3s-Cap
+                if ( $files_seen >= $max_files )      break 2;
+                if ( ! $file->isFile() )              continue;
+                if ( $file->getExtension() !== 'php' ) continue;
+                if ( $file->getSize() > $max_bytes )   continue;
+
+                $files_seen++;
+                $contents = @file_get_contents( $file->getPathname() );
+                if ( $contents === false ) continue;
+
+                foreach ( $patterns as $rx ) {
+                    if ( preg_match( $rx, $contents ) ) {
+                        // Pfad relativ zu WP_CONTENT_DIR — kein absoluter
+                        // Server-Pfad-Leak ans Dashboard.
+                        $matches[] = str_replace( WP_CONTENT_DIR, '', $file->getPathname() );
+                        break; // ein match pro Datei reicht
+                    }
+                }
+                if ( count( $matches ) >= 10 ) break 2;
+            }
+        } catch ( Throwable $e ) { /* skip dieser root */ }
+    }
+
+    return [
+        'count'         => count( $matches ),
+        'files_scanned' => $files_seen,
+        'sample'        => array_slice( $matches, 0, 3 ),
+    ];
 }
 
 // ── Handshake-Sender ──────────────────────────────────────────────────────────

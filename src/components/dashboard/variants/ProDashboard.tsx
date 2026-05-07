@@ -8,6 +8,7 @@ import MetricPillBar from "./_shared/MetricPillBar";
 import PluginDownloadCard from "./_shared/PluginDownloadCard";
 import HybridScanBanner from "./_shared/HybridScanBanner";
 import XrayCompareCard from "./_shared/XrayCompareCard";
+import DeepDataMetricsGrid from "./_shared/DeepDataMetricsGrid";
 import WhyWebsitefixCard from "./_shared/WhyWebsitefixCard";
 import OnboardingChecklist from "./_shared/OnboardingChecklist";
 import type { DeepData } from "@/lib/plugin-status";
@@ -785,6 +786,13 @@ export default function ProDashboard(props: ProDashboardProps) {
 
           {/* Röntgen-Vergleich: 12 (extern) vs. 85 (mit Plugin). */}
           <XrayCompareCard
+            pluginActive={pluginActive}
+            deepData={pluginDeepData}
+          />
+
+          {/* Plugin-only Detail-Metriken (Locked-Skeletons ohne Plugin):
+              PHP-Logs, DB-Last, Cron-Health, Sicherheits-Indikatoren. */}
+          <DeepDataMetricsGrid
             pluginActive={pluginActive}
             deepData={pluginDeepData}
           />

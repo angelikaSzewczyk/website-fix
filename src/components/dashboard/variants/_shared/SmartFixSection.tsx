@@ -69,19 +69,89 @@ function isAgencyLike(plan: string | null | undefined): boolean {
 }
 
 /** Aus deepData + fixKey ein konkretes Code-Snippet generieren — best-effort.
- *  Kein Match → null, dann fällt die UI auf den generischen "Server-Snapshot"-Pfad zurück. */
+ *  Kein Match → null, dann fällt die UI auf den generischen "Server-Snapshot"-Pfad zurück.
+ *
+ *  Priorität: Sicherheit > Cron-Stalls > DB-Bloat > Memory > Logs > Slow-Queries > PHP-EOL. */
 function generatePrecisionSnippet(
   deep: DeepData,
   fixKey: string | null,
 ): { language: string; code: string; lineHint?: string; explainer: string } | null {
-  const memLimit = deep.php?.memory_limit;
-  const phpVer   = deep.php?.version;
-  const wpDebug  = deep.wp?.debug;
-  const slowQ    = deep.db?.slow_queries_24h;
-  const errors24 = deep.logs?.php_errors_24h;
+  const memLimit       = deep.php?.memory_limit;
+  const phpVer         = deep.php?.version;
+  const wpDebug        = deep.wp?.debug;
+  const slowQTotal     = deep.db?.slow_queries_total;
+  const dbSize         = deep.db?.size_mb;
+  const errors24       = deep.logs?.php_errors_24h;
+  const cronOverdue    = deep.cron?.overdue;
+  const cronDisabled   = deep.cron?.wp_cron_disabled;
+  const malwareCount   = deep.security?.malware_suspects?.count;
+  const malwareSample  = deep.security?.malware_suspects?.sample;
+  const themeOk        = deep.security?.theme_integrity_ok;
+  const bruteForce     = deep.security?.brute_force_attempts_24h;
 
-  // Memory-Limit ist die häufigste Root-Cause für "kritischen Fehler"
-  // sowie für Plugin/Theme-Konflikte — daher zuerst.
+  // ── 1. Malware-Verdacht (höchste Priorität — Hack-in-Progress) ──
+  if (typeof malwareCount === "number" && malwareCount > 0) {
+    const filesList = (malwareSample ?? []).slice(0, 3).join("\n");
+    return {
+      language: "bash",
+      lineHint: "Sofort-Maßnahme: Verdächtige Dateien isolieren",
+      code: `# Backup vor JEDER Änderung erstellen!\n# Verdächtige Dateien:\n${filesList}\n\n# In Quarantäne verschieben (nicht löschen — forensische Analyse)\n# mv wp-content/<file> wp-content/quarantine/`,
+      explainer: `${malwareCount} Datei${malwareCount > 1 ? "en" : ""} mit Hack-Patterns (eval+base64_decode, /e-Modifier, gzinflate-Loops) gefunden. Backup → Datei in Quarantäne → Plugin/Theme neu von der offiziellen Quelle installieren. Nicht in der laufenden Installation editieren.`,
+    };
+  }
+
+  // ── 2. WP-Cron tot oder massiv überfällig ──
+  if (cronDisabled && (cronOverdue ?? 0) > 3) {
+    return {
+      language: "bash",
+      lineHint: "Server-Cron: alle 5 Min via crontab oder cPanel",
+      code: `# Linux/Cpanel: crontab -e\n*/5 * * * * curl -s https://deine-site.de/wp-cron.php?doing_wp_cron > /dev/null 2>&1`,
+      explainer: `DISABLE_WP_CRON ist aktiv und ${cronOverdue} Events überfällig — Auto-Updates, Scheduled Posts, Backup-Plugins laufen NICHT. Lösung: System-Cron alle 5 Min, der wp-cron.php ansteuert.`,
+    };
+  }
+  if ((cronOverdue ?? 0) > 5) {
+    return {
+      language: "php",
+      lineHint: "wp-config.php · WP-Cron Lock-Timeout zurücksetzen",
+      code: `// Stuck-Cron entriegeln (in functions.php oder mu-plugin):\nadd_action('init', function () {\n  delete_transient('doing_cron');\n});`,
+      explainer: `${cronOverdue} Cron-Events sind überfällig. Häufigste Ursache: Lock-Transient hängt nach einem Timeout. Einmal entriegeln dann Site neu laden — Cron sollte abarbeiten.`,
+    };
+  }
+
+  // ── 3. Theme-Integrität kaputt ──
+  if (themeOk === false) {
+    return {
+      language: "bash",
+      lineHint: "WP-CLI / Backend: aktives Theme prüfen + reparieren",
+      code: `# Theme-Validierung\nwp theme list --status=active\nwp theme verify-checksums --all\n\n# Falls Stylesheet fehlt:\n# 1. Backup ziehen\n# 2. Theme neu von original-Quelle hochladen`,
+      explainer: `Das aktive Theme hat strukturelle Fehler (style.css fehlt oder validate_file meldet Probleme). Reparatur: Backup → Theme aus offizieller Quelle (WordPress.org / Vendor) frisch installieren — keine manuelle Patch-Operation.`,
+    };
+  }
+
+  // ── 4. Brute-Force-Welle ──
+  if ((bruteForce ?? 0) > 50) {
+    return {
+      language: "apache",
+      lineHint: ".htaccess (Apache) · /wp-login.php IP-rate-limit",
+      code: `<Files wp-login.php>\n  Order Allow,Deny\n  # Erlaubt nur deine Office-IP\n  Allow from 1.2.3.4\n  Deny from all\n</Files>`,
+      explainer: `${bruteForce} Login-Versuche in 24 h — definitiv eine Brute-Force-Welle. Sofort-Maßnahme: wp-login.php auf Office-IP einschränken ODER Plugin "Limit Login Attempts Reloaded" mit 3-Versuche-Sperre installieren.`,
+    };
+  }
+
+  // ── 5. DB aufgebläht ──
+  if ((dbSize ?? 0) > 500) {
+    const top = deep.db?.largest_tables?.[0];
+    return {
+      language: "sql",
+      lineHint: "phpMyAdmin / WP-CLI · Größte Tabelle aufräumen",
+      code: top
+        ? `-- Größte Tabelle: ${top.name} (${top.size_mb} MB, ${top.rows.toLocaleString("de-DE")} Zeilen)\nOPTIMIZE TABLE \`${top.name}\`;\n\n-- Falls wp_options bloated: autoload-Felder analysieren\nSELECT option_name, LENGTH(option_value) AS bytes\nFROM wp_options WHERE autoload = 'yes'\nORDER BY bytes DESC LIMIT 10;`
+        : `-- DB-Größe analysieren\nSELECT TABLE_NAME, ROUND((DATA_LENGTH+INDEX_LENGTH)/1024/1024, 1) AS size_mb\nFROM information_schema.TABLES\nWHERE TABLE_SCHEMA = DATABASE()\nORDER BY size_mb DESC LIMIT 5;`,
+      explainer: `Deine Datenbank ist ${dbSize} MB groß${top ? ` — die größte Tabelle ist ${top.name} (${top.size_mb} MB)` : ""}. Über 500 MB führt bei den meisten Shared-Hostern zu langsamen Backups und Restore-Problemen. OPTIMIZE TABLE entfernt Fragmentierung sofort.`,
+    };
+  }
+
+  // ── 6. Memory-Limit zu klein ──
   if (memLimit && /^(?:32|64|96|128)M$/i.test(memLimit)) {
     return {
       language: "php",
@@ -91,6 +161,7 @@ function generatePrecisionSnippet(
     };
   }
 
+  // ── 7. Errors gesammelt, Debug aber aus ──
   if (fixKey === "404" && wpDebug === false && (errors24 ?? 0) > 5) {
     return {
       language: "php",
@@ -100,15 +171,17 @@ function generatePrecisionSnippet(
     };
   }
 
-  if ((slowQ ?? 0) > 10) {
+  // ── 8. Slow-Query-Log signalisiert DB-Performance-Problem ──
+  if ((slowQTotal ?? 0) > 100) {
     return {
       language: "sql",
       lineHint: "MySQL-Konsole · Slow-Query-Log auswerten",
       code: `SELECT query_time, sql_text FROM mysql.slow_log\nORDER BY query_time DESC LIMIT 5;`,
-      explainer: `Deine DB hat ${slowQ} langsame Queries in 24 h. Die Top-5 nach Laufzeit zeigen meistens fehlende Indizes oder unoptimierte Plugin-Abfragen.`,
+      explainer: `Deine DB hat ${slowQTotal} kumulative Slow-Queries. Die Top-5 nach Laufzeit zeigen meistens fehlende Indizes oder unoptimierte Plugin-Abfragen.`,
     };
   }
 
+  // ── 9. PHP-Version End-of-Life ──
   if (phpVer && /^7\.|^8\.0/.test(phpVer)) {
     return {
       language: "ini",
