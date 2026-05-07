@@ -44,7 +44,10 @@ export default function GuideRenderer({
 
   // Polling-Fallback: Webhook könnte verzögert sein. Wenn der User mit
   // ?session_id aus Stripe zurückkommt aber noch nicht unlocked ist,
-  // checken wir die Stripe-Session direkt.
+  // checken wir die Stripe-Session direkt. Bei expliziten Server-Errors
+  // (4xx/5xx) brechen wir SOFORT ab — sonst verschwendet der User 12 s mit
+  // einem Fehler, der eh nicht von selbst weggeht (z.B. STRIPE_SECRET_KEY
+  // fehlt → 500 mit "Stripe nicht konfiguriert").
   useEffect(() => {
     if (unlocked || !pendingSessionId) return;
     let cancelled = false;
@@ -59,25 +62,41 @@ export default function GuideRenderer({
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ sessionId: pendingSessionId }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({})) as { unlocked?: boolean; error?: string; payment_status?: string };
         if (cancelled) return;
         if (data.unlocked) {
           setUnlocked(true);
           setPollState("success");
-          // hard-reload damit Server-Component frische Daten bekommt
           setTimeout(() => window.location.reload(), 800);
           return;
+        }
+        // Hard-Errors (4xx/5xx) → sofort failed, kein weiteres Polling
+        if (!res.ok) {
+          setPollState("failed");
+          setPollError(`HTTP ${res.status}: ${data.error ?? "Unbekannter Server-Fehler"}`);
+          return;
+        }
+        // payment_status !== "paid" — Stripe hält die Session noch
+        if (data.payment_status && data.payment_status !== "paid") {
+          if (attempts >= maxAttempts) {
+            setPollState("failed");
+            setPollError(`Stripe-Status: ${data.payment_status}. Wenn du sicher bezahlt hast, lade die Seite neu oder kontaktiere Support.`);
+            return;
+          }
         }
         if (attempts < maxAttempts) {
           setTimeout(poll, 2000);
         } else {
           setPollState("failed");
-          setPollError("Zahlung konnte nicht bestätigt werden — bitte Support kontaktieren.");
+          setPollError("Webhook nicht angekommen + Polling abgelaufen. Bitte Seite neu laden — wenn das nicht hilft, support@website-fix.com mit der Stripe-Session-ID anschreiben.");
         }
-      } catch {
+      } catch (err) {
         if (cancelled) return;
         if (attempts < maxAttempts) setTimeout(poll, 2000);
-        else { setPollState("failed"); setPollError("Verbindungsfehler beim Prüfen."); }
+        else {
+          setPollState("failed");
+          setPollError(err instanceof Error ? `Netzwerk-Fehler: ${err.message}` : "Verbindungsfehler beim Prüfen.");
+        }
       }
     }
     poll();
@@ -115,6 +134,23 @@ export default function GuideRenderer({
             <p style={{ margin: 0, fontSize: 13, color: T.textSub, lineHeight: 1.55 }}>
               Stripe hat die Zahlung erfolgreich bearbeitet, wir schalten gerade<br/>deinen Zugang frei. Das dauert maximal 12 Sekunden.
             </p>
+            {pendingSessionId && (
+              <p style={{ margin: "14px 0 0", fontSize: 10.5, color: T.textMuted, fontFamily: "monospace", lineHeight: 1.4 }}>
+                Session: {pendingSessionId.slice(0, 18)}…
+              </p>
+            )}
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                marginTop: 18, padding: "7px 16px", borderRadius: 7,
+                background: "rgba(255,255,255,0.04)",
+                border: `1px solid ${T.border}`,
+                color: T.textSub, fontSize: 11.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Seite manuell neu laden
+            </button>
             <style>{`@keyframes wf-guide-spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         </div>
