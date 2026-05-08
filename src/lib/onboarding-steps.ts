@@ -85,9 +85,16 @@ export const ONBOARDING_STEPS: Record<OnboardingPlanKey, {
         icon:  "🔍",
       },
       {
+        id:    "pro_branding_setup",
+        label: "Logo & Brand-Farbe einrichten",
+        hint:  "Einmal hochladen — alle PDF-Berichte tragen ab sofort dein Branding.",
+        href:  "/dashboard/agency-branding",
+        icon:  "🎨",
+      },
+      {
         id:    "pro_first_report",
-        label: "Ersten White-Label PDF-Bericht erstellen",
-        hint:  "Dein Logo, deine Brand-Farbe, exportierbar in 30 Sekunden.",
+        label: "Ersten White-Label PDF-Bericht exportieren",
+        hint:  "Dein Logo, deine Brand-Farbe, in 30 Sekunden teilbar mit Endkunden.",
         href:  "/dashboard/reports",
         icon:  "📄",
       },

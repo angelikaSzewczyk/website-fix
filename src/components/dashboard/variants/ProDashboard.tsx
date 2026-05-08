@@ -745,8 +745,8 @@ export default function ProDashboard(props: ProDashboardProps) {
                     Willkommen im Professional-Bereich, {firstName}.
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
-                    Dein White-Label-Branding ist aktiv — richte dein Logo und deine Farben in den{" "}
-                    <a href="/dashboard/settings" style={{ color: "#10B981", textDecoration: "none", fontWeight: 600 }}>Einstellungen</a> ein.
+                    Dein White-Label-Branding ist aktiv — richte dein Logo und deine Farben unter{" "}
+                    <a href="/dashboard/agency-branding" style={{ color: "#10B981", textDecoration: "none", fontWeight: 600 }}>Branding & White-Label</a> ein.
                   </p>
                 </div>
               </div>
@@ -890,13 +890,16 @@ export default function ProDashboard(props: ProDashboardProps) {
                 </button>
               </form>
 
-              {/* Badges */}
+              {/* Badges — Pricing-Card Pro: "10 WordPress-Projekte · unbegrenzte
+                  Scans" + "Voller Deep-Scan: SEO, Technik, Performance, BFSG".
+                  getMaxSubpages('professional') = 500. Speed-Hint ehrlich auf
+                  1-2 Min (Engine-Realität ~30-90s). */}
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                 {[
-                  { icon: "📄", text: "25 Seiten inkl." },
-                  { icon: "🔍", text: "SEO-Audit" },
-                  { icon: "📱", text: "Mobile-Check" },
-                  { icon: "⚡", text: "< 60 Sekunden" },
+                  { icon: "📄", text: "Bis zu 500 Unterseiten" },
+                  { icon: "🤖", text: "KI-Auto-Fix" },
+                  { icon: "♿", text: "BFSG-Check" },
+                  { icon: "⚡", text: "Ergebnis in 1-2 Min" },
                 ].map(b => (
                   <div key={b.text} style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
@@ -1665,52 +1668,56 @@ export default function ProDashboard(props: ProDashboardProps) {
 
           {/* ⑦ SMART-GUARD AUTOMATION MODULES — hidden in focus mode */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
-            <SectionLabel color={D.blueSoft}>Professional · Automatisierung</SectionLabel>
-            <SectionHead>Einmal verstehen — dauerhaft überwacht.</SectionHead>
+            <SectionLabel color={D.blueSoft}>{isProfessionalPlus ? "Professional · Aktiv" : "Professional · Automatisierung"}</SectionLabel>
+            <SectionHead>{isProfessionalPlus ? "Diese Module sind in deinem Plan aktiv." : "Einmal verstehen — dauerhaft überwacht."}</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 580 }}>
-              Die Analyse liegt vor dir. Der Professional Plan läuft im Hintergrund, beobachtet jede Veränderung und meldet sich — ohne dass du selbst regelmäßig prüfen musst.
+              {isProfessionalPlus
+                ? "Score-Verlauf, 24/7-Monitoring und White-Label-PDF laufen im Hintergrund. Klick auf eine Karte, um den jeweiligen Bereich zu öffnen."
+                : "Die Analyse liegt vor dir. Der Professional Plan läuft im Hintergrund, beobachtet jede Veränderung und meldet sich — ohne dass du selbst regelmäßig prüfen musst."}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
               {([
                 {
+                  // Plan-aware CTA: Pro+ ist aktiv → "Verlauf öffnen", sonst Upgrade.
                   key: "score",
                   title: "Score-Verlauf",
                   badge: "Täglich · 30 Tage",
                   desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
-                  cta: "Professional aktivieren",
+                  cta: isProfessionalPlus ? "Verlauf öffnen →" : "Professional aktivieren",
                   planTag: "Professional",
-                  status: isFree ? "Professional" : null as string | null,
-                  disabled: isFree,
+                  status: !isProfessionalPlus ? "Professional" : null as string | null,
+                  disabled: !isProfessionalPlus,
                 },
                 {
                   key: "monitor",
                   title: "24/7 Live-Monitoring",
                   badge: "Echtzeit · E-Mail-Alert",
                   desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
-                  cta: "Professional aktivieren",
+                  cta: isProfessionalPlus ? "Status prüfen →" : "Professional aktivieren",
                   planTag: "Professional",
-                  status: isFree ? "Professional" : null as string | null,
-                  disabled: isFree,
+                  status: !isProfessionalPlus ? "Professional" : null as string | null,
+                  disabled: !isProfessionalPlus,
                 },
                 {
                   key: "pdf",
                   title: "Monatlicher PDF-Bericht",
                   badge: "Automatisch · Teilbar",
                   desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
-                  cta: "Berichte aktivieren",
+                  cta: isProfessionalPlus ? "Berichte öffnen →" : "Professional aktivieren",
                   planTag: "Professional",
-                  status: null as string | null,
-                  disabled: false,
+                  status: !isProfessionalPlus ? "Professional" : null as string | null,
+                  disabled: !isProfessionalPlus,
                 },
                 {
+                  // Lead-Magnet ist Agency-only — Pro sieht Lock + Agency-Upsell.
                   key: "leadmagnet",
                   title: "Lead-Magnet Widget",
                   badge: "Exklusiv · Agency",
                   desc: "Bettest du das Widget auf Kunden-Websites ein, können Besucher direkt einen kostenlosen Scan starten — und landen als warme Leads in deinem Dashboard.",
                   cta: "Agency anfragen",
                   planTag: "Agency",
-                  status: (isFree || isSmartGuard) ? "Agency" : null as string | null,
-                  disabled: isFree || isSmartGuard,
+                  status: !isAgency ? "Agency" : null as string | null,
+                  disabled: !isAgency,
                 },
               ]).map(module => (
                 <div key={module.key} className={module.disabled ? "wf-disabled-card" : ""} style={{
@@ -1921,14 +1928,19 @@ export default function ProDashboard(props: ProDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑧ WP-PLUGIN ANBINDUNG — hidden in focus mode */}
+          {/* ⑧ WHITE-LABEL-PLUGIN ANBINDUNG (Agency-only Upsell) — hidden in focus mode.
+               Klare Trennung zum Read-Only-Plugin (oben in PluginDownloadCard, ab Pro
+               inklusive). Diese Sektion bewirbt die WHITE-LABEL-Variante für Mandanten-
+               Sites mit Brand-Anpassung + KI-Mass-Fixer (Agency Scale exklusiv). */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
             <SectionLabel color={isAgency ? "#a78bfa" : D.blueSoft}>
-              {isAgency ? "Agency · Exklusiv" : "Agency Feature"}
+              {isAgency ? "Agency · Exklusiv" : "Agency Scale Feature"}
             </SectionLabel>
-            <SectionHead>WP-Plugin Anbindung</SectionHead>
+            <SectionHead>White-Label-Plugin für Mandanten-Sites</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 600 }}>
-              Installiere das White-Label Helper-Plugin auf deinen Kunden-Seiten, um Fixes direkt aus diesem Dashboard per API zu übertragen — ohne Entwickler, ohne manuelles Copy-Paste.
+              {isAgency
+                ? <>Das White-Label Helper-Plugin trägt dein Branding und überträgt Fixes per API direkt aus diesem Dashboard. Inkl. KI-Mass-Fixer für Bulk-Operationen über mehrere Mandanten.</>
+                : <>Du hast bereits das <strong style={{ color: D.text }}>Read-Only-Plugin</strong> in deinem Pro-Plan. Mit Agency Scale bekommst du zusätzlich die <strong style={{ color: "#a78bfa" }}>White-Label-Variante</strong> — dein Branding beim Endkunden plus KI-Mass-Fixer für Bulk-Operationen über alle Mandanten.</>}
             </p>
 
             {isAgency ? (
@@ -2581,17 +2593,24 @@ export default function ProDashboard(props: ProDashboardProps) {
               Alle {scanLimit} Scans diesen Monat aufgebraucht
             </h2>
             <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
-              Mit dem <strong style={{ color: "#FBBF24" }}>Professional-Plan</strong> bekommst du unbegrenzte Scans,
-              KI-gestützte Fix-Anleitungen und Monitoring rund um die Uhr.
+              {/* Plan-aware Upgrade-Hint: Pro hat seit 2026-05-08 selbst schon
+                  unbegrenzte Scans (PLAN_QUOTAS.professional.monthlyScans=500
+                  Anti-Abuse-Cap). Wenn das Modal trotzdem feuert (Cap-Hit),
+                  ist Agency Scale die nächste Stufe — nicht "Professional". */}
+              {isProfessionalPlus
+                ? <>Du hast den Anti-Abuse-Cap deines Plans erreicht. <strong style={{ color: "#A78BFA" }}>Agency Scale</strong> hebt das auf 50 Mandanten plus Mandanten-Portal und Team-Rollen.</>
+                : <>Mit dem <strong style={{ color: "#FBBF24" }}>Professional-Plan</strong> bekommst du unbegrenzte Scans, KI-gestützte Fix-Anleitungen und Monitoring rund um die Uhr.</>}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <a href="/fuer-agenturen#pricing" style={{
                 display: "block", padding: "13px 24px", borderRadius: 10,
-                background: "#FBBF24", color: "#0b0c10", fontWeight: 800, fontSize: 14,
-                textDecoration: "none", boxShadow: "0 4px 16px rgba(251,191,36,0.3)",
+                background: isProfessionalPlus ? "#A78BFA" : "#FBBF24",
+                color: "#0b0c10", fontWeight: 800, fontSize: 14,
+                textDecoration: "none",
+                boxShadow: isProfessionalPlus ? "0 4px 16px rgba(167,139,250,0.3)" : "0 4px 16px rgba(251,191,36,0.3)",
               }}>
-                Jetzt auf Professional upgraden →
+                {isProfessionalPlus ? "Auf Agency Scale upgraden →" : "Jetzt auf Professional upgraden →"}
               </a>
               <button
                 onClick={() => setShowLimitModal(false)}

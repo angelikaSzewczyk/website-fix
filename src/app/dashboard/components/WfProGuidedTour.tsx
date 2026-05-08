@@ -13,8 +13,8 @@ const STEPS = [
         <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
       </svg>
     ),
-    title: "Experten-Fazit schreiben",
-    body: "Ganz oben im Ergebnis-Panel findest du das Textfeld 'Experten-Fazit'. Schreibe hier dein persönliches Fazit für den Kunden — es erscheint automatisch auf Seite 1 deines PDFs. Nutze die Vorlagen-Buttons für einen schnellen Start.",
+    title: "Executive Summary schreiben",
+    body: "Ganz oben im Ergebnis-Panel findest du das Textfeld 'Executive Summary'. Schreibe hier dein persönliches Fazit für den Endkunden — es erscheint automatisch auf Seite 1 deines White-Label-PDFs. Nutze die Vorlagen-Buttons für einen schnellen Start.",
     accent: "#10B981",
   },
   {

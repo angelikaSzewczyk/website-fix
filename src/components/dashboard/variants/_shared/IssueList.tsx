@@ -1622,7 +1622,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
               <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
             </svg>
             <span style={{ fontSize: "10pt", fontWeight: 700, color: "#334155", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-              Experten-Fazit
+              Executive Summary
             </span>
           </div>
           <p style={{ margin: 0, fontSize: "10pt", color: "#334155", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>

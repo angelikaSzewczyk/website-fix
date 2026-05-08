@@ -65,7 +65,13 @@ export async function POST(req: NextRequest) {
   ` as Array<{ plan: string | null }>;
   const planKey = normalizePlan(userRow[0]?.plan);
 
-  if (planKey === "starter") {
+  // Plan-Limits via PLAN_QUOTAS (Single Source of Truth):
+  //   Starter      = 1 Site     → Upgrade-Hint "Professional"
+  //   Professional = 10 Sites   → Upgrade-Hint "Agency"
+  //   Agency       = 50 Sites   → Hard-Cap als Anti-Abuse, in der Praxis "unlimited"
+  // Limit greift nur wenn (a) schon Cap erreicht UND (b) die neue URL keine
+  // existierende Site ist (sonst würde der ON-CONFLICT-UPSERT geblockt).
+  if (planKey === "starter" || planKey === "professional" || planKey === "agency") {
     const existing = await sql`
       SELECT
         COUNT(*)::int                                              AS total,
@@ -77,17 +83,25 @@ export async function POST(req: NextRequest) {
     const total   = existing[0]?.total   ?? 0;
     const thisUrl = existing[0]?.this_url ?? 0;
 
-    // Limit greift nur wenn (a) schon eine Site existiert UND (b) die neue URL
-    // KEINE existierende Site ist (sonst würde der ON-CONFLICT-UPSERT geblockt).
-    if (total >= 1 && thisUrl === 0) {
+    const limit = planKey === "starter" ? 1 : planKey === "professional" ? 10 : 50;
+    const upgradeTo = planKey === "starter" ? "professional" : "agency";
+    const planLabel = planKey === "starter" ? "Starter" : planKey === "professional" ? "Professional" : "Agency Scale";
+    const upgradeMsg = planKey === "starter"
+      ? "Starter-Plan ist auf 1 Website beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten."
+      : planKey === "professional"
+      ? "Professional-Plan ist auf 10 Websites beschränkt. Upgrade auf Agency Scale, um bis zu 50 Mandanten zu verwalten."
+      : "Agency Scale ist auf 50 Mandanten beschränkt (Anti-Abuse-Cap). Bei größerem Bedarf: support@website-fix.com.";
+
+    if (total >= limit && thisUrl === 0) {
       return NextResponse.json(
         {
           error:        "limit_reached",
-          message:      "Starter-Plan ist auf 1 Website beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten.",
+          message:      upgradeMsg,
           currentCount: total,
-          limit:        1,
-          plan:         "starter",
-          upgradeTo:    "professional",
+          limit,
+          plan:         planKey,
+          planLabel,
+          upgradeTo,
         },
         { status: 402 },
       );

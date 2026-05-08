@@ -327,7 +327,7 @@ export default function ViewClient({
               animation: "wf-view-in 0.4s 0.05s ease both",
             }}>
               <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                Experten-Fazit
+                Executive Summary
               </p>
               <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
                 {execSummary}
