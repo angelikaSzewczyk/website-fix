@@ -16,6 +16,7 @@
  */
 
 import Link from "next/link";
+import { isAgency as isAgencyPlan } from "@/lib/plans";
 
 type Props = {
   plan: string;
@@ -38,7 +39,10 @@ const C = {
 } as const;
 
 export default function PluginDownloadCard({ plan, agencyLogoUrl }: Props) {
-  const isAgency = plan === "agency";
+  // Helper-basiert statt string-equal: Legacy-Werte (agency-pro, agency-starter)
+  // werden über normalizePlan korrekt als Agency erkannt und sehen die
+  // White-Label-Variante. Vorher fielen sie ins Read-Only-Branding durch.
+  const isAgency = isAgencyPlan(plan);
 
   return (
     <section style={{

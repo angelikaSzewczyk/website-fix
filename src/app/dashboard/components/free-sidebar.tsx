@@ -257,10 +257,9 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
     : [
         { icon: "dashboard", label: "Meine Website",      href: "/dashboard",       exact: true,  locked: false },
         { icon: "scan",      label: "Neuer Scan",          href: "/dashboard/scan",  exact: false, locked: false },
-        // Label "Kontakt" statt "Hilfe-Center" — vermeidet Redundanz mit dem
-        // "Hilfe & Support"-Button am Sidebar-Bottom (öffnet Modal).
-        // Nav-Item linkt auf /kontakt (existiert).
-        { icon: "help",      label: "Kontakt",             href: "/kontakt",         exact: false, locked: false },
+        // Kontakt-Eintrag entfernt (08.05.2026): linkte auf /kontakt, was die
+        // App verließ. Der "Hilfe & Support"-Button am Sidebar-Bottom (öffnet
+        // Modal mit Screenshot+Admin-Email) deckt den Use-Case in-app ab.
       ];
 
   return (

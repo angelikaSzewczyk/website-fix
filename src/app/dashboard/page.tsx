@@ -395,7 +395,13 @@ export default async function DashboardPage({
     siteCount = cnt[0]?.c ?? 0;
   } catch { /* Tabelle leer/fehlt → Default 0 */ }
   void siteCount; // bleibt im Scope für künftige Plan-Differenzierungen
-  const useRescueView = !isAgency && plan === "starter";
+  // RescueDashboard war zwischenzeitlich für Starter aktiviert (useRescueView=true),
+  // hat aber das StarterDashboard mit allen Pricing-Versprechen (Plugin-Card,
+  // Onboarding-Checklist, Tech-Fingerprint, MetricPillBar, BFSG-Banner) komplett
+  // versteckt → Pricing-vs-UI-Drift. Seit 2026-05-08: Starter rendert wieder
+  // StarterDashboard. RescueDashboard bleibt im Repo für potenziellen späteren
+  // "Notfall-Modus"-Trigger (z.B. fataler Site-Error), aktuell de-facto deprecated.
+  const useRescueView = false;
 
   // Phase 3 Sprint 4: ?project=<id> Active-Project-Scoping.
   // Wenn ein Projekt-Param mitkommt, schauen wir die zugehörige URL nach
