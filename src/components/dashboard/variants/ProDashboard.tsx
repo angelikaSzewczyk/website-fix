@@ -2176,7 +2176,7 @@ export default function ProDashboard(props: ProDashboardProps) {
                       Plugin herunterladen (.zip)
                     </a>
                     <a
-                      href="https://docs.website-fix.com/plugin"
+                      href="/plugin"
                       target="_blank" rel="noopener noreferrer"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
