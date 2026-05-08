@@ -12,15 +12,22 @@
  * bleiben (kein Schaden) oder gelöscht werden.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { Resend } from "resend";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
-const VERIFIER_TO = "check-auth@verifier.port25.com";
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL ?? "";
+const DEFAULT_TARGET = "check-auth@verifier.port25.com";
 
-export async function POST() {
-  // Auth-Gate
+/** Whitelist legitimer Auth-Tester. Verhindert dass der Endpoint zum
+ *  Generic-Mail-Sender umfunktioniert wird. */
+const ALLOWED_DOMAINS = [
+  "verifier.port25.com",
+  "dkimvalidator.com",
+  "appmaildev.com",         // mail-tester ähnlich
+];
+
+export async function POST(req: NextRequest) {
   const session = await auth();
   const email = session?.user?.email ?? "";
   if (!ADMIN_EMAIL || email !== ADMIN_EMAIL) {
@@ -34,17 +41,28 @@ export async function POST() {
     );
   }
 
+  const body = await req.json().catch(() => ({})) as { to?: string };
+  const target = (body.to || DEFAULT_TARGET).trim();
+
+  // Domain-Whitelist
+  const targetDomain = target.split("@")[1] ?? "";
+  if (!ALLOWED_DOMAINS.includes(targetDomain)) {
+    return NextResponse.json({
+      error: `Empfänger-Domain '${targetDomain}' nicht erlaubt. Erlaubt: ${ALLOWED_DOMAINS.join(", ")}`,
+    }, { status: 400 });
+  }
+
   const sentAt = new Date().toISOString();
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from:    "WebsiteFix <noreply@website-fix.com>",
-      to:      VERIFIER_TO,
+      to:      target,
       replyTo: ADMIN_EMAIL,
       subject: "WebsiteFix Auth Verification Request",
       html: `
-        <p>Hi Port25,</p>
-        <p>This is an automated authentication test. Please reply with the SPF/DKIM/DMARC report.</p>
+        <p>Hi,</p>
+        <p>Automated authentication test. Please verify SPF/DKIM/DMARC.</p>
         <p style="font-family:monospace;font-size:11px;color:#666;">
           Domain: website-fix.com<br/>
           Sent: ${sentAt}<br/>
@@ -52,15 +70,17 @@ export async function POST() {
           Reply-To: ${ADMIN_EMAIL}
         </p>
       `,
-      text: `WebsiteFix authentication test\n\nDomain: website-fix.com\nSent: ${sentAt}\nReply-To: ${ADMIN_EMAIL}\n\nPlease reply with the auth report.`,
+      text: `WebsiteFix auth verification test\n\nDomain: website-fix.com\nSent: ${sentAt}\nReply-To: ${ADMIN_EMAIL}\n\nPlease verify SPF/DKIM/DMARC.`,
     });
 
     return NextResponse.json({
-      ok:        true,
-      sentTo:    VERIFIER_TO,
-      reportTo:  ADMIN_EMAIL,
+      ok:       true,
+      sentTo:   target,
+      reportTo: targetDomain === "dkimvalidator.com" ? "Browser bei dkimvalidator.com" : ADMIN_EMAIL,
       sentAt,
-      hint:      `Report kommt in 1-2 Min an ${ADMIN_EMAIL} (auch Spam-Ordner prüfen).`,
+      hint:     targetDomain === "dkimvalidator.com"
+        ? "Mail verschickt. Geh jetzt zurück zu dkimvalidator.com und klicke auf 'View Results' — der Report erscheint im Browser, kein Mail-Reply nötig."
+        : `Report kommt in 1-5 Min an ${ADMIN_EMAIL} (auch Spam-Ordner prüfen).`,
     });
   } catch (err) {
     console.error("[auth-test] mail send failed:", err);
