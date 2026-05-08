@@ -699,6 +699,26 @@ function AccordionItem({
  * und entscheiden.
  */
 function UpgradeModal({ onClose }: { onClose: () => void }) {
+  // Starter-Quota-Lookup: zeigt eine Inklusiv-Hinweis-Box wenn der eingeloggte
+  // User Starter ist und noch von seinen 5 inklusiven Smart-Fix-Guides hat.
+  // Sonst sieht User nur 9,90 €-Pay-per-Fix + Pro-Flatrate-Optionen.
+  const [quota, setQuota] = useState<{ applicable: boolean; remaining: number; quota: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/me/guide-quota")
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return;
+        if (data.applicable && typeof data.remaining === "number") {
+          setQuota({ applicable: true, remaining: data.remaining, quota: data.quota });
+        } else {
+          setQuota({ applicable: false, remaining: 0, quota: data.quota ?? 5 });
+        }
+      })
+      .catch(() => { /* silent — bei Fehler kein Quota-Hint, nur 9,90 € + Pro */ });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <>
       <div onClick={onClose} style={{
@@ -730,6 +750,32 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         <p style={{ textAlign: "center", margin: "0 0 22px", fontSize: 12.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.6 }}>
           Zwei Wege zur Lösung — wähl den, der zu deinem Bedarf passt.
         </p>
+
+        {/* Inklusiv-Quota-Hinweis für Starter (08.05.2026) — User-Bug-Report:
+             "warum 9,90 € wenn 5 inklusive sind?" — Banner macht klar, dass
+             er bei einem passenden Smart-Fix-Guide aus der Issue-Liste
+             den Inklusiv-Pfad nimmt, ohne 9,90 € zu zahlen. */}
+        {quota?.applicable && quota.remaining > 0 && (
+          <div style={{
+            padding: "14px 16px", borderRadius: 11, marginBottom: 16,
+            background: "rgba(34,197,94,0.08)",
+            border: "1px solid rgba(34,197,94,0.34)",
+          }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "#22C55E", letterSpacing: "0.10em", textTransform: "uppercase" }}>
+                ✓ In deinem Plan inklusive
+              </span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: "#22C55E", fontVariantNumeric: "tabular-nums" }}>
+                {quota.remaining} von {quota.quota} frei
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
+              Du musst nichts zahlen — du hast noch <strong>{quota.remaining} Smart-Fix-Guides inklusive</strong>.
+              Schließe dieses Fenster und klicke in deiner Issue-Liste auf einen Smart-Fix-Guide,
+              der zu deinem Problem passt → dort kannst du ihn mit einem Klick einlösen.
+            </p>
+          </div>
+        )}
 
         {/* ── Option 1: Pay-per-Fix 9,90 € ─────────────────────────────────── */}
         <div style={{
