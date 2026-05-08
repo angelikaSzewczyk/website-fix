@@ -58,15 +58,18 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // ── Anon-Guide-Branch ─────────────────────────────────────────────
-    // Käufer hat ohne Login bezahlt. Wir müssen erst den User anlegen
-    // (oder existierenden by-email finden) und dann den Unlock schreiben.
-    // Idempotent: doppelter Webhook-Trigger erzeugt keine Duplikate.
+    // ── Anon-Guide-Branch (Pay-per-Fix, kein Konto) ───────────────────
+    // 9,90-€-Käufer bekommt einen 4-Wochen-Online-Token + dauerhaftes PDF
+    // im Postfach. KEIN User-Konto — sonst landet er in einem 29 €/Mo
+    // Starter-Dashboard, was konzeptionell falsch ist (Einmalkauf vs. Abo).
+    //
+    // Idempotenz: UNIQUE(stripe_session_id) auf guide_access_tokens. Bei
+    // doppelter Webhook-Delivery liefert der INSERT … ON CONFLICT … RETURNING
+    // einen leeren Result-Set, dann fischen wir den existierenden Token raus.
     if (session.mode === "payment" && session.metadata?.kind === "rescue_guide_anon") {
       const guideId   = session.metadata.guide_id;
       const hoster    = session.metadata.hoster ?? "default";
       const paidCents = session.amount_total ?? 0;
-      // Quellpriorität: Stripe-eingegebene Email → metadata-Fallback (sollte nie greifen)
       const buyerEmail = (session.customer_details?.email ?? session.metadata.email ?? "")
         .trim().toLowerCase();
 
@@ -78,64 +81,47 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // Find-or-create — race-safe.
-        // Bei zwei parallelen Webhook-Deliveries gleicher Email würde der naive
-        // SELECT-then-INSERT-Ansatz beim Second auf UNIQUE(email) crashen. Lösung:
-        // INSERT … ON CONFLICT (email) DO NOTHING RETURNING id liefert bei Race
-        // einen leeren Result-Set; das fangen wir mit einem Fallback-SELECT ab.
-        // password_hash IS NULL = der existierende /api/auth/register-Flow erkennt
-        // das später als "Account ohne Passwort" und linkt das Passwort beim
-        // ersten Register-Versuch (oder via /forgot-password).
-        const defaultName = buyerEmail.split("@")[0];
-        const inserted = await sql`
-          INSERT INTO users (name, email, password_hash, "emailVerified")
-          VALUES (${defaultName}, ${buyerEmail}, NULL, NOW())
-          ON CONFLICT (email) DO NOTHING
-          RETURNING id
-        ` as Array<{ id: string | number }>;
+        // Token-Insert race-safe via UNIQUE(stripe_session_id).
+        // RETURNING token, expires_at — wir brauchen beide für die Mail.
+        const tokenInsert = await sql`
+          INSERT INTO guide_access_tokens
+            (guide_id, email, hoster, stripe_session_id, paid_amount_cents)
+          VALUES
+            (${guideId}, ${buyerEmail}, ${hoster}, ${session.id}, ${paidCents})
+          ON CONFLICT (stripe_session_id) DO NOTHING
+          RETURNING token, expires_at
+        ` as Array<{ token: string; expires_at: string }>;
 
-        let userId: string;
-        let isNewAccount: boolean;
-        if (inserted[0]?.id) {
-          // INSERT erfolgreich → frischer Account.
-          userId       = String(inserted[0].id);
-          isNewAccount = true;
+        let tokenValue:    string;
+        let tokenExpires:  string;
+        if (tokenInsert[0]?.token) {
+          tokenValue   = tokenInsert[0].token;
+          tokenExpires = tokenInsert[0].expires_at;
         } else {
-          // ON CONFLICT triggered → User existiert bereits (entweder vorher angelegt
-          // ODER paralleler Webhook-Trigger war schneller). Fallback-SELECT liefert
-          // den existierenden id. Idempotent in beide Richtungen.
+          // Race oder Re-Delivery: existierender Token holen.
           const existing = await sql`
-            SELECT id FROM users WHERE email = ${buyerEmail} LIMIT 1
-          ` as Array<{ id: string | number }>;
-          if (!existing[0]?.id) {
-            // Sollte praktisch nie passieren (ON CONFLICT (email) ohne match wäre Bug
-            // im UNIQUE-Index). Trotzdem defensiv: 500 → Stripe retried.
-            throw new Error(`anon user resolution failed for email=${buyerEmail}`);
+            SELECT token, expires_at FROM guide_access_tokens
+            WHERE stripe_session_id = ${session.id}
+            LIMIT 1
+          ` as Array<{ token: string; expires_at: string }>;
+          if (!existing[0]?.token) {
+            throw new Error(`anon token resolution failed for session=${session.id}`);
           }
-          userId       = String(existing[0].id);
-          isNewAccount = false;
+          tokenValue   = existing[0].token;
+          tokenExpires = existing[0].expires_at;
         }
 
-        await sql`
-          INSERT INTO user_unlocked_guides (user_id, guide_id, stripe_session_id, paid_amount_cents, hoster)
-          VALUES (${userId}::int, ${guideId}, ${session.id}, ${paidCents}, ${hoster})
-          ON CONFLICT (user_id, guide_id) DO NOTHING
-        `;
-        console.log(`[stripe-webhook] anon guide unlocked: user=${userId} (new=${isNewAccount}) guide=${guideId} email=${buyerEmail}`);
+        console.log(`[stripe-webhook] anon guide token issued: guide=${guideId} email=${buyerEmail} token=${tokenValue.slice(0,8)}…`);
 
-        // Resend-Mail mit PDF-Anhang: Claim-Link + Guide als PDF zur Sicherung.
-        // PDF ist der "Lebenslang-Beleg" — User hat den Inhalt im Postfach,
-        // unabhängig von WebsiteFix-Server-Status. Failure ist nicht kritisch
-        // — der User landet ohnehin nach Stripe auf der Claim-Page.
         if (process.env.RESEND_API_KEY) {
           try {
-            const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
-            const claimUrl = isNewAccount
-              ? `${baseUrl}/forgot-password?email=${encodeURIComponent(buyerEmail)}`
-              : `${baseUrl}/login?callbackUrl=${encodeURIComponent(`/dashboard/guides/${guideId}`)}`;
+            const baseUrl   = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
+            const guideUrl  = `${baseUrl}/g/${tokenValue}`;
+            const expiresOn = new Date(tokenExpires).toLocaleDateString("de-DE", {
+              day: "2-digit", month: "long", year: "numeric",
+            });
 
-            // ── PDF-Anhang generieren (best-effort, Mail geht trotzdem raus
-            // wenn PDF-Render scheitert — wir wollen den Käufer nicht blocken) ──
+            // PDF-Anhang generieren (best-effort) — der dauerhafte Beleg.
             let pdfAttachment: { filename: string; content: Buffer } | null = null;
             try {
               const guideRows = await sql`
@@ -158,46 +144,44 @@ export async function POST(req: NextRequest) {
               }
             } catch (pdfErr) {
               console.error("[stripe-webhook] anon guide PDF render failed:", pdfErr);
-              // Keine PDF — Mail geht ohne Anhang raus. User hat noch Online-Zugriff.
             }
 
             const resend = new Resend(process.env.RESEND_API_KEY);
             await resend.emails.send({
               from:    "WebsiteFix <noreply@website-fix.com>",
               to:      buyerEmail,
-              subject: "Dein Fix-Guide ist freigeschaltet ✓",
+              subject: "Dein Fix-Guide ist da ✓",
               html: `
                 <div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0F172A;">
-                  <h2 style="margin:0 0 12px;font-size:20px;">Dein Fix-Guide ist bereit.</h2>
+                  <h2 style="margin:0 0 12px;font-size:20px;">Dein Fix-Guide ist da.</h2>
                   <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
-                    Vielen Dank für deinen Kauf. Dein Fix-Guide ist mit deiner E-Mail-Adresse
-                    <strong>${buyerEmail}</strong> verknüpft und steht ab sofort zur Verfügung.
+                    Vielen Dank für deinen Kauf. Du hast deinen Fix-Guide auf zwei Wegen — <strong>kein Konto, kein Login</strong> nötig:
                   </p>
                   ${pdfAttachment ? `
-                  <div style="margin:14px 0 18px;padding:12px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;">
-                    <p style="margin:0;font-size:13px;color:#166534;">
-                      📎 <strong>Anbei als PDF:</strong> die komplette Anleitung zum Speichern oder Drucken.
-                      Der Online-Zugriff über das Dashboard bleibt unbegrenzt erhalten.
+                  <div style="margin:14px 0 18px;padding:14px 16px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;">
+                    <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#166534;">
+                      📎 1. PDF im Anhang dieser Mail
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#166534;line-height:1.55;">
+                      Der komplette Guide zum Speichern oder Drucken — bleibt dauerhaft in deinem Postfach, auch in Jahren noch.
                     </p>
                   </div>
                   ` : ""}
-                  ${isNewAccount ? `
-                  <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
-                    Wir haben dir ein kostenloses Konto erstellt. Setze dein Passwort, um den
-                    Guide online aufzurufen — der Zugriff über das Dashboard bleibt erhalten,
-                    solange WebsiteFix verfügbar ist.
+                  <div style="margin:0 0 18px;padding:14px 16px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;">
+                    <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#5B21B6;">
+                      🔗 ${pdfAttachment ? "2. " : ""}Online-Bericht (4 Wochen aktiv)
+                    </p>
+                    <p style="margin:0 0 12px;font-size:13px;color:#5B21B6;line-height:1.55;">
+                      Eine Online-Version mit Code-Copy-Buttons und Klick-Pfaden für deinen Hoster — verfügbar bis <strong>${expiresOn}</strong>.
+                    </p>
+                    <a href="${guideUrl}" style="display:inline-block;padding:11px 22px;background:#7C3AED;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13.5px;">
+                      Online-Bericht öffnen →
+                    </a>
+                  </div>
+                  <p style="margin:0 0 6px;font-size:12px;color:#64748B;line-height:1.55;">
+                    Brauchst du dauerhaften Online-Zugriff plus alle 7 Guides?
+                    <a href="${baseUrl}/fuer-agenturen?upgrade=professional#pricing" style="color:#10B981;font-weight:700;text-decoration:none;">Professional ansehen →</a>
                   </p>
-                  <a href="${claimUrl}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
-                    Passwort setzen &amp; Guide öffnen
-                  </a>
-                  ` : `
-                  <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
-                    Logge dich mit deiner bekannten E-Mail-Adresse ein, um den Guide online zu öffnen.
-                  </p>
-                  <a href="${claimUrl}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
-                    Zum Guide
-                  </a>
-                  `}
                   <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
                     Beleg: Stripe-Session ${session.id} · Betrag ${(paidCents/100).toFixed(2).replace(".",",")} €
                   </p>
@@ -206,13 +190,12 @@ export async function POST(req: NextRequest) {
               attachments: pdfAttachment ? [pdfAttachment] : undefined,
             });
           } catch (mailErr) {
-            console.error("[stripe-webhook] anon guide claim mail failed:", mailErr);
+            console.error("[stripe-webhook] anon guide mail failed:", mailErr);
           }
         }
       } catch (err) {
-        console.error("[stripe-webhook] anon guide unlock failed:", err);
-        // 500 → Stripe retried (3-4 mal über Tage). Wir wollen den Unlock nicht verlieren.
-        return NextResponse.json({ error: "anon_unlock_failed", sessionId: session.id }, { status: 500 });
+        console.error("[stripe-webhook] anon guide token issue failed:", err);
+        return NextResponse.json({ error: "anon_token_failed", sessionId: session.id }, { status: 500 });
       }
       return NextResponse.json({ received: true });
     }

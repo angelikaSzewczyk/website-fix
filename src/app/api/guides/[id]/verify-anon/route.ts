@@ -1,20 +1,20 @@
 /**
  * GET /api/guides/[id]/verify-anon?session_id=cs_...
  *
- * Polling-Endpoint für die /scan/checkout/claim-Page. Bestätigt, dass
- * der Webhook den anonymen Guide-Kauf bereits verarbeitet hat.
+ * Polling-Endpoint für die /scan/checkout/claim-Page. Bestätigt, dass der
+ * Webhook den anonymen Guide-Kauf bereits verarbeitet und einen 4-Wochen-
+ * Online-Token in guide_access_tokens angelegt hat.
  *
  * Returns 200 mit:
- *  { verified: true,  email: "user@x.de", isNewAccount: bool }
- *  { verified: false }                     — noch nicht verarbeitet
+ *   { verified: true,  token: "<uuid>", email: "user@x.de" }
+ *   { verified: false }                                       — noch nicht da
  *
  * Sicherheits-Eigenschaften:
- *  - Stripe-Session muss zu DIESEM Guide gehören (metadata.guide_id ===
- *    URL-Param) — verhindert Session-ID-Schmuggel zur Info-Discovery.
- *  - Email wird zurückgegeben, weil die Claim-Page sie anzeigen muss
- *    ("Wir haben dir an X eine Mail geschickt"). Der Käufer hat sie eh
- *    selbst gerade eingegeben.
- *  - isNewAccount-Flag wird über password_hash IS NULL bestimmt.
+ *   - Stripe-Session muss zu DIESEM Guide gehören (metadata.guide_id ===
+ *     URL-Param) — verhindert Session-ID-Schmuggel zur Info-Discovery.
+ *   - Token-Lookup über UNIQUE(stripe_session_id) — race-safe, kein User-
+ *     Account involviert (Pay-per-Fix-Käufer haben kein Konto, siehe
+ *     guide_access_tokens-Migration 2026-05-08).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -49,7 +49,6 @@ export async function GET(
   if (stripeSession.metadata?.guide_id !== guideId) {
     return NextResponse.json({ verified: false }, { status: 400 });
   }
-  // Nur anon-Käufe — andere Pfade haben ihre eigenen Verify-Endpoints
   if (stripeSession.metadata?.kind !== "rescue_guide_anon") {
     return NextResponse.json({ verified: false }, { status: 400 });
   }
@@ -57,27 +56,21 @@ export async function GET(
     return NextResponse.json({ verified: false });
   }
 
-  const email = (stripeSession.customer_details?.email ?? stripeSession.metadata?.email ?? "").trim().toLowerCase();
-  if (!email) return NextResponse.json({ verified: false });
-
   const sql = neon(process.env.DATABASE_URL!);
-
-  // User existiert + Unlock geschrieben? → Webhook hat fertig.
   const rows = await sql`
-    SELECT u.id::text AS user_id, u.password_hash IS NULL AS is_new_account, ug.id AS unlock_id
-    FROM users u
-    LEFT JOIN user_unlocked_guides ug ON ug.user_id = u.id AND ug.guide_id = ${guideId}
-    WHERE u.email = ${email}
+    SELECT token::text AS token, email
+    FROM guide_access_tokens
+    WHERE stripe_session_id = ${sessionId}
     LIMIT 1
-  ` as Array<{ user_id: string; is_new_account: boolean; unlock_id: number | null }>;
+  ` as Array<{ token: string; email: string }>;
 
-  if (rows.length === 0 || rows[0].unlock_id === null) {
+  if (rows.length === 0) {
     return NextResponse.json({ verified: false });
   }
 
   return NextResponse.json({
-    verified:     true,
-    email,
-    isNewAccount: rows[0].is_new_account,
+    verified: true,
+    token:    rows[0].token,
+    email:    rows[0].email,
   });
 }

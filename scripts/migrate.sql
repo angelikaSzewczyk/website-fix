@@ -575,3 +575,32 @@ ALTER TABLE plugin_installations ADD COLUMN IF NOT EXISTS handshake_count   INTE
 CREATE INDEX IF NOT EXISTS plugin_installations_user_handshake_idx
   ON plugin_installations(user_id, last_handshake_at DESC)
   WHERE active = true;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Pay-per-Fix Token-basierter Zugriff (Mai 2026)
+--
+-- Statt für 9,90 €-Käufer ein Konto + Starter-Dashboard anzulegen (verwirrend,
+-- 29 €/Mo-Optik bei 9,90 €-Einmalkauf), bekommen sie einen 4-Wochen-Token für
+-- die Online-Variante des Guides. Das PDF im Postfach ist dauerhaft verfügbar.
+--
+-- Kein FK auf users — explizit eigenständig, weil Pay-per-Fix-Käufer KEIN
+-- User-Konto haben sollen.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guide_access_tokens (
+  token             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  guide_id          TEXT        NOT NULL,
+  email             TEXT        NOT NULL,
+  hoster            TEXT        NOT NULL DEFAULT 'default',
+  stripe_session_id TEXT        NOT NULL,
+  paid_amount_cents INTEGER     NOT NULL,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at        TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '28 days')
+);
+
+-- Idempotenz: doppelter Webhook-Trigger derselben Stripe-Session → kein
+-- Duplikat-Token. Lookup nutzt diesen Index ebenfalls.
+CREATE UNIQUE INDEX IF NOT EXISTS guide_access_tokens_stripe_session_uniq
+  ON guide_access_tokens (stripe_session_id);
+
+-- Optional: alte Tokens aufräumen (Cron oder manuell):
+--   DELETE FROM guide_access_tokens WHERE expires_at < NOW() - INTERVAL '90 days';

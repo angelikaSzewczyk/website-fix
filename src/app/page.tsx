@@ -248,7 +248,7 @@ const FAQ = [
   },
   {
     q: "Was passiert nach dem Kauf eines 9,90 €-Guides?",
-    a: "Direkt nach Stripe-Zahlung wirst du auf eine Bestätigungsseite weitergeleitet. Wir legen automatisch ein kostenloses Konto mit deiner E-Mail an (kein Passwort vorab erforderlich) und schicken dir eine Bestätigungs-Mail mit zwei Dingen: (1) einem Link zum Passwort-Setzen für den Online-Zugriff über das Dashboard und (2) dem kompletten Guide als PDF-Anhang zum Download oder Drucken. Der Online-Zugriff bleibt erhalten, solange WebsiteFix verfügbar ist (Mindestbetriebsdauer 24 Monate gem. § 327c BGB). Das PDF im Postfach ist davon unabhängig. Details siehe AGB §5.6. Bei Fragen: support@website-fix.com.",
+    a: "Kein Konto, kein Login, kein Dashboard. Direkt nach der Stripe-Zahlung schicken wir dir eine Bestätigungs-Mail mit zwei Dingen: (1) dem kompletten Guide als PDF-Anhang — dauerhaft in deinem Postfach nutzbar, auch in Jahren noch — und (2) einem persönlichen Online-Link mit Code-Copy-Buttons und Hoster-Klick-Pfaden, der vier Wochen aktiv ist. Brauchst du dauerhaften Online-Zugriff plus alle 7 Guides? Dann lohnt sich Professional für 89 €/Mo. Details siehe AGB §5.6. Bei Fragen: support@website-fix.com.",
   },
   {
     q: "Was kostet WebsiteFix in der Übersicht?",

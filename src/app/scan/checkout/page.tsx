@@ -346,7 +346,7 @@ function CheckoutInner() {
             </button>
 
             <p style={{ margin: "12px 0 0", fontSize: 11, color: "rgba(255,255,255,0.32)", textAlign: "center", lineHeight: 1.5 }}>
-              Einmalzahlung · Kein Abo · DSGVO-konform · Lebenslanger Zugriff
+              Einmalzahlung · Kein Konto · DSGVO-konform · PDF dauerhaft + Online-Bericht 4 Wochen
             </p>
           </form>
         </div>

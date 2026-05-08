@@ -1113,8 +1113,8 @@ export default function AgencyPage() {
                   </span>
                 </div>
                 <p style={{ margin: 0, fontSize: 13, color: T.textSub, lineHeight: 1.55 }}>
-                  Für den Endkunden mit akutem Einzelproblem: anonymer Checkout, kein Konto vorab nötig,
-                  lebenslanger Zugriff nach Zahlung. Perfekter Lead-Magnet für Agenturen.
+                  Für den Endkunden mit akutem Einzelproblem: anonymer Checkout ganz ohne Konto, PDF
+                  dauerhaft im Postfach plus 4-Wochen-Online-Bericht. Perfekter Lead-Magnet für Agenturen.
                 </p>
               </div>
               <Link href="/scan" style={{

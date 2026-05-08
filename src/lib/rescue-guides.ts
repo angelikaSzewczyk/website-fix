@@ -276,6 +276,70 @@ export async function matchGuidesForIssuesAnon(
 }
 
 /**
+ * Lädt einen Guide via 4-Wochen-Token (Pay-per-Fix, kein Konto).
+ *
+ * Liefert null wenn:
+ *   - Token nicht existiert
+ *   - Token-Format invalid
+ *   - referenced guide_id deaktiviert
+ *
+ * Liefert { expired: true } wenn der Token gültig war, aber Online-Zugriff
+ * abgelaufen ist (Renderer zeigt Soft-Upsell-Page). Das PDF im Postfach
+ * bleibt davon unberührt.
+ *
+ * UUID-Validation: Postgres-Cast UUID::text wirft bei Invalid-Format eine
+ * Exception → wir fangen das ab und returnen null statt 500.
+ */
+export async function getGuideByToken(token: string): Promise<
+  | { kind: "ok"; guide: RescueGuide; hoster: string; expiresAt: Date; createdAt: Date }
+  | { kind: "expired"; guide: RescueGuide; expiresAt: Date }
+  | { kind: "notfound" }
+> {
+  // Defensive UUID-Format-Check, sonst crasht der Cast im SQL.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) {
+    return { kind: "notfound" };
+  }
+
+  const sql = neon(process.env.DATABASE_URL!);
+  const tokenRows = await sql`
+    SELECT guide_id, hoster, created_at, expires_at, email
+    FROM guide_access_tokens
+    WHERE token = ${token}::uuid
+    LIMIT 1
+  ` as Array<{
+    guide_id: string; hoster: string;
+    created_at: string; expires_at: string; email: string;
+  }>;
+
+  if (tokenRows.length === 0) return { kind: "notfound" };
+  const t = tokenRows[0];
+
+  const guides = await sql`
+    SELECT id, title, problem_label, preview, price_cents, stripe_price_id,
+           estimated_minutes, content_json, active
+    FROM rescue_guides
+    WHERE id = ${t.guide_id} AND active = TRUE
+    LIMIT 1
+  ` as Array<{
+    id: string; title: string; problem_label: string; preview: string | null;
+    price_cents: number; stripe_price_id: string | null;
+    estimated_minutes: number | null; content_json: RescueGuideContent;
+    active: boolean;
+  }>;
+
+  if (guides.length === 0) return { kind: "notfound" };
+  const guide = guides[0] as RescueGuide;
+
+  const expiresAt = new Date(t.expires_at);
+  const createdAt = new Date(t.created_at);
+  if (expiresAt.getTime() < Date.now()) {
+    return { kind: "expired", guide, expiresAt };
+  }
+
+  return { kind: "ok", guide, hoster: t.hoster, expiresAt, createdAt };
+}
+
+/**
  * Lädt einen Guide per ID inkl. Unlock-Status für den aktuellen User.
  * Returnt null wenn der Guide nicht existiert oder inactive ist.
  */

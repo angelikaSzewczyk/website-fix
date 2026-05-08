@@ -76,12 +76,12 @@ const INTENT_CONTENT: Record<string, {
   bullets: string[];
 }> = {
   guide: {
-    headline: <>Konto kostenlos.<br />Fix einmalig 9,90 €.</>,
-    sub: "Erstelle dein Konto in 30 Sekunden — danach wählst du deinen Fix-Guide. Kein Abo, keine versteckten Kosten.",
+    headline: <>Pay-per-Fix · 9,90 €<br />einmalig, kein Konto.</>,
+    sub: "Pay-per-Fix erfordert kein Nutzerkonto — direkt zum Scan, dann Guide auswählen und zahlen. PDF kommt per Mail, plus Online-Bericht für 4 Wochen.",
     bullets: [
-      "Einzelne Guides ab 9,90 € · Einmalzahlung",
-      "Schritt-für-Schritt-Anleitung (hoster-spezifisch)",
-      "Lebenslanger Zugriff auf gekaufte Guides",
+      "Einzelne Guides ab 9,90 € · Einmalzahlung, kein Abo",
+      "PDF-Anhang dauerhaft im Postfach",
+      "Online-Bericht 4 Wochen aktiv (Code-Copy + Hoster-Klick-Pfade)",
     ],
   },
 };
