@@ -84,7 +84,11 @@ export async function POST(req: NextRequest) {
     const thisUrl = existing[0]?.this_url ?? 0;
 
     const limit = planKey === "starter" ? 1 : planKey === "professional" ? 10 : 50;
-    const upgradeTo = planKey === "starter" ? "professional" : "agency";
+    // upgradeTo signalisiert dem Client, welches Modal er rendern soll.
+    // Agency hat keinen weiteren Tier — wir setzen upgradeTo=null + cap_reached=true,
+    // damit der Client den Support-Mailto-Branch zeigt statt fälschlich
+    // "Auf Agency upgraden" für einen User, der schon Agency ist.
+    const upgradeTo = planKey === "starter" ? "professional" : planKey === "professional" ? "agency" : null;
     const planLabel = planKey === "starter" ? "Starter" : planKey === "professional" ? "Professional" : "Agency Scale";
     const upgradeMsg = planKey === "starter"
       ? "Starter-Plan ist auf 1 Website beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten."
@@ -102,6 +106,8 @@ export async function POST(req: NextRequest) {
           plan:         planKey,
           planLabel,
           upgradeTo,
+          // capReached=true bei Agency → Client zeigt Support-Mail statt Upgrade-Modal
+          capReached:   upgradeTo === null,
         },
         { status: 402 },
       );

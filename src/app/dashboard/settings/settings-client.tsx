@@ -451,7 +451,7 @@ export default function SettingsClient({ initial, plan, embedded = false }: { in
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>AGENCY</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden", maxWidth: 460 }}>
                   <span style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", fontSize: 13, color: "rgba(255,255,255,0.3)", borderRight: "1px solid rgba(255,255,255,0.12)", whiteSpace: "nowrap" }}>portal.</span>
@@ -471,7 +471,7 @@ export default function SettingsClient({ initial, plan, embedded = false }: { in
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <label style={{ ...label, marginBottom: 0 }}>E-Mail Absendername</label>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>PRO</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>AGENCY</span>
                 </div>
                 <input
                   style={input}

@@ -72,6 +72,14 @@ export async function GET(req: NextRequest) {
   // Alle gespeicherten Websites von Pro/Agentur-Nutzern holen. Plan-Filter
   // via KNOWN_PLAN_STRINGS — synchron mit der monthly-report-Cron, kein
   // hartkodiertes IN ('a', 'b', 'c', …) mehr.
+  // 08.05.2026: LIMIT 20 entfernt — Pricing-Card Agency verspricht "Daily Health-
+  // Check" für ALLE Mandanten (bis zu 50 pro Agency-User). Mit LIMIT 20 wurden
+  // bei 50 Mandanten nur 20/Tag gecheckt — Versprechen-Bruch. Cap bei 500 als
+  // Anti-Abuse (in der Praxis fern weg von Agency-Realität).
+  // Performance: Vercel-Function-Timeout 60s, checkWebsite() ~1-2s pro Site →
+  // 30 Sites/Min sind realistisch. 500-Cap = Worst-Case 17 Min, was
+  // Vercel-Cron-Job-Timeout sprengen würde. Bei mehr als 30 Sites pro User
+  // sollten wir Batching aufsetzen — vorerst LIMIT 500 als Hard-Cap.
   const websites = await sql`
     SELECT
       sw.id, sw.user_id, sw.url, sw.name, sw.alert_email,
@@ -80,7 +88,8 @@ export async function GET(req: NextRequest) {
     JOIN users u ON u.id = sw.user_id
     WHERE u.plan = ANY(${KNOWN_PLAN_STRINGS as string[]})
       AND (sw.last_check_at IS NULL OR sw.last_check_at < NOW() - INTERVAL '23 hours')
-    LIMIT 20
+    ORDER BY sw.last_check_at NULLS FIRST
+    LIMIT 500
   ` as SavedWebsite[];
 
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;

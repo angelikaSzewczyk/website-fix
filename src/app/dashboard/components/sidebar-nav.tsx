@@ -42,6 +42,10 @@ const AGENCY_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/reports",            label: "Berichts-Archiv",    icon: <Archive size={16} /> },
   { href: "/dashboard/lead-generator",     label: "Lead-Generator",     icon: <Magnet size={16} /> },
   { href: "/dashboard/agency-branding",    label: "Agency-Branding",    icon: <Palette size={16} /> },
+  // 08.05.2026: Hybrid-Tier-Modell — Workflow-API (Jira/Trello/Asana/Zapier)
+  // ist Agency-only. Sidebar-Eintrag fehlte (FreeSidebar hat ihn für Pro+,
+  // Agency nutzt aber diese SidebarNav-Komponente).
+  { href: "/dashboard/integrations",       label: "Integrationen",      icon: <Zap size={16} /> },
   { href: "/plugin",                       label: "Plugin (White-Label)", icon: <Download size={16} />, beta: true },
   { href: "/dashboard/settings",           label: "Einstellungen",      icon: <Settings size={16} /> },
 ];
