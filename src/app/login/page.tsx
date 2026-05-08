@@ -29,21 +29,26 @@ export default function LoginPage() {
           <BrandLogo size="lg" />
         </div>
 
-        {/* Value props */}
+        {/* Value props — plan-agnostisch (08.05.2026):
+             Login-Seite bedient Starter-Solo, Pro-Freelancer und Agency-Inhaber
+             gleichermaßen. Vorher rein Agency-Wording → andere Plan-User
+             fühlten sich nicht angesprochen. Jetzt outcome-fokussiert auf
+             Features die alle Pläne haben (Deep-Scan, BFSG, Smart-Fix-Drawer)
+             plus 1 Pro+-Bullet als Aspirations-Hint. */}
         <div style={{ position: "relative" }}>
           <h2 style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontWeight: 800, color: "#fff", margin: "0 0 8px", letterSpacing: "-0.03em", lineHeight: 1.2 }}>
-            Dein Agentur-Dashboard<br />wartet.
+            Dein Dashboard<br />wartet.
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", margin: "0 0 40px", lineHeight: 1.7 }}>
-            White-Label Reports, BFSG-Compliance und<br />automatische Jira-Tickets — alles in einem Tool.
+            Deep-Scan, Smart-Fix-Guides und BFSG-Compliance —<br />klar, machbar, ohne Entwickler.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {[
-              { icon: "✓", text: "Wöchentliche Deep-Scans für alle Kunden", color: "#22C55E" },
-              { icon: "✓", text: "White-Label Reports mit deinem Logo", color: "#22C55E" },
-              { icon: "✓", text: "BFSG 2025 automatisch überwacht", color: "#22C55E" },
-              { icon: "✓", text: "Jira · Trello · Asana Integration", color: "#22C55E" },
+              { icon: "✓", text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG", color: "#22C55E" },
+              { icon: "✓", text: "Smart-Fix-Guides mit Schritt-für-Schritt-Anleitung", color: "#22C55E" },
+              { icon: "✓", text: "Read-Only-Plugin für tiefe Diagnose ohne Passwort", color: "#22C55E" },
+              { icon: "✓", text: "BFSG-2025-Konformität dokumentiert & nachweisbar", color: "#22C55E" },
             ].map(item => (
               <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: item.color, flexShrink: 0, marginTop: 2 }}>{item.icon}</span>
