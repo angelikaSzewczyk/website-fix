@@ -9,7 +9,10 @@ type AgencySettings = {
   agency_website: string;
   logo_url: string;
   primary_color: string;
-  subdomain?: string;
+  /** Custom-Domain für das White-Label-Mandanten-Portal.
+   *  Backend-Field heißt 'custom_domain' (api/agency-settings/route.ts liest body.custom_domain).
+   *  Voll-Aktivierung mit Host-basierter Middleware ist Q3-Roadmap. */
+  custom_domain?: string;
   report_sender?: string;
 };
 
@@ -446,23 +449,28 @@ export default function SettingsClient({ initial, plan, embedded = false }: { in
               </p>
             </div>
 
-            {/* Subdomain — agency-only */}
+            {/* Custom-Domain für Mandanten-Portal — agency-only.
+                08.05.2026: State-Variable von subdomain → custom_domain umbenannt,
+                damit der Server (api/agency-settings/route.ts liest body.custom_domain)
+                den Wert tatsächlich speichert. Vorher war das UI-Theater. */}
             {isAgencyPlan(plan) && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <label style={{ ...label, marginBottom: 0 }}>Eigene Subdomain</label>
+                  <label style={{ ...label, marginBottom: 0 }}>Mandanten-Portal-Domain</label>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(167,139,250,0.15)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)", letterSpacing: "0.04em" }}>AGENCY</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4, background: "rgba(251,191,36,0.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.3)", letterSpacing: "0.04em" }}>Q3 BETA</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden", maxWidth: 460 }}>
-                  <span style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", fontSize: 13, color: "rgba(255,255,255,0.3)", borderRight: "1px solid rgba(255,255,255,0.12)", whiteSpace: "nowrap" }}>portal.</span>
-                  <input
-                    style={{ ...inputUnbounded, borderRadius: 0, border: "none", flex: 1 }}
-                    placeholder="deine-agentur.de"
-                    value={settings.subdomain ?? ""}
-                    onChange={e => setSettings(s => ({ ...s, subdomain: e.target.value }))}
-                  />
-                </div>
-                <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>Kunden öffnen ihr Portal unter portal.deine-agentur.de (DNS-Eintrag erforderlich)</p>
+                <input
+                  style={{ ...input, maxWidth: 460 }}
+                  placeholder="portal.deine-agentur.de"
+                  value={settings.custom_domain ?? ""}
+                  onChange={e => setSettings(s => ({ ...s, custom_domain: e.target.value }))}
+                />
+                <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+                  Trag jetzt deine Wunsch-Domain ein — wir aktivieren das Mandanten-Portal-Routing
+                  in Q3. Bestandskunden behalten ihren Plan-Preis nach Release. DNS-CNAME auf
+                  cname.vercel-dns.com folgt mit der Aktivierung per E-Mail.
+                </p>
               </div>
             )}
 

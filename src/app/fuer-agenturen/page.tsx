@@ -140,7 +140,7 @@ const PLANS: Plan[] = [
       { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true, key: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true, key: true },
-      { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true, key: true },
+      { text: "Mandanten-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
       { text: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall (60-Sek-Watchdog ab Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
       { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
@@ -184,8 +184,8 @@ const FAQ = [
     a: "Für maximale Sicherheit und Tiefe gegenüber Mandanten. Ein externer Crawl sieht nur, was die Website öffentlich preisgibt — Title-Tags, sichtbare Links, Bilder. Was er NICHT sieht: PHP-Error-Logs, langsame Datenbank-Queries, Plugin-Versions-Konflikte, fehlerhafte Cron-Jobs, kompromittierte Theme-Dateien. Genau das liest unser Read-Only-Plugin aus — ohne Schreibzugriff, ohne dass Sie Mandanten-Passwörter durch Ihre Agentur reichen müssen. Auf Agency Scale läuft das Plugin unter IHREM Branding (eigenes Logo + Agentur-Domain), sodass der Endkunde es als integralen Teil Ihres Wartungsvertrags wahrnimmt. Konfiguration unter Dashboard → Agency-Branding.",
   },
   {
-    q: "Wie funktioniert das Mandanten-Portal unter eigener Subdomain?",
-    a: "Sie hinterlegen einmalig ein CNAME-Record in Ihrem DNS (z. B. portal.ihre-agentur.de → wf-portal.vercel.app). Wir provisionieren ein TLS-Zertifikat automatisch. Ihre Endkunden sehen dann ausschließlich Ihr Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool. Inkl. eigener SMTP-Adresse für Auto-Reports. Full White-Label heißt: Endkunde sieht Sie als Anbieter, nicht uns.",
+    q: "Wann kommt das Mandanten-Portal unter Custom-Domain?",
+    a: "Im Q3 — Bestandskunden des Agency-Scale-Plans behalten ihren Preis nach Release. Aktuell hinterlegen Sie bereits in den Settings die Wunsch-Domain (z. B. portal.ihre-agentur.de); wir aktivieren das Routing in Q3 und benachrichtigen Sie per E-Mail mit den DNS-CNAME-Anweisungen. Bis dahin nutzen Sie das Standard-Dashboard mit Ihrem White-Label-Branding (Logo, Farben, SMTP-Absender für Auto-Reports). Endkunden-Reports tragen schon heute Ihr Branding, nicht WebsiteFix.",
   },
   {
     q: "Wann läuft das Website-Monitoring?",
@@ -205,7 +205,7 @@ const FAQ = [
   },
   {
     q: "Warum 249 € statt 89 €? Was ist der Hauptunterschied?",
-    a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: Mandanten-Portal unter eigener Subdomain, Team-Rollen-Logik, Daily Health-Check (60-Sek-Watchdog ab Q3 inklusive), Workflow-API, DSGVO-AVV. Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
+    a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: 50 Mandanten-Slots, Team-Rollen-Logik, Daily Health-Check (60-Sek-Watchdog ab Q3 inklusive), Workflow-API, DSGVO-AVV, Custom-Domain für Mandanten-Portal (Q3). Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
   },
   {
     q: "Kann ich Website-Fix zur Neukundengewinnung nutzen?",
@@ -609,7 +609,7 @@ export default function AgencyPage() {
               {
                 icon: Layers,
                 title: "Skalierbarkeit",
-                desc: "Mandanten-Portal unter Ihrer Subdomain, automatische Berichte, Workflow-API zu Jira/Asana/Trello. Sie wachsen von 10 auf 50 Mandanten, ohne ein einziges neues Senior-FTE einzustellen.",
+                desc: "50 Mandanten-Slots, automatische Berichte und Workflow-API zu Jira/Asana/Trello. Mandanten-Portal unter Custom-Domain folgt in Q3 — Bestandskunden behalten Preis. Sie wachsen von 10 auf 50 Mandanten, ohne ein einziges neues Senior-FTE einzustellen.",
                 accent: "#A78BFA",
               },
               {

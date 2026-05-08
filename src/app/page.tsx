@@ -213,7 +213,7 @@ const PLANS = [
       { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true },
-      { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true },
+      { text: "Mandanten-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true },
       { text: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall (60-Sek-Watchdog ab Q3 — Bestandskunden behalten Preis)", highlight: true },
       { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
@@ -253,7 +253,7 @@ const FAQ = [
   },
   {
     q: "Was kostet WebsiteFix in der Übersicht?",
-    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (1 Projekt, 5 Deep-Scans/Monat, voller SEO-/Technik-/BFSG-Check, 5 Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (50 Mandanten, Scan-Flatrate, Mandanten-Portal unter eigener Subdomain, Team-Rollen, Daily Health-Check inkl. 60-Sek-Watchdog ab Q3). Alle Abos monatlich kündbar.",
+    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (1 Projekt, 5 Deep-Scans/Monat, voller SEO-/Technik-/BFSG-Check, 5 Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (50 Mandanten, Scan-Flatrate, Mandanten-Portal unter Custom-Domain ab Q3, Team-Rollen, Daily Health-Check inkl. 60-Sek-Watchdog ab Q3). Alle Abos monatlich kündbar.",
   },
   {
     q: "Funktioniert WebsiteFix mit meinem Hoster?",
@@ -277,7 +277,7 @@ const FAQ = [
   },
   {
     q: "Kann ich WebsiteFix für Kunden-Websites nutzen (Agenturen)?",
-    a: "Absolut. Im Agency-Scale-Plan (249 €/Monat) verwaltest du bis zu 50 Mandanten, nutzt Full White-Label mit eigenem Branding und Mandanten-Portal unter deiner Subdomain. Inklusive: Embeddable Lead-Generator — ein Scanner mit deinem Logo zum Einbauen auf deiner Marketing-Site, der eingehende Leads direkt in dein Dashboard schiebt. Mehr Details auf der Agentur-Seite.",
+    a: "Absolut. Im Agency-Scale-Plan (249 €/Monat) verwaltest du bis zu 50 Mandanten, nutzt Full White-Label mit eigenem Branding. Im Q3 kommt dazu das Mandanten-Portal unter deiner Custom-Domain — Bestandskunden behalten ihren Preis. Bereits inklusive: Embeddable Lead-Generator — ein Scanner mit deinem Logo zum Einbauen auf deiner Marketing-Site, der eingehende Leads direkt in dein Dashboard schiebt. Mehr Details auf der Agentur-Seite.",
   },
 ];
 

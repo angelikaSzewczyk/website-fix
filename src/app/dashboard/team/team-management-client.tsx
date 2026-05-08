@@ -18,6 +18,9 @@ import Link from "next/link";
 export type Member = {
   id:           string;
   member_email: string;
+  /** team_members.role — granular Admin / Editor / Viewer (Pricing-Card-Bullet 6).
+   *  Default in DB: 'editor' (siehe team-schema.ts). */
+  role:         "admin" | "editor" | "viewer";
   invited_at:   string | null;
   joined_at:    string | null;
   last_seen_at: string | null;
@@ -229,8 +232,11 @@ function Header({ usedSeats, maxSeats }: { usedSeats: number; maxSeats: number }
   );
 }
 
+type InviteRole = "admin" | "editor" | "viewer";
+
 function InviteForm({ onInvited }: { onInvited: () => void }) {
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<InviteRole>("editor");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -245,7 +251,7 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
       const res = await fetch("/api/team", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), role }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -253,6 +259,7 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
         return;
       }
       setEmail("");
+      setRole("editor");
       setSuccess(true);
       onInvited();
       window.setTimeout(() => setSuccess(false), 2500);
@@ -292,6 +299,28 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
           }}
         />
       </div>
+      {/* Role-Selector — Pricing-Card Versprechen 'Team-Rollen: Admin, Editor
+          (Junior), Viewer — granular'. Server-Validation in api/team/route.ts:113. */}
+      <div style={{ minWidth: 160 }}>
+        <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 5, letterSpacing: "0.04em" }}>
+          ROLLE
+        </label>
+        <select
+          value={role}
+          onChange={e => setRole(e.target.value as InviteRole)}
+          disabled={pending}
+          style={{
+            width: "100%", padding: "10px 13px",
+            background: "#F8FAFC", border: "1px solid #E2E8F0",
+            borderRadius: 8, fontSize: 13, color: "#0F172A",
+            outline: "none", fontFamily: "inherit", boxSizing: "border-box",
+          }}
+        >
+          <option value="editor">Editor (Junior)</option>
+          <option value="admin">Admin</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
       <button
         type="submit"
         disabled={pending || !email.trim()}
@@ -310,6 +339,11 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
         {pending && <Spinner />}
         {pending ? "Lädt…" : success ? "Eingeladen ✓" : "Einladen →"}
       </button>
+      <p style={{ margin: 0, width: "100%", fontSize: 11, color: "#94A3B8", lineHeight: 1.5 }}>
+        <strong style={{ color: "#475569" }}>Admin</strong>: Volle Kontrolle inkl. Billing.{" "}
+        <strong style={{ color: "#475569" }}>Editor</strong>: Issues + Smart-Fix-Drawer, kein Billing.{" "}
+        <strong style={{ color: "#475569" }}>Viewer</strong>: Read-only für Stakeholder.
+      </p>
       {error && (
         <p style={{ margin: 0, width: "100%", fontSize: 12, color: "#DC2626" }}>{error}</p>
       )}
@@ -600,8 +634,12 @@ function MemberRow({ m, highlight, nowTick, onRemoved, mode, cols }: {
           {initials}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {displayName}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 1 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {displayName}
+            </span>
+            {/* Role-Badge — Pricing-Card 'Admin/Editor/Viewer — granular' */}
+            <RoleBadge role={m.role ?? "editor"} />
           </div>
           <div style={{ fontSize: 11, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {m.member_email}
@@ -807,5 +845,29 @@ function ActivityFeed({ entries }: { entries: AuditEntry[] }) {
         })}
       </ul>
     </section>
+  );
+}
+
+// ─── Role-Badge ───────────────────────────────────────────────────────────────
+// Pricing-Card-Versprechen #6: 'Team-Rollen: Admin, Editor (Junior), Viewer —
+// granular'. Badge-Farben pro Rolle, kompakt neben dem Namen.
+function RoleBadge({ role }: { role: "admin" | "editor" | "viewer" }) {
+  const config = {
+    admin:  { label: "Admin",  bg: "#FEF3C7", color: "#92400E", border: "#FDE68A" },
+    editor: { label: "Editor", bg: "#DBEAFE", color: "#1E3A8A", border: "#BFDBFE" },
+    viewer: { label: "Viewer", bg: "#F1F5F9", color: "#475569", border: "#E2E8F0" },
+  }[role];
+  return (
+    <span style={{
+      flexShrink: 0,
+      fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em",
+      padding: "1.5px 7px", borderRadius: 4,
+      background: config.bg,
+      color: config.color,
+      border: `1px solid ${config.border}`,
+      textTransform: "uppercase",
+    }}>
+      {config.label}
+    </span>
   );
 }

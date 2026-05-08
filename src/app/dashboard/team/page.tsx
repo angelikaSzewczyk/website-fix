@@ -49,6 +49,7 @@ export default async function TeamPage({
       SELECT
         tm.id::text                   AS id,
         tm.member_email               AS member_email,
+        tm.role                       AS role,
         tm.invited_at::text           AS invited_at,
         tm.joined_at::text            AS joined_at,
         u.last_seen_at::text          AS last_seen_at,

@@ -59,6 +59,7 @@ export async function GET() {
       tm.id,
       tm.member_email,
       tm.status,
+      tm.role,
       tm.invited_at,
       tm.joined_at,
       u.last_seen_at,
