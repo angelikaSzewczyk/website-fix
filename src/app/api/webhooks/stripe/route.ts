@@ -350,13 +350,18 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.type === "customer.subscription.deleted") {
+    // Subscription endgültig beendet (nach Period-End oder Failed-Payment-Final).
+    // Plan auf NULL setzen — Dashboard zeigt Pricing-Wall, kein Geschenk-
+    // Downgrade auf 'starter' (was wieder ein zahlpflichtiger Plan wäre).
     const sub = event.data.object as Stripe.Subscription;
     const customerId = sub.customer as string;
     const updated = await sql`
-      UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}
+      UPDATE users SET plan = NULL, stripe_subscription_id = NULL
+      WHERE stripe_customer_id = ${customerId}
       RETURNING id
     ` as { id: string }[];
     if (updated[0]?.id) await invalidateScanCacheForUser(updated[0].id);
+    console.log(`[stripe-webhook] subscription deleted → plan=NULL for customer=${customerId}`);
   }
 
   if (event.type === "customer.subscription.updated") {
@@ -373,11 +378,14 @@ export async function POST(req: NextRequest) {
       ` as { id: string }[];
       if (updated[0]?.id) await invalidateScanCacheForUser(updated[0].id);
     } else if (status === "canceled" || status === "unpaid") {
+      // Selbe Logik wie subscription.deleted: Plan auf NULL → Pricing-Wall.
       const updated = await sql`
-        UPDATE users SET plan = 'starter' WHERE stripe_customer_id = ${customerId}
+        UPDATE users SET plan = NULL, stripe_subscription_id = NULL
+        WHERE stripe_customer_id = ${customerId}
         RETURNING id
       ` as { id: string }[];
       if (updated[0]?.id) await invalidateScanCacheForUser(updated[0].id);
+      console.log(`[stripe-webhook] subscription ${status} → plan=NULL for customer=${customerId}`);
     }
   }
 

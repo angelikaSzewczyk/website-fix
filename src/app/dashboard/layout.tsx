@@ -17,16 +17,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (!session?.user) redirect("/login");
 
   // ── PAYMENT GATE: Immer frische DB-Abfrage — JWT kann nach Stripe-Webhook veraltet sein ──
-  let rawPlan = "starter";
+  // 2026-05-08: Plan-Default ist jetzt NULL in der DB. NULL = "noch nicht
+  // bezahlt" (Stripe-Cancel auf Register, oder gerade-gekündigte Subscription).
+  // Solche User landen via redirect("/fuer-agenturen") auf der Pricing-Wall —
+  // kein kostenloser Dashboard-Zugang ohne aktives Abo.
+  let rawPlan: string | null = null;
   try {
     const sqlGate = neon(process.env.DATABASE_URL!);
     const planRow = await sqlGate`SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1`;
-    rawPlan = (planRow[0]?.plan as string) ?? "starter";
+    rawPlan = (planRow[0]?.plan as string | null) ?? null;
 
     // Self-Heal: Legacy-DB-Werte (free, smart-guard, agency-starter, agency-pro)
-    // werden in den canonical Wert migriert. Verhindert Redirect-Loops bei
-    // Bestandsusern, die vor der 3-Plan-Migration angelegt wurden.
-    if (isLegacyPlanValue(rawPlan)) {
+    // werden in den canonical Wert migriert.
+    if (rawPlan && isLegacyPlanValue(rawPlan)) {
       const canonical = normalizePlan(rawPlan);
       if (canonical && canonical !== rawPlan) {
         await sqlGate`UPDATE users SET plan = ${canonical} WHERE id = ${session.user.id}`;
@@ -34,11 +37,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       }
     }
   } catch {
-    rawPlan = (session.user as { plan?: string }).plan ?? "starter";
+    // DB-Fehler darf den Pay-Gate nicht aushebeln — fallback auf JWT-Plan,
+    // aber wenn das auch fehlt, bleibt rawPlan = null → redirect.
+    rawPlan = (session.user as { plan?: string | null }).plan ?? null;
   }
 
+  // NULL-Plan oder unbekannter String → Pricing-Wall.
   const plan = normalizePlan(rawPlan);
-  if (!plan) redirect("/fuer-agenturen");
+  if (!plan) redirect("/fuer-agenturen?wall=no_plan");
 
   // Heartbeat: aktualisiert users.last_seen_at fire-and-forget für jedes
   // Dashboard-Render. Throttled auf 60 s in der DB-WHERE-Clause, damit

@@ -34,7 +34,13 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE,
   "emailVerified" TIMESTAMPTZ,
   image TEXT,
-  plan VARCHAR(20) DEFAULT 'starter',
+  -- Plan ist NULLable + ohne DEFAULT (seit 2026-05-08).
+  -- NULL = "noch nicht bezahlt" (Register-ohne-Zahlung, oder gerade-gekündigtes
+  -- Abo nach Period-End). Dashboard-Layout (src/app/dashboard/layout.tsx) routet
+  -- NULL-Plan-User zu /fuer-agenturen?wall=no_plan — kein kostenloser Zugang.
+  -- Setzen erfolgt nur über /api/verify-checkout oder den Stripe-Webhook
+  -- (rescue_guide / subscription.* Events).
+  plan VARCHAR(20),
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -42,6 +48,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Migration: add stripe_subscription_id to existing deployments
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+
+-- Migration 2026-05-08: Plan-Default auf NULL, damit Register-ohne-Zahlung kein
+-- kostenloses Konto erzeugt. Bestandsuser mit plan='starter' bleiben unverändert.
+ALTER TABLE users ALTER COLUMN plan DROP DEFAULT;
 
 -- Scan history
 CREATE TABLE IF NOT EXISTS scans (
