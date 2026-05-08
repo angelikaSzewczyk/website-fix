@@ -40,9 +40,18 @@ export default function ModalShell({
     sync();
     window.addEventListener("hashchange", sync);
     window.addEventListener("popstate",   sync);
+    // 08.05.2026: Custom-Event-Hook — Trigger-Buttons können dieses Event
+    // feuern, falls der Hash bereits #${id} ist (Browser feuert dann KEIN
+    // hashchange beim erneuten Klick). So bleiben die Buttons immer reaktiv.
+    const customSync = (e: Event) => {
+      const detail = (e as CustomEvent<{ id?: string }>).detail;
+      if (!detail?.id || detail.id === id) sync();
+    };
+    window.addEventListener("wf-modal-open", customSync as EventListener);
     return () => {
       window.removeEventListener("hashchange", sync);
       window.removeEventListener("popstate",   sync);
+      window.removeEventListener("wf-modal-open", customSync as EventListener);
     };
   }, [id]);
 

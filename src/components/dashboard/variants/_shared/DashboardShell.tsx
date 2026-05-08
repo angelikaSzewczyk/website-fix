@@ -165,6 +165,28 @@ export default function DashboardShell({
     ? "/fuer-agenturen?upgrade=agency#pricing"
     : "/fuer-agenturen?upgrade=professional#pricing";
 
+  // 08.05.2026: bulletproof Modal-Open Helper.
+  // Wenn User schon /dashboard ist + Hash bereits #modal-new-client (z.B.
+  // nach manuellem Close hat replaceState den Hash gestrippt, aber bei
+  // browser-back gibt es Edge-Cases) → setzt den Hash + feuert hashchange-
+  // Event manuell, falls sich URL nicht ändert. Custom 'wf-modal-open'-Event
+  // ist Fallback für ModalShell, sollte hashchange aus irgendeinem Grund
+  // verschluckt werden.
+  function openNewProjectModal() {
+    if (typeof window === "undefined") return;
+    const targetHash = "#modal-new-client";
+    if (window.location.pathname !== "/dashboard") {
+      window.location.href = `/dashboard${targetHash}`;
+      return;
+    }
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash; // fires hashchange
+    } else {
+      // Hash unchanged → kein hashchange. Custom-Event triggern.
+      window.dispatchEvent(new CustomEvent("wf-modal-open", { detail: { id: "modal-new-client" } }));
+    }
+  }
+
   async function handleResetAll() {
     if (resetting) return;
     setResetting(true);
@@ -353,22 +375,24 @@ export default function DashboardShell({
                 {slotLabel}
               </button>
               {!isAgency && (
-                <a
-                  href="#modal-new-client"
+                <button
+                  type="button"
+                  onClick={() => openNewProjectModal()}
                   title="Neues Projekt anlegen — öffnet Wizard mit Name + URL"
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
                     width: 22, height: 22, borderRadius: 6,
                     background: "rgba(16,185,129,0.12)",
                     border: "1px solid rgba(16,185,129,0.32)",
-                    color: "#10B981", textDecoration: "none",
+                    color: "#10B981", cursor: "pointer", padding: 0,
+                    fontFamily: "inherit",
                   }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
-                </a>
+                </button>
               )}
             </div>
 
@@ -544,15 +568,16 @@ export default function DashboardShell({
                  direkt /dashboard/scan"). Modal liegt auf /dashboard,
                  daher Hash-Link. Wenn User schon dort ist, öffnet via
                  :target ohne Page-Reload. */}
-            <a
-              href="#modal-new-client"
-              onClick={() => setProjectDialogOpen(false)}
+            <button
+              type="button"
+              onClick={() => { setProjectDialogOpen(false); openNewProjectModal(); }}
               style={{
-                display: "flex", alignItems: "center", gap: 10,
+                display: "flex", alignItems: "center", gap: 10, width: "100%",
                 padding: "10px 14px", borderRadius: D.radiusSm, marginBottom: 10,
                 background: "rgba(16,185,129,0.08)",
                 border: `1px dashed rgba(16,185,129,0.45)`,
-                color: "#10B981", fontSize: 13, fontWeight: 700, textDecoration: "none",
+                color: "#10B981", fontSize: 13, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit", textAlign: "left" as const,
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -565,7 +590,7 @@ export default function DashboardShell({
                   {projects?.length ?? 0} / {slotLabel}
                 </span>
               )}
-            </a>
+            </button>
 
             {/* Project list */}
             <div style={{

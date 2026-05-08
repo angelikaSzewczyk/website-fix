@@ -811,20 +811,36 @@ export default function ProDashboard(props: ProDashboardProps) {
                   startet automatisch.
                 </p>
               </div>
-              {/* Plain <a> statt <Link> — Next.js-Link triggert kein
-                   hashchange wenn pathname identisch ist (User schon auf
-                   /dashboard). Plain <a> macht echtes Hash-Update,
-                   ModalShell bekommt das hashchange-Event und öffnet. */}
-              <a href="#modal-new-client" style={{
-                flexShrink: 0,
-                padding: "10px 18px", borderRadius: 9,
-                background: "linear-gradient(90deg, #059669, #10B981)",
-                color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none",
-                boxShadow: "0 3px 14px rgba(16,185,129,0.32)",
-                whiteSpace: "nowrap" as const,
-              }}>
+              {/* Bulletproof Trigger via window.location.hash + Custom-Event-
+                   Fallback (08.05.2026 Bug-Fix: Hash-Link triggerte kein
+                   hashchange wenn URL bereits den Hash hatte). */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window === "undefined") return;
+                  const target = "#modal-new-client";
+                  if (window.location.pathname !== "/dashboard") {
+                    window.location.href = `/dashboard${target}`;
+                    return;
+                  }
+                  if (window.location.hash !== target) {
+                    window.location.hash = target;
+                  } else {
+                    window.dispatchEvent(new CustomEvent("wf-modal-open", { detail: { id: "modal-new-client" } }));
+                  }
+                }}
+                style={{
+                  flexShrink: 0,
+                  padding: "10px 18px", borderRadius: 9,
+                  background: "linear-gradient(90deg, #059669, #10B981)",
+                  color: "#fff", fontSize: 13, fontWeight: 800,
+                  border: "none", cursor: "pointer", fontFamily: "inherit",
+                  boxShadow: "0 3px 14px rgba(16,185,129,0.32)",
+                  whiteSpace: "nowrap" as const,
+                }}
+              >
                 + Neues Projekt anlegen
-              </a>
+              </button>
             </div>
           )}
 

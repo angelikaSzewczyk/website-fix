@@ -244,10 +244,16 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
   // ablenken. Drei klare Punkte: Meine Website / Hilfe-Center / Account.
   // White-Label-Tile bleibt nur für Pro/Agency, Starter sieht stattdessen
   // einen "Hilfe"-Eintrag.
+  // 'Live Scan' / 'Neuer Scan'-Sidebar-Eintrag entfernt (08.05.2026):
+  // Scans starten jetzt strukturiert über (a) den Wizard-Modal
+  // (#modal-new-client → "+ Neue Site"-Button im Header / Switcher /
+  // Portfolio) oder (b) Re-Scan-Buttons im Portfolio bzw. Switcher.
+  // Der nackte /dashboard/scan-Aufruf ohne Kontext führte zu Verwirrung
+  // ("wo bin ich grad? was scanne ich hier?"). Route bleibt erhalten —
+  // ist nur nicht mehr per Sidebar entry-point.
   const NAV = isPro
     ? [
         { icon: "dashboard",  label: "Dashboard",              href: "/dashboard",                  exact: true,  locked: false },
-        { icon: "scan",       label: "Live Scan",               href: "/dashboard/scan",             exact: false, locked: false },
         // Sorglos-Flatrate (05.05.): Pro+ erhält die Portfolio-Übersicht,
         // bisher Agency-only. Limit 10 Sites wird in /dashboard/clients
         // server-seitig durchgesetzt.
@@ -260,7 +266,6 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
       ]
     : [
         { icon: "dashboard", label: "Meine Website",      href: "/dashboard",       exact: true,  locked: false },
-        { icon: "scan",      label: "Neuer Scan",          href: "/dashboard/scan",  exact: false, locked: false },
         // Berichte-Übersicht (08.05.2026): vorher nur über
         // "Zurück zur Berichte-Übersicht"-Breadcrumb erreichbar — Starter
         // brauchen einen direkten Sidebar-Link, sonst finden sie ihre
