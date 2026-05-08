@@ -288,6 +288,24 @@ function AutoPilotWidget({ url, type }: { url: string; type: string }) {
 type ScanState = "idle" | "scanning" | "done" | "error";
 type TabType = "website" | "wcag" | "performance" | "fullsite";
 
+// Re-Scan-Hint: relative Zeit-Anzeige für den letzten Scan einer URL.
+// "vor 3 Stunden" / "vor 2 Tagen" / "gerade eben". Gerundet — exakte Sekunden
+// helfen dem User nicht beim Verstehen wie alt sein letzter Befund ist.
+function formatRelativeAge(iso: string | null): string {
+  if (!iso) return "noch nie";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 0)         return "gerade eben";
+  const mins = Math.floor(ms / 60_000);
+  if (mins < 1)       return "gerade eben";
+  if (mins < 60)      return `vor ${mins} Min.`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)       return `vor ${hrs} Std.`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30)      return `vor ${days} Tag${days === 1 ? "" : "en"}`;
+  const months = Math.floor(days / 30);
+  return `vor ${months} Monat${months === 1 ? "" : "en"}`;
+}
+
 // ─── Full-Site progress state ─────────────────────────────────────────────────
 // Phase-Strings müssen 1:1 mit den enqueue("phase", { phase: ... })-Events
 // in src/app/api/full-scan/route.ts übereinstimmen. Vorher fehlten "checking"
@@ -396,12 +414,19 @@ export default function DashboardScanClient({
   projectUrl = null,
   monthlyScans = 0,
   scanLimit = 3,
+  isReScan = false,
+  lastScanAt = null,
 }: {
   userName: string;
   plan: string;
   projectUrl?: string | null;
   monthlyScans?: number;
   scanLimit?: number;
+  /** True wenn die Page via ?websiteId=X erreicht wurde — Re-Scan-Modus
+   *  blendet das URL-Eingabefeld als read-only und zeigt "Letzter Scan vor X". */
+  isReScan?: boolean;
+  /** ISO-Timestamp des letzten Scans dieser URL (Server-side gequert). */
+  lastScanAt?: string | null;
 }) {
   // Hardcoded: alle Plans bekommen den Full-Site Deep-Scan (Pricing-konform).
   // Die anderen Modi (wcag/performance/website) sind code-mäßig noch
@@ -891,6 +916,25 @@ export default function DashboardScanClient({
           </div>
         ) : (
           <form onSubmit={handleScan} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* Re-Scan-Hint: zeigt letzten Scan-Zeitpunkt + Hinweis dass die
+                 URL fix ist. Erscheint nur wenn ?websiteId=X angesprungen wurde
+                 (User kommt vom Portfolio/Switcher und will diese Site neu scannen). */}
+            {isReScan && lastScanAt && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+                padding: "8px 12px", borderRadius: 8, marginBottom: 4,
+                background: "rgba(122,166,255,0.06)",
+                border: "1px solid rgba(122,166,255,0.20)",
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span style={{ fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>
+                  Letzter Scan dieser URL: <strong style={{ color: C.text }}>{formatRelativeAge(lastScanAt)}</strong>
+                  {" "}— der Re-Scan überschreibt die alten Befunde nicht, sondern legt einen neuen Eintrag an.
+                </span>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>
               <input
@@ -898,17 +942,20 @@ export default function DashboardScanClient({
                 type="text" value={url}
                 onChange={e => { setUrl(e.target.value); setUrlHint(null); }}
                 placeholder="https://kunden-website.de"
-                disabled={state === "scanning"}
+                disabled={state === "scanning" || isReScan}
+                readOnly={isReScan}
                 onFocus={() => setUrlFocused(true)}
                 onBlur={handleUrlBlur}
+                title={isReScan ? "URL ist fixiert auf das aktive Projekt — wechseln über den Projekt-Switcher oben." : undefined}
                 style={{
                   flex: 1, minWidth: 280,
-                  background: "rgba(255,255,255,0.04)",
-                  border: `1px solid ${urlFocused ? C.blue : C.borderMid}`,
+                  background: isReScan ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${urlFocused && !isReScan ? C.blue : C.borderMid}`,
                   borderRadius: C.radiusSm,
                   padding: "12px 16px",
-                  color: C.text, fontSize: 14, outline: "none",
-                  boxShadow: urlFocused ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
+                  color: isReScan ? C.textSub : C.text, fontSize: 14, outline: "none",
+                  cursor: isReScan ? "not-allowed" : "text",
+                  boxShadow: urlFocused && !isReScan ? `0 0 0 3px rgba(0,123,255,0.18)` : "none",
                   transition: "border-color 0.15s, box-shadow 0.15s",
                 }}
               />
