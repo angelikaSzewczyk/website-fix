@@ -214,7 +214,7 @@ const PLANS = [
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true },
-      { text: "60-Sekunden-Watchdog mit Slack-/E-Mail-Alarm bei Ausfall",                highlight: true },
+      { text: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall (60-Sek-Watchdog ab Q3 — Bestandskunden behalten Preis)", highlight: true },
       { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
       { text: "DSGVO-AVV, Audit-Log + Haftungs-Dokumentation",                           highlight: true },
       { text: "Priority-Onboarding: 60-Min-Setup-Call mit Account-Manager",              highlight: false },
@@ -252,7 +252,7 @@ const FAQ = [
   },
   {
     q: "Was kostet WebsiteFix in der Übersicht?",
-    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (1 Projekt, 5 Deep-Scans/Monat, voller SEO-/Technik-/BFSG-Check, 5 Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, 25 Scans/Monat, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (50 Mandanten, Scan-Flatrate, Mandanten-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog). Alle Abos monatlich kündbar.",
+    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (1 Projekt, 5 Deep-Scans/Monat, voller SEO-/Technik-/BFSG-Check, 5 Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (50 Mandanten, Scan-Flatrate, Mandanten-Portal unter eigener Subdomain, Team-Rollen, Daily Health-Check inkl. 60-Sek-Watchdog ab Q3). Alle Abos monatlich kündbar.",
   },
   {
     q: "Funktioniert WebsiteFix mit meinem Hoster?",

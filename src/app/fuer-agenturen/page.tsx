@@ -29,18 +29,18 @@ import PluginInfobox from "../components/PluginInfobox";
 // abgreifen ohne Keyword-Stuffing. Description spricht den Inhaber direkt an.
 export const metadata: Metadata = {
   title:       { absolute: "Für Agenturen | Marge skalieren statt Senior-Devs verheizen" },
-  description: "Verwandeln Sie Ihre WordPress-Agentur vom Notfall-Fixer zum Profit-Center. Mit Smart-Fix-Guides erledigen Junior-Devs Aufgaben, für die bisher teure Senior-Stunden anfielen. White-Label, 60s-Watchdog, Team-Rollen und Workflow-Integration ab 249 €/Monat.",
+  description: "Verwandeln Sie Ihre WordPress-Agentur vom Notfall-Fixer zum Profit-Center. Mit Smart-Fix-Guides erledigen Junior-Devs Aufgaben, für die bisher teure Senior-Stunden anfielen. White-Label, Daily Health-Check, Team-Rollen und Workflow-Integration ab 249 €/Monat.",
   alternates:  { canonical: "https://website-fix.com/fuer-agenturen" },
   openGraph: {
     title:       "Für Agenturen | Marge skalieren statt Senior-Devs verheizen",
-    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, 60s-Watchdog, White-Label-Mandantenportal, Workflow-Integration. Ab 249 €/Monat.",
+    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, Daily Health-Check, White-Label-Mandantenportal, Workflow-Integration. Ab 249 €/Monat.",
     url:         "https://website-fix.com/fuer-agenturen",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image",
     title:       "Für Agenturen | Marge skalieren statt Senior-Devs verheizen",
-    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, 60s-Watchdog, White-Label-Mandantenportal, Workflow-Integration.",
+    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, Daily Health-Check, White-Label-Mandantenportal, Workflow-Integration.",
   },
 };
 
@@ -141,7 +141,7 @@ const PLANS: Plan[] = [
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true, key: true },
       { text: "Mandanten-Portal unter Ihrer eigenen Subdomain",                          highlight: true, key: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
-      { text: "60-Sekunden-Watchdog mit Slack-/E-Mail-Alarm bei Ausfall",                highlight: true, key: true },
+      { text: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall (60-Sek-Watchdog ab Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
       { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
       { text: "DSGVO-AVV, Audit-Log + Haftungs-Dokumentation",                           highlight: true },
       { text: "Priority-Onboarding: 60-Min-Setup-Call mit Account-Manager",              highlight: false },
@@ -162,7 +162,7 @@ const WORKFLOW_INTEGRATIONS: Array<{ name: string; desc: string; Icon: (props: {
   { name: "Jira",    desc: "Issues werden automatisch als Tickets im richtigen Sprint angelegt.",        Icon: JiraIcon },
   { name: "Asana",   desc: "Befunde landen direkt im richtigen Projekt mit Verantwortlichem.",            Icon: AsanaIcon },
   { name: "Trello",  desc: "Karten werden mit Severity-Label im konfigurierten Board erstellt.",          Icon: TrelloIcon },
-  { name: "Slack",   desc: "60-Sekunden-Watchdog meldet Ausfall sofort im konfigurierten Channel.",       Icon: SlackIcon },
+  { name: "Slack",   desc: "Daily Health-Check meldet Ausfall im konfigurierten Channel (60-Sek-Watchdog ab Q3).",       Icon: SlackIcon },
 ];
 
 // ─── FAQ — überarbeitet auf Agency-Inhaber-Perspektive ──────────────────────
@@ -187,8 +187,8 @@ const FAQ = [
     a: "Sie hinterlegen einmalig ein CNAME-Record in Ihrem DNS (z. B. portal.ihre-agentur.de → wf-portal.vercel.app). Wir provisionieren ein TLS-Zertifikat automatisch. Ihre Endkunden sehen dann ausschließlich Ihr Branding — kein WebsiteFix-Logo, kein Hinweis auf das Tool. Inkl. eigener SMTP-Adresse für Auto-Reports. Full White-Label heißt: Endkunde sieht Sie als Anbieter, nicht uns.",
   },
   {
-    q: "Was bringt mir der 60-Sekunden-Watchdog im Vergleich zu täglichem Monitoring?",
-    a: "Wenn die Website eines Endkunden um 09:14 Uhr ausfällt und Sie es um 09:16 Uhr wissen, retten Sie die Beziehung — und können den Wartungsvertrag damit rechtfertigen. Wenn Sie es um 23:00 Uhr per täglichem Cron-Job erfahren, ist die Beschwerde-Mail vom Endkunden längst da. Das ist der Unterschied zwischen Versicherungs- und Notfall-Modell.",
+    q: "Wann läuft das Website-Monitoring?",
+    a: "Aktuell prüfen wir jede Website einmal täglich (Daily Health-Check) und alarmieren bei Ausfall via Slack/E-Mail. Der 60-Sekunden-Watchdog für Echtzeit-Detection ist im Q3-Roadmap geplant — Bestandskunden des Agency-Scale-Plans behalten den Preis nach Release (siehe Roadmap-Sektion unten auf der Seite). Bis dahin: einmalige Tages-Prüfung plus jederzeit manueller Re-Scan im Dashboard.",
   },
   {
     q: "Welche Team-Rollen gibt es und wie unterscheiden sie sich?",
@@ -204,7 +204,7 @@ const FAQ = [
   },
   {
     q: "Warum 249 € statt 89 €? Was ist der Hauptunterschied?",
-    a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: Mandanten-Portal unter eigener Subdomain, Team-Rollen-Logik, 60-Sekunden-Watchdog, Workflow-API, DSGVO-AVV. Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
+    a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: Mandanten-Portal unter eigener Subdomain, Team-Rollen-Logik, Daily Health-Check (60-Sek-Watchdog ab Q3 inklusive), Workflow-API, DSGVO-AVV. Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
   },
   {
     q: "Kann ich Website-Fix zur Neukundengewinnung nutzen?",
@@ -581,7 +581,7 @@ export default function AgencyPage() {
               </h3>
               <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  "60-Sekunden-Watchdog meldet Ausfall, bevor der Kunde es merkt",
+                  "Daily Health-Check meldet Ausfall via Slack/E-Mail (60-Sek-Watchdog Q3)",
                   "Wartungspauschale wird mit Audit-Log belegt",
                   "Junior löst 60–75 % aller Befunde via Smart-Fix-Drawer",
                   "BFSG-2025-Konformität dokumentiert — Haftungsschutz",
@@ -856,10 +856,10 @@ export default function AgencyPage() {
               <Bell size={20} color={T.amber} strokeWidth={2} style={{ flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: T.text, marginBottom: 2 }}>
-                  60-Sekunden-Watchdog (Agency Scale)
+                  Daily Health-Check &amp; Slack-Alerts (Agency Scale)
                 </div>
                 <div style={{ fontSize: 12.5, color: T.textSub, lineHeight: 1.5 }}>
-                  Bei einem Mandanten-Ausfall wird sofort ein Slack-Ping abgesetzt. WhatsApp- und SMS-Routing werden im nächsten Release ausgeliefert.
+                  Tägliche Ausfall-Prüfung mit Slack-Ping bei Down-Status. 60-Sek-Watchdog für Echtzeit-Detection ist in Q3-Roadmap geplant — Bestandskunden behalten Preis nach Release.
                 </div>
               </div>
             </div>
@@ -1247,7 +1247,7 @@ export default function AgencyPage() {
 
             {/* ── Q3-Roadmap mit Beta-Pricing-Hook ────────────────────────────
                 Drei kommende Agency-Scale-exklusive Module: Core-Checksum,
-                60s-Watchdog, Visual-Regression-Archive. Bestandskunden-Preis
+                60-Sek-Watchdog, Visual-Regression-Archive. Bestandskunden-Preis
                 wird vor dem Update zugesichert — Conversion-Treiber für die
                 aktuelle Pricing-Stufe. */}
             <Q3RoadmapSection />

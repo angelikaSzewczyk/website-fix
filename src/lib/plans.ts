@@ -88,11 +88,13 @@ export const PLAN_QUOTAS: Record<PlanKey, PlanQuota> = {
   // Professional upgraden — der Server-Guard in /api/websites/route.ts
   // erzwingt diese Grenze (402 limit_reached).
   starter:      { monthlyScans: 5,        monthlyScansLabel: "5 Scans",       projects: 1,  projectsLabel: "1 Projekt" },
-  professional: { monthlyScans: 25,       monthlyScansLabel: "25 Scans",      projects: 10, projectsLabel: "10 Projekte" },
-  // Agency: technisches Anti-Abuse-Cap bei 500 Scans/Monat. UI rendert "Flatrate" /
-  // "∞" damit der User nicht zählt. Wer 500 wirklich erreicht (extrem unwahrscheinlich)
-  // bekommt am Server-Side-Limit einen 429 — ehrlicher als "Unbegrenzt" und dann
-  // doch eine Wand bei 100.
+  // Professional & Agency haben beide ein technisches Anti-Abuse-Cap von 500
+  // Scans/Monat (08.05.2026: Pro von 25 → 500 angehoben, weil die Pricing-Card
+  // explizit "unbegrenzte Scans" verspricht — 25 würde Pro mit 10 Projekten
+  // bei 2.5 Scans/Site/Monat hart limitieren). UI rendert "Flatrate" / "∞"
+  // damit der User nicht zählt. Wer das Cap wirklich erreicht (sehr selten)
+  // bekommt einen 429 — ehrlicher als "Unbegrenzt" und plötzlich Wand bei 100.
+  professional: { monthlyScans: 500,      monthlyScansLabel: "Flatrate",      projects: 10, projectsLabel: "10 Projekte" },
   agency:       { monthlyScans: 500,      monthlyScansLabel: "Flatrate",      projects: 50, projectsLabel: "50 Projekte" },
 };
 
@@ -103,9 +105,11 @@ export function getPlanQuota(plan: string | null | undefined): PlanQuota {
 
 /** True, wenn das Quota-UI für diesen Plan als "unlimited" rendern soll
  *  (technisches Cap existiert in PLAN_QUOTAS, ist aber so hoch dass User
- *  effektiv keine Wand spüren). Aktuell nur Agency. */
+ *  effektiv keine Wand spüren). Pro + Agency seit 2026-05-08 — beide
+ *  Pricing-Cards versprechen "unbegrenzte Scans". */
 export function isUnlimitedQuota(plan: string | null | undefined): boolean {
-  return normalizePlan(plan) === "agency";
+  const p = normalizePlan(plan);
+  return p === "agency" || p === "professional";
 }
 
 /** UI-formatiertes Limit für "X / Y"-Counter — gibt "∞" zurück bei
