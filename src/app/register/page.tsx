@@ -35,36 +35,39 @@ const PLAN_CONTENT: Record<string, {
   sub: string;
   bullets: string[];
 }> = {
+  // Bullets wortgleich aus den Pricing-Cards (page.tsx PLANS-Array) —
+  // Memory-Regel 'Pricing strikt einhalten' (08.05.2026).
   starter: {
     headline: <>Deine Website.<br />Sicher &amp; Fehlerfrei.</>,
     sub: "Konto erstellen. Sicher per Stripe bezahlen. Sofort aktiv.",
     bullets: [
-      "Voller SEO-Audit (25 Seiten)",
-      "Kritische Fehler-Analyse",
-      "Sofort-Check für Google-Ranking",
+      "1 Projekt · 5 Deep-Scans pro Monat",
+      "Voller Deep-Scan: SEO, Technik, Performance, BFSG",
+      "5 Smart-Fix-Guides inklusive",
     ],
   },
   professional: {
     headline: <>Das WordPress-Audit<br />das Kunden überzeugt.</>,
-    sub: "Unbegrenzte WP-Scans. KI-Empfehlungen. White-Label Berichte.",
+    sub: "10 Projekte. Unbegrenzte Scans. KI-Auto-Fix.",
     bullets: [
-      "Unbegrenzte WordPress-Audits",
-      "Automatisches Monitoring 24/7",
-      "White-Label PDF-Reports",
+      "10 WordPress-Projekte · unbegrenzte Scans",
+      "KI-Auto-Fix mit Builder-Anleitung (Elementor / Divi)",
+      "White-Label PDF mit Logo + Brand-Farbe",
     ],
   },
   agency: {
-    headline: <>Der WordPress-Agentur<br />Autopilot.</>,
-    sub: "Konto erstellen. Direkt zu Stripe. Sofort loslegen.",
+    headline: <>Der Agentur-<br />Autopilot.</>,
+    sub: "Bis zu 50 Kunden. Workflow-API. DSGVO-AVV.",
     bullets: [
-      "Alle Agency-Features & WordPress-Plugin",
-      "Vollständiges White-Label",
-      "Mass-Fix für alle Kunden-Sites",
+      "Bis zu 50 Kunden · unbegrenzte Scans",
+      "White-Label-Plugin · Lead-Generator · Team-Rollen",
+      "Workflow-API (Jira/Trello/Asana) · DSGVO-AVV",
     ],
   },
-  // Legacy-Keys für alte Register-Links:
-  "smart-guard":    { headline: <>KI-Power für<br />deine Website.</>, sub: "Professional-Plan.", bullets: ["Unbegrenzte Scans", "KI-Empfehlungen", "White-Label Berichte"] },
-  "agency-starter": { headline: <>Der<br />Agentur-Autopilot.</>,       sub: "Agency-Plan.",       bullets: ["Alle Agency-Features", "White-Label Berichte", "Mass-Fix"] },
+  // Legacy-Aliasse: alte Register-Links (smart-guard → Pro, agency-starter → Agency)
+  // bekommen die kanonischen Bullets, damit das Wording nicht driftet.
+  "smart-guard":    { headline: <>Das WordPress-Audit<br />das Kunden überzeugt.</>, sub: "10 Projekte. Unbegrenzte Scans. KI-Auto-Fix.", bullets: ["10 WordPress-Projekte · unbegrenzte Scans", "KI-Auto-Fix mit Builder-Anleitung (Elementor / Divi)", "White-Label PDF mit Logo + Brand-Farbe"] },
+  "agency-starter": { headline: <>Der Agentur-<br />Autopilot.</>,                    sub: "Bis zu 50 Kunden. Workflow-API. DSGVO-AVV.",          bullets: ["Bis zu 50 Kunden · unbegrenzte Scans", "White-Label-Plugin · Lead-Generator · Team-Rollen", "Workflow-API (Jira/Trello/Asana) · DSGVO-AVV"] },
 };
 
 // ─── Intent-driven content (z.B. von /scan/results "9,90€ Einzel-Fix" CTA) ───
@@ -368,17 +371,11 @@ function RegisterContent() {
           ))}
         </div>
 
-        <div style={{ padding: "18px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Schon dabei:</p>
-          <div style={{ display: "flex", gap: -8 }}>
-            {["M", "S", "T"].map((l, i) => (
-              <div key={l} style={{ width: 28, height: 28, borderRadius: "50%", background: `hsl(${220 + i * 30}, 70%, 50%)`, border: "2px solid #0b0c10", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", marginLeft: i > 0 ? -8 : 0 }}>{l}</div>
-            ))}
-            <span style={{ marginLeft: 10, fontSize: 13, color: "rgba(255,255,255,0.4)", alignSelf: "center" }}>
-              Agenturen nutzen WebsiteFix
-            </span>
-          </div>
-        </div>
+        {/* Social-Proof-Block 'M·S·T Agenturen nutzen WebsiteFix' entfernt
+            (08.05.2026): waren generische Avatar-Initialen ohne echte
+            Referenz — fake Social-Proof schadet Vertrauen mehr als er
+            nützt. Sobald echte Pilot-Kunden-Quotes verfügbar sind, hier
+            mit Foto + Name + Agentur einsetzen. */}
       </div>
 
       {/* RIGHT panel */}
