@@ -57,18 +57,23 @@ function buildIssuesFromClaim(body: {
     issues.push({ severity: "red", title: `Google-Verwirrung: ${body.duplicateTitlesCount}× identischer Title-Tag (Ranking-Verlust)`, body: "Doppelte Titles führen zu Duplicate-Content-Problemen bei Google.", category: "technik", count: body.duplicateTitlesCount! });
   if ((body.duplicateMetasCount ?? 0) > 0)
     issues.push({ severity: "yellow", title: `Schwache Klickrate: ${body.duplicateMetasCount}× identische Meta-Description`, body: "Identische Vorschautexte — Google ignoriert sie oder wählt beliebige Textausschnitte.", category: "technik", count: body.duplicateMetasCount! });
-  if (body.hasUnreachable)
-    issues.push({ severity: "red", title: "Toter Link: Unterseiten geben 404/5xx zurück", body: "Besucher und Crawler landen auf Fehlerseiten — UX-Schaden und Ranking-Verlust.", category: "technik", count: 1 });
+  // body.hasUnreachable → siehe per-page-Loop unten, dort wird konkret pro URL
+  // der Befund emittiert (actionable mit Pfad). Der vage globale "Unterseiten
+  // geben 404/5xx zurück"-Befund war redundant.
   if ((body.orphanedPagesCount ?? 0) > 0)
     issues.push({ severity: "yellow", title: `Versteckter Content: ${body.orphanedPagesCount} Seiten ohne interne Verlinkung (nicht auffindbar)`, body: "Keine internen Links zeigen auf diese Seiten — Google und Besucher finden sie kaum.", category: "technik", count: body.orphanedPagesCount! });
 
-  // Per-page issues
+  // Per-page issues — Vorher (08.05.2026 Bug): bei 6 Seiten mit fehlenden
+  // Alt-Texten wurde dieses Issue 7× emittiert (1× global "Bilder für
+  // Screenreader unsichtbar" + 6× per-page) → User sah "Schritt-für-Schritt-
+  // Anleitung freischalten" 7×. Per-page Alt-Text-Issue rausgenommen, der
+  // globale Summary deckt das Thema 1× ab. Per-page unreachable BLEIBT (war
+  // vorher doppelt mit globalem hasUnreachable, der wurde im Block oben
+  // entfernt — jetzt 1× pro URL, actionable mit Pfad).
   for (const p of pages) {
     const path = toPath(p.url);
     if (!p.erreichbar)
       issues.push({ severity: "red", title: `Toter Link: ${path} gibt 404/5xx zurück`, body: "Besucher und Crawler landen auf einer Fehlerseite — direkter UX-Schaden und Ranking-Verlust.", category: "technik", url: p.url, count: 1 });
-    if (p.altMissing > 0)
-      issues.push({ severity: "red", title: `BFSG-Verstoß: ${p.altMissing}× fehlendes Alt-Attribut auf ${path}`, body: `${p.altMissing} Bilder ohne Alt-Text — Barrierefreiheitsgesetz ab 06/2025 verpflichtend.`, category: "recht", url: p.url, count: p.altMissing });
     if (p.noindex)
       issues.push({ severity: "yellow", title: `Für Google gesperrt: noindex auf ${path}`, body: "Diese Unterseite ist für Suchmaschinen komplett unsichtbar — ist das beabsichtigt?", category: "technik", url: p.url, count: 1 });
   }

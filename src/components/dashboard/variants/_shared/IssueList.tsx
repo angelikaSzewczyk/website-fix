@@ -998,6 +998,25 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
   const [openItems, setOpenItems]         = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
 
+  // Starter-Inklusiv-Quota (08.05.2026): Banner über der Issue-Liste klärt auf,
+  // dass 1 Smart-Fix-Guide-Claim mehrere Issues gleichen Typs abdeckt — User
+  // sahen vorher 10× "Anleitung freischalten" und vermuteten 10× 9,90 €. In
+  // Wahrheit löst z.B. der BFSG-Guide alle Bild-Beschreibungs-Issues.
+  const [inkluQuota, setInkluQuota] = useState<{ remaining: number; quota: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/me/guide-quota")
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return;
+        if (data.applicable && typeof data.remaining === "number") {
+          setInkluQuota({ remaining: data.remaining, quota: data.quota });
+        }
+      })
+      .catch(() => { /* silent — Banner bleibt einfach aus */ });
+    return () => { cancelled = true; };
+  }, []);
+
   // Agency-Plan ist Auto-Fix-via-Plugin berechtigt — der Klick auf den
   // gelben Button zeigt dann den WP-Plugin-Setup-Pfad statt des
   // Upgrade-Modals (Pro/Starter sehen weiterhin Upgrade).
@@ -1706,6 +1725,34 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
             )}
           </div>
         </div>
+
+        {/* ── Inklusiv-Banner für Starter mit verfügbarer Quota ─────────────
+             Erklärt: 1 Smart-Fix-Guide-Claim deckt mehrere Issues gleichen
+             Typs ab. Verhindert Verwirrung wenn User 10× "Anleitung
+             freischalten" sieht und 10× 9,90 € befürchtet. */}
+        {inkluQuota && inkluQuota.remaining > 0 && (redIssues.length > 0 || yellowIssues.length > 0) && (
+          <div className="wf-no-print" style={{
+            marginBottom: 16,
+            padding: "14px 16px",
+            background: "rgba(34,197,94,0.06)",
+            border: "1px solid rgba(34,197,94,0.22)",
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 12,
+          }}>
+            <span style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>✓</span>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", lineHeight: 1.55 }}>
+              <strong style={{ color: "#86EFAC" }}>
+                {inkluQuota.remaining} von {inkluQuota.quota} Smart-Fix-Guides inklusive
+              </strong>
+              {" — "}
+              ein Guide deckt <strong style={{ color: "#fff" }}>alle Issues eines Typs</strong> ab.
+              Beispiel: der <em>BFSG-Guide</em> löst auf einen Klick alle Bild-Beschreibungs-Issues
+              gleichzeitig — du musst nicht für jedes Issue einzeln zahlen.
+            </div>
+          </div>
+        )}
 
         {/* ── Gruppe: Handlungsbedarf (rot) ─────────────────────────────── */}
         {redIssues.length > 0 ? (
