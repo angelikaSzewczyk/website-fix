@@ -116,7 +116,7 @@ const PLANS: Plan[] = [
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true, key: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true, key: true },
       { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
-      { text: "Score-Verlauf · Client-Tracking · 24/7-Monitoring",           highlight: true },
+      { text: "Score-Verlauf · Site-Tracking · Daily Health-Check",          highlight: true },
       { text: "Slack- und E-Mail-Alerts bei kritischen Befunden",            highlight: true },
       { text: "Executive Summary für Endkunden-Reports",                     highlight: false },
     ],

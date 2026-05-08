@@ -236,7 +236,7 @@ export default async function ClientsPage({
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Neuen Kunden anlegen
+          {isAgencyPlan ? "Neuen Kunden anlegen" : "Neues Projekt anlegen"}
         </Link>
       </div>
 
@@ -356,7 +356,7 @@ export default async function ClientsPage({
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.purple }} />
             FILTER AKTIV
           </span>
-          <span>{totalShown} von {totalAll} Kunden sichtbar.</span>
+          <span>{totalShown} von {totalAll} {isAgencyPlan ? "Kunden" : "Projekten"} sichtbar.</span>
         </div>
       )}
 
@@ -417,11 +417,12 @@ export default async function ClientsPage({
                     </svg>
                   </div>
                   <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800, color: T.text, letterSpacing: "-0.01em" }}>
-                    Noch keine Kunden im Portfolio
+                    {isAgencyPlan ? "Noch keine Kunden im Portfolio" : "Noch keine Projekte im Portfolio"}
                   </h3>
                   <p style={{ margin: "0 auto 22px", fontSize: 12.5, color: T.textSub, lineHeight: 1.65, maxWidth: 480 }}>
-                    Pro Kunde speicherst du Domain, Branding-Hinweise und behältst SSL/Security/Scan-
-                    Historie an einem Ort. Beim ersten Scan landet die Domain automatisch hier.
+                    {isAgencyPlan
+                      ? "Pro Kunde speicherst du Domain, Branding-Hinweise und behältst SSL/Security/Scan-Historie an einem Ort. Beim ersten Scan landet die Domain automatisch hier."
+                      : `Bis zu ${projectLimit} Projekte parallel verwalten — pro Site Domain, SSL-Status, Security-Score und Scan-Historie. Beim ersten Scan einer neuen Domain landet sie automatisch hier.`}
                   </p>
                   <Link href="/dashboard#modal-new-client" style={{
                     display: "inline-flex", alignItems: "center", gap: 8,
@@ -435,7 +436,7 @@ export default async function ClientsPage({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
-                    Ersten Kunden anlegen
+                    {isAgencyPlan ? "Ersten Kunden anlegen" : "Erstes Projekt anlegen"}
                   </Link>
                 </div>
               )

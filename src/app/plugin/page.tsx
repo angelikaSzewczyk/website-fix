@@ -262,10 +262,10 @@ function PaidBlock() {
 
         <ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 8 }}>
           {[
-            <>WordPress-Backend → <strong style={{ color: C.text }}>Plugins → Installieren</strong> → <strong style={{ color: C.text }}>Plugin hochladen</strong> → ZIP wählen → installieren.</>,
+            <>WordPress-Backend (z.B. <code style={{ background: "rgba(0,0,0,0.32)", padding: "1px 6px", borderRadius: 4, fontSize: 11.5 }}>deine-domain.de/wp-admin</code>) → <strong style={{ color: C.text }}>Plugins → Installieren</strong> → <strong style={{ color: C.text }}>Plugin hochladen</strong> → ZIP wählen → installieren.</>,
             <>Aktiviere das Plugin über die Plugin-Liste.</>,
-            <>Gehe zu <strong style={{ color: C.text }}>Einstellungen → Website Exzellenz</strong>, kopiere deinen API-Key aus dem <Link href="/dashboard/integrations" style={{ color: C.green, textDecoration: "none", fontWeight: 700 }}>WebsiteFix-Dashboard</Link>, einfügen, <em>&quot;Speichern &amp; verbinden&quot;</em>.</>,
-            <>Dashboard refreshen — Banner kippt von gelb auf <strong style={{ color: C.green }}>&quot;Full System Audit aktiv&quot;</strong>.</>,
+            <>Im <strong style={{ color: C.text }}>WordPress-Admin</strong> erscheint nach Aktivierung ein neuer Menüpunkt <strong style={{ color: C.text }}>Einstellungen → Website Exzellenz</strong>. Dort: API-Key aus dem <Link href="/dashboard/integrations" style={{ color: C.green, textDecoration: "none", fontWeight: 700 }}>WebsiteFix-Dashboard</Link> kopieren, einfügen, <em>&quot;Speichern &amp; verbinden&quot;</em>.</>,
+            <>Zurück ins WebsiteFix-Dashboard refreshen — Banner kippt von gelb auf <strong style={{ color: C.green }}>&quot;Full System Audit aktiv&quot;</strong>.</>,
           ].map((step, i) => (
             <li key={i} style={{ fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>
               {step}
