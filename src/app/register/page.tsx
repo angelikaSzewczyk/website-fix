@@ -145,14 +145,13 @@ function RegisterContent() {
   const content    = isGuideIntent ? INTENT_CONTENT.guide : (PLAN_CONTENT[plan] ?? DEFAULT_CONTENT);
   const isPaidPlan = !isGuideIntent && plan && plan !== "free";
 
-  // Defensive (08.05.2026): /register ohne Plan + ohne Invite + ohne Guide-Intent
-  // ist konzeptionell falsch ("Eingeloggt = zahlend"). Direkt zur Pricing-
-  // Seite redirecten, statt verwirrenden DEFAULT_CONTENT zu rendern.
-  useEffect(() => {
-    if (!plan && !isGuideIntent && !isInviteFlow) {
-      window.location.href = "/#pricing";
-    }
-  }, [plan, isGuideIntent, isInviteFlow]);
+  // Defensive-Redirect von /register ohne Plan WURDE ENTFERNT (08.05.2026):
+  // Vorher gesetzter useEffect feuerte beim ersten Render bevor SearchParams
+  // hydrieren konnten — DEFAULT_CONTENT wurde nie gesehen, aber Plan-User
+  // wurden trotzdem nach /#pricing geredirected (Race-Condition Hydration).
+  // Resultat: Application-Error für JEDEN Plan. Login-Links zeigen jetzt
+  // direkt auf /#pricing, der DEFAULT_CONTENT-Pfad ist also unwahrscheinlich
+  // erreichbar, und falls doch, sieht User halt 'Plan wählen & loslegen'-Copy.
 
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState(isInviteFlow ? inviteEmailParam : "");
