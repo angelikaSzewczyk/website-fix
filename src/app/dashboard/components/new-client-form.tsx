@@ -24,6 +24,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import ModalCloseButton from "./ModalCloseButton";
+import { isAgency } from "@/lib/plans";
 
 const C = {
   bg:        "#0b0c10",
@@ -46,7 +47,15 @@ type LimitReachedPayload = {
   upgradeTo:    string;
 };
 
-export default function NewClientForm() {
+export default function NewClientForm({ plan = "" }: { plan?: string }) {
+  // 08.05.2026: Plan-aware Wording — Pro/Solo nennt es "Projekt", Agency
+  // arbeitet mit "Kunden". Beide schreiben in dieselbe saved_websites-Tabelle,
+  // is_customer_project-Flag steuert die Tab-Filter im Switcher.
+  const agencyMode = isAgency(plan);
+  const labels = agencyMode
+    ? { title: "Neuen Kunden anlegen", primaryField: "Kundenname", primaryPlaceholder: "z.B. Autohaus Müller GmbH", submit: "Kunde anlegen & ersten Scan starten →" }
+    : { title: "Neues Projekt anlegen", primaryField: "Projekt-Name (optional)", primaryPlaceholder: "z.B. Eigene Hauptseite", submit: "Projekt anlegen & ersten Scan starten →" };
+
   const [name, setName]               = useState("");
   const [url, setUrl]                 = useState("");
   const [busy, setBusy]               = useState(false);
@@ -76,8 +85,10 @@ export default function NewClientForm() {
         body:    JSON.stringify({
           url:               cleanUrl,
           name:              cleanName || null,
-          isCustomerProject: true,
-          clientLabel:       cleanName || null,
+          // Agency: alle neuen Sites = Kunden-Projekte. Pro/Starter Solo:
+          // eigene Sites (is_customer_project=false → landen im "Eigene"-Tab).
+          isCustomerProject: agencyMode,
+          clientLabel:       agencyMode ? (cleanName || null) : null,
         }),
       });
 
@@ -101,10 +112,13 @@ export default function NewClientForm() {
 
       // Redirect: id wenn vorhanden, sonst nur url als Fallback. Beide Pfade
       // führen zu einer funktionierenden Scan-Page; mit id kann der Scanner
-      // direkt das saved_websites-Tupel verlinken.
+      // direkt das saved_websites-Tupel verlinken. autoStart=1 triggert den
+      // ersten Scan beim Mount automatisch (08.05.2026: vorher musste der
+      // User auf der Scan-Page nochmal "Scan starten" klicken).
       const params = new URLSearchParams();
       if (id) params.set("websiteId", id);
       params.set("url", cleanUrl);
+      params.set("autoStart", "1");
       window.location.href = `/dashboard/scan?${params.toString()}`;
     } catch {
       setError("Verbindung zum Server unterbrochen.");
@@ -184,15 +198,16 @@ export default function NewClientForm() {
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div>
         <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 5 }}>
-          Kundenname
+          Website-URL *
         </label>
         <input
-          name="clientName"
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="z.B. Autohaus Müller GmbH"
-          autoComplete="off"
+          name="url"
+          type="url"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder={agencyMode ? "https://kunde-website.de" : "https://meine-website.de"}
+          required
+          autoFocus
           style={{
             width: "100%", padding: "10px 14px", borderRadius: 9,
             border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text,
@@ -202,15 +217,15 @@ export default function NewClientForm() {
       </div>
       <div>
         <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.textSub, marginBottom: 5 }}>
-          Website-URL
+          {labels.primaryField}
         </label>
         <input
-          name="url"
-          type="url"
-          value={url}
-          onChange={e => setUrl(e.target.value)}
-          placeholder="https://kunde-website.de"
-          required
+          name="clientName"
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder={labels.primaryPlaceholder}
+          autoComplete="off"
           style={{
             width: "100%", padding: "10px 14px", borderRadius: 9,
             border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text,
@@ -243,7 +258,7 @@ export default function NewClientForm() {
             opacity: !url.trim() ? 0.6 : 1,
           }}
         >
-          {busy ? "Speichern…" : "Ersten Scan starten →"}
+          {busy ? "Speichern…" : labels.submit}
         </button>
         <ModalCloseButton style={{
           padding: "11px 18px", borderRadius: 10,
@@ -255,7 +270,9 @@ export default function NewClientForm() {
         </ModalCloseButton>
       </div>
       <p style={{ margin: 0, fontSize: 11, color: C.textMuted, lineHeight: 1.5 }}>
-        Der Kundenname wird sofort gespeichert — du findest ihn anschließend in der Kunden-Matrix wieder.
+        {agencyMode
+          ? "Kundenname und URL werden gespeichert. Du findest den Eintrag anschließend im Kunden-Portfolio."
+          : "Projekt wird gespeichert und der erste Scan automatisch gestartet. Du findest es anschließend im Portfolio."}
       </p>
     </form>
   );

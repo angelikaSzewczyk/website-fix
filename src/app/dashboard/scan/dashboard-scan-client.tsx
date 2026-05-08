@@ -450,7 +450,7 @@ export default function DashboardScanClient({
     : canonical === "agency"     ? 500
     : 0;
 
-  // Pre-fill the URL field on mount — query param takes priority, then projectUrl
+  // Pre-fill the URL field on mount — query param takes priority, then projectUrl.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const queryUrl = params.get("url");
@@ -462,6 +462,25 @@ export default function DashboardScanClient({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectUrl]);
+
+  // 08.05.2026: ?autoStart=1 (vom NewClientForm-Wizard) triggert direkt den
+  // Scan, sodass der User nicht nochmal "Scan starten" klicken muss. Wir
+  // warten bis url gesetzt ist (state-update aus dem Pre-Fill-Effect oben),
+  // dann fire-and-forget. autoStartFiredRef verhindert doppeltes Auslösen.
+  const autoStartFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoStartFiredRef.current) return;
+    if (!url) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("autoStart") !== "1") return;
+    autoStartFiredRef.current = true;
+    // Strip ?autoStart=1, sodass Reload den Scan nicht nochmal triggert.
+    const stripped = new URL(window.location.href);
+    stripped.searchParams.delete("autoStart");
+    window.history.replaceState({}, "", stripped.toString());
+    handleScan(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
 
   // User-Feedback-Banner nach Scan-Completion. Kein Auto-Redirect mehr —
   // der User soll selbst entscheiden, was er als nächstes tut (Result lesen,

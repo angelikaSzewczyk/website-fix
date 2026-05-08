@@ -349,8 +349,8 @@ export default function DashboardShell({
               </button>
               {!isAgency && (
                 <Link
-                  href="/dashboard/scan"
-                  title="Neues Projekt anlegen"
+                  href="/dashboard#modal-new-client"
+                  title="Neues Projekt anlegen — öffnet Wizard mit Name + URL"
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
                     width: 22, height: 22, borderRadius: 6,
@@ -534,12 +534,13 @@ export default function DashboardShell({
               })}
             </div>
 
-            {/* "+ Neue Site hinzufügen" — immer sichtbar, damit Pro-User
-                seine 10-Slot-Quota ausschöpfen kann. Link führt nach
-                /dashboard/scan, dort URL eintippen → Scan startet → Site
-                wird automatisch in saved_websites angelegt. */}
+            {/* "+ Neue Site hinzufügen" — öffnet das Projekt-Wizard-Modal
+                 (08.05.2026 User-Direktive: "schöne Projekt-Anlage statt
+                 direkt /dashboard/scan"). Modal liegt auf /dashboard,
+                 daher Hash-Link. Wenn User schon dort ist, öffnet via
+                 :target ohne Page-Reload. */}
             <Link
-              href="/dashboard/scan"
+              href="/dashboard#modal-new-client"
               onClick={() => setProjectDialogOpen(false)}
               style={{
                 display: "flex", alignItems: "center", gap: 10,

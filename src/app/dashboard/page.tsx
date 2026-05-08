@@ -833,11 +833,19 @@ export default async function DashboardPage({
       >
         <ModalCloseButton ariaLabel="Modal schließen" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, lineHeight: 1 }}>×</ModalCloseButton>
         <div style={{ marginBottom: 24 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>Neues Projekt</p>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>Kunden anlegen</h2>
-          <p style={{ margin: "6px 0 0", fontSize: 13, color: C.textSub }}>Füge einen neuen Kunden zur Kunden-Matrix hinzu.</p>
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            {isAgency ? "Neuer Kunde" : "Neues Projekt"}
+          </p>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>
+            {isAgency ? "Kunde anlegen" : "Projekt anlegen"}
+          </h2>
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: C.textSub }}>
+            {isAgency
+              ? "Füge eine Kunden-Site hinzu — der erste Scan startet automatisch."
+              : "Füge eine eigene Site hinzu — der erste Scan startet automatisch."}
+          </p>
         </div>
-        <NewClientForm />
+        <NewClientForm plan={plan} />
       </ModalShell>
 
     </div>
