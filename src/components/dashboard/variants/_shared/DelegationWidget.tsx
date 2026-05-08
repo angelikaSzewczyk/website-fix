@@ -35,7 +35,34 @@ function formatEur(value: number): string {
 }
 
 export default function DelegationWidget({ stats }: { stats: DelegationStats }) {
-  if (stats.totalIssues === 0) return null;
+  // Bei 0 Issues: Empty-State statt null-render. Sonst ist das zentrale
+  // Profit-Center-Versprechen ('Delegations-Hebel im Dashboard') für neue
+  // Agency-User unsichtbar bis erste Mandanten-Scans laufen.
+  if (stats.totalIssues === 0) {
+    return (
+      <section style={{
+        background: `linear-gradient(135deg, ${C.bg}, rgba(251,191,36,0.04))`,
+        border: `1px dashed ${C.border}`,
+        borderRadius: 16,
+        padding: "22px 26px",
+        marginBottom: 16,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 28 }}>👥</span>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
+              Delegations-Hebel — bald aktiv
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
+              Sobald deine ersten Mandanten gescannt sind, siehst du hier den
+              monatlichen Junior-Lohnkosten-Hebel: was du an Senior-Stunden sparst,
+              wenn dein Junior-Team die Smart-Fix-Drawer-Empfehlungen abarbeitet.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const ratioPct = Math.round(stats.juniorRatio * 100);
   const savings  = stats.monthlySavingsEur;

@@ -122,6 +122,115 @@ export default function AgencyBrandingPage({
         embedded
       />
 
+      {/* ── Sektion 4: DSGVO & Compliance (Pricing-Card-Versprechen #9) ──── */}
+      {isAgencyPlan && (
+        <div style={{ marginTop: 36 }}>
+          <div style={{ marginBottom: 14 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              DSGVO &amp; Compliance
+            </p>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.text, letterSpacing: "-0.02em" }}>
+              AVV, Audit-Log &amp; Haftungs-Dokumentation
+            </h2>
+            <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.textSub, maxWidth: 600, lineHeight: 1.55 }}>
+              Was du brauchst, um deine Mandanten DSGVO-konform zu betreuen —
+              und im Schadensfall nachweisen kannst, dass die Wartung ordentlich erfolgte.
+            </p>
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 14,
+          }}>
+            {/* AVV-Template */}
+            <a
+              href="/dashboard/agency-branding/avv"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: "20px 22px", borderRadius: 12,
+                background: T.card, border: `1px solid ${T.border}`,
+                textDecoration: "none", color: "inherit",
+                display: "flex", flexDirection: "column", gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>📄</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: T.text }}>
+                  AVV-Vorlage öffnen
+                </span>
+                <span style={{ marginLeft: "auto", fontSize: 9.5, fontWeight: 800, padding: "2px 7px",
+                                borderRadius: 5, background: "rgba(167,139,250,0.18)",
+                                border: "1px solid rgba(167,139,250,0.4)", color: T.purple,
+                                letterSpacing: "0.04em" }}>
+                  AGENCY
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
+                Auftragsverarbeitungs-Vertrag (Art. 28 DSGVO) als druckbare Vorlage —
+                vorbefüllt mit deinem Agency-Namen. Per Browser-Print als PDF speichern,
+                vom Mandanten unterschreiben lassen, Kopie an support@website-fix.com schicken.
+              </p>
+              <span style={{ fontSize: 11.5, color: T.purple, fontWeight: 700, marginTop: 4 }}>
+                Vorlage öffnen →
+              </span>
+            </a>
+
+            {/* Audit-Log */}
+            <a
+              href="/dashboard/team#audit"
+              style={{
+                padding: "20px 22px", borderRadius: 12,
+                background: T.card, border: `1px solid ${T.border}`,
+                textDecoration: "none", color: "inherit",
+                display: "flex", flexDirection: "column", gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>📋</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: T.text }}>
+                  Audit-Log
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
+                Append-only Protokoll aller Team-Aktionen (Einladungen, Plan-Änderungen,
+                Zugriffe). Nachweis-Pflicht im DSGVO-Audit oder bei Mandanten-Anfragen
+                nach Art. 30 DSGVO.
+              </p>
+              <span style={{ fontSize: 11.5, color: T.purple, fontWeight: 700, marginTop: 4 }}>
+                Log ansehen →
+              </span>
+            </a>
+
+            {/* Haftungs-Doku */}
+            <div
+              style={{
+                padding: "20px 22px", borderRadius: 12,
+                background: T.card, border: `1px solid ${T.border}`,
+                display: "flex", flexDirection: "column", gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🛡️</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: T.text }}>
+                  Haftungs-Doku
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
+                BFSG-2025 + Wartungsvertrags-Standard-Klauseln zum Einbau in deine
+                Mandanten-Verträge. Bei Bedarf an branchenspezifischer Doku
+                (Praxis, Kanzlei, Online-Shop) schreib uns an
+                <a href="mailto:support@website-fix.com?subject=Haftungs-Doku%20Anfrage" style={{ color: T.purple, fontWeight: 700, textDecoration: "none" }}> support@website-fix.com</a>.
+              </p>
+              <span style={{ fontSize: 10.5, color: T.textMuted, marginTop: 4, fontStyle: "italic" }}>
+                Hinweis: Vor Verwendung von einem Anwalt prüfen lassen.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

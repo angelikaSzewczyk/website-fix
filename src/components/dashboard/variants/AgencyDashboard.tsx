@@ -758,9 +758,9 @@ export default async function AgencyDashboard({
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", backdropFilter: "blur(8px)" }}>
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>Activity-Feed</span>
-              {/* "AKTUELL" statt "LIVE" — kein Polling/WebSocket. Daten werden
-                  beim Page-Render gezogen (täglicher Cron + manuelle Scans). */}
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Aktuell</span>
+              {/* "TÄGLICH" — Daten kommen aus täglichem Cron (Daily Health-Check)
+                  + manuellen Scans. Echtzeit-Watchdog ist Q3-Roadmap. */}
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Täglich</span>
             </div>
             {recentScans.length === 0 ? (
               <div style={{ padding: "32px 18px", textAlign: "center", fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>

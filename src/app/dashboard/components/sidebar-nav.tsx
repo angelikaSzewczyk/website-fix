@@ -210,7 +210,7 @@ export default function SidebarNav({ plan, userName, userImage, signOutButton, l
             </div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", lineHeight: 1 }}>Agentur-Logo</div>
-              <div style={{ fontSize: 10, color: "rgba(167,139,250,0.7)", marginTop: 2, fontWeight: 500 }}>In Einstellungen setzen →</div>
+              <div style={{ fontSize: 10, color: "rgba(167,139,250,0.7)", marginTop: 2, fontWeight: 500 }}>Im Branding-Hub setzen →</div>
             </div>
           </Link>
         ) : (
