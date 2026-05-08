@@ -394,7 +394,7 @@ export default async function DashboardPage({
     ` as { c: number }[];
     siteCount = cnt[0]?.c ?? 0;
   } catch { /* Tabelle leer/fehlt → Default 0 */ }
-  void siteCount; // bleibt im Scope für künftige Plan-Differenzierungen
+  // siteCount wird an ProDashboard durchgereicht für die Multi-Site-CTA.
   // RescueDashboard war zwischenzeitlich für Starter aktiviert (useRescueView=true),
   // hat aber das StarterDashboard mit allen Pricing-Versprechen (Plugin-Card,
   // Onboarding-Checklist, Tech-Fingerprint, MetricPillBar, BFSG-Banner) komplett
@@ -766,6 +766,7 @@ export default async function DashboardPage({
               pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
               pluginDeepData={pluginStatus.deepData}
               userId={String(session.user.id)}
+              siteCount={siteCount}
             />
           ) : (
             <StarterDashboard

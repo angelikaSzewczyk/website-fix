@@ -101,6 +101,10 @@ export interface ProDashboardProps {
   pluginActive?:          boolean;
   pluginLastHandshakeAt?: string | null;
   pluginDeepData?:        DeepData | null;
+  /** Anzahl der bereits angelegten saved_websites (08.05.2026): wird
+   *  für die "Multi-Site"-CTA benutzt — Pro hat 10 Slots laut Pricing,
+   *  User soll aktiv sehen wie viele frei sind. */
+  siteCount?:             number;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -199,6 +203,7 @@ export default function ProDashboard(props: ProDashboardProps) {
     pluginActive = false,
     pluginLastHandshakeAt = null,
     pluginDeepData = null,
+    siteCount = 0,
   } = props;
 
   // Inklusiv-Guide-Modal-State — Click auf einen Guide-Card öffnet das
@@ -770,6 +775,54 @@ export default function ProDashboard(props: ProDashboardProps) {
           {/* "Warum WebsiteFix?"-Reminder mit 3 Key-Points. Pro sieht alle 3,
               inkl. Haftungsschutz als Vorgeschmack auf Agency-Upgrade. */}
           <WhyWebsitefixCard plan={plan} />
+
+          {/* ── MULTI-SITE-CTA (08.05.2026) ──────────────────────────────────
+               User-Direktive: "Pro Dashboard muss zeigen dass man mehrere
+               Kunden/Projekte anlegen kann — für 89€/Mo ein MUSS." Banner
+               nur sichtbar wenn noch Slots frei UND mindestens 1 Site da ist.
+               Bei 0 Sites greift der bestehende Empty-State, bei 10/10 ist
+               das Limit erreicht und Banner würde nur frustrieren. */}
+          {!isAgency && siteCount > 0 && siteCount < 10 && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "14px 18px", borderRadius: 12, marginBottom: 18,
+              background: "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
+              border: "1px solid rgba(16,185,129,0.32)",
+              flexWrap: "wrap" as const,
+            }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                background: "rgba(16,185,129,0.18)",
+                border: "1px solid rgba(16,185,129,0.42)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <p style={{ margin: "0 0 2px", fontSize: 13.5, fontWeight: 800, color: "#86EFAC", letterSpacing: "-0.01em" }}>
+                  {siteCount} von 10 Projekten genutzt — Platz für {10 - siteCount} weitere
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: D.textSub, lineHeight: 1.5 }}>
+                  Dein Pro-Plan deckt bis zu 10 WordPress-Projekte ab. Lege jetzt
+                  einen weiteren Kunden oder eine eigene Site an — der erste Scan
+                  startet automatisch.
+                </p>
+              </div>
+              <Link href="/dashboard#modal-new-client" style={{
+                flexShrink: 0,
+                padding: "10px 18px", borderRadius: 9,
+                background: "linear-gradient(90deg, #059669, #10B981)",
+                color: "#fff", fontSize: 13, fontWeight: 800, textDecoration: "none",
+                boxShadow: "0 3px 14px rgba(16,185,129,0.32)",
+                whiteSpace: "nowrap" as const,
+              }}>
+                + Neues Projekt anlegen
+              </Link>
+            </div>
+          )}
 
           {/* Hybrid-Scan-Banner (Basis-Scan vs. Full System Audit). */}
           <HybridScanBanner
