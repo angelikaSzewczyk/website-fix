@@ -1,22 +1,23 @@
 /**
  * POST /api/guides/[id]/claim-free
  *
- * Auto-Unlock für Starter-User: pro Account 5 Guides kostenlos freischaltbar.
- * Implementiert das Marketing-Promise "5 Smart-Fix-Guides inklusive" auf der
- * Pricing-Card.
+ * Auto-Unlock für eingeloggte Plan-User (alle bezahlten Pläne).
  *
- * Logik:
+ * Logik (08.05.2026 vereinfacht):
  *   - Auth required
- *   - Plan-Check: Starter-only (Pro/Agency haben Flatrate-Bypass über
- *     userHasFlatrate, brauchen diesen Endpoint nicht)
- *   - Quota-Check: COUNT(user_unlocked_guides WHERE paid_amount_cents = 0) < 5
+ *   - Jeder eingeloggte User mit aktivem Plan (Starter/Pro/Agency) kann
+ *     unbegrenzt Smart-Fix-Anleitungen freischalten — die Pricing-Cards
+ *     versprechen "Alle Anleitungen inklusive".
+ *   - Pay-per-Fix (9,90 €) ist NUR für Anon-Käufer ohne Abo (siehe
+ *     /api/guides/[id]/anon-checkout). Eingeloggte User sehen das nie.
  *   - Idempotent via UNIQUE(user_id, guide_id) → wenn schon unlocked: 200 mit
- *     alreadyUnlocked=true, Quota nicht zweifach belastet
+ *     alreadyUnlocked=true.
  *
- * Wenn Quota voll: 402 Payment Required mit Hint auf 9,90-Stripe oder Pro.
- *
- * paid_amount_cents = 0 ist der Marker, dass es ein Quota-Claim war (nicht
+ * paid_amount_cents = 0 ist der Marker, dass es ein Plan-Claim war (nicht
  * Stripe-Kauf). Das hilft bei Reporting/Admin-Audits.
+ *
+ * Vorher (bis 07.05.2026): Quota-Limit von 5 für Starter, "weitere 9,90 €" —
+ * wurde am 08.05.2026 entfernt. Pivot: Pay-per-Fix nur für Nicht-Abonnenten.
  */
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
@@ -24,14 +25,6 @@ import { neon } from "@neondatabase/serverless";
 import { normalizePlan } from "@/lib/plans";
 
 export const runtime = "nodejs";
-
-/** Anzahl der Guides, die ein Starter-User kostenlos freischalten kann.
- *  Synchron mit Pricing-Card-Bullet "5 inklusive". Bei Änderung hier
- *  parallel die PLANS-Arrays in app/page.tsx, fuer-agenturen/page.tsx
- *  und scan/results/page.tsx anpassen.
- *  Nicht exportieren — Next.js erlaubt in route.ts nur HTTP-Methods +
- *  Config-Felder als Exports. */
-const STARTER_FREE_QUOTA = 5;
 
 export async function POST(
   _req: Request,
@@ -45,23 +38,21 @@ export async function POST(
   const { id: guideId } = await params;
   const sql = neon(process.env.DATABASE_URL!);
 
-  // 1. Plan-Check: nur Starter darf claimen. Pro/Agency haben Flatrate
-  //    (siehe lib/rescue-guides.userHasFlatrate) und sehen den Guide direkt
-  //    ohne Unlock-Eintrag.
+  // 1. Plan-Check: nur User mit aktivem Plan (Starter/Pro/Agency).
+  //    NULL-Plan-User (registriert aber nie gezahlt) bekommen nichts geschenkt.
   const userRows = await sql`
     SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1
   ` as Array<{ plan: string | null }>;
   const planKey = normalizePlan(userRows[0]?.plan ?? null);
 
-  if (planKey !== "starter") {
+  if (!planKey) {
     return NextResponse.json({
       ok: false,
-      error: "Quota-Claim nur für Starter — höhere Pläne haben Flatrate-Zugriff.",
+      error: "Kein aktiver Plan — bitte zuerst einen Plan abschließen.",
     }, { status: 403 });
   }
 
-  // 2. Idempotenz: schon unlocked? → 200 mit alreadyUnlocked=true, kein
-  //    weiterer Verbrauch der Quota.
+  // 2. Idempotenz: schon unlocked? → 200 mit alreadyUnlocked=true.
   const existing = await sql`
     SELECT id FROM user_unlocked_guides
     WHERE user_id = ${session.user.id} AND guide_id = ${guideId}
@@ -80,28 +71,7 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "Guide nicht gefunden" }, { status: 404 });
   }
 
-  // 4. Quota-Check: wie viele Quota-Claims hat dieser User bereits verbraucht?
-  //    paid_amount_cents = 0 → Quota-Claim (nicht Stripe-Kauf).
-  const claimedRows = await sql`
-    SELECT COUNT(*)::int AS cnt
-    FROM user_unlocked_guides
-    WHERE user_id = ${session.user.id}
-      AND paid_amount_cents = 0
-  ` as Array<{ cnt: number }>;
-  const used = claimedRows[0]?.cnt ?? 0;
-
-  if (used >= STARTER_FREE_QUOTA) {
-    return NextResponse.json({
-      ok: false,
-      error: "quota_exhausted",
-      hint: `Deine ${STARTER_FREE_QUOTA} inklusiven Guides sind aufgebraucht. Weitere für 9,90 € einzeln oder ab Professional alle Guides inklusive.`,
-      used,
-      quota: STARTER_FREE_QUOTA,
-      upgrade_url: "/fuer-agenturen?upgrade=professional#pricing",
-    }, { status: 402 });
-  }
-
-  // 5. Insert mit paid_amount_cents = 0 als Quota-Marker.
+  // 4. Insert mit paid_amount_cents = 0 als Plan-Claim-Marker.
   //    ON CONFLICT verhindert Race-Condition (zwei parallele Klicks).
   await sql`
     INSERT INTO user_unlocked_guides
@@ -112,16 +82,15 @@ export async function POST(
   `;
 
   return NextResponse.json({
-    ok: true,
+    ok:          true,
     unlocked:    true,
     claimedFree: true,
-    used:        used + 1,
-    quota:       STARTER_FREE_QUOTA,
-    remaining:   STARTER_FREE_QUOTA - used - 1,
   });
 }
 
-// GET: Quota-Status abfragen ohne zu claimen (für Counter-UI im Dashboard)
+// GET: Status-Abfrage — ist Plan-Claim für diesen User möglich?
+//      Nach 08.05.2026 immer "ja" für alle aktiven Pläne (kein Limit mehr).
+//      Bleibt erhalten für Backwards-Compat falls Frontend GET-Status nutzt.
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -134,25 +103,10 @@ export async function GET() {
   ` as Array<{ plan: string | null }>;
   const planKey = normalizePlan(userRows[0]?.plan ?? null);
 
-  // Pro/Agency: Flatrate, kein Quota-Konzept — UI versteckt den Counter.
-  if (planKey !== "starter") {
-    return NextResponse.json({ ok: true, applicable: false, plan: planKey });
-  }
-
-  const claimedRows = await sql`
-    SELECT COUNT(*)::int AS cnt
-    FROM user_unlocked_guides
-    WHERE user_id = ${session.user.id}
-      AND paid_amount_cents = 0
-  ` as Array<{ cnt: number }>;
-  const used = claimedRows[0]?.cnt ?? 0;
-
   return NextResponse.json({
     ok:         true,
-    applicable: true,
-    plan:       "starter",
-    used,
-    quota:      STARTER_FREE_QUOTA,
-    remaining:  Math.max(0, STARTER_FREE_QUOTA - used),
+    plan:       planKey,
+    canClaim:   planKey !== null,
+    unlimited:  true,
   });
 }

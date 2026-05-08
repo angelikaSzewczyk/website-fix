@@ -1221,7 +1221,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             integrationsStatus={integrationsStatus}
             scanUrl={lastScan?.url}
             hideScoreRings
-            lockExpertFix
+            lockExpertFix={false}
           />
 
           {/* ─── EBENE 3: DEEP-SCAN MAP ─────────────────────────────────────── */}

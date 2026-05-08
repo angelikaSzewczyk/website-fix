@@ -683,42 +683,16 @@ function AccordionItem({
 
 // ─── Upgrade Modal ────────────────────────────────────────────────────────────
 /**
- * UpgradeModal — zwei klar getrennte Lösungs-Pfade:
+ * UpgradeModal — wird ausschließlich beim Klick auf "Auto-Fix via Plugin"
+ * von Starter/Pro-Usern angezeigt (Agency hat Plugin-Zugriff via PluginSetupModal).
  *
- *   1. "Einzel-Fix für 9,90 €" (Pay-per-Fix) — One-Time, kein Abo, Sofort-Anleitung
- *      mit allen Hoster-Variants und Code-Snippets.
- *   2. "Pro-Flatrate für 89 €/Mo" — alle Guides inklusive, plus KI-Auto-Fix
- *      via Plugin, Score-Verlauf, White-Label-PDF.
- *
- * Kein "Auto-Fix via Plugin"-Wording mehr im Header — das war verwirrend, weil
- * das Read-Only-Plugin AB STARTER inklusive ist (Diagnose). Auto-Fix-Features
- * (KI) sind hier explizit Pro-Tier zugeordnet.
- *
- * Bei "Schritt-für-Schritt-Anleitung freischalten" und "Auto-Fix via Plugin"
- * wird derselbe Modal gezeigt — der User soll beide Pfade nebeneinander sehen
- * und entscheiden.
+ * Nach 08.05.2026 Pivot:
+ *   - Smart-Fix-Anleitungen sind Plan-Inklusiv → KEIN 9,90-€-Pay-per-Fix mehr
+ *     für eingeloggte User (das ist nur noch Anon-Checkout).
+ *   - Modal bewirbt nur den Upgrade-Pfad zur nächst-höheren Tier mit
+ *     Auto-Fix-Plugin.
  */
 function UpgradeModal({ onClose }: { onClose: () => void }) {
-  // Starter-Quota-Lookup: zeigt eine Inklusiv-Hinweis-Box wenn der eingeloggte
-  // User Starter ist und noch von seinen 5 inklusiven Smart-Fix-Guides hat.
-  // Sonst sieht User nur 9,90 €-Pay-per-Fix + Pro-Flatrate-Optionen.
-  const [quota, setQuota] = useState<{ applicable: boolean; remaining: number; quota: number } | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/me/guide-quota")
-      .then(r => r.json())
-      .then(data => {
-        if (cancelled) return;
-        if (data.applicable && typeof data.remaining === "number") {
-          setQuota({ applicable: true, remaining: data.remaining, quota: data.quota });
-        } else {
-          setQuota({ applicable: false, remaining: 0, quota: data.quota ?? 5 });
-        }
-      })
-      .catch(() => { /* silent — bei Fehler kein Quota-Hint, nur 9,90 € + Pro */ });
-    return () => { cancelled = true; };
-  }, []);
-
   return (
     <>
       <div onClick={onClose} style={{
@@ -729,10 +703,10 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         position: "fixed", top: "50%", left: "50%",
         transform: "translate(-50%, -50%)",
         zIndex: 1101,
-        width: "min(560px, calc(100vw - 32px))",
+        width: "min(520px, calc(100vw - 32px))",
         maxHeight: "90vh", overflowY: "auto",
         background: "linear-gradient(135deg, #0d1520 0%, #0f1a2e 100%)",
-        border: "1px solid rgba(251,191,36,0.25)",
+        border: "1px solid rgba(16,185,129,0.30)",
         borderRadius: 20, padding: "32px 28px 24px",
         boxShadow: "0 32px 80px rgba(0,0,0,0.8)",
         animation: "wf-sr-modal-in 0.3s cubic-bezier(0.22,1,0.36,1) both",
@@ -745,72 +719,12 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         `}</style>
 
         <h2 style={{ textAlign: "center", margin: "0 0 6px", fontSize: 19, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-          Anleitung freischalten
+          Auto-Fix via Plugin freischalten
         </h2>
         <p style={{ textAlign: "center", margin: "0 0 22px", fontSize: 12.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.6 }}>
-          Zwei Wege zur Lösung — wähl den, der zu deinem Bedarf passt.
+          Auto-Fix-Funktionen via KI sind ab Professional verfügbar.
         </p>
 
-        {/* Inklusiv-Quota-Hinweis für Starter (08.05.2026) — User-Bug-Report:
-             "warum 9,90 € wenn 5 inklusive sind?" — Banner macht klar, dass
-             er bei einem passenden Smart-Fix-Guide aus der Issue-Liste
-             den Inklusiv-Pfad nimmt, ohne 9,90 € zu zahlen. */}
-        {quota?.applicable && quota.remaining > 0 && (
-          <div style={{
-            padding: "14px 16px", borderRadius: 11, marginBottom: 16,
-            background: "rgba(34,197,94,0.08)",
-            border: "1px solid rgba(34,197,94,0.34)",
-          }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "#22C55E", letterSpacing: "0.10em", textTransform: "uppercase" }}>
-                ✓ In deinem Plan inklusive
-              </span>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: "#22C55E", fontVariantNumeric: "tabular-nums" }}>
-                {quota.remaining} von {quota.quota} frei
-              </span>
-            </div>
-            <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
-              Du musst nichts zahlen — du hast noch <strong>{quota.remaining} Smart-Fix-Guides inklusive</strong>.
-              Schließe dieses Fenster und klicke in deiner Issue-Liste auf einen Smart-Fix-Guide,
-              der zu deinem Problem passt → dort kannst du ihn mit einem Klick einlösen.
-            </p>
-          </div>
-        )}
-
-        {/* ── Option 1: Pay-per-Fix 9,90 € ─────────────────────────────────── */}
-        <div style={{
-          padding: "16px 18px", borderRadius: 12, marginBottom: 12,
-          background: "rgba(251,191,36,0.05)",
-          border: "1px solid rgba(251,191,36,0.30)",
-        }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.10em", textTransform: "uppercase" }}>
-              ⚡ Notfall · einmalig
-            </span>
-            <span style={{ fontSize: 18, fontWeight: 900, color: "#FBBF24" }}>9,90 €</span>
-          </div>
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>
-            Einzel-Fix-Guide für genau diesen Fehler
-          </p>
-          <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-            {["Schritt-für-Schritt mit Hoster-Variants", "Copy-Paste-fertige Code-Snippets", "PDF-Anhang per E-Mail", "Kein Abo · einmalige Zahlung"].map(f => (
-              <li key={f} style={{ display: "flex", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
-                <span style={{ color: "#FBBF24", fontWeight: 700 }}>✓</span>
-                {f}
-              </li>
-            ))}
-          </ul>
-          <Link href="/dashboard" style={{
-            display: "block", textAlign: "center",
-            padding: "10px 20px", borderRadius: 9,
-            background: "linear-gradient(90deg,#F59E0B,#FBBF24)",
-            color: "#0b0c10", fontSize: 13, fontWeight: 800, textDecoration: "none",
-          }}>
-            Einzel-Guide auswählen →
-          </Link>
-        </div>
-
-        {/* ── Option 2: Pro-Flatrate ───────────────────────────────────────── */}
         <div style={{
           padding: "16px 18px", borderRadius: 12, marginBottom: 14,
           background: "rgba(16,185,129,0.06)",
@@ -818,19 +732,19 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", letterSpacing: "0.10em", textTransform: "uppercase" }}>
-              ★ Empfohlen · Flatrate
+              ★ Empfohlen
             </span>
             <span style={{ fontSize: 18, fontWeight: 900, color: "#10B981" }}>89 €/Mo</span>
           </div>
           <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>
-            Professional — alle Anleitungen + KI-Auto-Fix
+            Professional — KI-Auto-Fix + alle Pro-Features
           </p>
           <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
             {[
-              "Alle Schritt-für-Schritt-Guides inklusive",
               "KI-Auto-Fix via Plugin (Alt-Text, Meta, 404)",
               "10 Projekte · 25 Deep-Scans/Monat",
               "Score-Verlauf + White-Label-PDF",
+              "Slack- und E-Mail-Alerts",
             ].map(f => (
               <li key={f} style={{ display: "flex", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
                 <span style={{ color: "#10B981", fontWeight: 700 }}>✓</span>
@@ -849,16 +763,15 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
           </Link>
         </div>
 
-        {/* ── Plugin-Klarstellung ──────────────────────────────────────────── */}
         <p style={{
           margin: "0 0 14px", padding: "10px 12px", borderRadius: 9,
           background: "rgba(122,166,255,0.05)",
           border: "1px solid rgba(122,166,255,0.20)",
           fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.6,
         }}>
-          💡 <strong style={{ color: "rgba(255,255,255,0.75)" }}>Hinweis:</strong> Das Read-Only-Plugin
-          (Hybrid-Scan-Diagnose) ist bereits ab Starter inklusive.
-          Auto-Fix-Funktionen via KI sind ab Professional verfügbar.
+          💡 <strong style={{ color: "rgba(255,255,255,0.75)" }}>Hinweis:</strong> Smart-Fix-Anleitungen
+          (Schritt-für-Schritt) sind bereits in deinem Plan inklusive — du musst dafür nichts upgraden.
+          Auto-Fix bedeutet: das Plugin appliziert die Korrekturen automatisch in WordPress.
         </p>
 
         <button onClick={onClose} style={{
@@ -998,25 +911,6 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
   const [openItems, setOpenItems]         = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
 
-  // Starter-Inklusiv-Quota (08.05.2026): Banner über der Issue-Liste klärt auf,
-  // dass 1 Smart-Fix-Guide-Claim mehrere Issues gleichen Typs abdeckt — User
-  // sahen vorher 10× "Anleitung freischalten" und vermuteten 10× 9,90 €. In
-  // Wahrheit löst z.B. der BFSG-Guide alle Bild-Beschreibungs-Issues.
-  const [inkluQuota, setInkluQuota] = useState<{ remaining: number; quota: number } | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/me/guide-quota")
-      .then(r => r.json())
-      .then(data => {
-        if (cancelled) return;
-        if (data.applicable && typeof data.remaining === "number") {
-          setInkluQuota({ remaining: data.remaining, quota: data.quota });
-        }
-      })
-      .catch(() => { /* silent — Banner bleibt einfach aus */ });
-    return () => { cancelled = true; };
-  }, []);
-
   // Agency-Plan ist Auto-Fix-via-Plugin berechtigt — der Klick auf den
   // gelben Button zeigt dann den WP-Plugin-Setup-Pfad statt des
   // Upgrade-Modals (Pro/Starter sehen weiterhin Upgrade).
@@ -1028,10 +922,10 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
 
   // ── Executive Summary (Professional+) ────────────────────────────────────
   const isPro = isAtLeastProfessional(plan);
-  // Phase-2: lockExpertFix-Prop überschreibt das Plan-Default. Wenn der
-  // Variant-Caller explizit lockExpertFix=true setzt, gilt das, egal welcher
-  // Plan. Default-Fallback (undefined) → Plan-basiertes Verhalten (Pro+ frei).
-  const expertFixGated = lockExpertFix ?? !isPro;
+  // 08.05.2026 Pivot: Smart-Fix-Anleitungen sind Plan-Inklusiv für ALLE
+  // bezahlten User. lockExpertFix-Prop wird nur noch gesetzt für anonyme
+  // Share-Views o.ä., die Default-Annahme ist "freier Zugriff".
+  const expertFixGated = lockExpertFix ?? false;
   const [execSummary, setExecSummary]   = useState("");
   const [saveStatus,  setSaveStatus]    = useState<"idle" | "saving" | "saved">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1725,34 +1619,6 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
             )}
           </div>
         </div>
-
-        {/* ── Inklusiv-Banner für Starter mit verfügbarer Quota ─────────────
-             Erklärt: 1 Smart-Fix-Guide-Claim deckt mehrere Issues gleichen
-             Typs ab. Verhindert Verwirrung wenn User 10× "Anleitung
-             freischalten" sieht und 10× 9,90 € befürchtet. */}
-        {inkluQuota && inkluQuota.remaining > 0 && (redIssues.length > 0 || yellowIssues.length > 0) && (
-          <div className="wf-no-print" style={{
-            marginBottom: 16,
-            padding: "14px 16px",
-            background: "rgba(34,197,94,0.06)",
-            border: "1px solid rgba(34,197,94,0.22)",
-            borderRadius: 10,
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 12,
-          }}>
-            <span style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>✓</span>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", lineHeight: 1.55 }}>
-              <strong style={{ color: "#86EFAC" }}>
-                {inkluQuota.remaining} von {inkluQuota.quota} Smart-Fix-Guides inklusive
-              </strong>
-              {" — "}
-              ein Guide deckt <strong style={{ color: "#fff" }}>alle Issues eines Typs</strong> ab.
-              Beispiel: der <em>BFSG-Guide</em> löst auf einen Klick alle Bild-Beschreibungs-Issues
-              gleichzeitig — du musst nicht für jedes Issue einzeln zahlen.
-            </div>
-          </div>
-        )}
 
         {/* ── Gruppe: Handlungsbedarf (rot) ─────────────────────────────── */}
         {redIssues.length > 0 ? (

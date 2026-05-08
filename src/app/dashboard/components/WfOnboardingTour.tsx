@@ -35,10 +35,10 @@ function getTourSteps(isPro: boolean) {
         }
       : {
           // Starter-Versprechen aus Pricing-Card wortgleich:
-          // "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €"
+          // "Alle Smart-Fix-Anleitungen inklusive (kein Einzelkauf)"
           icon: <FileText size={20} strokeWidth={1.8} />,
-          title: "Schritt 3 — Smart-Fix-Guide öffnen",
-          body: "5 Smart-Fix-Guides sind in deinem Plan inklusive. Weitere Guides für 9,90 € einzeln. Jeder Guide ist eine vollständige Schritt-für-Schritt-Anleitung zum Problem.",
+          title: "Schritt 3 — Smart-Fix-Anleitung öffnen",
+          body: "Alle Smart-Fix-Anleitungen sind in deinem Plan inklusive — keine Limits, kein Einzelkauf. Jede Anleitung ist eine vollständige Schritt-für-Schritt-Lösung zu deinem Problem.",
         },
   ];
 }

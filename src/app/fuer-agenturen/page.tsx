@@ -90,7 +90,7 @@ const PLANS: Plan[] = [
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",   highlight: true, key: true },
       { text: "🔒 Inkl. Read-Only Plugin (Hybrid-Scan freischalten)",highlight: true, key: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true, key: true },
-      { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: true },
+      { text: "Alle Smart-Fix-Anleitungen inklusive (kein Einzelkauf)",highlight: true },
       { text: "Kein White-Label · Pro startet ab 89 €/Mo",           highlight: false, locked: true },
       { text: "Keine Team-Rollen · Pro startet ab 89 €/Mo",          highlight: false, locked: true },
       { text: "Kein Kunden-Portal · Agency startet ab 249 €/Mo",  highlight: false, locked: true },

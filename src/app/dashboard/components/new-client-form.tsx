@@ -138,7 +138,7 @@ export default function NewClientForm() {
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
           {[
             "10 Projekte statt 1",
-            "Alle Smart-Fix-Anleitungen ohne Einzelkauf (sonst 9,90 € pro Stück)",
+            "KI-Auto-Fix via Plugin (Alt-Text, Meta, 404)",
             "KI-Smart-Fix-Drawer + Score-Verlauf + Asana/Slack-Integration",
             "Unbegrenzte Scans statt 5/Monat",
           ].map(b => (
