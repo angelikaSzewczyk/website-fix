@@ -80,36 +80,50 @@ function computeIssueCount(d: StoredScan): number {
 const FEED_URL_PATTERN = /\/(feed|feed\/atom|feed\/rss|rss)(\/|$)|\.(xml|txt|json)(\?|#|$)/i;
 
 // ── Build subpage list from real data ─────────────────────────────────────────
+//
+// Issue-Aggregation (08.05.2026): "Bilder ohne alt-Text" zählt als 1 Issue
+// pro Seite, nicht pro Bild. Selbiges für Inputs/Buttons. Die Anzahl der
+// betroffenen Vorkommen bleibt in altMissing/inputsWithoutLabel/buttonsWithoutText
+// erhalten (für die Detail-Ansicht im Drawer), aber die Top-Level-"errors"-
+// Spalte zählt das Issue-Type-Level. Konkret: Seite mit 30 Bildern ohne alt
+// + fehlendem Title + fehlender Meta = 3 Issues (nicht 32).
+//
+// Maximum pro Page: 8 Issues (alt-fehlt, !erreichbar, noindex, noTitle, noH1,
+// noMeta, inputs-ohne-label, buttons-ohne-text). Realistisch 2-5 pro Seite.
 function buildPages(d: StoredScan): { base: string; items: PageItem[] } {
   const base = (() => { try { return new URL(d.url).host; } catch { return d.url; } })();
   const homePath = (() => { try { return new URL(d.url).pathname || "/"; } catch { return "/"; } })();
-  // Home page errors (from global flags, not per-page data)
+  // Home page errors (Issue-Typ-Level): alt-fehlt = 1, kein 1 pro Bild
   const homeAltMissing = d.altMissingCount > 0 ? Math.min(d.altMissingCount, 3) : 0;
-  const homeErrors = (!d.hasTitle ? 1 : 0) + (!d.hasMeta ? 1 : 0) + (!d.hasH1 ? 1 : 0) + homeAltMissing;
+  const homeErrors =
+    (!d.hasTitle ? 1 : 0) +
+    (!d.hasMeta  ? 1 : 0) +
+    (!d.hasH1    ? 1 : 0) +
+    (homeAltMissing > 0 ? 1 : 0);
 
   const items: PageItem[] = [
     {
       path: homePath, fullUrl: d.url, errors: homeErrors,
       erreichbar: true, altMissing: homeAltMissing, noindex: d.noIndex, isSkipped: false,
-      // altMissingImages for home: take first homeAltMissing entries from global list
       altMissingImages: (d.altMissingImages ?? []).slice(0, homeAltMissing),
       missingTitle: !d.hasTitle,
       missingMeta:  !d.hasMeta,
       missingH1:    !d.hasH1,
     },
-    // Audited subpages — same error checks as homepage
+    // Audited subpages — Issue-Typ-Level statt Vorkommen-Level
     ...d.unterseiten.filter(p => !FEED_URL_PATTERN.test(p.url)).map(p => {
       const noTitle = !p.title || p.title === "(kein Title)";
       const noH1    = !p.h1    || p.h1    === "(kein H1)";
       const noMeta  = !p.metaDescription;
-      let errors = p.altMissing;
-      if (!p.erreichbar)          errors += 1;
-      if (p.noindex)              errors += 1;
-      if (noTitle)                errors += 1;
-      if (noH1)                   errors += 1;
-      if (noMeta)                 errors += 1;
-      errors += (p.inputsWithoutLabel ?? 0);
-      errors += (p.buttonsWithoutText ?? 0);
+      let errors = 0;
+      if (p.altMissing > 0)                  errors += 1;  // 1 Issue: "Bilder ohne alt-Text"
+      if (!p.erreichbar)                     errors += 1;
+      if (p.noindex)                         errors += 1;
+      if (noTitle)                           errors += 1;
+      if (noH1)                              errors += 1;
+      if (noMeta)                            errors += 1;
+      if ((p.inputsWithoutLabel ?? 0) > 0)   errors += 1;  // 1 Issue: "Inputs ohne Label"
+      if ((p.buttonsWithoutText ?? 0) > 0)   errors += 1;  // 1 Issue: "Buttons ohne Text"
       const path = (() => { try { return new URL(p.url).pathname || "/"; } catch { return p.url; } })();
       return {
         path, fullUrl: p.url, errors,
