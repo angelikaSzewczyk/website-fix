@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 // ✅ Consent-based GA loader + banner
 import AnalyticsConsentLoader from "./components/analytics-consent-loader";
 import ConsentBanner from "./components/consent-banner";
+// ✅ SessionProvider-Wrapper für useSession() in Client-Components
+//    (sonst crasht /register beim Hydration mit 'Cannot destructure status').
+import Providers from "./providers";
 
 const SITE_URL = "https://website-fix.com";
 
@@ -46,7 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ✅ GA4 loads ONLY after consent */}
         <AnalyticsConsentLoader />
 
-        {children}
+        <Providers>
+          {children}
+        </Providers>
 
         {/* ✅ Cookie / Analytics consent banner */}
         <ConsentBanner />
