@@ -811,7 +811,11 @@ export default function ProDashboard(props: ProDashboardProps) {
                   startet automatisch.
                 </p>
               </div>
-              <Link href="/dashboard#modal-new-client" style={{
+              {/* Plain <a> statt <Link> — Next.js-Link triggert kein
+                   hashchange wenn pathname identisch ist (User schon auf
+                   /dashboard). Plain <a> macht echtes Hash-Update,
+                   ModalShell bekommt das hashchange-Event und öffnet. */}
+              <a href="#modal-new-client" style={{
                 flexShrink: 0,
                 padding: "10px 18px", borderRadius: 9,
                 background: "linear-gradient(90deg, #059669, #10B981)",
@@ -820,7 +824,7 @@ export default function ProDashboard(props: ProDashboardProps) {
                 whiteSpace: "nowrap" as const,
               }}>
                 + Neues Projekt anlegen
-              </Link>
+              </a>
             </div>
           )}
 

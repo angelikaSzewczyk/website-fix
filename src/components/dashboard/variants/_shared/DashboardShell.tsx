@@ -353,8 +353,8 @@ export default function DashboardShell({
                 {slotLabel}
               </button>
               {!isAgency && (
-                <Link
-                  href="/dashboard#modal-new-client"
+                <a
+                  href="#modal-new-client"
                   title="Neues Projekt anlegen — öffnet Wizard mit Name + URL"
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -368,7 +368,7 @@ export default function DashboardShell({
                     stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
-                </Link>
+                </a>
               )}
             </div>
 
@@ -544,8 +544,8 @@ export default function DashboardShell({
                  direkt /dashboard/scan"). Modal liegt auf /dashboard,
                  daher Hash-Link. Wenn User schon dort ist, öffnet via
                  :target ohne Page-Reload. */}
-            <Link
-              href="/dashboard#modal-new-client"
+            <a
+              href="#modal-new-client"
               onClick={() => setProjectDialogOpen(false)}
               style={{
                 display: "flex", alignItems: "center", gap: 10,
@@ -565,7 +565,7 @@ export default function DashboardShell({
                   {projects?.length ?? 0} / {slotLabel}
                 </span>
               )}
-            </Link>
+            </a>
 
             {/* Project list */}
             <div style={{
