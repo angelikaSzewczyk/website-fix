@@ -115,7 +115,7 @@ export const ONBOARDING_STEPS: Record<OnboardingPlanKey, {
       {
         id:    "agency_workflow",
         label: "Workflow verbinden (Slack / Jira)",
-        hint:  "60-Sek-Watchdog meldet Mandanten-Ausfälle direkt im richtigen Tool.",
+        hint:  "Daily Health-Check meldet Mandanten-Ausfälle direkt im richtigen Tool.",
         href:  "/dashboard/integrations",
         icon:  "🔗",
       },

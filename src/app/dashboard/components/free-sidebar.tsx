@@ -467,7 +467,7 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
           </div>
           {canonical === "starter" && remaining <= 2 && !limitReached && (
             <p style={{ margin: "8px 0 0", fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
-              Nur noch {remaining} {remaining === 1 ? "Scan" : "Scans"} diesen Monat — Professional entsperrt <strong style={{ color: "#10B981" }}>25/Monat</strong>.
+              Nur noch {remaining} {remaining === 1 ? "Scan" : "Scans"} diesen Monat — Professional entsperrt <strong style={{ color: "#10B981" }}>unbegrenzte Scans</strong>.
             </p>
           )}
           {limitReached && !isAgencyPlan && (

@@ -379,14 +379,14 @@ function upgradeHintFor(plan: string): UpgradeHint {
     return {
       ctaLabel: "Auf Agency upgraden →",
       ctaHref:  "/fuer-agenturen#pricing",
-      bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Agency upgraden für 100 Scans/Monat.",
+      bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Agency upgraden (Scan-Flatrate für 50 Mandanten).",
     };
   }
   // starter (oder Unknown-Fallback)
   return {
     ctaLabel: "Professional aktivieren →",
     ctaHref:  "/fuer-agenturen#pricing",
-    bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Professional upgraden für 25 Scans/Monat.",
+    bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Professional upgraden (unbegrenzte Scans).",
   };
 }
 

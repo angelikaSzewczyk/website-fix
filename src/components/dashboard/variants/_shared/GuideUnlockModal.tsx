@@ -236,7 +236,7 @@ export default function GuideUnlockModal({
                 ✓ Starter-Inklusiv-Quota
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: T.green, fontVariantNumeric: "tabular-nums" }}>
-                {quotaState.quota - quotaState.remaining} / {quotaState.quota} verbraucht
+                {quotaState.remaining} von {quotaState.quota} frei
               </span>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 13, color: T.text, lineHeight: 1.55 }}>

@@ -9,24 +9,39 @@ const ONBOARDING_KEY = "wf_onboarding_done";
 
 type Phase = "welcome" | "wizard-1" | "wizard-2" | "wizard-3" | "tour" | null;
 
-// ─── Tour steps (non-pro / feature overview) ──────────────────────────────────
-const TOUR_STEPS = [
-  {
-    icon: <Search size={20} strokeWidth={1.8} />,
-    title: "Schritt 1 — WordPress-Audit starten",
-    body: "Gib die URL deiner WordPress-Seite ein. Wir prüfen SEO, BFSG-Barrierefreiheit, WP-Performance, /wp-admin-Sicherheit und aktive Plugins — in unter 60 Sekunden.",
-  },
-  {
-    icon: <BarChart2 size={20} strokeWidth={1.8} />,
-    title: "Schritt 2 — WP-Performance Check lesen",
-    body: "Dein Bericht zeigt WordPress-spezifische Befunde: Cache-Plugin erkannt, Yoast/Rank Math Status, /xmlrpc.php offen, Bilder-Optimierung. Mit klaren Fix-Anleitungen.",
-  },
-  {
-    icon: <FileText size={20} strokeWidth={1.8} />,
-    title: "Schritt 3 — White-Label Berichte",
-    body: "Exportiere deinen WordPress-Audit als PDF oder teile ihn per Link — mit deinem Logo und deiner Agenturfarbe.",
-  },
-];
+// ─── Tour steps — plan-aware ──────────────────────────────────────────────────
+//
+// Step 3 unterscheidet sich nach Plan: White-Label-PDF ist explizit ein
+// Pro+-Feature laut Pricing-Card ("Kein White-Label · Pro startet ab 89 €/Mo"
+// für Starter). Starter darf kein White-Label-Versprechen in der Onboarding-
+// Tour sehen — sonst Pricing-vs-UI-Drift.
+function getTourSteps(isPro: boolean) {
+  return [
+    {
+      icon: <Search size={20} strokeWidth={1.8} />,
+      title: "Schritt 1 — WordPress-Audit starten",
+      body: "Gib die URL deiner WordPress-Seite ein. Wir prüfen SEO, BFSG-Barrierefreiheit, WP-Performance, /wp-admin-Sicherheit und aktive Plugins — in 1-2 Minuten.",
+    },
+    {
+      icon: <BarChart2 size={20} strokeWidth={1.8} />,
+      title: "Schritt 2 — WP-Performance Check lesen",
+      body: "Dein Bericht zeigt WordPress-spezifische Befunde: Cache-Plugin erkannt, Yoast/Rank Math Status, /xmlrpc.php offen, Bilder-Optimierung. Mit klaren Fix-Anleitungen.",
+    },
+    isPro
+      ? {
+          icon: <FileText size={20} strokeWidth={1.8} />,
+          title: "Schritt 3 — White-Label Berichte",
+          body: "Exportiere deinen WordPress-Audit als PDF oder teile ihn per Link — mit deinem Logo und deiner Agenturfarbe.",
+        }
+      : {
+          // Starter-Versprechen aus Pricing-Card wortgleich:
+          // "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €"
+          icon: <FileText size={20} strokeWidth={1.8} />,
+          title: "Schritt 3 — Smart-Fix-Guide öffnen",
+          body: "5 Smart-Fix-Guides sind in deinem Plan inklusive. Weitere Guides für 9,90 € einzeln. Jeder Guide ist eine vollständige Schritt-für-Schritt-Anleitung zum Problem.",
+        },
+  ];
+}
 
 const PLAN_LABEL: Record<string, string> = {
   starter: "Starter", professional: "Professional", agency: "Agency",
@@ -533,8 +548,9 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
   // ──────────────────────────────────────────────────────────────────────────
   // FEATURE TOUR (bottom panel)
   // ──────────────────────────────────────────────────────────────────────────
-  const current = TOUR_STEPS[tourStep];
-  const isLast  = tourStep === TOUR_STEPS.length - 1;
+  const tourSteps = getTourSteps(isPro);
+  const current   = tourSteps[tourStep];
+  const isLast    = tourStep === tourSteps.length - 1;
 
   return (
     <>
@@ -556,7 +572,7 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
         animation: "wf-tour-in 0.28s cubic-bezier(0.22,1,0.36,1) both",
       }}>
         <div style={{ display: "flex", gap: 5, marginBottom: 20 }}>
-          {TOUR_STEPS.map((_, i) => (
+          {tourSteps.map((_, i) => (
             <div key={i} style={{ height: 3, borderRadius: 2, flex: i <= tourStep ? 2 : 1, background: i <= tourStep ? "#FBBF24" : "rgba(255,255,255,0.1)", transition: "flex 0.3s ease" }} />
           ))}
         </div>
@@ -586,7 +602,7 @@ export default function WfOnboardingTour({ firstName, plan, scansCount }: Props)
         </div>
 
         <p style={{ margin: "14px 0 0", textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.18)" }}>
-          Schritt {tourStep + 1} von {TOUR_STEPS.length}
+          Schritt {tourStep + 1} von {tourSteps.length}
         </p>
       </div>
     </>

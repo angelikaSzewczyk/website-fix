@@ -806,13 +806,16 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                 </button>
               </form>
 
-              {/* Badges */}
+              {/* Badges — Werte aus Pricing-Card-Versprechen Starter:
+                   "Voller Deep-Scan: SEO, Technik, Performance, BFSG"
+                   getMaxSubpages('starter') = 50 (vs. 10 für anonyme).
+                   Speed-Hint ehrlich auf 1-2 Min (Engine-Realität ~30-90s). */}
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                 {[
-                  { icon: "📄", text: "25 Seiten inkl." },
-                  { icon: "🔍", text: "SEO-Audit" },
-                  { icon: "📱", text: "Mobile-Check" },
-                  { icon: "⚡", text: "< 60 Sekunden" },
+                  { icon: "📄", text: "Bis zu 50 Unterseiten" },
+                  { icon: "🔍", text: "Voller Deep-Scan" },
+                  { icon: "♿", text: "BFSG-Check" },
+                  { icon: "⚡", text: "Ergebnis in 1-2 Min" },
                 ].map(b => (
                   <div key={b.text} style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
@@ -1425,44 +1428,58 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
               {([
                 {
+                  // Disabled-Logik (08.05.2026): vorher disabled=isFree, was
+                  // Starter (isFree=false) als freigeschaltet zeigte. Pricing-Card
+                  // sagt "Score-Verlauf" ist Pro-Feature, Starter hat nur
+                  // "Basis-Monitoring (Uptime + Score-Trend)". Korrektur:
+                  // !isProfessionalPlus → Starter sieht Lock + Pro-Hint.
                   key: "score",
                   title: "Score-Verlauf",
                   badge: "Täglich · 30 Tage",
                   desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
                   cta: "Professional aktivieren",
                   planTag: "Professional",
-                  status: isFree ? "Professional" : null as string | null,
-                  disabled: isFree,
+                  status: !isProfessionalPlus ? "Professional" : null as string | null,
+                  disabled: !isProfessionalPlus,
                 },
                 {
+                  // 24/7-Monitoring ist Pro-Feature laut Pricing-Card
+                  // ("24/7-Monitoring" für Pro vs "Basis-Monitoring" für Starter).
                   key: "monitor",
                   title: "24/7 Live-Monitoring",
                   badge: "Echtzeit · E-Mail-Alert",
                   desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
                   cta: "Professional aktivieren",
                   planTag: "Professional",
-                  status: isFree ? "Professional" : null as string | null,
-                  disabled: isFree,
+                  status: !isProfessionalPlus ? "Professional" : null as string | null,
+                  disabled: !isProfessionalPlus,
                 },
                 {
+                  // Monatlicher PDF-Bericht ist im Pricing-Card-Bullet "White-Label
+                  // PDF (Logo + Brand-Farbe)" als Pro-Feature gelistet. Starter
+                  // hat keinen PDF-Auto-Bericht versprochen → disabled=true.
                   key: "pdf",
                   title: "Monatlicher PDF-Bericht",
                   badge: "Automatisch · Teilbar",
                   desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
-                  cta: "Berichte aktivieren",
+                  cta: "Professional aktivieren",
                   planTag: "Professional",
-                  status: null as string | null,
-                  disabled: false,
+                  status: !isProfessionalPlus ? "Professional" : null as string | null,
+                  disabled: !isProfessionalPlus,
                 },
                 {
+                  // Lead-Magnet ist Agency-only (Pricing-Card "Embeddable Lead-
+                  // Generator — Scanner mit deinem Logo auf deiner Website").
+                  // Vorher: disabled=isFree||isSmartGuard, was Agency selbst als
+                  // gelockt anzeigte. Korrektur: nur !isAgency disabled.
                   key: "leadmagnet",
                   title: "Lead-Magnet Widget",
                   badge: "Exklusiv · Agency",
                   desc: "Bettest du das Widget auf Kunden-Websites ein, können Besucher direkt einen kostenlosen Scan starten — und landen als warme Leads in deinem Dashboard.",
                   cta: "Agency anfragen",
                   planTag: "Agency",
-                  status: (isFree || isSmartGuard) ? "Agency" : null as string | null,
-                  disabled: isFree || isSmartGuard,
+                  status: !isAgency ? "Agency" : null as string | null,
+                  disabled: !isAgency,
                 },
               ]).map(module => (
                 <div key={module.key} className={module.disabled ? "wf-disabled-card" : ""} style={{

@@ -140,7 +140,7 @@ export default function NewClientForm() {
             "10 Projekte statt 1",
             "Alle Smart-Fix-Anleitungen ohne Einzelkauf (sonst 9,90 € pro Stück)",
             "KI-Smart-Fix-Drawer + Score-Verlauf + Asana/Slack-Integration",
-            "25 Scans/Monat statt 5",
+            "Unbegrenzte Scans statt 5/Monat",
           ].map(b => (
             <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: C.text, lineHeight: 1.5 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
