@@ -261,6 +261,11 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
     : [
         { icon: "dashboard", label: "Meine Website",      href: "/dashboard",       exact: true,  locked: false },
         { icon: "scan",      label: "Neuer Scan",          href: "/dashboard/scan",  exact: false, locked: false },
+        // Berichte-Übersicht (08.05.2026): vorher nur über
+        // "Zurück zur Berichte-Übersicht"-Breadcrumb erreichbar — Starter
+        // brauchen einen direkten Sidebar-Link, sonst finden sie ihre
+        // archivierten Reports nicht wieder.
+        { icon: "reports",   label: "Berichte",            href: "/dashboard/scans", exact: true,  locked: false },
         // Kontakt-Eintrag entfernt (08.05.2026): linkte auf /kontakt, was die
         // App verließ. Der "Hilfe & Support"-Button am Sidebar-Bottom (öffnet
         // Modal mit Screenshot+Admin-Email) deckt den Use-Case in-app ab.
