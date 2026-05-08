@@ -73,8 +73,8 @@ export async function GET(req: NextRequest) {
   // via KNOWN_PLAN_STRINGS — synchron mit der monthly-report-Cron, kein
   // hartkodiertes IN ('a', 'b', 'c', …) mehr.
   // 08.05.2026: LIMIT 20 entfernt — Pricing-Card Agency verspricht "Daily Health-
-  // Check" für ALLE Mandanten (bis zu 50 pro Agency-User). Mit LIMIT 20 wurden
-  // bei 50 Mandanten nur 20/Tag gecheckt — Versprechen-Bruch. Cap bei 500 als
+  // Check" für ALLE Kunden (bis zu 50 pro Agency-User). Mit LIMIT 20 wurden
+  // bei 50 Kunden nur 20/Tag gecheckt — Versprechen-Bruch. Cap bei 500 als
   // Anti-Abuse (in der Praxis fern weg von Agency-Realität).
   // Performance: Vercel-Function-Timeout 60s, checkWebsite() ~1-2s pro Site →
   // 30 Sites/Min sind realistisch. 500-Cap = Worst-Case 17 Min, was

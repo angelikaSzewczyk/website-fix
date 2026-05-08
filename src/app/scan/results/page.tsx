@@ -2013,9 +2013,9 @@ function ResultsInner() {
                   <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>249€</span>
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Agentur-Chef · Mandantengeschäft · 50 Sites</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Agentur-Chef · Kundengeschäft · 50 Sites</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
-                  {["50 Mandanten · Scan-Flatrate", "🔒 White-Label Plugin (dein Branding)", "Lead-Magnet Widget für Neukunden", "60-Sek-Watchdog + Slack/Email-Alerts", "Team-Rollen + Delegations-Hebel"].map(f => (
+                  {["50 Kunden · Scan-Flatrate", "🔒 White-Label Plugin (dein Branding)", "Lead-Magnet Widget für Neukunden", "60-Sek-Watchdog + Slack/Email-Alerts", "Team-Rollen + Delegations-Hebel"].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
                       <span style={{ color: "#a78bfa", fontSize: 11 }}>✓</span> {f}
                     </div>

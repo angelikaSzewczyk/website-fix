@@ -93,8 +93,8 @@ export async function POST(req: NextRequest) {
     const upgradeMsg = planKey === "starter"
       ? "Starter-Plan ist auf 1 Website beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten."
       : planKey === "professional"
-      ? "Professional-Plan ist auf 10 Websites beschränkt. Upgrade auf Agency Scale, um bis zu 50 Mandanten zu verwalten."
-      : "Agency Scale ist auf 50 Mandanten beschränkt (Anti-Abuse-Cap). Bei größerem Bedarf: support@website-fix.com.";
+      ? "Professional-Plan ist auf 10 Websites beschränkt. Upgrade auf Agency Scale, um bis zu 50 Kunden zu verwalten."
+      : "Agency Scale ist auf 50 Kunden beschränkt (Anti-Abuse-Cap). Bei größerem Bedarf: support@website-fix.com.";
 
     if (total >= limit && thisUrl === 0) {
       return NextResponse.json(

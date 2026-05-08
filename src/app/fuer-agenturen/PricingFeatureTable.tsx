@@ -4,7 +4,7 @@
  * Direkte Umsetzung des Pricing-Screenshots (07.05.2026): zwei-spaltiges
  * Grid mit Lock-Icons in der Pro-Spalte und kräftigen Checks in der Agency-
  * Scale-Spalte. Die Agency-Spalte enthält zusätzlich eine gold-akzentuierte
- * "Wartungs-Marge verdoppeln"-Box (50 Mandanten → 9.750 € Ersparnis/Mo) als
+ * "Wartungs-Marge verdoppeln"-Box (50 Kunden → 9.750 € Ersparnis/Mo) als
  * Profit-Anker.
  *
  * Server-Component — kein Interaktivitätsbedarf, der CTA ist ein Stripe-
@@ -73,7 +73,7 @@ const ROWS: FeatureRow[] = [
     agencySubBullets: [
       "Premium-Branding & Subdomain",
       "White-Label Auto-Reports",
-      "White-Label Mandanten-Portal",
+      "White-Label Kunden-Portal",
     ],
   },
   {
@@ -254,7 +254,7 @@ export default function PricingFeatureTable() {
                 Wartungs-Marge verdoppeln:
               </div>
               <div style={{ fontSize: 11.5, color: T.textSub, lineHeight: 1.45, fontVariantNumeric: "tabular-nums" }}>
-                50 Mandanten · ≈ <strong style={{ color: T.amberStrong, fontWeight: 800 }}>9.750 €</strong> Ersparnis/Monat
+                50 Kunden · ≈ <strong style={{ color: T.amberStrong, fontWeight: 800 }}>9.750 €</strong> Ersparnis/Monat
               </div>
             </div>
           </div>

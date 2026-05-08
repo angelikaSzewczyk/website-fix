@@ -33,14 +33,14 @@ export const metadata: Metadata = {
   alternates:  { canonical: "https://website-fix.com/fuer-agenturen" },
   openGraph: {
     title:       "Für Agenturen | Marge skalieren statt Senior-Devs verheizen",
-    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, Daily Health-Check, White-Label-Mandantenportal, Workflow-Integration. Ab 249 €/Monat.",
+    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, Daily Health-Check, White-Label-Kundenportal, Workflow-Integration. Ab 249 €/Monat.",
     url:         "https://website-fix.com/fuer-agenturen",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image",
     title:       "Für Agenturen | Marge skalieren statt Senior-Devs verheizen",
-    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, Daily Health-Check, White-Label-Mandantenportal, Workflow-Integration.",
+    description: "Vom Notfall-Fixer zum Profit-Center: Junior-Delegation, Daily Health-Check, White-Label-Kundenportal, Workflow-Integration.",
   },
 };
 
@@ -93,7 +93,7 @@ const PLANS: Plan[] = [
       { text: "Smart-Fix-Guides — 5 inklusive, weitere 9,90 €",      highlight: true },
       { text: "Kein White-Label · Pro startet ab 89 €/Mo",           highlight: false, locked: true },
       { text: "Keine Team-Rollen · Pro startet ab 89 €/Mo",          highlight: false, locked: true },
-      { text: "Kein Mandanten-Portal · Agency startet ab 249 €/Mo",  highlight: false, locked: true },
+      { text: "Kein Kunden-Portal · Agency startet ab 249 €/Mo",  highlight: false, locked: true },
     ],
     audienceFootnote: "Ideal für Selbstständige, die ihre eigene Website laufend optimieren wollen. Mehr Projekte? Professional ab 89 €/Mo (10 Sites).",
     cta: "Starter wählen",
@@ -120,7 +120,7 @@ const PLANS: Plan[] = [
       { text: "Slack- und E-Mail-Alerts bei kritischen Befunden",            highlight: true },
       { text: "Executive Summary für Endkunden-Reports",                     highlight: false },
     ],
-    audienceFootnote: "Für Freelancer und wachsende Web-Projekte mit bis zu 10 Mandanten.",
+    audienceFootnote: "Für Freelancer und wachsende Web-Projekte mit bis zu 10 Kunden.",
     cta: "Professional starten",
     href: undefined,
     recommended: true,
@@ -133,19 +133,18 @@ const PLANS: Plan[] = [
     price: "249",
     per: "/Monat",
     desc: "Infrastruktur & Profit-Maximierung für Inhaber",
-    audience: "Agentur-Chef · Mandantengeschäft",
+    audience: "Agentur-Chef · Kundengeschäft",
     accent: "#A78BFA",
     features: [
-      { text: "Bis zu 50 Mandanten · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)",             highlight: true, key: true },
+      { text: "Bis zu 50 Kunden · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)",             highlight: true, key: true },
       { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true, key: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true, key: true },
-      { text: "Mandanten-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
+      { text: "Kunden-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
       { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
       { text: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall (60-Sek-Watchdog ab Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
       { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
       { text: "DSGVO-AVV, Audit-Log + Haftungs-Dokumentation",                           highlight: true },
-      { text: "Priority-Onboarding: 60-Min-Setup-Call mit Account-Manager",              highlight: false },
     ],
     audienceFootnote: "Für Agentur-Inhaber, die Wartung profitabel skalieren wollen.",
     cta: "Agentur-Marge jetzt skalieren →",
@@ -167,24 +166,24 @@ const WORKFLOW_INTEGRATIONS: Array<{ name: string; desc: string; Icon: (props: {
 ];
 
 // ─── FAQ — überarbeitet auf Agency-Inhaber-Perspektive ──────────────────────
-// "Sie"-Form, B2B-Wording (Haftung, Mandanten, Marge, Delegation). Pricing
+// "Sie"-Form, B2B-Wording (Haftung, Kunden, Marge, Delegation). Pricing
 // vollständig: 9,90 € Pay-per-Fix, 29 € Starter, 89 € Pro, 249 € Agency
 // Scale. Read-Only-Plugin + Hoster-Kompatibilität explizit beantwortet.
 const FAQ = [
   {
     q: "Wie genau spare ich Senior-Lohnkosten — was kann ein Junior wirklich übernehmen?",
-    a: "Etwa 60–75 % aller Befunde, die unsere Engine findet, lassen sich im WordPress-Backend ohne Code-Eingriff lösen: Alt-Texte, Meta-Descriptions, Title-Tags, Sitemap-Toggles, Cookie-Banner-Konfig, Yoast/Rank-Math-Settings, Image-Alt im Medien-Manager. Unsere Smart-Fix-Guides sind so geschrieben, dass ein Werkstudent mit 3 Monaten WP-Erfahrung sie umsetzen kann. Im Agency-Dashboard sehen Sie pro Mandant exakt: \"X von Y Issues durch Junior lösbar\" — inkl. konkreter Lohnkosten-Ersparnis. Bei 50 Mandanten und 3 Junior-lösbaren Fixes pro Monat ergibt das rechnerisch eine Marge-Steigerung von ca. 9.750 €/Monat (Senior 100 €/h vs. Junior 35 €/h, je 1 h pro Fix).",
+    a: "Etwa 60–75 % aller Befunde, die unsere Engine findet, lassen sich im WordPress-Backend ohne Code-Eingriff lösen: Alt-Texte, Meta-Descriptions, Title-Tags, Sitemap-Toggles, Cookie-Banner-Konfig, Yoast/Rank-Math-Settings, Image-Alt im Medien-Manager. Unsere Smart-Fix-Guides sind so geschrieben, dass ein Werkstudent mit 3 Monaten WP-Erfahrung sie umsetzen kann. Im Agency-Dashboard sehen Sie pro Kunde exakt: \"X von Y Issues durch Junior lösbar\" — inkl. konkreter Lohnkosten-Ersparnis. Bei 50 Kunden und 3 Junior-lösbaren Fixes pro Monat ergibt das rechnerisch eine Marge-Steigerung von ca. 9.750 €/Monat (Senior 100 €/h vs. Junior 35 €/h, je 1 h pro Fix).",
   },
   {
-    q: "Was macht das Read-Only-Plugin und ist es sicher für Mandanten-Sites?",
-    a: "Das Plugin ist explizit Read-Only: Es liest WordPress-internen Status (Plugin-Versionen, Datenbank-Health, Theme-Konflikte, geplante Aktualisierungen, .maintenance-Flags), schreibt aber NIE etwas zurück. Kein Schreibzugriff auf wp_options, keine FTP-Aktionen, keine Cron-Manipulation. Rechtlich sauber für Wartungsverträge, weil der Endkunde keine \"unkontrollierte Drittsoftware\" installiert. Ab Starter (29 €/Monat) inklusive — auf Agency Scale per One-Click-Installation auf alle Mandanten ausrollbar. Vorteil gegenüber rein externer Analyse: tiefere Diagnose ohne dass Sie Mandanten-Passwörter durch Ihre Agentur reichen müssen.",
+    q: "Was macht das Read-Only-Plugin und ist es sicher für Kunden-Sites?",
+    a: "Das Plugin ist explizit Read-Only: Es liest WordPress-internen Status (Plugin-Versionen, Datenbank-Health, Theme-Konflikte, geplante Aktualisierungen, .maintenance-Flags), schreibt aber NIE etwas zurück. Kein Schreibzugriff auf wp_options, keine FTP-Aktionen, keine Cron-Manipulation. Rechtlich sauber für Wartungsverträge, weil der Endkunde keine \"unkontrollierte Drittsoftware\" installiert. Ab Starter (29 €/Monat) inklusive — auf Agency Scale per One-Click-Installation auf alle Kunden ausrollbar. Vorteil gegenüber rein externer Analyse: tiefere Diagnose ohne dass Sie Kunden-Passwörter durch Ihre Agentur reichen müssen.",
   },
   {
     q: "Warum brauche ich das Plugin überhaupt? Reicht der externe Scan nicht?",
-    a: "Für maximale Sicherheit und Tiefe gegenüber Mandanten. Ein externer Crawl sieht nur, was die Website öffentlich preisgibt — Title-Tags, sichtbare Links, Bilder. Was er NICHT sieht: PHP-Error-Logs, langsame Datenbank-Queries, Plugin-Versions-Konflikte, fehlerhafte Cron-Jobs, kompromittierte Theme-Dateien. Genau das liest unser Read-Only-Plugin aus — ohne Schreibzugriff, ohne dass Sie Mandanten-Passwörter durch Ihre Agentur reichen müssen. Auf Agency Scale läuft das Plugin unter IHREM Branding (eigenes Logo + Agentur-Domain), sodass der Endkunde es als integralen Teil Ihres Wartungsvertrags wahrnimmt. Konfiguration unter Dashboard → Agency-Branding.",
+    a: "Für maximale Sicherheit und Tiefe gegenüber Kunden. Ein externer Crawl sieht nur, was die Website öffentlich preisgibt — Title-Tags, sichtbare Links, Bilder. Was er NICHT sieht: PHP-Error-Logs, langsame Datenbank-Queries, Plugin-Versions-Konflikte, fehlerhafte Cron-Jobs, kompromittierte Theme-Dateien. Genau das liest unser Read-Only-Plugin aus — ohne Schreibzugriff, ohne dass Sie Kunden-Passwörter durch Ihre Agentur reichen müssen. Auf Agency Scale läuft das Plugin unter IHREM Branding (eigenes Logo + Agentur-Domain), sodass der Endkunde es als integralen Teil Ihres Wartungsvertrags wahrnimmt. Konfiguration unter Dashboard → Agency-Branding.",
   },
   {
-    q: "Wann kommt das Mandanten-Portal unter Custom-Domain?",
+    q: "Wann kommt das Kunden-Portal unter Custom-Domain?",
     a: "Im Q3 — Bestandskunden des Agency-Scale-Plans behalten ihren Preis nach Release. Aktuell hinterlegen Sie bereits in den Settings die Wunsch-Domain (z. B. portal.ihre-agentur.de); wir aktivieren das Routing in Q3 und benachrichtigen Sie per E-Mail mit den DNS-CNAME-Anweisungen. Bis dahin nutzen Sie das Standard-Dashboard mit Ihrem White-Label-Branding (Logo, Farben, SMTP-Absender für Auto-Reports). Endkunden-Reports tragen schon heute Ihr Branding, nicht WebsiteFix.",
   },
   {
@@ -193,31 +192,31 @@ const FAQ = [
   },
   {
     q: "Welche Team-Rollen gibt es und wie unterscheiden sie sich?",
-    a: "Drei Rollen: Admin (volle Kontrolle, Billing, Mandantenverwaltung), Editor (sieht Issues + Smart-Fix-Guides, kann fixen, KEIN Billing-Zugriff, KEINE Kundendaten), Viewer (Read-Only für Stakeholder). Damit können Sie Ihrem Junior-Team sicher Aufgaben übergeben, ohne sensible Stripe-Daten oder Kundenrabatte preiszugeben.",
+    a: "Drei Rollen: Admin (volle Kontrolle, Billing, Kundenverwaltung), Editor (sieht Issues + Smart-Fix-Guides, kann fixen, KEIN Billing-Zugriff, KEINE Kundendaten), Viewer (Read-Only für Stakeholder). Damit können Sie Ihrem Junior-Team sicher Aufgaben übergeben, ohne sensible Stripe-Daten oder Kundenrabatte preiszugeben.",
   },
   {
     q: "Wie läuft die Jira / Trello / Asana / Slack-Integration?",
-    a: "OAuth-Flow im Settings-Bereich, einmalig verbinden. Pro Mandant konfigurieren Sie das Ziel-Projekt + die Severity-Schwelle (z. B. \"nur kritische Issues nach Jira\"). Webhook-Trigger feuert automatisch, sobald ein neuer Befund gefunden wird — kein manuelles Copy-Paste, kein Browser-Tab-Wechsel.",
+    a: "OAuth-Flow im Settings-Bereich, einmalig verbinden. Pro Kunde konfigurieren Sie das Ziel-Projekt + die Severity-Schwelle (z. B. \"nur kritische Issues nach Jira\"). Webhook-Trigger feuert automatisch, sobald ein neuer Befund gefunden wird — kein manuelles Copy-Paste, kein Browser-Tab-Wechsel.",
   },
   {
-    q: "Wie sicher sind Mandanten-Daten — DSGVO, Haftung?",
+    q: "Wie sicher sind Kunden-Daten — DSGVO, Haftung?",
     a: "Hosting in Frankfurt, EU-only Datenfluss, TLS-Verschlüsselung, ISO-27001-Provider. Sie erhalten einen DSGVO-konformen AVV und einen Audit-Log, der jeden Scan, jeden Fix und jede Team-Aktion protokolliert. Im Schadensfall können Sie nachweisen, dass die Wartung ordnungsgemäß erfolgt ist — wertvoll bei BFSG-2025-Streitigkeiten.",
   },
   {
     q: "Warum 249 € statt 89 €? Was ist der Hauptunterschied?",
-    a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Mandantengeschäft skalieren. Sie zahlen den Aufpreis für: 50 Mandanten-Slots, Team-Rollen-Logik, Daily Health-Check (60-Sek-Watchdog ab Q3 inklusive), Workflow-API, DSGVO-AVV, Custom-Domain für Mandanten-Portal (Q3). Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
+    a: "Professional ist für Owner-Operators, die selbst fixen. Agency Scale ist für Inhaber, die NICHT mehr selbst fixen, sondern delegieren und ein Kundengeschäft skalieren. Sie zahlen den Aufpreis für: 50 Kunden-Slots, Team-Rollen-Logik, Daily Health-Check (60-Sek-Watchdog ab Q3 inklusive), Workflow-API, DSGVO-AVV, Custom-Domain für Kunden-Portal (Q3). Bei einer einzigen vermiedenen Senior-Stunde pro Monat (≈ 100 €) hat sich der Aufpreis amortisiert.",
   },
   {
     q: "Kann ich Website-Fix zur Neukundengewinnung nutzen?",
-    a: "Ja — das ist sogar ein Kern-Feature des Agency-Scale-Plans. Du bekommst einen iframe-Embed-Code für deine Marketing-Site, der unseren Scanner unter DEINEM Logo + DEINER Brand-Farbe + DEINEM Agentur-Namen zeigt. Besucher geben ihre URL ein, sehen einen Teaser-Score und müssen für den Vollreport ihre Email hinterlassen. Dieser Lead landet sofort in deinem Dashboard unter \"Lead-Generator\" — du kannst ihn mit einem Klick als Mandantenprojekt anlegen. Die Übergabe vom Lead zum Wartungsvertrag wird damit zur Routine, nicht zum Zufall. Setup: 2 Minuten (Snippet kopieren, in WordPress/Webflow/Wix einfügen, fertig).",
+    a: "Ja — das ist sogar ein Kern-Feature des Agency-Scale-Plans. Du bekommst einen iframe-Embed-Code für deine Marketing-Site, der unseren Scanner unter DEINEM Logo + DEINER Brand-Farbe + DEINEM Agentur-Namen zeigt. Besucher geben ihre URL ein, sehen einen Teaser-Score und müssen für den Vollreport ihre Email hinterlassen. Dieser Lead landet sofort in deinem Dashboard unter \"Lead-Generator\" — du kannst ihn mit einem Klick als Kundenprojekt anlegen. Die Übergabe vom Lead zum Wartungsvertrag wird damit zur Routine, nicht zum Zufall. Setup: 2 Minuten (Snippet kopieren, in WordPress/Webflow/Wix einfügen, fertig).",
   },
   {
     q: "Können meine Endkunden den 9,90-€-Pay-per-Fix nutzen, ohne dass ich für jeden ein Konto anlegen muss?",
     a: "Ja — und das ist ein eigener Lead-Magnet für Sie. Der Pay-per-Fix-Flow läuft komplett anonym: Endkunde scannt seine Seite, wählt einen Fix-Guide, gibt seine E-Mail ein, zahlt 9,90 € via Stripe — fertig. Account-Provisionierung passiert automatisch im Hintergrund nach erfolgreicher Zahlung; der Käufer bekommt eine Bestätigungs-Mail mit Passwort-setzen-Link. Wenn Sie das Lead-Magnet-Widget auf Ihrer eigenen Marketing-Site einbinden, ziehen Sie Endkunden in Ihren Funnel und können sie später auf Wartungsverträge upgraden.",
   },
   {
-    q: "Funktioniert WebsiteFix mit dem Hoster meiner Mandanten (Strato, IONOS, All-Inkl)?",
-    a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Für die deutschen Top-Hoster liefern wir hoster-spezifische Optimierungs-Pfade in jedem Smart-Fix-Guide: Strato, IONOS / 1&1, All-Inkl, Hostinger und Hetzner. Heißt: Wenn Ihr Junior einen Fix-Guide öffnet, sieht er nicht nur die generische WordPress-Anleitung, sondern die exakten Klick-Pfade fürs Hoster-Backend des konkreten Mandanten (Hoster wird automatisch aus dem Scan erkannt). Bei Spezial-Hostern wie Cloudways, Kinsta oder WP Engine greift die Standard-Anleitung — wir ergänzen Hoster-Spezial-Pfade laufend nach Mandanten-Verteilung.",
+    q: "Funktioniert WebsiteFix mit dem Hoster meiner Kunden (Strato, IONOS, All-Inkl)?",
+    a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Für die deutschen Top-Hoster liefern wir hoster-spezifische Optimierungs-Pfade in jedem Smart-Fix-Guide: Strato, IONOS / 1&1, All-Inkl, Hostinger und Hetzner. Heißt: Wenn Ihr Junior einen Fix-Guide öffnet, sieht er nicht nur die generische WordPress-Anleitung, sondern die exakten Klick-Pfade fürs Hoster-Backend des konkreten Kunden (Hoster wird automatisch aus dem Scan erkannt). Bei Spezial-Hostern wie Cloudways, Kinsta oder WP Engine greift die Standard-Anleitung — wir ergänzen Hoster-Spezial-Pfade laufend nach Kunden-Verteilung.",
   },
   {
     q: "Kann ich den Plan jederzeit kündigen?",
@@ -499,7 +498,7 @@ export default function AgencyPage() {
               <Wallet size={36} color={T.amber} strokeWidth={1.8} style={{ flexShrink: 0 }} />
               <div style={{ flex: "1 1 280px", minWidth: 0 }}>
                 <div style={{ fontSize: 17, fontWeight: 800, color: T.text, letterSpacing: "-0.01em", marginBottom: 4 }}>
-                  Bei 50 Mandanten und 3 Junior-lösbaren Issues pro Monat …
+                  Bei 50 Kunden und 3 Junior-lösbaren Issues pro Monat …
                 </div>
                 <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>
                   … sparen Sie ca. <strong style={{ color: T.amber, fontWeight: 700 }}>9.750 €</strong> monatlich an
@@ -609,7 +608,7 @@ export default function AgencyPage() {
               {
                 icon: Layers,
                 title: "Skalierbarkeit",
-                desc: "50 Mandanten-Slots, automatische Berichte und Workflow-API zu Jira/Asana/Trello. Mandanten-Portal unter Custom-Domain folgt in Q3 — Bestandskunden behalten Preis. Sie wachsen von 10 auf 50 Mandanten, ohne ein einziges neues Senior-FTE einzustellen.",
+                desc: "50 Kunden-Slots, automatische Berichte und Workflow-API zu Jira/Asana/Trello. Kunden-Portal unter Custom-Domain folgt in Q3 — Bestandskunden behalten Preis. Sie wachsen von 10 auf 50 Kunden, ohne ein einziges neues Senior-FTE einzustellen.",
                 accent: "#A78BFA",
               },
               {
@@ -666,7 +665,7 @@ export default function AgencyPage() {
                     "Klassifizierung pro Issue: Junior · Senior · gemischt",
                     "Ersparnis-Rechner mit Stundensatz-Annahmen (anpassbar)",
                     "Direkter Link in die Team-Verwaltung mit Rollen-Setup",
-                    "Aggregation über alle Mandanten — keine Einzel-Klicks nötig",
+                    "Aggregation über alle Kunden — keine Einzel-Klicks nötig",
                   ].map(t => (
                     <li key={t} style={{ display: "flex", gap: 9, fontSize: 13.5, color: T.textSub, lineHeight: 1.55 }}>
                       <Check size={14} color={T.green} strokeWidth={3} style={{ flexShrink: 0, marginTop: 3 }} />
@@ -750,7 +749,7 @@ export default function AgencyPage() {
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 720, marginInline: "auto" }}>
             <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: T.scale, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              White-Label · Mandanten-Portal
+              White-Label · Kunden-Portal
             </p>
             <h2 style={{ margin: "0 0 16px", fontSize: "clamp(26px, 3.5vw, 42px)", fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               Ihre Marke, Ihre Domain, Ihre Endkunden
@@ -768,7 +767,7 @@ export default function AgencyPage() {
           }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
               {[
-                { icon: Globe,       title: "Eigene Subdomain",       desc: "CNAME-Setup, automatisches TLS-Cert, beliebig viele Mandanten-Tenants." },
+                { icon: Globe,       title: "Eigene Subdomain",       desc: "CNAME-Setup, automatisches TLS-Cert, beliebig viele Kunden-Tenants." },
                 { icon: Palette,     title: "Branding & SVG-Logo",    desc: "Farbe, Typo, SVG-Logo. Live-Preview vor Aktivierung — kein Trial-and-Error." },
                 { icon: BellDot,     title: "SMTP unter Ihrer Domain", desc: "Auto-Reports gehen an Endkunden mit Ihrer Absender-Adresse — nicht von uns." },
                 { icon: FileText,    title: "PDF mit Ihrem Layout",   desc: "Executive-Summary + Befunde, vollständig white-labeled. Ein Klick zum Kunden." },
@@ -893,8 +892,8 @@ export default function AgencyPage() {
               <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
                 {[
                   { title: "Self-Service-Scan auf deiner Domain", body: "Besucher gibt URL ein, sieht in 60 Sek. einen Teaser-Score — komplett unter deinem Logo." },
-                  { title: "Email = Vollreport-Trigger", body: "Für den vollständigen Bericht hinterlässt der Besucher eine Email. Dein Mandanten-Funnel ist befüllt." },
-                  { title: "Lead landet sofort in deinem Dashboard", body: "Ein Klick: Lead → Mandantenprojekt. Du startest die erste Wartungs-Pitch in unter 30 Sekunden." },
+                  { title: "Email = Vollreport-Trigger", body: "Für den vollständigen Bericht hinterlässt der Besucher eine Email. Dein Kunden-Funnel ist befüllt." },
+                  { title: "Lead landet sofort in deinem Dashboard", body: "Ein Klick: Lead → Kundenprojekt. Du startest die erste Wartungs-Pitch in unter 30 Sekunden." },
                   { title: "iframe-Embed in 2 Minuten", body: "Copy-Paste eines <iframe>-Snippets. Funktioniert mit jedem CMS — WordPress, Webflow, Wix, Static." },
                 ].map(b => (
                   <li key={b.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -1001,7 +1000,7 @@ export default function AgencyPage() {
             </h2>
             <p style={{ margin: 0, fontSize: 15, color: T.textSub, lineHeight: 1.7 }}>
               Drei Rollen, granulare Rechte — Junior-Devs sehen nur, was sie sollen.
-              Billing, Stripe-Daten und Mandantenverträge bleiben beim Inhaber.
+              Billing, Stripe-Daten und Kundenverträge bleiben beim Inhaber.
             </p>
           </div>
 
@@ -1012,8 +1011,8 @@ export default function AgencyPage() {
                 accent: T.scale,
                 accentBg: T.scaleBg,
                 accentBorder: T.scaleBorder,
-                desc: "Inhaber-Rolle. Volle Kontrolle: Billing, Mandanten, Team-Einladungen, Branding.",
-                bullets: ["Stripe-Verwaltung", "Mandanten-Anlegen / Löschen", "Branding + Subdomain", "Team-Einladungen", "Audit-Log-Einsicht"],
+                desc: "Inhaber-Rolle. Volle Kontrolle: Billing, Kunden, Team-Einladungen, Branding.",
+                bullets: ["Stripe-Verwaltung", "Kunden-Anlegen / Löschen", "Branding + Subdomain", "Team-Einladungen", "Audit-Log-Einsicht"],
               },
               {
                 role: "Editor",
@@ -1021,7 +1020,7 @@ export default function AgencyPage() {
                 accentBg: "rgba(34,197,94,0.08)",
                 accentBorder: "rgba(34,197,94,0.30)",
                 desc: "Junior-Rolle. Sieht Issues + Smart-Fix-Guides, kann fixen, Status setzen.",
-                bullets: ["Issue-Liste pro Mandant", "Smart-Fix-Drawer + KI-Vorschläge", "Fix-Status setzen", "Kein Billing-Zugriff", "Keine Mandantendaten"],
+                bullets: ["Issue-Liste pro Kunde", "Smart-Fix-Drawer + KI-Vorschläge", "Fix-Status setzen", "Kein Billing-Zugriff", "Keine Kundendaten"],
               },
               {
                 role: "Viewer",
@@ -1029,7 +1028,7 @@ export default function AgencyPage() {
                 accentBg: "rgba(96,165,250,0.08)",
                 accentBorder: "rgba(96,165,250,0.30)",
                 desc: "Read-Only-Rolle für Stakeholder, Kunden-Manager oder externe Reviewer.",
-                bullets: ["Score-Übersicht pro Mandant", "Berichts-Archiv lesen", "Keine Aktionen", "Keine Daten-Edits", "Optional: Export-Erlaubnis"],
+                bullets: ["Score-Übersicht pro Kunde", "Berichts-Archiv lesen", "Keine Aktionen", "Keine Daten-Edits", "Optional: Export-Erlaubnis"],
               },
             ].map(r => (
               <div key={r.role} style={{
@@ -1051,7 +1050,7 @@ export default function AgencyPage() {
           </div>
 
           <p style={{ margin: "24px auto 0", maxWidth: 700, textAlign: "center", fontSize: 12.5, color: T.textFaint, lineHeight: 1.6 }}>
-            Roll-Out-Roadmap: Schema + Invite-Flow live. Granulare Route-Enforcement für jede API derzeit im Audit. Zwischenzeitlich harte Trennung: Editor-/Viewer-Accounts können sich anmelden und sehen die ihnen zugewiesenen Mandanten.
+            Roll-Out-Roadmap: Schema + Invite-Flow live. Granulare Route-Enforcement für jede API derzeit im Audit. Zwischenzeitlich harte Trennung: Editor-/Viewer-Accounts können sich anmelden und sehen die ihnen zugewiesenen Kunden.
           </p>
         </section>
 

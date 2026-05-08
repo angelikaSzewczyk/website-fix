@@ -103,12 +103,12 @@ export const ONBOARDING_STEPS: Record<OnboardingPlanKey, {
 
   agency: {
     title:    "Skalierung & Branding",
-    subtitle: "Vier Schritte zum vollen Profit-Center-Setup",
+    subtitle: "Drei Schritte zum vollen Profit-Center-Setup",
     steps: [
       {
         id:    "agency_branding",
         label: "White-Label aktivieren",
-        hint:  "Logo hochladen + Subdomain einrichten — Endkunden sehen nur dich.",
+        hint:  "Logo hochladen + Custom-Domain einrichten — Endkunden sehen nur dich.",
         href:  "/dashboard/agency-branding",
         icon:  "🎨",
       },
@@ -122,19 +122,9 @@ export const ONBOARDING_STEPS: Record<OnboardingPlanKey, {
       {
         id:    "agency_workflow",
         label: "Workflow verbinden (Slack / Jira)",
-        hint:  "Daily Health-Check meldet Mandanten-Ausfälle direkt im richtigen Tool.",
+        hint:  "Daily Health-Check meldet Kunden-Ausfälle direkt im richtigen Tool.",
         href:  "/dashboard/integrations",
         icon:  "🔗",
-      },
-      {
-        // Pricing-Card-Versprechen #10: "Priority-Onboarding: 60-Min-Setup-Call mit
-        // Account-Manager". Aktuell mailto-basiert — der Account-Manager bestätigt
-        // den Slot per Mail. Sobald Calendly/Cal.com aktiv ist, href umstellen.
-        id:    "agency_setup_call",
-        label: "Setup-Call mit Account-Manager buchen",
-        hint:  "60 Min Strategie-Gespräch: White-Label, Team-Setup, Workflow-Integration. Inklusive im Plan.",
-        href:  "mailto:support@website-fix.com?subject=Setup-Call%20Agency%20Scale&body=Hi%20WebsiteFix-Team%2C%0A%0Aich%20m%C3%B6chte%20meinen%20Priority-Onboarding-Call%20buchen.%20Mein%20Wunsch-Slot%3A%20%5BTermin%20oder%20Zeitfenster%20einf%C3%BCgen%5D.%0A%0AVielen%20Dank%21",
-        icon:  "📞",
       },
     ],
   },

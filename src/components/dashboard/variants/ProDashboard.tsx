@@ -1930,17 +1930,17 @@ export default function ProDashboard(props: ProDashboardProps) {
 
           {/* ⑧ WHITE-LABEL-PLUGIN ANBINDUNG (Agency-only Upsell) — hidden in focus mode.
                Klare Trennung zum Read-Only-Plugin (oben in PluginDownloadCard, ab Pro
-               inklusive). Diese Sektion bewirbt die WHITE-LABEL-Variante für Mandanten-
+               inklusive). Diese Sektion bewirbt die WHITE-LABEL-Variante für Kunden-
                Sites mit Brand-Anpassung + KI-Mass-Fixer (Agency Scale exklusiv). */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
             <SectionLabel color={isAgency ? "#a78bfa" : D.blueSoft}>
               {isAgency ? "Agency · Exklusiv" : "Agency Scale Feature"}
             </SectionLabel>
-            <SectionHead>White-Label-Plugin für Mandanten-Sites</SectionHead>
+            <SectionHead>White-Label-Plugin für Kunden-Sites</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 600 }}>
               {isAgency
-                ? <>Das White-Label Helper-Plugin trägt dein Branding und überträgt Fixes per API direkt aus diesem Dashboard. Inkl. KI-Mass-Fixer für Bulk-Operationen über mehrere Mandanten.</>
-                : <>Du hast bereits das <strong style={{ color: D.text }}>Read-Only-Plugin</strong> in deinem Pro-Plan. Mit Agency Scale bekommst du zusätzlich die <strong style={{ color: "#a78bfa" }}>White-Label-Variante</strong> — dein Branding beim Endkunden plus KI-Mass-Fixer für Bulk-Operationen über alle Mandanten.</>}
+                ? <>Das White-Label Helper-Plugin trägt dein Branding und überträgt Fixes per API direkt aus diesem Dashboard. Inkl. KI-Mass-Fixer für Bulk-Operationen über mehrere Kunden.</>
+                : <>Du hast bereits das <strong style={{ color: D.text }}>Read-Only-Plugin</strong> in deinem Pro-Plan. Mit Agency Scale bekommst du zusätzlich die <strong style={{ color: "#a78bfa" }}>White-Label-Variante</strong> — dein Branding beim Endkunden plus KI-Mass-Fixer für Bulk-Operationen über alle Kunden.</>}
             </p>
 
             {isAgency ? (
@@ -2497,7 +2497,7 @@ export default function ProDashboard(props: ProDashboardProps) {
             Pro-User sehen das Delegations-Widget nicht — exklusiv im Agency-
             Scale-Tier. Wir teasern es hier als Empty-State-Card, sodass der
             Pro-Owner erkennt, was er bei Skalierung gewinnt: konkrete Junior-
-            Lohnkosten-Ersparnis, Mandanten-Portal, Team-Rollen. Kein Hard-
+            Lohnkosten-Ersparnis, Kunden-Portal, Team-Rollen. Kein Hard-
             Sell — informativer Footer-Block. */}
         <div style={{
           marginTop: 40, padding: "24px 26px", borderRadius: 16,
@@ -2524,7 +2524,7 @@ export default function ProDashboard(props: ProDashboardProps) {
               Delegations-Hebel: bis zu 9.750 €/Monat Lohnkosten-Ersparnis
             </h3>
             <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-              Auf Agency Scale (249 €/Monat) siehst du im Dashboard pro Mandant: „X von Y Issues durch Junior lösbar" — inkl. konkreter €-Ersparnis-Rechnung. Plus: Mandanten-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog, Workflow-API zu Jira/Asana/Trello/Slack.
+              Auf Agency Scale (249 €/Monat) siehst du im Dashboard pro Kunde: „X von Y Issues durch Junior lösbar" — inkl. konkreter €-Ersparnis-Rechnung. Plus: Kunden-Portal unter eigener Subdomain, Team-Rollen, 60-Sekunden-Watchdog, Workflow-API zu Jira/Asana/Trello/Slack.
             </p>
           </div>
           <Link href="/fuer-agenturen#pricing" style={{
@@ -2598,7 +2598,7 @@ export default function ProDashboard(props: ProDashboardProps) {
                   Anti-Abuse-Cap). Wenn das Modal trotzdem feuert (Cap-Hit),
                   ist Agency Scale die nächste Stufe — nicht "Professional". */}
               {isProfessionalPlus
-                ? <>Du hast den Anti-Abuse-Cap deines Plans erreicht. <strong style={{ color: "#A78BFA" }}>Agency Scale</strong> hebt das auf 50 Mandanten plus Mandanten-Portal und Team-Rollen.</>
+                ? <>Du hast den Anti-Abuse-Cap deines Plans erreicht. <strong style={{ color: "#A78BFA" }}>Agency Scale</strong> hebt das auf 50 Kunden plus Kunden-Portal und Team-Rollen.</>
                 : <>Mit dem <strong style={{ color: "#FBBF24" }}>Professional-Plan</strong> bekommst du unbegrenzte Scans, KI-gestützte Fix-Anleitungen und Monitoring rund um die Uhr.</>}
             </p>
 

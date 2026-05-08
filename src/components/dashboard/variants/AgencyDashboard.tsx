@@ -424,7 +424,7 @@ export default async function AgencyDashboard({
       {/* ── HYBRID-SCAN-BANNER ──
           Basis-Scan vs. Full-System-Audit. Agency-Owner sieht den Status
           aggregiert für seinen Account (mindestens eine seiner verbundenen
-          Mandanten-Sites mit aktivem Plugin → "Deep-Scan aktiv"). */}
+          Kunden-Sites mit aktivem Plugin → "Deep-Scan aktiv"). */}
       <HybridScanBanner
         pluginActive={pluginActive}
         lastHandshakeAt={pluginLastHandshakeAt}

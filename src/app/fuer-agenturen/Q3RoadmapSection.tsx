@@ -71,7 +71,7 @@ const ITEMS: RoadmapItem[] = [
     bullets: [
       "HTTP-HEAD-Probe alle 60 s aus drei Regionen",
       "Multi-Channel-Alerts (Slack, E-Mail, später WhatsApp)",
-      "Incident-Log mit Downtime-MTTR pro Mandant",
+      "Incident-Log mit Downtime-MTTR pro Kunde",
     ],
   },
   {

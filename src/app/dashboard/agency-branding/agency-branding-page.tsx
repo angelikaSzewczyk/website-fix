@@ -133,7 +133,7 @@ export default function AgencyBrandingPage({
               AVV, Audit-Log &amp; Haftungs-Dokumentation
             </h2>
             <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.textSub, maxWidth: 600, lineHeight: 1.55 }}>
-              Was du brauchst, um deine Mandanten DSGVO-konform zu betreuen —
+              Was du brauchst, um deine Kunden DSGVO-konform zu betreuen —
               und im Schadensfall nachweisen kannst, dass die Wartung ordentlich erfolgte.
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function AgencyBrandingPage({
               <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
                 Auftragsverarbeitungs-Vertrag (Art. 28 DSGVO) als druckbare Vorlage —
                 vorbefüllt mit deinem Agency-Namen. Per Browser-Print als PDF speichern,
-                vom Mandanten unterschreiben lassen, Kopie an support@website-fix.com schicken.
+                vom Kunden unterschreiben lassen, Kopie an support@website-fix.com schicken.
               </p>
               <span style={{ fontSize: 11.5, color: T.purple, fontWeight: 700, marginTop: 4 }}>
                 Vorlage öffnen →
@@ -195,7 +195,7 @@ export default function AgencyBrandingPage({
               </div>
               <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
                 Append-only Protokoll aller Team-Aktionen (Einladungen, Plan-Änderungen,
-                Zugriffe). Nachweis-Pflicht im DSGVO-Audit oder bei Mandanten-Anfragen
+                Zugriffe). Nachweis-Pflicht im DSGVO-Audit oder bei Kunden-Anfragen
                 nach Art. 30 DSGVO.
               </p>
               <span style={{ fontSize: 11.5, color: T.purple, fontWeight: 700, marginTop: 4 }}>
@@ -219,7 +219,7 @@ export default function AgencyBrandingPage({
               </div>
               <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
                 BFSG-2025 + Wartungsvertrags-Standard-Klauseln zum Einbau in deine
-                Mandanten-Verträge. Bei Bedarf an branchenspezifischer Doku
+                Kunden-Verträge. Bei Bedarf an branchenspezifischer Doku
                 (Praxis, Kanzlei, Online-Shop) schreib uns an
                 <a href="mailto:support@website-fix.com?subject=Haftungs-Doku%20Anfrage" style={{ color: T.purple, fontWeight: 700, textDecoration: "none" }}> support@website-fix.com</a>.
               </p>

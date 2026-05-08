@@ -94,7 +94,7 @@ export default function PluginDownloadCard({ plan, agencyLogoUrl }: Props) {
         <p style={{ margin: 0, fontSize: 12.5, color: C.textSub, lineHeight: 1.6 }}>
           {isAgency ? (
             <>
-              Installiere das Plugin auf Mandanten-Sites — es läuft unter <strong style={{ color: C.text }}>deinem Logo + Agentur-Domain</strong>.
+              Installiere das Plugin auf Kunden-Sites — es läuft unter <strong style={{ color: C.text }}>deinem Logo + Agentur-Domain</strong>.
               Endkunden sehen WebsiteFix nicht. Logo + Brand-Farbe konfigurierst du im{" "}
               <Link href="/dashboard/agency-branding" style={{ color: C.scale, textDecoration: "underline", textUnderlineOffset: 2 }}>
                 Agency-Branding
