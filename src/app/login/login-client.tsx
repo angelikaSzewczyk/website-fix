@@ -133,13 +133,17 @@ export default function LoginClient() {
 
       <p style={{ marginTop: 20, textAlign: "center", fontSize: 13, color: "#64748B" }}>
         Noch kein Account?{" "}
-        <Link href="/register" style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none" }}>
-          Kostenlos registrieren
+        <Link href="/#pricing" style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none" }}>
+          Plan wählen &amp; registrieren
         </Link>
       </p>
 
+      {/* Trust-Badges (08.05.2026): generisch für alle Plan-Tiers.
+           Vorher: 'White-Label' (nur Pro+) und 'BFSG-ready' (zu redundant
+           mit WCAG). Neu: 3 universelle Trust-Signale, die für jeden
+           User-Typ relevant sind. */}
       <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #F1F5F9", display: "flex", gap: 16, justifyContent: "center" }}>
-        {["WCAG 2.1", "BFSG-ready", "White-Label"].map(badge => (
+        {["WCAG 2.1", "DSGVO-konform", "EU-Hosting"].map(badge => (
           <span key={badge} style={{ fontSize: 11, fontWeight: 600, color: "#94A3B8", letterSpacing: "0.04em", textTransform: "uppercase" }}>
             ✓ {badge}
           </span>

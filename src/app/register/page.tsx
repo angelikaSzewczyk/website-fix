@@ -145,6 +145,15 @@ function RegisterContent() {
   const content    = isGuideIntent ? INTENT_CONTENT.guide : (PLAN_CONTENT[plan] ?? DEFAULT_CONTENT);
   const isPaidPlan = !isGuideIntent && plan && plan !== "free";
 
+  // Defensive (08.05.2026): /register ohne Plan + ohne Invite + ohne Guide-Intent
+  // ist konzeptionell falsch ("Eingeloggt = zahlend"). Direkt zur Pricing-
+  // Seite redirecten, statt verwirrenden DEFAULT_CONTENT zu rendern.
+  useEffect(() => {
+    if (!plan && !isGuideIntent && !isInviteFlow) {
+      window.location.href = "/#pricing";
+    }
+  }, [plan, isGuideIntent, isInviteFlow]);
+
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState(isInviteFlow ? inviteEmailParam : "");
   const [password, setPassword] = useState("");
@@ -282,8 +291,9 @@ function RegisterContent() {
         } else if (isPaidPlan) {
           window.location.href = checkoutUrlFor(plan);
         } else {
-          // Kein Plan → zur Preisseite, nie zum Dashboard
-          window.location.href = "/fuer-agenturen";
+          // Kein Plan → zur Hauptseite-Pricing, alle 3 Pläne sichtbar
+          // (/fuer-agenturen ist B2B-Pivot, kein Starter dort).
+          window.location.href = "/#pricing";
         }
       } else {
         // signIn fehlgeschlagen — wir leiten NICHT auto-redirected weiter,

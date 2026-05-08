@@ -40,7 +40,7 @@ export default function LoginPage() {
             Dein Dashboard<br />wartet.
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", margin: "0 0 40px", lineHeight: 1.7 }}>
-            Deep-Scan, Smart-Fix-Guides und BFSG-Compliance —<br />klar, machbar, ohne Entwickler.
+            Deep-Scan und Smart-Fix-Guides —<br />klar, machbar, ohne Entwickler.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -48,7 +48,7 @@ export default function LoginPage() {
               { icon: "✓", text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG", color: "#22C55E" },
               { icon: "✓", text: "Smart-Fix-Guides mit Schritt-für-Schritt-Anleitung", color: "#22C55E" },
               { icon: "✓", text: "Read-Only-Plugin für tiefe Diagnose ohne Passwort", color: "#22C55E" },
-              { icon: "✓", text: "BFSG-2025-Konformität dokumentiert & nachweisbar", color: "#22C55E" },
+              { icon: "✓", text: "DSGVO-konform · EU-Hosting · TLS-verschlüsselt", color: "#22C55E" },
             ].map(item => (
               <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: item.color, flexShrink: 0, marginTop: 2 }}>{item.icon}</span>
@@ -79,7 +79,7 @@ export default function LoginPage() {
           </Link>
           <span style={{ fontSize: 13, color: "#94A3B8" }}>
             Noch kein Account?{" "}
-            <Link href="/register" style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none" }}>Registrieren</Link>
+            <Link href="/#pricing" style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none" }}>Plan wählen</Link>
           </span>
         </div>
 
