@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import BrandLogo from "../components/BrandLogo";
@@ -430,18 +430,33 @@ function RegisterContent() {
             </div>
           )}
 
-          {/* Hinweis bei bereits authenticated Session — KEIN Auto-Redirect.
-              User entscheidet selbst, ob er upgraden oder ausloggen will. */}
+          {/* Hinweis bei aktiver Session — könnte eine alte/stale Cookie sein
+              (User hat sich vorher mal eingeloggt und vergessen). Dem User
+              eine direkte Ausloggen-Option geben, sonst denkt er das Banner
+              ist falsch. */}
           {sessionStatus === "authenticated" && (
             <div style={{
               padding: "12px 14px", marginBottom: 22, borderRadius: 9,
               background: "#FFFBEB", border: "1px solid #FDE68A",
-              fontSize: 13, color: "#92400E", lineHeight: 1.5,
+              fontSize: 13, color: "#92400E", lineHeight: 1.55,
             }}>
-              <strong>Du bist bereits eingeloggt.</strong>{" "}
+              <strong>Aktive Session erkannt.</strong>{" "}
+              Falls du ein neues Konto anlegen willst, logge dich erst aus:{" "}
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: window.location.href })}
+                style={{
+                  color: "#92400E", textDecoration: "underline", fontWeight: 700,
+                  background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                  fontFamily: "inherit", fontSize: 13,
+                }}
+              >
+                Jetzt ausloggen
+              </button>
+              {" "}—{" "}
               {isPaidPlan
-                ? <>Wenn du auf deinem aktuellen Account upgraden willst, gehe zu <Link href={checkoutUrlFor(plan)} style={{ color: "#92400E", textDecoration: "underline", fontWeight: 700 }}>Checkout für {plan}</Link>.</>
-                : <>Du kannst direkt zum <Link href="/dashboard" style={{ color: "#92400E", textDecoration: "underline", fontWeight: 700 }}>Dashboard</Link> oder hier ein neues Konto anlegen.</>
+                ? <>oder mit aktuellem Account zu <Link href={checkoutUrlFor(plan)} style={{ color: "#92400E", textDecoration: "underline", fontWeight: 700 }}>Checkout für {plan}</Link>.</>
+                : <>oder direkt zum <Link href="/dashboard" style={{ color: "#92400E", textDecoration: "underline", fontWeight: 700 }}>Dashboard</Link>.</>
               }
             </div>
           )}
