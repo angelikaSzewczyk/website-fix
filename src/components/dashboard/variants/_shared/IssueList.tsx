@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { isAtLeastProfessional, isAgency } from "@/lib/plans";
+import { isAtLeastProfessional } from "@/lib/plans";
 import { matchIssueType, getSolution, pickVariant, PLUGIN_CATALOG, type BuilderName } from "@/lib/expert-guidance";
 import { classifyDisplayCategory, CATEGORY_META, type DisplayCategory } from "@/lib/issue-categories";
 import IssueActionBar from "@/app/dashboard/components/issue-action-bar";
@@ -911,13 +911,14 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
   const [openItems, setOpenItems]         = useState<Set<number>>(new Set());
   void openItems; void setOpenItems;
 
-  // Agency-Plan ist Auto-Fix-via-Plugin berechtigt — der Klick auf den
-  // gelben Button zeigt dann den WP-Plugin-Setup-Pfad statt des
-  // Upgrade-Modals (Pro/Starter sehen weiterhin Upgrade).
-  const isAgencyPlan = isAgency(plan);
+  // Pro/Agency haben Auto-Fix-Plugin laut Pricing-Card ("KI-Auto-Fix via
+  // Plugin"). Klick auf den Button öffnet Plugin-Setup-Pfad. Starter sieht
+  // Upgrade-Modal (Auto-Fix ist Pro+-Feature). Vorher (08.05.2026 Bug):
+  // nur Agency hatte den Plugin-Setup-Pfad → Pro-User bekamen "Auf
+  // Professional upgraden"-Modal obwohl sie schon Pro waren.
   const onAutoFixClick = () => {
-    if (isAgencyPlan) setShowPluginSetup(true);
-    else              setShowUpgrade(true);
+    if (isAtLeastProfessional(plan)) setShowPluginSetup(true);
+    else                             setShowUpgrade(true);
   };
 
   // ── Executive Summary (Professional+) ────────────────────────────────────

@@ -24,7 +24,7 @@ import Link from "next/link";
 import WfOnboardingTour from "@/app/dashboard/components/WfOnboardingTour";
 import WfProGuidedTour from "@/app/dashboard/components/WfProGuidedTour";
 import WebsiteSettingsModal, { type WebsiteSettingsTarget } from "./WebsiteSettingsModal";
-import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan, getPlanQuota } from "@/lib/plans";
+import { isAtLeastProfessional, isAgency as isAgencyPlan, normalizePlan, getPlanQuota, isUnlimitedQuota } from "@/lib/plans";
 
 // ── Design tokens (mirrored from Variants) ───────────────────────────────────
 const D = {
@@ -340,10 +340,13 @@ export default function DashboardShell({
               </span>
             </div>
 
-            {/* Scan-Limit-Pill */}
+            {/* Scan-Limit-Pill — Pro/Agency haben "unbegrenzte Scans" laut
+                 Pricing-Card (siehe isUnlimitedQuota). UI muss konsistent
+                 zur Sidebar-Bottom-Pill rendern (08.05.2026 User-Bug:
+                 oben "Limit erreicht" während unten "18/∞" stand). */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Scans/Monat</span>
-              {isAgency ? (
+              {isUnlimitedQuota(plan) ? (
                 <span style={{
                   fontSize: 11, fontWeight: 700,
                   padding: "2px 9px", borderRadius: 20,

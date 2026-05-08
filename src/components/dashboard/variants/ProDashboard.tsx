@@ -2382,8 +2382,10 @@ export default function ProDashboard(props: ProDashboardProps) {
             </div>
           </div>}
 
-          {/* ⑨ UPGRADE CTA — hidden in focus mode */}
-          {!isNewScan && <div style={{
+          {/* ⑨ UPGRADE CTA — Pro+ sieht das nicht (Pricing-Pivot 08.05.2026:
+               User-Bug "Pro kann nicht auf Pro upgraden"). Bleibt nur für
+               Starter und Free als Conversion-Hint, focus-mode-suppressed. */}
+          {!isNewScan && !isProfessionalPlus && <div style={{
             padding: "40px 40px",
             borderRadius: D.radius,
             background: "rgba(0,123,255,0.06)",
