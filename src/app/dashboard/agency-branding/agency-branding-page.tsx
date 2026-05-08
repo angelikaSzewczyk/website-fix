@@ -40,6 +40,7 @@ const T = {
   textMuted: "rgba(255,255,255,0.40)",
   border:    "rgba(255,255,255,0.08)",
   divider:   "rgba(255,255,255,0.06)",
+  card:      "rgba(255,255,255,0.025)",
   purple:    "#a78bfa",
 };
 
