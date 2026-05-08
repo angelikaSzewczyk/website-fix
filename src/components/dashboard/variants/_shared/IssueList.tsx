@@ -1319,8 +1319,12 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
       {/* ── All content wrapped for print targeting ─────────────────────── */}
       <div className="wf-print-root">
 
-      {/* ── EXECUTIVE SUMMARY — Edit UI (Professional+, screen only) ───────── */}
-      {isPro && scanId && (
+      {/* ── EXECUTIVE SUMMARY — Edit UI (Professional+, screen only) ─────────
+           Gated mit !hideScoreRings damit die Box nur 1× rendert.
+           ProDashboard ruft IssueList 2× auf (ScoreRingSection + direkt) —
+           ohne Gate erschien die Strategische-Analyse-Box doppelt
+           (08.05.2026 User-Bug). */}
+      {isPro && scanId && !hideScoreRings && (
         <div className="wf-no-print wf-exec-summary-edit" style={{
           marginBottom: 28,
           position: "relative",
@@ -1782,8 +1786,10 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
       </div>
       )}
 
-      {/* ── EXECUTIVE SUMMARY — Print box (after score rings, page 1) ───────── */}
-      {isPro && scanId && execSummary.trim() && (
+      {/* ── EXECUTIVE SUMMARY — Print box (after score rings, page 1) ─────────
+           Gleicher Gate wie Edit-UI oben: nur 1× rendern (ProDashboard ruft
+           IssueList 2× auf). */}
+      {isPro && scanId && execSummary.trim() && !hideScoreRings && (
         <div className="wf-exec-summary-print wf-print-card" style={{
           marginBottom: 24,
           background: "#f8fafc",
