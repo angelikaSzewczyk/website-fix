@@ -319,6 +319,7 @@ function AccordionItem({
   scanId,
   gated = false,
   onUpgradeClick,
+  canPersonalize = false,
 }: {
   issue: IssueProp;
   index: number;
@@ -336,6 +337,8 @@ function AccordionItem({
   gated?: boolean;
   /** Click-Handler für Lock-Pills (öffnet UpgradeModal im Parent). */
   onUpgradeClick?: () => void;
+  /** Pro+: zeigt den Hoster-Personalize-Button im Solution-Block. */
+  canPersonalize?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [showSolution, setShowSolution] = useState(false);
@@ -348,6 +351,46 @@ function AccordionItem({
   const issueType = matchIssueType(issue.title, issue.body);
   const solution  = getSolution(issueType, builder);
   const variant   = solution ? pickVariant(solution, builder) : null;
+
+  // 08.05.2026 (Stufe 2B): Hoster-Personalisierung via Anthropic.
+  // Pro+ kann die generischen Schritte auf Strato/Ionos/All-Inkl/Hostinger
+  // umschreiben lassen. Cap: 1× pro Issue (sonst Endlos-Klick-Cost).
+  const [personalizedSteps, setPersonalizedSteps] = useState<string[] | null>(null);
+  const [personalizeSummary, setPersonalizeSummary] = useState<string | null>(null);
+  const [personalizing, setPersonalizing] = useState(false);
+  const [personalizeError, setPersonalizeError] = useState<string | null>(null);
+  const [hosterValue, setHosterValue] = useState<string>("default");
+
+  async function handlePersonalize() {
+    if (personalizing || !variant) return;
+    setPersonalizing(true);
+    setPersonalizeError(null);
+    try {
+      const res = await fetch("/api/expert-fix/personalize", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          issueTitle: issue.title,
+          issueBody:  issue.body,
+          baseSteps:  variant.steps,
+          hoster:     hosterValue,
+          builder:    builder,
+          websiteUrl: scanUrl ?? null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data.steps)) {
+        setPersonalizeError(data.error ?? "Personalisierung fehlgeschlagen");
+        return;
+      }
+      setPersonalizedSteps(data.steps);
+      setPersonalizeSummary(typeof data.summary === "string" ? data.summary : null);
+    } catch {
+      setPersonalizeError("Verbindungsfehler — bitte erneut versuchen");
+    } finally {
+      setPersonalizing(false);
+    }
+  }
 
   return (
     <div id={`wf-issue-${index}`} data-wf-anchor={wfAnchor} style={{
@@ -615,24 +658,110 @@ function AccordionItem({
                 <strong style={{ color: "rgba(255,255,255,0.7)" }}>Warum:</strong> {solution.rootCause}
               </p>
 
-              {/* Schritte */}
-              <ol style={{ margin: "0 0 12px", padding: "0 0 0 0", listStyle: "none" }}>
-                {variant.steps.map((step, i) => (
-                  <li key={i} style={{
-                    display: "flex", gap: 10, alignItems: "flex-start",
-                    padding: "7px 0", borderBottom: i < variant.steps.length - 1 ? "1px dashed rgba(255,255,255,0.05)" : "none",
-                  }}>
-                    <span style={{
-                      flexShrink: 0, width: 19, height: 19, borderRadius: 5,
-                      background: "rgba(16,185,129,0.12)", color: "#10B981",
-                      fontSize: 10.5, fontWeight: 900,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      marginTop: 1,
-                    }}>{i + 1}</span>
-                    <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>{step}</span>
-                  </li>
-                ))}
-              </ol>
+              {/* Schritte — wenn personalisiert, zeige diese statt der Templates */}
+              {(() => {
+                const displaySteps = personalizedSteps ?? variant.steps;
+                return (
+                  <ol style={{ margin: "0 0 12px", padding: "0 0 0 0", listStyle: "none" }}>
+                    {displaySteps.map((step, i) => (
+                      <li key={i} style={{
+                        display: "flex", gap: 10, alignItems: "flex-start",
+                        padding: "7px 0", borderBottom: i < displaySteps.length - 1 ? "1px dashed rgba(255,255,255,0.05)" : "none",
+                      }}>
+                        <span style={{
+                          flexShrink: 0, width: 19, height: 19, borderRadius: 5,
+                          background: personalizedSteps ? "rgba(167,139,250,0.18)" : "rgba(16,185,129,0.12)",
+                          color: personalizedSteps ? "#a78bfa" : "#10B981",
+                          fontSize: 10.5, fontWeight: 900,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          marginTop: 1,
+                        }}>{i + 1}</span>
+                        <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.78)", lineHeight: 1.6, whiteSpace: "pre-wrap" as const }}>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                );
+              })()}
+
+              {/* Personalisierungs-Status (wenn KI-Lauf abgeschlossen) */}
+              {personalizedSteps && personalizeSummary && (
+                <div style={{
+                  padding: "8px 11px", borderRadius: 7, marginBottom: 12,
+                  background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.25)",
+                  fontSize: 11, color: "#c4b5fd", lineHeight: 1.5,
+                  display: "flex", alignItems: "flex-start", gap: 8,
+                }}>
+                  <span style={{ fontSize: 11 }}>✨</span>
+                  <span><strong style={{ color: "#a78bfa" }}>KI-personalisiert für {hosterValue}:</strong> {personalizeSummary}</span>
+                </div>
+              )}
+
+              {/* Hoster-Personalize-Bar (nur Pro+) */}
+              {canPersonalize && !personalizedSteps && (
+                <div style={{
+                  marginBottom: 12, padding: "10px 12px", borderRadius: 8,
+                  background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.2)",
+                  display: "flex", flexWrap: "wrap" as const, gap: 8, alignItems: "center",
+                }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
+                    ✨ Für deinen Hoster anpassen:
+                  </span>
+                  <select
+                    value={hosterValue}
+                    onChange={e => setHosterValue(e.target.value)}
+                    disabled={personalizing}
+                    style={{
+                      padding: "5px 10px", borderRadius: 6, fontSize: 11.5,
+                      background: "rgba(0,0,0,0.4)", border: "1px solid rgba(167,139,250,0.3)",
+                      color: "#fff", fontFamily: "inherit", outline: "none",
+                      cursor: personalizing ? "wait" : "pointer",
+                    }}
+                  >
+                    <option value="default">Anderer / Generisch</option>
+                    <option value="strato">Strato</option>
+                    <option value="ionos">IONOS / 1&amp;1</option>
+                    <option value="all-inkl">All-Inkl</option>
+                    <option value="hostinger">Hostinger</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handlePersonalize}
+                    disabled={personalizing}
+                    style={{
+                      padding: "5px 12px", borderRadius: 6, fontSize: 11.5, fontWeight: 800,
+                      background: personalizing
+                        ? "rgba(167,139,250,0.15)"
+                        : "linear-gradient(90deg, rgba(167,139,250,0.25), rgba(124,58,237,0.35))",
+                      border: "1px solid rgba(167,139,250,0.5)",
+                      color: personalizing ? "rgba(255,255,255,0.5)" : "#fff",
+                      cursor: personalizing ? "wait" : "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    {personalizing ? "KI denkt nach…" : "Anleitung umschreiben →"}
+                  </button>
+                  {personalizeError && (
+                    <span style={{ fontSize: 11, color: "#f87171" }}>
+                      {personalizeError}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Reset-Link wenn personalisiert (User kann zur generischen Version zurück) */}
+              {personalizedSteps && (
+                <button
+                  type="button"
+                  onClick={() => { setPersonalizedSteps(null); setPersonalizeSummary(null); }}
+                  style={{
+                    marginBottom: 12, padding: "4px 10px", borderRadius: 6,
+                    background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.45)", fontSize: 10.5, fontWeight: 600,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  ← Zurück zur generischen Anleitung
+                </button>
+              )}
 
               {variant.caveat && (
                 <div style={{
@@ -1737,6 +1866,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                     scanId={scanId}
                     gated={expertFixGated}
                     onUpgradeClick={() => setShowUpgrade(true)}
+                    canPersonalize={isPro}
                   />
                 );
               })}
@@ -1780,6 +1910,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                     scanId={scanId}
                     gated={expertFixGated}
                     onUpgradeClick={() => setShowUpgrade(true)}
+                    canPersonalize={isPro}
                   />
                 );
               })}
