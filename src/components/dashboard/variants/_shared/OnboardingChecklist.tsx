@@ -85,11 +85,16 @@ export default function OnboardingChecklist({ plan }: Props) {
         setState(loaded);
         // First-Run-Detection: keine completed_steps + nicht dismissed → Pulse
         // + scroll in den Viewport (smooth, falls die Card noch außerhalb).
+        // Scroll nur, wenn der User noch nicht runtergescrollt hat — sonst
+        // springt die Page bei Page-Reload zurück nach oben, was lesende User
+        // irritiert (Audit-Finding 08.05.2026).
         if (loaded.completed_steps.length === 0 && !loaded.dismissed) {
           setPulse(true);
-          requestAnimationFrame(() => {
-            cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          });
+          if (typeof window !== "undefined" && window.scrollY < 100) {
+            requestAnimationFrame(() => {
+              cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            });
+          }
           // Pulse-Auto-Off nach 6s
           setTimeout(() => setPulse(false), 6000);
           trackEvent("Onboarding Shown", { plan, fresh: "true" });
