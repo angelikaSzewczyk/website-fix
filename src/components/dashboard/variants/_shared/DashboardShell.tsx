@@ -215,6 +215,7 @@ export default function DashboardShell({
         .wf-upgrade-btn:hover { box-shadow: 0 6px 28px rgba(0,123,255,0.55) !important; transform: translateY(-1px); }
         .wf-upgrade-btn:hover .wf-arrow { animation: wf-arrow-slide 0.4s ease-in-out; }
         .wf-pro-badge { animation: wf-gold-pulse 3s ease-in-out infinite; }
+        .wf-project-switcher:hover { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.18) !important; }
         .wf-disabled-card { transition: filter 0.3s; }
         .wf-disabled-card:hover { filter: saturate(0.4) brightness(0.8) !important; }
         @keyframes wf-drawer-slide-right {
@@ -281,34 +282,38 @@ export default function DashboardShell({
             height: 52,
             display: "flex", alignItems: "center", gap: 14,
           }}>
-            {/* Aktives Projekt + Stift-Icon */}
+            {/* Aktives Projekt — Switcher-Pill (08.05.2026 UX-Refactor)
+                 Vorher: Domain-Text + winziges Pen-Icon → User dachte das Pen-Icon
+                 ist "Projekt-Name editieren". Jetzt: ganze Pill ist klickbar,
+                 Caret ▼ signalisiert Dropdown-Verhalten. Trigger öffnet den
+                 Switcher mit Search + Liste + "+ Neue Site"-Button. */}
             <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>
                 Aktives Projekt
               </span>
               {domain !== "—" ? (
-                <>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
+                <button
+                  onClick={() => setProjectDialogOpen(true)}
+                  title="Projekt wechseln — alle deine Sites zeigen"
+                  className="wf-project-switcher"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    padding: "5px 10px 5px 12px", borderRadius: 8,
+                    background: "rgba(255,255,255,0.03)",
+                    border: `1px solid ${D.border}`,
+                    cursor: "pointer", fontFamily: "inherit",
+                    transition: "background 0.15s, border-color 0.15s",
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 700, color: D.text, letterSpacing: "-0.005em" }}>
                     {domain}
                   </span>
-                  <button
-                    onClick={() => setProjectDialogOpen(true)}
-                    title="Projekt wechseln"
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      width: 22, height: 22, borderRadius: 5,
-                      background: "transparent", border: `1px solid ${D.border}`,
-                      cursor: "pointer", padding: 0, flexShrink: 0,
-                      transition: "border-color 0.15s",
-                    }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                      stroke={D.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                </>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke={D.textSub} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ flexShrink: 0 }}>
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
               ) : (
                 <Link href="/dashboard/scan" style={{
                   display: "inline-flex", alignItems: "center", gap: 5,
