@@ -929,7 +929,36 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
   const expertFixGated = lockExpertFix ?? false;
   const [execSummary, setExecSummary]   = useState("");
   const [saveStatus,  setSaveStatus]    = useState<"idle" | "saving" | "saved">("idle");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError,      setAiError]      = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 08.05.2026: KI-Auto-Generate Executive Summary via Anthropic Sonnet
+  // (Pricing-Card-Versprechen "Executive Summary für Endkunden-Reports").
+  // Nimmt den aktuellen Tone-Param mit, ruft POST /api/executive-summary,
+  // setzt das Ergebnis in den Editor → User editiert/speichert via Auto-Save.
+  async function handleAiGenerate(tone: "professional" | "urgent" | "compact") {
+    if (!scanId || aiGenerating) return;
+    setAiGenerating(true);
+    setAiError(null);
+    try {
+      const res = await fetch(`/api/executive-summary?scanId=${scanId}`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ tone }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.executive_summary) {
+        setAiError(data.error ?? "KI-Generation fehlgeschlagen");
+        return;
+      }
+      handleSummaryChange(data.executive_summary);
+    } catch {
+      setAiError("Verbindungsfehler — bitte erneut versuchen");
+    } finally {
+      setAiGenerating(false);
+    }
+  }
 
   useEffect(() => {
     if (!isPro || !scanId) return;
@@ -1215,8 +1244,68 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
               </span>
             </div>
 
-            {/* Smart template buttons */}
+            {/* KI-Auto-Generate (08.05.2026) — Pricing-Card-Versprechen.
+                Anthropic Sonnet liest die Issues und generiert ein
+                deutsches Endkunden-Fazit. User kann nachträglich editieren. */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" as const, alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => handleAiGenerate("professional")}
+                disabled={aiGenerating || !scanId}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+                  background: aiGenerating
+                    ? "rgba(167,139,250,0.18)"
+                    : "linear-gradient(90deg, rgba(167,139,250,0.18), rgba(251,191,36,0.18))",
+                  border: "1px solid rgba(167,139,250,0.45)",
+                  color: aiGenerating ? "rgba(255,255,255,0.5)" : "#c4b5fd",
+                  cursor: aiGenerating ? "wait" : "pointer", fontFamily: "inherit",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {aiGenerating ? "✨ KI denkt nach…" : "✨ Mit KI generieren"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAiGenerate("urgent")}
+                disabled={aiGenerating || !scanId}
+                title="Dringlicher Tonfall — kritische Punkte mit Zeitdruck"
+                style={{
+                  padding: "6px 10px", borderRadius: 7, fontSize: 11, fontWeight: 700,
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(167,139,250,0.22)",
+                  color: "rgba(167,139,250,0.7)",
+                  cursor: aiGenerating ? "wait" : "pointer", fontFamily: "inherit",
+                }}
+              >
+                + Dringlich-Tonfall
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAiGenerate("compact")}
+                disabled={aiGenerating || !scanId}
+                title="Kompakte Variante — 4 Sätze max"
+                style={{
+                  padding: "6px 10px", borderRadius: 7, fontSize: 11, fontWeight: 700,
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(167,139,250,0.22)",
+                  color: "rgba(167,139,250,0.7)",
+                  cursor: aiGenerating ? "wait" : "pointer", fontFamily: "inherit",
+                }}
+              >
+                + Kompakt
+              </button>
+              {aiError && (
+                <span style={{ fontSize: 11, color: "#f87171", marginLeft: 4 }}>
+                  {aiError}
+                </span>
+              )}
+            </div>
+
+            {/* Smart template buttons (statische Fallback-Vorlagen) */}
             <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" as const }}>
+              <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.32)", fontWeight: 600, alignSelf: "center", marginRight: 4 }}>
+                Oder Vorlage:
+              </span>
               {([
                 { label: "Dringlich", icon: "⚠️", text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung." },
                 { label: "Technisch", icon: "🔧", text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden." },
