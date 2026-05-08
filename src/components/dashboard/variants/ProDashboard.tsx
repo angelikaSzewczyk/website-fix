@@ -777,12 +777,15 @@ export default function ProDashboard(props: ProDashboardProps) {
             lastHandshakeAt={pluginLastHandshakeAt}
           />
 
-          {/* Plugin-Download-Card (Read-Only-Variante für Pro). Plan-aware
-              — bei Pro Standard-Branding, bei Agency erscheint die White-
-              Label-Variante (siehe AgencyDashboard). */}
-          <div style={{ marginBottom: 20 }}>
-            <PluginDownloadCard plan={plan} />
-          </div>
+          {/* Plugin-Download-Card — nur wenn Plugin NOCH NICHT verbunden.
+              Sobald pluginActive=true, zeigt der HybridScanBanner oben
+              schon "Full System Audit aktiv" — Download-CTA wäre redundant
+              (08.05.2026 User-Bug-Report). */}
+          {!pluginActive && (
+            <div style={{ marginBottom: 20 }}>
+              <PluginDownloadCard plan={plan} />
+            </div>
+          )}
 
           {/* Röntgen-Vergleich: 12 (extern) vs. 92 (mit Plugin). */}
           <XrayCompareCard

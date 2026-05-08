@@ -12,6 +12,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
+import { getPluginStatus } from "@/lib/plugin-status";
 import IntegrationsClient from "./integrations-client";
 
 export default async function IntegrationsPage() {
@@ -24,5 +25,9 @@ export default async function IntegrationsPage() {
   ` as { plan: string | null }[];
   const plan = rows[0]?.plan ?? null;
 
-  return <IntegrationsClient plan={plan} />;
+  // Plugin-Status — wenn aktiv, wird die "Plugin herunterladen"-Card
+  // ausgeblendet (User hat das Plugin schon installiert + verbunden).
+  const pluginStatus = await getPluginStatus(session.user.id);
+
+  return <IntegrationsClient plan={plan} pluginActive={pluginStatus.pluginActive} />;
 }

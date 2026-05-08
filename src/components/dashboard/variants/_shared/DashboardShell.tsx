@@ -327,17 +327,44 @@ export default function DashboardShell({
 
             <div style={{ flex: 1 }} />
 
-            {/* Projekt-Slots */}
+            {/* Projekt-Slots — interaktiv: klickbarer Pill öffnet den
+                 Switcher (mit "+ Neue Site"-Button), zusätzlicher "+"-
+                 Schnell-Button. 08.05.2026 User-Direktive:
+                 "User muss sehen dass er weitere Projekte anlegen kann". */}
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekte</span>
-              <span style={{
-                fontSize: 11, fontWeight: 700,
-                padding: "2px 9px", borderRadius: 20,
-                background: D.card, border: `1px solid ${D.borderMid}`,
-                color: D.textSub,
-              }}>
+              <button
+                type="button"
+                onClick={() => setProjectDialogOpen(true)}
+                title="Projekt-Übersicht öffnen"
+                style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: "2px 9px", borderRadius: 20,
+                  background: D.card, border: `1px solid ${D.borderMid}`,
+                  color: D.textSub,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
                 {slotLabel}
-              </span>
+              </button>
+              {!isAgency && (
+                <Link
+                  href="/dashboard/scan"
+                  title="Neues Projekt anlegen"
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 22, height: 22, borderRadius: 6,
+                    background: "rgba(16,185,129,0.12)",
+                    border: "1px solid rgba(16,185,129,0.32)",
+                    color: "#10B981", textDecoration: "none",
+                  }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </Link>
+              )}
             </div>
 
             {/* Scan-Limit-Pill — Pro/Agency haben "unbegrenzte Scans" laut

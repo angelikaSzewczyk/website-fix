@@ -653,7 +653,9 @@ export default function StarterDashboard(props: StarterDashboardProps) {
           {/* Plugin-Download-Card — Read-Only-Plugin ist ab Starter inklusive,
               gibt diesem Tier ein konkretes Power-User-Feature jenseits vom
               wöchentlichen Scan. */}
-          {isPaidPlan(plan) && (
+          {/* Nur zeigen wenn Plugin NICHT aktiv — Banner oben gibt sonst
+              schon den "Full System Audit aktiv"-Status. */}
+          {isPaidPlan(plan) && !pluginActive && (
             <div style={{ marginBottom: 20 }}>
               <PluginDownloadCard plan={plan} />
             </div>

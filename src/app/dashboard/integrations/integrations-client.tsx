@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { isAgency as isAgencyPlan } from "@/lib/plans";
+import { SlackIcon, JiraIcon, TrelloIcon, AsanaIcon } from "@/app/components/BrandIcons";
 
 // 08.05.2026: Dark-Theme passend zum restlichen Dashboard. Vorher Light-
 // Theme — wirkte als heller Bruch im sonst dunklen Layout.
@@ -134,32 +135,24 @@ const INTEGRATIONS: Integration[] = [
 
 // ─── Brand icons ──────────────────────────────────────────────────────────────
 function IntegrationIcon({ id, color }: { id: string; color: string }) {
-  if (id === "slack") return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={color}>
-      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
-    </svg>
-  );
-  if (id === "jira") return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={color}>
-      <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005zm5.723-5.756H5.757a5.215 5.215 0 0 0 5.214 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.001 1.001 0 0 0-1.021-1.005zM23.013 0H11.459a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.019 12.49V1.005A1.001 1.001 0 0 0 23.013 0z"/>
-    </svg>
-  );
-  if (id === "trello") return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={color}>
-      <path d="M21 0H3C1.343 0 0 1.343 0 3v18c0 1.656 1.343 3 3 3h18c1.656 0 3-1.344 3-3V3c0-1.657-1.344-3-3-3zM10.44 18.18c0 .795-.645 1.44-1.44 1.44H4.56c-.795 0-1.44-.645-1.44-1.44V4.56c0-.795.645-1.44 1.44-1.44H9c.795 0 1.44.645 1.44 1.44v13.62zm10.44-6c0 .794-.645 1.44-1.44 1.44H15c-.795 0-1.44-.646-1.44-1.44V4.56c0-.795.645-1.44 1.44-1.44h4.44c.795 0 1.44.645 1.44 1.44v7.62z"/>
-    </svg>
-  );
-  if (id === "asana") return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={color}>
-      <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm-3.5 14.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7zm7 0a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7zm-3.5-7a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
-    </svg>
-  );
+  // 08.05.2026: Markenechte SVGs aus components/BrandIcons (Slack-4-Farb,
+  // Jira-Gradient, Trello-Card-Logo, Asana-3-Punkte). Vorher Single-Color-
+  // Inline-SVGs — wirkten generisch.
+  if (id === "slack")  return <SlackIcon  size={26} />;
+  if (id === "jira")   return <JiraIcon   size={26} />;
+  if (id === "trello") return <TrelloIcon size={26} />;
+  if (id === "asana")  return <AsanaIcon  size={26} />;
+  // Zapier hat noch keinen Brand-SVG in components/BrandIcons —
+  // benutzen das offizielle "Z"-Funnel-Logo inline.
   if (id === "zapier") return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={color}>
-      <path d="M14.924 12.001a12.954 12.954 0 0 1-.203 2.31H9.279a12.955 12.955 0 0 1 0-4.62h5.442c.136.752.203 1.528.203 2.31zm3.387 6.932a13.05 13.05 0 0 1-1.965 1.965l-3.846-3.846a7.734 7.734 0 0 0 1.965-1.965zm-13.622 0l3.846-3.846a7.734 7.734 0 0 0 1.965 1.965l-3.846 3.846a13.05 13.05 0 0 1-1.965-1.965zm0-13.866a13.05 13.05 0 0 1 1.965-1.965l3.846 3.846a7.734 7.734 0 0 0-1.965 1.965zm13.622 0l-3.846 3.846a7.734 7.734 0 0 0-1.965-1.965l3.846-3.846a13.05 13.05 0 0 1 1.965 1.965zM12 7.076a4.925 4.925 0 1 0 0 9.849 4.925 4.925 0 0 0 0-9.849z"/>
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+      <path d="M16 1l5.196 9-5.196 9-5.196-9L16 1z" fill="#FF4F00"/>
+      <path d="M16 13l5.196 9-5.196 9-5.196-9L16 13z" fill="#FF4F00"/>
+      <path d="M1 16l9-5.196 9 5.196-9 5.196L1 16z" fill="#FF4F00"/>
+      <path d="M13 16l9-5.196 9 5.196-9 5.196L13 16z" fill="#FF4F00"/>
     </svg>
   );
-  // Generic icon for github/notion/linear
+  // Coming-Soon (github/notion/linear)
   return (
     <span style={{ fontSize: 16, fontWeight: 800, color }}>{id.charAt(0).toUpperCase()}</span>
   );
@@ -293,7 +286,7 @@ function IntegrationCard({ integration, locked = false }: { integration: Integra
   );
 }
 
-export default function IntegrationsClient({ plan }: { plan: string | null }) {
+export default function IntegrationsClient({ plan, pluginActive = false }: { plan: string | null; pluginActive?: boolean }) {
   // Plan-Tier-Sektionierung (Hybrid-Modell, 08.05.2026):
   //   Pro+    sieht Slack-Card freigeschaltet (Pricing-Card "Slack-Alerts")
   //   Pro     sieht Workflow-API-Cards mit Lock-Wrapper (Pricing-Card "Agency-only")
@@ -317,10 +310,12 @@ export default function IntegrationsClient({ plan }: { plan: string | null }) {
       </div>
 
       {/* Plan-Tier-Hint Banner */}
+      {/* Plan-Banner — Dark-Variante, ausreichender Kontrast (08.05.2026
+           Bug: vorheriges Light-Lila auf Dark-Page → Text unlesbar) */}
       <div style={{
         marginBottom: 32, padding: "14px 18px", borderRadius: 11,
-        background: isAgency ? "#F5F3FF" : "#EFF6FF",
-        border: `1px solid ${isAgency ? "#DDD6FE" : C.blueBorder}`,
+        background: isAgency ? "rgba(167,139,250,0.10)" : "rgba(37,99,235,0.10)",
+        border: `1px solid ${isAgency ? "rgba(167,139,250,0.32)" : C.blueBorder}`,
         display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
       }}>
         <span style={{
@@ -330,14 +325,18 @@ export default function IntegrationsClient({ plan }: { plan: string | null }) {
         }}>
           {isAgency ? "AGENCY SCALE" : "PROFESSIONAL"}
         </span>
-        <p style={{ margin: 0, fontSize: 13, color: C.textSub, flex: 1, lineHeight: 1.55 }}>
+        <p style={{ margin: 0, fontSize: 13, color: C.text, flex: 1, lineHeight: 1.55 }}>
           {isAgency
             ? <>Du hast vollen Zugriff auf alle Integrationen inkl. Workflow-API (Jira, Trello, Asana, Zapier).</>
             : <>Slack- und E-Mail-Alerts sind in deinem Plan inklusive. Die volle Workflow-API (Jira, Trello, Asana, Zapier — automatisch verbucht) ist Teil von Agency Scale.</>}
         </p>
       </div>
 
-      {/* ── Plugin Download Card ─────────────────────────────────────────── */}
+      {/* ── Plugin Download Card — nur wenn Plugin NICHT aktiv ───────────────
+           User hat Plugin schon installiert+verbunden → "herunterladen"-CTA
+           ist redundant. Ersetzt durch grüne "Plugin verbunden"-Bestätigung
+           weiter unten. (08.05.2026 User-Direktive) */}
+      {!pluginActive && (
       <div style={{
         background: C.card,
         border: `1.5px solid ${C.greenBorder}`,
@@ -435,6 +434,36 @@ export default function IntegrationsClient({ plan }: { plan: string | null }) {
           </span>
         </div>
       </div>
+      )}
+
+      {/* Plugin-Verbunden-Status — wenn aktiv (08.05.2026) */}
+      {pluginActive && (
+        <div style={{
+          marginBottom: 36, padding: "18px 22px", borderRadius: 14,
+          background: "rgba(34,197,94,0.08)",
+          border: "1px solid rgba(34,197,94,0.32)",
+          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        }}>
+          <div style={{
+            flexShrink: 0, width: 36, height: 36, borderRadius: 10,
+            background: "rgba(34,197,94,0.15)",
+            border: "1px solid rgba(34,197,94,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#86EFAC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 800, color: "#86EFAC" }}>
+              WebsiteFix Connector-Plugin · Aktiv
+            </p>
+            <p style={{ margin: 0, fontSize: 12.5, color: C.textSub, lineHeight: 1.5 }}>
+              Dein Plugin sendet Read-Only-Daten an WebsiteFix. Deep-Scan-Diagnose ist freigeschaltet.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Pro+ Sektion: Alerts */}
       <div style={{ marginBottom: 36 }}>
