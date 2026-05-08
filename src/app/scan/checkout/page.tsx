@@ -222,7 +222,9 @@ function CheckoutInner() {
               Wähle deinen Fix-Guide
             </h1>
             <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-              Unser Scan hat <strong style={{ color: "#fff" }}>{guides.length}</strong> {guides.length === 1 ? "passenden Guide" : "passende Guides"} für deine Seite gefunden. Wähle einen aus, gib deine E-Mail ein, und du wirst direkt zum sicheren Stripe-Checkout geleitet. Kein Abo, keine versteckten Kosten.
+              {!guidesLoaded
+                ? <>Wir analysieren deinen Scan und suchen die passenden Guides für deine konkreten Befunde …</>
+                : <>Unser Scan hat <strong style={{ color: "#fff" }}>{guides.length}</strong> {guides.length === 1 ? "passenden Guide" : "passende Guides"} für deine Seite gefunden. Wähle einen aus, gib deine E-Mail ein, und du wirst direkt zum sicheren Stripe-Checkout geleitet. Kein Abo, keine versteckten Kosten.</>}
             </p>
           </div>
 
