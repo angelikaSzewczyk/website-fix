@@ -462,7 +462,7 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
               {canonical === "starter" ? "Starter" : canonical === "professional" ? "Professional" : "Agency"} · {quota.monthlyScansLabel}
             </span>
             {!isAgencyPlan && (
-              <Link href="/fuer-agenturen#pricing" style={{
+              <Link href="/#pricing" style={{
                 fontSize: 10, fontWeight: 700, color: "#10B981", textDecoration: "none",
               }}>
                 Upgrade →

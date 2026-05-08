@@ -54,7 +54,7 @@ export async function GET(
       {
         ok: false, error: "paid_plan_required",
         hint: "Das Plugin ist ab Starter (29 €/Monat) inklusive.",
-        upgrade_url: "/fuer-agenturen#pricing",
+        upgrade_url: "/#pricing",
       },
       { status: 403 },
     );

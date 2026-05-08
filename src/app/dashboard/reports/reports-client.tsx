@@ -218,7 +218,7 @@ function StarterView({ scans }: { scans: ScanHistoryItem[] }) {
             <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
               Mit Professional siehst du, ob deine SEO-Scores und Issue-Zahlen sich Monat für Monat verbessern — inklusive KI-Empfehlungen als PDF-Anhang.
             </p>
-            <Link href="/fuer-agenturen#pricing" style={{
+            <Link href="/#pricing" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "8px 16px", borderRadius: 8, textDecoration: "none",
               fontSize: 12, fontWeight: 700,

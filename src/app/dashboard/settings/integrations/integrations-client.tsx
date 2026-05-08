@@ -448,7 +448,7 @@ export default function IntegrationsSettingsClient({ plan, hasAccess, initialSta
             <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
               Slack-Alerts, Jira-Tickets, Trello-Karten, Zapier-Webhooks und GSC/GA-Dashboards — alle Integrationen in einem Plan. Ab <strong style={{ color: D.emerald }}>89 €/Monat</strong>.
             </p>
-            <Link href="/fuer-agenturen#pricing" style={{
+            <Link href="/#pricing" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "10px 18px", borderRadius: 9,
               background: "linear-gradient(90deg, #059669, #10B981)", color: "#fff",

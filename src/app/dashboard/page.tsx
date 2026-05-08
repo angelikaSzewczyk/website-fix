@@ -273,7 +273,7 @@ function ProgressBar({ plan, scanCount, hasResult }: { plan: string; scanCount: 
           {badge.label}
         </span>
         {!isPro && (
-          <Link href="/fuer-agenturen#pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "var(--pro-emerald-bg)", border: "1px solid var(--pro-emerald-border)", color: "var(--pro-emerald)" }}>
+          <Link href="/#pricing" style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, textDecoration: "none", background: "var(--pro-emerald-bg)", border: "1px solid var(--pro-emerald-border)", color: "var(--pro-emerald)" }}>
             Auf Professional upgraden →
           </Link>
         )}

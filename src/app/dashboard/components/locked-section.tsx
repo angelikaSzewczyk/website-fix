@@ -59,7 +59,7 @@ function meetsRequirement(plan: string | null | undefined, required: RequiredTie
 
 export default function LockedSection({
   required, currentPlan, feature, title, description,
-  upsellPrice, upsellHref = "/fuer-agenturen#pricing", children,
+  upsellPrice, upsellHref = "/#pricing", children,
 }: Props) {
   if (meetsRequirement(currentPlan, required)) {
     return <>{children}</>;

@@ -328,7 +328,7 @@ export default function FreeSettingsClient({
             <p style={{ margin: "0 0 14px", fontSize: 13, color: D.textSub, lineHeight: 1.6 }}>
               Dein Logo auf jedem PDF-Bericht. Deine Agenturfarbe im Dashboard. Teilen-Links mit deinem Namen statt WebsiteFix — <strong style={{ color: "#10B981" }}>ab 89 €/Monat</strong>.
             </p>
-            <Link href="/fuer-agenturen#pricing" style={{
+            <Link href="/#pricing" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "9px 16px", borderRadius: 8,
               background: "linear-gradient(90deg, #059669, #10B981)",
@@ -445,7 +445,7 @@ export default function FreeSettingsClient({
                 <p style={{ margin: "0 0 10px", fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>
                   Upgrade auf Professional für automatische PDF-Berichte, Full-Site Crawls und White-Label-Berichte.
                 </p>
-                <Link href="/fuer-agenturen#pricing" style={{
+                <Link href="/#pricing" style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "7px 16px", borderRadius: D.radiusXs,
                   background: "#10B981", color: "#fff",

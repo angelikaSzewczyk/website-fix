@@ -723,7 +723,7 @@ export default function ScanPage() {
                         background: "radial-gradient(ellipse, rgba(0,123,255,0.5) 0%, transparent 65%)",
                         pointerEvents: "none",
                       }} />
-                      <Link href="/fuer-agenturen#pricing" style={{
+                      <Link href="/#pricing" style={{
                         position: "relative",
                         display: "inline-block",
                         padding: "15px 36px", borderRadius: 11, fontSize: 15, fontWeight: 800,
@@ -1099,7 +1099,7 @@ export default function ScanPage() {
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
                   Tiefen-Analyse der ersten <strong style={{ color: "#fff" }}>{MAX_FREE_PAGES} Seiten</strong> abgeschlossen.
                   Für einen vollständigen Scan aller Seiten{" "}
-                  <Link href="/fuer-agenturen#pricing" style={{ color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>wähle einen Pro-Plan →</Link>
+                  <Link href="/#pricing" style={{ color: "#7aa6ff", textDecoration: "none", fontWeight: 600 }}>wähle einen Pro-Plan →</Link>
                 </p>
               </div>
             )}
@@ -1140,7 +1140,7 @@ export default function ScanPage() {
                       <strong style={{ color: "#fff" }}>allen Unterseiten</strong>, Smart-Fix Guides und PDF-Export frei.
                     </p>
                     <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                      <Link href="/fuer-agenturen#pricing" style={{
+                      <Link href="/#pricing" style={{
                         padding: "11px 24px", borderRadius: 9, fontSize: 14, fontWeight: 700,
                         background: "linear-gradient(90deg, #007BFF, #0057b8)",
                         color: "#fff", textDecoration: "none",
@@ -1209,7 +1209,7 @@ export default function ScanPage() {
             </div>
 
             <div style={{ textAlign: "center", marginTop: 40 }}>
-              <Link href="/fuer-agenturen#pricing" style={{
+              <Link href="/#pricing" style={{
                 display: "inline-block",
                 padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
                 background: "linear-gradient(90deg, #007BFF, #0057b8)",

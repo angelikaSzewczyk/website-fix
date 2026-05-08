@@ -378,14 +378,14 @@ function upgradeHintFor(plan: string): UpgradeHint {
   if (canonical === "professional") {
     return {
       ctaLabel: "Auf Agency upgraden →",
-      ctaHref:  "/fuer-agenturen#pricing",
+      ctaHref:  "/#pricing",
       bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Agency upgraden (Scan-Flatrate für 50 Kunden).",
     };
   }
   // starter (oder Unknown-Fallback)
   return {
     ctaLabel: "Professional aktivieren →",
-    ctaHref:  "/fuer-agenturen#pricing",
+    ctaHref:  "/#pricing",
     bannerSuffix: "Reset am 1. des nächsten Monats — oder jetzt auf Professional upgraden (unbegrenzte Scans).",
   };
 }
@@ -997,7 +997,7 @@ export default function DashboardScanClient({
             Analysiere deine gesamte Website automatisch — alle Unterseiten, aggregierte Fehler, Seitentyp-Auswertung.
             Verfügbar ab dem Starter-Plan (25 Seiten) bis Agency Scale (500 Seiten).
           </p>
-          <a href="/fuer-agenturen#pricing" style={{
+          <a href="/#pricing" style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             padding: "9px 20px", borderRadius: C.radiusSm,
             background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13,
