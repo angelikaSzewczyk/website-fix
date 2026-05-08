@@ -597,17 +597,26 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
     title: string;
     detail: string;
     tone: "warn" | "ok" | "info";
-    icon: "builder" | "shop" | "dsgvo" | "seo";
+    icon: "builder" | "shop" | "dsgvo" | "seo" | "bfsg";
   }> = [];
 
+  // BFSG-Indikatoren — separat von SEO behandeln, weil alt-Texte und
+  // Form-Labels vorrangig Barrierefreiheits-Pflichten sind (BFSG seit Juni 2025),
+  // nicht primär SEO. Der bfsg-accessibility-Guide nimmt diese Issues auf.
+  const altMissing               = scan.altMissingCount ?? 0;
+  const totalInputsWithoutLabel  = (scan.unterseiten ?? []).reduce((s, p) => s + (p.inputsWithoutLabel ?? 0), 0);
+  const totalButtonsWithoutText  = (scan.unterseiten ?? []).reduce((s, p) => s + (p.buttonsWithoutText ?? 0), 0);
+  const bfsgIssues: string[] = [
+    altMissing > 0                ? `${altMissing} Bilder ohne Alt-Text`                                         : "",
+    totalInputsWithoutLabel > 0   ? `${totalInputsWithoutLabel} Form-Felder ohne Beschriftung`                   : "",
+    totalButtonsWithoutText > 0   ? `${totalButtonsWithoutText} Buttons ohne Beschriftung`                       : "",
+  ].filter(Boolean) as string[];
+
   // SEO-Indikatoren für die "Indexierung & Sichtbarkeit"-Card.
-  // Wird bei Nicht-Shop-Sites anstelle der WooCommerce-Card eingeblendet —
-  // entspricht der Search-Console-User-Intention ("nicht gefunden").
-  const altMissing      = scan.altMissingCount      ?? 0;
+  // Alt-Texte sind hier bewusst RAUS — gehören in die BFSG-Card oben.
   const brokenLinks     = scan.brokenLinksCount     ?? 0;
   const orphanedPages   = scan.orphanedPagesCount   ?? 0;
   const seoBlockers: string[] = [
-    altMissing > 50         ? `${altMissing} Bilder ohne Alt-Text`        : "",
     brokenLinks > 0          ? `${brokenLinks} defekte Link${brokenLinks !== 1 ? "s" : ""} (404)` : "",
     scan.hasUnreachable      ? "Unterseiten nicht erreichbar"              : "",
     scan.noIndex             ? "Startseite mit noindex"                    : "",
@@ -666,6 +675,20 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
     });
   }
 
+  // BFSG-Card — nur wenn echte Issues. Alle Werte 0 = keine Card (kein
+  // "Karma-Theater" mit grüner Schein-Card, sondern komplett ausgeblendet).
+  if (bfsgIssues.length > 0) {
+    const isMassive = altMissing > 30 || (totalInputsWithoutLabel + totalButtonsWithoutText) > 5;
+    cards.push({
+      title:  isMassive
+        ? "⚠️ BFSG-Risiko · Barrierefreiheit"
+        : "BFSG · Barrierefreiheit-Hinweise",
+      detail: `${bfsgIssues.slice(0, 2).join(" · ")}${bfsgIssues.length > 2 ? "…" : ""}. BFSG-Pflicht seit 28.06.2025 — Details + Fix-Anleitung im Guide.`,
+      tone:   isMassive ? "warn" : "info",
+      icon:   "bfsg",
+    });
+  }
+
   if (fonts > 0) {
     cards.push({
       title:  "DSGVO-Status: Google Fonts gefunden",
@@ -703,7 +726,9 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
           Sofort-Diagnose deiner Seite
         </h3>
         <span style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", marginLeft: "auto" }}>
-          {showWooCard ? "Builder · WooCommerce · DSGVO" : "Builder · SEO & Sichtbarkeit · DSGVO"}
+          {showWooCard
+            ? `Builder · WooCommerce${bfsgIssues.length > 0 ? " · BFSG" : ""} · DSGVO`
+            : `Builder · SEO${bfsgIssues.length > 0 ? " · BFSG" : ""} · DSGVO`}
         </span>
       </div>
       <div
@@ -745,6 +770,13 @@ function QuickCheckSummary({ scan, isDemo }: { scan: StoredScan | null; isDemo: 
                 {c.icon === "seo" && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                )}
+                {c.icon === "bfsg" && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Auge — Symbol für Barrierefreiheit / Sichtbarkeit */}
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
                   </svg>
                 )}
                 <span style={{ fontSize: 12.5, fontWeight: 800, color: colors.fg, letterSpacing: "-0.01em" }}>
@@ -2082,12 +2114,15 @@ function ResultsInner() {
         .wf-quick-grid-1 { grid-template-columns: 1fr; }
         .wf-quick-grid-2 { grid-template-columns: 1fr; }
         .wf-quick-grid-3 { grid-template-columns: 1fr; }
+        .wf-quick-grid-4 { grid-template-columns: 1fr; }
         @media (min-width: 640px) {
           .wf-quick-grid-2 { grid-template-columns: 1fr 1fr; }
           .wf-quick-grid-3 { grid-template-columns: 1fr 1fr; }
+          .wf-quick-grid-4 { grid-template-columns: 1fr 1fr; }
         }
         @media (min-width: 900px) {
           .wf-quick-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+          .wf-quick-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
         }
         @media (max-width: 768px) {
           .wf-scan-header { display: none !important; }
