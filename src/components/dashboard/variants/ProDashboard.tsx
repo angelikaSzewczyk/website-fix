@@ -850,6 +850,65 @@ export default function ProDashboard(props: ProDashboardProps) {
             lastHandshakeAt={pluginLastHandshakeAt}
           />
 
+          {/* ── SITE-PROFIL (08.05.2026) ─────────────────────────────────────
+               User-Bug: 'Bei Glasklar wird Tech-Stack angezeigt aber nicht bei
+               zoda-picture'. Strip war an techChips.length > 0 gekoppelt → bei
+               Sites ohne genug Detection-Confidence komplett unsichtbar.
+               Jetzt: IMMER rendern wenn ein Scan da ist. Bei sparse Detection
+               wird mindestens 'Tech-Erkennung läuft' als Hinweis angezeigt. */}
+          {!isNewScan && lastScan && (
+            <div style={{
+              display: "flex", flexDirection: "column", gap: 10,
+              padding: "14px 16px", borderRadius: 12, marginBottom: 18,
+              background: "rgba(255,255,255,0.025)",
+              border: `1px solid ${D.border}`,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: D.textMuted, letterSpacing: "0.10em", textTransform: "uppercase" }}>
+                    Site-Profil
+                  </span>
+                  {fingerprint && fingerprint.cms.value === "WordPress" && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(122,166,255,0.10)", border: "1px solid rgba(122,166,255,0.28)", color: "#7aa6ff" }}>
+                      {(fingerprint.wpPlugins ?? []).filter(p => p.confidence >= CONFIDENCE_THRESHOLD).length} Plugins erkannt
+                    </span>
+                  )}
+                </div>
+                <span style={{ fontSize: 10, color: D.textMuted }}>
+                  {fingerprint ? "Erkannt beim letzten Scan" : "Tech-Erkennung erst ab dem nächsten Scan verfügbar"}
+                </span>
+              </div>
+              {techChips.length > 0 ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {techChips.map(item => (
+                    <div key={item.label} style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "5px 12px 5px 10px",
+                      borderRadius: 20,
+                      background: `rgba(${hexToRgb(item.color)},0.06)`,
+                      border: `1px solid rgba(${hexToRgb(item.color)},0.2)`,
+                    }}>
+                      <span style={{
+                        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                        background: item.color, opacity: 0.85,
+                      }} />
+                      <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ margin: 0, fontSize: 12, color: D.textMuted, lineHeight: 1.55 }}>
+                  Für diese Site liegen noch keine Tech-Fingerprint-Signale vor.
+                  Beim nächsten Scan ermitteln wir CMS-Version, Server, SSL,
+                  Plugins und mehr — sichtbar danach hier.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Plugin-Download-Card — nur wenn Plugin NOCH NICHT verbunden.
               Sobald pluginActive=true, zeigt der HybridScanBanner oben
               schon "Full System Audit aktiv" — Download-CTA wäre redundant
@@ -1310,29 +1369,9 @@ export default function ProDashboard(props: ProDashboardProps) {
             </LockedSection>
           )}
 
-          {/* ② TECH FINGERPRINT STRIP */}
-          {!isNewScan && lastScan && techChips.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
-              {techChips.map(item => (
-                <div key={item.label} style={{
-                  display: "flex", alignItems: "center", gap: 7,
-                  padding: "5px 12px 5px 10px",
-                  borderRadius: 20,
-                  background: `rgba(${hexToRgb(item.color)},0.06)`,
-                  border: `1px solid rgba(${hexToRgb(item.color)},0.2)`,
-                }}>
-                  <span style={{
-                    width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-                    background: item.color, opacity: 0.85,
-                  }} />
-                  <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 500 }}>{item.label}:</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* ② TECH FINGERPRINT STRIP — siehe oben (08.05.2026 nach oben
+               verschoben für Konsistenz pro Projekt). Hier bewusst leer
+               gelassen damit das Layout der Folge-Sections gleich bleibt. */}
 
           {/* ②b WORDPRESS-EXPERT-MODE — Plugin-Liste mit plan-abhängiger Tiefe */}
           {!isNewScan && lastScan && fingerprint && fingerprint.cms.value === "WordPress" &&
