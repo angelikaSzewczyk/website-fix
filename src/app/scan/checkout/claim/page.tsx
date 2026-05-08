@@ -127,19 +127,42 @@ function ClaimInner() {
                 Online-Bericht öffnen →
               </Link>
 
+              {/* Wichtigster Hinweis bei jungen Domains: User sollte den Link
+                  jetzt sofort sichern, falls die Mail ggf. im Spam landet
+                  (web.de/GMX-Heuristik bei <30-Tage-Sender-Domains). */}
               <div style={{
                 margin: "22px 0 0", padding: "12px 14px", borderRadius: 10,
+                background: "rgba(251,191,36,0.08)",
+                border: "1px solid rgba(251,191,36,0.30)",
+                textAlign: "left",
+              }}>
+                <p style={{ margin: "0 0 4px", fontSize: 11.5, fontWeight: 800, color: "#fbbf24",
+                            letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  💡 Tipp: jetzt sichern
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.55 }}>
+                  Bookmark den Link <strong style={{ color: "#fff" }}>direkt jetzt</strong> (Strg+D / Cmd+D)
+                  oder kopier ihn aus der Adresszeile. Er bleibt 4 Wochen aktiv und du brauchst
+                  weder Konto noch Mail für den Zugriff.
+                </p>
+              </div>
+
+              <div style={{
+                margin: "10px 0 0", padding: "12px 14px", borderRadius: 10,
                 background: "rgba(255,255,255,0.035)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 textAlign: "left",
               }}>
                 <p style={{ margin: "0 0 4px", fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.7)",
                             letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  📎 PDF im Postfach
+                  📎 PDF kommt per Mail
                 </p>
                 <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
-                  Wir haben dir den kompletten Guide zusätzlich als PDF an{" "}
-                  {email ? <strong style={{ color: "#fff" }}>{email}</strong> : "deine E-Mail"} geschickt — dauerhaft nutzbar, auch nach Ablauf des Online-Zugriffs.
+                  Wir senden den kompletten Guide zusätzlich als PDF an{" "}
+                  {email ? <strong style={{ color: "#fff" }}>{email}</strong> : "deine E-Mail"} —
+                  dauerhaft nutzbar. Bei <strong>web.de / GMX</strong> bitte auch im{" "}
+                  <strong style={{ color: "#fff" }}>Spam-Ordner</strong> prüfen, das ist bei jungen
+                  Absender-Domains ein bekanntes Verhalten der Provider.
                 </p>
               </div>
 

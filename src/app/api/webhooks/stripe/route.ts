@@ -182,7 +182,12 @@ export async function POST(req: NextRequest) {
                     Brauchst du dauerhaften Online-Zugriff plus alle 7 Guides?
                     <a href="${baseUrl}/fuer-agenturen?upgrade=professional#pricing" style="color:#10B981;font-weight:700;text-decoration:none;">Professional ansehen →</a>
                   </p>
-                  <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
+                  <p style="margin:20px 0 6px;padding:10px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:11.5px;color:#92400E;line-height:1.5;">
+                    💡 <strong>Damit du keine Mails verpasst:</strong> bitte
+                    <strong>noreply@website-fix.com</strong> zu deinen Kontakten hinzufügen
+                    oder als „kein Spam" markieren — vor allem bei web.de/GMX-Postfächern.
+                  </p>
+                  <p style="margin:14px 0 0;font-size:12px;color:#94A3B8;">
                     Beleg: Stripe-Session ${session.id} · Betrag ${(paidCents/100).toFixed(2).replace(".",",")} €
                   </p>
                 </div>
@@ -291,7 +296,12 @@ export async function POST(req: NextRequest) {
                     <a href="${baseUrl}/dashboard/guides/${guideId}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
                       Zum Guide →
                     </a>
-                    <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
+                    <p style="margin:20px 0 6px;padding:10px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:11.5px;color:#92400E;line-height:1.5;">
+                      💡 <strong>Damit du keine Mails verpasst:</strong> bitte
+                      <strong>noreply@website-fix.com</strong> zu deinen Kontakten hinzufügen
+                      oder als „kein Spam" markieren — vor allem bei web.de/GMX-Postfächern.
+                    </p>
+                    <p style="margin:14px 0 0;font-size:12px;color:#94A3B8;">
                       Beleg: Stripe-Session ${session.id} · Betrag ${(paidCents/100).toFixed(2).replace(".",",")} €
                     </p>
                   </div>
