@@ -4,14 +4,15 @@ import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import ScansClient from "./scans-client";
 import type { ScanRow } from "./scans-client";
-import { isAtLeastProfessional } from "@/lib/plans";
+import { isAtLeastProfessional, getPlanQuota } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Berichte — WebsiteFix",
   robots: { index: false },
 };
 
-const SCAN_LIMIT = 3;
+// Hard-coded SCAN_LIMIT entfernt (08.05.2026): Plan-aware Limit kommt jetzt
+// aus PLAN_QUOTAS — vorher zeigte Berichte-Page für Pro fälschlich 18/3.
 
 // Normalise title for grouping — mirrors the logic in the detail page and free-dashboard-client
 function normKey(title: string): string {
@@ -103,7 +104,7 @@ export default async function ScansPage() {
     <ScansClient
       firstName={firstName}
       monthlyScans={monthlyScans}
-      scanLimit={SCAN_LIMIT}
+      scanLimit={getPlanQuota(plan).monthlyScans}
       scans={scans}
       plan={plan}
       isPro={isPro}

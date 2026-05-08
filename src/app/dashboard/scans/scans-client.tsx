@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { isUnlimitedQuota } from "@/lib/plans";
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 const D = {
@@ -261,7 +262,11 @@ function ActivityFeed({ scans, accent }: { scans: ScanRow[]; accent: string }) {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 export default function ScansClient({ firstName, monthlyScans, scanLimit, scans, plan, isPro }: Props) {
-  const limitReached = monthlyScans >= scanLimit;
+  // Pro/Agency haben "unbegrenzte Scans" laut Pricing-Card → kein
+  // Limit-Erreicht-State (08.05.2026 Bug-Fix: Pro sah '18 / 3 Limit
+  // erreicht', weil monthlyScans=18 und hardcoded SCAN_LIMIT=3 war).
+  const unlimited    = isUnlimitedQuota(plan);
+  const limitReached = !unlimited && monthlyScans >= scanLimit;
   const accent = "var(--agency-primary, #8df3d3)";
 
   // Pre-compute "previous scan of same URL" lookup for the Compare button.
@@ -317,7 +322,7 @@ export default function ScansClient({ firstName, monthlyScans, scanLimit, scans,
                 </svg>
               )}
               <span style={{ fontSize: 12, fontWeight: 700, color: limitReached ? D.red : D.blueSoft, whiteSpace: "nowrap" }}>
-                Scans: {monthlyScans} / {scanLimit}{limitReached && " (Limit erreicht)"}
+                Scans: {monthlyScans} / {unlimited ? "∞ (Flatrate)" : scanLimit}{limitReached && " (Limit erreicht)"}
               </span>
             </div>
           </div>
