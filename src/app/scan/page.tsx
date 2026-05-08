@@ -802,7 +802,7 @@ export default function ScanPage() {
                   {/* Trust chips */}
                   <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 12, flexWrap: "wrap" }}>
                     {[
-                      "Bis zu 25 Unterseiten",
+                      "Bis zu 10 Unterseiten",
                       "Inkl. BFSG-Check",
                       "Sofortergebnis",
                     ].map(t => (
@@ -817,10 +817,10 @@ export default function ScanPage() {
 
                   {/* Pricing hint */}
                   <p style={{ margin: "10px 0 0", fontSize: 12, color: "rgba(255,255,255,0.22)", textAlign: "center" }}>
-                    Voller Report ab{" "}
-                    <span style={{ color: "rgba(255,255,255,0.45)" }}>9,90 € einmalig</span>
-                    {" "}oder{" "}
-                    <span style={{ color: "rgba(255,255,255,0.45)" }}>29 €/Monat (Flatrate)</span>
+                    Einzel-Fix ab{" "}
+                    <span style={{ color: "rgba(255,255,255,0.45)" }}>9,90 €</span>
+                    {" "}· Voller Report mit allen Guides ab{" "}
+                    <span style={{ color: "rgba(255,255,255,0.45)" }}>29 €/Monat</span>
                   </p>
                 </form>
               )}

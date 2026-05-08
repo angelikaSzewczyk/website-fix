@@ -1,26 +1,27 @@
 /**
- * POST /api/guides/[id]/anon-checkout — Stripe-Checkout für anonyme Käufer.
+ * POST /api/guides/[id]/anon-checkout — Stripe-Checkout für Pay-per-Fix-Käufer.
  *
  * Body: { email: string, hoster?: HosterValue }
  * Resp: { url: string } — Stripe-Checkout-URL für Redirect.
  *
- * Architektur (warum überhaupt anonym):
+ * Architektur (Token-basiert, kein Konto — Stand 2026-05-08):
  *  - Landingpage verspricht "Einmal-Fix ab 9,90 €". Der reguläre /api/guides/[id]/checkout
  *    erfordert Auth — würde das Versprechen brechen ("erst 29 € Sub abschließen").
- *  - Dieser Endpoint nimmt nur eine Email entgegen, erstellt KEINEN User
- *    sofort. Account-Anlage geschieht im Webhook NACH erfolgreicher Zahlung
- *    (siehe /api/webhooks/stripe → kind === "rescue_guide_anon"-Branch).
- *  - Vorteil: keine orphaned User-Records bei abgebrochenen Checkouts.
+ *  - Dieser Endpoint nimmt nur eine Email entgegen, erstellt KEINEN User-Account.
+ *  - Webhook (kind === "rescue_guide_anon") legt einen 4-Wochen-Online-Token in
+ *    guide_access_tokens an und schickt dem Käufer eine Mail mit:
+ *       (a) PDF-Anhang dauerhaft im Postfach
+ *       (b) Online-Link /g/<token> für 4 Wochen interaktiven Zugriff
+ *  - Käufer braucht weder Login noch Dashboard — beides würde fälschlich Abo-Optik
+ *    suggerieren. Eingeloggte Pro/Agency-Käufer haben den getrennten kind ==
+ *    "rescue_guide"-Branch, der unverändert auf Dashboard-Unlock geht.
  *
  * Sicherheits-Überlegungen:
- *  - Email wird NICHT validiert (kein Verification-Mail-Pingback) — Stripe
- *    erzwingt schon eine plausible Email beim Checkout.
- *  - Wenn der User bei der Stripe-Eingabe eine andere Email tippt als hier
- *    übergeben, gewinnt die Stripe-Email (Webhook liest customer_details.email).
- *  - Idempotenz: kein DB-Write hier, daher keine Race-Conditions.
- *  - Bei existierender Email mit aktivem Account: der Webhook re-uses den
- *    bestehenden user_id — der Käufer landet nach Payment im normalen
- *    Login-Flow und sieht den frisch unlocked-en Guide.
+ *  - Email wird strukturell validiert (Pattern + Length) — Stripe erzwingt
+ *    zusätzlich Format beim Checkout.
+ *  - Idempotenz: kein DB-Write hier; Token-Insert im Webhook ist UNIQUE auf
+ *    stripe_session_id, doppelte Webhook-Deliveries erzeugen keine Duplikate.
+ *  - Hoster-Wert wird gegen HOSTER_OPTIONS-Whitelist geprüft, Default "default".
  */
 
 import { NextRequest, NextResponse } from "next/server";

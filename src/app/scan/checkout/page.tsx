@@ -71,6 +71,10 @@ function CheckoutInner() {
   const [scanLoaded, setScanLoaded]   = useState(false);
   const [guides, setGuides]           = useState<AnonGuide[]>([]);
   const [guidesLoaded, setGuidesLoaded] = useState(false);
+  // Match-API kann fehlschlagen (Server-Error, Netzwerk). In dem Fall sollen
+  // wir NICHT "keine Befunde — alles clean" suggerieren — der User bekäme den
+  // falschen Eindruck, seine Seite sei in Ordnung. Dafür eigener matchError-State.
+  const [matchError, setMatchError]   = useState(false);
   const [selectedId, setSelectedId]   = useState<string | null>(null);
   const [email, setEmail]             = useState("");
   const [hoster, setHoster]           = useState<string>("default");
@@ -89,19 +93,27 @@ function CheckoutInner() {
     if (!scan) { setGuidesLoaded(true); return; }
     const issues = buildIssuesFromScan(scan);
     if (issues.length === 0) { setGuides([]); setGuidesLoaded(true); return; }
+    setMatchError(false);
     fetch("/api/guides/anon-match", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ issues }),
     })
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data: { guides?: AnonGuide[] }) => {
         const list = data.guides ?? [];
         setGuides(list);
         // Auto-select das relevanteste Guide, damit der User nur 1 Klick braucht
         if (list.length > 0) setSelectedId(list[0].id);
       })
-      .catch(() => setGuides([]))
+      .catch(() => {
+        // Server-/Netzwerk-Error — getrennt vom "keine Issues"-Pfad behandeln.
+        setGuides([]);
+        setMatchError(true);
+      })
       .finally(() => setGuidesLoaded(true));
   }, [scan]);
 
@@ -154,6 +166,32 @@ function CheckoutInner() {
             <Link href="/scan" style={{ display: "inline-flex", padding: "11px 22px", borderRadius: 10, background: "linear-gradient(90deg, #059669, #10B981)", color: "#fff", fontSize: 13.5, fontWeight: 800, textDecoration: "none", boxShadow: "0 4px 14px rgba(16,185,129,0.32)" }}>
               Jetzt scannen →
             </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  if (guidesLoaded && matchError) {
+    return (
+      <>
+        <Nav />
+        <main style={{ background: "#0b0c10", minHeight: "calc(100vh - 58px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
+          <div style={{ maxWidth: 480, textAlign: "center", padding: "32px 28px", borderRadius: 16, background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.25)" }}>
+            <h1 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: "#fca5a5" }}>
+              Hmm — Guide-Suche hat gerade Probleme
+            </h1>
+            <p style={{ margin: "0 0 20px", fontSize: 13.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+              Wir konnten die zu deinem Scan passenden Fix-Guides nicht laden. Das ist meist nur ein kurzer Aussetzer. Bitte lade die Seite neu — wenn der Fehler bleibt, melde dich bei{" "}
+              <a href="mailto:support@website-fix.com" style={{ color: "#7aa6ff" }}>support@website-fix.com</a>.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(90deg, #007BFF, #0057b8)", color: "#fff", fontSize: 13.5, fontWeight: 800, border: "none", cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Erneut versuchen
+            </button>
           </div>
         </main>
         <SiteFooter />
