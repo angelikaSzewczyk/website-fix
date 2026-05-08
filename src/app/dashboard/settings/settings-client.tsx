@@ -129,23 +129,26 @@ function ReportPreview({ settings }: { settings: AgencySettings }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// 08.05.2026: Dark-Theme passend zur restlichen Dashboard-UI. Vorher
+// waren alle Karten weiß (Light-Theme-Relikt aus früherer Settings-Page),
+// Branding-Page hatte daher hellen Bruch im sonst dunklen Layout.
 const CA = {
-  card:       "#FFFFFF",
-  bg:         "#F8FAFC",
-  border:     "#E2E8F0",
-  divider:    "#F1F5F9",
-  shadow:     "0 1px 4px rgba(0,0,0,0.07)",
-  text:       "#0F172A",
-  textSub:    "#475569",
-  textMuted:  "#94A3B8",
+  card:       "rgba(255,255,255,0.025)",
+  bg:         "rgba(255,255,255,0.015)",
+  border:     "rgba(255,255,255,0.08)",
+  divider:    "rgba(255,255,255,0.06)",
+  shadow:     "0 1px 4px rgba(0,0,0,0.4)",
+  text:       "rgba(255,255,255,0.92)",
+  textSub:    "rgba(255,255,255,0.55)",
+  textMuted:  "rgba(255,255,255,0.40)",
   blue:       "#2563EB",
-  blueBg:     "#EFF6FF",
-  blueBorder: "#BFDBFE",
+  blueBg:     "rgba(37,99,235,0.10)",
+  blueBorder: "rgba(37,99,235,0.32)",
   green:      "#16A34A",
-  greenBg:    "#F0FDF4",
-  amber:      "#D97706",
-  amberBg:    "#FFFBEB",
-  amberBorder:"#FDE68A",
+  greenBg:    "rgba(22,163,74,0.10)",
+  amber:      "#FBBF24",
+  amberBg:    "rgba(251,191,36,0.10)",
+  amberBorder:"rgba(251,191,36,0.30)",
 };
 
 type ScanInterval = "manuell" | "wöchentlich" | "täglich";

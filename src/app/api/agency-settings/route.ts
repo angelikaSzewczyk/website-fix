@@ -18,7 +18,7 @@
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
-import { hasBrandingAccess, isAgency } from "@/lib/plans";
+import { hasBrandingAccess, isAtLeastProfessional } from "@/lib/plans";
 import { encrypt } from "@/lib/crypto";
 
 export const runtime = "nodejs";
@@ -91,9 +91,10 @@ export async function GET() {
     smtp_pass_set:        !!row?.smtp_pass_encrypted,
     api_key_wp_set:       !!row?.api_key_wp_hash,
     api_key_wp_created_at: row?.api_key_wp_created_at ?? null,
-    // Agency-Plan kann WP-Bridge nutzen; kleinere Plans sehen den
-    // "Generieren"-Button in der UI ausgegraut.
-    can_use_wp_bridge:    isAgency(plan),
+    // Pro/Agency können WP-Bridge nutzen; Starter sieht den "Generieren"-
+    // Button in der UI ausgegraut. (08.05.2026: vorher Agency-only — aber
+    // Pricing-Card verspricht "Deep-Scan Plugin · KI-Auto-Fix" ab Pro.)
+    can_use_wp_bridge:    isAtLeastProfessional(plan),
   });
 }
 

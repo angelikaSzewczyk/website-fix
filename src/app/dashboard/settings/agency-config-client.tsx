@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { isAgency } from "@/lib/plans";
 
 type Loaded = {
   smtp_host:            string;
@@ -533,7 +534,7 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         subtitle="API-Key für das WebsiteFix Auto-Heal-Plugin. Schreibt SEO-Korrekturen direkt in die Kunden-Sites."
       >
         {!cfg.can_use_wp_bridge && (
-          <StatusInline kind="info" message="WP-Bridge ist exklusiv für den Agency-Plan. Upgrade in den Plan-Einstellungen." />
+          <StatusInline kind="info" message="WP-Bridge ist ab Professional verfügbar. Upgrade in den Plan-Einstellungen." />
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -667,7 +668,11 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         </div>
       </CardShell>
 
-      {/* ─── 4. Lead-Magnet-Snippet ───────────────────────────────────────── */}
+      {/* ─── 4. Lead-Magnet-Snippet (Agency-only) ──────────────────────────
+           08.05.2026: Sektion ist Agency-Pricing-Card-Versprechen, war aber
+           für alle Pro+-User sichtbar (über die Branding-Page erreichbar).
+           Pro hat KEIN Lead-Capture-Backend → Box ausblenden. */}
+      {isAgency(plan) && (
       <CardShell
         title="Lead-Magnet-Snippet"
         subtitle="HTML/JS-Code zum Einbetten auf deiner Agency-Site. Postet automatisch an deinen Lead-Capture-Endpoint."
@@ -678,28 +683,19 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
           der Server nur Anfragen von dieser Domain — Schutz vor Lead-Diebstahl.
         </p>
 
-        <div style={{ position: "relative" }}>
-          <pre style={{
-            margin: 0,
-            padding: "14px 16px",
-            borderRadius: 10,
-            background: "rgba(0,0,0,0.4)",
-            border: `1px solid ${D.border}`,
-            fontSize: 11.5, fontFamily: "ui-monospace, SF Mono, monospace",
-            color: D.text, lineHeight: 1.55,
-            overflowX: "auto",
-            maxHeight: 320,
-          }}>
-            <code>{leadSnippet}</code>
-          </pre>
+        {/* Header-Row mit Copy-Button — vorher position:absolute,
+             überdeckte erste Code-Zeile (08.05.2026 UI-Bug-Fix) */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 11, color: D.textMuted, fontWeight: 600, letterSpacing: "0.02em" }}>
+            HTML/JS-Embed
+          </span>
           <button
             onClick={() => copyToClipboard(leadSnippet, () => {
               setSnippetCopied(true);
               setTimeout(() => setSnippetCopied(false), 2500);
             })}
             style={{
-              position: "absolute", top: 10, right: 10,
-              padding: "6px 12px", borderRadius: 7,
+              padding: "6px 14px", borderRadius: 7,
               background: snippetCopied ? D.green : D.purple,
               color: snippetCopied ? "#0b0c10" : "#fff",
               border: "none", fontSize: 11.5, fontWeight: 700,
@@ -710,11 +706,26 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
           </button>
         </div>
 
+        <pre style={{
+          margin: 0,
+          padding: "14px 16px",
+          borderRadius: 10,
+          background: "rgba(0,0,0,0.4)",
+          border: `1px solid ${D.border}`,
+          fontSize: 11.5, fontFamily: "ui-monospace, SF Mono, monospace",
+          color: D.text, lineHeight: 1.55,
+          overflowX: "auto",
+          maxHeight: 320,
+        }}>
+          <code>{leadSnippet}</code>
+        </pre>
+
         <p style={{ margin: 0, fontSize: 11, color: D.textMuted, lineHeight: 1.6 }}>
           Agency-ID = <code style={{ background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: 4, color: D.text }}>{agencyId}</code> ·
           Plan = <code style={{ background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: 4, color: D.text }}>{plan}</code>
         </p>
       </CardShell>
+      )}
     </div>
   );
 }

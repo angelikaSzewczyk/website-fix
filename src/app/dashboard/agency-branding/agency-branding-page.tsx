@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { isAtLeastProfessional } from "@/lib/plans";
 import SettingsClient from "../settings/settings-client";
 import IntegrationsSettingsClient from "../settings/integrations/integrations-client";
 import AgencyConfigClient from "../settings/agency-config-client";
@@ -116,7 +117,7 @@ export default function AgencyBrandingPage({
       </div>
       <IntegrationsSettingsClient
         plan={plan}
-        hasAccess={isAgencyPlan}
+        hasAccess={isAtLeastProfessional(plan)}
         initialStatus={integrationsStatus}
         initialSettings={integrationsSettings}
         initialOpen={initialOpen}
