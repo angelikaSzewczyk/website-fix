@@ -534,7 +534,7 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         subtitle="API-Key für das WebsiteFix Auto-Heal-Plugin. Schreibt SEO-Korrekturen direkt in die Kunden-Sites."
       >
         {!cfg.can_use_wp_bridge && (
-          <StatusInline kind="info" message="WP-Bridge ist ab Professional verfügbar. Upgrade in den Plan-Einstellungen." />
+          <StatusInline kind="info" message="API-Key-Generation ist nur mit aktivem Plan verfügbar. Upgrade in den Plan-Einstellungen." />
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

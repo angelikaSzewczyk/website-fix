@@ -1,11 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { isAtLeastProfessional } from "@/lib/plans";
 import SettingsClient from "../settings/settings-client";
-import IntegrationsSettingsClient from "../settings/integrations/integrations-client";
 import AgencyConfigClient from "../settings/agency-config-client";
 
 type BrandingSettings = {
@@ -28,13 +23,6 @@ type IntegrationsVisible = {
   ga_property_id:   string | null;
 };
 
-const PROVIDER_IDS = ["slack", "zapier", "asana", "jira", "trello", "gsc", "ga"] as const;
-type ProviderId = (typeof PROVIDER_IDS)[number];
-function validateProvider(raw: string | null): ProviderId | null {
-  if (!raw) return null;
-  return (PROVIDER_IDS as readonly string[]).includes(raw) ? (raw as ProviderId) : null;
-}
-
 const T = {
   text:      "rgba(255,255,255,0.92)",
   textSub:   "rgba(255,255,255,0.55)",
@@ -49,6 +37,8 @@ type Props = {
   plan:                 string;
   userId:               string;
   branding:             BrandingSettings;
+  // Bleiben in den Props weil page.tsx sie noch lädt. Werden hier nicht mehr
+  // verwendet (Externe-Integrationen-Sektion 08.05.2026 entfernt).
   integrationsStatus:   Status | null;
   integrationsSettings: IntegrationsVisible | null;
   isAgencyPlan:         boolean;
@@ -57,20 +47,7 @@ type Props = {
 export default function AgencyBrandingPage({
   plan, userId, branding, integrationsStatus, integrationsSettings, isAgencyPlan,
 }: Props) {
-  const router       = useRouter();
-  const searchParams = useSearchParams();
-
-  // ?open=<provider> Deep-Link einmalig beim Mount auswerten — wie zuvor
-  // im Settings-Tabs-Client. Wert wird in den lokalen State eingefroren,
-  // damit das nachträgliche router.replace (Param strippen) das Akkordeon
-  // nicht wieder schließt.
-  const [initialOpen] = useState<ProviderId | null>(() => validateProvider(searchParams?.get("open") ?? null));
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!searchParams?.get("open")) return;
-    router.replace(window.location.pathname, { scroll: false });
-  }, [router, searchParams]);
+  void integrationsStatus; void integrationsSettings; // unused — Sektion entfernt
 
   return (
     <main style={{
@@ -102,29 +79,12 @@ export default function AgencyBrandingPage({
       {/* ── Sektion 2: SMTP / Custom-Domain / WP-API-Key ─────────────────── */}
       <AgencyConfigClient agencyId={userId} plan={plan} />
 
-      {/* ── Sektion 3: Externe Workflow-Integrationen ────────────────────── */}
-      <div style={{ marginTop: 28, marginBottom: 14 }}>
-        <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          Workflow
-        </p>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.text, letterSpacing: "-0.02em" }}>
-          Externe Integrationen
-        </h2>
-        <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.textSub, maxWidth: 600, lineHeight: 1.55 }}>
-          Slack-Notifications, Asana-Tickets, Jira-Issues — verbinde WebsiteFix
-          mit den Tools, die du eh schon nutzt.
-        </p>
-      </div>
-      <IntegrationsSettingsClient
-        plan={plan}
-        hasAccess={isAtLeastProfessional(plan)}
-        initialStatus={integrationsStatus}
-        initialSettings={integrationsSettings}
-        initialOpen={initialOpen}
-        embedded
-      />
+      {/* Externe-Integrationen-Sektion entfernt (08.05.2026): redundant mit
+           der dedizierten /dashboard/integrations-Seite. User-Feedback:
+           "auf der White Label und Branding Seite brauchen wir es nicht
+           thematisieren". */}
 
-      {/* ── Sektion 4: DSGVO & Compliance (Pricing-Card-Versprechen #9) ──── */}
+      {/* ── Sektion 3: DSGVO & Compliance (Pricing-Card-Versprechen #9) ──── */}
       {isAgencyPlan && (
         <div style={{ marginTop: 36 }}>
           <div style={{ marginBottom: 14 }}>

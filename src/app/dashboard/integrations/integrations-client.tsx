@@ -3,24 +3,26 @@
 import { useState } from "react";
 import { isAgency as isAgencyPlan } from "@/lib/plans";
 
+// 08.05.2026: Dark-Theme passend zum restlichen Dashboard. Vorher Light-
+// Theme — wirkte als heller Bruch im sonst dunklen Layout.
 const C = {
-  bg:          "#F8FAFC",
-  card:        "#FFFFFF",
-  border:      "#E2E8F0",
-  divider:     "#F1F5F9",
-  shadow:      "0 1px 4px rgba(0,0,0,0.07)",
-  text:        "#0F172A",
-  textSub:     "#475569",
-  textMuted:   "#94A3B8",
+  bg:          "#0b0c10",
+  card:        "rgba(255,255,255,0.025)",
+  border:      "rgba(255,255,255,0.08)",
+  divider:     "rgba(255,255,255,0.06)",
+  shadow:      "0 1px 4px rgba(0,0,0,0.4)",
+  text:        "rgba(255,255,255,0.92)",
+  textSub:     "rgba(255,255,255,0.55)",
+  textMuted:   "rgba(255,255,255,0.40)",
   blue:        "#2563EB",
-  blueBg:      "#EFF6FF",
-  blueBorder:  "#BFDBFE",
-  green:       "#16A34A",
-  greenBg:     "#F0FDF4",
-  greenBorder: "#A7F3D0",
-  amber:       "#D97706",
-  amberBg:     "#FFFBEB",
-  amberBorder: "#FDE68A",
+  blueBg:      "rgba(37,99,235,0.10)",
+  blueBorder:  "rgba(37,99,235,0.32)",
+  green:       "#22C55E",
+  greenBg:     "rgba(34,197,94,0.10)",
+  greenBorder: "rgba(34,197,94,0.32)",
+  amber:       "#FBBF24",
+  amberBg:     "rgba(251,191,36,0.10)",
+  amberBorder: "rgba(251,191,36,0.30)",
 };
 
 type Integration = {
@@ -186,8 +188,8 @@ function IntegrationCard({ integration, locked = false }: { integration: Integra
           position: "absolute", top: 10, right: 10,
           display: "inline-flex", alignItems: "center", gap: 4,
           padding: "3px 8px", borderRadius: 5,
-          background: "#F5F3FF", border: "1px solid #DDD6FE",
-          fontSize: 10, fontWeight: 700, color: "#7C3AED", letterSpacing: "0.04em",
+          background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)",
+          fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.04em",
         }}>
           🔒 AGENCY
         </div>
@@ -255,9 +257,9 @@ function IntegrationCard({ integration, locked = false }: { integration: Integra
             style={{
               display: "block", width: "100%", textAlign: "center",
               padding: "9px 0", borderRadius: 8, fontSize: 13, fontWeight: 700,
-              border: "1px solid #DDD6FE",
-              background: "#F5F3FF",
-              color: "#7C3AED",
+              border: "1px solid rgba(167,139,250,0.35)",
+              background: "rgba(167,139,250,0.10)",
+              color: "#a78bfa",
               textDecoration: "none",
             }}
           >
@@ -371,7 +373,7 @@ export default function IntegrationsClient({ plan }: { plan: string | null }) {
             </span>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 5,
-              background: "#F0FFF4", color: "#15803D", border: "1px solid #86EFAC",
+              background: "rgba(34,197,94,0.10)", color: "#86EFAC", border: "1px solid rgba(34,197,94,0.32)",
               letterSpacing: "0.05em",
             }}>v0.9.1 Beta</span>
             <span style={{
