@@ -54,36 +54,10 @@ export function CopyCodeButton({ code }: { code: string }) {
   );
 }
 
-export function JiraExportButton({ title, description }: { title: string; description: string }) {
-  const [exported, setExported] = useState(false);
-
-  async function handleExport() {
-    await fetch("/api/jira-export", {
-      method: "POST", credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description }),
-    }).catch(() => null);
-    setExported(true);
-    setTimeout(() => setExported(false), 3000);
-  }
-
-  return (
-    <button
-      onClick={handleExport}
-      style={{
-        display: "flex", alignItems: "center", gap: 6,
-        padding: "6px 12px", borderRadius: 7, border: `1px solid ${C.border}`,
-        background: "#fff", color: C.textSub,
-        fontSize: 12, fontWeight: 600, cursor: "pointer",
-      }}
-    >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-      {exported ? "Exportiert ✓" : "Jira-Ticket"}
-    </button>
-  );
-}
+// JiraExportButton entfernt (08.05.2026):
+// - rief /api/jira-export auf, Route existierte nie → 404
+// - JiraExportButton war nirgends importiert (toter Export)
+// - echte Jira-Integration kommt mit Workflow-API in Q3 (Agency-Pricing-Bullet)
 
 export function ResolvedButton() {
   const [resolved, setResolved] = useState(false);
