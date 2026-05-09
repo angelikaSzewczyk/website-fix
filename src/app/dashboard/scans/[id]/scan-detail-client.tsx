@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import IssueList, { type IssueProp } from "@/components/dashboard/variants/_shared/IssueList";
 import { DrawerPanel } from "@/components/dashboard/variants/_shared/IssueDetailDrawer";
+import CmsStackCard from "@/components/dashboard/variants/_shared/CmsStackCard";
 import type { UnterseiteProp } from "@/components/dashboard/variants/_shared/dashboard-types";
+import type { SiteContext } from "@/lib/scan-engine/types";
+import type { TechFingerprint } from "@/lib/tech-detector";
 import PrintButton from "./print-button";
 
 interface Props {
@@ -25,6 +28,12 @@ interface Props {
   diagnose?: string;
   totalPages?: number;
   issueCount?: number;
+  /** 09.05.2026: gleiche CMS-Stack-Card wie auf /dashboard. Quelle:
+   *  meta_json.site_context. */
+  siteContext?: SiteContext | null;
+  /** Für die Konditionsprüfung 'WordPress erkannt' falls wpVersion nicht
+   *  öffentlich war (Generator-Tag versteckt) — fingerprint.cms.value reicht. */
+  fingerprint?: TechFingerprint | null;
 }
 
 const T = {
@@ -119,6 +128,8 @@ export default function ScanDetailClient({
   diagnose = "",
   totalPages,
   issueCount,
+  siteContext = null,
+  fingerprint = null,
 }: Props) {
   const [drawerPageUrl, setDrawerPageUrl] = useState<string | null>(null);
   const [checkedUrls, setCheckedUrls] = useState<Set<string>>(new Set());
@@ -189,7 +200,7 @@ export default function ScanDetailClient({
         </div>
 
         {/* Scan meta — kompakt, fokussiert */}
-        <div style={{ marginBottom: 4 }}>
+        <div style={{ marginBottom: 16 }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             Archivierter Bericht
           </p>
@@ -198,6 +209,16 @@ export default function ScanDetailClient({
           </h1>
           <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{date}</p>
         </div>
+
+        {/* CMS-Stack-Analyse (09.05.2026): gleiche Card wie auf /dashboard.
+            Render-Kondition: WP-Version sichtbar ODER Tech-Fingerprint
+            klassifiziert die Site als WordPress. Plugin-Hint hier
+            unterdrückt — auf der Detail-Page wäre der Hinweis redundant
+            (Smart-Fix-Drawer macht den Plugin-CTA an einer prominenteren
+            Stelle). */}
+        {(siteContext?.wpVersion || fingerprint?.cms.value === "WordPress") && (
+          <CmsStackCard siteContext={siteContext} showPluginHint={false} />
+        )}
 
         {/* Results panel */}
         <IssueList

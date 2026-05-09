@@ -26,6 +26,10 @@ type Scan = {
   speed_score: number | null;
   result: string | null;
   total_pages: number | null;
+  tech_fingerprint: unknown | null;
+  meta_json: {
+    site_context?: import("@/lib/scan-engine/types").SiteContext;
+  } | null;
 };
 
 // ─── Consolidation helpers ─────────────────────────────────────────────────────
@@ -85,7 +89,8 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
     SELECT id, url, type, created_at, issue_count,
            issues_json::text       AS issues_json,
            unterseiten_json::text  AS unterseiten_json,
-           speed_score, result, total_pages
+           speed_score, result, total_pages,
+           tech_fingerprint, meta_json
     FROM scans
     WHERE id = ${params.id} AND user_id = ${session.user.id}
     LIMIT 1
@@ -142,6 +147,23 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
     }
   }
 
+  // 09.05.2026: Site-Kontext für die CmsStackCard. Quelle wie auf dem
+  // Dashboard: meta_json.site_context (vom Aggregator persistiert).
+  const siteContext = scan.meta_json?.site_context ?? null;
+
+  // tech_fingerprint defensive: alte Scans vor Phase B haben evtl. {} oder
+  // halbwegs valide Tupel ohne cms-Feld. Identische Sanitization wie in
+  // dashboard/page.tsx.
+  const rawFingerprint = scan.tech_fingerprint;
+  const techFingerprint = (
+    rawFingerprint &&
+    typeof rawFingerprint === "object" &&
+    Object.keys(rawFingerprint).length > 0 &&
+    "cms" in rawFingerprint
+  )
+    ? rawFingerprint as import("@/lib/tech-detector").TechFingerprint
+    : null;
+
   return (
     <ScanDetailClient
       url={scan.url}
@@ -157,6 +179,8 @@ export default async function ScanDetailPage({ params }: { params: { id: string 
       diagnose={scan.result ?? ""}
       totalPages={scan.total_pages ?? unterseiten.length}
       issueCount={scan.issue_count ?? panelIssues.reduce((s, i) => s + (i.count ?? 1), 0)}
+      siteContext={siteContext}
+      fingerprint={techFingerprint}
     />
   );
 }
