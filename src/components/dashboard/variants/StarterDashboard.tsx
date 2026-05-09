@@ -1474,69 +1474,70 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑦ SMART-GUARD AUTOMATION MODULES — hidden in focus mode */}
+          {/* ⑦ SMART-GUARD AUTOMATION MODULES — hidden in focus mode.
+              09.05.2026 Pricing-Strict-Korrektur: Pricing-Card verspricht
+              "Basis-Monitoring (Uptime + Score-Trend)" für Starter — Score-
+              Verlauf-Modul ist also kein Pro-Feature mehr. Lock-Wand-Konsolidierung:
+              statt 4 grosse Lock-Cards (Score gelockt + 3 weitere) gibt's jetzt 1
+              freigeschaltete Score-Card + 1 kompakte "Mehr drin im Pro-Plan"-Box,
+              die die verbleibenden 3 Pro/Agency-Features in einer Zeile bündelt. */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
-            <SectionLabel color={D.blueSoft}>Professional · Automatisierung</SectionLabel>
+            <SectionLabel color={D.blueSoft}>Automatisierung &amp; Verlauf</SectionLabel>
             <SectionHead>Einmal verstehen — dauerhaft überwacht.</SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 580 }}>
-              Die Analyse liegt vor dir. Der Professional Plan läuft im Hintergrund, beobachtet jede Veränderung und meldet sich — ohne dass du selbst regelmäßig prüfen musst.
+              {isProfessionalPlus
+                ? "Pro läuft im Hintergrund: tägliche Re-Scans, Echtzeit-Alerts, automatische Reports."
+                : "Score-Verlauf ist in deinem Plan inklusive — die anderen Automation-Bausteine erweitern dich auf Pro/Agency."}
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isProfessionalPlus ? "repeat(auto-fit, minmax(220px, 1fr))" : "1fr 1fr", gap: 14 }}>
               {([
                 {
-                  // Disabled-Logik (08.05.2026): vorher disabled=isFree, was
-                  // Starter (isFree=false) als freigeschaltet zeigte. Pricing-Card
-                  // sagt "Score-Verlauf" ist Pro-Feature, Starter hat nur
-                  // "Basis-Monitoring (Uptime + Score-Trend)". Korrektur:
-                  // !isProfessionalPlus → Starter sieht Lock + Pro-Hint.
+                  // Score-Verlauf: in jedem bezahlten Plan inklusive (per Pricing-
+                  // Card "Basis-Monitoring (Uptime + Score-Trend)"). Kein Lock
+                  // mehr für Starter; Mini-Chart-Visualization rendert für alle.
                   key: "score",
                   title: "Score-Verlauf",
-                  badge: "Täglich · 30 Tage",
-                  desc: "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut.",
-                  cta: "Professional aktivieren",
-                  planTag: "Professional",
-                  status: !isProfessionalPlus ? "Professional" : null as string | null,
-                  disabled: !isProfessionalPlus,
+                  badge: isProfessionalPlus ? "Täglich · 30 Tage" : "Pro Scan dokumentiert",
+                  desc: isProfessionalPlus
+                    ? "Jede Verbesserung, jeder Rückschritt — sauber dokumentiert. Du siehst, ob deine Maßnahmen wirken, bevor Google es tut."
+                    : "Jeder Scan landet im Berichts-Archiv. Du siehst direkt, ob deine Maßnahmen den Score gehoben haben.",
+                  cta: isProfessionalPlus ? "Verlauf öffnen" : "Berichts-Archiv öffnen",
+                  ctaHref: "/dashboard/scans",
+                  status: null as string | null,
+                  disabled: false,
                 },
-                {
-                  // 24/7-Monitoring ist Pro-Feature laut Pricing-Card
-                  // ("24/7-Monitoring" für Pro vs "Basis-Monitoring" für Starter).
-                  key: "monitor",
-                  title: "24/7 Live-Monitoring",
-                  badge: "Echtzeit · E-Mail-Alert",
-                  desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
-                  cta: "Professional aktivieren",
-                  planTag: "Professional",
-                  status: !isProfessionalPlus ? "Professional" : null as string | null,
-                  disabled: !isProfessionalPlus,
-                },
-                {
-                  // Monatlicher PDF-Bericht ist im Pricing-Card-Bullet "White-Label
-                  // PDF (Logo + Brand-Farbe)" als Pro-Feature gelistet. Starter
-                  // hat keinen PDF-Auto-Bericht versprochen → disabled=true.
-                  key: "pdf",
-                  title: "Monatlicher PDF-Bericht",
-                  badge: "Automatisch · Teilbar",
-                  desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
-                  cta: "Professional aktivieren",
-                  planTag: "Professional",
-                  status: !isProfessionalPlus ? "Professional" : null as string | null,
-                  disabled: !isProfessionalPlus,
-                },
-                {
-                  // Lead-Magnet ist Agency-only (Pricing-Card "Embeddable Lead-
-                  // Generator — Scanner mit deinem Logo auf deiner Website").
-                  // Vorher: disabled=isFree||isSmartGuard, was Agency selbst als
-                  // gelockt anzeigte. Korrektur: nur !isAgency disabled.
-                  key: "leadmagnet",
-                  title: "Lead-Magnet Widget",
-                  badge: "Exklusiv · Agency",
-                  desc: "Bettest du das Widget auf Kunden-Websites ein, können Besucher direkt einen kostenlosen Scan starten — und landen als warme Leads in deinem Dashboard.",
-                  cta: "Agency anfragen",
-                  planTag: "Agency",
-                  status: !isAgency ? "Agency" : null as string | null,
-                  disabled: !isAgency,
-                },
+                ...(isProfessionalPlus ? [
+                  {
+                    key: "monitor",
+                    title: "24/7 Live-Monitoring",
+                    badge: "Echtzeit · E-Mail-Alert",
+                    desc: "Ausfall, veränderte Inhalte, neue Sicherheitsprobleme — du wirst sofort informiert. Nicht einmal täglich, sondern in dem Moment, in dem es passiert.",
+                    cta: "Verlauf öffnen",
+                    ctaHref: "/dashboard/scans",
+                    status: null as string | null,
+                    disabled: false,
+                  },
+                  {
+                    key: "pdf",
+                    title: "Monatlicher PDF-Bericht",
+                    badge: "Automatisch · Teilbar",
+                    desc: "Jeden Monat ein vollständiger Auditbericht als PDF — automatisch erstellt, strukturiert aufbereitet, teilbar mit Kunden oder für die interne Dokumentation.",
+                    cta: "Berichte öffnen",
+                    ctaHref: "/dashboard/reports",
+                    status: null as string | null,
+                    disabled: false,
+                  },
+                  {
+                    key: "leadmagnet",
+                    title: "Lead-Magnet Widget",
+                    badge: "Exklusiv · Agency",
+                    desc: "Bettest du das Widget auf Kunden-Websites ein, können Besucher direkt einen kostenlosen Scan starten — und landen als warme Leads in deinem Dashboard.",
+                    cta: isAgency ? "Lead-Generator öffnen" : "Agency anfragen",
+                    ctaHref: isAgency ? "/dashboard/lead-generator" : "/fuer-agenturen#pricing",
+                    status: !isAgency ? "Agency" : null as string | null,
+                    disabled: !isAgency,
+                  },
+                ] : []),
               ]).map(module => (
                 <div key={module.key} className={module.disabled ? "wf-disabled-card" : ""} style={{
                   borderRadius: D.radius,
@@ -1728,7 +1729,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                       {module.cta} →
                     </Link>
                   ) : (
-                    <Link href="/dashboard/reports" style={{
+                    <Link href={module.ctaHref ?? "/dashboard/reports"} style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
                       alignSelf: "flex-start",
                       padding: "8px 16px", borderRadius: D.radiusXs,
@@ -1741,6 +1742,76 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                   )}
                 </div>
               ))}
+
+              {/* "Mehr drin im Pro-Plan"-Box (09.05.2026): Starter sieht hier
+                  eine kompakte Übersicht der Pro/Agency-Features, statt 3 grosse
+                  Lock-Cards. Senkt den 'alles ist gelockt'-Eindruck den die
+                  4-Card-Wand vorher erzeugt hat (User-Direktive E2E-Audit). */}
+              {!isProfessionalPlus && (
+                <div style={{
+                  borderRadius: D.radius,
+                  background: "rgba(251,191,36,0.04)",
+                  border: "1px solid rgba(251,191,36,0.20)",
+                  padding: "20px 22px",
+                  display: "flex", flexDirection: "column", gap: 14,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9,
+                      background: "rgba(251,191,36,0.12)",
+                      border: "1px solid rgba(251,191,36,0.32)",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      color: "#fbbf24",
+                    }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(251,191,36,0.85)", textTransform: "uppercase", letterSpacing: "0.09em" }}>
+                        Mehr drin im Pro-Plan
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: D.text, marginTop: 1 }}>
+                        Drei zusätzliche Automation-Bausteine
+                      </div>
+                    </div>
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
+                    {[
+                      { title: "24/7 Live-Monitoring", desc: "Echtzeit-Alerts via E-Mail/Slack — statt täglich oder manuell." },
+                      { title: "Monatlicher PDF-Bericht", desc: "Auto-erstellt, White-Label-fähig, teilbar mit Kunden." },
+                      { title: "Lead-Magnet Widget (Agency)", desc: "Scan-Widget für Kunden-Websites — Besucher werden zu warmen Leads." },
+                    ].map(f => (
+                      <li key={f.title} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fbbf24"
+                          strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ flexShrink: 0, marginTop: 3 }} aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: D.text, lineHeight: 1.35 }}>
+                            {f.title}
+                          </div>
+                          <div style={{ fontSize: 11.5, color: D.textMuted, lineHeight: 1.5, marginTop: 1 }}>
+                            {f.desc}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/fuer-agenturen?upgrade=professional#pricing" style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    alignSelf: "flex-start",
+                    padding: "9px 18px", borderRadius: 8,
+                    background: "rgba(251,191,36,0.14)", border: "1px solid rgba(251,191,36,0.35)",
+                    color: "#fbbf24", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                  }}>
+                    Auf Professional upgraden →
+                  </Link>
+                </div>
+              )}
             </div>
           </div>}
 
