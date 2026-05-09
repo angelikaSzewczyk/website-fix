@@ -10,10 +10,13 @@ export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Chromium download URL — aus Env-Var oder GitHub Releases
+// Chromium download URL — aus Env-Var oder GitHub Releases.
+// 09.05.2026: Version muss zu @sparticuz/chromium-min (^143.0.4 in package.json)
+// passen. Vorher v131.0.0 → 'browserType.launch: Target page closed' weil
+// Wrapper- und Pack-Version inkompatibel waren.
 const CHROMIUM_URL =
   process.env.CHROMIUM_PACK_URL ??
-  "https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar";
+  "https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar";
 
 // Globale Bremse: max 3 WCAG-Scans pro Minute (Playwright + Claude = teuer)
 const globalLimit = { count: 0, resetAt: 0 };
