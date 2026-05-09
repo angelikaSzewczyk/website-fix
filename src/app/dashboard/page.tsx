@@ -511,7 +511,23 @@ export default async function DashboardPage({
         : null;
       lastScanTotalPages = rows[0]?.total_pages ?? null;
       lastScanSpeedScore = rows[0]?.speed_score ?? null;
-      lastScanUnterseiten = (rows[0]?.unterseiten_json as typeof lastScanUnterseiten | null) ?? null;
+      // 09.05.2026 Bug-Fix: PageAudit speichert `ok: boolean`, das Dashboard-UI
+      // erwartet aber `erreichbar: boolean`. Ohne diese Normalisierung war
+      // `erreichbar` IMMER undefined → `!undefined === true` → Deep-Scan-Map
+      // zeigte den "404/5xx"-Badge bei JEDER Subpage.
+      type RawPage = { ok?: boolean; erreichbar?: boolean } & Record<string, unknown>;
+      const rawUnterseiten = rows[0]?.unterseiten_json as RawPage[] | null;
+      if (rawUnterseiten && rawUnterseiten.length > 0) {
+        lastScanUnterseiten = rawUnterseiten.map(p => ({
+          ...p,
+          erreichbar: typeof p.erreichbar === "boolean"
+            ? p.erreichbar
+            : typeof p.ok === "boolean"
+              ? p.ok
+              : true,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        })) as any;
+      }
       lastScanWooAudit = rows[0]?.meta_json?.woo_audit ?? null;
       lastScanBuilderAudit = rows[0]?.meta_json?.builder_audit ?? null;
       lastScanTtfbMs = typeof rows[0]?.meta_json?.ttfb_ms === "number" ? rows[0].meta_json.ttfb_ms : null;
