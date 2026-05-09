@@ -241,13 +241,21 @@ Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
     }
 
     // Zur DB loggen, damit wir wiederkehrende Probleme später diagnostizieren können.
+    // Truncation auf 3000 (vorher 500) — Playwright-Launch-Errors dumpen zuerst
+    // alle Launch-Args (~400 Zeichen), erst danach der eigentliche Exit-Grund
+    // (Signal, Code, stderr-Snippet). Bei 500-Cap sah man nur die Args.
+    // Plus: tail-Anhang mit den letzten 800 Zeichen für den Fall dass der Body
+    // weiter geht — so haben wir Anfang + Ende auch wenn die Mitte verloren geht.
     try {
-      const session = await auth();
-      if (session?.user?.id) {
+      const session2 = await auth();
+      if (session2?.user?.id) {
         const sql = neon(process.env.DATABASE_URL!);
+        const truncated = rawMsg.length > 3000
+          ? `${rawMsg.slice(0, 2200)}\n…[${rawMsg.length - 3000} chars cut]…\n${rawMsg.slice(-800)}`
+          : rawMsg;
         await sql`
           INSERT INTO scan_log (user_id, url, scan_type, status, error_msg, from_cache)
-          VALUES (${session.user.id}, ${"unknown"}, 'wcag', 'error', ${rawMsg.slice(0, 500)}, FALSE)
+          VALUES (${session2.user.id}, ${"unknown"}, 'wcag', 'error', ${truncated}, FALSE)
         `;
       }
     } catch { /* optional */ }
