@@ -35,6 +35,16 @@ export function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFr
     <div className="wf-deep-scan-map" style={{ marginBottom: 28 }}>
       <SectionLabel>Scan-Ergebnisse · Alle analysierten Seiten</SectionLabel>
       <SectionHead>Deep-Scan Map</SectionHead>
+      {/* Erklär-Text (09.05.2026): User-Verwirrung — die Issue-Liste oben zählt
+          KONSOLIDIERTE Issue-Typen ('SEO-Schwäche: H1 fehlt auf 5 Seiten' = 1
+          Eintrag), die Map zeigt die ROHEN Pro-Seite-Counts. Beide Zahlen sind
+          korrekt aber bezogen auf unterschiedliche Aggregationen. */}
+      <p style={{
+        margin: "-4px 0 12px", fontSize: 12, color: D.textSub, lineHeight: 1.55,
+      }}>
+        Die Issue-Typen aus &bdquo;Optimierungs-Aufgaben&rdquo; oben verteilen sich pro
+        Seite so &mdash; eine einzelne Issue-Art kann mehrere Seiten betreffen.
+      </p>
       <Card style={{ padding: 0, overflow: "hidden" }}>
         {/* ── Startseite ── */}
         {(() => {
