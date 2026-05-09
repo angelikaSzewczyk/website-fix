@@ -10,11 +10,14 @@ export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// 09.05.2026: Switch von @sparticuz/chromium-min (Runtime-Pack-Download) auf
-// @sparticuz/chromium (Binary + Libs gebündelt). chromium-min v143 hatte auf
-// Vercel-AL2023-Runtime einen libnss3.so-Lookup-Fehler (das Pack hat die
-// .so-Files nicht am Pfad gehabt, an dem Chromium sie suchte). Volles Paket
-// hat alles im node_modules → executablePath() ohne URL-Arg, kein Download.
+// 09.05.2026 Diagnose-Loop für die WCAG-Engine:
+//   1. chromium-min v143 + v131-Pack-URL → Wrapper/Pack-Version-Mismatch
+//   2. chromium-min v143 + v143-Pack-URL → libnss3.so missing (Pack-Layout)
+//   3. chromium v148 (full) → libnspr4.so missing (bleeding-edge AL-Libs)
+//   4. chromium v131.0.1 (full, downgrade) → ENDLICH stabil auf Vercel-AL2023.
+// Volles Paket bündelt Binary + .br-komprimierte AL2023-Libs. executablePath()
+// extrahiert beim ersten Call alles nach /tmp und LD_LIBRARY_PATH zeigt darauf.
+// v131 ist bewusst älter gewählt — ist die meistens-deployte Vercel-Variante.
 
 // Globale Bremse: max 3 WCAG-Scans pro Minute (Playwright + Claude = teuer)
 const globalLimit = { count: 0, resetAt: 0 };
