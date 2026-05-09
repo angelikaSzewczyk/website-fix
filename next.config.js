@@ -5,10 +5,13 @@ const nextConfig = {
   // streamt sie nach Auth-Check. Vercel muss den Ordner trotzdem in den
   // Serverless-Function-Bundle aufnehmen, sonst ENOENT zur Laufzeit.
   // In Next.js 14 unter experimental — wird in 15 promotet.
+  // 09.05.2026: + @sparticuz/chromium-Binary in den /api/wcag-scan-Bundle
+  // ziehen, sonst ENOENT bei executablePath() zur Laufzeit.
   experimental: {
     outputFileTracingIncludes: {
       "/api/plugin/download": ["./private-assets/plugin/**/*"],
       "/api/plugin/download/[file]": ["./private-assets/plugin/**/*"],
+      "/api/wcag-scan": ["./node_modules/@sparticuz/chromium/**/*"],
     },
   },
   webpack: (config, { isServer }) => {
@@ -16,7 +19,10 @@ const nextConfig = {
       config.externals = [
         ...(Array.isArray(config.externals) ? config.externals : [config.externals]).filter(Boolean),
         "playwright-core",
-        "@sparticuz/chromium-min",
+        // 09.05.2026: chromium-min → chromium (volles Paket). Externals-Eintrag
+        // muss matchen, sonst relociert Webpack das Binary und bin/-Ordner ist
+        // zur Laufzeit nicht am erwarteten Pfad.
+        "@sparticuz/chromium",
       ];
     }
     return config;
