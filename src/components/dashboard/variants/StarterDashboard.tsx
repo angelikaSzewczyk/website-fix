@@ -80,6 +80,9 @@ export interface StarterDashboardProps {
   pluginActive?:          boolean;
   pluginLastHandshakeAt?: string | null;
   pluginDeepData?:        DeepData | null;
+  /** 09.05.2026: Site-Kontext aus meta_json.site_context — füttert die
+   *  CMS-Stack-Analyse-Card (wpVersion, xmlRpc, sitemap, robots, SEO-Plugin). */
+  siteContext?:           import("@/lib/scan-engine/types").SiteContext | null;
 }
 
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
@@ -111,6 +114,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
     pluginActive = false,
     pluginLastHandshakeAt = null,
     pluginDeepData = null,
+    siteContext = null,
   } = props;
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
@@ -404,6 +408,11 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
     const php = pick(fp.phpVersion);
     if (php)    chips.push({ label: "PHP",       value: php,              color: "#a78bfa" });
+
+    // Hosting-Chip — vorher übersprungen (09.05.2026 Bug-Fix). Anon-Results
+    // rendern den Hoster prominent im Hero-Badge — Starter sah ihn nirgends.
+    const hosting = pick(fp.hosting);
+    if (hosting) chips.push({ label: "Hosting",  value: hosting,          color: "#fbbf24" });
 
     // SSL is always shown
     const sslDisplay = fp.ssl.value.startsWith("SSL aktiv") ? "Aktiv"
@@ -1025,7 +1034,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
           {/* ② TECH FINGERPRINT STRIP */}
           {!isNewScan && lastScan && techChips.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28, padding: "14px 0 2px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, padding: "14px 0 2px" }}>
               {techChips.map(item => (
                 <div key={item.label} style={{
                   display: "flex", alignItems: "center", gap: 7,
@@ -1044,6 +1053,178 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                   </span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ②a CMS-STACK-ANALYSE — 09.05.2026 ergänzt aus den Anon-Results.
+              Pricing-Strict-Korrektur: zahlende Starter sahen NICHTS davon, der
+              gratis Anon-Scan zeigte WP-Version, XML-RPC, Sitemap, robots.txt
+              und SEO-Plugin-Status. Jetzt 1:1 hier auch — und das ist erst der
+              Anfang: mit Plugin liefert der Hybrid-Scan zusätzlich PHP-Logs,
+              DB-Last, exakte Pfade. Risk-Hinweise je Reihe für besseren Kontext. */}
+          {!isNewScan && lastScan && siteContext && (siteContext.wpVersion || fingerprint?.cms.value === "WordPress") && (
+            <div style={{
+              background: "rgba(255,255,255,0.025)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14,
+              padding: "20px 22px",
+              marginBottom: 20,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 9,
+                  background: "rgba(33,117,218,0.12)", border: "1px solid rgba(33,117,218,0.25)",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: D.textMuted, textTransform: "uppercase", letterSpacing: "0.09em" }}>
+                    CMS-Stack-Analyse
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: D.text }}>
+                    WordPress erkannt — tiefgehende Prüfung
+                  </div>
+                </div>
+                {siteContext.wpVersion && (
+                  <div style={{
+                    marginLeft: "auto",
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "4px 10px", borderRadius: 20,
+                    background: "rgba(122,166,255,0.08)", border: "1px solid rgba(122,166,255,0.2)",
+                  }}>
+                    <span style={{ fontSize: 11, color: D.textMuted }}>WordPress</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: D.blueSoft, fontFamily: "monospace" }}>
+                      v{siteContext.wpVersion}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
+                {(() => {
+                  type StackItem = { label: string; ok: boolean; detail: string; risk: string | null };
+                  const items: StackItem[] = [
+                    {
+                      label: "WordPress erkannt",
+                      ok: true,
+                      detail: siteContext.wpVersion
+                        ? `Version ${siteContext.wpVersion} im Generator-Tag`
+                        : "Version nicht öffentlich sichtbar",
+                      risk: siteContext.wpVersion
+                        ? "Version öffentlich: Angreifer können gezielt bekannte Lücken suchen"
+                        : null,
+                    },
+                    {
+                      label: "XML-RPC Schnittstelle",
+                      ok: !siteContext.xmlRpcOpen,
+                      detail: siteContext.xmlRpcOpen
+                        ? "/xmlrpc.php antwortet (Angriffsfläche offen)"
+                        : "/xmlrpc.php blockiert",
+                      risk: siteContext.xmlRpcOpen
+                        ? "Sicherheitsrisiko: XML-RPC ermöglicht Brute-Force-Attacken & DDoS-Amplification"
+                        : null,
+                    },
+                    {
+                      label: "Sitemap gefunden",
+                      ok: !!siteContext.sitemapVorhanden,
+                      detail: siteContext.sitemapIndexFound
+                        ? "sitemap_index.xml vorhanden"
+                        : siteContext.sitemapVorhanden
+                          ? "sitemap.xml vorhanden"
+                          : "Keine Sitemap gefunden",
+                      risk: !siteContext.sitemapVorhanden
+                        ? "Google findet neue Seiten langsamer — SEO-Indexierungsverzögerung"
+                        : null,
+                    },
+                    {
+                      label: "robots.txt Status",
+                      ok: !siteContext.robotsBlockiertAlles,
+                      detail: siteContext.robotsBlockiertAlles
+                        ? "Disallow: / — alle Crawler gesperrt"
+                        : "Crawler erlaubt",
+                      risk: siteContext.robotsBlockiertAlles
+                        ? "Kritisch: Seite komplett deindexiert — kein organischer Traffic"
+                        : null,
+                    },
+                    {
+                      label: "SEO-Plugin",
+                      ok: !!(siteContext.hasRankMath || siteContext.hasYoast),
+                      detail: siteContext.hasRankMath
+                        ? "Rank Math erkannt — strukturierte SEO-Daten aktiv"
+                        : siteContext.hasYoast
+                          ? "Yoast SEO erkannt — strukturierte SEO-Daten aktiv"
+                          : "Kein SEO-Plugin erkannt",
+                      risk: !(siteContext.hasRankMath || siteContext.hasYoast)
+                        ? "Schema-Markup & Sitemap-Generierung möglicherweise nicht optimiert"
+                        : null,
+                    },
+                    {
+                      label: "SSL-Zertifikat",
+                      ok: !!siteContext.https,
+                      detail: siteContext.sslExpiresAt
+                        ? `Gültig bis ${new Date(siteContext.sslExpiresAt).toLocaleDateString("de-DE")}`
+                        : siteContext.https
+                          ? "HTTPS aktiv"
+                          : "Kein HTTPS",
+                      risk: !siteContext.https
+                        ? "Mixed-Content + Browser-Warnungen — SEO-Penalty"
+                        : null,
+                    },
+                  ];
+                  return items.map(item => {
+                    const borderColor = !item.ok ? "rgba(251,191,36,0.25)" : "rgba(34,197,94,0.18)";
+                    const bgColor    = !item.ok ? "rgba(251,191,36,0.05)" : "rgba(34,197,94,0.04)";
+                    const dotColor   = !item.ok ? "#fbbf24" : "#22c55e";
+                    return (
+                      <div key={item.label} style={{
+                        padding: "12px 14px", borderRadius: 10,
+                        background: bgColor, border: `1px solid ${borderColor}`,
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dotColor}
+                            strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true">
+                            {item.ok
+                              ? <polyline points="20 6 9 17 4 12"/>
+                              : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+                            }
+                          </svg>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.78)" }}>
+                            {item.label}
+                          </span>
+                        </div>
+                        <div style={{
+                          fontSize: 11, color: D.textMuted,
+                          fontFamily: "monospace", lineHeight: 1.45,
+                          marginBottom: item.risk ? 6 : 0,
+                        }}>
+                          {item.detail}
+                        </div>
+                        {item.risk && (
+                          <div style={{ fontSize: 10, color: dotColor, lineHeight: 1.45, opacity: 0.9 }}>
+                            {item.risk}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              {!pluginActive && (
+                <div style={{
+                  marginTop: 14, padding: "10px 12px", borderRadius: 8,
+                  background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.20)",
+                  fontSize: 11, color: D.textSub, lineHeight: 1.55,
+                }}>
+                  <strong style={{ color: "#a78bfa" }}>Mit Plugin:</strong> zusätzlich PHP-Error-Logs,
+                  DB-Last, Cron-Health, Plugin-Versionen + Sicherheits-Indikatoren — diese Daten kann
+                  ein externer Crawler nicht sehen.
+                </div>
+              )}
             </div>
           )}
 

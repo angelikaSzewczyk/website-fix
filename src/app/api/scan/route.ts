@@ -181,8 +181,12 @@ function siteContextFromScanData(
     rootUrl,
     https:                !!scanData.https,
     sitemapVorhanden:     !!scanData.sitemapVorhanden,
+    sitemapIndexFound:    !!scanData.sitemapIndexFound,
     robotsBlockiertAlles: !!scanData.robotsBlockiertAlles,
     wpVersion:            typeof scanData.wpVersion === "string" ? scanData.wpVersion : null,
+    xmlRpcOpen:           !!scanData.xmlRpcOpen,
+    hasYoast:             !!scanData.hasYoast,
+    hasRankMath:          !!scanData.hasRankMath,
     sslExpiresAt,
   };
 }
@@ -753,6 +757,9 @@ async function saveUserScan(params: {
   avgTtfbMs?:          number | null;
   wcagHeuristicScore?: number | null;
   wcagHeuristicLabel?: string | null;
+  /** 09.05.2026: Site-Kontext (wpVersion, sitemap, robots, XML-RPC, SEO-Plugin)
+   *  für die "CMS-Stack-Analyse"-Card im StarterDashboard. */
+  siteContext?:        SiteContext | null;
 }): Promise<string | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
@@ -811,6 +818,7 @@ async function saveUserScan(params: {
     if (typeof params.avgTtfbMs === "number" && params.avgTtfbMs >= 0) metaJsonObj.avg_ttfb_ms = params.avgTtfbMs;
     if (typeof params.wcagHeuristicScore === "number") metaJsonObj.wcag_heuristic_score = params.wcagHeuristicScore;
     if (typeof params.wcagHeuristicLabel === "string") metaJsonObj.wcag_heuristic_label = params.wcagHeuristicLabel;
+    if (params.siteContext) metaJsonObj.site_context = params.siteContext;
     const metaJson = Object.keys(metaJsonObj).length > 0 ? metaJsonObj : null;
     const rows = await sql`
       INSERT INTO scans (user_id, url, type, issue_count, result, issues_json, speed_score, tech_fingerprint, total_pages, unterseiten_json, meta_json, is_superseded)
@@ -1256,6 +1264,7 @@ export async function POST(req: NextRequest) {
             avgTtfbMs:          cachedScanResult.avgTtfbMs,
             wcagHeuristicScore: cachedScanResult.wcagHeuristicScore,
             wcagHeuristicLabel: cachedScanResult.wcagHeuristicLabel,
+            siteContext:        siteContextFromScanData(cached.scanData, targetUrl, cachedSslExpiresAt),
           });
         }
         logScan({ userId, url: targetUrl, scanType: "website", status: "cached", fromCache: true });
@@ -1749,6 +1758,7 @@ PFLICHT-REGELN:
           avgTtfbMs:          _scanResult.avgTtfbMs,
           wcagHeuristicScore: _scanResult.wcagHeuristicScore,
           wcagHeuristicLabel: _scanResult.wcagHeuristicLabel,
+          siteContext:        _scanResult.siteContext,
         })
       : null;
 

@@ -145,11 +145,19 @@ export type SiteContext = {
   https:                boolean;
   /** True wenn /sitemap.xml einen 2xx-Status liefert. */
   sitemapVorhanden:     boolean;
+  /** True wenn /sitemap.xml ein <sitemapindex>-Element ist (multi-sitemap setup). */
+  sitemapIndexFound?:   boolean;
   /** True wenn /robots.txt "Disallow: /" für User-agent: * enthält. */
   robotsBlockiertAlles: boolean;
   /** Erkannte WordPress-Major-Version (z.B. "6.5"), null wenn nicht WP
    *  oder Generator-Tag versteckt. */
   wpVersion:            string | null;
+  /** True wenn /xmlrpc.php mit 200 oder 405 antwortet (offen, evtl. Brute-Force-Vektor). */
+  xmlRpcOpen?:          boolean;
+  /** True wenn Yoast SEO im rendered HTML erkannt wird (yoast/wpseo). */
+  hasYoast?:            boolean;
+  /** True wenn Rank Math im rendered HTML erkannt wird. */
+  hasRankMath?:         boolean;
   /** Phase A2 / Infrastructure-Slot: SSL-Cert-Ablaufdatum als ISO-String.
    *  Aktuell IMMER null — Phase A3 verkabelt tls.connect() für die echte
    *  Cert-Inspection. Existiert hier vorerst nur als Datentyp-Slot, sodass
@@ -200,6 +208,11 @@ export type ScanResult = {
   techFingerprint:     unknown | null;
   speedScore:          number;
   meta:                ScanMetadata;
+  /** Site-Kontext (wpVersion, xmlRpcOpen, sitemap, robots, SEO-Plugin, SSL).
+   *  09.05.2026: ergänzt damit das eingeloggte Dashboard die "CMS-Stack-Analyse"-
+   *  Card aus den Anon-Results 1:1 rendern kann. Wird in meta_json.site_context
+   *  persistiert. */
+  siteContext:         SiteContext;
   // ── Site-Wide Metrics (Helikopter-Blick, Säule 3) ──
   /** Mittelwert aller TTFB-Werte über erreichbare Pages. Null wenn keine
    *  Page eine TTFB-Messung lieferte. */

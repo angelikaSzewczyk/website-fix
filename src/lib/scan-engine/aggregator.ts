@@ -112,6 +112,7 @@ export function consolidateScans(
     techFingerprint:    options.techFingerprint ?? null,
     speedScore,
     meta:               options.meta ?? {},
+    siteContext,
     avgTtfbMs,
     wcagHeuristicScore,
     // Phase A2: Disclaimer-String, den UIs zwingend anzeigen sollen.

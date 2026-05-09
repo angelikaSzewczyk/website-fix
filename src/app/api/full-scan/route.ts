@@ -551,6 +551,7 @@ Erstelle Site-Audit-Bericht auf Deutsch (für Agentur-Kundenbericht):
                 ...scanResult.meta,
                 avg_ttfb_ms:           scanResult.avgTtfbMs,
                 wcag_heuristic_score:  scanResult.wcagHeuristicScore,
+                site_context:          scanResult.siteContext,
               })}::jsonb,
               ${isSuperseded}
             )

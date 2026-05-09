@@ -483,13 +483,15 @@ export default async function DashboardPage({
   let lastScanAvgTtfbMs: number | null = null;
   let lastScanWcagScore: number | null = null;
   let lastScanWcagLabel: string | null = null;
+  // 09.05.2026: Site-Kontext für die "CMS-Stack-Analyse"-Card im StarterDashboard.
+  let lastScanSiteContext: import("@/lib/scan-engine/types").SiteContext | null = null;
   const lastScan = scans[0] ?? null;
   if (!isAgency && lastScan) {
     try {
       const rows = await sql`
         SELECT result, issues_json, tech_fingerprint, total_pages, unterseiten_json, speed_score, meta_json
         FROM scans WHERE id = ${lastScan.id} AND user_id = ${session.user.id}
-      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit; ttfb_ms?: number; avg_ttfb_ms?: number; wcag_heuristic_score?: number; wcag_heuristic_label?: string } | null }[];
+      ` as { result: string | null; issues_json: unknown; tech_fingerprint: unknown; total_pages: number | null; unterseiten_json: unknown; speed_score: number | null; meta_json: { woo_audit?: typeof lastScanWooAudit; builder_audit?: typeof lastScanBuilderAudit; ttfb_ms?: number; avg_ttfb_ms?: number; wcag_heuristic_score?: number; wcag_heuristic_label?: string; site_context?: import("@/lib/scan-engine/types").SiteContext } | null }[];
       lastScanResult = rows[0]?.result ?? null;
       lastScanIssuesJson = (rows[0]?.issues_json as ParsedIssue[] | null) ?? null;
       // Sanitize tech_fingerprint: leeres Objekt {} aus DB (z.B. Phase-B-Migration
@@ -524,6 +526,7 @@ export default async function DashboardPage({
       lastScanWcagLabel = typeof rows[0]?.meta_json?.wcag_heuristic_label === "string"
         ? rows[0].meta_json.wcag_heuristic_label
         : null;
+      lastScanSiteContext = rows[0]?.meta_json?.site_context ?? null;
     } catch {}
   }
 
@@ -762,6 +765,7 @@ export default async function DashboardPage({
               avgTtfbMs={lastScanAvgTtfbMs}
               wcagHeuristicScore={lastScanWcagScore}
               wcagHeuristicLabel={lastScanWcagLabel}
+              siteContext={lastScanSiteContext}
               pluginActive={pluginStatus.pluginActive}
               pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
               pluginDeepData={pluginStatus.deepData}
@@ -796,6 +800,7 @@ export default async function DashboardPage({
               avgTtfbMs={lastScanAvgTtfbMs}
               wcagHeuristicScore={lastScanWcagScore}
               wcagHeuristicLabel={lastScanWcagLabel}
+              siteContext={lastScanSiteContext}
               pluginActive={pluginStatus.pluginActive}
               pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
               pluginDeepData={pluginStatus.deepData}
