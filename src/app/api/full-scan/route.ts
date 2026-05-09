@@ -271,10 +271,30 @@ export async function GET(req: NextRequest) {
         }
 
         // ── Pre-Check: ist die Root überhaupt erreichbar? ─────────────────
+        // 09.05.2026: Timeout von 8s auf 20s erhöht. Shared-Hosting + WP mit
+        // langer Plugin-Chain hat oft TTFB von 5-10s — und der full-scan
+        // braucht den Pre-Check sowieso nur als "Ist die Site überhaupt
+        // online?"-Probe, nicht als Performance-Test. Gleichzeitig werden
+        // konkrete Fehlerursachen geloggt + an den Client weitergereicht,
+        // damit "Site konnte nicht erreicht werden" nicht für Timeouts und
+        // 503er gleichermaßen rausgeht.
         enqueue("phase", { phase: "checking", message: "Prüfe Erreichbarkeit der Website..." });
-        const preCheck = await fetchWithTtfb(targetUrl, 8000);
-        if (!preCheck.res || !isRealWebsiteContent(preCheck.res, preCheck.html, host)) {
-          enqueue("error", { message: "Website konnte nicht erreicht werden – bitte prüfe die URL." });
+        const preCheck = await fetchWithTtfb(targetUrl, 20000);
+        if (!preCheck.res) {
+          const reason = "Verbindung fehlgeschlagen oder Timeout (>20s). Site evtl. offline oder hinter strenger WAF.";
+          logScan({ userId: session.user!.id, url: targetUrl, scanType: "fullsite", status: "error", errorMsg: reason });
+          enqueue("error", { message: `Website konnte nicht erreicht werden – ${reason}` });
+          controller.close();
+          return;
+        }
+        if (!isRealWebsiteContent(preCheck.res, preCheck.html, host)) {
+          const reason = preCheck.res.status >= 400
+            ? `HTTP ${preCheck.res.status} (${preCheck.res.statusText || "Server-Fehler"})`
+            : preCheck.html.length < 500
+              ? `Antwort zu kurz (${preCheck.html.length} Bytes) — evtl. leere Shell oder Redirect-Loop`
+              : "Parking-/Default-/404-Seite erkannt — keine echte Website am Ende der URL";
+          logScan({ userId: session.user!.id, url: targetUrl, scanType: "fullsite", status: "error", errorMsg: reason });
+          enqueue("error", { message: `Website konnte nicht gescannt werden – ${reason}` });
           controller.close();
           return;
         }
