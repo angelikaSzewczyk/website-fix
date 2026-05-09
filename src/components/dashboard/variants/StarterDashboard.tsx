@@ -1195,9 +1195,9 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                   </div>
                 ))
               ) : [
-                { label: "Handlungsbedarf", total: redTotal,    cats: redCount,    color: D.red,   bg: D.redBg,   border: D.redBorder   },
-                { label: "Optimierungen",   total: yellowTotal, cats: yellowCount, color: D.amber, bg: D.amberBg, border: D.amberBorder },
-                { label: "Hinweise",        total: greenTotal,  cats: greenCount,  color: D.green, bg: D.greenBg, border: D.greenBorder },
+                { label: "Handlungsbedarf",      total: redTotal,    cats: redCount,    color: D.red,   bg: D.redBg,   border: D.redBorder   },
+                { label: "Optimierungshinweise", total: yellowTotal, cats: yellowCount, color: D.amber, bg: D.amberBg, border: D.amberBorder },
+                { label: "Hinweise",             total: greenTotal,  cats: greenCount,  color: D.green, bg: D.greenBg, border: D.greenBorder },
               ].map(s => (
                 <div key={s.label} style={{
                   padding: "20px 22px",
