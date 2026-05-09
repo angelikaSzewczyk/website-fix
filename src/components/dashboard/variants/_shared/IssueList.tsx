@@ -1316,12 +1316,11 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Print header hidden on screen — globals.css handles all @media print rules */
-        .wf-print-header { display: none; }
-        /* Executive summary print box hidden on screen */
-        .wf-exec-summary-print { display: none; }
-        /* Agency footer hidden on screen */
-        .wf-agency-footer { display: none; }
+        /* Print-only Klassen (.wf-print-header, .wf-exec-summary-print,
+           .wf-agency-footer) werden global in globals.css mit display:none
+           ausgeblendet — siehe Block direkt vor @media print. Die Inline-
+           Regeln hier haben Hydration-Edge-Cases ausgelöst (Footer wurde
+           gelegentlich auf dem Bildschirm sichtbar). */
 
         @media print {
           :root { --agency-primary: ${agencyColor}; }

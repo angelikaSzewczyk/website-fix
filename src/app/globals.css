@@ -3227,6 +3227,18 @@ footer a, nav a.footerLink {
   }
 }
 
+/* ─── PRINT-ONLY ELEMENTS — auf dem Bildschirm IMMER unsichtbar ───────────────
+   Vorher steckte die display:none-Regel nur in einem JSX <style>-Tag in
+   IssueList.tsx — Next.js-Streaming/Hydration konnte den Tag verlieren,
+   sodass der Agency-Footer ('Dieser Bericht wurde mit WebsiteFix.io erstellt.')
+   im Browser sichtbar wurde. 09.05.2026: Hide-Regel global, mit !important.
+   Inside @media print werden sie wieder sichtbar (siehe weiter unten). */
+.wf-print-header,
+.wf-exec-summary-print,
+.wf-agency-footer {
+  display: none !important;
+}
+
 @media print {
   /* ─── 1. WHITE BASE ─────────────────────────────────────────────────────── */
   html, body {
