@@ -407,8 +407,14 @@ export default function FatalErrorAlert({ deepData, userPlan, pageUrl }: Props) 
           border: `1px solid ${C.border}`,
         }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted,
-                        letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4 }}>
-            🧠 Erste Vermutung
+                        letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4,
+                        display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/>
+              <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/>
+            </svg>
+            Erste Vermutung
           </div>
           <p style={{ margin: 0, fontSize: 12.5, color: C.textSub, lineHeight: 1.55 }}>
             {hint}
@@ -432,7 +438,21 @@ export default function FatalErrorAlert({ deepData, userPlan, pageUrl }: Props) 
               : "0 4px 16px rgba(248,113,113,0.32)",
           }}
         >
-          {isAgency ? "📋" : "📄"} {ctaLabel}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {isAgency ? (
+              <>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              </>
+            ) : (
+              <>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </>
+            )}
+          </svg>
+          {ctaLabel}
         </button>
       </div>
 
@@ -528,10 +548,18 @@ export default function FatalErrorAlert({ deepData, userPlan, pageUrl }: Props) 
                     boxShadow: copied === "text" ? "none" : "0 3px 12px rgba(34,197,94,0.30)",
                   }}
                 >
-                  {copied === "text" ? "✓ Kopiert" : (
+                  {copied === "text" ? (
                     <>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                           strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                           strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Kopiert
+                    </>
+                  ) : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <rect x="9" y="9" width="13" height="13" rx="2"/>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                       </svg>
@@ -556,7 +584,15 @@ export default function FatalErrorAlert({ deepData, userPlan, pageUrl }: Props) 
                         fontFamily: "inherit",
                       }}
                     >
-                      {copied === "json" ? "✓ JSON kopiert" : "JSON kopieren"}
+                      {copied === "json" ? (
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          JSON kopiert
+                        </>
+                      ) : "JSON kopieren"}
                     </button>
                     <button
                       onClick={handleDelegate}
@@ -574,8 +610,15 @@ export default function FatalErrorAlert({ deepData, userPlan, pageUrl }: Props) 
                         fontFamily: "inherit",
                       }}
                     >
-                      {delegated ? "✓ An Team delegiert"
-                       : delegating ? "Wird delegiert…"
+                      {delegated ? (
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          An Team delegiert
+                        </>
+                      ) : delegating ? "Wird delegiert…"
                        : "An Team delegieren →"}
                     </button>
                   </>

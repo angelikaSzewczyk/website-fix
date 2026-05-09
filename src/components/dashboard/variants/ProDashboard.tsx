@@ -1041,20 +1041,37 @@ export default function ProDashboard(props: ProDashboardProps) {
                   Scans" + "Voller Deep-Scan: SEO, Technik, Performance, BFSG".
                   getMaxSubpages('professional') = 500. Speed-Hint ehrlich auf
                   1-2 Min (Engine-Realität ~30-90s). */}
-              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                 {[
-                  { icon: "📄", text: "Bis zu 500 Unterseiten" },
-                  { icon: "🤖", text: "KI-Auto-Fix" },
-                  { icon: "♿", text: "BFSG-Check" },
-                  { icon: "⚡", text: "Ergebnis in 1-2 Min" },
+                  {
+                    text: "Bis zu 500 Unterseiten",
+                    svg: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>,
+                  },
+                  {
+                    text: "KI-Auto-Fix",
+                    svg: <><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></>,
+                  },
+                  {
+                    text: "BFSG-Check",
+                    svg: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+                  },
+                  {
+                    text: "Ergebnis in 1-2 Min",
+                    svg: <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>,
+                  },
                 ].map(b => (
                   <div key={b.text} style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.55)",
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                    background: "rgba(0,123,255,0.06)",
+                    border: `1px solid ${D.blueBorder}`,
+                    color: D.blueSoft,
                   }}>
-                    <span>{b.icon}</span>{b.text}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      {b.svg}
+                    </svg>
+                    {b.text}
                   </div>
                 ))}
               </div>
@@ -1087,25 +1104,29 @@ export default function ProDashboard(props: ProDashboardProps) {
                     {" · "}
                     {totalErrors > 0
                       ? `${totalErrors} Optimierungen verfügbar`
-                      : "Alles optimiert ✓"}
+                      : "Alles optimiert"}
                   </p>
                 )}
-                {/* Status badge — amber for opportunities, green for perfect */}
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px", borderRadius: 20,
-                  background: totalErrors > 0 ? D.amberBg : D.greenBg,
-                  border: `1px solid ${totalErrors > 0 ? D.amberBorder : D.greenBorder}`,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%",
-                    background: totalErrors > 0 ? D.amber : D.green,
-                    flexShrink: 0,
-                  }} />
-                  <span style={{ fontSize: 11, fontWeight: 700,
-                    color: totalErrors > 0 ? D.amber : D.green,
+                {/* Status badge — amber für Optimierungen, green für perfekt.
+                    Nur wenn lastScan vorhanden — "Alles optimiert" ohne Scan
+                    wäre logisch falsch (es wurde NICHTS gescannt). */}
+                {lastScan && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", borderRadius: 20,
+                    background: totalErrors > 0 ? D.amberBg : D.greenBg,
+                    border: `1px solid ${totalErrors > 0 ? D.amberBorder : D.greenBorder}`,
                   }}>
-                    {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert ✓"}
-                  </span>
-                </div>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%",
+                      background: totalErrors > 0 ? D.amber : D.green,
+                      flexShrink: 0,
+                    }} />
+                    <span style={{ fontSize: 11, fontWeight: 700,
+                      color: totalErrors > 0 ? D.amber : D.green,
+                    }}>
+                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert"}
+                    </span>
+                  </div>
+                )}
 
                 {/* WooCommerce-Shop-Badge — immer sichtbar bei erkanntem Shop (alle Pläne) */}
                 {fingerprint && fingerprint.ecommerce.value === "WooCommerce" && fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD && (
@@ -1285,12 +1306,17 @@ export default function ProDashboard(props: ProDashboardProps) {
               borderRadius: 12,
             }}>
               <div style={{
-                fontSize: 22, flexShrink: 0,
+                flexShrink: 0,
                 background: "rgba(251,191,36,0.1)",
                 border: "1px solid rgba(251,191,36,0.2)",
-                borderRadius: 8, padding: "6px 10px",
+                borderRadius: 8, padding: 8,
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                color: "#FBBF24",
               }}>
-                🔧
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#FBBF24" }}>
@@ -1321,12 +1347,19 @@ export default function ProDashboard(props: ProDashboardProps) {
               borderRadius: 12,
             }}>
               <div style={{
-                fontSize: 22, flexShrink: 0,
+                flexShrink: 0,
                 background: "rgba(167,139,250,0.08)",
                 border: "1px solid rgba(167,139,250,0.2)",
-                borderRadius: 8, padding: "6px 10px",
+                borderRadius: 8, padding: 8,
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                color: "#a78bfa",
               }}>
-                🧲
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 11 11L13 22l-4-4 6.39-6.36a2.14 2.14 0 0 0-3-3.03z"/>
+                  <path d="m5 8 4 4"/>
+                  <path d="m12 15 4 4"/>
+                </svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#a78bfa" }}>
@@ -1438,7 +1471,22 @@ export default function ProDashboard(props: ProDashboardProps) {
               background: bfsgOk ? D.greenBg : D.amberBg,
               border: `1px solid ${bfsgOk ? D.greenBorder : D.amberBorder}`,
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{bfsgOk ? "✅" : "⚠️"}</span>
+              <span style={{ flexShrink: 0, color: bfsgOk ? D.green : D.amber, display: "inline-flex" }}>
+                {bfsgOk ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                )}
+              </span>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700,
                   color: bfsgOk ? D.green : "#FBBF24",
@@ -2186,10 +2234,19 @@ export default function ProDashboard(props: ProDashboardProps) {
                     border: `1px solid ${batchResult.summary.failed === 0 ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}`,
                   }}>
                     <p style={{ margin: 0, fontSize: 12, fontWeight: 700,
-                      color: batchResult.summary.failed === 0 ? "#34d399" : "#FBBF24" }}>
+                      color: batchResult.summary.failed === 0 ? "#34d399" : "#FBBF24",
+                      display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        {batchResult.summary.failed === 0 ? (
+                          <polyline points="20 6 9 17 4 12"/>
+                        ) : (
+                          <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
+                        )}
+                      </svg>
                       {batchResult.summary.failed === 0
-                        ? `✓ ${batchResult.summary.success} / ${batchResult.summary.total} Sites erfolgreich`
-                        : `⚠ ${batchResult.summary.success} OK · ${batchResult.summary.failed} Fehler`}
+                        ? `${batchResult.summary.success} / ${batchResult.summary.total} Sites erfolgreich`
+                        : `${batchResult.summary.success} OK · ${batchResult.summary.failed} Fehler`}
                     </p>
                   </div>
                 )}
@@ -2239,7 +2296,15 @@ export default function ProDashboard(props: ProDashboardProps) {
                         flexShrink: 0, transition: "all 0.2s",
                       }}
                     >
-                      {pluginKeyCopied ? "✓ Kopiert!" : "Kopieren"}
+                      {pluginKeyCopied ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          Kopiert!
+                        </span>
+                      ) : "Kopieren"}
                     </button>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

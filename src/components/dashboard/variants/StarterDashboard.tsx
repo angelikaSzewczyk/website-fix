@@ -874,22 +874,26 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                       : "Alles optimiert"}
                   </p>
                 )}
-                {/* Status badge — amber for opportunities, green for perfect */}
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px", borderRadius: 20,
-                  background: totalErrors > 0 ? D.amberBg : D.greenBg,
-                  border: `1px solid ${totalErrors > 0 ? D.amberBorder : D.greenBorder}`,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%",
-                    background: totalErrors > 0 ? D.amber : D.green,
-                    flexShrink: 0,
-                  }} />
-                  <span style={{ fontSize: 11, fontWeight: 700,
-                    color: totalErrors > 0 ? D.amber : D.green,
+                {/* Status badge — amber für Optimierungen, green für perfekt.
+                    Nur rendern wenn ein Scan existiert — sonst ist "Alles optimiert"
+                    bei lastScan=null logisch falsch (es wurde NICHTS gescannt). */}
+                {lastScan && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", borderRadius: 20,
+                    background: totalErrors > 0 ? D.amberBg : D.greenBg,
+                    border: `1px solid ${totalErrors > 0 ? D.amberBorder : D.greenBorder}`,
                   }}>
-                    {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert"}
-                  </span>
-                </div>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%",
+                      background: totalErrors > 0 ? D.amber : D.green,
+                      flexShrink: 0,
+                    }} />
+                    <span style={{ fontSize: 11, fontWeight: 700,
+                      color: totalErrors > 0 ? D.amber : D.green,
+                    }}>
+                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert"}
+                    </span>
+                  </div>
+                )}
 
                 {/* WooCommerce-Shop-Badge — immer sichtbar bei erkanntem Shop (alle Pläne) */}
                 {fingerprint && fingerprint.ecommerce.value === "WooCommerce" && fingerprint.ecommerce.confidence >= CONFIDENCE_THRESHOLD && (
@@ -1091,7 +1095,22 @@ export default function StarterDashboard(props: StarterDashboardProps) {
               background: bfsgOk ? D.greenBg : D.amberBg,
               border: `1px solid ${bfsgOk ? D.greenBorder : D.amberBorder}`,
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{bfsgOk ? "✅" : "⚠️"}</span>
+              <span style={{ flexShrink: 0, color: bfsgOk ? D.green : D.amber, display: "inline-flex" }}>
+                {bfsgOk ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                )}
+              </span>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700,
                   color: bfsgOk ? D.green : "#FBBF24",
@@ -1841,10 +1860,19 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                     border: `1px solid ${batchResult.summary.failed === 0 ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}`,
                   }}>
                     <p style={{ margin: 0, fontSize: 12, fontWeight: 700,
-                      color: batchResult.summary.failed === 0 ? "#34d399" : "#FBBF24" }}>
+                      color: batchResult.summary.failed === 0 ? "#34d399" : "#FBBF24",
+                      display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        {batchResult.summary.failed === 0 ? (
+                          <polyline points="20 6 9 17 4 12"/>
+                        ) : (
+                          <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
+                        )}
+                      </svg>
                       {batchResult.summary.failed === 0
-                        ? `✓ ${batchResult.summary.success} / ${batchResult.summary.total} Sites erfolgreich`
-                        : `⚠ ${batchResult.summary.success} OK · ${batchResult.summary.failed} Fehler`}
+                        ? `${batchResult.summary.success} / ${batchResult.summary.total} Sites erfolgreich`
+                        : `${batchResult.summary.success} OK · ${batchResult.summary.failed} Fehler`}
                     </p>
                   </div>
                 )}
@@ -1894,7 +1922,15 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                         flexShrink: 0, transition: "all 0.2s",
                       }}
                     >
-                      {pluginKeyCopied ? "✓ Kopiert!" : "Kopieren"}
+                      {pluginKeyCopied ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          Kopiert!
+                        </span>
+                      ) : "Kopieren"}
                     </button>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

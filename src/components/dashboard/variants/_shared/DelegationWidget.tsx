@@ -48,7 +48,20 @@ export default function DelegationWidget({ stats }: { stats: DelegationStats }) 
         marginBottom: 16,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 28 }}>👥</span>
+          <span style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            width: 40, height: 40, borderRadius: 10,
+            background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)",
+            color: "#fbbf24", flexShrink: 0,
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </span>
           <div style={{ flex: 1, minWidth: 240 }}>
             <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>
               Delegations-Hebel — bald aktiv

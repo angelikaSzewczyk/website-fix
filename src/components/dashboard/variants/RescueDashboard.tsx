@@ -445,7 +445,12 @@ export default function RescueDashboard({
                     title="Sofort-Fix-Anleitung freischalten"
                   >
                     <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 14 }}>🚨</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
                       <span>SOS-Fix anfordern</span>
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.text, opacity: 0.8 }}>
@@ -464,7 +469,13 @@ export default function RescueDashboard({
                       fontSize: 12, fontWeight: 700, textDecoration: "none",
                     }}
                   >
-                    <span>✓ Anleitung öffnen</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Anleitung öffnen
+                    </span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6"/>
                     </svg>
