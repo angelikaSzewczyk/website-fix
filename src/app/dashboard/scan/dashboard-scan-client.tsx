@@ -416,6 +416,7 @@ export default function DashboardScanClient({
   scanLimit = 3,
   isReScan = false,
   lastScanAt = null,
+  lastScanId = null,
 }: {
   userName: string;
   plan: string;
@@ -427,6 +428,8 @@ export default function DashboardScanClient({
   isReScan?: boolean;
   /** ISO-Timestamp des letzten Scans dieser URL (Server-side gequert). */
   lastScanAt?: string | null;
+  /** ID des letzten Scans dieser URL — Eingabe für den Vergleichs-Toggle. */
+  lastScanId?: string | null;
 }) {
   // Hardcoded: alle Plans bekommen den Full-Site Deep-Scan (Pricing-konform).
   // Die anderen Modi (wcag/performance/website) sind code-mäßig noch
@@ -456,6 +459,10 @@ export default function DashboardScanClient({
   const [urlFocused, setUrlFocused] = useState(false);
   const [urlHint, setUrlHint]       = useState<"https" | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  // Re-Scan-Vergleichs-Toggle (09.05.2026): wenn aktiv, springt der User
+  // nach Scan-Abschluss direkt auf die Compare-Page (a=alter Scan, b=neuer
+  // Scan) statt auf die übliche Detail-Page. Pro+ only.
+  const [compareAfterScan, setCompareAfterScan] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const canonical         = normalizePlan(plan);
   const isAgencyPlan      = isAgency(plan);
@@ -626,7 +633,13 @@ export default function DashboardScanClient({
       // nicht". Die Detail-Page (/dashboard/scans/[scanId]) ist die
       // kompakte, fokussierte View mit IssueList + Subpage-Drilldown.
       if (d.scanId) {
-        window.location.href = `/dashboard/scans/${d.scanId}`;
+        // Re-Scan + Vergleichs-Toggle aktiv → Compare-Page mit a=alt b=neu.
+        // Sonst: normale Detail-Page.
+        if (compareAfterScan && lastScanId) {
+          window.location.href = `/dashboard/scans/compare?a=${lastScanId}&b=${d.scanId}`;
+        } else {
+          window.location.href = `/dashboard/scans/${d.scanId}`;
+        }
       } else {
         // Fallback wenn aus irgendeinem Grund keine scanId — alter Pfad
         // mit Result-Display, damit der User wenigstens das Result sieht.
@@ -934,6 +947,34 @@ export default function DashboardScanClient({
                   {" "}— der Re-Scan überschreibt die alten Befunde nicht, sondern legt einen neuen Eintrag an.
                 </span>
               </div>
+            )}
+            {/* Vergleichs-Toggle (09.05.2026): Nur sichtbar im Re-Scan-Modus
+                mit Pro+ Plan und vorhandenem Vorgänger-Scan. Springt nach
+                Abschluss direkt auf die Compare-Page (a=alt, b=neu). */}
+            {isReScan && lastScanId && isAtLeastProfessional(plan) && (
+              <label style={{
+                display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap",
+                padding: "8px 12px", borderRadius: 8, marginBottom: 4,
+                background: compareAfterScan ? "rgba(124,58,237,0.08)" : "rgba(255,255,255,0.02)",
+                border: `1px solid ${compareAfterScan ? "rgba(124,58,237,0.32)" : "rgba(255,255,255,0.08)"}`,
+                cursor: "pointer",
+                transition: "background 0.15s, border-color 0.15s",
+              }}>
+                <input
+                  type="checkbox"
+                  checked={compareAfterScan}
+                  onChange={e => setCompareAfterScan(e.target.checked)}
+                  disabled={state === "scanning"}
+                  style={{
+                    width: 14, height: 14, accentColor: "#a78bfa",
+                    cursor: "pointer", flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>
+                  Nach dem Scan direkt zum <strong style={{ color: C.text }}>Vergleich</strong>{" "}
+                  mit dem letzten Scan springen.
+                </span>
+              </label>
             )}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <label htmlFor="dashboard-scan-url" className="sr-only">Website-URL</label>

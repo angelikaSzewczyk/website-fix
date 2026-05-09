@@ -817,6 +817,7 @@ export default async function DashboardPage({
           agencyLogoUrl={agencyLogoUrl}
           scans={scans}
           usedSlots={usedSlots}
+          activeProjectId={projectId}
           pluginActive={pluginStatus.pluginActive}
           pluginLastHandshakeAt={pluginStatus.lastHandshakeAt}
           pluginDeepData={pluginStatus.deepData}

@@ -584,7 +584,7 @@ export default function DashboardShell({
                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Neue Site hinzufügen
+              {isAgency ? "Neuen Kunden anlegen" : "Neue Site hinzufügen"}
               {!isAgency && (
                 <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(16,185,129,0.65)", fontWeight: 600 }}>
                   {projects?.length ?? 0} / {slotLabel}

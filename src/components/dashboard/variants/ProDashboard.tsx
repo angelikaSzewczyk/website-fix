@@ -227,15 +227,27 @@ export default function ProDashboard(props: ProDashboardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Professional welcome banner — shown once after upgrade
+  // Professional welcome banner — shown nach Upgrade. Manuelles Schließen
+  // setzt den dismissed-Key (permanent weg). Falls der User es nie wegklickt:
+  // Auto-Dismiss 7 Tage nach dem ersten Anzeigen, damit das Banner nicht
+  // monatelang oben kleben bleibt.
   const isPro = isAtLeastProfessional(plan);
   const [showProWelcome, setShowProWelcome] = useState(false);
   useEffect(() => {
     if (!isPro) return;
-    const key = "wf_pro_welcome_seen_v1";
-    if (!localStorage.getItem(key)) {
-      setShowProWelcome(true);
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const dismissedKey = "wf_pro_welcome_seen_v1";
+    const firstSeenKey = "wf_pro_welcome_first_seen_at";
+    if (localStorage.getItem(dismissedKey)) return;
+    const firstSeen = Number(localStorage.getItem(firstSeenKey));
+    if (firstSeen && Date.now() - firstSeen >= SEVEN_DAYS_MS) {
+      localStorage.setItem(dismissedKey, "1");
+      return;
     }
+    if (!firstSeen) {
+      localStorage.setItem(firstSeenKey, String(Date.now()));
+    }
+    setShowProWelcome(true);
   }, [isPro]);
   function dismissProWelcome() {
     localStorage.setItem("wf_pro_welcome_seen_v1", "1");

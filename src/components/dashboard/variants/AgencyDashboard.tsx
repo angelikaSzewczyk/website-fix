@@ -33,6 +33,7 @@ import PluginDownloadCard from "./_shared/PluginDownloadCard";
 import HybridScanBanner from "./_shared/HybridScanBanner";
 import XrayCompareCard from "./_shared/XrayCompareCard";
 import OnboardingChecklist from "./_shared/OnboardingChecklist";
+import AgencyTabBar from "./_shared/AgencyTabBar";
 import { normalizeOnboardingPlan } from "@/lib/onboarding-steps";
 
 // ─── Theme tokens — Dark-Mode (Phase 3 Sprint 6) ─────────────────────────────
@@ -124,6 +125,8 @@ type Props = {
   scans: ScanBrief[];
   /** Belegte Slots — wird aus dem Page-Wrapper für die Stat-Pill übergeben. */
   usedSlots: number;
+  /** Aktiv-Projekt aus ?project=<id> — highlightet den passenden Tab in der TabBar. */
+  activeProjectId?: string | null;
   /** Hybrid-Scan-Status (07.05.2026). */
   pluginActive?:          boolean;
   pluginLastHandshakeAt?: string | null;
@@ -152,6 +155,7 @@ function Sparkline({ values, color, width = 60, height = 18 }: { values: number[
 // ─── Hauptkomponente ─────────────────────────────────────────────────────────
 export default async function AgencyDashboard({
   firstName, plan, badge, userId, agencyName, agencyLogoUrl, scans, usedSlots,
+  activeProjectId = null,
   pluginActive = false, pluginLastHandshakeAt = null, pluginDeepData = null,
 }: Props) {
   const sql = neon(process.env.DATABASE_URL!);
@@ -326,7 +330,11 @@ export default async function AgencyDashboard({
   return (
     <main style={{ padding: "28px 32px 80px", maxWidth: 1280, margin: "0 auto" }}>
 
-      {/* ── Sticky Action-Bar ── */}
+      {/* ── Sticky Action-Bar (Reihe 1: Title+CTA, Reihe 2: AgencyTabBar) ──
+          Vorher: ein Flex-Container für Title+CTA. Jetzt: Block-Container mit
+          zwei Reihen — die TabBar (Variante B, 09.05.2026) sitzt direkt unter
+          dem Header und scrollt mit dem Sticky-Block, sodass der Project-
+          Context beim Scrollen sichtbar bleibt. */}
       <div style={{
         position: "sticky", top: 0, zIndex: 25,
         marginLeft: -32, marginRight: -32, paddingLeft: 32, paddingRight: 32,
@@ -334,32 +342,51 @@ export default async function AgencyDashboard({
         background: "rgba(11,12,16,0.78)",
         backdropFilter: "blur(15px)",
         WebkitBackdropFilter: "blur(15px)",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginBottom: 24, gap: 14, flexWrap: "wrap",
-        paddingBottom: 18, borderBottom: `1px solid ${C.divider}`,
+        marginBottom: 24,
+        borderBottom: `1px solid ${C.divider}`,
       }}>
-        <div>
-          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            Kommandozentrale
-          </p>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
-            {agencyName ?? "Kunden-Übersicht"}
-          </h1>
-        </div>
-        <a href="#modal-new-client" style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          padding: "11px 22px", borderRadius: 10,
-          background: "rgba(124,58,237,0.85)",
-          border: "1px solid rgba(167,139,250,0.55)",
-          color: "#fff",
-          fontWeight: 700, fontSize: 13, textDecoration: "none",
-          whiteSpace: "nowrap",
-          boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
-          transition: "transform 0.12s ease, box-shadow 0.12s ease",
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 14, flexWrap: "wrap",
+          paddingBottom: matrixRows.length > 0 ? 12 : 18,
         }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Neuen Kunden anlegen
-        </a>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Kommandozentrale
+            </p>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
+              {agencyName ?? "Kunden-Übersicht"}
+            </h1>
+          </div>
+          <a href="#modal-new-client" style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "11px 22px", borderRadius: 10,
+            background: "rgba(124,58,237,0.85)",
+            border: "1px solid rgba(167,139,250,0.55)",
+            color: "#fff",
+            fontWeight: 700, fontSize: 13, textDecoration: "none",
+            whiteSpace: "nowrap",
+            boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
+            transition: "transform 0.12s ease, box-shadow 0.12s ease",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Neuen Kunden anlegen
+          </a>
+        </div>
+
+        {matrixRows.length > 0 && (
+          <div style={{ paddingBottom: 14 }}>
+            <AgencyTabBar
+              tabs={matrixRows.map(r => ({
+                id: r.id,
+                url: r.url,
+                name: r.name,
+                client_label: r.client_label,
+              }))}
+              activeProjectId={activeProjectId}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Stat Strip ──

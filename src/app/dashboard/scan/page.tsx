@@ -29,8 +29,10 @@ export default async function DashboardScanPage({
   let monthlyScans = 0;
   // 08.05.2026: Re-Scan-Mode (boolean) + lastScanAt für Hint im Client.
   // isReScan=true → Client rendert URL als read-only mit "Letzter Scan vor X"-Hint.
+  // 09.05.2026: + lastScanId für den optionalen Vergleichs-Toggle nach dem Re-Scan.
   const isReScan = !!sp.websiteId;
   let lastScanAt: string | null = null;
+  let lastScanId: string | null = null;
 
   const sql = neon(process.env.DATABASE_URL!);
 
@@ -60,14 +62,16 @@ export default async function DashboardScanPage({
       if (urlRows[0]?.url) projectUrl = urlRows[0].url;
     }
 
-    // Letzten Scan-Timestamp für die aktive Project-URL holen (Hint im Client).
+    // Letzten Scan-Timestamp + ID für die aktive Project-URL holen (Hint
+    // im Client + Vergleichs-Toggle).
     if (projectUrl) {
       const lastRows = await sql`
-        SELECT created_at::text AS created_at FROM scans
+        SELECT id::text AS id, created_at::text AS created_at FROM scans
         WHERE user_id = ${session.user.id} AND url = ${projectUrl}
         ORDER BY created_at DESC LIMIT 1
-      ` as Array<{ created_at: string }>;
+      ` as Array<{ id: string; created_at: string }>;
       lastScanAt = lastRows[0]?.created_at ?? null;
+      lastScanId = lastRows[0]?.id ?? null;
     }
 
     const countRows = await sql`
@@ -88,6 +92,7 @@ export default async function DashboardScanPage({
       scanLimit={scanLimit}
       isReScan={isReScan}
       lastScanAt={lastScanAt}
+      lastScanId={lastScanId}
     />
   );
 }
