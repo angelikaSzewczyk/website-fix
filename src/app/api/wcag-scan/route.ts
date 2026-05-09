@@ -79,16 +79,33 @@ export async function POST(req: NextRequest) {
 
     // ── 1. PLAYWRIGHT + CHROMIUM STARTEN ─────────────────────────
     // Dynamischer Import damit Next.js die Module nicht beim Build verarbeitet.
-    // Volles @sparticuz/chromium-Paket: Binary + libnss3.so + Mitglied-Libs sind
-    // im node_modules-Tree. executablePath() ohne Argument liefert den lokalen
-    // Pfad zum Binary; kein Runtime-Download nötig, kein Layout-Mismatch.
     const chromium = (await import("@sparticuz/chromium")).default;
     const { chromium: playwrightChromium } = await import("playwright-core");
 
+    // executablePath() extrahiert das Binary nach /tmp/chromium UND die
+    // System-Libs (.br-komprimierte libnss3.so etc.) nach /tmp/lib.
+    // Sparticuz' Puppeteer-Integration setzt LD_LIBRARY_PATH automatisch —
+    // bei Playwright-core funktioniert dieser Hook nicht zuverlässig, deshalb
+    // setzen wir den Lib-Pfad hier explizit, BEVOR der Browser launched.
+    // Sonst: ENOENT auf libnss3.so / libnspr4.so → exitCode=127 beim Launch.
+    const execPath = await chromium.executablePath();
+    const libDir = "/tmp/lib";
+    process.env.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH
+      ? `${libDir}:${process.env.LD_LIBRARY_PATH}`
+      : libDir;
+    process.env.FONTCONFIG_PATH = "/tmp/fonts";
+    process.env.HOME = "/tmp";
+
     browser = await playwrightChromium.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: execPath,
       headless: true,
+      env: {
+        ...process.env,
+        LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH,
+        FONTCONFIG_PATH: "/tmp/fonts",
+        HOME: "/tmp",
+      } as Record<string, string>,
     });
 
     const page = await browser.newPage();
