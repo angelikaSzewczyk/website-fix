@@ -114,22 +114,18 @@ export default function MetricPillBar({
         </div>
       )}
       {wcagHeuristicScore != null && (
-        <a
-          href="/dashboard/wcag-audit"
-          title={`${wcagHeuristicLabel ?? "Heuristische Analyse"}. Klick: echten axe-core-Audit im Headless-Browser starten — exakte Verstöße + Code-Fixes statt struktureller Schätzung.`}
+        <div
+          title={`${wcagHeuristicLabel ?? "Heuristische Analyse"} — strukturelle Schätzung über alle gecrawlten Seiten. Echter axe-core-Audit folgt mit der Tier-3-Engine.`}
           style={{
-            display: "flex", alignItems: "center", gap: s.pillGap,
+            display: "flex", alignItems: "center", gap: s.pillGap, cursor: "help",
             padding: s.pillPad, borderRadius: s.radius,
             background: "rgba(124,58,237,0.10)",
             border: "1px solid rgba(124,58,237,0.30)",
-            textDecoration: "none",
-            transition: "background 0.15s ease, border-color 0.15s ease",
           }}
         >
           <span style={{ fontSize: s.label, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.05em", textTransform: "uppercase" }}>WCAG-Heuristik</span>
           <span style={{ fontSize: s.value, fontWeight: 800, color: wcagColor(wcagHeuristicScore) }}>{wcagHeuristicScore}/100</span>
-          <span style={{ fontSize: s.sub, color: "rgba(255,255,255,0.55)", fontWeight: 700 }}>· Echten Audit starten →</span>
-        </a>
+        </div>
       )}
       {sslDaysLeft != null && (
         <div

@@ -12,11 +12,5 @@
       "path": "/api/cron/monthly-report",
       "schedule": "0 8 1 * *"
     }
-  ],
-  "functions": {
-    "src/app/api/wcag-scan/route.ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  }
+  ]
 }
