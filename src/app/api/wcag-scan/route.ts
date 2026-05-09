@@ -52,10 +52,17 @@ export async function POST(req: NextRequest) {
     }
     globalLimit.count++;
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-    const limitResult = await checkIpRateLimit(ip);
-    if (!limitResult.allowed) {
-      return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
+    // 09.05.2026: IP-Rate-Limit (2 Scans / 24h) ist nur für ANONYME User —
+    // eingeloggte Starter+ haben ihre eigenen Plan-Quotas (siehe getPlanQuota).
+    // Vorher wurde checkIpRateLimit ohne Auth-Check aufgerufen → eingeloggte
+    // User mit gleicher IP wurden mitgeblockt, obwohl sie zahlen.
+    const session = await auth();
+    if (!session?.user?.id) {
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+      const limitResult = await checkIpRateLimit(ip);
+      if (!limitResult.allowed) {
+        return NextResponse.json({ success: false, error: limitResult.reason }, { status: 429 });
+      }
     }
 
     const { url } = await req.json();
