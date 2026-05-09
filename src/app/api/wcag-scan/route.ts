@@ -208,8 +208,42 @@ Schreib ohne Einleitung, direkt mit ## Zusammenfassung.`;
       try { await browser.close(); } catch { /* ignore */ }
     }
     console.error("WCAG-Scan-Fehler:", err);
+
+    // Fehler kategorisieren — vorher (09.05.2026) wurde IMMER 'Scan fehlgeschlagen.
+    // Bitte versuche es erneut.' zurückgegeben, was bei wirklichen Issues wie
+    // Chromium-Download-Timeout oder axe-Injection-Block dazu führte, dass User
+    // immer wieder denselben kaputten Scan versuchen.
+    const rawMsg = err instanceof Error ? err.message : String(err);
+    const lower = rawMsg.toLowerCase();
+    let userMsg: string;
+    if (lower.includes("timeout") && (lower.includes("goto") || lower.includes("page"))) {
+      userMsg = "Die Website hat in 25s nicht geladen. Bei sehr großen WP-Setups oder Cold-Cache reicht das oft nicht — versuche einen erneuten Scan in 1-2 Min.";
+    } else if (lower.includes("chromium") || lower.includes("executablepath") || lower.includes("downloading")) {
+      userMsg = "Headless-Chromium konnte nicht heruntergeladen werden — Server-Setup-Problem. Bitte melde dich beim Support, wenn das wiederholt auftritt.";
+    } else if (lower.includes("axe") || lower.includes("scripttag")) {
+      userMsg = "axe-core konnte nicht in die Seite injiziert werden. Möglicherweise blockt eine strenge Content-Security-Policy externe Scripts.";
+    } else if (lower.includes("anthropic") || lower.includes("api_key") || lower.includes("claude")) {
+      userMsg = "KI-Diagnose nicht erreichbar — der reine axe-core-Scan hat aber funktioniert. Versuche es in 1 Min nochmal.";
+    } else if (lower.includes("function timeout") || lower.includes("504") || lower.includes("max_duration")) {
+      userMsg = "Scan hat das 60s-Zeitlimit überschritten. Sehr langsame Sites schaffen das im Headless-Audit nicht — die Heuristik im Dashboard ist hier robuster.";
+    } else {
+      userMsg = `Scan fehlgeschlagen: ${rawMsg.slice(0, 180)}`;
+    }
+
+    // Zur DB loggen, damit wir wiederkehrende Probleme später diagnostizieren können.
+    try {
+      const session = await auth();
+      if (session?.user?.id) {
+        const sql = neon(process.env.DATABASE_URL!);
+        await sql`
+          INSERT INTO scan_log (user_id, url, scan_type, status, error_msg, from_cache)
+          VALUES (${session.user.id}, ${"unknown"}, 'wcag', 'error', ${rawMsg.slice(0, 500)}, FALSE)
+        `;
+      }
+    } catch { /* optional */ }
+
     return NextResponse.json(
-      { success: false, error: "Scan fehlgeschlagen. Bitte versuche es erneut." },
+      { success: false, error: userMsg },
       { status: 500 }
     );
   }
