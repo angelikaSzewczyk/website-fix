@@ -10,13 +10,11 @@ export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Chromium download URL — aus Env-Var oder GitHub Releases.
-// 09.05.2026: Version muss zu @sparticuz/chromium-min (^143.0.4 in package.json)
-// passen. Vorher v131.0.0 → 'browserType.launch: Target page closed' weil
-// Wrapper- und Pack-Version inkompatibel waren.
-const CHROMIUM_URL =
-  process.env.CHROMIUM_PACK_URL ??
-  "https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar";
+// 09.05.2026: Switch von @sparticuz/chromium-min (Runtime-Pack-Download) auf
+// @sparticuz/chromium (Binary + Libs gebündelt). chromium-min v143 hatte auf
+// Vercel-AL2023-Runtime einen libnss3.so-Lookup-Fehler (das Pack hat die
+// .so-Files nicht am Pfad gehabt, an dem Chromium sie suchte). Volles Paket
+// hat alles im node_modules → executablePath() ohne URL-Arg, kein Download.
 
 // Globale Bremse: max 3 WCAG-Scans pro Minute (Playwright + Claude = teuer)
 const globalLimit = { count: 0, resetAt: 0 };
@@ -77,13 +75,16 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 1. PLAYWRIGHT + CHROMIUM STARTEN ─────────────────────────
-    // Dynamischer Import damit Next.js die Module nicht beim Build verarbeitet
-    const chromium = (await import("@sparticuz/chromium-min")).default;
+    // Dynamischer Import damit Next.js die Module nicht beim Build verarbeitet.
+    // Volles @sparticuz/chromium-Paket: Binary + libnss3.so + Mitglied-Libs sind
+    // im node_modules-Tree. executablePath() ohne Argument liefert den lokalen
+    // Pfad zum Binary; kein Runtime-Download nötig, kein Layout-Mismatch.
+    const chromium = (await import("@sparticuz/chromium")).default;
     const { chromium: playwrightChromium } = await import("playwright-core");
 
     browser = await playwrightChromium.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(CHROMIUM_URL),
+      executablePath: await chromium.executablePath(),
       headless: true,
     });
 
