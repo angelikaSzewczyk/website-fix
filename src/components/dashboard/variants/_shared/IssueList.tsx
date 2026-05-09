@@ -926,29 +926,78 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         `}</style>
 
         <h2 style={{ textAlign: "center", margin: "0 0 6px", fontSize: 19, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-          KI-Code-Anleitung mit Plugin freischalten
+          Tiefen-Diagnose mit Plugin + KI-Code-Snippets
         </h2>
         <p style={{ textAlign: "center", margin: "0 0 22px", fontSize: 12.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.6 }}>
-          Mit Plugin liefert die KI Copy-Paste-fertige Code-Snippets statt nur generische Hinweise.
+          Zwei Schritte — Schritt 1 ist in deinem Plan inklusive, Schritt 2 ist Pro+.
         </p>
 
+        {/* Schritt 1 — Plugin-Install (kostenlos in jedem bezahlten Plan) */}
+        <div style={{
+          padding: "14px 16px", borderRadius: 11, marginBottom: 12,
+          background: "rgba(122,166,255,0.06)",
+          border: "1px solid rgba(122,166,255,0.28)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 22, height: 22, borderRadius: 6,
+              background: "rgba(122,166,255,0.18)", border: "1px solid rgba(122,166,255,0.4)",
+              color: "#7aa6ff", fontSize: 11, fontWeight: 800,
+            }}>1</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>
+              Plugin installieren
+            </span>
+            <span style={{
+              fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 10,
+              background: "rgba(74,222,128,0.14)", border: "1px solid rgba(74,222,128,0.32)",
+              color: "#4ade80", letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>
+              In deinem Plan
+            </span>
+          </div>
+          <p style={{ margin: "0 0 10px", fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.6 }}>
+            Das Read-Only-Plugin liest PHP-Error-Logs, DB-Last und exakte Datei-Pfade auf
+            deinem Server. Externer Crawler kann das nicht sehen. <strong style={{ color: "rgba(255,255,255,0.85)" }}>Kein Upgrade nötig</strong> — der Plugin-Download ist im Starter-Plan inklusive.
+          </p>
+          <Link href="/plugin" style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "7px 14px", borderRadius: 7,
+            background: "rgba(122,166,255,0.18)", border: "1px solid rgba(122,166,255,0.4)",
+            color: "#7aa6ff", fontSize: 12, fontWeight: 700, textDecoration: "none",
+          }}>
+            Zum Plugin-Setup →
+          </Link>
+        </div>
+
+        {/* Schritt 2 — KI-Code-Snippets (Pro+) */}
         <div style={{
           padding: "16px 18px", borderRadius: 12, marginBottom: 14,
           background: "rgba(16,185,129,0.06)",
           border: "1px solid rgba(16,185,129,0.32)",
         }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#10B981", letterSpacing: "0.10em", textTransform: "uppercase" }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
-                strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-              Empfohlen
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 22, height: 22, borderRadius: 6,
+              background: "rgba(16,185,129,0.18)", border: "1px solid rgba(16,185,129,0.4)",
+              color: "#10B981", fontSize: 11, fontWeight: 800,
+            }}>2</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>
+              KI generiert Code-Snippets
             </span>
-            <span style={{ fontSize: 18, fontWeight: 900, color: "#10B981" }}>89 €/Mo</span>
+            <span style={{
+              fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 10,
+              background: "rgba(251,191,36,0.14)", border: "1px solid rgba(251,191,36,0.32)",
+              color: "#FBBF24", letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>
+              Pro · 89 €/Mo
+            </span>
           </div>
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>
-            Professional — KI-Code-Snippets + alle Pro-Features
+          <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.6 }}>
+            KI nimmt die Plugin-Diagnose-Daten und baut daraus Copy-Paste-fertige Code-Snippets — du
+            paste-st sie direkt ins WordPress-Theme. Statt generischer Hinweise: exakte Lösung für
+            deinen Stack.
           </p>
           <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
             {[
@@ -980,14 +1029,13 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 
         <p style={{
           margin: "0 0 14px", padding: "10px 12px", borderRadius: 9,
-          background: "rgba(122,166,255,0.05)",
-          border: "1px solid rgba(122,166,255,0.20)",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.10)",
           fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.6,
         }}>
-          <strong style={{ color: "rgba(255,255,255,0.75)" }}>Hinweis:</strong> Smart-Fix-Anleitungen
-          (Schritt-für-Schritt) sind bereits in deinem Plan inklusive — du musst dafür nichts upgraden.
-          Mit Plugin: KI sieht deine PHP-Logs + DB-Last und liefert exakte Code-Snippets — du paste-st
-          sie ins WordPress-Theme. Das Plugin selbst ist Read-Only.
+          <strong style={{ color: "rgba(255,255,255,0.75)" }}>Schon dabei:</strong> Generische
+          Smart-Fix-Anleitungen (Schritt-für-Schritt-Erklärungen ohne Plugin-Daten) sind in deinem
+          Plan inklusive — klick im Issue auf &bdquo;So löst du das&ldquo;.
         </p>
 
         <button onClick={onClose} style={{
