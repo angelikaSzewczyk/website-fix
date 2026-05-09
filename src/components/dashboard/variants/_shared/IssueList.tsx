@@ -645,6 +645,43 @@ function AccordionItem({
             />
           )}
 
+          {/* Generic Fallback (09.05.2026): wenn matchIssueType "unknown" liefert
+              und damit kein Eintrag in SOLUTIONS existiert, zeigen wir trotzdem
+              eine Lösungs-Card mit dem Issue-Body als Erklärung + Hinweis auf
+              Plugin-Daten für Code-Snippets. So sehen ALLE Issues konsistent
+              eine Lösung — nicht nur die mit spezifischer Builder-Vorlage. */}
+          {showSolution && (!solution || !variant) && (
+            <div style={{
+              marginTop: 14, padding: "16px 18px", borderRadius: 10,
+              background: "linear-gradient(135deg, rgba(16,185,129,0.06), rgba(251,191,36,0.03))",
+              border: "1px solid rgba(16,185,129,0.25)",
+              animation: "wf-sol-in 0.2s ease both",
+            }}>
+              <style>{`@keyframes wf-sol-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" as const }}>
+                <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 10, background: "rgba(16,185,129,0.15)", color: "#10B981", border: "1px solid rgba(16,185,129,0.35)", letterSpacing: "0.06em" }}>
+                  ANLEITUNG
+                </span>
+              </div>
+              <h4 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                {humanize(issue.title)}
+              </h4>
+              <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.65, whiteSpace: "pre-wrap" as const }}>
+                {humanize(issue.body)}
+              </p>
+              <div style={{
+                padding: "10px 12px", borderRadius: 8,
+                background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.20)",
+                fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.55,
+              }}>
+                <strong style={{ color: "#a78bfa" }}>Konkretere Schritte gewünscht?</strong>{" "}
+                Mit verbundenem Plugin liest die KI deine Server-Daten (PHP-Logs,
+                exakte Pfade, betroffene Templates) und liefert einen Copy-Paste-fertigen
+                Code-Snippet — statt generischer CMS-Anweisungen.
+              </div>
+            </div>
+          )}
+
           {/* Expert-Guidance: ausklappbare Lösung mit Builder-spezifischen Schritten */}
           {showSolution && solution && variant && (
             <div style={{
