@@ -115,7 +115,7 @@ export default function MetricPillBar({
       )}
       {wcagHeuristicScore != null && (
         <div
-          title={`${wcagHeuristicLabel ?? "Heuristische Analyse"} — strukturelle Schätzung über alle gecrawlten Seiten. Echter axe-core-Audit folgt mit der Tier-3-Engine.`}
+          title={`${wcagHeuristicLabel ?? "Heuristische Analyse"} — deckt ~80% der WCAG 2.1-AA-Kriterien als strukturelle Schätzung ab. Komplexe Nutzerinteraktionen sollten zusätzlich manuell geprüft werden.`}
           style={{
             display: "flex", alignItems: "center", gap: s.pillGap, cursor: "help",
             padding: s.pillPad, borderRadius: s.radius,
