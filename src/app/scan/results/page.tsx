@@ -1805,7 +1805,7 @@ function ResultsInner() {
               // Normal rows — amber-first: treat all findings as optimization opportunities
               const isUnreachable = !p.erreichbar;
               const dotColor   = isUnreachable ? "#ef4444" : p.errors === 0 ? "#22c55e" : "#FBBF24";
-              const statusLabel = isUnreachable ? "Nicht erreichbar" : p.errors === 0 ? "✓ Optimiert" : "Optimierbar";
+              const statusLabel = isUnreachable ? "Nicht erreichbar" : p.errors === 0 ? "✓ Keine Befunde" : "Optimierbar";
               const isExpanded  = expandedRow === (p.path + i);
               const canExpand   = !isDemo && p.errors > 0;
 

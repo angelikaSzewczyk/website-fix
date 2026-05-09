@@ -88,7 +88,7 @@ export function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFr
                       strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    Optimiert
+                    Keine Befunde
                   </span>
                 )}
               </span>
@@ -177,7 +177,7 @@ export function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFr
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
                   )}
-                  {isChecked ? "Geprüft" : pageIssues > 0 ? `${pageIssues} Optimierungen` : "Optimiert"}
+                  {isChecked ? "Geprüft" : pageIssues > 0 ? `${pageIssues} Optimierungen` : "Keine Befunde"}
                 </span>
 
                 {/* Full URL */}

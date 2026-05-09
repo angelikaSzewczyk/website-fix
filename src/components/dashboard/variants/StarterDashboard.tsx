@@ -881,11 +881,11 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                     {" · "}
                     {totalErrors > 0
                       ? `${totalErrors} Optimierungen verfügbar`
-                      : "Alles optimiert"}
+                      : "Keine Befunde"}
                   </p>
                 )}
                 {/* Status badge — amber für Optimierungen, green für perfekt.
-                    Nur rendern wenn ein Scan existiert — sonst ist "Alles optimiert"
+                    Nur rendern wenn ein Scan existiert — sonst ist "Keine Befunde"
                     bei lastScan=null logisch falsch (es wurde NICHTS gescannt). */}
                 {lastScan && (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
@@ -900,7 +900,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                     <span style={{ fontSize: 11, fontWeight: 700,
                       color: totalErrors > 0 ? D.amber : D.green,
                     }}>
-                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert"}
+                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Keine Befunde"}
                     </span>
                   </div>
                 )}

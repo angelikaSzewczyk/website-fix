@@ -1271,11 +1271,11 @@ export default function ProDashboard(props: ProDashboardProps) {
                     {" · "}
                     {totalErrors > 0
                       ? `${totalErrors} Optimierungen verfügbar`
-                      : "Alles optimiert"}
+                      : "Keine Befunde"}
                   </p>
                 )}
                 {/* Status badge — amber für Optimierungen, green für perfekt.
-                    Nur wenn lastScan vorhanden — "Alles optimiert" ohne Scan
+                    Nur wenn lastScan vorhanden — "Keine Befunde" ohne Scan
                     wäre logisch falsch (es wurde NICHTS gescannt). */}
                 {lastScan && (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
@@ -1290,7 +1290,7 @@ export default function ProDashboard(props: ProDashboardProps) {
                     <span style={{ fontSize: 11, fontWeight: 700,
                       color: totalErrors > 0 ? D.amber : D.green,
                     }}>
-                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert"}
+                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Keine Befunde"}
                     </span>
                   </div>
                 )}
