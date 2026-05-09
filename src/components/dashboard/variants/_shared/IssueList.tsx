@@ -556,7 +556,14 @@ function AccordionItem({
               Starter (gated=true): Expert-Fix wird durch Lock-Pill ersetzt
               — Expert-Fixes sind ein Pro-Feature. */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {solution && !gated && (
+            {/* "So löst du das"-Button — IMMER rendern (09.05.2026 Konsistenz-Fix).
+                Vorher: Button nur bei {solution && !gated} → unknown-IssueTypes
+                hatten KEINEN Button, was beim User-Vergleich zwischen
+                Handlungsbedarf (oft "missing_*"-Types mit Solution) und
+                Optimierungshinweisen (oft "unknown") inkonsistent wirkte.
+                Jetzt: Button immer da; Panel rendert spezifische Lösung wenn
+                gemappt, sonst generischen Body+Hinweis-Fallback. */}
+            {!gated && (
               <button
                 onClick={() => setShowSolution(s => !s)}
                 style={{
@@ -573,7 +580,7 @@ function AccordionItem({
                   strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                 </svg>
-                {showSolution ? "Lösung ausblenden" : `So löst du das${builder ? ` in ${builder}` : ""}`}
+                {showSolution ? "Lösung ausblenden" : `So löst du das${solution && builder ? ` in ${builder}` : ""}`}
               </button>
             )}
             {/* Konsistente Lock-Pill für ALLE gated Issues (07.05.2026) —
@@ -600,6 +607,12 @@ function AccordionItem({
                 Schritt-für-Schritt-Anleitung freischalten
               </button>
             )}
+            {/* "Code-Anleitung mit Plugin" (09.05.2026 Honest-Wording-Refactor):
+                Vorher hieß der Button "Auto-Fix via Plugin", was implizierte
+                das Plugin appliziert die Fixes automatisch — das Plugin ist
+                aber Read-Only (User-Direktive 09.05). Korrekt: Plugin liefert
+                Server-Daten (PHP-Logs, DB-Last, exakte Pfade), KI generiert
+                Copy-Paste-Code-Snippets, User paste-st sie selbst. */}
             <button
               onClick={onAutoFix}
               style={{
@@ -616,7 +629,7 @@ function AccordionItem({
                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              Auto-Fix via Plugin
+              Code-Anleitung mit Plugin
             </button>
           </div>
 
@@ -812,14 +825,18 @@ function AccordionItem({
 
 // ─── Upgrade Modal ────────────────────────────────────────────────────────────
 /**
- * UpgradeModal — wird ausschließlich beim Klick auf "Auto-Fix via Plugin"
+ * UpgradeModal — wird ausschließlich beim Klick auf "Code-Anleitung mit Plugin"
  * von Starter/Pro-Usern angezeigt (Agency hat Plugin-Zugriff via PluginSetupModal).
  *
  * Nach 08.05.2026 Pivot:
  *   - Smart-Fix-Anleitungen sind Plan-Inklusiv → KEIN 9,90-€-Pay-per-Fix mehr
  *     für eingeloggte User (das ist nur noch Anon-Checkout).
  *   - Modal bewirbt nur den Upgrade-Pfad zur nächst-höheren Tier mit
- *     Auto-Fix-Plugin.
+ *     KI-Code-Snippets (auf Basis von Plugin-Server-Daten).
+ *
+ * 09.05.2026 Wording-Refactor: "Auto-Fix" durch "KI-Code-Snippets" ersetzt —
+ * das Plugin ist Read-Only, KI generiert Snippets, User paste-st manuell.
+ * Vorheriges Wording war Pricing-Strict-Verstoß (versprach Auto-Apply).
  */
 function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
@@ -848,10 +865,10 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         `}</style>
 
         <h2 style={{ textAlign: "center", margin: "0 0 6px", fontSize: 19, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-          Auto-Fix via Plugin freischalten
+          KI-Code-Anleitung mit Plugin freischalten
         </h2>
         <p style={{ textAlign: "center", margin: "0 0 22px", fontSize: 12.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.6 }}>
-          Auto-Fix-Funktionen via KI sind ab Professional verfügbar.
+          Mit Plugin liefert die KI Copy-Paste-fertige Code-Snippets statt nur generische Hinweise.
         </p>
 
         <div style={{
@@ -866,11 +883,11 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
             <span style={{ fontSize: 18, fontWeight: 900, color: "#10B981" }}>89 €/Mo</span>
           </div>
           <p style={{ margin: "0 0 12px", fontSize: 13, color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>
-            Professional — KI-Auto-Fix + alle Pro-Features
+            Professional — KI-Code-Snippets + alle Pro-Features
           </p>
           <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
             {[
-              "KI-Auto-Fix via Plugin (Alt-Text, Meta, 404)",
+              "KI-Code-Snippets mit Plugin-Daten (Alt-Text, Meta, 404)",
               "10 Projekte · 25 Deep-Scans/Monat",
               "Score-Verlauf + White-Label-PDF",
               "Slack- und E-Mail-Alerts",
@@ -898,9 +915,10 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
           border: "1px solid rgba(122,166,255,0.20)",
           fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.6,
         }}>
-          💡 <strong style={{ color: "rgba(255,255,255,0.75)" }}>Hinweis:</strong> Smart-Fix-Anleitungen
+          <strong style={{ color: "rgba(255,255,255,0.75)" }}>Hinweis:</strong> Smart-Fix-Anleitungen
           (Schritt-für-Schritt) sind bereits in deinem Plan inklusive — du musst dafür nichts upgraden.
-          Auto-Fix bedeutet: das Plugin appliziert die Korrekturen automatisch in WordPress.
+          Mit Plugin: KI sieht deine PHP-Logs + DB-Last und liefert exakte Code-Snippets — du paste-st
+          sie ins WordPress-Theme. Das Plugin selbst ist Read-Only.
         </p>
 
         <button onClick={onClose} style={{
@@ -915,9 +933,10 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── PluginSetupModal: Agency-Plan-Modal für "Auto-Fix via Plugin" ──────────
-// Statt Upgrade-Pfad zeigen wir Agency-Usern den Setup-Flow für das WP-Plugin
-// (das die Auto-Fixes via /api/wp-bridge auf der Kunden-Site ausführt).
+// ─── PluginSetupModal: Pro+/Agency-Modal für "Code-Anleitung mit Plugin" ────
+// Statt Upgrade-Pfad zeigen wir Pro+ Usern den Setup-Flow für das Read-Only-
+// WP-Plugin. Plugin liefert PHP-Logs / DB-Last / exakte Pfade — KI nutzt die
+// Daten, um Copy-Paste-fertige Code-Snippets zu generieren.
 function PluginSetupModal({ onClose }: { onClose: () => void }) {
   return (
     <>
@@ -950,22 +969,22 @@ function PluginSetupModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <h2 style={{ textAlign: "center", margin: "0 0 8px", fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-          Auto-Fix via WordPress-Plugin
+          Plugin-Diagnose mit KI-Code-Snippets
         </h2>
         <p style={{ textAlign: "center", margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}>
-          Das WebsiteFix-Plugin liest deine bereinigten SEO-Daten via{" "}
+          Das Read-Only-Plugin liefert Server-Daten via{" "}
           <code style={{ background: "rgba(167,139,250,0.14)", padding: "1px 6px", borderRadius: 4, fontSize: 11, color: "#a78bfa", fontFamily: "ui-monospace, SF Mono, Menlo, monospace" }}>
             /api/wp-bridge
           </code>{" "}
-          aus und appliziert Alt-Texte, Meta-Descriptions und Broken-Link-Redirects direkt in WordPress.
+          (PHP-Logs, DB-Last, exakte Pfade). Die KI generiert daraus Copy-Paste-fertige Code-Snippets — du paste-st sie ins WordPress-Theme.
         </p>
 
         {/* 3-Schritte-Setup */}
         <div style={{ marginBottom: 20 }}>
           {[
-            { n: "1", title: "Plugin auf Kunden-Site installieren", body: "WordPress-Admin → Plugins → Neu hinzufügen → \"WebsiteFix Auto-Heal\" suchen und aktivieren." },
+            { n: "1", title: "Plugin auf Kunden-Site installieren", body: "WordPress-Admin → Plugins → Neu hinzufügen → \"WebsiteFix Diagnose\" suchen und aktivieren." },
             { n: "2", title: "API-Key generieren", body: "In WebsiteFix unter Agency-Branding → API-Key erstellen → einmalig kopieren (wird danach nur als Hash gespeichert)." },
-            { n: "3", title: "Key ins Plugin eintragen", body: "WordPress-Admin → WebsiteFix → Settings → API-Key einfügen → Speichern. Plugin pollt alle 6h und appliziert neue Fixes." },
+            { n: "3", title: "Key ins Plugin eintragen", body: "WordPress-Admin → WebsiteFix → Settings → API-Key einfügen → Speichern. Plugin sendet alle 6h Server-Diagnose-Daten — KI baut daraus konkrete Code-Snippets im Smart-Fix-Drawer." },
           ].map(step => (
             <div key={step.n} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div style={{
