@@ -357,44 +357,49 @@ export default function DashboardShell({
             {/* Projekt-Slots — interaktiv: klickbarer Pill öffnet den
                  Switcher (mit "+ Neue Site"-Button), zusätzlicher "+"-
                  Schnell-Button. 08.05.2026 User-Direktive:
-                 "User muss sehen dass er weitere Projekte anlegen kann". */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekte</span>
-              <button
-                type="button"
-                onClick={() => setProjectDialogOpen(true)}
-                title="Projekt-Übersicht öffnen"
-                style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: "2px 9px", borderRadius: 20,
-                  background: D.card, border: `1px solid ${D.borderMid}`,
-                  color: D.textSub,
-                  cursor: "pointer", fontFamily: "inherit",
-                }}
-              >
-                {slotLabel}
-              </button>
-              {!isAgency && (
+                 "User muss sehen dass er weitere Projekte anlegen kann".
+                 09.05.2026: Starter hat nur 1 Slot — die Pill ist dort
+                 redundant + verwirrend (zeigt "1 Projekt" + grüner +,
+                 aber Anlegen geht ins Limit). Nur ab Pro rendern. */}
+            {isPro && (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekte</span>
                 <button
                   type="button"
-                  onClick={() => openNewProjectModal()}
-                  title="Neues Projekt anlegen — öffnet Wizard mit Name + URL"
+                  onClick={() => setProjectDialogOpen(true)}
+                  title="Projekt-Übersicht öffnen"
                   style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    width: 22, height: 22, borderRadius: 6,
-                    background: "rgba(16,185,129,0.12)",
-                    border: "1px solid rgba(16,185,129,0.32)",
-                    color: "#10B981", cursor: "pointer", padding: 0,
-                    fontFamily: "inherit",
+                    fontSize: 11, fontWeight: 700,
+                    padding: "2px 9px", borderRadius: 20,
+                    background: D.card, border: `1px solid ${D.borderMid}`,
+                    color: D.textSub,
+                    cursor: "pointer", fontFamily: "inherit",
                   }}
                 >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
+                  {slotLabel}
                 </button>
-              )}
-            </div>
+                {!isAgency && (
+                  <button
+                    type="button"
+                    onClick={() => openNewProjectModal()}
+                    title="Neues Projekt anlegen — öffnet Wizard mit Name + URL"
+                    style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: 22, height: 22, borderRadius: 6,
+                      background: "rgba(16,185,129,0.12)",
+                      border: "1px solid rgba(16,185,129,0.32)",
+                      color: "#10B981", cursor: "pointer", padding: 0,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Scan-Limit-Pill — Pro/Agency haben "unbegrenzte Scans" laut
                  Pricing-Card (siehe isUnlimitedQuota). UI muss konsistent

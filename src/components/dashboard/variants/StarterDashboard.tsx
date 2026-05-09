@@ -637,6 +637,97 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             return planKey ? <OnboardingChecklist plan={planKey} /> : null;
           })()}
 
+          {/* QUICK-START GUIDE (09.05.2026): direkt UNTER der "Erste Schritte"-
+              Checkliste. Der zweite Schritt der Liste ("Ersten Deep-Scan starten")
+              ist genau das, was diese Card erlaubt — natürlicher Flow.
+              Nutzt die geteilte Card mit Blue-Accent — gleicher Look wie der
+              Audit-Hero darunter, statt eigenständigem Marketing-Gradient.
+              Lucide-SVG-Icons statt Emojis (User-Direktive: Pro-Look). */}
+          {!lastScan && !isNewScan && (
+            <Card style={{ padding: "28px 32px 24px", marginBottom: 16, textAlign: "center" }} accent="#007BFF">
+              <SectionLabel color={D.blueSoft}>Quick-Start</SectionLabel>
+              <h2 style={{ margin: "4px 0 8px", fontSize: 20, fontWeight: 800, color: D.text, letterSpacing: "-0.02em" }}>
+                URL eingeben für deinen ersten Deep-Scan
+              </h2>
+              <p style={{ margin: "0 0 22px", fontSize: 13, color: D.textSub, lineHeight: 1.55 }}>
+                Kein Plugin nötig, kein Hosting-Zugang — Domain eingeben und starten.
+              </p>
+
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  const url = quickStartUrl.trim();
+                  if (!url) return;
+                  const full = url.startsWith("http") ? url : `https://${url}`;
+                  window.location.href = `/dashboard/scan?url=${encodeURIComponent(full)}`;
+                }}
+                style={{ display: "flex", gap: 8, maxWidth: 540, margin: "0 auto 18px", flexWrap: "wrap" }}
+              >
+                <input
+                  type="text"
+                  value={quickStartUrl}
+                  onChange={e => setQuickStartUrl(e.target.value)}
+                  placeholder="https://deine-website.de"
+                  style={{
+                    flex: 1, minWidth: 200,
+                    padding: "11px 14px", borderRadius: 8, fontSize: 14,
+                    background: "rgba(255,255,255,0.04)",
+                    border: `1px solid ${D.blueBorder}`,
+                    color: D.text, outline: "none", fontFamily: "inherit",
+                    transition: "border-color 0.15s, box-shadow 0.15s",
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = D.blue; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.18)"; }}
+                  onBlur={e  => { e.currentTarget.style.borderColor = D.blueBorder; e.currentTarget.style.boxShadow = "none"; }}
+                />
+                <button type="submit" style={{
+                  padding: "11px 22px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  background: D.blue, color: "#fff", border: "none", cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontFamily: "inherit",
+                  boxShadow: D.blueGlow,
+                  transition: "box-shadow 0.15s, transform 0.15s",
+                }}>
+                  Deep-Scan starten
+                </button>
+              </form>
+
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                {[
+                  {
+                    text: "Bis zu 50 Unterseiten",
+                    svg: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>,
+                  },
+                  {
+                    text: "Voller Deep-Scan",
+                    svg: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+                  },
+                  {
+                    text: "BFSG-Check",
+                    svg: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+                  },
+                  {
+                    text: "Ergebnis in 1-2 Min",
+                    svg: <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>,
+                  },
+                ].map(b => (
+                  <div key={b.text} style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                    background: "rgba(0,123,255,0.06)",
+                    border: `1px solid ${D.blueBorder}`,
+                    color: D.blueSoft,
+                  }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      {b.svg}
+                    </svg>
+                    {b.text}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* "Warum WebsiteFix?"-Reminder — 3 Key-Points (Code-Fix · PHP-Logs ·
               Haftungsschutz). Plan-aware: Starter sieht 2 + Agency-Hint, Pro
               alle 3 als Vorgeschmack auf Agency-Upgrade. */}
@@ -754,84 +845,6 @@ export default function StarterDashboard(props: StarterDashboardProps) {
             </div>
           )}
 
-          {/* ① QUICK-START GUIDE — shown when plan is active but no scan yet */}
-          {!lastScan && !isNewScan && (
-            <div style={{
-              background: "linear-gradient(160deg, #0d1f3c 0%, #091528 100%)",
-              border: "1px solid rgba(37,99,235,0.3)",
-              borderRadius: 18, padding: "40px 40px 32px", marginBottom: 16,
-              textAlign: "center",
-            }}>
-              <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-                Quick-Start Guide — Schritt 1 von 1
-              </p>
-              <h2 style={{ margin: "0 0 10px", fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>
-                URL eingeben für deinen ersten Deep-Scan
-              </h2>
-              <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
-                Kein Plugin nötig. Kein Hosting-Zugang. Einfach die Domain eingeben — fertig.
-              </p>
-
-              {/* URL Input */}
-              <form
-                onSubmit={e => {
-                  e.preventDefault();
-                  const url = quickStartUrl.trim();
-                  if (!url) return;
-                  const full = url.startsWith("http") ? url : `https://${url}`;
-                  window.location.href = `/dashboard/scan?url=${encodeURIComponent(full)}`;
-                }}
-                style={{ display: "flex", gap: 10, maxWidth: 540, margin: "0 auto 20px", flexWrap: "wrap" }}
-              >
-                <input
-                  type="text"
-                  value={quickStartUrl}
-                  onChange={e => setQuickStartUrl(e.target.value)}
-                  placeholder="https://deine-website.de"
-                  style={{
-                    flex: 1, minWidth: 200,
-                    padding: "13px 18px", borderRadius: 10, fontSize: 15,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1.5px solid rgba(37,99,235,0.4)",
-                    color: "#fff", outline: "none", fontFamily: "inherit",
-                  }}
-                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.8)"; e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-                  onBlur={e  => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.4)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-                />
-                <button type="submit" style={{
-                  padding: "13px 24px", borderRadius: 10, fontSize: 14, fontWeight: 800,
-                  background: "#2563EB", color: "#fff", border: "none", cursor: "pointer",
-                  boxShadow: "0 4px 20px rgba(37,99,235,0.5)", whiteSpace: "nowrap",
-                  fontFamily: "inherit",
-                }}>
-                  Deep-Scan starten →
-                </button>
-              </form>
-
-              {/* Badges — Werte aus Pricing-Card-Versprechen Starter:
-                   "Voller Deep-Scan: SEO, Technik, Performance, BFSG"
-                   getMaxSubpages('starter') = 50 (vs. 10 für anonyme).
-                   Speed-Hint ehrlich auf 1-2 Min (Engine-Realität ~30-90s). */}
-              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                {[
-                  { icon: "📄", text: "Bis zu 50 Unterseiten" },
-                  { icon: "🔍", text: "Voller Deep-Scan" },
-                  { icon: "♿", text: "BFSG-Check" },
-                  { icon: "⚡", text: "Ergebnis in 1-2 Min" },
-                ].map(b => (
-                  <div key={b.text} style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.55)",
-                  }}>
-                    <span>{b.icon}</span>{b.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* ② AUDIT HERO CARD */}
           <Card style={{ padding: "28px 32px", marginBottom: 12 }} accent="#007BFF">
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
@@ -858,7 +871,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                     {" · "}
                     {totalErrors > 0
                       ? `${totalErrors} Optimierungen verfügbar`
-                      : "Alles optimiert ✓"}
+                      : "Alles optimiert"}
                   </p>
                 )}
                 {/* Status badge — amber for opportunities, green for perfect */}
@@ -874,7 +887,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                   <span style={{ fontSize: 11, fontWeight: 700,
                     color: totalErrors > 0 ? D.amber : D.green,
                   }}>
-                    {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert ✓"}
+                    {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Alles optimiert"}
                   </span>
                 </div>
 
@@ -939,12 +952,18 @@ export default function StarterDashboard(props: StarterDashboardProps) {
               borderRadius: 12,
             }}>
               <div style={{
-                fontSize: 22, flexShrink: 0,
+                flexShrink: 0,
                 background: "rgba(167,139,250,0.08)",
                 border: "1px solid rgba(167,139,250,0.2)",
-                borderRadius: 8, padding: "6px 10px",
+                borderRadius: 8, padding: 8,
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
               }}>
-                🧲
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 15a6 6 0 0 0 12 0v-2H6v2z"/>
+                  <path d="M6 13V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v8"/>
+                  <path d="M14 13V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v8"/>
+                </svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 800, color: "#a78bfa" }}>

@@ -271,6 +271,12 @@ export default function FreeSidebar({ firstName, plan, monthlyScans, scanLimit, 
         // brauchen einen direkten Sidebar-Link, sonst finden sie ihre
         // archivierten Reports nicht wieder.
         { icon: "reports",   label: "Berichte",            href: "/dashboard/scans", exact: true,  locked: false },
+        // Pro-Teaser-Items (09.05.2026): Sidebar wirkte sonst leer + es fehlte
+        // der visuelle Upgrade-Hebel. Locked-Items zeigen mit "Pro"-Badge was
+        // mit Professional drinsteckt — Klick führt zur Pricing-Section.
+        { icon: "users",        label: "Portfolio",       href: "/fuer-agenturen?upgrade=professional#pricing", exact: false, locked: true },
+        { icon: "whitelabel",   label: "White-Label",     href: "/fuer-agenturen?upgrade=professional#pricing", exact: false, locked: true },
+        { icon: "integrations", label: "Integrationen",   href: "/fuer-agenturen?upgrade=professional#pricing", exact: false, locked: true },
         // Kontakt-Eintrag entfernt (08.05.2026): linkte auf /kontakt, was die
         // App verließ. Der "Hilfe & Support"-Button am Sidebar-Bottom (öffnet
         // Modal mit Screenshot+Admin-Email) deckt den Use-Case in-app ab.

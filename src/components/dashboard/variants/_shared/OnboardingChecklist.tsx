@@ -288,7 +288,6 @@ export default function OnboardingChecklist({ plan }: Props) {
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
-                    <span aria-hidden="true">{s.icon}</span>
                     <span style={{
                       fontSize: 13.5, fontWeight: 700,
                       color: done ? "rgba(255,255,255,0.50)" : C.text,
