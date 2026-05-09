@@ -245,7 +245,12 @@ export default function SmartFixSection({ pluginActive, deepData, userPlan, topI
             boxShadow: "0 3px 10px rgba(34,197,94,0.28)",
           }}
         >
-          🔒 Jetzt Plugin verbinden &amp; Details freischalten
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Jetzt Plugin verbinden &amp; Details freischalten
         </Link>
       </div>
     );
@@ -359,10 +364,18 @@ export default function SmartFixSection({ pluginActive, deepData, userPlan, topI
                 cursor: copied ? "default" : "pointer",
               }}
             >
-              {copied ? "✓ Kopiert" : (
+              {copied ? (
                 <>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                       strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Kopiert
+                </>
+              ) : (
+                <>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="9" y="9" width="13" height="13" rx="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                   </svg>
@@ -385,7 +398,15 @@ export default function SmartFixSection({ pluginActive, deepData, userPlan, topI
                   cursor: (delegating || delegated) ? "default" : "pointer",
                 }}
               >
-                {delegated ? "✓ An Team delegiert" : delegating ? "Wird delegiert…" : (
+                {delegated ? (
+                  <>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    An Team delegiert
+                  </>
+                ) : delegating ? "Wird delegiert…" : (
                   <>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

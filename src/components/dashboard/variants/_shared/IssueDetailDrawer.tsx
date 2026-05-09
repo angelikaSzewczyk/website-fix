@@ -135,7 +135,24 @@ export function DrawerCard({
               transition: "all 0.15s",
             }}
           >
-            {fixOpen ? "Schließen ✕" : "Anleitung ↓"}
+            {fixOpen ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                Schließen
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </span>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                Anleitung
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </span>
+            )}
           </button>
         )}
       </div>
@@ -367,8 +384,14 @@ export function DrawerPanel({
           <button onClick={onClose} aria-label="Schließen" style={{
             background: "none", border: `1px solid ${D.border}`, cursor: "pointer",
             borderRadius: 7, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-            color: D.textSub, fontSize: 14, flexShrink: 0,
-          }}>✕</button>
+            color: D.textSub, flexShrink: 0,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
 
         {/* ── Body ── */}
@@ -455,15 +478,29 @@ export function DrawerPanel({
               border: `2px solid ${isChecked ? D.green : D.borderMid}`,
               background: isChecked ? D.greenBg : "transparent",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: D.green, fontSize: 12, fontWeight: 700,
+              color: D.green,
               transition: "all 0.15s",
-            }}>{isChecked ? "✓" : ""}</span>
+            }}>
+              {isChecked && (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              )}
+            </span>
             <span style={{ fontSize: 13, fontWeight: 600, color: isChecked ? D.green : D.textSub }}>
               {isChecked ? "Als erledigt markiert" : "Diese Seite als erledigt markieren"}
             </span>
             {isChecked && (
-              <span style={{ marginLeft: "auto", fontSize: 11, color: D.textMuted, flexShrink: 0 }}>
-                In Map ✓
+              <span style={{
+                marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4,
+                fontSize: 11, color: D.textMuted, flexShrink: 0,
+              }}>
+                In Map
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
               </span>
             )}
           </button>
@@ -715,7 +752,13 @@ export function OptimizationPlanModal({ onClose, plan, builder, woo, speedScore,
                           {exportState[idx] === "loading" ? (
                             <><span style={{ width: 10, height: 10, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", display: "inline-block", animation: "wf-opt-spin 0.7s linear infinite" }} /> Wird exportiert…</>
                           ) : exportState[idx] === "done" ? (
-                            <>✓ Als Task exportiert</>
+                            <>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                              Als Task exportiert
+                            </>
                           ) : (
                             <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Als Task exportieren</>
                           )}

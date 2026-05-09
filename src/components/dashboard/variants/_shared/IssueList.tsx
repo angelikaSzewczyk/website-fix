@@ -434,9 +434,16 @@ function AccordionItem({
               color: "#a78bfa",
               letterSpacing: "0.06em",
               cursor: "help",
+              display: "inline-flex", alignItems: "center", gap: 4,
             }}
           >
-            🌐 GLOBAL
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            GLOBAL
           </span>
         )}
         {issue.count != null && issue.count > 1 && (
@@ -741,7 +748,11 @@ function AccordionItem({
                   fontSize: 11, color: "#c4b5fd", lineHeight: 1.5,
                   display: "flex", alignItems: "flex-start", gap: 8,
                 }}>
-                  <span style={{ fontSize: 11 }}>✨</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true">
+                    <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>
+                  </svg>
                   <span><strong style={{ color: "#a78bfa" }}>KI-personalisiert für {hosterValue}:</strong> {personalizeSummary}</span>
                 </div>
               )}
@@ -753,8 +764,12 @@ function AccordionItem({
                   background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.2)",
                   display: "flex", flexWrap: "wrap" as const, gap: 8, alignItems: "center",
                 }}>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
-                    ✨ Für deinen Hoster anpassen:
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>
+                    </svg>
+                    Für deinen Hoster anpassen:
                   </span>
                   <select
                     value={hosterValue}
@@ -819,7 +834,16 @@ function AccordionItem({
                   background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.22)",
                   fontSize: 11.5, color: "rgba(251,191,36,0.85)", lineHeight: 1.55,
                 }}>
-                  <strong>⚠ Achtung:</strong> {variant.caveat}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginRight: 4 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <strong>Achtung:</strong>
+                  </span>
+                  {variant.caveat}
                 </div>
               )}
 
@@ -914,8 +938,12 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
           border: "1px solid rgba(16,185,129,0.32)",
         }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", letterSpacing: "0.10em", textTransform: "uppercase" }}>
-              ★ Empfohlen
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#10B981", letterSpacing: "0.10em", textTransform: "uppercase" }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
+                strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              Empfohlen
             </span>
             <span style={{ fontSize: 18, fontWeight: 900, color: "#10B981" }}>89 €/Mo</span>
           </div>
@@ -929,8 +957,12 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
               "Score-Verlauf + White-Label-PDF",
               "Slack- und E-Mail-Alerts",
             ].map(f => (
-              <li key={f} style={{ display: "flex", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
-                <span style={{ color: "#10B981", fontWeight: 700 }}>✓</span>
+              <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981"
+                  strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ flexShrink: 0, marginTop: 3 }} aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
                 {f}
               </li>
             ))}
@@ -1199,8 +1231,12 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
               `${CATEGORY_META.bestPractices.shortLabel}: 100`,
               `${CATEGORY_META.accessibility.shortLabel}: 100`,
             ].map(label => (
-              <span key={label} style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", color: "#4ade80" }}>
-                ✓ {label}
+              <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", color: "#4ade80" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                {label}
               </span>
             ))}
           </div>
@@ -1425,11 +1461,20 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                 </p>
               </div>
               <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
                 fontSize: 11, flexShrink: 0, paddingTop: 2,
                 color: saveStatus === "saved" ? "#4ade80" : saveStatus === "saving" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.18)",
                 transition: "color 0.3s",
               }}>
-                {saveStatus === "saving" ? "Speichert…" : saveStatus === "saved" ? "✓ Gespeichert" : "Auto-Save"}
+                {saveStatus === "saving" ? "Speichert…" : saveStatus === "saved" ? (
+                  <>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Gespeichert
+                  </>
+                ) : "Auto-Save"}
               </span>
             </div>
 
@@ -1453,7 +1498,11 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                   letterSpacing: "-0.01em",
                 }}
               >
-                {aiGenerating ? "✨ KI denkt nach…" : "✨ Mit KI generieren"}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>
+                </svg>
+                {aiGenerating ? "KI denkt nach…" : "Mit KI generieren"}
               </button>
               <button
                 type="button"
@@ -1495,21 +1544,62 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
               <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.32)", fontWeight: 600, alignSelf: "center", marginRight: 4 }}>
                 Oder Vorlage:
               </span>
-              {([
-                { label: "Dringlich", icon: "⚠️", text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung." },
-                { label: "Technisch", icon: "🔧", text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden." },
-                { label: "Kompakt",   icon: "📋", text: "Kurzfazit: Website-Analyse abgeschlossen. Handlungsbedarf und Optimierungshinweise identifiziert. Nächste Schritte: Prioritäten gemeinsam besprechen und Maßnahmenplan erstellen." },
-                ...(isWooCommerce ? [{
-                  label: "Shop-Owner",
-                  icon:  "🛒",
-                  text:  "Shop-Audit abgeschlossen: Ihr WooCommerce-Shop zeigt messbares Optimierungspotenzial bei Checkout-Performance und Datenbank-Struktur. Jede 100 ms Ladezeit-Verbesserung bedeutet ca. 1 % mehr Umsatz (Akamai). Unsere Empfehlung: 1) Cart-Fragments auf Nicht-Shop-Seiten deaktivieren, 2) schwere Plugin-Scripts selektiv laden, 3) WooCommerce-Template-Overrides im Theme auf aktuelle Versionen bringen. Wir schätzen das Revenue-Potenzial auf Basis der Analyse und setzen die Maßnahmen in einem festen Wartungsvertrag um.",
-                }] : []),
-                ...(builderName ? [{
-                  label: `${builderName}-Audit`,
-                  icon:  "🎨",
-                  text:  `Analyse von ${builderName} zeigt signifikanten Optimierungsbedarf bei der Asset-Struktur: DOM-Verschachtelung, Font-Vielfalt und ungenutzte Builder-Styles wirken sich direkt auf Ladezeit und Core Web Vitals aus. Wir empfehlen einen technischen Service-Termin, in dem wir ${builderName === "Elementor" ? "Container-Migration, Font-Konsolidierung und Asset-Aggregation" : builderName === "Divi" ? "Section-Verschlankung, Font-Konsolidierung und Style-Aggregation" : "Theme-Optimierung, Font-Konsolidierung und Asset-Aggregation"} in einem festen Rahmen umsetzen. Erwarteter Impact: –30 bis –50 % LCP auf Mobile, messbar in PageSpeed Insights.`,
-                }] : []),
-              ] as { label: string; icon: string; text: string }[]).map(tpl => (
+              {(() => {
+                const lucideAlertTriangle = (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                );
+                const lucideWrench = (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                );
+                const lucideClipboard = (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                  </svg>
+                );
+                const lucideShoppingCart = (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                );
+                const lucidePalette = (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="13.5" cy="6.5" r=".5"/>
+                    <circle cx="17.5" cy="10.5" r=".5"/>
+                    <circle cx="8.5" cy="7.5" r=".5"/>
+                    <circle cx="6.5" cy="12.5" r=".5"/>
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                  </svg>
+                );
+                return [
+                  { label: "Dringlich", iconNode: lucideAlertTriangle, text: "Dringende Maßnahmen erforderlich: Wir empfehlen, die kritischen Befunde innerhalb der nächsten 14 Tage zu beheben. Diese Punkte wirken sich direkt auf Sichtbarkeit, Nutzervertrauen und rechtliche Compliance aus. Gerne unterstützen wir Sie bei der Umsetzung." },
+                  { label: "Technisch", iconNode: lucideWrench,        text: "Technische Analyse: Die Scan-Ergebnisse zeigen optimierungsfähige Bereiche in Performance und Core Web Vitals. Wir empfehlen eine strukturierte Priorisierung nach Aufwand/Wirkung. Die identifizierten Maßnahmen können schrittweise im Rahmen des regulären Betriebs umgesetzt werden." },
+                  { label: "Kompakt",   iconNode: lucideClipboard,     text: "Kurzfazit: Website-Analyse abgeschlossen. Handlungsbedarf und Optimierungshinweise identifiziert. Nächste Schritte: Prioritäten gemeinsam besprechen und Maßnahmenplan erstellen." },
+                  ...(isWooCommerce ? [{
+                    label:    "Shop-Owner",
+                    iconNode: lucideShoppingCart,
+                    text:     "Shop-Audit abgeschlossen: Ihr WooCommerce-Shop zeigt messbares Optimierungspotenzial bei Checkout-Performance und Datenbank-Struktur. Jede 100 ms Ladezeit-Verbesserung bedeutet ca. 1 % mehr Umsatz (Akamai). Unsere Empfehlung: 1) Cart-Fragments auf Nicht-Shop-Seiten deaktivieren, 2) schwere Plugin-Scripts selektiv laden, 3) WooCommerce-Template-Overrides im Theme auf aktuelle Versionen bringen. Wir schätzen das Revenue-Potenzial auf Basis der Analyse und setzen die Maßnahmen in einem festen Wartungsvertrag um.",
+                  }] : []),
+                  ...(builderName ? [{
+                    label:    `${builderName}-Audit`,
+                    iconNode: lucidePalette,
+                    text:     `Analyse von ${builderName} zeigt signifikanten Optimierungsbedarf bei der Asset-Struktur: DOM-Verschachtelung, Font-Vielfalt und ungenutzte Builder-Styles wirken sich direkt auf Ladezeit und Core Web Vitals aus. Wir empfehlen einen technischen Service-Termin, in dem wir ${builderName === "Elementor" ? "Container-Migration, Font-Konsolidierung und Asset-Aggregation" : builderName === "Divi" ? "Section-Verschlankung, Font-Konsolidierung und Style-Aggregation" : "Theme-Optimierung, Font-Konsolidierung und Asset-Aggregation"} in einem festen Rahmen umsetzen. Erwarteter Impact: –30 bis –50 % LCP auf Mobile, messbar in PageSpeed Insights.`,
+                  }] : []),
+                ];
+              })().map(tpl => (
                 <button
                   key={tpl.label}
                   onClick={() => handleSummaryChange(tpl.text)}
@@ -1533,7 +1623,7 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                     b.style.color = "rgba(141,243,211,0.7)";
                   }}
                 >
-                  {tpl.icon} {tpl.label}
+                  {tpl.iconNode} {tpl.label}
                 </button>
               ))}
             </div>
@@ -1791,7 +1881,13 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                             }}
                             title="Zur Aufgabe springen"
                           >
-                            <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1.4, marginTop: 0 }}>❌</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#EF4444"
+                              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                              style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true">
+                              <circle cx="12" cy="12" r="10"/>
+                              <line x1="15" y1="9" x2="9" y2="15"/>
+                              <line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
                             <span style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
                               {d.label}
                             </span>
@@ -1805,7 +1901,12 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                   ) : col.score >= 98 ? (
                     // Perfect score → strong positive confirmation
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
-                      <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1.4 }}>✅</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+                        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                      </svg>
                       <span style={{ fontSize: 11, color: "rgba(74,222,128,0.8)", lineHeight: 1.4, fontWeight: 600 }}>
                         {excellentMsg[col.heading]}
                       </span>
@@ -1815,7 +1916,11 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                     <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
                       {positives[col.heading].slice(0, 3).map(p => (
                         <li key={p} style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
-                          <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1.4 }}>✅</span>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
                           <span style={{ fontSize: 11, color: "rgba(74,222,128,0.7)", lineHeight: 1.4 }}>{p}</span>
                         </li>
                       ))}
@@ -1823,7 +1928,13 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
                   ) : col.heading === CATEGORY_META.performance.label ? (
                     // Performance score = PSI-Speed-Score-Baseline, keine spezifischen Issue-Treffer
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
-                      <span style={{ flexShrink: 0, fontSize: 13, lineHeight: 1.3 }}>⚠️</span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fbbf24"
+                        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
                       <span style={{ fontSize: 11, color: "rgba(251,191,36,0.75)", lineHeight: 1.5 }}>
                         PageSpeed-Score: {col.score}/100 — Ladezeit oder Server-Antwortzeit verbessern.
                       </span>

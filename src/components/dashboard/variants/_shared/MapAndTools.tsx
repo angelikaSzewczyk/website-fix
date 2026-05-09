@@ -82,7 +82,15 @@ export function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFr
                 border: `1px solid ${homepageIssueCount > 0 ? D.amberBorder : D.greenBorder}`,
                 padding: "2px 8px", borderRadius: 4,
               }}>
-                {homepageIssueCount > 0 ? `${homepageIssueCount} Optimierungen` : "✓ Optimiert"}
+                {homepageIssueCount > 0 ? `${homepageIssueCount} Optimierungen` : (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Optimiert
+                  </span>
+                )}
               </span>
               {homepageIssueCount > 0 && (
                 <span style={{
@@ -145,11 +153,17 @@ export function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFr
                     color: D.green, fontSize: 11, fontWeight: 700,
                   }}
                 >
-                  {isChecked ? "✓" : ""}
+                  {isChecked ? (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : null}
                 </button>
 
                 {/* Status badge — turns green immediately when page is checked off */}
                 <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
                   fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
                   background: isChecked ? D.greenBg : pageIssues > 0 ? D.amberBg : D.greenBg,
                   color:      isChecked ? D.green  : pageIssues > 0 ? D.amber   : D.green,
@@ -157,7 +171,13 @@ export function DeepScanMap({ homepageUrl, homepageIssueCount, unterseiten, isFr
                   whiteSpace: "nowrap", flexShrink: 0,
                   transition: "background 0.2s, color 0.2s, border-color 0.2s",
                 }}>
-                  {isChecked ? "✓ Geprüft" : pageIssues > 0 ? `${pageIssues} Optimierungen` : "✓ Optimiert"}
+                  {(isChecked || pageIssues === 0) && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                  {isChecked ? "Geprüft" : pageIssues > 0 ? `${pageIssues} Optimierungen` : "Optimiert"}
                 </span>
 
                 {/* Full URL */}
