@@ -107,13 +107,16 @@ export default function WcagAuditClient({ initialUrl }: { initialUrl: string }) 
       fontFamily: "system-ui, -apple-system, sans-serif",
     }}>
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
-        {/* Header */}
-        <Link href="/dashboard" style={{
-          fontSize: 12, color: C.textMuted, textDecoration: "none",
-          display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 18,
-        }}>
-          ← Zurück zum Dashboard
-        </Link>
+        {/* Header — Back-Link in eigener Zeile (vorher inline neben Pill,
+            wirkten zu kurz nebeneinander). */}
+        <div style={{ marginBottom: 18 }}>
+          <Link href="/dashboard" style={{
+            fontSize: 12, color: C.textMuted, textDecoration: "none",
+            display: "inline-flex", alignItems: "center", gap: 6,
+          }}>
+            ← Zurück zum Dashboard
+          </Link>
+        </div>
 
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
