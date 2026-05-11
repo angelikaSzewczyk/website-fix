@@ -213,7 +213,7 @@ export function GuidePdf({ guide, hoster, buyerEmail, stripeSessionId }: GuidePd
   const hosterLabel = ((): string => {
     const map: Record<string, string> = {
       strato: "Strato", ionos: "IONOS / 1&1", "all-inkl": "All-Inkl",
-      hostinger: "Hostinger", default: "Anderer Hoster",
+      hostinger: "Hostinger", hetzner: "Hetzner", default: "Anderer Hoster",
     };
     return map[hoster] ?? hoster;
   })();

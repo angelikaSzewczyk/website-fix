@@ -250,7 +250,7 @@ const FAQ = [
   },
   {
     q: "Was passiert nach dem Kauf eines 9,90 €-Guides?",
-    a: "Kein Konto, kein Login, kein Dashboard. Direkt nach der Stripe-Zahlung schicken wir dir eine Bestätigungs-Mail mit zwei Dingen: (1) dem kompletten Guide als PDF-Anhang — dauerhaft in deinem Postfach nutzbar, auch in Jahren noch — und (2) einem persönlichen Online-Link mit Code-Copy-Buttons und Hoster-Klick-Pfaden, der vier Wochen aktiv ist. Brauchst du dauerhaften Online-Zugriff plus alle 7 Guides? Dann lohnt sich Professional für 89 €/Mo. Details siehe AGB §5.6. Bei Fragen: support@website-fix.com.",
+    a: "Kein Konto, kein Login, kein Dashboard. Direkt nach der Stripe-Zahlung schicken wir dir eine Bestätigungs-Mail mit zwei Dingen: (1) dem kompletten Guide als PDF-Anhang — dauerhaft in deinem Postfach nutzbar, auch in Jahren noch — und (2) einem persönlichen Online-Link mit Code-Copy-Buttons (bei den drei Premium-Guides zusätzlich mit hoster-spezifischen Klick-Pfaden für Strato, IONOS, All-Inkl, Hostinger und Hetzner), der vier Wochen aktiv ist. Brauchst du dauerhaften Online-Zugriff plus alle 7 Guides? Dann lohnt sich Professional für 89 €/Mo. Details siehe AGB §5.6. Bei Fragen: support@website-fix.com.",
   },
   {
     q: "Was kostet WebsiteFix in der Übersicht?",
@@ -258,7 +258,7 @@ const FAQ = [
   },
   {
     q: "Funktioniert WebsiteFix mit meinem Hoster?",
-    a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Für die deutschen Top-Hoster haben wir hoster-spezifische Optimierungs-Anleitungen: Strato, IONOS / 1&1, All-Inkl, Hostinger, Hetzner. Das heißt: wenn du einen Fix-Guide kaufst, bekommst du nicht nur die generische WordPress-Anleitung, sondern zusätzlich die exakten Klick-Pfade für DEIN Hoster-Backend (.htaccess-Editor, PHP-Versions-Wechsel, SSL-Toggle etc.). Bei Spezial-Hostern (Cloudways, Kinsta, WP Engine) funktioniert die Standard-Anleitung — wir ergänzen die Hoster-Spezial-Pfade laufend.",
+    a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Unsere drei Premium-Guides (Hosting-Speed, Google-Sichtbarkeit, WP-Critical-Error) liefern hoster-spezifische Klick-Pfade für die deutschen Top-Hoster: Strato, IONOS / 1&1, All-Inkl, Hostinger und Hetzner — exakte Backend-Pfade (.htaccess-Editor, PHP-Versions-Wechsel, SSL-Toggle etc.). Die übrigen Guides arbeiten mit der generischen WordPress-Anleitung, die mit jedem Hoster funktioniert. Bei Spezial-Hostern (Cloudways, Kinsta, WP Engine) greift ebenfalls die Standard-Anleitung — wir ergänzen die Hoster-Spezial-Pfade laufend.",
   },
   {
     q: "Was genau prüft der Deep-Scan?",

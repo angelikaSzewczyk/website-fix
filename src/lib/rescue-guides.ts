@@ -135,6 +135,7 @@ export const HOSTER_OPTIONS = [
   { value: "ionos",      label: "IONOS / 1&1" },
   { value: "all-inkl",   label: "All-Inkl" },
   { value: "hostinger",  label: "Hostinger" },
+  { value: "hetzner",    label: "Hetzner" },
 ] as const;
 
 export type HosterValue = typeof HOSTER_OPTIONS[number]["value"];

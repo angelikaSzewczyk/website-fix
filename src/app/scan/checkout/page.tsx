@@ -9,7 +9,9 @@
  *  3. Klick → /api/guides/[id]/anon-checkout → Stripe-Redirect
  *
  * Nach erfolgreicher Zahlung kommt der Käufer auf /scan/checkout/claim,
- * der Webhook hat parallel User + Unlock angelegt.
+ * der Webhook hat parallel einen 4-Wochen-Token in guide_access_tokens
+ * angelegt (kein User-Konto — Token-only seit 08.05.2026) und die
+ * Bestätigungs-Mail mit PDF-Anhang + Online-Link versendet.
  *
  * Fallback: wenn kein Scan im sessionStorage liegt (Direkt-Aufruf),
  * zeigen wir einen "Erst scannen"-Hinweis mit Link zu /scan.

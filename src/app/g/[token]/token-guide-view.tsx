@@ -496,6 +496,7 @@ function hosterLabel(value: string): string {
     ionos:     "IONOS / 1&1",
     "all-inkl": "All-Inkl",
     hostinger: "Hostinger",
+    hetzner:   "Hetzner",
     default:   "anderer Hoster",
   };
   return map[value] ?? value;
