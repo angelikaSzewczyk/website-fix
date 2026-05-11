@@ -943,7 +943,7 @@ export default function Page() {
               </h2>
               <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}>
                 Falsche Fixes machen Sites kaputt, verschlechtern Accessibility-Scores oder SEO — und kosten dich den Kunden.
-                Deshalb haben wir uns für maximale Sicherheit entschieden: <strong style={{ color: "#fff" }}>WebsiteFix kann deine Site technisch gar nicht verändern.</strong>
+                Deshalb haben wir uns für ein <strong style={{ color: "#fff" }}>Default-Read-Only-Plugin</strong> entschieden: alle Scans sind reine Diagnose ohne Schreibzugriff. Auto-Fixes laufen <strong style={{ color: "#fff" }}>nur auf deinen expliziten Klick im Dashboard</strong>.
               </p>
             </div>
 
@@ -956,9 +956,9 @@ export default function Page() {
                       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                   ),
-                  title: "Read-Only-Plugin",
-                  body: "Kein Schreibzugriff. Kein FTP. Kein Passwort-Sharing. Das Plugin liest WordPress-Status, schreibt aber NIE etwas zurück.",
-                  badge: "Plugin-Bytes: 0 geschrieben",
+                  title: "Default-Read-Only-Plugin",
+                  body: "Diagnose-Scans sind reine Lese-Operationen — kein FTP, kein Passwort-Sharing, kein Dateisystem-Zugriff. KI-Auto-Fix schreibt nur das, was du im Dashboard explizit freigibst.",
+                  badge: "Schreibzugriff: nur auf Klick",
                 },
                 {
                   icon: (
@@ -969,8 +969,8 @@ export default function Page() {
                     </svg>
                   ),
                   title: "EU-Hosting + DSGVO-AVV",
-                  body: "Frankfurt-Server, ISO-27001-Provider, TLS-verschlüsselt. AVV als PDF im Account — vorausgefüllt mit deinem Agentur-Namen.",
-                  badge: "Server: 100% Deutschland",
+                  body: "Datenbank in Frankfurt (Neon, ISO-27001), Compute über Vercel-Edge-Region Frankfurt. TLS-verschlüsselt. AVV als druckbare Mustervorlage im Account.",
+                  badge: "DB + Compute: Frankfurt",
                 },
                 {
                   icon: (
@@ -994,8 +994,8 @@ export default function Page() {
                     </svg>
                   ),
                   title: "BFSG-Compliance ab 06/2025",
-                  body: "Barrierefreiheitsstärkungsgesetz seit Juni 2025 Pflicht für fast alle Unternehmens-Sites. Unsere Scans liefern dir den Audit-Beleg.",
-                  badge: "Haftungs-Schutz dokumentiert",
+                  body: "Barrierefreiheitsstärkungsgesetz seit Juni 2025 Pflicht für fast alle Unternehmens-Sites. Unsere Scans liefern dir den Audit-Beleg + AVV-Mustervorlage zum Vorzeigen.",
+                  badge: "AVV-Vorlage · Fachanwalt-Prüfung empfohlen",
                 },
               ].map(t => (
                 <div key={t.title} style={{
@@ -1034,9 +1034,9 @@ export default function Page() {
             </div>
 
             <p style={{ margin: "32px auto 0", maxWidth: 720, textAlign: "center", fontSize: 13.5, color: "rgba(255,255,255,0.42)", lineHeight: 1.7 }}>
-              Konkret: Wir können keine PHP-Datei ändern, keinen Plugin-Eintrag in wp_options überschreiben,
-              keinen Inhalt löschen. Selbst wenn unser Server gehackt würde — deine Kundenseite bleibt
-              unverändert. <strong style={{ color: "rgba(255,255,255,0.65)" }}>Read-Only heißt wirklich Read-Only.</strong>
+              Konkret: Diagnose-Scans laufen vollständig Read-Only — kein FTP, kein Datei-System-Zugriff,
+              keine automatischen Schreiboperationen. KI-Auto-Fix führt nur die Änderungen aus, die du
+              im Dashboard explizit per Klick freigibst. <strong style={{ color: "rgba(255,255,255,0.65)" }}>Du behältst die volle Kontrolle.</strong>
             </p>
           </div>
         </section>
