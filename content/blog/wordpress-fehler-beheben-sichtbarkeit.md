@@ -30,7 +30,7 @@ faq:
 
 ![Standard-Scan vs Röntgenblick — wo bremst WordPress wirklich](/blog/wordpress-roentgenblick.webp)
 
-## Einleitung: Der Arzt, der nur den Puls misst
+## Der Arzt, der nur den Puls misst
 
 Du kennst diesen Moment. Du rufst deine WordPress-Seite auf — und siehst nur eine weiße Fläche. Oder die nüchterne Meldung: **„Es gab einen kritischen Fehler auf deiner Website."** Oder, noch fieser: Die Seite läuft, aber Google ignoriert dich seit Wochen. Keine Indexierung, kein Ranking, keine Anfragen.
 
