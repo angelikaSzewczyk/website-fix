@@ -19,6 +19,8 @@
  */
 
 import type { SiteContext } from "@/lib/scan-engine/types";
+import type { TechFingerprint } from "@/lib/tech-detector/types";
+import { CONFIDENCE_THRESHOLD } from "@/lib/tech-detector/types";
 
 const C = {
   text:       "rgba(255,255,255,0.92)",
@@ -30,7 +32,27 @@ const C = {
 
 type StackItem = { label: string; ok: boolean; detail: string; risk: string | null };
 
-function buildItems(siteContext: SiteContext): StackItem[] {
+/** Defense-in-depth (12.05.2026): SEO-Plugin-Detection läuft primär über
+ *  siteContext.hasRankMath/hasYoast (Regex auf Root-HTML), aber falls dieser
+ *  Pfad einen Bug hat (z.B. nach einem Refactor wieder nicht gesetzt), greift
+ *  der Tech-Detector als Fallback — der erkennt Plugins über mehrere Signale
+ *  (HTML-Patterns, Header, Asset-URLs). */
+function fingerprintHasPlugin(
+  fingerprint: TechFingerprint | null | undefined,
+  needle: RegExp,
+): boolean {
+  if (!fingerprint?.wpPlugins) return false;
+  return fingerprint.wpPlugins.some(
+    p => p.confidence >= CONFIDENCE_THRESHOLD && needle.test(p.value),
+  );
+}
+
+function buildItems(siteContext: SiteContext, fingerprint: TechFingerprint | null | undefined): StackItem[] {
+  // SEO-Plugin: siteContext-Flags ODER Tech-Detector als Fallback.
+  const fingerprintRankMath = fingerprintHasPlugin(fingerprint, /rank[-_\s]?math/i);
+  const fingerprintYoast    = fingerprintHasPlugin(fingerprint, /yoast|wpseo/i);
+  const hasRankMath = siteContext.hasRankMath || fingerprintRankMath;
+  const hasYoast    = siteContext.hasYoast    || fingerprintYoast;
   return [
     {
       label: "WordPress erkannt",
@@ -76,13 +98,13 @@ function buildItems(siteContext: SiteContext): StackItem[] {
     },
     {
       label: "SEO-Plugin",
-      ok:    !!(siteContext.hasRankMath || siteContext.hasYoast),
-      detail: siteContext.hasRankMath
+      ok:    !!(hasRankMath || hasYoast),
+      detail: hasRankMath
         ? "Rank Math erkannt — strukturierte SEO-Daten aktiv"
-        : siteContext.hasYoast
+        : hasYoast
           ? "Yoast SEO erkannt — strukturierte SEO-Daten aktiv"
           : "Kein SEO-Plugin erkannt",
-      risk: !(siteContext.hasRankMath || siteContext.hasYoast)
+      risk: !(hasRankMath || hasYoast)
         ? "Schema-Markup & Sitemap-Generierung möglicherweise nicht optimiert"
         : null,
     },
@@ -103,11 +125,15 @@ function buildItems(siteContext: SiteContext): StackItem[] {
 
 export default function CmsStackCard({
   siteContext,
+  fingerprint = null,
   pluginActive = false,
   showPluginHint = true,
   marginBottom = 20,
 }: {
   siteContext: SiteContext | null | undefined;
+  /** Optionaler Tech-Detector-Fingerprint — wird als Fallback genutzt,
+   *  wenn siteContext-Flags (hasRankMath/hasYoast) leer sind. */
+  fingerprint?: TechFingerprint | null;
   /** Wenn true, wird der "Mit Plugin: PHP-Logs/DB-Last/…"-Hinweis NICHT gerendert
    *  (Plugin ist schon verbunden, der Hinweis wäre redundant). */
   pluginActive?: boolean;
@@ -117,7 +143,7 @@ export default function CmsStackCard({
   marginBottom?: number;
 }) {
   if (!siteContext) return null;
-  const items = buildItems(siteContext);
+  const items = buildItems(siteContext, fingerprint);
 
   return (
     <div style={{

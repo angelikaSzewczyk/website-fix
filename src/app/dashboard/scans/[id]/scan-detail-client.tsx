@@ -230,7 +230,7 @@ export default function ScanDetailClient({
             (Smart-Fix-Drawer macht den Plugin-CTA an einer prominenteren
             Stelle). */}
         {(siteContext?.wpVersion || fingerprint?.cms.value === "WordPress") && (
-          <CmsStackCard siteContext={siteContext} showPluginHint={false} />
+          <CmsStackCard siteContext={siteContext} fingerprint={fingerprint} showPluginHint={false} />
         )}
 
         {/* Results panel */}

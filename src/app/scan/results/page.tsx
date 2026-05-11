@@ -1448,22 +1448,32 @@ function ResultsInner() {
             {(() => {
               // Items pro Spalte erst sammeln und filtern, damit wir
               // bei leeren Spalten kein "Bug-Gefühl" produzieren.
+              //
+              // Severity-Sync mit Aggregator (12.05.2026): Free-Cards hatten
+              // Alt-Text-Issue und !title als "Wachstums-Bremse" (rot)
+              // klassifiziert, während der Aggregator beide als yellow
+              // (Optimierungshinweis) klassifiziert. Ergebnis: User sah Free
+              // dramatischer als Paid auf gleicher Domain → Vertrauensbruch.
+              // Mapping jetzt: rot = nur echte Sichtbarkeits-Blocker
+              // (https/robots/noindex/broken-links/404). Alle anderen
+              // Diagnose-Befunde (alt, title, meta, h1, sitemap, duplicates)
+              // landen in seoItems = "SEO & UX-Optimierungen" (gelb).
               const blockerItems: string[] = [
                 !scan?.https                       ? "Kein HTTPS: verhindert optimale Google-Sichtbarkeit und schließt potenzielle Kunden aus" : "",
                 scan?.robotsBlocked                ? "robots.txt blockiert Google: Seite wird nicht indexiert — kein organischer Traffic möglich" : "",
                 scan?.noIndex                      ? "noindex auf Startseite: Google schließt die Seite aktiv aus dem Index aus" : "",
                 (scan?.brokenLinksCount ?? 0) > 0  ? `${scan!.brokenLinksCount} Broken Links: Nutzer und Google landen auf leeren Seiten — direkte Ranking-Einbuße` : "",
-                !scan?.hasTitle                    ? "Kein <title>-Tag: wichtigstes On-Page-SEO-Signal fehlt — Klickrate sinkt" : "",
                 scan?.hasUnreachable               ? "Unterseiten nicht erreichbar (404): Crawling-Budget verschwendet, Nutzer verloren" : "",
-                (scan?.altMissingCount ?? 0) > 0   ? `${scan!.altMissingCount} Bilder ohne Alt-Text: Google-Bild-Suche vollständig ausgeschlossen` : "",
                 isDemo                             ? "Formularfelder ohne Label: verhindert Conversions durch schlechte Nutzerführung" : "",
                 isDemo                             ? "3 Broken Links: Nutzer und Google landen auf leeren Seiten" : "",
               ].filter(Boolean);
 
               const seoItems: string[] = [
+                !scan?.hasTitle                           ? "Kein <title>-Tag: wichtigstes On-Page-SEO-Signal fehlt — Klickrate sinkt" : "",
                 !scan?.hasMeta                            ? "Meta-Description fehlt: Klickrate in Google-Suchergebnissen leidet" : "",
                 !scan?.hasH1                              ? "Kein H1-Tag: Google fehlt die Haupt-Überschrift als Relevanz-Signal" : "",
                 !scan?.hasSitemap                         ? "Keine Sitemap: Google findet neue Seiten langsamer" : "",
+                (scan?.altMissingCount ?? 0) > 0          ? `${scan!.altMissingCount} Bilder ohne Alt-Text: Google-Bild-Suche vollständig ausgeschlossen — Barrierefreiheit-relevant` : "",
                 (scan?.duplicateTitlesCount ?? 0) > 1     ? "Doppelte Seitentitel: Keyword-Kannibalisierung schadet Rankings" : "",
                 (scan?.duplicateMetasCount  ?? 0) > 1     ? "Doppelte Meta-Descriptions: Google verwässert das Relevanz-Signal" : "",
                 isDemo                                    ? "168 Bilder ohne Alt-Text: Google kann sie nicht lesen — Smart-Fix Guide im Professional Plan" : "",

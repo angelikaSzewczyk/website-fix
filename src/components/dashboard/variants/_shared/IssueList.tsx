@@ -1316,6 +1316,17 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
   const redIssues    = sorted.filter(i => i.severity === "red");
   const yellowIssues = sorted.filter(i => i.severity === "yellow");
 
+  // Top-3 nach Volumen (= affected items, z.B. "101 Bilder ohne Alt-Text" vor
+  // "2 tote Links"). Konsistent mit Free-Scan-Wachstums-Bremsen-Card, die
+  // High-Volume-Issues prominent zeigt. Schwelle count >= 5 verhindert dass
+  // bei reinen Single-Page-Issues eine triviale "Top 3"-Card gerendert wird.
+  // (12.05.2026 User-Vertrauens-Fix: ehrliche Volumen-Sortierung statt
+  // versteckte hohe Counts in den Severity-Gruppen.)
+  const volumeTop3 = [...redIssues, ...yellowIssues]
+    .filter(i => (i.count ?? 1) >= 5)
+    .sort((a, b) => (b.count ?? 1) - (a.count ?? 1))
+    .slice(0, 3);
+
   // Index of the first Accessibility-Issue (Phase-3-Refactor: Display-Classifier
   // statt Daten-Kategorie 'recht', weil 'recht' jetzt sowohl A11y als auch
   // Best-Practices-Compliance enthält). Anchor wird vom UX-Hürden-Button
@@ -2058,6 +2069,47 @@ export default function IssueList({ issues, redCount, yellowCount, speedScore, p
             )}
           </div>
         </div>
+
+        {/* ── Top 3 Wachstums-Bremsen (nach Volumen) ──
+            Hebt High-Volume-Issues (z.B. "101 Bilder ohne Alt-Text") prominent
+            heraus, bevor die Severity-Gruppierung sie in der yellow-Sektion
+            "versteckt". Wird nur gerendert wenn mindestens ein Issue
+            count >= 5 hat — kleine Single-Page-Issues bekommen keinen Drama-
+            Anstrich. (12.05.2026 User-Vertrauens-Fix.) */}
+        {volumeTop3.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fb923c", flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#fb923c", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Top {volumeTop3.length} Wachstums-Bremsen · nach Volumen
+              </p>
+            </div>
+            <div style={{
+              background: "rgba(251,146,60,0.05)",
+              border: "1px solid rgba(251,146,60,0.20)",
+              borderRadius: 12, padding: "12px 16px",
+              display: "flex", flexDirection: "column", gap: 8,
+            }}>
+              {volumeTop3.map((issue, i) => (
+                <div key={`vol-${i}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{
+                    flexShrink: 0, minWidth: 38,
+                    fontSize: 14, fontWeight: 800, color: "#fb923c",
+                    textAlign: "right",
+                  }}>
+                    {issue.count ?? 1}×
+                  </span>
+                  <span style={{
+                    fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.82)",
+                    lineHeight: 1.5,
+                  }}>
+                    {issue.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Gruppe: Handlungsbedarf (rot) ─────────────────────────────── */}
         {redIssues.length > 0 ? (

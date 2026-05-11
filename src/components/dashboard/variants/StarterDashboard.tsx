@@ -1068,7 +1068,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
           {/* ②a CMS-STACK-ANALYSE (09.05.2026): geteilte Komponente, gleiche
               Card auch in ProDashboard + Scan-Detail. Quelle: meta_json.site_context. */}
           {!isNewScan && lastScan && (siteContext?.wpVersion || fingerprint?.cms.value === "WordPress") && (
-            <CmsStackCard siteContext={siteContext} pluginActive={pluginActive} />
+            <CmsStackCard siteContext={siteContext} fingerprint={fingerprint} pluginActive={pluginActive} />
           )}
 
           {/* ②b WORDPRESS-EXPERT-MODE — Plugin-Liste mit plan-abhängiger Tiefe */}
