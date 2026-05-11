@@ -181,7 +181,12 @@ export default function PluginReportClient({ source, medium, campaign, siteUrl: 
           }}>
             Vorab-Score · 5 Quick-Checks aus deinem Plugin
           </p>
-          <svg viewBox="0 0 220 130" style={{ width: "100%", maxWidth: 280, height: "auto", margin: "0 auto", display: "block" }} role="img" aria-label={`Health-Score ${Math.round(animVal)} von 100`}>
+          <svg
+            viewBox="0 0 220 125"
+            style={{ width: "100%", maxWidth: 260, height: "auto", margin: "0 auto", display: "block" }}
+            role="img"
+            aria-label={`Health-Score ${Math.round(animVal)} von 100`}
+          >
             {/* Track */}
             <path d={trackPath} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" strokeLinecap="round" />
             {/* Fill */}
@@ -198,14 +203,25 @@ export default function PluginReportClient({ source, medium, campaign, siteUrl: 
             <line x1={cx} y1={cy} x2={needleX} y2={needleY} stroke={scoreColor} strokeWidth="3" strokeLinecap="round" />
             <circle cx={cx} cy={cy} r="6" fill={scoreColor} />
             <circle cx={cx} cy={cy} r="2.5" fill={T.bg} />
-            {/* Score */}
-            <text x={cx} y={cy + 24} textAnchor="middle" fontSize="32" fontWeight="800" fill={scoreColor} fontFamily="ui-monospace, monospace">
-              {Math.round(animVal)}
-            </text>
-            <text x={cx} y={cy + 40} textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.45)" letterSpacing="2">
-              / 100
-            </text>
           </svg>
+          {/* Score-Anzeige außerhalb des SVG, damit sie nie an die viewBox-Grenze stößt. */}
+          <div style={{ marginTop: -14, marginBottom: 6, lineHeight: 1 }}>
+            <span style={{
+              fontSize: 36, fontWeight: 800, color: scoreColor,
+              fontFamily: "ui-monospace, monospace",
+              letterSpacing: "-0.02em",
+            }}>
+              {Math.round(animVal)}
+            </span>
+            <span style={{
+              fontSize: 13, color: "rgba(255,255,255,0.45)",
+              fontFamily: "ui-monospace, monospace",
+              letterSpacing: "0.08em",
+              marginLeft: 4,
+            }}>
+              / 100
+            </span>
+          </div>
           <p style={{ margin: "0 0 4px", fontSize: 13, color: T.text, fontWeight: 700 }}>
             Verbesserungsbedürftig
           </p>

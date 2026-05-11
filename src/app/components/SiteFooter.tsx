@@ -37,8 +37,9 @@ export default function SiteFooter() {
                 { href: "/#pricing",                   label: "Preise" },
                 { href: "/fuer-agenturen",             label: "Agentur-Programm" },
                 { href: "/fuer-agenturen#white-label", label: "White-Label Reports" },
-                { href: "/blog",                       label: "Blog" },
                 { href: "/scan",                       label: "Kostenlos scannen" },
+                { href: "/smart-fix-library",          label: "Smart-Fix Library" },
+                { href: "/blog",                       label: "Blog" },
               ].map(({ href, label }) => (
                 <Link key={href} href={href} className="wf-footer-link">{label}</Link>
               ))}

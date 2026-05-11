@@ -753,6 +753,59 @@ export default function EngineeringSection() {
           </p>
         </div>
 
+        {/* ── Bridge zur Smart-Fix-Library ──
+            Macht die Library auf der Homepage discoverable. Ohne diesen
+            Link wäre /smart-fix-library nur via direkter URL oder organischer
+            Google-Suche erreichbar. Hier landet jeder Dev-zu-Dev-Leser. */}
+        <a
+          href="/smart-fix-library"
+          style={{
+            display: "block",
+            marginTop: 40,
+            padding: "22px 26px",
+            background: T.greenBg,
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: `1px solid ${T.borderStrong}`,
+            borderRadius: 14,
+            boxShadow: `${T.glassInner}, 0 24px 56px -32px rgba(74,222,128,0.30)`,
+            textDecoration: "none",
+            transition: "transform 0.15s ease, border-color 0.15s ease",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+              <p style={{
+                margin: "0 0 6px",
+                fontSize: 10.5, fontWeight: 800, color: T.green,
+                fontFamily: T.mono, letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>
+                Geöffneter Engineering-Lab
+              </p>
+              <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: T.text, letterSpacing: "-0.015em" }}>
+                Smart-Fix-Library &nbsp;·&nbsp; 5 kuratierte Snippets, copy-paste-ready
+              </h3>
+              <p style={{ margin: 0, fontSize: 13, color: T.textSub, lineHeight: 1.6 }}>
+                Heartbeat-Drosselung, XML-RPC-Hardening, Emoji-Bloat-Remove, Query-String-Cleaner, jQuery-Migrate-Drop —
+                jeder mit Auto-Safety-Check für Plugin-Kollisionen.
+              </p>
+            </div>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "10px 18px",
+              background: T.green,
+              color: "#06210f",
+              fontSize: 13, fontWeight: 800,
+              borderRadius: 9,
+              letterSpacing: "-0.005em",
+              flexShrink: 0,
+            }}>
+              Library öffnen
+              <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>→</span>
+            </span>
+          </div>
+        </a>
+
       </div>
     </section>
   );

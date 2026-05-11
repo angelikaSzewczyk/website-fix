@@ -158,13 +158,15 @@ Die gleiche Tiefe für **IONOS, Hetzner, all-inkl, Goneo, 1&1, Webgo** — jeder
 
 ## Wie du jetzt weitermachst
 
-Drei klare Wege, in absteigender Reihenfolge der Investition:
+Vier klare Wege, in absteigender Reihenfolge der Investition:
 
-**1. Du willst erst mal verstehen, was los ist.** → Starte den **kostenlosen Scan**. Du bekommst den Sichtbarkeits-Score, die 92-Punkte-Diagnose und eine Hoster-Erkennung. Keine Email, kein Konto. Wenn du auf den Live-Daten-Button klickst, holen wir dir auch die echten Google PageSpeed Insights LCP- und CLS-Werte direkt von Google's Servern.
+**1. Du willst sofort selbst Hand anlegen.** → Schau in unsere [**Smart-Fix-Library**](/smart-fix-library). Fünf kuratierte, copy-paste-fertige WordPress-Snippets (Heartbeat-Drosselung, XML-RPC-Hardening, Emoji-Bloat-Remove, Query-String-Cleaner, jQuery-Migrate-Drop) — jeder mit Auto-Safety-Check, der erkennt, ob du das Snippet überhaupt brauchst.
 
-**2. Du willst diesen einen Fehler heute Abend lösen.** → Nach dem Scan zeigen wir dir den **passenden 9,90-€-Rescue-Guide für deinen Hoster**. Sofortiger Download, kein Konto.
+**2. Du willst erst mal verstehen, was los ist.** → Starte den **kostenlosen Scan**. Du bekommst den Sichtbarkeits-Score, die 92-Punkte-Diagnose und eine Hoster-Erkennung. Keine Email, kein Konto. Wenn du auf den Live-Daten-Button klickst, holen wir dir auch die echten Google PageSpeed Insights LCP- und CLS-Werte direkt von Google's Servern.
 
-**3. Du betreust mehrere Seiten oder willst Server-Wahrheit dauerhaft.** → Das **Pro-Abo** mit Deep-Audit-Plugin gibt dir Datei- und Zeilennummer-Diagnose, monatliche Hybrid-Scans und unlimitierte Smart-Fix-Guides. Read-Only-Architektur, EU-Hosting, jederzeit kündbar.
+**3. Du willst diesen einen Fehler heute Abend lösen.** → Nach dem Scan zeigen wir dir den **passenden 9,90-€-Rescue-Guide für deinen Hoster**. Sofortiger Download, kein Konto.
+
+**4. Du betreust mehrere Seiten oder willst Server-Wahrheit dauerhaft.** → Das **Pro-Abo** mit Deep-Audit-Plugin gibt dir Datei- und Zeilennummer-Diagnose, monatliche Hybrid-Scans und unlimitierte Smart-Fix-Guides. Read-Only-Architektur, EU-Hosting, jederzeit kündbar.
 
 Die wichtigste Erkenntnis aus diesem Beitrag: Ein externer Scan ist ein guter Start. Aber wenn Google deine Seite nicht sieht oder du den „kritischen Fehler" nicht wegbekommst, dann liegt die Antwort fast immer dort, wo dein Tool nicht hinsehen kann — im Server, in der Datenbank, im PHP-Log.
 
