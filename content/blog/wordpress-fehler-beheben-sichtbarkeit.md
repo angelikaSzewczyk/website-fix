@@ -28,6 +28,8 @@ faq:
     a: "Bei Strato: Kundencenter → 'Paket verwalten' → 'PHP & Datenbank' → 'PHP-Einstellungen' → 'Error-Log einsehen' (die letzten 1.000 Zeilen werden angezeigt). Bei IONOS: 'Hosting' → 'Performance' → 'Logs' → 'PHP-Fehlerprotokoll herunterladen'. Bei Hetzner (konsoleH): 'Tools' → 'Log-Dateien' → 'error.log'. Wer mehrere Hoster betreut, spart sich die Klick-Wanderung mit einem Deep-Audit-Plugin, das diese Logs direkt im Dashboard zusammenführt."
 ---
 
+![Standard-Scan vs Röntgenblick — wo bremst WordPress wirklich](/blog/wordpress-roentgenblick.webp)
+
 ## Einleitung: Der Arzt, der nur den Puls misst
 
 Du kennst diesen Moment. Du rufst deine WordPress-Seite auf — und siehst nur eine weiße Fläche. Oder die nüchterne Meldung: **„Es gab einen kritischen Fehler auf deiner Website."** Oder, noch fieser: Die Seite läuft, aber Google ignoriert dich seit Wochen. Keine Indexierung, kein Ranking, keine Anfragen.
@@ -166,9 +168,3 @@ Drei klare Wege, in absteigender Reihenfolge der Investition:
 Die wichtigste Erkenntnis aus diesem Beitrag: Ein externer Scan ist ein guter Start. Aber wenn Google deine Seite nicht sieht oder du den „kritischen Fehler" nicht wegbekommst, dann liegt die Antwort fast immer dort, wo dein Tool nicht hinsehen kann — im Server, in der Datenbank, im PHP-Log.
 
 Der Röntgenblick ist kein Marketing-Wort. Er ist die einzige Methode, die funktioniert, wenn die Fassade dich anlügt.
-
-<div style="margin: 40px 0 16px; padding: 28px 32px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; text-align: center;">
-  <h3 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.01em;">Bereit für den Röntgenblick?</h3>
-  <p style="margin: 0 0 18px; font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.6;">Starte mit dem kostenlosen Scan. 60 Sekunden, keine Email, sofortiger Sichtbarkeits-Score.</p>
-  <a href="/scan" style="display: inline-block; padding: 12px 26px; background: linear-gradient(135deg, #8df3d3, #7aa6ff); color: #0b1220; border-radius: 10px; font-weight: 800; text-decoration: none; font-size: 14px;">Kostenlosen Scan starten →</a>
-</div>
