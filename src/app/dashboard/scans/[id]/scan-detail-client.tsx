@@ -199,7 +199,10 @@ export default function ScanDetailClient({
           </div>
         </div>
 
-        {/* Scan meta — kompakt, fokussiert */}
+        {/* Scan meta — kompakt, fokussiert.
+            Aufgaben-Zahl + betroffene Stellen wortgleich zu /scan/results und
+            StarterDashboard, damit Free → Paid → Re-Scan-Detail dieselbe
+            Sprache sprechen (12.05.2026 User-Vertrauens-Fix). */}
         <div style={{ marginBottom: 16 }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             Archivierter Bericht
@@ -207,7 +210,17 @@ export default function ScanDetailClient({
           <h1 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", wordBreak: "break-all" }}>
             {url}
           </h1>
-          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{date}</p>
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+            {date}
+            {(() => {
+              const bucketCount = issues.length;
+              const affectedCount = issues.reduce((s, i) => s + (i.count ?? 1), 0);
+              if (bucketCount === 0) return " · Keine Befunde";
+              const n = totalPages ?? null;
+              const pagesPart = n != null ? ` auf ${n} ${n === 1 ? "Seite" : "Seiten"}` : "";
+              return ` · ${bucketCount} ${bucketCount === 1 ? "Optimierungs-Aufgabe" : "Optimierungs-Aufgaben"} · ${affectedCount} ${affectedCount === 1 ? "Stelle" : "Stellen"}${pagesPart}`;
+            })()}
+          </p>
         </div>
 
         {/* CMS-Stack-Analyse (09.05.2026): gleiche Card wie auf /dashboard.

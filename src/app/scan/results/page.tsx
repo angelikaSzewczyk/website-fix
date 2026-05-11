@@ -1304,7 +1304,7 @@ function ResultsInner() {
             )}
             <div className="hide-sm" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
               <Link
-                href="/checkout?plan=starter"
+                href="/register?plan=starter"
                 onClick={() => trackCta("Click Optimize Button", "scan-header")}
                 className="wf-optimize-cta"
                 style={{
