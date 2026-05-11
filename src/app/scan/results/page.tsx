@@ -6,7 +6,6 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
 import MobileNav from "../../components/MobileNav";
 import SiteFooter from "../../components/SiteFooter";
-import MaintenanceBanner from "../../components/MaintenanceBanner";
 
 import { type StoredScan, saveScanToStorage, loadScanFromStorage } from "@/lib/scan-storage";
 import { normalizePlan } from "@/lib/plans";
@@ -1154,7 +1153,6 @@ function ResultsInner() {
   // Verhindert den verwirrenden silent-fallback in den Demo-Modus.
   if (scanMissing && !scan) return (
     <>
-      <MaintenanceBanner />
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(11,12,16,0.95)", backdropFilter: "blur(12px)",
@@ -1267,7 +1265,6 @@ function ResultsInner() {
 
   return (
     <>
-      <MaintenanceBanner />
       {/* NAV */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
