@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
   Layers, BellDot, Globe, ShieldCheck, Zap, Server, Palette,
-  Headphones, Magnet, Crown, Check,
+  Magnet, Crown, Check,
   Wallet, Users, Bell, Lock, FileText, AlertTriangle,
 } from "lucide-react";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "../components/BrandIcons";
@@ -1389,15 +1389,6 @@ export default function AgencyPage() {
                   boxShadow: "0 8px 32px rgba(124,58,237,0.50)",
                 }}
               />
-              <Link href="mailto:support@website-fix.com?subject=Agency%20Scale%20Onboarding-Call" style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "16px 28px", borderRadius: 14,
-                background: T.card, border: `1px solid ${T.borderStrong}`,
-                color: T.text, fontSize: 14.5, fontWeight: 700, textDecoration: "none",
-              }}>
-                <Headphones size={16} strokeWidth={2} />
-                Onboarding-Call anfragen
-              </Link>
             </div>
             <p style={{ margin: 0, fontSize: 12, color: T.textFaint }}>
               Monatlich kündbar · keine Mindestlaufzeit · Hosting Frankfurt · DSGVO-konform
