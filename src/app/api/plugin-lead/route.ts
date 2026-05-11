@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 
 /**
  * Lead-Capture-Endpoint für die /plugin-report-Landing.
@@ -42,7 +42,10 @@ export async function POST(req: NextRequest) {
   // Referer (= Kunden-Site), darum lassen wir Origin-Mismatch hier durch.
   // Schutz erfolgt stattdessen via Rate-Limit + Captcha-frei UNIQUE-Constraint.
 
-  let body: { email?: unknown; siteUrl?: unknown; source?: unknown; medium?: unknown; campaign?: unknown };
+  let body: {
+    email?: unknown; siteUrl?: unknown; source?: unknown; medium?: unknown; campaign?: unknown;
+    newsletterOptIn?: unknown;
+  };
   try {
     body = await req.json();
   } catch {
@@ -59,6 +62,11 @@ export async function POST(req: NextRequest) {
   const source   = typeof body.source === "string"   ? body.source.slice(0, 80)    : "unknown";
   const medium   = typeof body.medium === "string"   ? body.medium.slice(0, 80)    : null;
   const campaign = typeof body.campaign === "string" ? body.campaign.slice(0, 80)  : null;
+  // Newsletter-Opt-In ist explizit + getrennt vom Lead-Eintrag selbst. DSGVO-
+  // konformer Double-Opt-In: wir speichern den Wunsch zusammen mit einem
+  // Confirmation-Token und schicken eine getrennte Bestätigungs-Mail. Erst
+  // nach Klick auf den Link setzt /api/plugin-lead/confirm das confirmed_at.
+  const newsletterOptIn = body.newsletterOptIn === true;
 
   const ip       = getClientIp(req);
   const ipHash   = hashIp(ip);
@@ -85,11 +93,17 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Persist (idempotent via UNIQUE(email, source)) ──
+  // confirmation_token wird nur generiert, wenn Newsletter-Opt-In aktiv ist
+  // und der Eintrag NEU ist. Bei Duplicate behalten wir den existierenden
+  // Status — kein erneutes Token-Reset.
   let isFirstTime = true;
+  const confirmationToken = newsletterOptIn ? randomUUID() : null;
   try {
     const inserted = await sql`
-      INSERT INTO plugin_leads (email, source, medium, campaign, site_url, ip_hash, user_agent)
-      VALUES (${email}, ${source}, ${medium}, ${campaign}, ${siteUrl}, ${ipHash}, ${ua})
+      INSERT INTO plugin_leads
+        (email, source, medium, campaign, site_url, ip_hash, user_agent, newsletter_opt_in, confirmation_token)
+      VALUES
+        (${email}, ${source}, ${medium}, ${campaign}, ${siteUrl}, ${ipHash}, ${ua}, ${newsletterOptIn}, ${confirmationToken})
       ON CONFLICT (email, source) DO NOTHING
       RETURNING id
     ` as Array<{ id: number }>;
@@ -142,10 +156,55 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Newsletter-Bestätigungs-Mail (Double-Opt-In) ──
+  // Eine SEPARATE Mail, damit die DSGVO-Trennung sauber ist: Welcome-Mail
+  // ist Vertragserfüllung (User hat den Bericht angefordert), Newsletter
+  // braucht explizite Einwilligung mit Klick-Bestätigung.
+  if (process.env.RESEND_API_KEY && isFirstTime && newsletterOptIn && confirmationToken) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
+      const confirmUrl = `${baseUrl}/api/plugin-lead/confirm?token=${encodeURIComponent(confirmationToken)}`;
+
+      await resend.emails.send({
+        from:    "WebsiteFix <noreply@website-fix.com>",
+        to:      email,
+        subject: "Bitte bestätige deine Newsletter-Anmeldung",
+        html: `
+          <div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0F172A;">
+            <h2 style="margin:0 0 12px;font-size:20px;">Newsletter bestätigen — ein Klick reicht.</h2>
+            <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
+              Du hast dich für unsere WordPress-Optimierungs-Tipps angemeldet. Damit wir dir
+              schreiben dürfen, brauchen wir noch deine ausdrückliche Bestätigung (Double-Opt-In
+              nach DSGVO).
+            </p>
+            <a href="${confirmUrl}" style="display:inline-block;padding:12px 22px;background:#16a34a;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
+              Newsletter-Anmeldung bestätigen
+            </a>
+            <p style="margin:18px 0 6px;font-size:12px;color:#94A3B8;line-height:1.55;">
+              Wenn der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br/>
+              <a href="${confirmUrl}" style="color:#16a34a;word-break:break-all;">${confirmUrl}</a>
+            </p>
+            <p style="margin:14px 0 0;padding:10px 12px;background:#F1F5F9;border-radius:6px;font-size:11px;color:#475569;line-height:1.5;">
+              <strong>Du hast diese Mail nicht angefordert?</strong> Dann ignoriere sie einfach.
+              Ohne deine Bestätigung wirst du nicht in den Verteiler aufgenommen, und der
+              Eintrag wird nach 14 Tagen automatisch gelöscht. Widerruf jederzeit per Antwort
+              auf diese Mail.
+            </p>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.error("[plugin-lead] newsletter confirmation mail failed:", mailErr);
+    }
+  }
+
   return NextResponse.json({
     success: true,
     message: isFirstTime
-      ? "Bericht freigeschaltet. Check dein Postfach für den Scan-Link."
+      ? (newsletterOptIn
+          ? "Bericht freigeschaltet. Wir haben dir 2 Mails geschickt — eine mit dem Scan-Link, eine zur Newsletter-Bestätigung."
+          : "Bericht freigeschaltet. Check dein Postfach für den Scan-Link.")
       : "Du bist bereits registriert. Bitte prüfe dein Postfach (auch Spam-Ordner).",
   });
 }

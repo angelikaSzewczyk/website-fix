@@ -57,11 +57,12 @@ interface Props {
 
 export default function PluginReportClient({ source, medium, campaign, siteUrl: initialSiteUrl }: Props) {
   const [email,    setEmail]    = useState("");
-  const [siteUrl,  setSiteUrl]  = useState(initialSiteUrl ?? "");
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState<string | null>(null);
-  const [success,  setSuccess]  = useState<string | null>(null);
-  const [animVal,  setAnimVal]  = useState(0);  // Tacho-Wert
+  const [siteUrl,         setSiteUrl]         = useState(initialSiteUrl ?? "");
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);  // Double-Opt-In Wunsch
+  const [loading,         setLoading]         = useState(false);
+  const [error,           setError]           = useState<string | null>(null);
+  const [success,         setSuccess]         = useState<string | null>(null);
+  const [animVal,         setAnimVal]         = useState(0);  // Tacho-Wert
 
   // Tacho-Animation: 0 → TEASER_SCORE über ~1.4 s mit Ease-Out
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function PluginReportClient({ source, medium, campaign, siteUrl: 
           email: email.trim(),
           siteUrl: siteUrl.trim() || null,
           source, medium, campaign,
+          newsletterOptIn,
         }),
       });
       const data = await res.json() as { success: boolean; message?: string; error?: string };
@@ -372,9 +374,63 @@ export default function PluginReportClient({ source, medium, campaign, siteUrl: 
                     borderRadius: 8,
                     outline: "none",
                     fontFamily: "inherit",
-                    marginBottom: 16,
+                    marginBottom: 14,
                   }}
                 />
+
+                {/* Newsletter-Opt-In (Double-Opt-In) — DSGVO-konform getrennt
+                    vom Lead-Eintrag selbst. Lighthouse-Grün-Custom-Checkbox. */}
+                <label
+                  htmlFor="lead-newsletter"
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    padding: "10px 12px",
+                    marginBottom: 16,
+                    borderRadius: 8,
+                    background: newsletterOptIn ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${newsletterOptIn ? T.greenBorder : T.glassBorder}`,
+                    cursor: "pointer",
+                    transition: "background 0.15s ease, border-color 0.15s ease",
+                  }}
+                >
+                  <span style={{
+                    position: "relative",
+                    flexShrink: 0,
+                    width: 18, height: 18, marginTop: 1,
+                    borderRadius: 5,
+                    background: newsletterOptIn ? T.greenSoft : "rgba(255,255,255,0.05)",
+                    border: `1px solid ${newsletterOptIn ? T.greenSoft : "rgba(255,255,255,0.25)"}`,
+                    transition: "background 0.15s ease, border-color 0.15s ease",
+                  }}>
+                    {newsletterOptIn && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06210f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", top: 2, left: 2 }}>
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </span>
+                  <input
+                    id="lead-newsletter"
+                    type="checkbox"
+                    checked={newsletterOptIn}
+                    onChange={e => setNewsletterOptIn(e.target.checked)}
+                    disabled={loading}
+                    style={{
+                      // Hidden, native checkbox bleibt focusable für Tastatur-User
+                      position: "absolute",
+                      width: 0, height: 0, opacity: 0, pointerEvents: "none",
+                    }}
+                  />
+                  <span style={{ fontSize: 12.5, color: T.textSub, lineHeight: 1.55 }}>
+                    Ich möchte zusätzlich hilfreiche Tipps zur WordPress-Optimierung und exklusive
+                    Angebote erhalten. <span style={{ color: T.textMuted }}>(Widerruf jederzeit möglich.)</span>
+                    <br/>
+                    <span style={{ fontSize: 10.5, color: T.textMuted, fontFamily: T.mono }}>
+                      Double-Opt-In · Bestätigungs-Mail folgt nach dem Klick
+                    </span>
+                  </span>
+                </label>
 
                 {error && (
                   <p style={{
