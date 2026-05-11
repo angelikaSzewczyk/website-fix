@@ -54,80 +54,96 @@ const STACK: ReadonlyArray<{ name: string; version: string; role: string; Icon: 
 
 type MatrixGroup = "DB-Audit" | "PHP-Runtime" | "Security & Server-Last";
 
+// Dreiklang-Positionierung (11.05.2026): jeder Parameter zeigt jetzt
+// drei Auflösungsstufen — Lighthouse = WAS (Symptom), Profi-Tools wie
+// Query Monitor / New Relic = WO (Rohdaten, Dev-only), WebsiteFix = WIE
+// (übersetzt in Fix-Anleitung). proTool-Feld beschreibt was ein Profi-
+// Tool zeigen würde + dessen Limit (Setup-Friction, Live-Last, Dev-only).
+// weDeliver = unser Translation-Layer in eine actionable Antwort.
 const MATRIX: ReadonlyArray<{
   group:     MatrixGroup;
   Icon:      LucideIcon;
   param:     string;
-  weSee:     string;
+  proTool:   string;
+  weDeliver: string;
   blind:     string;
 }> = [
   // ── Datenbank-Audit ─────────────────────────────────────────────────────
   {
-    group:  "DB-Audit",
-    Icon:   Database,
-    param:  "wp_options Autoload-Size",
-    weSee:  "Live-Messung der pro-Request geladenen Option-Bytes",
-    blind:  "Lighthouse misst nur das Frontend-HTML — eine 200 MB große Autoload-Tabelle ist für externe Tools unsichtbar.",
+    group:    "DB-Audit",
+    Icon:     Database,
+    param:    "wp_options Autoload-Size",
+    proTool:  "Query Monitor listet alle Autoload-Options nach Größe — sortieren musst du selbst.",
+    weDeliver:"Plugin-Slug des Verursachers + Migrations-Snippet zum Auslagern ins Transient-Cache.",
+    blind:    "Lighthouse misst nur das Frontend-HTML — eine 200 MB große Autoload-Tabelle ist für externe Tools unsichtbar.",
   },
   {
-    group:  "DB-Audit",
-    Icon:   Layers,
-    param:  "Index-Health & Fragmentierung",
-    weSee:  "Fragmentation-Ratio pro Tabelle, fehlende Foreign-Key-Indizes",
-    blind:  "Browser-basierte Audits sehen keine SQL-Struktur. Index-Probleme zeigen sich nur in Slow-TTFB-Symptomen ohne Ursache.",
+    group:    "DB-Audit",
+    Icon:     Layers,
+    param:    "Index-Health & Fragmentierung",
+    proTool:  "phpMyAdmin zeigt SHOW INDEX-Output — du musst SQL lesen können.",
+    weDeliver:"Konkreter ALTER-TABLE-Befehl + Risiko-Hinweis (Lock-Dauer auf deinem DB-Größenprofil).",
+    blind:    "Browser-basierte Audits sehen keine SQL-Struktur. Index-Probleme zeigen sich nur in Slow-TTFB-Symptomen ohne Ursache.",
   },
   {
-    group:  "DB-Audit",
-    Icon:   FileSearch,
-    param:  "Slow-Query-Log + Post-Revisions",
-    weSee:  "Queries > 1 s aus der MySQL-Slow-Log, Revisions-Bloat pro Post-Type",
-    blind:  "Externe Crawler erleben nur Symptome (langsame Antwort) — sie können nicht in den MySQL-Log schauen, der die wahre Query identifiziert.",
+    group:    "DB-Audit",
+    Icon:     FileSearch,
+    param:    "Slow-Query-Log + Post-Revisions",
+    proTool:  "MySQL-Slow-Log liefert rohe Queries — Hoster aktivieren, parsen, korrelieren musst du selbst.",
+    weDeliver:"Verursachendes Plugin/Theme identifiziert + WP-CLI-Befehl zum Revisions-Cleanup.",
+    blind:    "Externe Crawler erleben nur Symptome (langsame Antwort) — sie können nicht in den MySQL-Log schauen, der die wahre Query identifiziert.",
   },
 
   // ── PHP-Runtime ─────────────────────────────────────────────────────────
   {
-    group:  "PHP-Runtime",
-    Icon:   AlertTriangle,
-    param:  "PHP-Fatal-Errors mit Datei + Zeile",
-    weSee:  "Live-Parse von /wp-content/debug.log und Hoster-Error-Logs",
-    blind:  "Externer 200-OK-Crawl signalisiert „alles gut“ — gleichzeitig kann debug.log voller Fatal-Errors auf nicht-gecrawlten Routen sein.",
+    group:    "PHP-Runtime",
+    Icon:     AlertTriangle,
+    param:    "PHP-Fatal-Errors mit Datei + Zeile",
+    proTool:  "New Relic / Sentry zeigen Traces — brauchen Agent-Install + Service-Abo.",
+    weDeliver:"Datei + Zeile aus debug.log + passende Disable-/Hotfix-Anweisung pro Plugin.",
+    blind:    "Externer 200-OK-Crawl signalisiert „alles gut“ — gleichzeitig kann debug.log voller Fatal-Errors auf nicht-gecrawlten Routen sein.",
   },
   {
-    group:  "PHP-Runtime",
-    Icon:   Cpu,
-    param:  "Memory-Limit-Hits & Peak-Usage",
-    weSee:  "memory_get_peak_usage() pro Request, OOM-Häufigkeit aus Logs",
-    blind:  "Lighthouse misst Browser-Memory, nicht das PHP-Memory-Limit auf dem Server. Out-of-Memory-Crashes bleiben unsichtbar bis zur weißen Seite.",
+    group:    "PHP-Runtime",
+    Icon:     Cpu,
+    param:    "Memory-Limit-Hits & Peak-Usage",
+    proTool:  "Query Monitor zeigt Peak-Usage pro Request — Aggregation über Zeit fehlt.",
+    weDeliver:"Trend + memory_limit-Empfehlung für deinen Hoster + .htaccess- oder php.ini-Snippet.",
+    blind:    "Lighthouse misst Browser-Memory, nicht das PHP-Memory-Limit auf dem Server. Out-of-Memory-Crashes bleiben unsichtbar bis zur weißen Seite.",
   },
   {
-    group:  "PHP-Runtime",
-    Icon:   Zap,
-    param:  "OPcache-Status & Hit-Rate",
-    weSee:  "opcache_get_status(): aktive Slots, Hit-/Miss-Verhältnis, Restart-Counter",
-    blind:  "OPcache läuft serverseitig — ein deaktivierter Cache halbiert die PHP-Performance, ist von außen aber nicht messbar.",
+    group:    "PHP-Runtime",
+    Icon:     Zap,
+    param:    "OPcache-Status & Hit-Rate",
+    proTool:  "opcache_get_status() ist eine PHP-Funktion — du musst sie selbst aufrufen + interpretieren.",
+    weDeliver:"Status-Bewertung + Hoster-spezifische Anweisung zum Aktivieren (Strato, IONOS, Hetzner usw.).",
+    blind:    "OPcache läuft serverseitig — ein deaktivierter Cache halbiert die PHP-Performance, ist von außen aber nicht messbar.",
   },
 
   // ── Security & Server-Last ──────────────────────────────────────────────
   {
-    group:  "Security & Server-Last",
-    Icon:   GitBranch,
-    param:  "Hook-Chain-Race-Conditions",
-    weSee:  "Welcher add_filter() überschreibt welchen — Reihenfolge & Priority",
-    blind:  "DevTools sehen nur das gerenderte Endprodukt. Welche zwei Plugins sich gegenseitig auf the_content tot-filtern, bleibt verborgen.",
+    group:    "Security & Server-Last",
+    Icon:     GitBranch,
+    param:    "Hook-Chain-Race-Conditions",
+    proTool:  "Query Monitor zeigt registrierte Hooks pro Action — Konflikt-Erkennung machst du manuell.",
+    weDeliver:"Konfligierende Plugin-Paare identifiziert + Priority-Reihenfolge zum Fixen.",
+    blind:    "DevTools sehen nur das gerenderte Endprodukt. Welche zwei Plugins sich gegenseitig auf the_content tot-filtern, bleibt verborgen.",
   },
   {
-    group:  "Security & Server-Last",
-    Icon:   Activity,
-    param:  "Heartbeat-API-Frequenz & Cronjob-Counter",
-    weSee:  "WP-Heartbeat alle 15 s vs 60 s, Anzahl Pseudo-Crons pro Request",
-    blind:  "Externe Scans sind Snapshot-basiert. Ein Cron, der nur alle 5 Min 2.000 Queries feuert, wird zu 99 % verfehlt.",
+    group:    "Security & Server-Last",
+    Icon:     Activity,
+    param:    "Heartbeat-API-Frequenz & Cronjob-Counter",
+    proTool:  "Heartbeat-Control-Plugin gibt UI — aber nur, wenn du es installierst und konfigurierst.",
+    weDeliver:"Empfohlene Frequenz nach Site-Profil + drei Zeilen wp-config-Tweak für die Anpassung.",
+    blind:    "Externe Scans sind Snapshot-basiert. Ein Cron, der nur alle 5 Min 2.000 Queries feuert, wird zu 99 % verfehlt.",
   },
   {
-    group:  "Security & Server-Last",
-    Icon:   Server,
-    param:  "PHP-Version-Drift & SSL-Chain",
-    weSee:  "PHP-Version vs Hoster-Empfehlung, Zertifikats-Chain bis Root-CA",
-    blind:  "SSL-Checker sagen „grün, gültig“. Eine veraltete Intermediate-CA oder ein EOL-PHP wird oft erst beim Browser-Warning-Popup sichtbar.",
+    group:    "Security & Server-Last",
+    Icon:     Server,
+    param:    "PHP-Version-Drift & SSL-Chain",
+    proTool:  "phpinfo() + openssl s_client zeigen Rohwerte — kein Konflikt-Check mit Plugin-Anforderungen.",
+    weDeliver:"PHP-Version-Empfehlung pro aktivem Plugin + 1-Click-Upgrade-Pfad bei deinem Hoster.",
+    blind:    "SSL-Checker sagen „grün, gültig“. Eine veraltete Intermediate-CA oder ein EOL-PHP wird oft erst beim Browser-Warning-Popup sichtbar.",
   },
 ];
 
@@ -194,15 +210,17 @@ export default function EngineeringSection() {
             fontSize: "clamp(26px, 3.4vw, 42px)", fontWeight: 800,
             color: T.text, letterSpacing: "-0.025em", lineHeight: 1.15,
           }}>
-            Was Lighthouse nicht sieht.
+            Tiefer als Lighthouse.
             <br/>
             <span style={{ background: "linear-gradient(90deg,#4ade80,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Und warum wir es gebaut haben.
+              Verständlicher als Query Monitor.
             </span>
           </h2>
           <p style={{ margin: 0, fontSize: 15.5, color: T.textSub, lineHeight: 1.65 }}>
-            WebsiteFix ist keine SEO-Audit-App. Wir sind eine PHP-Deep-Bridge mit Next.js-Frontend
-            und einem Read-Only-Plugin als zweiter Augenpaar im WordPress-Kern. Hier ist, wie.
+            Lighthouse misst das <strong style={{ color: T.text }}>Was</strong> (Symptome an der Oberfläche).
+            Profi-Tools zeigen das <strong style={{ color: T.text }}>Wo</strong> (Rohdaten für Entwickler).
+            WebsiteFix liefert das <strong style={{ color: T.green }}>Wie</strong> — Deep-Audit-Metriken übersetzt
+            in Fix-Anleitungen, die ein Solo-Betreiber oder Agentur-Junior umsetzen kann.
           </p>
         </div>
 
@@ -252,10 +270,16 @@ export default function EngineeringSection() {
               Ein externer Crawler hat keinen Zugriff auf <code style={{ fontFamily: T.mono, fontSize: 14, color: T.green, padding: "0 4px" }}>/wp-content/debug.log</code>,
               auf den Slow-Query-Log, auf die Hook-Chain in <code style={{ fontFamily: T.mono, fontSize: 14, color: T.green, padding: "0 4px" }}>functions.php</code>.
             </p>
-            <p style={{ margin: 0 }}>
+            <p style={{ margin: "0 0 14px" }}>
               Also habe ich angefangen, das Tool zu bauen, das ich gebraucht hätte:
               eine Brücke vom Browser-Audit zum WordPress-PHP-Kern. Read-Only, kein FTP, kein Passwort-Sharing.
               Was eine Entwicklerin sehen will, sieht WebsiteFix jetzt auch.
+            </p>
+            <p style={{ margin: 0, paddingTop: 14, borderTop: `1px dashed ${T.border}`, color: "rgba(255,255,255,0.7)" }}>
+              Ich schätze Tools wie <code style={{ fontFamily: T.mono, fontSize: 14, color: T.green, padding: "0 4px" }}>Query Monitor</code> beim Coden — die zeigen
+              mir, <em>wo</em> es klemmt. Aber für den schnellen, automatisierten Health-Check einer Live-Seite,
+              und für Kunden, die kein WP-Backend lesen können, brauchte ich etwas, das Analyse und Lösungsweg
+              vereint. Nicht „<code style={{ fontFamily: T.mono, fontSize: 13.5, color: T.textSub, padding: "0 3px" }}>SHOW SLOW QUERIES</code>" — sondern „dieses Plugin verursacht es, hier ist der Fix".
             </p>
           </blockquote>
           <p style={{
@@ -403,28 +427,116 @@ export default function EngineeringSection() {
           </div>
         </div>
 
-        {/* ── 3. 92-Parameter-Matrix als interaktives Grid ── */}
+        {/* ── 3. 92-Parameter-Matrix mit Dreiklang-Positionierung ── */}
         <div style={{ marginBottom: 64 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 22 }}>
             <p style={{
               margin: 0, fontSize: 10.5, fontWeight: 800, color: T.green,
               fontFamily: T.mono, letterSpacing: "0.1em", textTransform: "uppercase",
             }}>
-              03 — 92-Parameter-Matrix
+              03 — Drei Auflösungsstufen
             </p>
             <span style={{ flex: 1, height: 1, background: T.border }} />
           </div>
           <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: "-0.02em" }}>
-            Drei Gruppen · neun Beispiele · ein blinder Fleck.
+            Wo Lighthouse aufhört, wo Profi-Tools überfordern, wo wir landen.
           </h3>
           <p style={{ margin: "0 0 22px", fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 720 }}>
-            Hover über eine Karte (oder tippe sie an), um zu sehen, warum Lighthouse hier blind ist.
-            Die vollständigen 92 Parameter zeigt der Audit-Report nach dem Scan.
+            Jeder Parameter zeigt drei Sichten — die Symptom-Sicht, die Profi-Tool-Sicht (z. B. Query Monitor,
+            New Relic), und unsere übersetzte Lösung. Hover über eine Karte für die Lighthouse-Blindspot-Begründung.
           </p>
 
+          {/* ── Dreiklang-Comparison-Bar ── */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 10,
+            marginBottom: 22,
+          }}>
+            {[
+              {
+                accent:   "rgba(248,113,113,0.85)",
+                accentBg: "rgba(248,113,113,0.06)",
+                accentBd: "rgba(248,113,113,0.22)",
+                label:    "Lighthouse",
+                role:     "Browser-Audit",
+                verb:     "Misst das WAS",
+                detail:   "Symptome an der Oberfläche · TTFB, LCP, CLS. Schnell, aber Server-blind.",
+                friction: "no setup",
+              },
+              {
+                accent:   "rgba(251,191,36,0.85)",
+                accentBg: "rgba(251,191,36,0.06)",
+                accentBd: "rgba(251,191,36,0.25)",
+                label:    "Profi-Tools",
+                role:     "Query Monitor · New Relic · phpMyAdmin",
+                verb:     "Zeigen das WO",
+                detail:   "Rohdaten + Code-Zeilen für Entwickler. Mächtig, aber Setup-intensiv, Live-Last, Dev-only.",
+                friction: "Agent + SQL-Skill nötig",
+              },
+              {
+                accent:   T.green,
+                accentBg: "rgba(74,222,128,0.10)",
+                accentBd: T.borderStrong,
+                label:    "WebsiteFix",
+                role:     "Hybrid-Audit · automatisiert",
+                verb:     "Liefert das WIE",
+                detail:   "Übersetzte Fix-Anleitung pro Befund: verursachendes Plugin, exakter Befehl, Hoster-spezifischer Pfad.",
+                friction: "Read-Only · ein Klick",
+                highlight: true,
+              },
+            ].map(col => (
+              <div key={col.label} style={{
+                padding: "14px 16px",
+                background: col.accentBg,
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                border: `1px solid ${col.accentBd}`,
+                borderRadius: 11,
+                boxShadow: col.highlight
+                  ? `${T.glassInner}, 0 16px 36px -20px rgba(74,222,128,0.45)`
+                  : T.glassInner,
+                position: "relative",
+              }}>
+                {col.highlight && (
+                  <span style={{
+                    position: "absolute", top: -10, right: 12,
+                    fontSize: 9.5, fontWeight: 800, color: "#06210f",
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    padding: "3px 9px", borderRadius: 999,
+                    background: T.green,
+                    boxShadow: `0 6px 16px -6px ${T.green}`,
+                  }}>
+                    Goldene Mitte
+                  </span>
+                )}
+                <div style={{ fontSize: 11, fontWeight: 800, color: col.accent, fontFamily: T.mono, letterSpacing: "0.06em", marginBottom: 4 }}>
+                  {col.verb}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: T.text, letterSpacing: "-0.01em", marginBottom: 3 }}>
+                  {col.label}
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.mono, marginBottom: 10 }}>
+                  {col.role}
+                </div>
+                <div style={{ fontSize: 12.5, color: T.textSub, lineHeight: 1.55, marginBottom: 10 }}>
+                  {col.detail}
+                </div>
+                <div style={{
+                  fontSize: 10.5, fontWeight: 700, color: col.accent, fontFamily: T.mono,
+                  letterSpacing: "0.04em", textTransform: "uppercase",
+                  paddingTop: 8, borderTop: `1px dashed ${T.border}`,
+                }}>
+                  {col.friction}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Cards-Grid: jede Karte zeigt jetzt Profi-Tool-Sicht + WebsiteFix-Antwort ── */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
             gap: 12,
           }}>
             {MATRIX.map((m, i) => {
@@ -469,13 +581,36 @@ export default function EngineeringSection() {
                   </div>
 
                   {/* Parameter-Name */}
-                  <div style={{ fontSize: 14.5, fontWeight: 700, color: T.text, letterSpacing: "-0.01em", lineHeight: 1.35, marginBottom: 6 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, color: T.text, letterSpacing: "-0.01em", lineHeight: 1.35, marginBottom: 12 }}>
                     {m.param}
                   </div>
 
-                  {/* Was wir sehen — immer sichtbar */}
-                  <div style={{ fontSize: 12.5, color: T.textSub, lineHeight: 1.55, fontFamily: T.mono }}>
-                    {m.weSee}
+                  {/* Profi-Tool-Sicht (das WO) — sekundär, monospace */}
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{
+                      fontSize: 9.5, fontWeight: 800, color: "rgba(251,191,36,0.85)",
+                      fontFamily: T.mono, letterSpacing: "0.06em", textTransform: "uppercase",
+                      marginBottom: 3,
+                    }}>
+                      Profi-Tool zeigt
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.55 }}>
+                      {m.proTool}
+                    </div>
+                  </div>
+
+                  {/* WebsiteFix-Antwort (das WIE) — primär, grüner Akzent */}
+                  <div>
+                    <div style={{
+                      fontSize: 9.5, fontWeight: 800, color: T.green,
+                      fontFamily: T.mono, letterSpacing: "0.06em", textTransform: "uppercase",
+                      marginBottom: 3,
+                    }}>
+                      WebsiteFix liefert
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.86)", lineHeight: 1.55, fontWeight: 500 }}>
+                      {m.weDeliver}
+                    </div>
                   </div>
 
                   {/* Lighthouse-Blindspot — Hover-Reveal (Desktop) / always-visible-muted (Mobile) */}
@@ -483,8 +618,8 @@ export default function EngineeringSection() {
                     marginTop: 10,
                     paddingTop: 10,
                     borderTop: `1px dashed ${T.border}`,
-                    fontSize: 12, lineHeight: 1.6,
-                    color: "rgba(255,255,255,0.65)",
+                    fontSize: 11.5, lineHeight: 1.55,
+                    color: "rgba(255,255,255,0.6)",
                     fontStyle: "italic",
                   }}>
                     <span style={{ color: "rgba(248,113,113,0.85)", fontStyle: "normal", fontWeight: 700, marginRight: 4 }}>
@@ -498,14 +633,14 @@ export default function EngineeringSection() {
           </div>
         </div>
 
-        {/* ── 4. Counter-AI ── Glas-Card mit Amber-Akzent */}
+        {/* ── 4. Non-Intrusive & AI-Native ── Glas-Card mit Amber-Akzent */}
         <div style={{ marginBottom: 64 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 22 }}>
             <p style={{
               margin: 0, fontSize: 10.5, fontWeight: 800, color: T.amber,
               fontFamily: T.mono, letterSpacing: "0.1em", textTransform: "uppercase",
             }}>
-              04 — AI-Native Workflow
+              04 — Non-Intrusive · AI-Assisted, Human-Reviewed
             </p>
             <span style={{ flex: 1, height: 1, background: T.border }} />
           </div>
@@ -518,15 +653,30 @@ export default function EngineeringSection() {
             borderRadius: 14,
             boxShadow: T.glassInner,
           }}>
-            <h3 style={{ margin: "0 0 12px", fontSize: 18, fontWeight: 800, color: T.text, letterSpacing: "-0.015em" }}>
-              Wir nutzen LLMs. Aber nicht da, wo es wehtut.
+            <h3 style={{ margin: "0 0 10px", fontSize: 18, fontWeight: 800, color: T.text, letterSpacing: "-0.015em" }}>
+              Kein Agent. Kein Live-Mitlesen. Kein Performance-Drag.
             </h3>
-            <p style={{ margin: "0 0 12px", fontSize: 14, color: T.textSub, lineHeight: 1.75 }}>
+            <p style={{ margin: "0 0 14px", fontSize: 14, color: T.textSub, lineHeight: 1.75 }}>
+              APM-Suiten wie New Relic, DataDog oder Blackfire installieren einen permanenten Agent in deinem
+              PHP-Runtime und sampeln jeden Request — bezahlt mit ein paar Millisekunden Overhead und einer
+              Server-Konfiguration, die Solo-Betreiber oft überfordert. WebsiteFix arbeitet on-demand: das
+              Read-Only-Plugin liest Logs &amp; Konfiguration nur wenn du scannst, der Audit läuft danach in
+              unserer Cloud weiter. <strong style={{ color: T.text }}>Null Live-Last, kein Setup über
+              „Plugin aktivieren" hinaus.</strong>
+            </p>
+            <div style={{
+              fontSize: 11, fontWeight: 800, color: T.amber, fontFamily: T.mono,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+              marginBottom: 8, paddingTop: 14, borderTop: `1px dashed ${T.border}`,
+            }}>
+              Zum AI-Einsatz, ehrlich
+            </div>
+            <p style={{ margin: "0 0 10px", fontSize: 13.5, color: T.textSub, lineHeight: 1.7 }}>
               Wir bauen schnell, weil LLMs für Repeating-Code, Doku-Drafts und Test-Boilerplate die richtigen
               Werkzeuge sind. Aber jeder Pfad, der auf eine Datenbank schreibt oder Geld bewegt, geht durch
               manuelle Reviews.
             </p>
-            <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13.5, color: T.textSub, lineHeight: 1.9 }}>
+            <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: T.textSub, lineHeight: 1.9 }}>
               <li>Plugin-Security-Audit: manuell, vor jedem Release. Kein Auto-Deploy für PHP-Code.</li>
               <li>Auth-Flows: handgeschrieben, gegen OWASP-Top-10 abgeglichen.</li>
               <li>Architektur-Entscheidungen: in Code-Reviews, nicht in einem LLM-Prompt.</li>
