@@ -90,7 +90,7 @@ const PROBLEM_VARIANTS: Record<ProblemPillar, {
       <>
         Server-Antwortzeit, DOM-Tiefe, Plugin-Bloat und Bilder —{" "}
         <span style={{ color: "rgba(255,255,255,0.75)" }}>der Scanner findet den echten Bremsklotz.</span>{" "}
-        Inklusive hoster-spezifischer Fix-Anleitung für Strato, IONOS, All-Inkl und Hostinger.
+        Inklusive hoster-spezifischer Fix-Anleitung für Strato, IONOS, All-Inkl, Hostinger und Hetzner.
       </>
     ),
   },

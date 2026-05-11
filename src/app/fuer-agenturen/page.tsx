@@ -217,7 +217,7 @@ const FAQ = [
     a: "Ja — und das ist ein eigener Lead-Magnet für Sie. Der Pay-per-Fix-Flow läuft komplett anonym, ohne dass Sie für den Endkunden ein Konto anlegen müssen: Endkunde scannt seine Seite, wählt einen Fix-Guide, gibt seine E-Mail ein, zahlt 9,90 € via Stripe — fertig. Direkt nach der Zahlung schickt Stripe dem Käufer eine Bestätigungs-Mail mit dem Guide als PDF-Anhang (dauerhaft im Postfach) plus einem persönlichen Online-Link, der 4 Wochen aktiv ist. Kein Account, kein Login, kein Dashboard. Wenn Sie das Lead-Magnet-Widget auf Ihrer eigenen Marketing-Site einbinden, ziehen Sie diese Endkunden trotzdem in Ihren Funnel und können sie später auf Wartungsverträge upgraden.",
   },
   {
-    q: "Funktioniert WebsiteFix mit dem Hoster meiner Kunden (Strato, IONOS, All-Inkl)?",
+    q: "Funktioniert WebsiteFix mit dem Hoster meiner Kunden (Strato, IONOS, All-Inkl, Hostinger, Hetzner)?",
     a: "Ja, mit jedem Hoster, dessen Seite öffentlich erreichbar ist. Unsere drei Premium-Guides (Hosting-Speed, Google-Sichtbarkeit, WP-Critical-Error) liefern hoster-spezifische Klick-Pfade für die deutschen Top-Hoster: Strato, IONOS / 1&1, All-Inkl, Hostinger und Hetzner. Heißt: Wenn Ihr Junior einen dieser drei Premium-Guides öffnet, sieht er die exakten Klick-Pfade fürs Hoster-Backend des konkreten Kunden (Hoster wird automatisch aus dem Scan erkannt). Die übrigen Guides arbeiten mit der generischen WordPress-Anleitung, die mit jedem Hoster funktioniert. Bei Spezial-Hostern wie Cloudways, Kinsta oder WP Engine greift ebenfalls die Standard-Anleitung — wir ergänzen Hoster-Spezial-Pfade laufend nach Kunden-Verteilung.",
   },
   {

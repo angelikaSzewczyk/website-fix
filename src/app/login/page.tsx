@@ -45,13 +45,17 @@ export default function LoginPage() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {[
-              { icon: "✓", text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG", color: "#22C55E" },
-              { icon: "✓", text: "Smart-Fix-Guides mit Schritt-für-Schritt-Anleitung", color: "#22C55E" },
-              { icon: "✓", text: "Read-Only-Plugin für tiefe Diagnose ohne Passwort", color: "#22C55E" },
-              { icon: "✓", text: "DSGVO-konform · EU-Hosting · TLS-verschlüsselt", color: "#22C55E" },
+              { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG" },
+              { text: "Smart-Fix-Guides mit Schritt-für-Schritt-Anleitung" },
+              { text: "Read-Only-Plugin für tiefe Diagnose ohne Passwort" },
+              { text: "DSGVO-konform · EU-Hosting · TLS-verschlüsselt" },
             ].map(item => (
               <div key={item.text} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: item.color, flexShrink: 0, marginTop: 2 }}>{item.icon}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E"
+                  strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ flexShrink: 0, marginTop: 4 }} aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
                 <span style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{item.text}</span>
               </div>
             ))}

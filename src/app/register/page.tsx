@@ -59,7 +59,7 @@ const PLAN_CONTENT: Record<string, {
     headline: <>Der Agentur-<br />Autopilot.</>,
     sub: "Bis zu 50 Kunden. Workflow-API. DSGVO-AVV.",
     bullets: [
-      "Bis zu 50 Kunden · unbegrenzte Scans",
+      "Bis zu 50 Kunden · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)",
       "White-Label-Plugin · Lead-Generator · Team-Rollen",
       "Workflow-API (Jira/Trello/Asana) · DSGVO-AVV",
     ],
@@ -67,7 +67,7 @@ const PLAN_CONTENT: Record<string, {
   // Legacy-Aliasse: alte Register-Links (smart-guard → Pro, agency-starter → Agency)
   // bekommen die kanonischen Bullets, damit das Wording nicht driftet.
   "smart-guard":    { headline: <>Das WordPress-Audit<br />das Kunden überzeugt.</>, sub: "10 Projekte. Unbegrenzte Scans. KI-Auto-Fix.", bullets: ["10 WordPress-Projekte · unbegrenzte Scans", "KI-Auto-Fix mit Builder-Anleitung (Elementor / Divi)", "White-Label PDF mit Logo + Brand-Farbe"] },
-  "agency-starter": { headline: <>Der Agentur-<br />Autopilot.</>,                    sub: "Bis zu 50 Kunden. Workflow-API. DSGVO-AVV.",          bullets: ["Bis zu 50 Kunden · unbegrenzte Scans", "White-Label-Plugin · Lead-Generator · Team-Rollen", "Workflow-API (Jira/Trello/Asana) · DSGVO-AVV"] },
+  "agency-starter": { headline: <>Der Agentur-<br />Autopilot.</>,                    sub: "Bis zu 50 Kunden. Workflow-API. DSGVO-AVV.",          bullets: ["Bis zu 50 Kunden · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)", "White-Label-Plugin · Lead-Generator · Team-Rollen", "Workflow-API (Jira/Trello/Asana) · DSGVO-AVV"] },
 };
 
 // ─── Intent-driven content (z.B. von /scan/results "9,90€ Einzel-Fix" CTA) ───

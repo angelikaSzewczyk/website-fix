@@ -913,7 +913,7 @@ function FullReportLockedCTA({ tier }: { tier: "anon" | "free" | "paid" }) {
                 Für Agenturen: 7 Tage kostenlos testen
               </div>
               <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
-                Agency-Plan · White-Label · Lead-Widget · unbegrenzte Scans
+                Agency-Plan · White-Label · Lead-Widget · Scan-Flatrate (Cap 500/Mo)
               </div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>

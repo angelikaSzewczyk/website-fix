@@ -182,6 +182,7 @@ const PLANS = [
     // KEEP SYNCED with /fuer-agenturen PLANS Professional — wortgleich, gleiche Reihenfolge.
     features: [
       { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true },
+      { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",           highlight: true },
       { text: "🔒 Deep-Scan Plugin · KI-Analyse aller Befunde",              highlight: true },
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true },
@@ -209,7 +210,7 @@ const PLANS = [
     accentBorder: "#DDD6FE",
     // KEEP SYNCED with /fuer-agenturen PLANS Agency Scale — wortgleich, gleiche Reihenfolge.
     features: [
-      { text: "Bis zu 50 Kunden · unbegrenzte Scans",                                 highlight: true },
+      { text: "Bis zu 50 Kunden · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)",             highlight: true },
       { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true },
@@ -546,7 +547,7 @@ export default function Page() {
               <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
                 <li>· Server-Antwortzeit messen + bewerten</li>
                 <li>· PHP-Version + GZIP/Brotli prüfen</li>
-                <li>· Strato / IONOS / All-Inkl-spezifische Fixes</li>
+                <li>· Strato / IONOS / All-Inkl / Hostinger / Hetzner-Fixes</li>
               </ul>
               <Link
                 href="/scan?problem=speed"

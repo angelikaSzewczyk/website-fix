@@ -3,7 +3,9 @@ import LegalLayout from "../components/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Datenschutz — WebsiteFix",
-  robots: { index: false, follow: false },
+  // Pflichtangabe nach DSGVO — muss indexierbar sein. Google wertet noindex
+  // auf §13 TMG / Art. 13 DSGVO-Pages als Verschleierung (Trust-Signal-Verlust).
+  robots: { index: true, follow: true },
 };
 
 const P: React.CSSProperties = {

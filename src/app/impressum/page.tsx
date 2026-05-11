@@ -3,7 +3,9 @@ import LegalLayout from "../components/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Impressum — WebsiteFix",
-  robots: { index: false, follow: false },
+  // Pflichtangabe nach §5 TMG — muss indexierbar sein. Google wertet noindex
+  // auf Impressum-Pages als Verschleierung (Trust-Signal-Verlust).
+  robots: { index: true, follow: true },
 };
 
 const H2: React.CSSProperties = {
