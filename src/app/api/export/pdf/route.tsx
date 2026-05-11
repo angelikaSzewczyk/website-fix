@@ -169,6 +169,15 @@ export async function GET(req: NextRequest) {
     agencyBranding = undefined;
   }
 
+  // Executive Summary aus meta_json.executive_summary lesen (vom Pro/Agency-User
+   // im Drawer editiert). Wird oberhalb der Score-Card im PDF gerendert. Null/
+   // leer → Block wird ausgelassen. Pricing-Card-Pro-Bullet "Executive Summary
+   // für Endkunden-Reports" hängt daran — vorher landete der Text nur im
+   // /view/[token]-Share-Link, nicht im exportierten PDF.
+  const executiveSummary = typeof meta.executive_summary === "string"
+    ? meta.executive_summary
+    : null;
+
   const buffer = await renderToBuffer(
     <ScanReportPdf
       url={row.url}
@@ -181,6 +190,7 @@ export async function GET(req: NextRequest) {
       topIssues={topIssues}
       categoryScores={categoryScores}
       categoryIssueCounts={categoryIssueCounts}
+      executiveSummary={executiveSummary}
       agency={agencyBranding}
     />,
   );

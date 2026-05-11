@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { generateReportData, renderReportEmail, formatMonth } from "@/lib/monthly-report";
-import { KNOWN_PLAN_STRINGS } from "@/lib/plans";
+import { MONITORING_PLAN_STRINGS } from "@/lib/plans";
 
 export const maxDuration = 60;
 
@@ -21,14 +21,14 @@ export async function GET(req: NextRequest) {
   const monthLabel = formatMonth(prevMonth);
 
   // All Pro/Agentur users with at least 1 saved website. Plan-Filter via
-  // KNOWN_PLAN_STRINGS aus lib/plans.ts — Single-Source für alle akzeptierten
-  // Plan-Werte (kanonisch + Legacy). = ANY() statt IN () weil Postgres-Arrays
+  // MONITORING_PLAN_STRINGS — Starter-Card verspricht kein Monatsbericht,
+  // also bekommen Starter-User keine. = ANY() statt IN () weil Postgres-Arrays
   // mit Neon-Tagged-Templates direkt parametrisierbar sind.
   const users = (await sql`
     SELECT DISTINCT u.id, u.email, u.name, u.plan
     FROM users u
     JOIN saved_websites sw ON sw.user_id = u.id
-    WHERE u.plan = ANY(${KNOWN_PLAN_STRINGS as string[]})
+    WHERE u.plan = ANY(${MONITORING_PLAN_STRINGS as string[]})
   `) as { id: number; email: string; name: string | null; plan: string }[];
 
   let sent = 0;

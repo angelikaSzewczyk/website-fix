@@ -89,6 +89,7 @@ export interface StarterDashboardProps {
 // ─── Design tokens — matching the WebsiteFix marketing site exactly ───────────
 import { D, Card, SectionLabel, SectionHead, Pill, BtnPrimary, BtnGhost, Divider, SevBadge, LockIco, hexToRgb } from "./_shared/UIHelpers";
 import { DrawerCard, DrawerPanel, OptimizationPlanModal } from "./_shared/IssueDetailDrawer";
+import { detectCmsContext } from "@/lib/wp-health";
 import { getBuilderTheme } from "./_shared/builder-utils";
 import type { BuilderAuditProp, WooAuditProp } from "./_shared/builder-utils";
 import type { ParsedIssueProp, ScanBriefProp, UnterseiteProp } from "./_shared/dashboard-types";
@@ -1309,6 +1310,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
               pluginActive={pluginActive}
               deepData={pluginDeepData}
               userPlan={plan}
+              cmsContext={detectCmsContext(fingerprint)}
             />
           )}
 

@@ -21,6 +21,7 @@ import type { TechFingerprint } from "@/lib/tech-detector";
 import { CONFIDENCE_THRESHOLD, UNKNOWN } from "@/lib/tech-detector";
 import { D, Card, SectionLabel, SectionHead, Pill, BtnPrimary, BtnGhost, Divider, SevBadge, LockIco, hexToRgb } from "./_shared/UIHelpers";
 import { DrawerCard, DrawerPanel, OptimizationPlanModal } from "./_shared/IssueDetailDrawer";
+import { detectCmsContext } from "@/lib/wp-health";
 import GuideUnlockModal from "./_shared/GuideUnlockModal";
 import { WordPressPluginsBlock, WooCommerceSection, BuilderIntelligenceSection } from "./_shared/IntegrationSections";
 import type { PluginDetected } from "./_shared/IntegrationSections";
@@ -1843,6 +1844,7 @@ export default function ProDashboard(props: ProDashboardProps) {
               pluginActive={pluginActive}
               deepData={pluginDeepData}
               userPlan={plan}
+              cmsContext={detectCmsContext(fingerprint)}
             />
           )}
 

@@ -45,6 +45,10 @@ export type ScanReportPdfProps = {
   categoryScores?: Record<DisplayCategory, number>;
   /** Anzahl Issues je Kategorie — für die Kategorie-Übersicht. */
   categoryIssueCounts?: Record<DisplayCategory, number>;
+  /** Vom User im Drawer editierte Zusammenfassung — landet als Klartext-Block
+   *  oberhalb der Score-Card. Pricing-Card-Pro-Bullet "Executive Summary für
+   *  Endkunden-Reports" hängt daran. Null/leer → Block wird ausgelassen. */
+  executiveSummary?: string | null;
   agency?:      PdfAgencyBranding;
 };
 
@@ -120,6 +124,11 @@ const styles = StyleSheet.create({
 
   // Quality badge (next to KPI)
   qualityBadge:   { fontSize: 7, fontWeight: 800, padding: "2pt 5pt", borderRadius: 3, marginLeft: 5, textTransform: "uppercase", letterSpacing: 0.4 },
+
+  // Executive-Summary-Block (Klartext, oberhalb der Score-Card)
+  summaryBlock:   { marginBottom: 18, padding: "12pt 14pt", borderRadius: 5, backgroundColor: "#FFFBEB", border: "1pt solid #FDE68A" },
+  summaryLabel:   { fontSize: 8, fontWeight: 800, color: "#92400E", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 },
+  summaryText:    { fontSize: 10, color: TOKENS.text, lineHeight: 1.55 },
 
   // Issue rows
   issueRow:       { flexDirection: "row", alignItems: "flex-start", paddingVertical: 9, paddingHorizontal: 4, borderBottom: `0.5pt solid ${TOKENS.divider}` },
@@ -202,8 +211,9 @@ function wpVersionBadge(wpVersion: string | null): { badge: string; color: strin
 // ─── Document ───────────────────────────────────────────────────────────────
 export function ScanReportPdf({
   url, scannedAt, speedScore, issueCount, totalPages, ttfbMs, wpVersion, topIssues,
-  categoryScores, categoryIssueCounts, agency,
+  categoryScores, categoryIssueCounts, executiveSummary, agency,
 }: ScanReportPdfProps) {
+  const summary = executiveSummary?.trim() || null;
   const accent     = agency?.primaryColor ?? TOKENS.primary;
   const brandName  = agency?.name ?? "WebsiteFix";
   const brandLogo  = agency?.logoUrl;
@@ -237,6 +247,14 @@ export function ScanReportPdf({
           <Text style={styles.pageTitle}>Website-Audit</Text>
           <Text style={styles.pageSubtitle}>{url}</Text>
         </View>
+
+        {/* ── Executive Summary (User-Klartext) ── */}
+        {summary && (
+          <View style={styles.summaryBlock}>
+            <Text style={styles.summaryLabel}>Executive Summary</Text>
+            <Text style={styles.summaryText}>{summary}</Text>
+          </View>
+        )}
 
         {/* ── Score Block ── */}
         <View style={styles.scoreCard}>

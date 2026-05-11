@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { checkWebsite, type CheckAlert } from "@/lib/monitor";
 import { sendSlackAlert, type AlertType } from "@/lib/slack";
-import { KNOWN_PLAN_STRINGS } from "@/lib/plans";
+import { MONITORING_PLAN_STRINGS } from "@/lib/plans";
 import { diffPluginLists } from "@/lib/wp-health";
 
 export const maxDuration = 60;
@@ -70,8 +70,8 @@ export async function GET(req: NextRequest) {
   const sql = neon(process.env.DATABASE_URL!);
 
   // Alle gespeicherten Websites von Pro/Agentur-Nutzern holen. Plan-Filter
-  // via KNOWN_PLAN_STRINGS — synchron mit der monthly-report-Cron, kein
-  // hartkodiertes IN ('a', 'b', 'c', …) mehr.
+  // via MONITORING_PLAN_STRINGS — Daily-Health-Check ist Pro-Card-Versprechen,
+  // Starter bekommt nur Score-Trend aus der scans-Tabelle (manuelle Re-Scans).
   // 08.05.2026: LIMIT 20 entfernt — Pricing-Card Agency verspricht "Daily Health-
   // Check" für ALLE Kunden (bis zu 50 pro Agency-User). Mit LIMIT 20 wurden
   // bei 50 Kunden nur 20/Tag gecheckt — Versprechen-Bruch. Cap bei 500 als
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       u.email AS user_email, u.name AS user_name, u.plan
     FROM saved_websites sw
     JOIN users u ON u.id = sw.user_id
-    WHERE u.plan = ANY(${KNOWN_PLAN_STRINGS as string[]})
+    WHERE u.plan = ANY(${MONITORING_PLAN_STRINGS as string[]})
       AND (sw.last_check_at IS NULL OR sw.last_check_at < NOW() - INTERVAL '23 hours')
     ORDER BY sw.last_check_at NULLS FIRST
     LIMIT 500

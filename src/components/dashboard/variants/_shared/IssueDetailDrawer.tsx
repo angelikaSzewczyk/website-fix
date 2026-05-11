@@ -22,6 +22,7 @@ import type { ParsedIssueProp, UnterseiteProp } from "./dashboard-types";
 import SmartFixSection from "./SmartFixSection";
 import FatalErrorAlert from "./FatalErrorAlert";
 import type { DeepData } from "@/lib/plugin-status";
+import { getFixGuide, type FixIssueKind } from "@/lib/fix-guides";
 
 export const DRAWER_FIX_STEPS: Record<string, string[]> = {
   alt:     ["Öffne WordPress-Dashboard → Medien → Bibliothek.", "Klicke auf ein Bild ohne Alt-Text → befülle das Feld 'Alternativtext' (kurze inhaltliche Beschreibung, z.B. 'Teamfoto Büro München').", "Für Bilder direkt auf Seiten: Editor öffnen → Bild anklicken → Alt-Text-Feld in der Seitenleiste.", "Dekorative Bilder dürfen ein leeres alt-Attribut (alt=\"\") erhalten."],
@@ -86,6 +87,7 @@ export function DrawerCard({
   count,
   images,
   fields,
+  cmsContext = null,
 }: {
   fixKey: string | null;
   label: string;
@@ -93,9 +95,22 @@ export function DrawerCard({
   count?: number;
   images?: string[];
   fields?: string[];  // field identifiers for inputsWithoutLabel
+  /** CMS-Context aus website_checks.cms_context — entscheidet welche Builder-
+   *  Anleitung gerendert wird (Elementor / Divi / Gutenberg / Astra / WPBakery
+   *  / Beaver / WordPress-Klassisch). Null → Fallback auf den hartkodierten
+   *  WordPress/Elementor-Pfad in DRAWER_FIX_STEPS. */
+  cmsContext?: string | null;
 }) {
   const [fixOpen, setFixOpen] = useState(false);
-  const steps = fixKey ? DRAWER_FIX_STEPS[fixKey] ?? [] : [];
+  // Versuche zuerst die kontextspezifische Anleitung aus fix-guides.ts —
+  // dort liegen Schritte für Divi / Gutenberg / Astra / WPBakery / Beaver
+  // neben dem Elementor-Pfad. Fallback auf das hartkodierte WP/Elementor-
+  // Mapping nur falls (a) kein cmsContext gesetzt oder (b) das Issue-Kind
+  // noch nicht in fix-guides.ts gemappt ist.
+  const guide = fixKey ? getFixGuide(fixKey as FixIssueKind, cmsContext) : null;
+  const steps: string[] = guide?.steps ?? (fixKey ? DRAWER_FIX_STEPS[fixKey] ?? [] : []);
+  const heading = guide?.heading ?? "WordPress / Elementor — Schritt für Schritt:";
+  const note = guide?.note ?? null;
   const accent = kind === "critical" ? D.red : D.amber;
   const accentBg  = kind === "critical" ? "rgba(160,80,80,0.07)"  : "rgba(251,191,36,0.07)";
   const accentBdr = kind === "critical" ? "rgba(160,80,80,0.20)"  : "rgba(251,191,36,0.22)";
@@ -165,13 +180,18 @@ export function DrawerCard({
           background: "rgba(0,0,0,0.18)",
         }}>
           <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: "0.09em" }}>
-            WordPress / Elementor — Schritt für Schritt:
+            {heading}
           </p>
           <ol style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 6 }}>
             {steps.map((s, si) => (
               <li key={si} style={{ fontSize: 12, color: D.textSub, lineHeight: 1.65, paddingLeft: 2 }}>{s}</li>
             ))}
           </ol>
+          {note && (
+            <p style={{ margin: "10px 0 0", fontSize: 11, color: D.textMuted, lineHeight: 1.5, fontStyle: "italic" }}>
+              {note}
+            </p>
+          )}
         </div>
       )}
 
@@ -270,6 +290,13 @@ export function DrawerPanel({
   pluginActive = false,
   deepData     = null,
   userPlan     = null,
+  // CMS-Context aus website_checks.cms_context (oder via detectCmsContext
+  // aus dem Fingerprint). Wird an alle DrawerCards weitergereicht, damit
+  // die Fix-Anleitungen builder-spezifisch sind (Elementor / Divi / Gutenberg /
+  // Astra / WPBakery / Beaver). Pricing-Card Pro-Bullet verspricht
+  // "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)" — diese
+  // Prop löst das Versprechen ein. Null → Fallback auf WP/Elementor.
+  cmsContext   = null,
 }: {
   pageUrl: string;
   unterseiten: UnterseiteProp[];
@@ -280,6 +307,7 @@ export function DrawerPanel({
   pluginActive?: boolean;
   deepData?:     DeepData | null;
   userPlan?:     string | null;
+  cmsContext?:   string | null;
 }) {
   // Swipe-to-close for mobile bottom-sheet
   const touchStartY = useRef<number>(0);
@@ -566,10 +594,11 @@ export function DrawerPanel({
                     fixKey="404"
                     label="Falls dauerhaft tot: Weiterleitung einrichten"
                     kind="warning"
+                    cmsContext={cmsContext}
                   />
                 )}
                 {entries.map((e, i) => (
-                  <DrawerCard key={i} fixKey={e.fixKey} label={e.label} kind={e.kind} count={e.count} images={e.images} fields={e.fields} />
+                  <DrawerCard key={i} fixKey={e.fixKey} label={e.label} kind={e.kind} count={e.count} images={e.images} fields={e.fields} cmsContext={cmsContext} />
                 ))}
               </div>
             )

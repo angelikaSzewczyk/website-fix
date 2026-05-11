@@ -132,6 +132,20 @@ export const KNOWN_PLAN_STRINGS: readonly string[] = [
   "smart-guard", "agency-starter", "agency-pro",
 ] as const;
 
+/** Plan-Strings für Daily-Health-Check + Alerting (Slack/E-Mail).
+ *  Pricing-Card-Spec (11.05.2026):
+ *    - Starter: "Basis-Monitoring (Uptime + Score-Trend)" — kein Daily-Cron,
+ *      Score-Trend kommt aus der scans-Tabelle (manuelle Re-Scans).
+ *    - Professional: "Daily Health-Check" + "Slack-/E-Mail-Alerts bei
+ *      kritischen Befunden" → Pro im Daily-Cron.
+ *    - Agency: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall" → Pro im Daily-Cron.
+ *  Damit ist die Exklusivität von "Daily Health-Check" für Pro+ wieder hergestellt
+ *  (Audit-Finding 11.05.2026: KNOWN_PLAN_STRINGS gab Starter stillschweigend Daily). */
+export const MONITORING_PLAN_STRINGS: readonly string[] = [
+  "professional", "agency",
+  "smart-guard", "agency-starter", "agency-pro",
+] as const;
+
 export const PLAN_MRR: Record<string, number> = Object.fromEntries(
   Object.entries(PLANS).map(([k, v]) => [k, v.mrr]),
 );
