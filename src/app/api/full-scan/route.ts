@@ -202,6 +202,12 @@ async function buildSiteContext(rootUrl: string, rootHtml: string): Promise<Site
     robotsBlockiertAlles,
     wpVersion:            extractWpVersion(rootHtml),
     sslExpiresAt,
+    // Phase A4 (12.05.2026 Audit-Fix): SEO-Plugin-Detection ist auf
+    // /api/scan/route.ts gelaufen aber wurde hier vergessen. CmsStackCard
+    // zeigte deshalb "Kein SEO-Plugin erkannt" für Paid-Re-Scans, obwohl
+    // Free-Scan dieselbe Site mit Rank Math korrekt erkannte.
+    hasYoast:             /yoast|wpseo/i.test(rootHtml),
+    hasRankMath:          /rank[-_]?math/i.test(rootHtml),
   };
 }
 
