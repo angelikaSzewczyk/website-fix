@@ -18,6 +18,11 @@ type Props = {
   lastHandshakeAt: string | null;
   /** Zielroute des CTA. Default = /plugin (Setup-Anleitung). */
   href?: string;
+  /** Wenn false: kein "Plugin verbinden →"-CTA-Button. Default true.
+   *  Genutzt von Starter/Pro-Dashboard, wo direkt drunter die
+   *  PluginDownloadCard mit dem CTA gerendert wird — sonst hätte User
+   *  zwei "Plugin verbinden/herunterladen"-Buttons direkt untereinander. */
+  showCta?: boolean;
 };
 
 function formatRelative(iso: string | null): string {
@@ -33,7 +38,7 @@ function formatRelative(iso: string | null): string {
   return `vor ${days} Tag${days === 1 ? "" : "en"}`;
 }
 
-export default function HybridScanBanner({ pluginActive, lastHandshakeAt, href = "/plugin" }: Props) {
+export default function HybridScanBanner({ pluginActive, lastHandshakeAt, href = "/plugin", showCta = true }: Props) {
   if (pluginActive) {
     return (
       <section
@@ -113,16 +118,18 @@ export default function HybridScanBanner({ pluginActive, lastHandshakeAt, href =
           PHP-Logs, DB-Last, Memory-Limit und exakte Code-Zeilen-Diagnose.
         </p>
       </div>
-      <Link href={href} style={{
-        flexShrink: 0,
-        padding: "8px 16px", borderRadius: 8,
-        background: "linear-gradient(90deg,#16a34a,#22c55e)",
-        color: "#fff", fontSize: 12.5, fontWeight: 800,
-        textDecoration: "none", whiteSpace: "nowrap",
-        boxShadow: "0 3px 12px rgba(34,197,94,0.32)",
-      }}>
-        Plugin verbinden →
-      </Link>
+      {showCta && (
+        <Link href={href} style={{
+          flexShrink: 0,
+          padding: "8px 16px", borderRadius: 8,
+          background: "linear-gradient(90deg,#16a34a,#22c55e)",
+          color: "#fff", fontSize: 12.5, fontWeight: 800,
+          textDecoration: "none", whiteSpace: "nowrap",
+          boxShadow: "0 3px 12px rgba(34,197,94,0.32)",
+        }}>
+          Plugin verbinden →
+        </Link>
+      )}
     </section>
   );
 }

@@ -870,10 +870,14 @@ export default function ProDashboard(props: ProDashboardProps) {
             </div>
           )}
 
-          {/* Hybrid-Scan-Banner (Basis-Scan vs. Full System Audit). */}
+          {/* Hybrid-Scan-Banner als reiner Status-Indikator. CTA-Button
+              ausgeblendet (showCta=false), weil die PluginDownloadCard direkt
+              drunter den "Plugin herunterladen"-CTA hat — zwei CTAs
+              untereinander wäre redundant (User-Report 12.05.2026). */}
           <HybridScanBanner
             pluginActive={pluginActive}
             lastHandshakeAt={pluginLastHandshakeAt}
+            showCta={false}
           />
 
           {/* ── SITE-PROFIL (08.05.2026) ─────────────────────────────────────

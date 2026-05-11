@@ -57,8 +57,8 @@ export const ONBOARDING_STEPS: Record<OnboardingPlanKey, {
       {
         id:    "starter_guide_tour",
         label: "Smart-Fix-Drawer kennenlernen",
-        hint:  "Klick auf einen Befund öffnet die Schritt-für-Schritt-Anleitung.",
-        href:  "/dashboard",
+        hint:  "Öffne einen Scan-Bericht und klick auf einen Befund — die Schritt-für-Schritt-Anleitung erscheint im Drawer.",
+        href:  "/dashboard/scans",
         icon:  "📖",
       },
     ],

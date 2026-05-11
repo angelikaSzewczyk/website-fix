@@ -390,7 +390,7 @@ export default function FreeSettingsClient({
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: D.text }}>
-                Gratis-Scans diesen Monat
+                Scans diesen Monat
               </span>
               <span style={{
                 fontSize: 12, fontWeight: 700,

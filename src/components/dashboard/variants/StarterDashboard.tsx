@@ -749,12 +749,14 @@ export default function StarterDashboard(props: StarterDashboardProps) {
               alle 3 als Vorgeschmack auf Agency-Upgrade. */}
           <WhyWebsitefixCard plan={plan} />
 
-          {/* Hybrid-Scan-Banner (External Mode vs. Full System Audit). Steht
-              direkt über der Plugin-Download-Card, weil der CTA dort hin
-              verlinkt — User-Flow: Banner sehen → Plugin-Card sehen → klicken. */}
+          {/* Hybrid-Scan-Banner als reiner Status-Indikator. CTA-Button
+              ausgeblendet (showCta=false), weil die PluginDownloadCard direkt
+              drunter den "Plugin herunterladen"-CTA hat — zwei CTAs
+              untereinander wäre redundant (User-Report 12.05.2026). */}
           <HybridScanBanner
             pluginActive={pluginActive}
             lastHandshakeAt={pluginLastHandshakeAt}
+            showCta={false}
           />
 
           {/* Plugin-Download-Card — Read-Only-Plugin ist ab Starter inklusive,

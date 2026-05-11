@@ -1863,24 +1863,14 @@ function ResultsInner() {
                         {p.errors === 0 ? "—" : `${p.errors} Optimierungen`}
                         {canExpand && <span style={{ fontSize: 10, marginLeft: 4, opacity: 0.6 }}>{isExpanded ? "▲" : "▼"}</span>}
                       </span>
-                      {/* ── Magic pulse: gold tooltip on first expandable row ──
-                          position:absolute statt static, weil das Element sonst
-                          aus der 90px-Cell horizontal hinausragte und auf Mobile
-                          die Nachbar-Zeile überlappte (User-Report 12.05.2026). */}
-                      {canExpand && showPulse && i === firstErrorIdx && (
-                        <div className="wf-pulse-hint" style={{
-                          position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 10,
-                          padding: "4px 10px", borderRadius: 6,
-                          background: "rgba(251,191,36,0.18)",
-                          border: "1px solid rgba(251,191,36,0.5)",
-                          fontSize: 10, color: "#FBBF24", fontWeight: 700,
-                          whiteSpace: "nowrap", lineHeight: 1.3,
-                          cursor: "pointer",
-                          boxShadow: "0 4px 12px rgba(251,191,36,0.25)",
-                        }} onClick={() => handleExpand(p.path + i)}>
-                          ↑ Klick hier: Dein Schritt-für-Schritt SEO-Fix
-                        </div>
-                      )}
+                      {/* Pulse-Hint-Tooltip entfernt (12.05.2026): ~250px-Text
+                          passte nicht in die 90px-"Fehler"-Cell, ragte über die
+                          Tabellen-Breite raus und überlappte Nachbar-Zeilen.
+                          Position-Hacks (absolute + right:0 + zIndex) waren
+                          unzureichend. Die unterstrichelte "X Optimierungen"-
+                          Cell selbst signalisiert die Klick-Möglichkeit bereits
+                          (textDecoration: underline dotted + cursor: pointer +
+                          ▼-Caret). Kein extra Hint nötig. */}
                     </div>
                   </div>
 
