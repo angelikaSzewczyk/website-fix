@@ -14,7 +14,7 @@
  * unter PricingFeatureTable eingebettet.
  */
 
-import { ShieldCheck, Activity, ImageDown } from "lucide-react";
+import { ShieldCheck, Activity, ImageDown, Lock } from "lucide-react";
 import CheckoutButton from "../components/checkout-button";
 
 const T = {
@@ -201,9 +201,9 @@ export default function Q3RoadmapSection() {
           width: 48, height: 48, borderRadius: 12, flexShrink: 0,
           background: T.amberBg, border: `1px solid ${T.amberBorder}`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          color: T.amber, fontSize: 22, fontWeight: 800,
+          color: T.amber,
         }} aria-hidden="true">
-          🔒
+          <Lock size={22} strokeWidth={2.2} />
         </div>
         <div style={{ flex: "1 1 280px", minWidth: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: T.amber, letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4 }}>

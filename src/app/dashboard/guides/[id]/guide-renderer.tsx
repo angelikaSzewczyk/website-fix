@@ -572,8 +572,14 @@ export default function GuideRenderer({
               flexShrink: 0, width: 36, height: 36, borderRadius: 10,
               background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.35)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#10b981", fontSize: 18,
-            }}>🛡️</span>
+              color: "#10b981",
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+            </span>
             <p style={{ margin: 0, flex: "1 1 280px", fontSize: 13, color: T.textSub, lineHeight: 1.65 }}>
               {humanize(guide.content_json.psychological_close)}
             </p>
