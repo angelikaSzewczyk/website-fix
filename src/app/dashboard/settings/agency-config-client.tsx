@@ -23,6 +23,13 @@ type Loaded = {
   smtp_pass_set:        boolean;
   white_label_logo_url: string;
   custom_domain:        string;
+  /** ISO-Zeitpunkt der erfolgreichen DNS-CNAME-Verifikation. Null = entweder
+   *  keine Domain eingetragen oder CNAME noch nicht (mehr) korrekt gesetzt. */
+  custom_domain_verified_at: string | null;
+  /** Target-Host für den CNAME-Record (z.B. "portal.website-fix.com").
+   *  Kommt aus CUSTOM_DOMAIN_TARGET-ENV-Var, damit Staging/Production
+   *  unterschiedliche Targets haben können. */
+  custom_domain_target: string;
   api_key_wp_set:       boolean;
   api_key_wp_created_at: string | null;
   can_use_wp_bridge:    boolean;
@@ -135,6 +142,16 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
   const [wlSaving, setWlSaving]   = useState(false);
   const [wlStatus, setWlStatus]   = useState<{ kind: "ok"|"error"; message: string } | null>(null);
 
+  // Custom-Domain Verifikation (separater Flow vom Save-Pfad — User editiert
+  // erst die Domain, speichert, klickt dann auf "Verifizieren" sobald der
+  // DNS-CNAME beim eigenen Provider gesetzt ist).
+  const [verifying, setVerifying] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<
+    | { kind: "ok"; message: string }
+    | { kind: "error"; message: string }
+    | null
+  >(null);
+
   // WP-API-Key
   const [keyBusy, setKeyBusy] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
@@ -164,6 +181,7 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         if (!cancelled) setLoaded({
           smtp_host: "", smtp_port: null, smtp_user: "", smtp_from_email: "",
           smtp_pass_set: false, white_label_logo_url: "", custom_domain: "",
+          custom_domain_verified_at: null, custom_domain_target: "portal.website-fix.com",
           api_key_wp_set: false, api_key_wp_created_at: null, can_use_wp_bridge: false,
         });
       } finally {
@@ -297,10 +315,36 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         return;
       }
       setWlStatus({ kind: "ok", message: "White-Label & Custom-Domain gespeichert." });
+      // verified-Status nach Domain-Save neu laden — Server hat ihn ggf. auf NULL
+      // gesetzt wenn sich die Domain geändert hat.
+      const fresh = await fetch("/api/agency-settings").then(r => r.ok ? r.json() : null).catch(() => null);
+      if (fresh) setLoaded(fresh);
+      setVerifyStatus(null);
     } catch {
       setWlStatus({ kind: "error", message: "Verbindungsfehler beim Speichern." });
     } finally {
       setWlSaving(false);
+    }
+  }
+
+  async function verifyDomain() {
+    setVerifying(true);
+    setVerifyStatus(null);
+    try {
+      const res = await fetch("/api/agency-settings/verify-domain", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.verified) {
+        setVerifyStatus({ kind: "ok", message: data.message ?? "Domain verifiziert." });
+        // verified_at neu laden
+        const fresh = await fetch("/api/agency-settings").then(r => r.ok ? r.json() : null).catch(() => null);
+        if (fresh) setLoaded(fresh);
+      } else {
+        setVerifyStatus({ kind: "error", message: data.message ?? data.error ?? "DNS-Verifikation fehlgeschlagen." });
+      }
+    } catch {
+      setVerifyStatus({ kind: "error", message: "Verbindungsfehler bei der DNS-Verifikation." });
+    } finally {
+      setVerifying(false);
     }
   }
 
@@ -506,9 +550,79 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         <Field label="White-Label Logo (URL)" hint="Wird im PDF-Header verwendet. Optional — fällt sonst auf das Branding-Logo zurück.">
           <input value={whiteLabelLogo} onChange={e => setWhiteLabelLogo(e.target.value)} placeholder="https://cdn.kunde.de/logo.png" style={inputStyle} />
         </Field>
-        <Field label="Custom-Domain" hint="Domain, auf der dein Lead-Widget eingebettet ist. Sichert /api/leads/capture per Origin-Check ab.">
+        <Field label="Custom-Domain" hint="Domain, auf der dein Lead-Widget eingebettet ist. Sichert /api/leads/capture per Origin-Check ab. Routing für das Kunden-Portal auf dieser Domain folgt mit Q3 — Bestandskunden behalten ihren Preis.">
           <input value={customDomain} onChange={e => setCustomDomain(e.target.value.toLowerCase())} placeholder="kunde-agentur.de" style={inputStyle} />
         </Field>
+
+        {/* DNS-CNAME-Anleitung + Verify-Status — nur sichtbar wenn die User
+            tatsächlich eine Domain eingetragen UND gespeichert hat (= Domain
+            steht in cfg.custom_domain, was beim Save aus dem Server kommt).
+            Sonst spammt der Block den Settings-Screen wenn jemand nur das
+            Lead-Widget für eine sub-Domain einrichten will. */}
+        {cfg.custom_domain && (
+          <div style={{
+            marginTop: 6, padding: "12px 14px", borderRadius: 9,
+            background: "rgba(0,0,0,0.22)",
+            border: `1px solid ${D.divider}`,
+          }}>
+            <p style={{ margin: "0 0 8px", fontSize: 11.5, fontWeight: 700, color: D.text, letterSpacing: "0.02em" }}>
+              DNS-CNAME-Setup
+            </p>
+            <p style={{ margin: "0 0 10px", fontSize: 12, color: D.textSub, lineHeight: 1.55 }}>
+              Setze bei deinem DNS-Provider einen <strong style={{ color: D.text }}>CNAME-Record</strong> für{" "}
+              <code style={{ background: "rgba(0,0,0,0.35)", padding: "1px 6px", borderRadius: 4, fontSize: 11.5, color: D.text }}>{cfg.custom_domain}</code>
+              {" "}auf{" "}
+              <code style={{ background: "rgba(0,0,0,0.35)", padding: "1px 6px", borderRadius: 4, fontSize: 11.5, color: D.text }}>{cfg.custom_domain_target}</code>
+              . Sobald die Propagation durch ist (1-30 Min), klick auf <strong style={{ color: D.text }}>Verifizieren</strong> — wir prüfen den CNAME live.
+            </p>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              {cfg.custom_domain_verified_at ? (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "4px 10px", borderRadius: 20,
+                  background: "rgba(74,222,128,0.12)",
+                  border: "1px solid rgba(74,222,128,0.35)",
+                  fontSize: 11, fontWeight: 800, color: "#4ade80",
+                  letterSpacing: "0.04em",
+                }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Verifiziert · {new Date(cfg.custom_domain_verified_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })}
+                </span>
+              ) : (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "4px 10px", borderRadius: 20,
+                  background: "rgba(251,191,36,0.10)",
+                  border: "1px solid rgba(251,191,36,0.30)",
+                  fontSize: 11, fontWeight: 800, color: "#fbbf24",
+                  letterSpacing: "0.04em",
+                }}>
+                  Nicht verifiziert
+                </span>
+              )}
+
+              <button
+                onClick={verifyDomain}
+                disabled={verifying}
+                style={{
+                  padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 700,
+                  background: "rgba(255,255,255,0.06)",
+                  border: `1px solid ${D.border}`,
+                  color: D.text, cursor: verifying ? "wait" : "pointer", fontFamily: "inherit",
+                  opacity: verifying ? 0.7 : 1,
+                }}
+              >
+                {verifying ? "Prüfe DNS…" : "Verifizieren"}
+              </button>
+            </div>
+
+            {verifyStatus && <StatusInline kind={verifyStatus.kind} message={verifyStatus.message} />}
+          </div>
+        )}
 
         <div>
           <button

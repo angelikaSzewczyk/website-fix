@@ -60,6 +60,7 @@ export async function GET() {
   const rows = await sql`
     SELECT agency_name, agency_website, logo_url, primary_color,
            white_label_logo_url, custom_domain,
+           custom_domain_verified_at::text AS custom_domain_verified_at,
            smtp_host, smtp_port, smtp_user, smtp_from_email,
            smtp_pass_encrypted, api_key_wp_hash, api_key_wp_created_at::text AS api_key_wp_created_at
     FROM agency_settings
@@ -69,6 +70,7 @@ export async function GET() {
     agency_name: string | null; agency_website: string | null;
     logo_url: string | null; primary_color: string | null;
     white_label_logo_url: string | null; custom_domain: string | null;
+    custom_domain_verified_at: string | null;
     smtp_host: string | null; smtp_port: number | null;
     smtp_user: string | null; smtp_from_email: string | null;
     smtp_pass_encrypted: string | null;
@@ -84,6 +86,10 @@ export async function GET() {
     primary_color:        row?.primary_color        ?? "#8df3d3",
     white_label_logo_url: row?.white_label_logo_url ?? "",
     custom_domain:        row?.custom_domain        ?? "",
+    custom_domain_verified_at: row?.custom_domain_verified_at ?? null,
+    // Target-CNAME für die UI-Anzeige ("CNAME setzen auf: …"). Aus ENV-Var,
+    // damit Staging/Production unterschiedliche Targets bekommen können.
+    custom_domain_target: process.env.CUSTOM_DOMAIN_TARGET ?? "portal.website-fix.com",
     smtp_host:            row?.smtp_host            ?? "",
     smtp_port:            row?.smtp_port            ?? null,
     smtp_user:            row?.smtp_user            ?? "",
@@ -176,6 +182,13 @@ export async function PUT(req: Request) {
             primary_color         = ${primaryColor},
             white_label_logo_url  = ${whiteLabelLogo},
             custom_domain         = ${customDomain},
+            -- Re-Verifikation erzwingen wenn sich die Domain ändert. Re-Save
+            -- mit identischem Wert lässt verified_at unangetastet.
+            custom_domain_verified_at = CASE
+              WHEN agency_settings.custom_domain IS DISTINCT FROM ${customDomain}
+              THEN NULL
+              ELSE agency_settings.custom_domain_verified_at
+            END,
             smtp_host             = ${smtpHost},
             smtp_port             = ${smtpPort},
             smtp_user             = ${smtpUser},
@@ -204,6 +217,11 @@ export async function PUT(req: Request) {
             primary_color         = ${primaryColor},
             white_label_logo_url  = ${whiteLabelLogo},
             custom_domain         = ${customDomain},
+            custom_domain_verified_at = CASE
+              WHEN agency_settings.custom_domain IS DISTINCT FROM ${customDomain}
+              THEN NULL
+              ELSE agency_settings.custom_domain_verified_at
+            END,
             smtp_host             = ${smtpHost},
             smtp_port             = ${smtpPort},
             smtp_user             = ${smtpUser},
