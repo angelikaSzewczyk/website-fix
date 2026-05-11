@@ -17,7 +17,7 @@
 import { useState } from "react";
 import {
   ChevronDown, ChevronUp, Copy, Check, ShieldCheck,
-  AlertTriangle, RotateCcw, Server, Layers,
+  AlertTriangle, RotateCcw, Server, Layers, Lock,
 } from "lucide-react";
 import { type Snippet, buildSnippet } from "@/lib/smartfix-snippets";
 
@@ -51,6 +51,43 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
 
   const fullCode = buildSnippet(snippet);
 
+  // HowTo-JSON-LD pro Snippet. Generische Steps (Kopieren / Einfügen / Validieren)
+  // statt der per-Snippet-installSteps — Rich-Snippet-Display in Google SERPs
+  // braucht knappe, einheitliche Schritte. Die ausführlichen Steps bleiben im UI.
+  const baseUrl = "https://website-fix.com";
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type":    "HowTo",
+    "name":     snippet.title,
+    "description": snippet.description,
+    "totalTime": "PT5M",
+    "tool": {
+      "@type": "HowToTool",
+      "name": "WordPress (mit Child-Theme oder Code-Snippets-Plugin)",
+    },
+    "step": [
+      {
+        "@type":    "HowToStep",
+        "position": 1,
+        "name":     "Code kopieren",
+        "text":     `Kopiere den Safe-Mode-geprüften ${snippet.fixType}-Snippet aus der WebsiteFix Smart-Fix Library.`,
+        "url":      `${baseUrl}/smart-fix-library#snippet-${snippet.slug}`,
+      },
+      {
+        "@type":    "HowToStep",
+        "position": 2,
+        "name":     "Snippet einfügen",
+        "text":     "Füge den Code in die functions.php deines aktiven Child-Themes ein — oder lege ihn als neues Snippet im Plugin „Code Snippets“ an.",
+      },
+      {
+        "@type":    "HowToStep",
+        "position": 3,
+        "name":     "Ergebnis validieren",
+        "text":     "Speichern, Frontend neu laden, im Browser-DevTools (Network-Tab) den erwarteten Effekt prüfen.",
+      },
+    ],
+  };
+
   async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(fullCode);
@@ -77,6 +114,12 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
         scrollMarginTop: 84,
       }}
     >
+      {/* HowTo-JSON-LD für Google-Rich-Snippets. Unique pro Snippet —
+          kein FAQ-Doublette-Risk, da jeder Card-Inhalt einzigartig ist. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+      />
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div style={{ padding: "20px 22px 16px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
@@ -127,6 +170,12 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
             <ShieldCheck size={11} strokeWidth={2.5} />
             Safe-Mode geprüft
           </span>
+          {snippet.safetyCheck && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: T.green, padding: "3px 8px", borderRadius: 6, background: T.greenBg, border: `1px solid ${T.greenBorder}`, fontWeight: 700 }}>
+              <Lock size={11} strokeWidth={2.5} />
+              Auto-Safety-Check
+            </span>
+          )}
         </div>
       </div>
 
@@ -189,18 +238,23 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
             overflow: "hidden",
             marginBottom: 18,
           }}>
-            {/* Terminal-Header */}
+            {/* Terminal-Header — flex-wrap für sehr enge Mobile-Viewports */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
+              gap: 8, flexWrap: "wrap",
               padding: "9px 14px",
               borderBottom: `1px solid ${T.border}`,
               background: "rgba(255,255,255,0.02)",
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#ef4444" }} />
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#fbbf24" }} />
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#22c55e" }} />
-                <span style={{ marginLeft: 10, fontSize: 11, color: T.textMuted, fontFamily: T.mono }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: "1 1 auto" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#ef4444", flexShrink: 0 }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
+                <span style={{
+                  marginLeft: 10, fontSize: 11, color: T.textMuted, fontFamily: T.mono,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  minWidth: 0,
+                }}>
                   smart-fix · {snippet.slug}.php
                 </span>
               </div>
@@ -290,6 +344,7 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
               background: "rgba(255,255,255,0.03)",
               border: `1px solid ${T.border}`,
               borderRadius: 8,
+              marginBottom: 12,
             }}>
               <RotateCcw size={13} color={T.textMuted} strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
               <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
@@ -297,6 +352,20 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
               </p>
             </div>
           )}
+
+          {/* Safe-Mode Disclaimer (Haftungs-Schutz) — dezent, aber rechtlich notwendig */}
+          <p style={{
+            margin: 0,
+            fontSize: 11, color: T.textMuted, lineHeight: 1.6,
+            fontStyle: "italic",
+            paddingTop: 10,
+            borderTop: `1px dashed ${T.border}`,
+          }}>
+            <strong style={{ color: "rgba(255,255,255,0.55)", fontStyle: "normal" }}>Disclaimer:</strong>{" "}
+            Dieser Code ist als Blaupause optimiert. Die Anwendung erfolgt in eigener Verantwortung.
+            WebsiteFix empfiehlt dringend ein Backup vor der Implementierung und die Nutzung eines
+            Child-Themes oder Snippet-Plugins.
+          </p>
 
         </div>
       )}

@@ -32,7 +32,12 @@ export interface Snippet {
   effectScope: string;
   /** Optionaler Warnhinweis, der über dem Code steht. */
   warning?:    string;
-  /** Body OHNE Wrapper — `buildSnippet()` schreibt den Wrapper drumherum. */
+  /** Optionaler Auto-Safety-Check (PHP-Code), der dem Body vorangestellt wird.
+   *  Prüft die WordPress-Umgebung zur Laufzeit (z.B. WP_DEBUG, konfligierende
+   *  Plugins) und bricht ggf. mit return; ab — damit ein versehentlicher
+   *  Einbau in einer ungeeigneten Umgebung kein Frontend killt. */
+  safetyCheck?: string;
+  /** Body OHNE Wrapper — `buildSnippet()` schreibt den Wrapper + Safety-Check drumherum. */
   body:        string;
   /** 1-2-3 Install-Anleitung (genau 3 Steps). */
   installSteps: readonly [string, string, string];
@@ -45,13 +50,16 @@ export interface Snippet {
  * Single source of truth — UI ruft das vor Anzeige + Kopieren auf.
  */
 export function buildSnippet(s: Snippet): string {
+  const safetyBlock = s.safetyCheck
+    ? `\n// ── Auto-Safety-Check ──\n${s.safetyCheck.trim()}\n`
+    : "";
   return `if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /**
  * WebsiteFix Smart-Fix: ${s.title}
  * Status: Safe-Mode geprüft | Typ: ${s.fixType}
  * Hoster: ${s.hosterScope} | Wirkt auf: ${s.effectScope}
  */
-
+${safetyBlock}
 ${s.body.trim()}
 `;
 }
@@ -72,6 +80,16 @@ export const SNIPPETS: ReadonlyArray<Snippet> = [
     fixType:     "Performance-Optimierung",
     hosterScope: "Alle Hoster",
     effectScope: "Backend & Frontend",
+    safetyCheck: `// Konfligierende Plugins erkennen — wenn "Heartbeat Control" oder WP Rocket
+// die Heartbeat-API bereits verwaltet, vermeiden wir doppelte Drosselung.
+$wf_active = (array) get_option( 'active_plugins' );
+if ( in_array( 'heartbeat-control/heartbeat-control.php', $wf_active, true )
+  || in_array( 'wp-rocket/wp-rocket.php',                  $wf_active, true ) ) {
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( 'WebsiteFix Smart-Fix [heartbeat]: skipped — collision detected.' );
+    }
+    return;
+}`,
     body: `add_filter( 'heartbeat_settings', function( $settings ) {
     // Kontextabhängige Frequenz statt Standard-15 s.
     if ( is_admin() ) {
@@ -115,13 +133,18 @@ add_action( 'init', function() {
     hosterScope: "Alle Hoster",
     effectScope: "Backend",
     warning:     "Wenn du die WordPress-Mobile-App, ein externes Publishing-Tool oder eine Marketing-Suite nutzt, die via XML-RPC schreibt: ein Test in der Staging-Umgebung empfohlen.",
-    body: `// Safety-Check — wenn Jetpack aktiv ist, brichst du hier ab.
-// Jetpack kommuniziert mit WordPress.com via XML-RPC.
-if ( in_array( 'jetpack/jetpack.php', (array) get_option( 'active_plugins' ), true ) ) {
-    return;
-}
-
-// XML-RPC vollständig deaktivieren
+    safetyCheck: `// Jetpack kommuniziert mit WordPress.com via XML-RPC — wenn aktiv, abbrechen.
+// Ebenso bei Wordfence/Sucuri, die teilweise eigene XML-RPC-Hardening-Regeln setzen.
+$wf_active = (array) get_option( 'active_plugins' );
+foreach ( array( 'jetpack/jetpack.php', 'wordfence/wordfence.php', 'sucuri-scanner/sucuri.php' ) as $wf_skip ) {
+    if ( in_array( $wf_skip, $wf_active, true ) ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'WebsiteFix Smart-Fix [xmlrpc]: skipped — security plugin manages this (' . $wf_skip . ').' );
+        }
+        return;
+    }
+}`,
+    body: `// XML-RPC vollständig deaktivieren
 add_filter( 'xmlrpc_enabled', '__return_false' );
 
 // Pingback-Methoden zusätzlich entfernen (Defense-in-Depth)
@@ -167,6 +190,15 @@ add_filter( 'rest_authentication_errors', function( $result ) {
     fixType:     "Performance-Optimierung",
     hosterScope: "Alle Hoster",
     effectScope: "Frontend",
+    safetyCheck: `// Disable-Emojis-Plugin oder Perfmatters managen diese Optimierung bereits.
+$wf_active = (array) get_option( 'active_plugins' );
+if ( in_array( 'disable-emojis/disable-emojis.php', $wf_active, true )
+  || in_array( 'perfmatters/perfmatters.php',        $wf_active, true ) ) {
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( 'WebsiteFix Smart-Fix [emojis]: skipped — handled by existing plugin.' );
+    }
+    return;
+}`,
     body: `// ── 1. Emoji-Scripte + Styles aus dem Frontend entfernen ──
 remove_action( 'wp_head',             'print_emoji_detection_script', 7 );
 remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
@@ -214,6 +246,20 @@ remove_action( 'wp_head',               'wp_oembed_add_host_js' );
     hosterScope: "Alle Hoster (besonders sinnvoll mit Cloudflare / Hoster-Cache)",
     effectScope: "Frontend",
     warning:     "Wenn du Plugins/Themes oft updatest und KEIN Cache-Plugin nutzt, kann ein einzelner Hard-Refresh nötig sein, bis ein CSS-Update beim User ankommt. Mit WP Rocket / W3 Total Cache greift deren Cache-Versioning trotzdem.",
+    safetyCheck: `// Caching-Plugins erledigen Query-String-Stripping bereits — kein Doppel-Apply.
+$wf_active = (array) get_option( 'active_plugins' );
+foreach ( array(
+    'wp-rocket/wp-rocket.php',
+    'w3-total-cache/w3-total-cache.php',
+    'wp-super-cache/wp-cache.php',
+) as $wf_cache ) {
+    if ( in_array( $wf_cache, $wf_active, true ) ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'WebsiteFix Smart-Fix [query-strings]: skipped — handled by ' . $wf_cache . '.' );
+        }
+        return;
+    }
+}`,
     body: `// Query-Strings aus statischen Asset-URLs entfernen.
 // Greift in src/href, auch wenn das Plugin/Theme ?ver=X.Y anhängt.
 function wf_smartfix_strip_ver_from_assets( $src ) {
@@ -249,6 +295,24 @@ add_filter( 'script_loader_src', 'wf_smartfix_strip_ver_from_assets', 10, 1 );
     hosterScope: "Alle Hoster",
     effectScope: "Frontend",
     warning:     "Bei Themes älter als 2020 oder Custom-Code mit Konstrukten wie `$.browser` / `$.live()` vor dem Aktivieren in einer Staging-Umgebung testen — diese Patterns würden ohne Migrate brechen.",
+    safetyCheck: `// "Disable jQuery Migrate" / Perfmatters managen das schon. Außerdem:
+// im WP_DEBUG-Modus loggen wir den Disable, damit Migrate-Console-Warnings
+// in Staging-Tests nicht als Plugin-Bug fehlgedeutet werden.
+$wf_active = (array) get_option( 'active_plugins' );
+foreach ( array(
+    'disable-jquery-migrate/disable-jquery-migrate.php',
+    'perfmatters/perfmatters.php',
+) as $wf_skip ) {
+    if ( in_array( $wf_skip, $wf_active, true ) ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'WebsiteFix Smart-Fix [jquery-migrate]: skipped — handled by ' . $wf_skip . '.' );
+        }
+        return;
+    }
+}
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+    error_log( 'WebsiteFix Smart-Fix [jquery-migrate]: aktiv — jQuery-Migrate aus Frontend entfernt.' );
+}`,
     body: `// jQuery-Migrate nur im Frontend rauswerfen.
 // Im Admin bleibt es geladen, weil dort ältere Plugins (Gutenberg-Blöcke,
 // Builder) gelegentlich noch darauf bauen.
