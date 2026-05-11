@@ -141,10 +141,12 @@ const PLANS: Plan[] = [
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true, key: true },
       { text: "Kunden-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
-      { text: "Team-Rollen: Admin, Editor (Junior), Viewer — granular",                  highlight: true, key: true },
+      { text: "Bis zu 10 Team-Sitze (Rollen-Logik Q3 — Bestandskunden behalten Preis)",  highlight: true, key: true },
       { text: "Daily Health-Check mit Slack-/E-Mail-Alarm bei Ausfall (60-Sek-Watchdog ab Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
       { text: "Workflow-API: Jira, Trello, Asana, Zapier — automatisch verbucht",        highlight: true },
-      { text: "DSGVO-AVV, Audit-Log + Haftungs-Dokumentation",                           highlight: true },
+      { text: "Custom-SMTP-Versand — White-Label-E-Mails unter Ihrem eigenen Absender",  highlight: true },
+      { text: "Plugin-Diff-Alarme — Sofort-Warnung bei neuen Plugins auf Kunden-Sites",  highlight: true },
+      { text: "DSGVO-AVV, Aktivitäts-Log + Haftungs-Dokumentation",                      highlight: true },
     ],
     audienceFootnote: "Für Agentur-Inhaber, die Wartung profitabel skalieren wollen.",
     cta: "Agentur-Marge jetzt skalieren →",
@@ -192,7 +194,7 @@ const FAQ = [
   },
   {
     q: "Welche Team-Rollen gibt es und wie unterscheiden sie sich?",
-    a: "Drei Rollen: Admin (volle Kontrolle, Billing, Kundenverwaltung), Editor (sieht Issues + Smart-Fix-Guides, kann fixen, KEIN Billing-Zugriff, KEINE Kundendaten), Viewer (Read-Only für Stakeholder). Damit können Sie Ihrem Junior-Team sicher Aufgaben übergeben, ohne sensible Stripe-Daten oder Kundenrabatte preiszugeben.",
+    a: "Drei Rollen geplant: Admin (volle Kontrolle, Billing, Kundenverwaltung), Editor (sieht Issues + Smart-Fix-Guides, kann fixen, kein Billing-Zugriff, keine Kundendaten), Viewer (Read-Only für Stakeholder). Status: Schema und Invite-Flow sind live, bis zu 10 Team-Sitze pro Agency-Account. Die granulare Route-Enforcement pro API folgt im Q3 — Bestandskunden behalten den Preis nach Release. Bis dahin: harte Trennung über separate Logins, Editor-/Viewer-Konten haben kein Billing-Sichtbarkeit.",
   },
   {
     q: "Wie läuft die Jira / Trello / Asana / Slack-Integration?",
@@ -200,7 +202,7 @@ const FAQ = [
   },
   {
     q: "Wie sicher sind Kunden-Daten — DSGVO, Haftung?",
-    a: "Hosting in Frankfurt, EU-only Datenfluss, TLS-Verschlüsselung, ISO-27001-Provider. Sie erhalten einen DSGVO-konformen AVV und einen Audit-Log, der jeden Scan, jeden Fix und jede Team-Aktion protokolliert. Im Schadensfall können Sie nachweisen, dass die Wartung ordnungsgemäß erfolgt ist — wertvoll bei BFSG-2025-Streitigkeiten.",
+    a: "Hosting in Frankfurt, EU-only Datenfluss, TLS-Verschlüsselung, ISO-27001-Provider. Sie erhalten einen DSGVO-konformen AVV und einen Aktivitäts-Log, der Team-Einladungen, Kundenanlagen und Settings-Änderungen append-only protokolliert. Im Schadensfall können Sie nachweisen, dass die Wartung ordnungsgemäß erfolgt ist — wertvoll bei BFSG-2025-Streitigkeiten.",
   },
   {
     q: "Warum 249 € statt 89 €? Was ist der Hauptunterschied?",
@@ -602,7 +604,7 @@ export default function AgencyPage() {
               {
                 icon: Lock,
                 title: "Haftungsschutz",
-                desc: "BFSG 2025, DSGVO, Cookie-Compliance: jeder Scan, jeder Fix, jede Team-Aktion wird im Audit-Log protokolliert. Im Streitfall haben Sie den lückenlosen Beleg, dass die Wartung ordnungsgemäß erfolgt ist.",
+                desc: "BFSG 2025, DSGVO, Cookie-Compliance: Team-Einladungen, Kundenanlagen und Settings-Änderungen werden im append-only Aktivitäts-Log protokolliert, AVV als PDF im Account-Bereich. Im Streitfall haben Sie den Beleg, dass die Wartung ordnungsgemäß erfolgt ist.",
                 accent: "#7C3AED",
               },
               {
@@ -1012,7 +1014,7 @@ export default function AgencyPage() {
                 accentBg: T.scaleBg,
                 accentBorder: T.scaleBorder,
                 desc: "Inhaber-Rolle. Volle Kontrolle: Billing, Kunden, Team-Einladungen, Branding.",
-                bullets: ["Stripe-Verwaltung", "Kunden-Anlegen / Löschen", "Branding + Subdomain", "Team-Einladungen", "Audit-Log-Einsicht"],
+                bullets: ["Stripe-Verwaltung", "Kunden-Anlegen / Löschen", "Branding + Subdomain", "Team-Einladungen", "Aktivitäts-Log-Einsicht"],
               },
               {
                 role: "Editor",
@@ -1050,7 +1052,7 @@ export default function AgencyPage() {
           </div>
 
           <p style={{ margin: "24px auto 0", maxWidth: 700, textAlign: "center", fontSize: 12.5, color: T.textFaint, lineHeight: 1.6 }}>
-            Roll-Out-Roadmap: Schema + Invite-Flow live. Granulare Route-Enforcement für jede API derzeit im Audit. Zwischenzeitlich harte Trennung: Editor-/Viewer-Accounts können sich anmelden und sehen die ihnen zugewiesenen Kunden.
+            Roll-Out-Roadmap: Schema + Invite-Flow für bis zu 10 Team-Sitze sind live. Granulare Route-Enforcement pro API folgt im Q3 — Bestandskunden des Agency-Plans behalten ihren Preis nach Release. Bis dahin: harte Trennung über separate Logins, Editor-/Viewer-Konten haben kein Billing-Sichtbarkeit.
           </p>
         </section>
 

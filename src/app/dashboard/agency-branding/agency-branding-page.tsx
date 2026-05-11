@@ -92,7 +92,7 @@ export default function AgencyBrandingPage({
               DSGVO &amp; Compliance
             </p>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.text, letterSpacing: "-0.02em" }}>
-              AVV, Audit-Log &amp; Haftungs-Dokumentation
+              AVV, Aktivitäts-Log &amp; Haftungs-Dokumentation
             </h2>
             <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.textSub, maxWidth: 600, lineHeight: 1.55 }}>
               Was du brauchst, um deine Kunden DSGVO-konform zu betreuen —
@@ -152,13 +152,13 @@ export default function AgencyBrandingPage({
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 18 }}>📋</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: T.text }}>
-                  Audit-Log
+                  Aktivitäts-Log
                 </span>
               </div>
               <p style={{ margin: 0, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
-                Append-only Protokoll aller Team-Aktionen (Einladungen, Plan-Änderungen,
-                Zugriffe). Nachweis-Pflicht im DSGVO-Audit oder bei Kunden-Anfragen
-                nach Art. 30 DSGVO.
+                Append-only Protokoll: Team-Einladungen, Kundenanlagen und Settings-
+                Änderungen mit Zeitstempel. Nachweis-Pflicht im DSGVO-Audit oder bei
+                Kunden-Anfragen nach Art. 30 DSGVO.
               </p>
               <span style={{ fontSize: 11.5, color: T.purple, fontWeight: 700, marginTop: 4 }}>
                 Log ansehen →

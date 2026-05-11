@@ -58,7 +58,7 @@ const POINTS: KeyPoint[] = [
   {
     icon:  ShieldCheck,
     title: "Haftungsschutz",
-    body:  "Dokumentierte Sicherheits-Audits + Audit-Log für jeden Fix. Im Streitfall mit dem Endkunden ist die Wartung nachweisbar.",
+    body:  "Dokumentierte Sicherheits-Audits + Aktivitäts-Log mit Team-Einladungen, Kundenanlagen und Settings-Änderungen. Im Streitfall mit dem Endkunden ist die Wartung nachweisbar.",
     color: C.amber,
     bg:    "rgba(251,191,36,0.14)",
   },

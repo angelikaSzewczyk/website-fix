@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { checkWebsite } from "@/lib/monitor";
 import { normalizePlan, getPlanQuota } from "@/lib/plans";
+import { logAudit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -189,6 +190,22 @@ export async function POST(req: NextRequest) {
       // saved_websites ist bereits erfolgt, der User-Flow geht weiter.
       console.error("[websites POST] first-run check failed:", err);
     }
+  }
+
+  // Aktivitäts-Log: Kundenseite angelegt/aktualisiert. Bei ON CONFLICT DO UPDATE
+  // ist das ein Re-Submit derselben URL — wird trotzdem geloggt, weil eine
+  // erneute Konfigurations-Aktion (z.B. Umbenennen, als Kundenprojekt markieren).
+  if (website) {
+    logAudit({
+      ownerId: session.user.id as string,
+      action: "website.create",
+      metadata: {
+        website_id: website.id,
+        url: website.url,
+        is_customer_project: website.is_customer_project,
+        client_label: website.client_label,
+      },
+    });
   }
 
   return NextResponse.json({ success: true, website });

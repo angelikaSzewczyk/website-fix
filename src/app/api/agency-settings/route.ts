@@ -20,6 +20,7 @@ import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 import { hasBrandingAccess, isPaidPlan } from "@/lib/plans";
 import { encrypt } from "@/lib/crypto";
+import { logAudit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
@@ -220,6 +221,17 @@ export async function PUT(req: Request) {
     console.error("[agency-settings] PUT failed:", err);
     return NextResponse.json({ error: "Speichern fehlgeschlagen." }, { status: 500 });
   }
+
+  // Aktivitäts-Log: welche Felder wurden geändert (nur Schlüssel, keine Werte —
+  // SMTP-Pass darf NICHT geloggt werden, selbst verschlüsselt nicht).
+  logAudit({
+    ownerId: session.user.id as string,
+    action: "settings.update",
+    metadata: {
+      fields: Object.keys(body).filter(k => k !== "smtp_pass"),
+      smtp_pass_touched: smtpPassEncrypted !== undefined,
+    },
+  });
 
   return NextResponse.json({ ok: true });
 }
