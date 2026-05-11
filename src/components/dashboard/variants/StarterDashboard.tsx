@@ -121,6 +121,11 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
   // Actual sum of all errors (e.g. 24 alt-missing = 24, not 1)
   const totalErrors = issues.reduce((acc, i) => acc + (i.count ?? 1), 0);
+  // Anzahl distinct Optimierungs-Aufgaben (1 Eintrag pro Issue-Kind nach
+  // Aggregator-Konsolidierung). Gleicher Begriff wie auf /scan/results
+  // (bucketCount), damit Free + Paid Header identische Sprache sprechen
+  // ("X Aufgaben · Y Stellen") — User-Vertrauen statt Drama (12.05.2026).
+  const bucketCount = issues.length;
 
   const searchParams    = useSearchParams();
   const isImpersonating = searchParams.get("impersonating") === "1";
@@ -880,8 +885,8 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                       return n != null ? ` · ${n} Seite${n !== 1 ? "n" : ""} analysiert` : "";
                     })()}
                     {" · "}
-                    {totalErrors > 0
-                      ? `${totalErrors} Optimierungen verfügbar`
+                    {bucketCount > 0
+                      ? `${bucketCount} ${bucketCount === 1 ? "Optimierungs-Aufgabe" : "Optimierungs-Aufgaben"} · ${totalErrors} ${totalErrors === 1 ? "Stelle" : "Stellen"}`
                       : "Keine Befunde"}
                   </p>
                 )}
@@ -891,17 +896,17 @@ export default function StarterDashboard(props: StarterDashboardProps) {
                 {lastScan && (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6,
                     padding: "5px 12px", borderRadius: 20,
-                    background: totalErrors > 0 ? D.amberBg : D.greenBg,
-                    border: `1px solid ${totalErrors > 0 ? D.amberBorder : D.greenBorder}`,
+                    background: bucketCount > 0 ? D.amberBg : D.greenBg,
+                    border: `1px solid ${bucketCount > 0 ? D.amberBorder : D.greenBorder}`,
                   }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%",
-                      background: totalErrors > 0 ? D.amber : D.green,
+                      background: bucketCount > 0 ? D.amber : D.green,
                       flexShrink: 0,
                     }} />
                     <span style={{ fontSize: 11, fontWeight: 700,
-                      color: totalErrors > 0 ? D.amber : D.green,
+                      color: bucketCount > 0 ? D.amber : D.green,
                     }}>
-                      {totalErrors > 0 ? `${totalErrors} Optimierungen` : "Keine Befunde"}
+                      {bucketCount > 0 ? `${bucketCount} ${bucketCount === 1 ? "Aufgabe" : "Aufgaben"} · ${totalErrors} ${totalErrors === 1 ? "Stelle" : "Stellen"}` : "Keine Befunde"}
                     </span>
                   </div>
                 )}

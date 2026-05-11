@@ -1246,6 +1246,29 @@ function ResultsInner() {
   // critErrors is the total sum — NOT a boolean type-count
   const critErrors   = isDemo ? DEMO_CRIT : (totalTableErrors > 0 ? totalTableErrors : computeIssueCount(scan!));
 
+  // ── Bucket-Count: Anzahl der DISTINCT Optimierungs-Aufgaben (Issue-Kinds) ──
+  // Ehrlichkeits-Hebel: Free-Scan zeigt sonst die rohe Stellen-Summe (totalTableErrors),
+  // das Dashboard die konsolidierte Issue-Zahl. User war frustriert: "Free sagt 19,
+  // Paid sagt 5 — gleicher Crawl, andere Zahl". Jetzt zeigen beide Pages denselben
+  // Aggregations-Begriff: "X Aufgaben · Y Stellen auf Z Seiten". Die kleine Zahl
+  // (Buckets) ist die ehrliche "wie viele Arbeitsschritte muss ich machen"-Antwort,
+  // die große Zahl (Stellen) bleibt als sekundäres Volumen-Signal sichtbar.
+  const bucketCount = isDemo ? DEMO_CRIT : (() => {
+    const kinds = new Set<string>();
+    for (const p of pageItems) {
+      if (p.isSkipped) continue;
+      if (p.altMissing > 0)                    kinds.add("alt");
+      if (p.missingTitle)                      kinds.add("title");
+      if (p.missingH1)                         kinds.add("h1");
+      if (p.missingMeta)                       kinds.add("meta");
+      if (p.noindex)                           kinds.add("noindex");
+      if (!p.erreichbar)                       kinds.add("404");
+      if ((p.inputsWithoutLabel ?? 0) > 0)     kinds.add("label");
+      if ((p.buttonsWithoutText ?? 0) > 0)     kinds.add("button");
+    }
+    return kinds.size;
+  })();
+
   // Context strings for discovered vs analysed
   const entdeckteUrls  = scan?.entdeckteUrls  ?? 0;
   const gefilterteUrls = scan?.gefilterteUrls ?? 0;
@@ -1386,8 +1409,8 @@ function ResultsInner() {
                 : <>{pagesTotal} {pagesTotal === 1 ? "Seite" : "Seiten"} analysiert</>
               }
               {!isDemo && gefilterteUrls > 0 && ` · ${gefilterteUrls} Feeds/XML übersprungen`}
-              {!isDemo && critErrors > 0 && (
-                <span style={{ color: "#f59e0b", fontWeight: 600 }}> · {critErrors} Optimierungen gefunden</span>
+              {!isDemo && bucketCount > 0 && (
+                <span style={{ color: "#f59e0b", fontWeight: 600 }}> · {bucketCount} {bucketCount === 1 ? "Optimierungs-Aufgabe" : "Optimierungs-Aufgaben"} · {critErrors} betroffene Stellen</span>
               )}
             </p>
           </div>
@@ -1403,21 +1426,21 @@ function ResultsInner() {
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
                 <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° Website-Optimierungs-Report</p>
-                {!isDemo && critErrors > 0 && (
+                {!isDemo && bucketCount > 0 && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", color: "#FBBF24" }}>
-                    ⚡ {critErrors} Optimierungen verfügbar
+                    ⚡ {bucketCount} {bucketCount === 1 ? "Aufgabe" : "Aufgaben"} · {critErrors} Stellen
                   </span>
                 )}
               </div>
               <h2 style={{ margin: "0 0 6px", fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff" }}>
-                {!isDemo && critErrors > 0
-                  ? `${critErrors} Optimierungen für deine Website`
+                {!isDemo && bucketCount > 0
+                  ? `${bucketCount} ${bucketCount === 1 ? "Optimierungs-Aufgabe" : "Optimierungs-Aufgaben"} für deine Website`
                   : "Website-Optimierungs-Report"}
               </h2>
-              {!isDemo && critErrors > 0 && (
+              {!isDemo && bucketCount > 0 && (
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
                   Auf {pagesTotal} analysierten {pagesTotal === 1 ? "Seite" : "Seiten"}{" "}
-                  <strong style={{ color: "#fff" }}>{critErrors} Verbesserungsmöglichkeiten</strong> identifiziert
+                  <strong style={{ color: "#fff" }}>{critErrors} betroffene {critErrors === 1 ? "Stelle" : "Stellen"}</strong> identifiziert
                   {errorDensity > 0 ? ` — ⌀ ${errorDensity} pro Seite` : ""}.
                 </p>
               )}
@@ -1825,7 +1848,7 @@ function ResultsInner() {
                         {statusLabel}
                       </span>
                     </div>
-                    <div className="wf-scan-errors" style={{ width: 90, textAlign: "right" }}>
+                    <div className="wf-scan-errors" style={{ width: 90, textAlign: "right", position: "relative" }}>
                       {/* Gold ✓ checkmark flash during unlock */}
                       {unlocking && canExpand && (
                         <span className="wf-unlock-check" style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", display: "block", pointerEvents: "none", animationDelay: `${i * 55}ms` }}>
@@ -1840,15 +1863,20 @@ function ResultsInner() {
                         {p.errors === 0 ? "—" : `${p.errors} Optimierungen`}
                         {canExpand && <span style={{ fontSize: 10, marginLeft: 4, opacity: 0.6 }}>{isExpanded ? "▲" : "▼"}</span>}
                       </span>
-                      {/* ── Magic pulse: gold tooltip on first expandable row ── */}
+                      {/* ── Magic pulse: gold tooltip on first expandable row ──
+                          position:absolute statt static, weil das Element sonst
+                          aus der 90px-Cell horizontal hinausragte und auf Mobile
+                          die Nachbar-Zeile überlappte (User-Report 12.05.2026). */}
                       {canExpand && showPulse && i === firstErrorIdx && (
                         <div className="wf-pulse-hint" style={{
-                          marginTop: 6, padding: "4px 8px", borderRadius: 5,
-                          background: "rgba(251,191,36,0.12)",
-                          border: "1px solid rgba(251,191,36,0.4)",
+                          position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 10,
+                          padding: "4px 10px", borderRadius: 6,
+                          background: "rgba(251,191,36,0.18)",
+                          border: "1px solid rgba(251,191,36,0.5)",
                           fontSize: 10, color: "#FBBF24", fontWeight: 700,
                           whiteSpace: "nowrap", lineHeight: 1.3,
                           cursor: "pointer",
+                          boxShadow: "0 4px 12px rgba(251,191,36,0.25)",
                         }} onClick={() => handleExpand(p.path + i)}>
                           ↑ Klick hier: Dein Schritt-für-Schritt SEO-Fix
                         </div>
