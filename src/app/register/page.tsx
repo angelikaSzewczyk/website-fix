@@ -41,9 +41,9 @@ const PLAN_CONTENT: Record<string, {
     headline: <>Deine Website.<br />Sicher &amp; Fehlerfrei.</>,
     sub: "Konto erstellen. Sicher per Stripe bezahlen. Sofort aktiv.",
     bullets: [
-      "1 Projekt · 5 Deep-Scans pro Monat",
+      "2 Projekte · 10 Deep-Scans pro Monat",
       "Voller Deep-Scan: SEO, Technik, Performance, BFSG",
-      "5 Smart-Fix-Guides inklusive",
+      "Alle Smart-Fix-Guides inklusive",
     ],
   },
   professional: {

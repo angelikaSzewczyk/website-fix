@@ -83,11 +83,13 @@ export interface PlanQuota {
 }
 
 export const PLAN_QUOTAS: Record<PlanKey, PlanQuota> = {
-  // Pay-per-Guide-Pivot (05.05.2026): Starter ist Single-Site. 5 Scans/Monat
-  // reichen für Re-Scans nach Fixes. Wer 2+ Sites braucht, soll auf
-  // Professional upgraden — der Server-Guard in /api/websites/route.ts
-  // erzwingt diese Grenze (402 limit_reached).
-  starter:      { monthlyScans: 5,        monthlyScansLabel: "5 Scans",       projects: 1,  projectsLabel: "1 Projekt" },
+  // Starter-Justierung (11.05.2026): von 1/5 auf 2/10 erhöht, weil Solo-
+  // Webdesigner fast immer eigene Site + 1 Kundenseite betreuen und 5 Scans
+  // bei 1-2 Re-Scans pro Fix-Zyklus nach einer Woche aufgebraucht waren.
+  // Wer 3+ Sites oder echte Scan-Flatrate braucht, geht auf Professional —
+  // der Server-Guard in /api/websites/route.ts erzwingt die 2-Projekt-Grenze
+  // (402 limit_reached).
+  starter:      { monthlyScans: 10,       monthlyScansLabel: "10 Scans",      projects: 2,  projectsLabel: "2 Projekte" },
   // Professional & Agency haben beide ein technisches Anti-Abuse-Cap von 500
   // Scans/Monat (08.05.2026: Pro von 25 → 500 angehoben, weil die Pricing-Card
   // explizit "unbegrenzte Scans" verspricht — 25 würde Pro mit 10 Projekten

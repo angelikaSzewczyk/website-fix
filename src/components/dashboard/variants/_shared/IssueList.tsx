@@ -1002,7 +1002,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
           <ul style={{ margin: "0 0 14px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
             {[
               "KI-Code-Snippets mit Plugin-Daten (Alt-Text, Meta, 404)",
-              "10 Projekte · 25 Deep-Scans/Monat",
+              "10 Projekte · unbegrenzte Scans",
               "Score-Verlauf + White-Label-PDF",
               "Slack- und E-Mail-Alerts",
             ].map(f => (

@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 
 // ─── Plan-Reframing ──────────────────────────────────────────────────────────
 // Drei klar abgegrenzte Audiences, KEIN "mehr-vom-gleichen"-Schema:
-//   • Starter   — Solo-Macher, 1 Projekt
+//   • Starter   — Solo-Macher, bis 2 Projekte
 //   • Professional — Selbst-Macher / Effizienz: der Owner-Operator, der schneller fixt
 //   • Agency Scale — Infrastruktur / Management: Chef-Perspektive, delegiert + skaliert
 // Die Feature-Listen pro Tier folgen dieser Logik und vermeiden, dass Agency
@@ -82,11 +82,11 @@ const PLANS: Plan[] = [
     planKey: "starter",
     price: "29",
     per: "/Monat",
-    desc: "Für eine Website mit voller Deep-Diagnose",
-    audience: "Selbstständige · 1 eigene Website",
+    desc: "Für bis zu zwei Sites mit voller Deep-Diagnose",
+    audience: "Selbstständige · bis zu 2 Sites",
     accent: "#60a5fa",
     features: [
-      { text: "1 Projekt · 5 Deep-Scans pro Monat",                  highlight: true, key: true },
+      { text: "2 Projekte · 10 Deep-Scans pro Monat",                highlight: true, key: true },
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",   highlight: true, key: true },
       { text: "🔒 Inkl. Read-Only Plugin (Hybrid-Scan freischalten)",highlight: true, key: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true, key: true },
@@ -95,7 +95,7 @@ const PLANS: Plan[] = [
       { text: "Keine Team-Rollen · Pro startet ab 89 €/Mo",          highlight: false, locked: true },
       { text: "Kein Kunden-Portal · Agency startet ab 249 €/Mo",  highlight: false, locked: true },
     ],
-    audienceFootnote: "Ideal für Selbstständige, die ihre eigene Website laufend optimieren wollen. Mehr Projekte? Professional ab 89 €/Mo (10 Sites).",
+    audienceFootnote: "Ideal für Solo-Webdesigner mit eigener Site plus einer Kundenseite. Mehr Projekte? Professional ab 89 €/Mo (10 Sites).",
     cta: "Starter wählen",
     href: undefined,
     recommended: false,

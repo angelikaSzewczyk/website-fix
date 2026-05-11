@@ -363,11 +363,11 @@ export default function DashboardShell({
                  Switcher (mit "+ Neue Site"-Button), zusätzlicher "+"-
                  Schnell-Button. 08.05.2026 User-Direktive:
                  "User muss sehen dass er weitere Projekte anlegen kann".
-                 09.05.2026: Starter hat nur 1 Slot — die Pill ist dort
-                 redundant + verwirrend (zeigt "1 Projekt" + grüner +,
-                 aber Anlegen geht ins Limit). Nur ab Pro rendern. */}
-            {isPro && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                 11.05.2026: Starter hat jetzt 2 Slots (vorher 1) — Pill
+                 rendert für alle Plan-Tiers, damit der zweite Slot
+                 sichtbar wird. Server-Guard in /api/websites/route.ts
+                 fängt Over-Limit-Anlagen mit 402 ab. */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ fontSize: 10, color: D.textMuted, fontWeight: 500 }}>Projekte</span>
                 <button
                   type="button"
@@ -404,7 +404,6 @@ export default function DashboardShell({
                   </button>
                 )}
               </div>
-            )}
 
             {/* Scan-Limit-Pill — Pro/Agency haben "unbegrenzte Scans" laut
                  Pricing-Card (siehe isUnlimitedQuota). UI muss konsistent

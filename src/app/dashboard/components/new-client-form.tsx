@@ -146,15 +146,15 @@ export default function NewClientForm({ plan = "" }: { plan?: string }) {
             Bereit für mehr Sites?
           </h3>
           <p style={{ margin: 0, fontSize: 13.5, color: C.textSub, lineHeight: 1.6 }}>
-            Dein Starter-Plan deckt 1 Website ab. Mit <strong style={{ color: C.text }}>Professional (89 €/Monat)</strong> verwaltest du bis zu <strong style={{ color: C.text }}>10 Projekte</strong>, bekommst <strong style={{ color: C.text }}>alle Rescue-Guides inklusive</strong> und nutzt das volle Portfolio-Dashboard.
+            Dein Starter-Plan deckt 2 Websites ab. Mit <strong style={{ color: C.text }}>Professional (89 €/Monat)</strong> verwaltest du bis zu <strong style={{ color: C.text }}>10 Projekte</strong>, bekommst <strong style={{ color: C.text }}>alle Rescue-Guides inklusive</strong> und nutzt das volle Portfolio-Dashboard.
           </p>
         </div>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
           {[
-            "10 Projekte statt 1",
+            "10 Projekte statt 2",
             "KI-Auto-Fix via Plugin (Alt-Text, Meta, 404)",
             "KI-Smart-Fix-Drawer + Score-Verlauf + Asana/Slack-Integration",
-            "Unbegrenzte Scans statt 5/Monat",
+            "Unbegrenzte Scans statt 10/Monat",
           ].map(b => (
             <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: C.text, lineHeight: 1.5 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>

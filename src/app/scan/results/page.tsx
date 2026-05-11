@@ -883,7 +883,7 @@ function FullReportLockedCTA({ tier }: { tier: "anon" | "free" | "paid" }) {
                 Sorglos-Flatrate für 29 €/Monat
               </div>
               <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
-                Starter-Plan · alle Guides inklusive · 5 Scans/Monat · monatlich kündbar
+                Starter-Plan · alle Guides inklusive · 10 Scans/Monat · monatlich kündbar
               </div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -1962,9 +1962,26 @@ function ResultsInner() {
                   <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>29€</span>
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>/Monat</span>
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für Selbstständige · 1 eigene Website</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 16, lineHeight: 1.5 }}>Für Selbstständige · bis zu 2 Sites</div>
+                {/* BFSG-Hook — Compliance-Trigger als Top-Argument vor den Bullets. */}
+                <div style={{
+                  margin: "0 0 14px", padding: "9px 12px", borderRadius: 8,
+                  background: "linear-gradient(90deg, rgba(251,191,36,0.14), rgba(245,158,11,0.08))",
+                  border: "1px solid rgba(251,191,36,0.32)",
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FBBF24"
+                    strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ flexShrink: 0 }} aria-hidden="true">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                    <path d="M12 9v4"/><path d="M12 17h.01"/>
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#FBBF24", lineHeight: 1.35 }}>
+                    BFSG-Pflicht ab Juni 2025 — 29 €/Mo &lt; 1 h Anwalt
+                  </span>
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
-                  {["1 Projekt · 5 Deep-Scans/Monat", "SEO, Technik, Performance, BFSG", "🔒 Read-Only Plugin (Hybrid-Scan)", "5 Smart-Fix-Guides inklusive"].map(f => (
+                  {["2 Projekte · 10 Deep-Scans/Monat", "SEO, Technik, Performance, BFSG", "🔒 Read-Only Plugin (Hybrid-Scan)", "Alle Smart-Fix-Guides inklusive"].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
                       <span style={{ color: "#FBBF24", fontSize: 11 }}>✓</span> {f}
                     </div>
@@ -1991,7 +2008,7 @@ function ResultsInner() {
                 </div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.5 }}>Für Owner-Operators · Solo-Pro</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 20 }}>
-                  {["10 Projekte · 25 Deep-Scans/Monat", "Smart-Fix Drawer (vollständig)", "KI-Auto-Fix (Copy-Paste-fertig)", "Score-Verlauf · 24/7-Monitoring", "White-Label PDF (Logo + Brand)", "Alle Smart-Fix-Guides inklusive"].map(f => (
+                  {["10 WordPress-Projekte · unbegrenzte Scans", "Smart-Fix Drawer (vollständig)", "KI-Auto-Fix (Copy-Paste-fertig)", "Score-Verlauf · 24/7-Monitoring", "White-Label PDF (Logo + Brand)", "Alle Smart-Fix-Guides inklusive"].map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                       <span style={{ color: "#FBBF24", fontSize: 11 }}>✓</span> {f}
                     </div>

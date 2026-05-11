@@ -145,15 +145,15 @@ const PLANS = [
     planKey: "starter",
     price: "29",
     per: "/Monat",
-    desc: "Für eine Website mit voller Deep-Diagnose",
-    audienceFootnote: "Ideal für Selbstständige, die ihre eigene Website laufend optimieren wollen. Mehr Projekte? Professional ab 89 €/Mo (10 Sites).",
+    desc: "Für bis zu zwei Sites mit voller Deep-Diagnose",
+    audienceFootnote: "Ideal für Solo-Webdesigner mit eigener Site plus einer Kundenseite. Mehr Projekte? Professional ab 89 €/Mo (10 Sites).",
     badge: null,
     accent: "#475569",
     accentBg: "#F1F5F9",
     accentBorder: "#E2E8F0",
     // KEEP SYNCED with /fuer-agenturen PLANS Starter — wortgleich, gleiche Reihenfolge.
     features: [
-      { text: "1 Projekt · 5 Deep-Scans pro Monat",                  highlight: true },
+      { text: "2 Projekte · 10 Deep-Scans pro Monat",                highlight: true },
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",   highlight: true },
       { text: "🔒 Inkl. Read-Only Plugin (Hybrid-Scan freischalten)",highlight: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true },
@@ -252,7 +252,7 @@ const FAQ = [
   },
   {
     q: "Was kostet WebsiteFix in der Übersicht?",
-    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (1 Projekt, 5 Deep-Scans/Monat, voller SEO-/Technik-/BFSG-Check, 5 Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (50 Kunden, Scan-Flatrate, Kunden-Portal unter Custom-Domain ab Q3, Team-Rollen, Daily Health-Check inkl. 60-Sek-Watchdog ab Q3). Alle Abos monatlich kündbar.",
+    a: "Drei Abo-Stufen plus eine Notfall-Option: Pay-per-Fix für 9,90 € einmalig (Einzel-Guide ohne Abo). Starter für 29 €/Monat (2 Projekte, 10 Deep-Scans/Monat, voller SEO-/Technik-/BFSG-Check, alle Smart-Fix-Guides inklusive, Read-Only-Plugin). Professional für 89 €/Monat (10 Projekte, unbegrenzte Scans, KI-Auto-Fix, White-Label-PDF). Agency Scale für 249 €/Monat (50 Kunden, Scan-Flatrate, Kunden-Portal unter Custom-Domain ab Q3, Team-Rollen, Daily Health-Check inkl. 60-Sek-Watchdog ab Q3). Alle Abos monatlich kündbar.",
   },
   {
     q: "Funktioniert WebsiteFix mit meinem Hoster?",
@@ -1064,6 +1064,32 @@ export default function Page() {
                       </div>
                       <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>{plan.desc}</p>
                     </div>
+
+                    {/* BFSG-Hook — nur Starter. Compliance-Trigger ist DAS
+                        DACH-Argument für 2025+: 29 €/Mo vs. Anwalts-Stunde
+                        bei einer Klage. Wird als amber-Pill über den Bullets
+                        gerendert (vor dem Divider), damit das Auge sie liest
+                        bevor es in die Feature-Liste eintaucht. */}
+                    {plan.planKey === "starter" && (
+                      <div style={{
+                        margin: "0 0 16px",
+                        padding: "10px 14px",
+                        borderRadius: 9,
+                        background: "linear-gradient(90deg, rgba(251,191,36,0.14), rgba(245,158,11,0.08))",
+                        border: "1px solid rgba(251,191,36,0.32)",
+                        display: "flex", alignItems: "center", gap: 9,
+                      }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FBBF24"
+                          strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ flexShrink: 0 }} aria-hidden="true">
+                          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                          <path d="M12 9v4"/><path d="M12 17h.01"/>
+                        </svg>
+                        <span style={{ fontSize: 11.5, fontWeight: 700, color: "#FBBF24", lineHeight: 1.4 }}>
+                          BFSG-Pflicht ab Juni 2025 — 29 €/Mo sind weniger als 1 Stunde Anwalt
+                        </span>
+                      </div>
+                    )}
 
                     {/* Divider */}
                     <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { checkWebsite } from "@/lib/monitor";
-import { normalizePlan } from "@/lib/plans";
+import { normalizePlan, getPlanQuota } from "@/lib/plans";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -55,22 +55,19 @@ export async function POST(req: NextRequest) {
 
   const sql = neon(process.env.DATABASE_URL!);
 
-  // ── Starter-Plan-Quota-Guard ────────────────────────────────────────
-  // Pay-per-Guide-Pivot: Starter-User dürfen genau 1 Website verwalten.
-  // Bei Versuch eine 2. anzulegen → 402 limit_reached, damit der Client
-  // das Upsell-Modal zum Professional-Plan zeigen kann. Re-Submit derselben
-  // URL ist erlaubt (UPSERT-Pfad bleibt unten greifbar).
+  // ── Plan-Projekt-Quota-Guard ────────────────────────────────────────
+  // Limit kommt aus PLAN_QUOTAS (Single Source of Truth in lib/plans.ts) —
+  // nie hardcoden, sonst driftet UI-Versprechen vs. Server-Realität auseinander.
+  //   Starter      = 2 Sites    → Upgrade-Hint "Professional"
+  //   Professional = 10 Sites   → Upgrade-Hint "Agency"
+  //   Agency       = 50 Sites   → Hard-Cap als Anti-Abuse, in der Praxis "unlimited"
+  // Limit greift nur wenn (a) schon Cap erreicht UND (b) die neue URL keine
+  // existierende Site ist (sonst würde der ON-CONFLICT-UPSERT geblockt).
   const userRow = await sql`
     SELECT plan FROM users WHERE id = ${session.user.id} LIMIT 1
   ` as Array<{ plan: string | null }>;
   const planKey = normalizePlan(userRow[0]?.plan);
 
-  // Plan-Limits via PLAN_QUOTAS (Single Source of Truth):
-  //   Starter      = 1 Site     → Upgrade-Hint "Professional"
-  //   Professional = 10 Sites   → Upgrade-Hint "Agency"
-  //   Agency       = 50 Sites   → Hard-Cap als Anti-Abuse, in der Praxis "unlimited"
-  // Limit greift nur wenn (a) schon Cap erreicht UND (b) die neue URL keine
-  // existierende Site ist (sonst würde der ON-CONFLICT-UPSERT geblockt).
   if (planKey === "starter" || planKey === "professional" || planKey === "agency") {
     const existing = await sql`
       SELECT
@@ -83,7 +80,7 @@ export async function POST(req: NextRequest) {
     const total   = existing[0]?.total   ?? 0;
     const thisUrl = existing[0]?.this_url ?? 0;
 
-    const limit = planKey === "starter" ? 1 : planKey === "professional" ? 10 : 50;
+    const limit = getPlanQuota(planKey).projects;
     // upgradeTo signalisiert dem Client, welches Modal er rendern soll.
     // Agency hat keinen weiteren Tier — wir setzen upgradeTo=null + cap_reached=true,
     // damit der Client den Support-Mailto-Branch zeigt statt fälschlich
@@ -91,10 +88,10 @@ export async function POST(req: NextRequest) {
     const upgradeTo = planKey === "starter" ? "professional" : planKey === "professional" ? "agency" : null;
     const planLabel = planKey === "starter" ? "Starter" : planKey === "professional" ? "Professional" : "Agency Scale";
     const upgradeMsg = planKey === "starter"
-      ? "Starter-Plan ist auf 1 Website beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten."
+      ? `Starter-Plan ist auf ${limit} Websites beschränkt. Upgrade auf Professional, um weitere Sites zu verwalten.`
       : planKey === "professional"
-      ? "Professional-Plan ist auf 10 Websites beschränkt. Upgrade auf Agency Scale, um bis zu 50 Kunden zu verwalten."
-      : "Agency Scale ist auf 50 Kunden beschränkt (Anti-Abuse-Cap). Bei größerem Bedarf: support@website-fix.com.";
+      ? `Professional-Plan ist auf ${limit} Websites beschränkt. Upgrade auf Agency Scale, um bis zu 50 Kunden zu verwalten.`
+      : `Agency Scale ist auf ${limit} Kunden beschränkt (Anti-Abuse-Cap). Bei größerem Bedarf: support@website-fix.com.`;
 
     if (total >= limit && thisUrl === 0) {
       return NextResponse.json(
