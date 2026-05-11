@@ -852,7 +852,20 @@ export default async function DashboardPage({
       <ModalShell
         id="modal-new-client"
         className="agency-modal"
-        innerStyle={{ background: C.card, borderRadius: 20, padding: "32px", maxWidth: 480, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", position: "relative" }}
+        innerStyle={{
+          // Solider Dark-Card-BG, nicht transparent (12.05.2026 User-Report:
+          // C.card = rgba(255,255,255,0.025) verschwamm mit dem Modal-Backdrop,
+          // Card wirkte unsichtbar). #131720 = Dark-Tone leicht heller als das
+          // Page-Background #0b0c10, mit klarer Border zur Abgrenzung.
+          background:    "#131720",
+          border:        "1px solid rgba(255,255,255,0.10)",
+          borderRadius:  20,
+          padding:       "32px",
+          maxWidth:      480,
+          width:         "90%",
+          boxShadow:     "0 24px 64px rgba(0,0,0,0.55)",
+          position:      "relative",
+        }}
       >
         <ModalCloseButton ariaLabel="Modal schließen" style={{ position: "absolute", top: 16, right: 20, fontSize: 22, color: C.textMuted, lineHeight: 1 }}>×</ModalCloseButton>
         <div style={{ marginBottom: 24 }}>
