@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       WebsiteFix Health Check
+ * Plugin Name:       WebsiteFix Health Check & Deep Audit
  * Plugin URI:        https://website-fix.com
- * Description:       Schneller WordPress-Gesundheits-Check direkt im Dashboard. Zeigt PHP-Version, SSL-Status, WordPress-Update, aktive Plugins und 2 SEO-Quick-Checks. Für den vollständigen 92-Punkt-Audit: WebsiteFix.com.
- * Version:           0.1.0
+ * Description:       Schneller WordPress-Gesundheits-Check direkt im Dashboard: PHP-Version, SSL-Status, WordPress-Update, aktive Plugins, SEO-Basics. Read-Only — keine Schreibzugriffe auf Dateisystem oder Datenbank. Für den vollständigen 92-Punkt-Deep-Audit (DB-Bloat, PHP-Error-Trace, Hook-Chain-Analyse): WebsiteFix.com.
+ * Version:           0.2.0
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -17,10 +17,13 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Konstanten ─────────────────────────────────────────────────────────────
-define( 'WFHC_VERSION',  '0.1.0' );
+define( 'WFHC_VERSION',  '0.2.0' );
 define( 'WFHC_SLUG',     'websitefix-health-check' );
 define( 'WFHC_BASEURL',  'https://website-fix.com' );
 define( 'WFHC_UTM',      '?utm_source=wp-plugin&utm_medium=marketplace&utm_campaign=health-check' );
+// Lead-Capture-Landingpage statt direktem /scan-Sprung — leitet User durch
+// die Email-Wall, sodass wir den Plugin-Kanal sauber tracken können.
+define( 'WFHC_REPORT_PATH', '/plugin-report' );
 define( 'WFHC_PATH',     plugin_dir_path( __FILE__ ) );
 
 // ── Includes ───────────────────────────────────────────────────────────────
@@ -62,7 +65,7 @@ function wfhc_register_dashboard_widget() {
 
     wp_add_dashboard_widget(
         WFHC_SLUG . '-widget',
-        __( 'WebsiteFix · Gesundheits-Check', 'websitefix-health-check' ),
+        __( 'WebsiteFix · Health Check & Deep Audit', 'websitefix-health-check' ),
         array( 'WFHC_Dashboard_Widget', 'render' )
     );
 }
