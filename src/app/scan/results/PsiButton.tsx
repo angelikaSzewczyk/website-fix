@@ -5,8 +5,16 @@ import { useState } from "react";
 type VitalScore = number | null;
 
 interface PsiResult {
-  scores: { performance: number; accessibility: number; seo: number };
-  vitals: { lcp: string; cls: string; lcpScore: VitalScore; clsScore: VitalScore };
+  scores: {
+    performance:   number;
+    accessibility: number;
+    bestPractices: number;
+    seo:           number;
+  };
+  vitals: {
+    lcp: string; cls: string; tbt: string;
+    lcpScore: VitalScore; clsScore: VitalScore; tbtScore: VitalScore;
+  };
 }
 
 interface ApiResponse {
@@ -15,6 +23,23 @@ interface ApiResponse {
   vitals?: PsiResult["vitals"];
   error?: string;
   errorCode?: string;
+}
+
+function scoreColor(score: number | null, perfMode = false): string {
+  if (score == null) return "#94a3b8";
+  // Lighthouse-Konvention: ≥0.9 grün, ≥0.5 gelb, sonst rot
+  // perfMode: 0..100 statt 0..1
+  const v = perfMode ? score / 100 : score;
+  if (v >= 0.9) return "#22c55e";
+  if (v >= 0.5) return "#f59e0b";
+  return "#ef4444";
+}
+
+function scoreLabel(c: string): string {
+  if (c === "#22c55e") return "im grünen Bereich";
+  if (c === "#f59e0b") return "verbesserungsbedürftig";
+  if (c === "#ef4444") return "kritisch";
+  return "—";
 }
 
 /**
@@ -68,7 +93,7 @@ export default function PsiButton({ url, onTrack }: { url: string; onTrack?: () 
           </svg>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#22d3ee", letterSpacing: "0.01em" }}>
-              Echte Core-Web-Vitals (LCP, CLS) laden
+              Echte Lighthouse-Werte laden (4 Scores + Core-Web-Vitals)
             </div>
             <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
               Live-Messung via Google PageSpeed Insights API · einmaliger Klick, ~10 Sekunden
@@ -153,24 +178,22 @@ export default function PsiButton({ url, onTrack }: { url: string; onTrack?: () 
     );
   }
 
-  // ── State 4: done — 3 Pills ───────────────────────────────────────
+  // ── State 4: done — 4 Lighthouse-Scores + 3 Core-Web-Vitals ───────
   const r = result!;
-  // Pill-Color basierend auf Lighthouse-Score-Range (0..1) bzw. Performance-Score (0..100)
-  const lcpColor = r.vitals.lcpScore == null ? "#94a3b8"
-                : r.vitals.lcpScore >= 0.9 ? "#22c55e"
-                : r.vitals.lcpScore >= 0.5 ? "#f59e0b" : "#ef4444";
-  const clsColor = r.vitals.clsScore == null ? "#94a3b8"
-                : r.vitals.clsScore >= 0.9 ? "#22c55e"
-                : r.vitals.clsScore >= 0.5 ? "#f59e0b" : "#ef4444";
-  const perfColor = r.scores.performance >= 90 ? "#22c55e"
-                  : r.scores.performance >= 50 ? "#f59e0b" : "#ef4444";
+  const perfColor = scoreColor(r.scores.performance, true);
+  const a11yColor = scoreColor(r.scores.accessibility, true);
+  const bpColor   = scoreColor(r.scores.bestPractices, true);
+  const seoColor  = scoreColor(r.scores.seo, true);
+  const lcpColor  = scoreColor(r.vitals.lcpScore);
+  const clsColor  = scoreColor(r.vitals.clsScore);
+  const tbtColor  = scoreColor(r.vitals.tbtScore);
 
   return (
     <div style={{
       marginTop: 12, padding: "14px 16px", borderRadius: 9,
       background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.22)",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 6L9 17l-5-5"/>
         </svg>
@@ -178,13 +201,66 @@ export default function PsiButton({ url, onTrack }: { url: string; onTrack?: () 
           Echte Werte · Google PageSpeed Insights
         </span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-        <Pill label="LCP" subtitle="Ladezeit Hauptinhalt" value={r.vitals.lcp} color={lcpColor} hint={lcpColor === "#22c55e" ? "im grünen Bereich" : lcpColor === "#f59e0b" ? "verbesserungsbedürftig" : "kritisch"} />
-        <Pill label="CLS" subtitle="Layout-Stabilität"    value={r.vitals.cls} color={clsColor} hint={clsColor === "#22c55e" ? "stabil" : clsColor === "#f59e0b" ? "Sprünge möglich" : "starke Sprünge"} />
-        <Pill label="Performance" subtitle="Gesamt-Score" value={`${r.scores.performance}/100`} color={perfColor} hint={perfColor === "#22c55e" ? "Top-Niveau" : perfColor === "#f59e0b" ? "Mittelfeld" : "schwach"} />
+
+      {/* Reihe 1 — 4 Lighthouse-Kategorie-Scores (kompakte Ringe) */}
+      <div style={{
+        fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+        letterSpacing: "0.06em", textTransform: "uppercase",
+        marginBottom: 6,
+      }}>
+        Lighthouse-Scores (4 Kategorien)
       </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 12 }}>
+        <ScoreChip label="Performance"   value={r.scores.performance}   color={perfColor} />
+        <ScoreChip label="Accessibility" value={r.scores.accessibility} color={a11yColor} />
+        <ScoreChip label="Best Practices" value={r.scores.bestPractices} color={bpColor}  />
+        <ScoreChip label="SEO"            value={r.scores.seo}           color={seoColor} />
+      </div>
+
+      {/* Reihe 2 — 3 Core-Web-Vitals (prominente Pills) */}
+      <div style={{
+        fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+        letterSpacing: "0.06em", textTransform: "uppercase",
+        marginBottom: 6,
+      }}>
+        Core Web Vitals
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+        <Pill
+          label="LCP" subtitle="Ladezeit Hauptinhalt"
+          value={r.vitals.lcp} color={lcpColor}
+          hint={scoreLabel(lcpColor)}
+        />
+        <Pill
+          label="INP / TBT" subtitle="Interaktivität (Lab-Proxy)"
+          value={r.vitals.tbt} color={tbtColor}
+          hint={scoreLabel(tbtColor)}
+        />
+        <Pill
+          label="CLS" subtitle="Layout-Stabilität"
+          value={r.vitals.cls} color={clsColor}
+          hint={scoreLabel(clsColor)}
+        />
+      </div>
+
       <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", marginTop: 9, lineHeight: 1.5 }}>
-        Vollständige Performance-Roadmap (TBT, FCP, Speed-Index, KB-Ersparnisse pro Audit) im Dashboard.
+        Lab-Daten via Lighthouse (Mobile-Profil). Echtes INP aus dem CrUX-Field-Data, plus FCP/Speed-Index/KB-Ersparnisse pro Audit, im Dashboard.
+      </div>
+    </div>
+  );
+}
+
+function ScoreChip({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div style={{
+      padding: "7px 8px", borderRadius: 6,
+      background: "rgba(0,0,0,0.28)",
+      border: `1px solid ${color}40`,
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+    }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.55)", fontWeight: 700, letterSpacing: "0.03em", textTransform: "uppercase", textAlign: "center" }}>
+        {label}
       </div>
     </div>
   );

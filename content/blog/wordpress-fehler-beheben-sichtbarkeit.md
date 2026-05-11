@@ -62,11 +62,12 @@ Ein externer Scanner sieht davon **nichts**. Er sieht nur, dass die Homepage in 
 
 Wer Schritt 4 fixen will, muss bei Schritt 1 anfangen. Genau hier scheitert die externe Diagnose.
 
-<div style="margin: 32px 0; padding: 24px 28px; background: linear-gradient(135deg, rgba(141,243,211,0.06), rgba(122,166,255,0.06)); border: 1px solid rgba(141,243,211,0.25); border-radius: 14px;">
-  <p style="margin: 0 0 8px; font-size: 12px; font-weight: 800; color: #8df3d3; letter-spacing: 0.08em; text-transform: uppercase;">Gratis-Scan</p>
-  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #fff;">In 60 Sekunden: Wo bremst deine Seite Google aus?</h3>
-  <p style="margin: 0 0 14px; font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6;">Externer Scan mit Sichtbarkeits-Score, Hoster-Erkennung und Top-Optimierungen. Kein Login nötig.</p>
-  <a href="/scan" style="display: inline-block; padding: 10px 22px; background: #8df3d3; color: #0b1220; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 14px;">Jetzt kostenlos scannen →</a>
+<div style="margin: 40px 0; padding: 28px 28px 24px; background: rgba(141,243,211,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px;">
+  <p style="margin: 0 0 10px; font-size: 11px; font-weight: 700; color: #8df3d3; letter-spacing: 0.08em; text-transform: uppercase;">Gratis-Scan · 60 Sekunden</p>
+  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">Wo bremst deine Seite Google aus?</h3>
+  <p style="margin: 0 0 20px; font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7;">Externer Scan mit Sichtbarkeits-Score, Hoster-Erkennung und Top-Optimierungen. Kein Login nötig.</p>
+  <a href="/scan" style="display: inline-block; padding: 11px 22px; background: #fff; color: #0b0c10; border-radius: 9px; font-weight: 700; font-size: 14px; text-decoration: none;">Jetzt kostenlos scannen →</a>
+  <p style="font-size: 11px; color: rgba(255,255,255,0.25); margin: 10px 0 0;">Kostenlos · Keine Anmeldung · DSGVO-konform</p>
 </div>
 
 ## Der Mythos vom „externen Scan"
@@ -116,11 +117,11 @@ Genau für diese Lücke haben wir das **Hybrid-Scan-Modell** gebaut.
 
 Das ist der Unterschied zwischen einem Symptom-Detektor und einem Mechaniker mit Diagnose-Gerät.
 
-<div style="margin: 32px 0; padding: 24px 28px; background: linear-gradient(135deg, rgba(192,132,252,0.06), rgba(167,139,250,0.06)); border: 1px solid rgba(167,139,250,0.3); border-radius: 14px;">
-  <p style="margin: 0 0 8px; font-size: 12px; font-weight: 800; color: #c084fc; letter-spacing: 0.08em; text-transform: uppercase;">Deep-Audit testen</p>
-  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #fff;">Plugin verbinden, Server-Wahrheit sehen.</h3>
-  <p style="margin: 0 0 14px; font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6;">Pro-Abo: 92-Punkt-Hybrid-Scan mit Datei + Zeilennummer-Diagnose. Read-Only, EU-Hosting, jederzeit kündbar.</p>
-  <a href="/fuer-agenturen#pricing" style="display: inline-block; padding: 10px 22px; background: #a78bfa; color: #0b1220; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 14px;">Pro-Plan ansehen →</a>
+<div style="margin: 40px 0; padding: 28px 28px 24px; background: rgba(141,243,211,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px;">
+  <p style="margin: 0 0 10px; font-size: 11px; font-weight: 700; color: #c084fc; letter-spacing: 0.08em; text-transform: uppercase;">Deep-Audit · Pro-Plan</p>
+  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">Plugin verbinden, Server-Wahrheit sehen.</h3>
+  <p style="margin: 0 0 20px; font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7;">92-Punkt-Hybrid-Scan mit Datei + Zeilennummer-Diagnose. Read-Only, EU-Hosting, jederzeit kündbar.</p>
+  <a href="/fuer-agenturen#pricing" style="display: inline-block; padding: 11px 22px; background: #fff; color: #0b0c10; border-radius: 9px; font-weight: 700; font-size: 14px; text-decoration: none;">Pro-Plan ansehen →</a>
 </div>
 
 ## Die 9,90-€-Soforthilfe für Nicht-Techniker
@@ -148,11 +149,11 @@ Die gleiche Tiefe für **IONOS, Hetzner, all-inkl, Goneo, 1&1, Webgo** — jeder
 
 **Wann der Guide nicht reicht:** Bei tief sitzenden Datenbank-Inkonsistenzen, Multi-Site-Konfigurationen oder bei Seiten mit Custom-Code, der vor Jahren von einem Entwickler hinterlassen wurde. Da ist der Deep-Audit-Plugin der ehrlichere Weg.
 
-<div style="margin: 32px 0; padding: 24px 28px; background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(245,158,11,0.06)); border: 1px solid rgba(251,191,36,0.3); border-radius: 14px;">
-  <p style="margin: 0 0 8px; font-size: 12px; font-weight: 800; color: #fbbf24; letter-spacing: 0.08em; text-transform: uppercase;">9,90 € Soforthilfe</p>
-  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #fff;">Hoster-spezifischer Rescue-Guide.</h3>
-  <p style="margin: 0 0 14px; font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6;">Erst Scan starten — der Hoster wird automatisch erkannt, du bekommst den passenden Guide direkt vorgeschlagen.</p>
-  <a href="/scan" style="display: inline-block; padding: 10px 22px; background: #fbbf24; color: #0b1220; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 14px;">Hoster prüfen, Guide finden →</a>
+<div style="margin: 40px 0; padding: 28px 28px 24px; background: rgba(141,243,211,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px;">
+  <p style="margin: 0 0 10px; font-size: 11px; font-weight: 700; color: #fbbf24; letter-spacing: 0.08em; text-transform: uppercase;">9,90 € Soforthilfe · kein Abo</p>
+  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">Hoster-spezifischer Rescue-Guide.</h3>
+  <p style="margin: 0 0 20px; font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7;">Erst Scan starten — der Hoster wird automatisch erkannt, du bekommst den passenden Guide direkt vorgeschlagen.</p>
+  <a href="/scan" style="display: inline-block; padding: 11px 22px; background: #fff; color: #0b0c10; border-radius: 9px; font-weight: 700; font-size: 14px; text-decoration: none;">Hoster prüfen, Guide finden →</a>
 </div>
 
 ## Wie du jetzt weitermachst

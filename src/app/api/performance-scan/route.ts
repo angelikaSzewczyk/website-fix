@@ -131,13 +131,28 @@ export async function POST(req: NextRequest) {
       }));
 
     // Anon-Mode (Button auf /scan/results): keine KI-Diagnose, kein
-    // Persistieren — schlankes JSON für die 3 Pills. Spart Tokens + Latenz.
+    // Persistieren — schlankes JSON für die 4 Scores + 3 Vitals. Spart
+    // Tokens + Latenz. TBT als Lab-Proxy für INP (Lighthouse liefert
+    // keine echten INP-Lab-Werte; echtes INP käme aus dem CrUX-Field-Data).
     if (anonMode) {
+      const tbtScore = (audits?.["total-blocking-time"]?.score ?? null) as number | null;
       return NextResponse.json({
         success: true,
         url: targetUrl,
-        scores: { performance: scores.performance, accessibility: scores.accessibility, seo: scores.seo },
-        vitals: { lcp: vitals.lcp, cls: vitals.cls, lcpScore: vitals.lcpScore, clsScore: vitals.clsScore },
+        scores: {
+          performance:   scores.performance,
+          accessibility: scores.accessibility,
+          bestPractices: scores.bestPractices,
+          seo:           scores.seo,
+        },
+        vitals: {
+          lcp:      vitals.lcp,
+          cls:      vitals.cls,
+          tbt:      vitals.tbt,
+          lcpScore: vitals.lcpScore,
+          clsScore: vitals.clsScore,
+          tbtScore: tbtScore,
+        },
       });
     }
 
