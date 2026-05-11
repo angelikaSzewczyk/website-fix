@@ -7,6 +7,7 @@ import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import SiteFooter from "./components/SiteFooter";
+import EngineeringSection from "./components/EngineeringSection";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 import PluginInfobox from "./components/PluginInfobox";
 
@@ -924,6 +925,13 @@ export default function Page() {
           </div>
         </section>
 
+
+        {/* THE ENGINEERING — Dev-zu-Dev-Trust-Section (11.05.2026,
+            Reaktion auf WordPress-Experten-Kritik "anonymer KI-Content").
+            Eigene Komponente, damit page.tsx schlank bleibt und die Section
+            später bei Bedarf auf /fuer-agenturen oder /engineering verschiebbar
+            ist. Bewusst vor dem Pricing platziert: erst Trust, dann Geld-Frage. */}
+        <EngineeringSection />
 
         {/* PRICING */}
         <section id="pricing" style={{ padding: "80px 24px" }}>
