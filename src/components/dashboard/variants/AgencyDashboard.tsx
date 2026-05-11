@@ -330,64 +330,75 @@ export default async function AgencyDashboard({
   return (
     <main style={{ padding: "28px 32px 80px", maxWidth: 1280, margin: "0 auto" }}>
 
-      {/* ── Sticky Action-Bar (Reihe 1: Title+CTA, Reihe 2: AgencyTabBar) ──
-          Vorher: ein Flex-Container für Title+CTA. Jetzt: Block-Container mit
-          zwei Reihen — die TabBar (Variante B, 09.05.2026) sitzt direkt unter
-          dem Header und scrollt mit dem Sticky-Block, sodass der Project-
-          Context beim Scrollen sichtbar bleibt. */}
+      {/* ── Page-Header (NICHT sticky — scrollt mit dem Content weg) ──
+          Variante B (11.05.2026): vorher war Title+CTA Teil eines dicken
+          Sticky-Blocks. Jetzt ist nur noch die TabBar darunter sticky
+          (siehe nächster Block), damit der Agent beim Scrollen mehr
+          vertikalen Platz fürs Daten-Grid hat und nur die Projekt-Identität
+          dauerhaft sichtbar bleibt. */}
       <div style={{
-        position: "sticky", top: 0, zIndex: 25,
-        marginLeft: -32, marginRight: -32, paddingLeft: 32, paddingRight: 32,
-        marginTop: -32, paddingTop: 24,
-        background: "rgba(11,12,16,0.78)",
-        backdropFilter: "blur(15px)",
-        WebkitBackdropFilter: "blur(15px)",
-        marginBottom: 24,
-        borderBottom: `1px solid ${C.divider}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        gap: 14, flexWrap: "wrap",
+        marginBottom: 18,
       }}>
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 14, flexWrap: "wrap",
-          paddingBottom: matrixRows.length > 0 ? 12 : 18,
-        }}>
-          <div>
-            <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              Kommandozentrale
-            </p>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
-              {agencyName ?? "Kunden-Übersicht"}
-            </h1>
-          </div>
-          <a href="#modal-new-client" style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "11px 22px", borderRadius: 10,
-            background: "rgba(124,58,237,0.85)",
-            border: "1px solid rgba(167,139,250,0.55)",
-            color: "#fff",
-            fontWeight: 700, fontSize: 13, textDecoration: "none",
-            whiteSpace: "nowrap",
-            boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
-            transition: "transform 0.12s ease, box-shadow 0.12s ease",
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Neuen Kunden anlegen
-          </a>
+        <div>
+          <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            Kommandozentrale
+          </p>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-0.025em" }}>
+            {agencyName ?? "Kunden-Übersicht"}
+          </h1>
         </div>
-
-        {matrixRows.length > 0 && (
-          <div style={{ paddingBottom: 14 }}>
-            <AgencyTabBar
-              tabs={matrixRows.map(r => ({
-                id: r.id,
-                url: r.url,
-                name: r.name,
-                client_label: r.client_label,
-              }))}
-              activeProjectId={activeProjectId}
-            />
-          </div>
-        )}
+        <a href="#modal-new-client" style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "11px 22px", borderRadius: 10,
+          background: "rgba(124,58,237,0.85)",
+          border: "1px solid rgba(167,139,250,0.55)",
+          color: "#fff",
+          fontWeight: 700, fontSize: 13, textDecoration: "none",
+          whiteSpace: "nowrap",
+          boxShadow: "0 4px 18px rgba(124,58,237,0.35)",
+          transition: "transform 0.12s ease, box-shadow 0.12s ease",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Neuen Kunden anlegen
+        </a>
       </div>
+
+      {/* ── Schlanker Sticky-Sub-Header: nur Projekt-Switcher ──
+          Variante B (11.05.2026). 3 sichtbare Tabs + Overflow-Dropdown +
+          "+"-Button — gibt der Agentur jederzeit den Kontext "Ich arbeite
+          gerade an Kunde X", ohne Vertikalraum für die Daten zu fressen. */}
+      {matrixRows.length > 0 && (
+        <div style={{
+          position: "sticky", top: 0, zIndex: 25,
+          marginLeft: -32, marginRight: -32, paddingLeft: 32, paddingRight: 32,
+          paddingTop: 10, paddingBottom: 10,
+          marginBottom: 18,
+          background: "rgba(11,12,16,0.82)",
+          backdropFilter: "blur(15px)",
+          WebkitBackdropFilter: "blur(15px)",
+          borderBottom: `1px solid ${C.divider}`,
+          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+        }}>
+          <span style={{
+            fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.35)",
+            letterSpacing: "0.1em", textTransform: "uppercase",
+            flexShrink: 0,
+          }}>
+            Projekt
+          </span>
+          <AgencyTabBar
+            tabs={matrixRows.map(r => ({
+              id: r.id,
+              url: r.url,
+              name: r.name,
+              client_label: r.client_label,
+            }))}
+            activeProjectId={activeProjectId}
+          />
+        </div>
+      )}
 
       {/* ── Stat Strip ──
           Klickbar (Drill-Down): jede Kachel führt zu einer gefilterten

@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { renderGuidePdfBuffer } from "@/lib/pdf/render-guide-pdf";
 import type { RescueGuide } from "@/lib/rescue-guides";
+import { PLANS, type PlanKey } from "@/lib/plans";
 
 /** Invalidiert den scan_cache für alle URLs, die dieser User schonmal gescannt hat.
  *  Wird bei JEDEM Plan-Wechsel gerufen — sonst sieht ein frisch upgegradeter
@@ -365,6 +366,50 @@ export async function POST(req: NextRequest) {
     // läuft der nächste Scan in den 24h-Cache vom alten Plan.
     if (updated[0]?.id) {
       await invalidateScanCacheForUser(updated[0].id);
+    }
+
+    // Welcome-Mail: Plan-Bestätigung mit Dashboard-Link + Spam-Hinweis.
+    // Fire-and-forget — Mail-Failure darf das Plan-Upgrade nicht blocken.
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const baseUrl = process.env.NEXTAUTH_URL ?? "https://website-fix.com";
+        const planLabel = PLANS[plan as PlanKey]?.label ?? plan;
+        const paidCents = session.amount_total ?? 0;
+        const amount = paidCents > 0
+          ? `${(paidCents / 100).toFixed(2).replace(".", ",")} €`
+          : null;
+        await resend.emails.send({
+          from:    "WebsiteFix <noreply@website-fix.com>",
+          to:      email,
+          subject: `Willkommen bei WebsiteFix ${planLabel} ✓`,
+          html: `
+            <div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0F172A;">
+              <h2 style="margin:0 0 12px;font-size:20px;">Dein ${planLabel}-Plan ist aktiv.</h2>
+              <p style="margin:0 0 16px;line-height:1.6;color:#475569;">
+                Vielen Dank für dein Vertrauen. Dein Dashboard ist sofort einsatzbereit —
+                logge dich ein und starte deinen ersten Scan.
+              </p>
+              <a href="${baseUrl}/dashboard" style="display:inline-block;padding:12px 22px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">
+                Zum Dashboard →
+              </a>
+              <p style="margin:20px 0 6px;padding:10px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:11.5px;color:#92400E;line-height:1.5;">
+                💡 <strong>Damit du keine Mails verpasst:</strong> bitte
+                <strong>noreply@website-fix.com</strong> zu deinen Kontakten hinzufügen
+                oder als „kein Spam" markieren — vor allem bei web.de/GMX-Postfächern.
+              </p>
+              <p style="margin:14px 0 0;font-size:12px;color:#94A3B8;">
+                Abo-Verwaltung: jederzeit unter
+                <a href="${baseUrl}/dashboard/settings" style="color:#475569;">Einstellungen → Abo &amp; Zahlung</a>
+                (Stripe-Kundenportal).
+                ${amount ? `<br/>Beleg: Stripe-Session ${session.id} · ${amount}` : ""}
+              </p>
+            </div>
+          `,
+        });
+      } catch (mailErr) {
+        console.error("[stripe-webhook] subscription welcome mail failed:", mailErr);
+      }
     }
 
     console.log(`[stripe-webhook] Plan upgraded: ${email} → ${plan} (sub: ${subscriptionId})`);

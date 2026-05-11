@@ -41,17 +41,26 @@ export default async function SettingsPage() {
     // brandColor wird für den Stripe-Button-Style genutzt — wir lesen
     // nur primary_color aus agency_settings, sonst nichts. Defensives
     // try/catch, damit ein DB-Fehler nicht die Settings-Page killt.
-    let brandColor = "#8df3d3";
+    let brandColor   = "#8df3d3";
+    let monthlyScans = 0;
     try {
       const sql = neon(process.env.DATABASE_URL!);
-      const rows = await sql`
-        SELECT primary_color FROM agency_settings WHERE user_id = ${userId} LIMIT 1
-      ` as Array<{ primary_color: string | null }>;
-      if (rows[0]?.primary_color && /^#[0-9a-fA-F]{6}$/.test(rows[0].primary_color)) {
-        brandColor = rows[0].primary_color;
+      const [brandRows, countRow] = await Promise.all([
+        sql`
+          SELECT primary_color FROM agency_settings WHERE user_id = ${userId} LIMIT 1
+        ` as unknown as Promise<{ primary_color: string | null }[]>,
+        sql`
+          SELECT COUNT(*)::int AS cnt FROM scans
+          WHERE user_id = ${userId}
+            AND created_at >= date_trunc('month', NOW())
+        ` as unknown as Promise<{ cnt: number }[]>,
+      ]);
+      if (brandRows[0]?.primary_color && /^#[0-9a-fA-F]{6}$/.test(brandRows[0].primary_color)) {
+        brandColor = brandRows[0].primary_color;
       }
+      monthlyScans = countRow[0]?.cnt ?? 0;
     } catch (err) {
-      console.error("[settings] brand color query failed:", err);
+      console.error("[settings] pro/agency query failed:", err);
     }
 
     return (
@@ -60,6 +69,8 @@ export default async function SettingsPage() {
         email={session.user.email ?? ""}
         plan={plan}
         brandColor={brandColor}
+        monthlyScans={monthlyScans}
+        scanLimit={getPlanQuota(plan).monthlyScans}
       />
     );
   }

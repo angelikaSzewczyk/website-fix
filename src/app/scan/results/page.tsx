@@ -9,6 +9,7 @@ import SiteFooter from "../../components/SiteFooter";
 
 import { type StoredScan, saveScanToStorage, loadScanFromStorage } from "@/lib/scan-storage";
 import { normalizePlan } from "@/lib/plans";
+import PsiButton from "./PsiButton";
 
 // ── Rich page item used in Deep-Scan Map ─────────────────────────────────────
 type PageItem = {
@@ -1414,6 +1415,11 @@ function ResultsInner() {
               )}
             </p>
           </div>
+
+          {/* ── PSI-LIVE-MESSUNG (anon, nicht-Demo) ── */}
+          {!isDemo && userTier === "anon" && scan && (
+            <PsiButton url={scan.url} onTrack={() => trackCta("Click PSI Anon", "results-hero")} />
+          )}
 
           {/* ── QUICK-CHECK-ZUSAMMENFASSUNG (anon/free) ── */}
           {userTier !== "paid" && <QuickCheckSummary scan={scan} isDemo={isDemo} />}

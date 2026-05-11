@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { PLANS, normalizePlan, type PlanKey } from "@/lib/plans";
+import { PLANS, normalizePlan, type PlanKey, getPlanQuota } from "@/lib/plans";
 
 const T = {
   page:    "#0b0c10",
@@ -41,12 +41,14 @@ function Spinner({ size = 14 }: { size?: number }) {
  * Hier KEIN Tab-Switcher — eine Sidebar-Klick = eine Mission.
  */
 export default function ProfileSettingsClient({
-  name, email, plan, brandColor,
+  name, email, plan, brandColor, monthlyScans, scanLimit,
 }: {
-  name:       string;
-  email:      string;
-  plan:       string;
-  brandColor: string;
+  name:         string;
+  email:        string;
+  plan:         string;
+  brandColor:   string;
+  monthlyScans: number;
+  scanLimit:    number;
 }) {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError,   setPortalError]   = useState<string | null>(null);
@@ -54,6 +56,9 @@ export default function ProfileSettingsClient({
 
   const canonical = (normalizePlan(plan) ?? "starter") as PlanKey;
   const planDef   = PLANS[canonical];
+  const quota     = getPlanQuota(plan);
+  const scansUsed = Math.min(monthlyScans, scanLimit);
+  const scanPct   = Math.max(0, Math.min(100, Math.round((scansUsed / Math.max(scanLimit, 1)) * 100)));
 
   async function openStripePortal() {
     setPortalLoading(true);
@@ -131,6 +136,46 @@ export default function ProfileSettingsClient({
               </span>
             </span>
           </div>
+        </div>
+
+        {/* Nutzung diesen Monat */}
+        <div style={{
+          background: T.card, border: `1px solid ${T.border}`,
+          borderRadius: 14, padding: "24px 26px",
+        }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 700 }}>Nutzung diesen Monat</h2>
+          <p style={{ margin: "0 0 18px", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+            Inkludiert in deinem {planDef.label}-Plan: {quota.monthlyScansLabel} · {quota.projectsLabel}. Setzt sich am 1. des Monats zurück.
+          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>Scans diesen Monat</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: T.textSub }}>
+              {scansUsed} / {scanLimit}
+            </span>
+          </div>
+          <div style={{
+            height: 6, borderRadius: 10,
+            background: "rgba(255,255,255,0.06)",
+            border: `1px solid ${T.border}`,
+            overflow: "hidden",
+          }}>
+            <div style={{
+              height: "100%",
+              width: `${scanPct}%`,
+              borderRadius: 10,
+              background: scansUsed >= scanLimit
+                ? "linear-gradient(90deg, #f87171, #fb923c)"
+                : scansUsed >= scanLimit * 0.85
+                ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
+                : `linear-gradient(90deg, ${planDef.color}, ${planDef.color}cc)`,
+              transition: "width 0.5s ease",
+            }} />
+          </div>
+          <p style={{ margin: "8px 0 0", fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+            {scansUsed >= scanLimit
+              ? "Fair-Use-Grenze erreicht — kontaktiere uns für Erhöhung."
+              : `${scanLimit - scansUsed} Scan${scanLimit - scansUsed !== 1 ? "s" : ""} verbleibend`}
+          </p>
         </div>
 
         {/* Stripe-Portal + Logout */}

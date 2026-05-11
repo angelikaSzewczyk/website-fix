@@ -23,7 +23,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-const VISIBLE_LIMIT = 6;
+// Variante B (11.05.2026): von 6 auf 3 reduziert. Begründung — der Sticky-
+// Sub-Header soll schmal bleiben (Fokus aufs Daten-Grid darunter). Mehr als
+// 3 Projekte landen ins Overflow-Dropdown mit Such-Input.
+const VISIBLE_LIMIT = 3;
 
 const C = {
   text:         "rgba(255,255,255,0.92)",
@@ -109,15 +112,15 @@ export default function AgencyTabBar({
             href={`/dashboard?project=${tab.id}`}
             title={tab.url}
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "7px 12px", borderRadius: 8,
-              background: active ? C.accentBg : C.card,
-              border: `1px solid ${active ? C.accentBorder : C.border}`,
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "5px 10px", borderRadius: 7,
+              background: active ? C.accentBg : "transparent",
+              border: `1px solid ${active ? C.accentBorder : "transparent"}`,
               color: active ? C.accent : C.textSub,
-              fontSize: 12, fontWeight: active ? 800 : 600,
+              fontSize: 11.5, fontWeight: active ? 800 : 600,
               textDecoration: "none",
               letterSpacing: "-0.005em",
-              maxWidth: 200,
+              maxWidth: 180,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               transition: "background 0.15s ease, border-color 0.15s ease, color 0.15s ease",
             }}
@@ -143,12 +146,12 @@ export default function AgencyTabBar({
             onClick={() => setOverflowOpen(o => !o)}
             aria-expanded={overflowOpen}
             style={{
-              display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "7px 11px", borderRadius: 8,
-              background: C.card,
-              border: `1px solid ${C.borderMid}`,
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "5px 9px", borderRadius: 7,
+              background: "transparent",
+              border: `1px solid ${C.border}`,
               color: C.textSub,
-              fontSize: 12, fontWeight: 700,
+              fontSize: 11.5, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
             }}
           >
@@ -255,7 +258,7 @@ export default function AgencyTabBar({
         title="Neuen Kunden anlegen"
         style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
-          width: 32, height: 32, borderRadius: 8,
+          width: 26, height: 26, borderRadius: 7,
           background: "rgba(16,185,129,0.10)",
           border: "1px solid rgba(16,185,129,0.30)",
           color: "#10B981",
@@ -264,7 +267,7 @@ export default function AgencyTabBar({
           flexShrink: 0,
         }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>

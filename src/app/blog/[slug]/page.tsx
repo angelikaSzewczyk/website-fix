@@ -118,8 +118,48 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   const { htmlWithIds, toc } = extractTocAndInjectIds(post.contentHtml);
 
+  // BlogPosting-JSON-LD: einmalig pro Page, KEIN FAQPage (siehe
+  // project_jsonld_decision.md — FAQ-Schema bewusst entfernt April 2026).
+  // BlogPosting hat dieses Problem nicht: nur eine Instanz, Google's
+  // duplicate-Detector triggert nur bei mehrfachem gleichem @type. Server-
+  // gerendert als <script type="application/ld+json"> via dangerouslySetInnerHTML.
+  const siteUrl = "https://website-fix.com";
+  const canonical = `${siteUrl}/blog/${params.slug}`;
+  const ogImagePath = (post.data.ogImage as string | undefined)
+    ?? (post.data.thumbnail as string | undefined)
+    ?? "/og-default.png";
+  const imageUrl = ogImagePath.startsWith("http") ? ogImagePath : `${siteUrl}${ogImagePath}`;
+  const publishedDate = post.data.date as string | undefined;
+  const blogPostingJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.data.title,
+    "description": post.data.description,
+    "image": imageUrl,
+    "datePublished": publishedDate,
+    "dateModified": publishedDate,
+    "author": {
+      "@type": "Organization",
+      "name": "WebsiteFix",
+      "url": siteUrl,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "WebsiteFix",
+      "url": siteUrl,
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": canonical,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
+      />
       <BlogHeader active="blog" lang="de" />
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 96px" }}>

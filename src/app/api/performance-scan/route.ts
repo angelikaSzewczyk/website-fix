@@ -4,6 +4,7 @@ import { guardRequest } from "@/lib/scan-guard";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { MODELS } from "@/lib/ai-models";
+import { checkIpRateLimitPsi } from "@/lib/ip-rate-limit";
 
 export const maxDuration = 60;
 
@@ -51,14 +52,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: guard.reason }, { status: 403 });
   }
 
-  const { url, strategy = "mobile" } = await req.json();
+  const { url, strategy = "mobile", mode } = await req.json();
   if (!url || typeof url !== "string") {
     return NextResponse.json({ success: false, error: "Bitte gib eine gültige URL ein." }, { status: 400 });
   }
   const device = strategy === "desktop" ? "desktop" : "mobile";
+  // "anon" mode: Anon-User auf /scan/results — eigenes Rate-Limit, kein
+  // KI-Diagnose-Text (Token sparen), schlankes JSON.
+  const anonMode = mode === "anon";
 
   let targetUrl = url.trim();
   if (!targetUrl.startsWith("http")) targetUrl = "https://" + targetUrl;
+
+  // Anon-Rate-Limit nur für nicht-eingeloggte User. Eingeloggte kommen am
+  // Limit vorbei (sie haben ein Abo-Kontingent über andere Quellen).
+  const sessionPre = await auth().catch(() => null);
+  if (!sessionPre?.user?.id) {
+    const ip = (req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? req.headers.get("x-real-ip") ?? "0.0.0.0").trim();
+    const rl = await checkIpRateLimitPsi(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: rl.reason ?? "Rate-Limit erreicht.", errorCode: rl.errorCode },
+        { status: rl.errorCode === "RATE_LIMITED" ? 429 : 400 },
+      );
+    }
+  }
 
   try {
     // PageSpeed Insights API
@@ -111,6 +129,17 @@ export async function POST(req: NextRequest) {
         score: a.score,
         kbSavings: BYTE_SAVING_AUDITS.has(id) ? extractKbSavings(a) : null,
       }));
+
+    // Anon-Mode (Button auf /scan/results): keine KI-Diagnose, kein
+    // Persistieren — schlankes JSON für die 3 Pills. Spart Tokens + Latenz.
+    if (anonMode) {
+      return NextResponse.json({
+        success: true,
+        url: targetUrl,
+        scores: { performance: scores.performance, accessibility: scores.accessibility, seo: scores.seo },
+        vitals: { lcp: vitals.lcp, cls: vitals.cls, lcpScore: vitals.lcpScore, clsScore: vitals.clsScore },
+      });
+    }
 
     // KI-Diagnose
     const prompt = `Du bist ein freundlicher Website-Performance-Experte.
