@@ -16,14 +16,12 @@ import { neon } from "@neondatabase/serverless";
 import type { Metadata } from "next";
 import ProfileSettingsClient from "./profile-settings-client";
 import FreeSettingsClient from "./free-settings-client";
-import { hasBrandingAccess } from "@/lib/plans";
+import { hasBrandingAccess, getPlanQuota } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Einstellungen — WebsiteFix",
   robots: { index: false },
 };
-
-const SCAN_LIMIT = 3;
 
 export default async function SettingsPage() {
   let session;
@@ -90,6 +88,11 @@ export default async function SettingsPage() {
     console.error("[settings] free-plan query failed:", err);
   }
 
+  // Scan-Limit aus PLAN_QUOTAS (Single Source of Truth) statt hartkodiert.
+  // Vorher stand SCAN_LIMIT = 3 hier (alter Free-Tier-Wert) — User auf Starter
+  // sah "3/3 Limit erreicht" obwohl Sidebar korrekt 10 zog. (12.05.2026 Fix)
+  const scanLimit = getPlanQuota(plan).monthlyScans;
+
   return (
     <FreeSettingsClient
       name={session.user.name ?? ""}
@@ -97,7 +100,7 @@ export default async function SettingsPage() {
       plan={plan}
       projectUrl={projectUrl}
       monthlyScans={monthlyScans}
-      scanLimit={SCAN_LIMIT}
+      scanLimit={scanLimit}
     />
   );
 }

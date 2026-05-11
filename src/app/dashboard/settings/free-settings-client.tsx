@@ -443,7 +443,7 @@ export default function FreeSettingsClient({
                   Du nutzt den Starter-Plan.
                 </p>
                 <p style={{ margin: "0 0 10px", fontSize: 12, color: D.textSub, lineHeight: 1.6 }}>
-                  Upgrade auf Professional für automatische PDF-Berichte, Full-Site Crawls und White-Label-Berichte.
+                  Upgrade auf Professional für unbegrenzte Scans, 10 Projekte, KI-Auto-Fix und White-Label-PDF.
                 </p>
                 <Link href="/#pricing" style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
