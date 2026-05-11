@@ -58,8 +58,10 @@ function ClaimInner() {
         }
       } catch { /* network error → retry */ }
 
-      if (attempts < 6) {
-        setTimeout(poll, 1500);
+      // Polling-Window 12×2s=24s (Stripe-Webhook-P95 ist ~15-25s, vorheriges
+      // 6×1.5s=9s war zu eng bei Webhook-Delay). User-Vertrauens-Fix 12.05.
+      if (attempts < 12) {
+        setTimeout(poll, 2000);
       } else if (!cancelled) {
         setVerified("pending");
       }

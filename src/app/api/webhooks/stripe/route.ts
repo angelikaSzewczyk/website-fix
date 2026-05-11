@@ -144,6 +144,27 @@ export async function POST(req: NextRequest) {
               }
             } catch (pdfErr) {
               console.error("[stripe-webhook] anon guide PDF render failed:", pdfErr);
+              // Admin-Alert bei PDF-Render-Failure — sonst silent. Best-effort
+              // (alerting darf den Webhook-Response nicht blockieren). Pricing-
+              // Card verspricht "PDF dauerhaft im Postfach" — wenn das systematisch
+              // versagt (z.B. Font-Asset fehlt nach Deploy), wollen wir es am
+              // Launch-Tag sofort wissen, nicht via Support-Ticket. (12.05.2026 Y2)
+              try {
+                const adminEmail = process.env.ADMIN_EMAIL;
+                if (adminEmail && process.env.RESEND_API_KEY) {
+                  const adminResend = new Resend(process.env.RESEND_API_KEY);
+                  const errMsg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
+                  await adminResend.emails.send({
+                    from:    "WebsiteFix Alerts <noreply@website-fix.com>",
+                    to:      adminEmail,
+                    subject: `[ALERT] PDF-Render fehlgeschlagen — Guide ${guideId}`,
+                    html: `<p>Stripe-Webhook konnte für Käufer <code>${buyerEmail}</code> kein PDF für Guide <code>${guideId}</code> rendern.</p>
+                           <p>Käufer hat den Online-Link erhalten, das PDF im Mail-Anhang fehlt.</p>
+                           <p><strong>Fehler:</strong> <code>${errMsg.slice(0, 500)}</code></p>
+                           <p>Session: <code>${session.id}</code></p>`,
+                  }).catch(() => { /* alerting failure ist non-fatal */ });
+                }
+              } catch { /* alerting failure ist non-fatal */ }
             }
 
             const resend = new Resend(process.env.RESEND_API_KEY);

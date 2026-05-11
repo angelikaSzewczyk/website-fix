@@ -235,8 +235,9 @@ Pro Fehler: Symptom + Wie testest du das + Wie fixt du das (max 3 Schritte)
 - Asset CleanUp (kostenlos) — selektives Script-Deaktivieren
 
 **6. Der WebsiteFix-Check (~200W)**
-- Scannt alle 3 Metriken + identifiziert konkrete Killer
-- Hoster-spezifischer Hosting-Speed-Guide (9,90 €) für genau diese Themen
+- WebsiteFix-Scanner identifiziert die **Bremsklotz-Issues** (langsames TTFB, Render-blocking JS, schwere Bilder, Cart-Fragments, DOM-Tiefe) — also die konkreten **Ursachen** schwacher Core Web Vitals
+- Direkte LCP/FID/CLS-Werte messen wir mit der **PageSpeed-Insights-API** (Pro-Dashboard, Button "Performance-Scan starten")
+- Anon-User: kostenloser Heuristik-Score auf /scan + Hosting-Speed-Guide 9,90 € mit Hoster-spezifischen TTFB-Optimierungen
 
 **7. CTA (~150W)**
 - Primary: "Core Web Vitals jetzt prüfen" → `/scan`

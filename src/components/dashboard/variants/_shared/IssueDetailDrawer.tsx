@@ -688,6 +688,12 @@ export function OptimizationPlanModal({ onClose, plan, builder, woo, speedScore,
           .wf-opt-plan-card * { color: #0b0c10 !important; }
           .wf-opt-plan-no-print { display: none !important; }
         }
+        /* Mobile <360px: enge Padding-Reduktion, sonst quetscht der Modal-
+           Inhalt visuell. Y3-Fix nach 12.05. Audit-Report. */
+        @media (max-width: 360px) {
+          .wf-opt-plan-root { padding: 8px !important; }
+          .wf-opt-plan-card > div { padding: 16px !important; }
+        }
       `}</style>
       <div className="wf-opt-plan-root" onClick={onClose} style={{
         position: "fixed", inset: 0, zIndex: 100,
