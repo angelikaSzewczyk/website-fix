@@ -925,6 +925,123 @@ export default function Page() {
         </section>
 
 
+        {/* TRUST-SECTION — "Agenturen kaufen Sicherheit, nicht Features"
+            Vier konkrete Trust-Hooks vor dem Pricing. Hintergrund: falsche
+            Fixes können Kunden-Beziehungen einer Agentur kaputt machen
+            (Accessibility-Scores runter, SEO verschlechtert, Site kaputt).
+            Diese Section beweist: WebsiteFix kann gar nicht kaputt machen,
+            weil wir keinen Schreibzugriff haben. Plus DSGVO/Aktivitäts-Log
+            als Haftungsschutz. (12.05.2026 Launch-Vorbereitung.) */}
+        <section style={{ padding: "80px 24px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 720, marginInline: "auto" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(74,222,128,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                Sicherheit zuerst
+              </p>
+              <h2 style={{ fontSize: "clamp(24px, 3.2vw, 40px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", lineHeight: 1.15, color: "#fff" }}>
+                Agenturen kaufen <span style={{ background: "linear-gradient(90deg,#4ade80,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Sicherheit</span>, nicht Features.
+              </h2>
+              <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}>
+                Falsche Fixes machen Sites kaputt, verschlechtern Accessibility-Scores oder SEO — und kosten dich den Kunden.
+                Deshalb haben wir uns für maximale Sicherheit entschieden: <strong style={{ color: "#fff" }}>WebsiteFix kann deine Site technisch gar nicht verändern.</strong>
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              {[
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  ),
+                  title: "Read-Only-Plugin",
+                  body: "Kein Schreibzugriff. Kein FTP. Kein Passwort-Sharing. Das Plugin liest WordPress-Status, schreibt aber NIE etwas zurück.",
+                  badge: "Plugin-Bytes: 0 geschrieben",
+                },
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                  ),
+                  title: "EU-Hosting + DSGVO-AVV",
+                  body: "Frankfurt-Server, ISO-27001-Provider, TLS-verschlüsselt. AVV als PDF im Account — vorausgefüllt mit deinem Agentur-Namen.",
+                  badge: "Server: 100% Deutschland",
+                },
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                      <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                  ),
+                  title: "Aktivitäts-Log",
+                  body: "Append-only Protokoll: Team-Einladungen, Kundenanlagen, Settings-Änderungen mit Zeitstempel. Im Streitfall der lückenlose Beleg.",
+                  badge: "Art. 30 DSGVO-tauglich",
+                },
+                {
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <polyline points="9 12 11 14 15 10"/>
+                    </svg>
+                  ),
+                  title: "BFSG-Compliance ab 06/2025",
+                  body: "Barrierefreiheitsstärkungsgesetz seit Juni 2025 Pflicht für fast alle Unternehmens-Sites. Unsere Scans liefern dir den Audit-Beleg.",
+                  badge: "Haftungs-Schutz dokumentiert",
+                },
+              ].map(t => (
+                <div key={t.title} style={{
+                  padding: "24px 22px", borderRadius: 14,
+                  background: "rgba(34,197,94,0.04)",
+                  border: "1px solid rgba(34,197,94,0.22)",
+                  display: "flex", flexDirection: "column", gap: 12,
+                }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 11,
+                    background: "rgba(34,197,94,0.12)",
+                    border: "1px solid rgba(34,197,94,0.30)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    {t.icon}
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                    {t.title}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.65, flex: 1 }}>
+                    {t.body}
+                  </p>
+                  <div style={{
+                    marginTop: "auto",
+                    padding: "5px 10px", borderRadius: 7,
+                    background: "rgba(34,197,94,0.10)",
+                    border: "1px solid rgba(34,197,94,0.25)",
+                    fontSize: 11, fontWeight: 700, color: "#22c55e",
+                    alignSelf: "flex-start",
+                  }}>
+                    {t.badge}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ margin: "32px auto 0", maxWidth: 720, textAlign: "center", fontSize: 13.5, color: "rgba(255,255,255,0.42)", lineHeight: 1.7 }}>
+              Konkret: Wir können keine PHP-Datei ändern, keinen Plugin-Eintrag in wp_options überschreiben,
+              keinen Inhalt löschen. Selbst wenn unser Server gehackt würde — deine Kundenseite bleibt
+              unverändert. <strong style={{ color: "rgba(255,255,255,0.65)" }}>Read-Only heißt wirklich Read-Only.</strong>
+            </p>
+          </div>
+        </section>
+
+
         {/* PRICING */}
         <section id="pricing" style={{ padding: "80px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
