@@ -4458,3 +4458,30 @@ html, body {
     gap: 14px;
   }
 }
+
+/* PluginInfobox — Mobile-Layout (siehe components/PluginInfobox.tsx).
+   Desktop ist Grid auto-1fr-auto (Shield, Text, CTA in einer Reihe).
+   Mobile bricht in Single-Column: Shield zentriert oben, Text-Block voll
+   breit, CTA full-width unten. Verhindert dass der Text-Block auf ~150 px
+   gequetscht wird. */
+@media (max-width: 700px) {
+  .wf-plugin-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    text-align: center;
+  }
+  .wf-plugin-grid .wf-plugin-icon {
+    margin: 0 auto;
+  }
+  .wf-plugin-grid > div:nth-child(2) {
+    /* Text-Block — Bullet-Pills auf Mobile linksbündig statt centered,
+       weil zentrierte Pills komisch aussehen wenn sie nicht gleichmäßig
+       umbrechen. */
+    text-align: left;
+  }
+  .wf-plugin-grid .wf-plugin-cta {
+    display: block;
+    text-align: center;
+    width: 100%;
+  }
+}

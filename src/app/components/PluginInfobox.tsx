@@ -8,6 +8,10 @@
  *
  * Tone-of-Voice: technische Klarheit + Sicherheit. Hauptbotschaft:
  * "Kein Passwort-Stress" + "Keine Schreibrechte" + "Tiefere Daten".
+ *
+ * Mobile-Layout: 3-Spalten-Grid bricht via globals.css @media-Query in
+ * Single-Column um (Shield zentriert oben, Text drunter, CTA full-width
+ * unten) — siehe .wf-plugin-grid in globals.css.
  */
 
 import Link from "next/link";
@@ -23,10 +27,10 @@ export default function PluginInfobox() {
         padding: "32px 32px",
         boxShadow: "0 12px 40px rgba(34,197,94,0.08)",
       }}>
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="wf-plugin-grid" style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 24, alignItems: "center" }}>
 
           {/* Shield-Icon */}
-          <div style={{
+          <div className="wf-plugin-icon" style={{
             width: 64, height: 64, borderRadius: 16, flexShrink: 0,
             background: "rgba(34,197,94,0.14)",
             border: "1px solid rgba(34,197,94,0.36)",
@@ -57,9 +61,34 @@ export default function PluginInfobox() {
             </p>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 14 }}>
               {[
-                { icon: "🔒", text: "Kein WP-Login nötig" },
-                { icon: "✕",  text: "Kein Schreibzugriff" },
-                { icon: "📊", text: "PHP + DB + Plugin-Diagnose" },
+                {
+                  text: "Kein WP-Login nötig",
+                  svg: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  ),
+                },
+                {
+                  text: "Kein Schreibzugriff",
+                  svg: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  ),
+                },
+                {
+                  text: "PHP + DB + Plugin-Diagnose",
+                  svg: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="18" y1="20" x2="18" y2="10"/>
+                      <line x1="12" y1="20" x2="12" y2="4"/>
+                      <line x1="6"  y1="20" x2="6"  y2="14"/>
+                    </svg>
+                  ),
+                },
               ].map(b => (
                 <span key={b.text} style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
@@ -68,7 +97,7 @@ export default function PluginInfobox() {
                   border: "1px solid rgba(255,255,255,0.08)",
                   fontSize: 12, color: "rgba(255,255,255,0.65)",
                 }}>
-                  <span aria-hidden="true">{b.icon}</span>
+                  <span style={{ color: "rgba(255,255,255,0.55)", display: "inline-flex" }}>{b.svg}</span>
                   {b.text}
                 </span>
               ))}
@@ -78,6 +107,7 @@ export default function PluginInfobox() {
           {/* CTA */}
           <Link
             href="/plugin"
+            className="wf-plugin-cta"
             style={{
               flexShrink: 0,
               padding: "12px 26px", borderRadius: 11,
