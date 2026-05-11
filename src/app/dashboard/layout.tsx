@@ -7,10 +7,8 @@ import SignOutForm from "./components/signout-form";
 import BrandLogo from "../components/BrandLogo";
 import FreeSidebar, { FREE_SIDEBAR_W } from "./components/free-sidebar";
 import PendingClaimHandler from "./components/PendingClaimHandler";
-import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue, isAgency, isAtLeastProfessional } from "@/lib/plans";
+import { normalizePlan, getPlanTheme, hasBrandingAccess, isLegacyPlanValue, isAgency, isAtLeastProfessional, getPlanQuota } from "@/lib/plans";
 import { touchLastSeen } from "@/lib/heartbeat";
-
-const SCAN_LIMIT = 3;
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -220,7 +218,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             firstName={userName}
             plan={plan}
             monthlyScans={monthlyScans}
-            scanLimit={SCAN_LIMIT}
+            scanLimit={getPlanQuota(plan).monthlyScans}
             projectUrl={projectUrl}
             unreadTickets={unreadTickets}
           />
