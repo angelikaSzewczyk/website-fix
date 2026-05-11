@@ -8,6 +8,8 @@ import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import SiteFooter from "./components/SiteFooter";
 import EngineeringSection from "./components/EngineeringSection";
+import PluginStackComparison from "./components/PluginStackComparison";
+import FounderPledge from "./components/FounderPledge";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 import PluginInfobox from "./components/PluginInfobox";
 
@@ -932,6 +934,16 @@ export default function Page() {
             später bei Bedarf auf /fuer-agenturen oder /engineering verschiebbar
             ist. Bewusst vor dem Pricing platziert: erst Trust, dann Geld-Frage. */}
         <EngineeringSection />
+
+        {/* PLUGIN-STACK-VERGLEICH — "Eine SaaS statt 15 Plugins"
+            Strategische Abgrenzung gegen den eigentlichen Konkurrenten:
+            das typische 12-15-Plugin-Sammelsurium des DACH-WP-Solopreneurs. */}
+        <PluginStackComparison />
+
+        {/* FOUNDER-PLEDGE — Pre-Launch-Ersatz für Testimonials.
+            Drei überprüfbare Versprechen + Signatur statt erfundene
+            5-Sterne-Sprechblasen (UWG-konform). */}
+        <FounderPledge />
 
         {/* PRICING */}
         <section id="pricing" style={{ padding: "80px 24px" }}>
