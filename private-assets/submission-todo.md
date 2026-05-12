@@ -1,14 +1,19 @@
-# Submission-TODO — Stand 2026-05-12 14:30
+# Submission-TODO — Stand 2026-05-12 abends
 
-**Optimizer ist eingereicht.** Hier die offenen Schritte bis zur Live-Schaltung beider Plugins.
+**Tagesleistung 12.05.:**
+- Optimizer-ZIP bei WP.org hochgeladen (14:30 UTC) mit Pre-Empt-Text
+- WP-Bridge Dead-Code aus White-Label-Settings entfernt (-194 Zeilen)
+- SEO-Cluster Post #2 „XML-RPC deaktivieren" geschrieben (~2.000 Wörter, 11 Sektionen, HowTo-Schema) + Thumbnail eingebunden
+- xmlrpc-disable-Snippet bekam blogPost-Outbound-Verknüpfung in der Library
+
+**Für morgen + die nächsten Tage:**
 
 ---
 
-## Phase 1 — Today (12.05.)
+## Phase 1 — Morgen früh (13.05.)
 
-- [x] **Optimizer-ZIP hochgeladen** mit Pre-Empt-Text (14:30 UTC)
-- [ ] **Bestätigungs-Mail von WordPress.org abwarten** ("Plugin submission received")
-  - Sollte innerhalb 1–2 Stunden eintreffen
+- [ ] **Bestätigungs-Mail von WordPress.org checken** ("Plugin submission received")
+  - Sollte über Nacht oder morgen früh eintreffen
   - Mail-Subject typisch: "[WordPress Plugin Directory] Plugin submission received"
 - [ ] **Bestätigung notieren**: Submission-ID + Datum/Uhrzeit irgendwo speichern
 
