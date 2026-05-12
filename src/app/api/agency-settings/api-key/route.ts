@@ -21,7 +21,7 @@
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
-import { isAgency } from "@/lib/plans";
+import { isPaidPlan } from "@/lib/plans";
 import { encrypt, generateApiKey, sha256Hex } from "@/lib/crypto";
 
 export const runtime = "nodejs";
@@ -30,12 +30,12 @@ export async function POST() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // WP-Bridge ist Agency-only. Bewusst strenger als hasBrandingAccess —
-  // Pro-User können kein eigenes WordPress-Plugin haben (Plan-Restriction
-  // + Cost-Control).
+  // WP-Bridge ist ab jedem zahlenden Plan verfügbar (Smart-Fix-Pivot 08.05.):
+  // eingeloggt + aktiv = Plugin-Anbindung inklusive. Per-Plan-Feature-Gating
+  // passiert downstream (verify-Endpoint liefert Features-Map plan-aware).
   const plan = (session.user as { plan?: string }).plan;
-  if (!isAgency(plan)) {
-    return NextResponse.json({ error: "WP-Bridge ist Agency-Plan-Feature." }, { status: 403 });
+  if (!isPaidPlan(plan)) {
+    return NextResponse.json({ error: "Plugin-Anbindung erfordert einen aktiven Plan." }, { status: 403 });
   }
 
   const apiKey = generateApiKey();
@@ -82,8 +82,8 @@ export async function DELETE() {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const plan = (session.user as { plan?: string }).plan;
-  if (!isAgency(plan)) {
-    return NextResponse.json({ error: "WP-Bridge ist Agency-Plan-Feature." }, { status: 403 });
+  if (!isPaidPlan(plan)) {
+    return NextResponse.json({ error: "Plugin-Anbindung erfordert einen aktiven Plan." }, { status: 403 });
   }
 
   try {

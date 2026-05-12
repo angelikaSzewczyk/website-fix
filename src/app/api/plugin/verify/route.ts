@@ -9,7 +9,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { isAgency } from "@/lib/plans";
+import { isPaidPlan, isAgency, isAtLeastProfessional } from "@/lib/plans";
 
 // In-memory rate limit: 60 req / 60 min per IP
 const ipHits = new Map<string, { count: number; resetAt: number }>();
@@ -69,10 +69,10 @@ export async function POST(req: NextRequest) {
 
   const user = rows[0];
 
-  if (!isAgency(user.plan)) {
+  if (!isPaidPlan(user.plan)) {
     return NextResponse.json({
       valid: false,
-      error: `Agency plan required. Current plan: ${user.plan}`,
+      error: `Aktiver Plan erforderlich. Current plan: ${user.plan}`,
       plan: user.plan,
     }, { status: 403 });
   }
@@ -86,18 +86,24 @@ export async function POST(req: NextRequest) {
     `.catch(() => {});
   }
 
+  // Plan-aware Features-Map — Connector zeigt im WP-Admin nur Features,
+  // die der gebuchte Plan tatsächlich abdeckt. Verhindert UI-Versprechen,
+  // die backend-seitig nicht eingelöst werden.
+  const isAgencyPlan = isAgency(user.plan);
+  const isProOrAgency = isAtLeastProfessional(user.plan);
+
   return NextResponse.json({
     valid: true,
     agency_id:    user.id,
-    agency_name:  user.agency_name ?? user.name ?? "WebsiteFix Agency",
+    agency_name:  user.agency_name ?? user.name ?? "WebsiteFix",
     plan:         user.plan,
     primary_color: user.primary_color ?? "#FBBF24",
     logo_url:     user.logo_url ?? null,
     features: {
-      remote_fix:    true,
-      bulk_scan:     true,
-      white_label:   true,
-      ki_mass_fixer: true,
+      remote_fix:    isProOrAgency,   // Pro + Agency dürfen Fixes per Klick ausrollen
+      bulk_scan:     isAgencyPlan,    // Agency-only (Cost-Control)
+      white_label:   isAgencyPlan,    // Agency-only
+      ki_mass_fixer: isAgencyPlan,    // Agency-only
     },
   });
 }

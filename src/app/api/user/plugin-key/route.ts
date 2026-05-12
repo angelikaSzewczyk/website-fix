@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
 import { randomBytes } from "crypto";
-import { isAgency } from "@/lib/plans";
+import { isPaidPlan } from "@/lib/plans";
 
 function generateKey(): string {
   return "wf_live_" + randomBytes(24).toString("hex");
@@ -33,8 +33,8 @@ export async function GET() {
   const user = session?.user as UserSession | undefined;
   if (!user?.id) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-  if (!isAgency(user.plan)) {
-    return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
+  if (!isPaidPlan(user.plan)) {
+    return NextResponse.json({ error: "Plugin-Anbindung erfordert einen aktiven Plan." }, { status: 403 });
   }
 
   const sql = neon(process.env.DATABASE_URL!);
@@ -47,8 +47,8 @@ export async function POST() {
   const user = session?.user as UserSession | undefined;
   if (!user?.id) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-  if (!isAgency(user.plan)) {
-    return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
+  if (!isPaidPlan(user.plan)) {
+    return NextResponse.json({ error: "Plugin-Anbindung erfordert einen aktiven Plan." }, { status: 403 });
   }
 
   const sql = neon(process.env.DATABASE_URL!);

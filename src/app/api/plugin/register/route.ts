@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { isAgency } from "@/lib/plans";
+import { isPaidPlan } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
   const api_key = req.headers.get("x-wf-api-key")?.trim() ?? "";
@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
     SELECT id, plan FROM users WHERE plugin_api_key = ${api_key} LIMIT 1
   ` as { id: number; plan: string }[];
 
-  if (!users.length || !isAgency(users[0].plan)) {
-    return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
+  if (!users.length || !isPaidPlan(users[0].plan)) {
+    return NextResponse.json({ error: "Aktiver Plan erforderlich" }, { status: 403 });
   }
 
   const userId = users[0].id;

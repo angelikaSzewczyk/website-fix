@@ -7,7 +7,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { neon } from "@neondatabase/serverless";
-import { isAgency } from "@/lib/plans";
+import { isPaidPlan } from "@/lib/plans";
 
 export async function GET() {
   const session = await auth();
@@ -16,8 +16,8 @@ export async function GET() {
   if (!user?.id) {
     return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
   }
-  if (!isAgency(user.plan)) {
-    return NextResponse.json({ error: "Agency plan required" }, { status: 403 });
+  if (!isPaidPlan(user.plan)) {
+    return NextResponse.json({ error: "Aktiver Plan erforderlich" }, { status: 403 });
   }
 
   const sql = neon(process.env.DATABASE_URL!);

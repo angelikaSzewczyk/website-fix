@@ -38,7 +38,8 @@ type Loaded = {
 type Props = {
   /** Numerische User-ID = agency_id für Lead-Snippet. */
   agencyId: string;
-  /** Plan-String — Settings-Page hat bereits hasBrandingAccess gegated, aber WP-Bridge ist Agency-only. */
+  /** Plan-String — gated wird auf Page-Ebene über hasBrandingAccess. WP-Bridge
+   *  ist ab jedem aktiven Plan verfügbar (Smart-Fix-Pivot 08.05.). */
   plan: string;
 };
 
