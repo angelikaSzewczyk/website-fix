@@ -113,7 +113,7 @@ class WFOCO_Admin_Page {
                 <?php esc_html_e( 'WebsiteFix One-Click Optimizer', 'websitefix-one-click-optimizer' ); ?>
             </h1>
             <p class="description" style="max-width: 720px; font-size: 13.5px; color: #475569; line-height: 1.65; margin: 8px 0 24px;">
-                <?php esc_html_e( '5 kuratierte WordPress-Performance-Fixes mit einem Klick. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins und greift dann nicht ein) und sofortiger Rückgängig-Möglichkeit. Snippets werden als Must-Use-Plugin-Datei in /wp-content/mu-plugins/wf-optimizer/ abgelegt — kein Theme-Edit, kein Reload-Workaround.', 'websitefix-one-click-optimizer' ); ?>
+                <?php esc_html_e( '5 kuratierte WordPress-Performance-Fixes mit einem Klick. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins und greift dann nicht ein) und sofortiger Rückgängig-Möglichkeit. Snippets werden als Must-Use-Plugin-Datei in /wp-content/mu-plugins/ (mit wf-optimizer-Präfix) abgelegt — kein Theme-Edit, kein Reload-Workaround.', 'websitefix-one-click-optimizer' ); ?>
             </p>
 
             <?php if ( $notice ) : ?>
@@ -129,7 +129,7 @@ class WFOCO_Admin_Page {
                        printf(
                            /* translators: %s: full path to mu-plugins directory */
                            esc_html__( 'Das Verzeichnis %s ist nicht schreibbar. Bitte CHMOD oder Hosting-Support kontaktieren — sonst können wir keine Fixes aktivieren.', 'websitefix-one-click-optimizer' ),
-                           '<code>' . esc_html( WFOCO_MU_DIR ) . '</code>'
+                           '<code>' . esc_html( WPMU_PLUGIN_DIR ) . '</code>'
                        );
                        ?>
                     </p>
@@ -253,7 +253,7 @@ class WFOCO_Admin_Page {
 
             <p style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; line-height: 1.6;">
                 <strong><?php esc_html_e( 'Technische Details:', 'websitefix-one-click-optimizer' ); ?></strong>
-                <?php esc_html_e( 'Aktivierte Fixes liegen als einzelne PHP-Dateien in /wp-content/mu-plugins/wf-optimizer/. WordPress lädt mu-plugins automatisch vor regulären Plugins — kein Activation-Workflow nötig. Deaktivieren = Datei wird gelöscht. Standard-WordPress-Verhalten ist sofort wieder aktiv.', 'websitefix-one-click-optimizer' ); ?>
+                <?php esc_html_e( 'Aktivierte Fixes liegen als einzelne PHP-Dateien in /wp-content/mu-plugins/ (Präfix wf-optimizer-). WordPress lädt mu-plugins automatisch vor regulären Plugins — kein Activation-Workflow nötig. Deaktivieren = Datei wird gelöscht. Standard-WordPress-Verhalten ist sofort wieder aktiv.', 'websitefix-one-click-optimizer' ); ?>
                 <br/>
                 <a href="https://website-fix.com/smart-fix-library?utm_source=wp-plugin&utm_medium=optimizer&utm_campaign=lab-link" target="_blank" rel="noopener noreferrer">
                     <?php esc_html_e( 'Hintergrund-Lab zu den Snippets auf website-fix.com →', 'websitefix-one-click-optimizer' ); ?>

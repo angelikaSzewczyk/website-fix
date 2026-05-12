@@ -3,7 +3,7 @@
  * WFOCO_Optimizer — Apply/Revert-Engine.
  *
  * Schreibt einen Fix als mu-plugin-Datei nach
- * /wp-content/mu-plugins/wf-optimizer/<slug>.php. WordPress lädt mu-plugins
+ * /wp-content/mu-plugins/wf-optimizer-<slug>.php. WordPress lädt mu-plugins
  * automatisch (vor regulären Plugins, ohne Activation), daher greift der
  * Fix sofort nach dem Schreiben — kein Reload-Workaround nötig.
  *
@@ -32,12 +32,13 @@ class WFOCO_Optimizer {
             ) );
         }
 
-        // mu-plugins/wf-optimizer/ sicherstellen
+        // mu-plugins/ sicherstellen (flach, kein Subfolder — WordPress lädt
+        // nur direkt unter WPMU_PLUGIN_DIR liegende .php-Files)
         if ( ! self::ensure_mu_dir() ) {
             return array( 'ok' => false, 'message' => sprintf(
                 /* translators: %s: path to mu-plugins directory */
                 __( 'Verzeichnis %s konnte nicht angelegt werden. Bitte Schreibrechte auf wp-content/mu-plugins/ prüfen.', 'websitefix-one-click-optimizer' ),
-                WFOCO_MU_DIR
+                WPMU_PLUGIN_DIR
             ) );
         }
 
@@ -167,14 +168,19 @@ class WFOCO_Optimizer {
 
     /**
      * Pfad zur mu-plugin-Datei eines Slugs.
+     *
+     * FLACH unter WPMU_PLUGIN_DIR mit Präfix wf-optimizer-, weil WordPress'
+     * wp_get_mu_plugins() Subfolder ignoriert (siehe wp-includes/load.php).
+     * Wenn wir in einen Unterordner schreiben würden, würde keine Datei je
+     * von WordPress geladen werden — die Fixes wären tot.
      */
     public static function file_path( $slug ) {
         $safe = preg_replace( '/[^a-z0-9\-]/', '', strtolower( (string) $slug ) );
-        return trailingslashit( WFOCO_MU_DIR ) . $safe . '.php';
+        return trailingslashit( WPMU_PLUGIN_DIR ) . WFOCO_FILE_PREFIX . $safe . '.php';
     }
 
     /**
-     * Stellt sicher, dass mu-plugins/wf-optimizer/ existiert + schreibbar.
+     * Stellt sicher, dass mu-plugins/ existiert + schreibbar.
      */
     private static function ensure_mu_dir() {
         if ( ! file_exists( WPMU_PLUGIN_DIR ) ) {
@@ -182,21 +188,16 @@ class WFOCO_Optimizer {
                 return false;
             }
         }
-        if ( ! file_exists( WFOCO_MU_DIR ) ) {
-            if ( ! @wp_mkdir_p( WFOCO_MU_DIR ) ) {
-                return false;
-            }
-        }
-        return is_writable( WFOCO_MU_DIR );
+        return is_writable( WPMU_PLUGIN_DIR );
     }
 
     /**
      * Prüft, ob das Plugin überhaupt schreiben darf — für Admin-Page-Warnung.
      */
     public static function is_writable_environment() {
-        if ( file_exists( WFOCO_MU_DIR ) ) {
-            return is_writable( WFOCO_MU_DIR );
+        if ( file_exists( WPMU_PLUGIN_DIR ) ) {
+            return is_writable( WPMU_PLUGIN_DIR );
         }
-        return is_writable( dirname( WFOCO_MU_DIR ) );
+        return is_writable( dirname( WPMU_PLUGIN_DIR ) );
     }
 }

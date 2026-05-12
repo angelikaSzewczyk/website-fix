@@ -103,14 +103,13 @@ class WFOCO_Diagnostics {
     }
 
     /**
-     * Query-String-Status: macht einen Dummy-Test-Call durch unsere Filter.
-     * Wenn wir den Filter installiert haben, kommt eine Stripped-URL zurück.
+     * Query-String-Status. Liest die Option statt einen Filter-Probe durch
+     * fremde Plugin-Handler zu jagen — manche Caching-/Security-Plugins
+     * haben Handler auf style_loader_src, die auf synthetische Test-URLs
+     * mit Fatal antworten. v0.1.0-Workaround: nur Option-State lesen.
      */
     private static function check_query_strings() {
-        $test_url = 'https://example.com/wp-content/themes/test/style.css?ver=1.0';
-        $filtered = apply_filters( 'style_loader_src', $test_url );
-
-        if ( strpos( $filtered, '?ver=' ) === false ) {
+        if ( WFOCO_Optimizer::is_active( 'query-string-cleaner' ) ) {
             return array(
                 'active' => true,
                 'label'  => 'gestrippt',
@@ -125,40 +124,19 @@ class WFOCO_Diagnostics {
     }
 
     /**
-     * jQuery-Migrate-Status: schauen, ob es in den default-scripts noch
-     * als Dependency von jquery registriert ist.
+     * jQuery-Migrate-Status. Selbe Sicherheits-Strategie wie bei Query-Strings:
+     * Option-State statt riskante WP_Scripts-Inspektion. Im Admin-Kontext
+     * würde new WP_Scripts() + wp_default_scripts() zu Doppel-Registrierungen
+     * und Fatal-Errors führen, wenn andere Plugins auf wp_default_scripts hooken.
      */
     private static function check_jquery_migrate() {
-        global $wp_scripts;
-        // wp_scripts ist im Admin meist initialisiert. Falls nicht, triggern
-        // wir das via wp_default_scripts-Action manuell.
-        if ( ! $wp_scripts instanceof WP_Scripts ) {
-            $wp_scripts = new WP_Scripts();
-            wp_default_scripts( $wp_scripts );
-        }
-        $deps = isset( $wp_scripts->registered['jquery'] )
-            ? (array) $wp_scripts->registered['jquery']->deps
-            : array();
-        $migrate_in_deps = in_array( 'jquery-migrate', $deps, true );
-
-        // Im Admin-Kontext ist jquery-migrate normalerweise Bestandteil von
-        // jquery's Deps. Unser Snippet entfernt sie nur im Frontend (is_admin
-        // returnt true im Admin), also greift unsere Diagnostik hier nicht
-        // direkt. Workaround: wir prüfen, ob unser Frontend-Filter installiert
-        // ist via has_filter().
-        $filter_active = has_action( 'wp_default_scripts' );
-        // has_filter mit Funktions-Name als Closure-Detektor ist unzuverlässig.
-        // Stattdessen: Status aus Optionen ablesen.
-        $is_active_per_option = WFOCO_Optimizer::is_active( 'jquery-migrate-remove' );
-
-        if ( $is_active_per_option ) {
+        if ( WFOCO_Optimizer::is_active( 'jquery-migrate-remove' ) ) {
             return array(
                 'active' => true,
                 'label'  => 'entfernt',
                 'detail' => __( 'jquery-migrate.min.js wird im Frontend nicht mehr geladen', 'websitefix-one-click-optimizer' ),
             );
         }
-        unset( $filter_active, $migrate_in_deps ); // unused-warnings vermeiden
         return array(
             'active' => false,
             'label'  => 'geladen',

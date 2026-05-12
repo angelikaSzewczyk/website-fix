@@ -4,7 +4,7 @@ Tags: performance, optimization, heartbeat, xmlrpc, jquery
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,7 +35,7 @@ Entfernt `jquery-migrate.min.js` (~11 KB) aus dem Frontend, lässt sie im Admin 
 
 = Wie es technisch funktioniert =
 
-Wenn du einen Fix aktivierst, schreibt das Plugin eine einzelne PHP-Datei nach `/wp-content/mu-plugins/wf-optimizer/<fix-slug>.php`. WordPress lädt Must-Use-Plugins **automatisch vor allen regulären Plugins** — kein Activation-Workflow nötig, kein Reload-Trick, der Fix greift sofort.
+Wenn du einen Fix aktivierst, schreibt das Plugin eine einzelne PHP-Datei nach `/wp-content/mu-plugins/wf-optimizer-<fix-slug>.php`. WordPress lädt Must-Use-Plugins **automatisch vor allen regulären Plugins** — kein Activation-Workflow nötig, kein Reload-Trick, der Fix greift sofort.
 
 Beim Deaktivieren wird die Datei gelöscht. Standard-WordPress-Verhalten ist sofort wieder aktiv. Beim Deinstallieren des Plugins selbst werden ALLE Fix-Dateien automatisch entfernt.
 
@@ -67,7 +67,7 @@ WebsiteFix ist ein in Frankfurt entwickeltes WordPress-Diagnose-Tool. Die fünf 
 
 = Wird mein Theme oder meine functions.php verändert? =
 
-Nein. Das Plugin schreibt ausschließlich in `/wp-content/mu-plugins/wf-optimizer/` und legt dort pro aktivem Fix eine eigene PHP-Datei an. Dein Theme, deine `functions.php`, deine `wp-config.php` werden nie angerührt.
+Nein. Das Plugin schreibt ausschließlich in `/wp-content/mu-plugins/` mit dem Präfix `wf-optimizer-` (z.B. `wf-optimizer-heartbeat-throttle.php`). Dein Theme, deine `functions.php`, deine `wp-config.php` werden nie angerührt.
 
 = Was passiert, wenn ich das Plugin deaktiviere? =
 
@@ -121,10 +121,23 @@ Ja. Es verarbeitet keine personenbezogenen Daten, sendet nichts an externe Serve
 
 == Changelog ==
 
+= 0.1.1 — 2026-05-12 =
+* **Kritischer Bug-Fix:** mu-plugin-Files wurden in v0.1.0 in einen
+  Unterordner (`mu-plugins/wf-optimizer/`) geschrieben, den WordPress nicht
+  automatisch auflöst. Folge: aktivierte Fixes lagen auf Disk, liefen aber
+  nicht. Jetzt: flach unter `mu-plugins/` mit Präfix `wf-optimizer-`.
+* **Critical-Error-Fix:** Die Live-Diagnostik für Query-Strings und
+  jQuery-Migrate triggerte einen Fatal, wenn fremde Plugins Handler auf
+  `style_loader_src` oder `wp_default_scripts` registriert hatten und auf
+  unsere synthetischen Test-URLs mit einer Exception reagierten. Jetzt
+  liest die Diagnostik den Option-State direkt — kein Filter-Probe mehr.
+* Uninstall räumt jetzt sowohl die neuen flachen Files als auch die
+  Legacy-Files aus dem v0.1.0-Unterordner auf.
+
 = 0.1.0 — 2026-05-13 =
 * Erste öffentliche Beta-Version.
 * 5 Fix-Cards: Heartbeat, XML-RPC, Emojis & oEmbed, Query-Strings, jQuery-Migrate.
-* Apply/Revert via Must-Use-Plugin-Dateien in `/wp-content/mu-plugins/wf-optimizer/`.
+* Apply/Revert via Must-Use-Plugin-Dateien in `/wp-content/mu-plugins/`.
 * Auto-Safety-Check pro Fix (erkennt konfligierende Plugins).
 * Live-Diagnostic pro Card (zeigt aktuellen Status: aktiv/inaktiv + Detail).
 * Code-Preview-Toggle pro Card (volle Transparenz vor Apply).
@@ -133,6 +146,9 @@ Ja. Es verarbeitet keine personenbezogenen Daten, sendet nichts an externe Serve
 * Sauberer Uninstall-Pfad — alle Fix-Dateien werden beim Plugin-Delete entfernt.
 
 == Upgrade Notice ==
+
+= 0.1.1 =
+**Bug-Fix-Release:** v0.1.0 hatte zwei kritische Bugs (mu-plugin-Subfolder wurde nicht autoloaded → Fixes liefen nicht, Critical-Error bei der Diagnostik). Beide behoben. Upgrade dringend empfohlen.
 
 = 0.1.0 =
 Erste öffentliche Beta. Aktiv getestet auf den fünf größten deutschen Shared-Hosting-Anbietern (IONOS, Strato, All-Inkl, Hetzner, webgo) und unter WordPress-Multisite.

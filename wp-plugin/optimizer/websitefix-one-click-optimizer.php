@@ -3,7 +3,7 @@
  * Plugin Name:       WebsiteFix One-Click Performance Optimizer
  * Plugin URI:        https://website-fix.com/plugin
  * Description:       Aktiviere 5 kuratierte WordPress-Performance-Fixes mit einem Klick: Heartbeat drosseln, XML-RPC abschalten, Emojis & oEmbed entfernen, Query-Strings strippen, jQuery-Migrate aus dem Frontend werfen. Jeder Fix kommt mit Safety-Check + sofortiger Rückgängig-Möglichkeit.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -16,21 +16,22 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Konstanten ─────────────────────────────────────────────────────────────
-define( 'WFOCO_VERSION',     '0.1.0' );
+define( 'WFOCO_VERSION',     '0.1.1' );
 define( 'WFOCO_SLUG',        'websitefix-one-click-optimizer' );
 define( 'WFOCO_PATH',        plugin_dir_path( __FILE__ ) );
 define( 'WFOCO_URL',         plugin_dir_url( __FILE__ ) );
 define( 'WFOCO_OPTION_KEY',  'wfoco_active_fixes' ); // Array of active slugs
-define( 'WFOCO_MU_SUBDIR',   'wf-optimizer' );       // Unter-Ordner in /mu-plugins/
+define( 'WFOCO_FILE_PREFIX', 'wf-optimizer-' );      // Präfix für unsere mu-plugin-Files
 
-// Pfad zum mu-plugins/wf-optimizer/-Ordner, in dem wir unsere Fix-Dateien
-// ablegen. WPMU_PLUGIN_DIR ist seit WP 3.0 immer definiert — Standard ist
-// WP_CONTENT_DIR . '/mu-plugins'. Falls in wp-config überschrieben, greifen
-// wir die User-Konstante korrekt.
+// WordPress lädt mu-plugins NUR flach aus WPMU_PLUGIN_DIR — Subfolder werden
+// ignoriert (siehe wp_get_mu_plugins() in wp-includes/load.php). Deshalb
+// schreiben wir flach mit Präfix, statt in einen Unterordner.
 if ( ! defined( 'WPMU_PLUGIN_DIR' ) ) {
     define( 'WPMU_PLUGIN_DIR', WP_CONTENT_DIR . '/mu-plugins' );
 }
-define( 'WFOCO_MU_DIR', trailingslashit( WPMU_PLUGIN_DIR ) . WFOCO_MU_SUBDIR );
+// LEGACY: v0.1.0 hat in diesen Unterordner geschrieben — Uninstall räumt ihn
+// noch auf, damit Upgrader keine Reste-Dateien behalten.
+define( 'WFOCO_LEGACY_MU_DIR', trailingslashit( WPMU_PLUGIN_DIR ) . 'wf-optimizer' );
 
 // ── Includes ───────────────────────────────────────────────────────────────
 require_once WFOCO_PATH . 'includes/class-snippet-library.php';
@@ -42,11 +43,11 @@ require_once WFOCO_PATH . 'includes/class-admin-page.php';
 register_activation_hook( __FILE__, 'wfoco_activate' );
 
 function wfoco_activate() {
-    // mu-plugins/wf-optimizer/-Verzeichnis anlegen, falls noch nicht da.
-    // Schreibrechte testen wir aktiv — bei Failed-Permission soll User es
-    // wissen, bevor er einen Fix aktiviert.
-    if ( ! file_exists( WFOCO_MU_DIR ) ) {
-        @wp_mkdir_p( WFOCO_MU_DIR );
+    // mu-plugins-Verzeichnis sicherstellen — bei vielen WP-Installs existiert
+    // es noch nicht, weil noch nie ein mu-plugin angelegt wurde. wp_mkdir_p
+    // legt es bei Schreibrechten auf wp-content/ automatisch an.
+    if ( ! file_exists( WPMU_PLUGIN_DIR ) ) {
+        @wp_mkdir_p( WPMU_PLUGIN_DIR );
     }
 
     // Optionen mit leerer Liste vorbelegen, autoload=no für niedrige Memory-
@@ -80,9 +81,17 @@ function wfoco_uninstall() {
     }
     delete_option( WFOCO_OPTION_KEY );
 
-    // mu-plugins/wf-optimizer/-Ordner entfernen, falls leer.
-    if ( is_dir( WFOCO_MU_DIR ) && count( glob( WFOCO_MU_DIR . '/*' ) ?: array() ) === 0 ) {
-        @rmdir( WFOCO_MU_DIR );
+    // Legacy: wf-optimizer/-Unterordner aus v0.1.0 entfernen, falls vorhanden.
+    if ( is_dir( WFOCO_LEGACY_MU_DIR ) ) {
+        $legacy_files = glob( WFOCO_LEGACY_MU_DIR . '/*.php' );
+        if ( is_array( $legacy_files ) ) {
+            foreach ( $legacy_files as $file ) {
+                @unlink( $file );
+            }
+        }
+        if ( count( glob( WFOCO_LEGACY_MU_DIR . '/*' ) ?: array() ) === 0 ) {
+            @rmdir( WFOCO_LEGACY_MU_DIR );
+        }
     }
 }
 
