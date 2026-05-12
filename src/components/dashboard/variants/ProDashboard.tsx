@@ -2281,10 +2281,10 @@ export default function ProDashboard(props: ProDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑧ PLUGIN-ANBINDUNG — API-Key + Connector-Download ab Pro inklusive.
-               KI-Mass-Fixer (Bulk-Fan-Out auf alle Kundensites) bleibt
-               Agency-exklusiv. Pro-User sehen am Ende eine slim Upsell-Pille
-               für die Agency-Erweiterung. */}
+          {/* ⑧ PLUGIN-ANBINDUNG — API-Key + Connector-Download ab Starter
+               inklusive (Smart-Fix-Pivot 08.05.). KI-Mass-Fixer (Bulk-Fan-Out
+               auf alle Kundensites) bleibt Agency-exklusiv. Non-Agency-User
+               sehen am Ende eine slim Upsell-Pille für die Agency-Erweiterung. */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
             <SectionLabel color={isAgency ? "#a78bfa" : "#22c55e"}>
               {isAgency ? "Agency · Exklusiv" : "Pro · Inklusive"}

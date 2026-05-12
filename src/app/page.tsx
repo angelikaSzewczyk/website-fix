@@ -160,7 +160,7 @@ const PLANS = [
       { text: "🔒 Inkl. Read-Only Plugin (Hybrid-Scan freischalten)",highlight: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true },
       { text: "Alle Smart-Fix-Anleitungen inklusive (kein Einzelkauf)",highlight: true },
-      { text: "Kein White-Label · Pro startet ab 89 €/Mo",           highlight: false, locked: true },
+      { text: "Kein White-Label-PDF · Pro startet ab 89 €/Mo",       highlight: false, locked: true },
       { text: "Keine Team-Rollen · Pro startet ab 89 €/Mo",          highlight: false, locked: true },
       { text: "Kein Kunden-Portal · Agency ab 249 €/Mo",          highlight: false, locked: true },
     ],
