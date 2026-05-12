@@ -43,6 +43,17 @@ export interface Snippet {
   installSteps: readonly [string, string, string];
   /** Rollback-Anweisung. */
   rollback?:   string;
+  /** Optionaler Pillar-Blog-Post, der das Snippet vertieft erklärt.
+   *  Wenn gesetzt, rendert SmartFixCard eine "Detail-Guide"-CTA-Pille und
+   *  speist gleichzeitig den HowTo-Schema-Verweis. Verlinkt im SEO-Cluster
+   *  Library → Blog (Outbound-Hub). Anchor-Text muss pro Snippet eindeutig
+   *  sein — keine Wiederholung von "Heartbeat-Drossel-Snippet" o.ä. */
+  blogPost?: {
+    /** Slug unter /blog/<slug>. */
+    slug:       string;
+    /** Anchor-Text für die CTA-Pille — pro Snippet anders formuliert. */
+    anchorText: string;
+  };
 }
 
 /**
@@ -119,6 +130,10 @@ add_action( 'init', function() {
       "Speichern. Site einmal neu laden, im Network-Tab prüfen: admin-ajax.php-Calls verschwinden im Frontend.",
     ],
     rollback: "Codeblock löschen — Default-Heartbeat (15 s) ist sofort wieder aktiv.",
+    blogPost: {
+      slug:       "wordpress-heartbeat-drosseln",
+      anchorText: "Detail-Guide: warum 60/120/300 s die richtige Drosselung ist",
+    },
   },
 
   // ────────────────────────────────────────────────────────────────────────

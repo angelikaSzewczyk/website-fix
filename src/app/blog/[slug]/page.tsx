@@ -154,12 +154,50 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     },
   };
 
+  // Optionales HowTo-JSON-LD aus dem Frontmatter. Erlaubt für Pillar-Posts,
+  // die einen konkreten Mehrstufen-Prozess beschreiben (z.B. "Heartbeat
+  // drosseln"). Bewusst separat vom BlogPosting-Schema, weil Google beide
+  // unabhängig parst und HowTo eigene Rich-Result-Slots in der SERP belegt.
+  // FAQ-Schema bleibt absichtlich deaktiviert (siehe project_jsonld_decision).
+  type HowToFrontmatter = {
+    name: string;
+    description?: string;
+    totalTime?: string;
+    tool?: string;
+    steps: Array<{ name: string; text: string; url?: string }>;
+  };
+  const howToRaw = post.data.howTo as HowToFrontmatter | undefined;
+  const howToJsonLd = howToRaw ? {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": howToRaw.name,
+    "description": howToRaw.description,
+    "totalTime": howToRaw.totalTime,
+    "image": imageUrl,
+    "tool": howToRaw.tool
+      ? { "@type": "HowToTool", "name": howToRaw.tool }
+      : undefined,
+    "step": howToRaw.steps.map((s, i) => ({
+      "@type": "HowToStep",
+      "position": i + 1,
+      "name": s.name,
+      "text": s.text,
+      "url": s.url ?? `${canonical}#step-${i + 1}`,
+    })),
+  } : null;
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
       />
+      {howToJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        />
+      )}
       <BlogHeader active="blog" lang="de" />
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 96px" }}>

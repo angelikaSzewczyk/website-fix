@@ -17,7 +17,7 @@
 import { useState } from "react";
 import {
   ChevronDown, ChevronUp, Copy, Check, ShieldCheck,
-  AlertTriangle, RotateCcw, Server, Layers, Lock,
+  AlertTriangle, RotateCcw, Server, Layers, Lock, BookOpen, ArrowRight,
 } from "lucide-react";
 import { type Snippet, buildSnippet } from "@/lib/smartfix-snippets";
 
@@ -54,6 +54,8 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
   // HowTo-JSON-LD pro Snippet. Generische Steps (Kopieren / Einfügen / Validieren)
   // statt der per-Snippet-installSteps — Rich-Snippet-Display in Google SERPs
   // braucht knappe, einheitliche Schritte. Die ausführlichen Steps bleiben im UI.
+  // Wenn ein Pillar-Blog-Post existiert, hängt sich der Schema-Eintrag per
+  // `relatedLink` an den Post — das ist ein direktes Cluster-Signal an Google.
   const baseUrl = "https://website-fix.com";
   const howToSchema = {
     "@context": "https://schema.org",
@@ -86,6 +88,12 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
         "text":     "Speichern, Frontend neu laden, im Browser-DevTools (Network-Tab) den erwarteten Effekt prüfen.",
       },
     ],
+    ...(snippet.blogPost && {
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id":   `${baseUrl}/blog/${snippet.blogPost.slug}`,
+      },
+    }),
   };
 
   async function copyToClipboard() {
@@ -177,6 +185,32 @@ export default function SmartFixCard({ snippet, defaultExpanded = false }: Props
             </span>
           )}
         </div>
+
+        {/* Outbound-Hub: Link zum Pillar-Post (falls verknüpft). Immer sichtbar
+            — Crawler folgen ihm ohne Card-Expand. Anchor-Text pro Snippet
+            individuell (siehe Snippet.blogPost.anchorText). */}
+        {snippet.blogPost && (
+          <a
+            href={`/blog/${snippet.blogPost.slug}`}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              marginTop: 14,
+              fontSize: 12.5, fontWeight: 700,
+              color: T.green,
+              padding: "8px 12px",
+              borderRadius: 8,
+              background: T.greenBg,
+              border: `1px dashed ${T.greenBorder}`,
+              textDecoration: "none",
+              fontFamily: "inherit",
+              lineHeight: 1.4,
+            }}
+          >
+            <BookOpen size={13} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+            <span>{snippet.blogPost.anchorText}</span>
+            <ArrowRight size={13} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+          </a>
+        )}
       </div>
 
       {/* ── Toggle: "Lösung verfügbar" ───────────────────────────────────── */}
