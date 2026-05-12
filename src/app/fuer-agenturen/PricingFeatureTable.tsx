@@ -157,9 +157,75 @@ function Pill({ text, tone }: NonNullable<FeatureRow["pill"]>) {
   );
 }
 
+const RESPONSIVE_CSS = `
+  .pft-header, .pft-margin-row, .pft-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) minmax(160px, 1fr) minmax(220px, 1.4fr);
+    gap: 12px;
+  }
+  @media (max-width: 720px) {
+    .pft-header {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 16px !important;
+      align-items: stretch !important;
+    }
+    .pft-header > .pft-spacer { display: none; }
+    .pft-header-pro {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 2px !important;
+    }
+    .pft-header-agency {
+      margin: 0 !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 2px !important;
+    }
+    .pft-margin-row {
+      grid-template-columns: 1fr;
+      padding: 0 16px !important;
+    }
+    .pft-margin-row > .pft-spacer { display: none; }
+    .pft-row {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas: "label label" "pro agency";
+      padding: 14px 16px !important;
+      gap: 10px !important;
+      align-items: start !important;
+    }
+    .pft-row > .pft-label { grid-area: label; }
+    .pft-row > .pft-cell-pro {
+      grid-area: pro;
+      justify-content: center;
+      padding: 10px 8px;
+      background: rgba(255,255,255,0.025);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .pft-row > .pft-cell-agency {
+      grid-area: agency;
+      justify-content: center;
+      padding: 10px 8px;
+      background: rgba(34,197,94,0.04);
+      border-radius: 10px;
+      border: 1px solid rgba(34,197,94,0.14);
+      align-items: center !important;
+    }
+    .pft-row > .pft-cell-agency ul {
+      align-self: stretch;
+    }
+  }
+`;
+
 export default function PricingFeatureTable() {
   return (
     <section style={{ maxWidth: 1100, margin: "56px auto 0", padding: "0 24px" }}>
+      <style dangerouslySetInnerHTML={{ __html: RESPONSIVE_CSS }} />
       {/* ── Header-CTA "Agentur-Marge jetzt skalieren →" ─────────────────── */}
       <div style={{ textAlign: "center", marginBottom: 26 }}>
         <CheckoutButton
@@ -186,23 +252,21 @@ export default function PricingFeatureTable() {
         borderRadius: 18, overflow: "hidden",
       }}>
         {/* Header-Row */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(220px, 1.4fr) minmax(160px, 1fr) minmax(220px, 1.4fr)",
+        <div className="pft-header" style={{
           padding: "16px 22px",
           borderBottom: `1px solid ${T.border}`,
           background: "rgba(255,255,255,0.015)",
-          alignItems: "baseline", gap: 12,
+          alignItems: "baseline",
         }}>
-          <div />
-          <div style={{
+          <div className="pft-spacer" />
+          <div className="pft-header-pro" style={{
             fontSize: 14, fontWeight: 800, color: T.text, letterSpacing: "-0.01em",
             display: "flex", alignItems: "baseline", gap: 8,
           }}>
             Professional
             <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>89 €/Mo</span>
           </div>
-          <div style={{
+          <div className="pft-header-agency" style={{
             position: "relative",
             padding: "10px 14px", margin: "-10px -14px",
             borderRadius: 12,
@@ -221,14 +285,12 @@ export default function PricingFeatureTable() {
         </div>
 
         {/* Wartungs-Marge-Box im Agency-Header (visueller ROI-Anker) */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(220px, 1.4fr) minmax(160px, 1fr) minmax(220px, 1.4fr)",
+        <div className="pft-margin-row" style={{
           padding: "0 22px",
-          gap: 12, alignItems: "stretch",
+          alignItems: "stretch",
         }}>
-          <div />
-          <div />
+          <div className="pft-spacer" />
+          <div className="pft-spacer" />
           <div style={{
             margin: "14px 0",
             padding: "14px 16px", borderRadius: 12,
@@ -267,17 +329,16 @@ export default function PricingFeatureTable() {
             return (
               <div
                 key={row.label}
+                className="pft-row"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(220px, 1.4fr) minmax(160px, 1fr) minmax(220px, 1.4fr)",
                   padding: "16px 22px",
                   borderTop: `1px solid ${T.border}`,
                   borderBottom: isLast ? "none" : undefined,
-                  alignItems: "center", gap: 12,
+                  alignItems: "center",
                 }}
               >
                 {/* Feature-Label */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <div className="pft-label" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: T.text, letterSpacing: "-0.01em" }}>
                     {row.label}
                   </span>
@@ -285,12 +346,12 @@ export default function PricingFeatureTable() {
                 </div>
 
                 {/* Pro-Spalte */}
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div className="pft-cell-pro" style={{ display: "flex", alignItems: "center" }}>
                   <CellPro mode={row.pro} />
                 </div>
 
                 {/* Agency-Spalte */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, flexDirection: "column" }}>
+                <div className="pft-cell-agency" style={{ display: "flex", alignItems: "flex-start", gap: 10, flexDirection: "column" }}>
                   <CellAgency mode={row.agency} />
                   {row.agencySubBullets && (
                     <ul style={{

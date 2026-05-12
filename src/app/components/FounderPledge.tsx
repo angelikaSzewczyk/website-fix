@@ -202,14 +202,14 @@ export default function FounderPledge() {
             <div style={{ fontSize: 12.5, color: T.textSub, marginTop: 2, fontFamily: T.mono }}>
               Frontend-Developer · Gründerin
             </div>
-            <a href="mailto:angelika@website-fix.com" style={{
+            <a href="mailto:support@website-fix.com" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               fontSize: 12, color: T.green,
               marginTop: 8, textDecoration: "none",
               fontFamily: T.mono,
             }}>
               <Mail size={12} strokeWidth={2.2} />
-              angelika@website-fix.com
+              support@website-fix.com
             </a>
           </div>
           <p style={{ margin: 0, flex: "1 1 200px", fontSize: 12.5, color: T.textMuted, lineHeight: 1.6, fontStyle: "italic" }}>
