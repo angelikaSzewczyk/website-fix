@@ -13,6 +13,8 @@ tags:
   - "system.multicall brute force"
   - "wordpress login brute force schutz"
 status: "published"
+thumbnail: "/blog/xmlrpc-defense.webp"
+ogImage: "/blog/xmlrpc-defense.webp"
 howTo:
   name: "XML-RPC in WordPress auf Server- und Application-Ebene deaktivieren"
   description: "Defense-in-Depth-Konfiguration mit .htaccess-Regel auf Server-Level, PHP-Snippet auf App-Level und REST-API-User-Enumeration-Schutz. Inklusive automatischer Jetpack/Wordfence/Sucuri-Erkennung."
@@ -46,6 +48,8 @@ faq:
   - q: "Was passiert, wenn ich xmlrpc.php einfach lösche?"
     a: "Kurz funktioniert es, beim nächsten WordPress-Update ist die Datei zurück. WordPress-Core ersetzt fehlende Core-Dateien beim Update routinemäßig. Plus: manche Server-Software meldet 500-Fehler statt 404, wenn eine erwartete Core-Datei fehlt. Sichererer Pfad: Datei behalten, aber per .htaccess-Regel den Zugriff blockieren UND per PHP-Filter die Funktionalität abschalten. Das ist die Defense-in-Depth-Variante, die dieser Post empfiehlt."
 ---
+
+![XML-RPC deaktivieren — Drei-Schichten-Defense gegen Brute-Force-Angriffe auf WordPress](/blog/xmlrpc-defense.webp)
 
 # XML-RPC deaktivieren in WordPress: Brute-Force-Schutz auf 3 Ebenen (2026).
 
