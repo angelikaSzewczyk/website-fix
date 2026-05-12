@@ -4,19 +4,19 @@ Tags: performance, optimization, heartbeat, xmlrpc, jquery
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.1
+Stable tag: 0.2.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Aktiviere 5 kuratierte WordPress-Performance-Fixes mit einem Klick. Sicher, reversibel, ohne Code-Editing.
+Aktiviere 7 WordPress-Performance- und Security-Fixes mit einem Klick. Sicher, reversibel, ohne Code-Editing.
 
 == Description ==
 
 Du hast schon mal gehört „du solltest die Heartbeat-API drosseln" oder „xmlrpc.php solltest du eigentlich abschalten"? Aber jedes Mal landest du in einem Forenthread mit 12 widersprüchlichen Code-Snippets, von denen 3 deine Site zerlegen.
 
-**WebsiteFix One-Click Optimizer** löst genau dieses Problem. Fünf hand-kuratierte Performance-Fixes, jeder mit Safety-Check (erkennt konfligierende Plugins automatisch und greift dann NICHT ein), jeder per Klick aktivierbar und genauso per Klick wieder weg.
+**WebsiteFix One-Click Optimizer** löst genau dieses Problem. Sieben hand-kuratierte Performance- und Security-Fixes, jeder mit Safety-Check (erkennt konfligierende Plugins automatisch und greift dann NICHT ein), jeder per Klick aktivierbar und genauso per Klick wieder weg.
 
-= Die 5 Fixes =
+= Die 7 Fixes =
 
 **1. Heartbeat-API drosseln**
 Reduziert die WordPress-Heartbeat-Frequenz kontextabhängig: 60 s im Admin, 120 s im Post-Editor (statt 15 s), Frontend praktisch aus. Typische Ersparnis: 75–85 % weniger admin-ajax.php-Last → niedrigere CPU-Drosselung beim Hoster, deutlich niedrigerer TTFB-Wert.
@@ -32,6 +32,12 @@ Strippt `?ver=…` aus CSS/JS-Asset-Pfaden. Proxy- und CDN-Caches (Cloudflare, H
 
 **5. jQuery-Migrate aus dem Frontend entfernen**
 Entfernt `jquery-migrate.min.js` (~11 KB) aus dem Frontend, lässt sie im Admin aber aktiv. Auf modernen Themes (2020+) ist Migrate überflüssig. Lighthouse-Performance-Score steigt typisch um 1–3 Punkte.
+
+**6. Author-Archive blockieren (User-Enumeration-Schutz)**
+Verhindert Username-Discovery via `/?author=N` oder `/author/<name>/`. Auto-Safety-Check: wenn Yoast bereits Author-Archives deaktiviert hat, greift der Fix nicht ein. Bekanntester Brute-Force-Vorbereitungs-Trick wird ausgehebelt — Aufrufe werden 301 zur Startseite redirected. Zusätzlich: REST-API-User-Einzelendpoints für anonyme Calls dichtgemacht.
+
+**7. WordPress-Version aus Frontend entfernen**
+Entfernt den `<meta name="generator">`-Tag im HTML-Head, im RSS-Feed und in Asset-URL-`?ver=`-Strings. Externe Scanner und Brute-Force-Bots erkennen die exakte WordPress-Version nicht mehr direkt — versions-spezifische Exploit-Sweep-Attacken werden aufwändiger. Auto-Safety-Check: wenn Wordfence / Sucuri / All-in-One Security / Perfmatters aktiv sind, greift der Fix nicht ein (die machen das selbst).
 
 = Wie es technisch funktioniert =
 
@@ -121,6 +127,15 @@ Ja. Es verarbeitet keine personenbezogenen Daten, sendet nichts an externe Serve
 
 == Changelog ==
 
+= 0.2.0 — 2026-05-12 =
+* **Zwei neue Fixes:** Author-Archive blockieren (User-Enumeration-Schutz)
+  und WordPress-Version aus Frontend entfernen (Generator-Tag,
+  RSS-Feed-Generator und Asset-`?ver=`-Strings). Beide mit Auto-Safety-
+  Check gegen Yoast, Wordfence, Sucuri, All-in-One Security und Perfmatters.
+* Plugin-Beschreibung von "5 Fixes" auf "7 Fixes" aktualisiert.
+* Diagnostics für die zwei neuen Slugs ergänzt — Author-Block per
+  Option-State, Version-Hide per `has_action`-Probe auf `wp_generator`.
+
 = 0.1.1 — 2026-05-12 =
 * **Kritischer Bug-Fix:** mu-plugin-Files wurden in v0.1.0 in einen
   Unterordner (`mu-plugins/wf-optimizer/`) geschrieben, den WordPress nicht
@@ -146,6 +161,9 @@ Ja. Es verarbeitet keine personenbezogenen Daten, sendet nichts an externe Serve
 * Sauberer Uninstall-Pfad — alle Fix-Dateien werden beim Plugin-Delete entfernt.
 
 == Upgrade Notice ==
+
+= 0.2.0 =
+**Feature-Release:** Zwei neue Fixes (Author-Archive-Block + WordPress-Version-Hide), beide mit Auto-Safety-Check gegen konfligierende Security-Plugins. Bestehende 5 Fixes unverändert.
 
 = 0.1.1 =
 **Bug-Fix-Release:** v0.1.0 hatte zwei kritische Bugs (mu-plugin-Subfolder wurde nicht autoloaded → Fixes liefen nicht, Critical-Error bei der Diagnostik). Beide behoben. Upgrade dringend empfohlen.

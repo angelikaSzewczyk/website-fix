@@ -26,6 +26,8 @@ class WFOCO_Diagnostics {
             case 'emojis-embeds-bloat-remove': return self::check_emojis();
             case 'query-string-cleaner':       return self::check_query_strings();
             case 'jquery-migrate-remove':      return self::check_jquery_migrate();
+            case 'author-archive-block':       return self::check_author_block();
+            case 'hide-wp-version':            return self::check_hide_version();
             default:
                 return array( 'active' => false, 'label' => 'unbekannt', 'detail' => '' );
         }
@@ -120,6 +122,46 @@ class WFOCO_Diagnostics {
             'active' => false,
             'label'  => 'aktiv',
             'detail' => __( 'WordPress hängt ?ver=X.Y an alle Asset-URLs', 'websitefix-one-click-optimizer' ),
+        );
+    }
+
+    /**
+     * Author-Archive-Block-Status. Wir können den `template_redirect`-Hook
+     * nicht zur Laufzeit der Admin-Page testen (ist Frontend-only). Daher
+     * Option-State.
+     */
+    private static function check_author_block() {
+        if ( WFOCO_Optimizer::is_active( 'author-archive-block' ) ) {
+            return array(
+                'active' => true,
+                'label'  => 'blockiert',
+                'detail' => __( '/?author=N und /author/<name>/ werden 301-redirected', 'websitefix-one-click-optimizer' ),
+            );
+        }
+        return array(
+            'active' => false,
+            'label'  => 'offen',
+            'detail' => __( '/?author=N verrät Usernames an Brute-Force-Bots', 'websitefix-one-click-optimizer' ),
+        );
+    }
+
+    /**
+     * Hide-WP-Version-Status. Prüft via has_action, ob wp_generator noch
+     * an wp_head hängt — das ist der Standard-Generator-Tag.
+     */
+    private static function check_hide_version() {
+        $generator_active = has_action( 'wp_head', 'wp_generator' );
+        if ( false === $generator_active ) {
+            return array(
+                'active' => true,
+                'label'  => 'versteckt',
+                'detail' => __( 'Generator-Tag aus <head> + RSS entfernt', 'websitefix-one-click-optimizer' ),
+            );
+        }
+        return array(
+            'active' => false,
+            'label'  => 'sichtbar',
+            'detail' => __( '<meta name="generator" content="WordPress X.Y"> im HTML-Head', 'websitefix-one-click-optimizer' ),
         );
     }
 

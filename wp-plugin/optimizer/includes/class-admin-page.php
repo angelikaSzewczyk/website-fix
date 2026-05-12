@@ -113,7 +113,7 @@ class WFOCO_Admin_Page {
                 <?php esc_html_e( 'WebsiteFix One-Click Optimizer', 'websitefix-one-click-optimizer' ); ?>
             </h1>
             <p class="description" style="max-width: 720px; font-size: 13.5px; color: #475569; line-height: 1.65; margin: 8px 0 24px;">
-                <?php esc_html_e( '5 kuratierte WordPress-Performance-Fixes mit einem Klick. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins und greift dann nicht ein) und sofortiger Rückgängig-Möglichkeit. Snippets werden als Must-Use-Plugin-Datei in /wp-content/mu-plugins/ (mit wf-optimizer-Präfix) abgelegt — kein Theme-Edit, kein Reload-Workaround.', 'websitefix-one-click-optimizer' ); ?>
+                <?php esc_html_e( '7 kuratierte WordPress-Performance- und Security-Fixes mit einem Klick. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins und greift dann nicht ein) und sofortiger Rückgängig-Möglichkeit. Snippets werden als Must-Use-Plugin-Datei in /wp-content/mu-plugins/ (mit wf-optimizer-Präfix) abgelegt — kein Theme-Edit, kein Reload-Workaround.', 'websitefix-one-click-optimizer' ); ?>
             </p>
 
             <?php if ( $notice ) : ?>
@@ -143,7 +143,7 @@ class WFOCO_Admin_Page {
                     <input type="hidden" name="action" value="wfoco_apply" />
                     <input type="hidden" name="slug"   value="all" />
                     <button type="submit" class="button button-primary" <?php disabled( ! $writable ); ?>>
-                        ⚡ <?php esc_html_e( 'Alle 5 Fixes auf einmal aktivieren', 'websitefix-one-click-optimizer' ); ?>
+                        ⚡ <?php esc_html_e( 'Alle 7 Fixes auf einmal aktivieren', 'websitefix-one-click-optimizer' ); ?>
                     </button>
                 </form>
                 <?php if ( count( $active_list ) > 0 ) : ?>

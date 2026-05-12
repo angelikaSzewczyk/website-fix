@@ -38,6 +38,8 @@ class WFOCO_Snippet_Library {
             self::snippet_emojis(),
             self::snippet_query_strings(),
             self::snippet_jquery_migrate(),
+            self::snippet_author_archive_block(),
+            self::snippet_hide_wp_version(),
         );
     }
 
@@ -267,6 +269,113 @@ function wfoco_strip_ver_from_assets( $src ) {
 }
 add_filter( 'style_loader_src',  'wfoco_strip_ver_from_assets', 10, 1 );
 add_filter( 'script_loader_src', 'wfoco_strip_ver_from_assets', 10, 1 );
+PHP,
+        );
+    }
+
+    private static function snippet_author_archive_block() {
+        return array(
+            'slug'         => 'author-archive-block',
+            'title'        => 'Author-Archive blockieren (User-Enumeration-Schutz)',
+            'tagline'      => 'Verhindert Username-Discovery via /?author=N oder /author/<name>/. Bekanntester Brute-Force-Vorbereitungs-Trick wird ausgehebelt.',
+            'problem_tag'  => 'User-Enumeration · Brute-Force-Vorstufe',
+            'effect'       => 'Aufrufe von /?author=1, /?author=2, ... liefern 301 zur Startseite. Username-Probing zwecks Brute-Force-Vorbereitung wird ineffektiv. Standard-Härtung, die fast keine Site wirklich braucht.',
+            'hoster_scope' => 'Alle Hoster',
+            'effect_scope' => 'Frontend',
+            'warning'      => 'Wenn du Author-Archives bewusst nutzt (z.B. Multi-Autoren-Blog mit /author/jane/-Seiten als Content-Hub): NICHT aktivieren, sonst werden die regulär gewünschten Author-URLs blockiert.',
+            'code'         => <<<'PHP'
+// ── Auto-Safety-Check: Yoast/All-in-One-SEO haben eigene Author-Archive-Optionen ──
+// Wenn dort Author-Archives explizit deaktiviert wurden, brauchen wir nicht doppelt.
+$wfoco_active = (array) get_option( 'active_plugins' );
+if ( in_array( 'wordpress-seo/wp-seo.php', $wfoco_active, true ) ) {
+    $yoast_titles = get_option( 'wpseo_titles' );
+    if ( is_array( $yoast_titles ) && ! empty( $yoast_titles['disable-author'] ) ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'WebsiteFix Optimizer [author-block]: skipped — Yoast disable-author already on.' );
+        }
+        return;
+    }
+}
+
+// ── Author-Query auf Frontend abfangen ──
+add_action( 'template_redirect', function() {
+    if ( is_admin() ) return;
+
+    // /?author=N — Standard-Probe-URL
+    if ( isset( $_GET['author'] ) ) {
+        wp_safe_redirect( home_url( '/' ), 301 );
+        exit;
+    }
+
+    // /author/<name>/ — wenn Permalinks aktiv
+    if ( is_author() ) {
+        wp_safe_redirect( home_url( '/' ), 301 );
+        exit;
+    }
+}, 1 );
+
+// ── REST-API: /wp-json/wp/v2/users/<n> auch dichtmachen für anonyme Calls ──
+// (XML-RPC-Snippet macht das schon für /users — hier zusätzlich für Einzel-User-Endpoints.)
+add_filter( 'rest_authentication_errors', function( $result ) {
+    if ( ! is_user_logged_in() && ! empty( $_SERVER['REQUEST_URI'] )
+         && preg_match( '#/wp-json/wp/v2/users/\d+#', wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) {
+        return new WP_Error( 'rest_not_logged_in', 'Anmeldung erforderlich.', array( 'status' => 401 ) );
+    }
+    return $result;
+}, 10, 1 );
+PHP,
+        );
+    }
+
+    private static function snippet_hide_wp_version() {
+        return array(
+            'slug'         => 'hide-wp-version',
+            'title'        => 'WordPress-Version aus Frontend entfernen',
+            'tagline'      => 'Entfernt den Generator-Tag im HTML-Head, im RSS-Feed und in Resource-URL-Versionierungen — Scanner sehen die WordPress-Version nicht mehr direkt.',
+            'problem_tag'  => 'Information Disclosure · Security Hygiene',
+            'effect'       => 'Externe Scanner und Brute-Force-Bots erkennen die exakte WordPress-Version nicht mehr via /, RSS-Feed oder Asset-?ver=. Macht versions-spezifische Exploit-Sweep-Attacken aufwändiger.',
+            'hoster_scope' => 'Alle Hoster',
+            'effect_scope' => 'Frontend',
+            'warning'      => '',
+            'code'         => <<<'PHP'
+// ── Auto-Safety-Check: Security-Plugins managen das oft schon ──
+$wfoco_active = (array) get_option( 'active_plugins' );
+foreach ( array(
+    'wordfence/wordfence.php',
+    'sucuri-scanner/sucuri.php',
+    'all-in-one-wp-security-and-firewall/wp-security.php',
+    'perfmatters/perfmatters.php',
+) as $wfoco_skip ) {
+    if ( in_array( $wfoco_skip, $wfoco_active, true ) ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'WebsiteFix Optimizer [hide-wp-version]: skipped — handled by ' . $wfoco_skip . '.' );
+        }
+        return;
+    }
+}
+
+// 1. Generator-Tag im <head> entfernen
+remove_action( 'wp_head', 'wp_generator' );
+
+// 2. Filter den Generator-Output zusätzlich leer-string — manche Themes geben ihn selbst aus
+add_filter( 'the_generator', '__return_empty_string' );
+
+// 3. RSS-Feed-Generator (XML-Header) ebenfalls dichtmachen
+foreach ( array( 'rss2_head', 'commentsrss2_head', 'rss_head', 'rdf_header', 'atom_head', 'comments_atom_head', 'opml_head', 'app_head' ) as $wfoco_feed ) {
+    add_action( $wfoco_feed, function() {
+        // No-op — überschreibt nichts, aber der Generator-Hook läuft hier nicht mehr durch
+    }, 0 );
+}
+
+// 4. WordPress-Version aus Asset-URLs entfernen — falls Query-String-Cleaner-Fix
+//    NICHT aktiv ist, würde ?ver=6.4.3 die Version verraten. Dieser Block neutralisiert
+//    GENAU diese WP-Versions-Spur (ohne andere ?ver=-Strings zu touchen).
+add_filter( 'style_loader_src', function( $src ) {
+    return remove_query_arg( array( 'ver', 'v' ), $src );
+}, 9999 );
+add_filter( 'script_loader_src', function( $src ) {
+    return remove_query_arg( array( 'ver', 'v' ), $src );
+}, 9999 );
 PHP,
         );
     }

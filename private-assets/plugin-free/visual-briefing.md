@@ -4,6 +4,9 @@
 **Version:** 0.3.0 (Stand 2026-05-13)
 **Plugin-Source:** `wp-plugin/free/` (readme.txt + Code) — Source of Truth
 **Dist-ZIP:** `wp-plugin/dist/websitefix-health-check-v0.3.0.zip`
+
+**Geschwister-Plugin:** [One-Click-Optimizer Visual-Briefing](../plugin-optimizer/visual-briefing.md). Beide Plugins teilen Brand-Sprache + Farbpalette, unterscheiden sich nur in Glyph + Headline-Hook. Health-Check = Pulse-Glyph (Diagnose-Konnotation), Optimizer = Lightning-Bolt-Glyph (Action-Konnotation).
+
 **Brand-Token:**
 - Primary: Lighthouse-Grün `#4ade80` (matched mit dem Hauptprodukt)
 - Secondary: Tiefes Grün `#22c55e`
