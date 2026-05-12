@@ -48,11 +48,10 @@ type FeatureRow = {
 };
 
 const ROWS: FeatureRow[] = [
-  {
-    label:  "Hybrid-Scan-Modi (Blackbox vs. Röntgen)",
-    pro:    "lock",
-    agency: "check",
-  },
+  // Hybrid-Scan-Modi entfernt 12.05.2026: nach dem Gating-Loosening
+  // (Commit 3235820) haben Starter + Pro + Agency den Plugin-Handshake,
+  // damit hat Pro automatisch auch den Röntgen-Modus. Die Zeile wäre 2× ✓
+  // und würde die Upgrade-Argumentation schwächen.
   {
     label:  "Smart-Fix-Drawer & Diagnosetiefe",
     pill:   { text: "Premium-Mode", tone: "info" },
