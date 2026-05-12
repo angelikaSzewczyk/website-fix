@@ -37,7 +37,7 @@ if ( ! defined( 'WFC_WHITE_LABEL_CONFIG' ) ) {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-define( 'WFC_VERSION',    '1.3.0' );
+define( 'WFC_VERSION',    '1.3.1' );
 define( 'WFC_API_BASE',   'https://website-fix.com/api/plugin' );
 define( 'WFC_SLUG',       'wf-connector' );
 define( 'WFC_OPT_KEY',    'wfc_api_key' );
@@ -1074,6 +1074,20 @@ function wfc_scan_malware_patterns(): ?array {
                 if ( ! $file->isFile() )              continue;
                 if ( $file->getExtension() !== 'php' ) continue;
                 if ( $file->getSize() > $max_bytes )   continue;
+
+                // ── Skip WebsiteFix-eigene Plugin-Files ──
+                // Sonst matched der Scanner sich selbst: die Regex-Patterns
+                // unten stehen in DIESER Datei als String, und finden sich
+                // selbst als "eval(base64_decode(" beim Self-Scan. False-
+                // Positive, der Hosting-Inhaber alarmiert und unser
+                // Anti-False-Positive-Versprechen bricht.
+                $lower_path = strtolower( str_replace( '\\', '/', $file->getPathname() ) );
+                if ( false !== strpos( $lower_path, '/websitefix-' )
+                  || false !== strpos( $lower_path, '/website-exzellenz-' )
+                  || false !== strpos( $lower_path, '/wf-connector' )
+                  || false !== strpos( $lower_path, '/wf-optimizer' ) ) {
+                    continue;
+                }
 
                 $files_seen++;
                 $contents = @file_get_contents( $file->getPathname() );

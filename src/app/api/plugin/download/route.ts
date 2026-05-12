@@ -24,7 +24,7 @@ import path from "node:path";
 
 export const runtime = "nodejs";
 
-const PLUGIN_VERSION = "1.2.1";
+const PLUGIN_VERSION = "1.3.1";
 const ZIP_FILENAME   = "websitefix-connector.zip";
 
 export async function GET() {
