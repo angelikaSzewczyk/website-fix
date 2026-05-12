@@ -192,6 +192,10 @@ add_filter( 'rest_authentication_errors', function( $result ) {
       "Speichern. Testen: `https://deine-domain.de/xmlrpc.php` aufrufen — sollte deaktiviert antworten.",
     ],
     rollback: "Codeblock löschen — XML-RPC ist sofort wieder aktiv.",
+    blogPost: {
+      slug:       "xmlrpc-deaktivieren-wordpress",
+      anchorText: "Defense-in-Depth: warum Wordfence-Block oft nicht reicht",
+    },
   },
 
   // ────────────────────────────────────────────────────────────────────────
