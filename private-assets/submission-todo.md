@@ -32,10 +32,15 @@
     - "Rejection" → sehr selten, dann gemeinsam überlegen
 - [ ] **NICHT** nachfragen oder mehrfach einreichen — Reviewer arbeiten First-In-First-Out durch eine Warteschlange
 
-**Was du in der Zwischenzeit machen kannst:**
-- WP.org-Account-Profil befüllen (Bio, Avatar) — wird im Plugin-Listing als "By websitefix" angezeigt
-- Optional: WordPress.org-User-Profile-Seite einrichten mit Link zu website-fix.com
-- Auf andere Sprints umschwenken (z. B. SEO-Cluster Post #2 „XML-RPC deaktivieren" aus der bestehenden Outline)
+**Was du in der Zwischenzeit machen kannst — Sprint-Backlog für die Wartezeit:**
+
+1. **SEO-Cluster Post #2 schreiben** — „XML-RPC deaktivieren in WordPress" (1.800-2.200 Wörter). Outline bereits fertig in `private-assets/blog-outlines/xmlrpc-deaktivieren-outline.md` (Master-Template mit 11 Sektionen, Defense-in-Depth-USP, Anchor-Pool, HowTo-Schema-Plan). Aufwand: ~2-3h. Output: neuer Markdown-Post unter `content/blog/xmlrpc-deaktivieren-wordpress.md` mit Frontmatter + HowTo-Schema + Smart-Fix-Library-Cluster-Link.
+
+2. **WP.org-Profil befüllen** — Bio (1-2 Sätze auf deutsch + englisch, was WebsiteFix macht), Avatar (kann unser Plugin-Icon sein oder ein anderes Logo), Link zu website-fix.com. Wird im Plugin-Listing als „By websitefix" angezeigt → first-impression-relevant. Aufwand: ~15-20 Min.
+
+3. **Distribution-Strategie weiterbauen** — 20-DACH-Agenturen-Outreach gemäß `todo_distribution_strategy.md`. Mail-Template + Liste der ersten 20 Ziel-Agenturen + 1 personalisierter Outreach pro Woche. Aufwand: 2-3h initial, dann 30 Min/Woche.
+
+Reihenfolge: nach der Pause. Wenn ein anderer Sprint Vorrang bekommt — sag Bescheid.
 
 ---
 

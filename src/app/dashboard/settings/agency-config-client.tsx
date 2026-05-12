@@ -153,12 +153,6 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
     | null
   >(null);
 
-  // WP-API-Key
-  const [keyBusy, setKeyBusy] = useState(false);
-  const [revealedKey, setRevealedKey] = useState<string | null>(null);
-  const [keyStatus, setKeyStatus] = useState<{ kind: "ok"|"error"; message: string } | null>(null);
-  const [showRotateConfirm, setShowRotateConfirm] = useState(false);
-
   // Lead-Snippet
   const [snippetCopied, setSnippetCopied] = useState(false);
 
@@ -346,51 +340,6 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
       setVerifyStatus({ kind: "error", message: "Verbindungsfehler bei der DNS-Verifikation." });
     } finally {
       setVerifying(false);
-    }
-  }
-
-  async function generateApiKey() {
-    setKeyBusy(true);
-    setKeyStatus(null);
-    setRevealedKey(null);
-    try {
-      const res = await fetch("/api/agency-settings/api-key", { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setKeyStatus({ kind: "error", message: data.error ?? "Generierung fehlgeschlagen." });
-        return;
-      }
-      setRevealedKey(data.api_key as string);
-      setKeyStatus({ kind: "ok", message: "Neuer API-Key erstellt — Kopie ist nur jetzt sichtbar." });
-      // loaded.api_key_wp_set updaten
-      const fresh = await fetch("/api/agency-settings").then(r => r.json()).catch(() => null);
-      if (fresh) setLoaded(fresh);
-    } catch {
-      setKeyStatus({ kind: "error", message: "Verbindungsfehler bei der Generierung." });
-    } finally {
-      setKeyBusy(false);
-      setShowRotateConfirm(false);
-    }
-  }
-
-  async function deleteApiKey() {
-    setKeyBusy(true);
-    setKeyStatus(null);
-    setRevealedKey(null);
-    try {
-      const res = await fetch("/api/agency-settings/api-key", { method: "DELETE" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setKeyStatus({ kind: "error", message: data.error ?? "Löschen fehlgeschlagen." });
-        return;
-      }
-      setKeyStatus({ kind: "ok", message: "API-Key entfernt — das WordPress-Plugin verliert sofort den Zugriff." });
-      const fresh = await fetch("/api/agency-settings").then(r => r.json()).catch(() => null);
-      if (fresh) setLoaded(fresh);
-    } catch {
-      setKeyStatus({ kind: "error", message: "Verbindungsfehler beim Löschen." });
-    } finally {
-      setKeyBusy(false);
     }
   }
 
@@ -643,145 +592,12 @@ export default function AgencyConfigClient({ agencyId, plan }: Props) {
         {wlStatus && <StatusInline kind={wlStatus.kind} message={wlStatus.message} />}
       </CardShell>
 
-      {/* ─── 3. WP-Plugin-Verbindung ─────────────────────────────────────── */}
-      <CardShell
-        title="WordPress-Plugin-Verbindung"
-        subtitle="API-Key für das WebsiteFix Auto-Heal-Plugin. Schreibt SEO-Korrekturen direkt in die Kunden-Sites."
-      >
-        {!cfg.can_use_wp_bridge && (
-          <StatusInline kind="info" message="API-Key-Generation ist nur mit aktivem Plan verfügbar. Upgrade in den Plan-Einstellungen." />
-        )}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{
-              fontSize: 11, fontWeight: 700,
-              padding: "3px 9px", borderRadius: 20,
-              color: cfg.api_key_wp_set ? D.green : D.textMuted,
-              background: cfg.api_key_wp_set ? "rgba(74,222,128,0.10)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${cfg.api_key_wp_set ? "rgba(74,222,128,0.28)" : D.border}`,
-              letterSpacing: "0.04em",
-            }}>
-              {cfg.api_key_wp_set ? "● API-KEY AKTIV" : "○ KEIN API-KEY"}
-            </span>
-            {cfg.api_key_wp_created_at && (
-              <span style={{ fontSize: 11, color: D.textMuted }}>
-                erstellt am {new Date(cfg.api_key_wp_created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })}
-              </span>
-            )}
-          </div>
-
-          {!cfg.api_key_wp_set ? (
-            <button
-              onClick={generateApiKey}
-              disabled={keyBusy || !cfg.can_use_wp_bridge}
-              style={{
-                alignSelf: "flex-start",
-                padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                background: D.purple, color: "#fff", border: "none",
-                cursor: keyBusy ? "wait" : !cfg.can_use_wp_bridge ? "not-allowed" : "pointer",
-                fontFamily: "inherit",
-                opacity: !cfg.can_use_wp_bridge ? 0.5 : 1,
-              }}
-            >
-              {keyBusy ? "Wird generiert…" : "Neuen API-Key generieren"}
-            </button>
-          ) : (
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {!showRotateConfirm ? (
-                <button
-                  onClick={() => setShowRotateConfirm(true)}
-                  disabled={keyBusy}
-                  style={{
-                    padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                    background: "rgba(255,255,255,0.04)", color: D.amber,
-                    border: `1px solid rgba(251,191,36,0.30)`,
-                    cursor: keyBusy ? "wait" : "pointer", fontFamily: "inherit",
-                  }}
-                >
-                  API-Key rotieren
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={generateApiKey}
-                    disabled={keyBusy}
-                    style={{
-                      padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                      background: D.amber, color: "#0b0c10", border: "none",
-                      cursor: keyBusy ? "wait" : "pointer", fontFamily: "inherit",
-                    }}
-                  >
-                    {keyBusy ? "Wird rotiert…" : "Wirklich rotieren? Alter Key wird sofort ungültig."}
-                  </button>
-                  <button
-                    onClick={() => setShowRotateConfirm(false)}
-                    disabled={keyBusy}
-                    style={{
-                      padding: "9px 14px", borderRadius: 8, fontSize: 13,
-                      background: "rgba(255,255,255,0.04)", color: D.textSub,
-                      border: `1px solid ${D.border}`, cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >
-                    Abbrechen
-                  </button>
-                </>
-              )}
-              <button
-                onClick={deleteApiKey}
-                disabled={keyBusy}
-                style={{
-                  padding: "9px 14px", borderRadius: 8, fontSize: 13,
-                  background: "rgba(248,113,113,0.08)", color: D.red,
-                  border: `1px solid rgba(248,113,113,0.28)`,
-                  cursor: keyBusy ? "wait" : "pointer", fontFamily: "inherit",
-                }}
-              >
-                Verbindung trennen
-              </button>
-            </div>
-          )}
-
-          {/* One-time-reveal: nur wenn revealedKey gesetzt ist */}
-          {revealedKey && (
-            <div style={{
-              marginTop: 6,
-              padding: "14px 16px", borderRadius: 10,
-              background: "rgba(74,222,128,0.06)",
-              border: `1px solid rgba(74,222,128,0.30)`,
-            }}>
-              <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: D.green, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Dein neuer API-Key (nur einmal sichtbar)
-              </p>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <code style={{
-                  flex: 1, minWidth: 240,
-                  fontFamily: "ui-monospace, SF Mono, monospace", fontSize: 12,
-                  padding: "10px 12px", borderRadius: 7,
-                  background: "rgba(0,0,0,0.35)",
-                  color: D.green, wordBreak: "break-all",
-                }}>{revealedKey}</code>
-                <button
-                  onClick={() => copyToClipboard(revealedKey, () => {})}
-                  style={{
-                    padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 700,
-                    background: D.green, color: "#0b0c10", border: "none",
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}
-                >
-                  Key kopieren
-                </button>
-              </div>
-              <p style={{ margin: "10px 0 0", fontSize: 11.5, color: D.textSub, lineHeight: 1.55 }}>
-                Trage diesen Wert im WordPress-Plugin unter <strong>Einstellungen → WebsiteFix → API-Key</strong> ein.
-                Bei Verlust einfach rotieren — der alte Key wird damit sofort ungültig.
-              </p>
-            </div>
-          )}
-
-          {keyStatus && <StatusInline kind={keyStatus.kind} message={keyStatus.message} />}
-        </div>
-      </CardShell>
+      {/* ─── 3. (entfernt 12.05.2026) WP-Plugin-Verbindung-Sektion ───────────
+           Die alte Auto-Heal-Plugin-Anbindung (wfak_-Key + /api/wp-bridge)
+           ist durch den Connector-Flow im Dashboard ⑧ ("WordPress-Plugin
+           verbinden") ersetzt. Connector nutzt wf_live_-Keys + /api/plugin/*
+           und bietet sowohl Read-Only-Diagnose als auch Single-Site-Fixes.
+           Das hier doppelt anzubieten war verwirrend für Pro-User. */}
 
       {/* ─── 4. Lead-Magnet-Snippet (Agency-only) ──────────────────────────
            08.05.2026: Sektion ist Agency-Pricing-Card-Versprechen, war aber
