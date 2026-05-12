@@ -9,6 +9,12 @@
  * - CTA als Inline-Link am Ende, nicht als Hero-Button
  * - Read-Only-Hinweis als technisches Trust-Statement, nicht als Werbung
  *
+ * v0.3.0 (13.05.2026): Die 5 Werte sind jetzt differenziert positioniert
+ * als "siehst du, ob dein Hoster dich bremst" — TTFB, Heartbeat, DB-Bloat,
+ * PHP-Memory, Update-Backlog. Ersetzt die generischen v0.2.0-Werte
+ * (PHP-Version, SSL, WP-Core, Plugin-Updates, SEO-Basics), die mit dem
+ * eingebauten WordPress-Site-Health zu stark überlappten.
+ *
  * Alle Strings escaped via esc_html / esc_attr / esc_url.
  */
 
@@ -19,49 +25,49 @@ class WFHC_Dashboard_Widget {
     public static function render() {
         $data = WFHC_Quick_Check::get_all();
 
-        // Tabellen-Container — wir nutzen den WP-Standard-Look, keine fancy Cards
         echo '<div class="wfhc-widget" style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif;">';
 
-        // ── Statusliste als technische Tabelle ──
         echo '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
         echo '<tbody>';
 
+        // ── 1. TTFB — Server-Response ──
         self::row(
-            __( 'PHP-Version', 'websitefix-health-check' ),
-            esc_html( $data['php']['version'] ),
-            $data['php']['ok'],
-            $data['php']['hint']
+            __( 'Server-Response (TTFB)', 'websitefix-health-check' ),
+            $data['ttfb']['value_text'],
+            $data['ttfb']['ok'],
+            $data['ttfb']['hint']
         );
+
+        // ── 2. Heartbeat-Frequenz ──
         self::row(
-            __( 'TLS / SSL', 'websitefix-health-check' ),
-            $data['ssl']['active'] ? __( 'aktiv', 'websitefix-health-check' ) : __( 'inaktiv', 'websitefix-health-check' ),
-            $data['ssl']['active'],
-            $data['ssl']['hint']
+            __( 'Heartbeat-API-Last', 'websitefix-health-check' ),
+            $data['heartbeat']['value_text'],
+            $data['heartbeat']['ok'],
+            $data['heartbeat']['hint']
         );
+
+        // ── 3. Datenbank-Größe + Top-Tabelle ──
         self::row(
-            __( 'WordPress-Core', 'websitefix-health-check' ),
-            esc_html( $data['wp']['version'] ),
-            $data['wp']['up_to_date'],
-            $data['wp']['hint']
+            __( 'Datenbank-Größe', 'websitefix-health-check' ),
+            $data['database']['value_text'],
+            $data['database']['ok'],
+            $data['database']['hint']
         );
+
+        // ── 4. PHP-Memory ──
         self::row(
-            __( 'Aktive Plugins', 'websitefix-health-check' ),
-            sprintf(
-                /* translators: 1: Anzahl aktive Plugins, 2: Anzahl Updates */
-                __( '%1$d aktiv · %2$d Updates verfügbar', 'websitefix-health-check' ),
-                (int) $data['plugins']['active'],
-                (int) $data['plugins']['updates']
-            ),
-            $data['plugins']['updates'] === 0,
-            $data['plugins']['hint']
+            __( 'PHP-Memory', 'websitefix-health-check' ),
+            $data['memory']['value_text'],
+            $data['memory']['ok'],
+            $data['memory']['hint']
         );
+
+        // ── 5. Update-Backlog ──
         self::row(
-            __( 'SEO-Basics (Home)', 'websitefix-health-check' ),
-            ( $data['seo']['title_ok'] && $data['seo']['meta_ok'] )
-                ? __( 'OK', 'websitefix-health-check' )
-                : __( 'Lücken erkannt', 'websitefix-health-check' ),
-            $data['seo']['title_ok'] && $data['seo']['meta_ok'],
-            $data['seo']['hint']
+            __( 'Update-Backlog', 'websitefix-health-check' ),
+            $data['updates']['value_text'],
+            $data['updates']['ok'],
+            $data['updates']['hint']
         );
 
         echo '</tbody>';
@@ -75,7 +81,7 @@ class WFHC_Dashboard_Widget {
         echo '<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; line-height: 1.6;">';
         echo '<p style="margin: 0 0 6px;">';
         echo '<strong style="color: #374151;">' . esc_html__( 'Read-Only Check', 'websitefix-health-check' ) . '</strong> · ';
-        echo esc_html__( 'Diese 5 Werte werden lokal ohne Schreibzugriff auf Dateisystem oder Datenbank erhoben. Keine Daten verlassen deine Site.', 'websitefix-health-check' );
+        echo esc_html__( 'Diese 5 Werte zeigen dir, wo dein Hoster oder deine Konfiguration die Site bremst. Lokal erhoben, keine Daten verlassen deine Site.', 'websitefix-health-check' );
         echo '</p>';
         echo '<p style="margin: 0;">';
         printf(

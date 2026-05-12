@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       WebsiteFix Health Check & Deep Audit
  * Plugin URI:        https://website-fix.com
- * Description:       Schneller WordPress-Gesundheits-Check direkt im Dashboard: PHP-Version, SSL-Status, WordPress-Update, aktive Plugins, SEO-Basics. Read-Only — keine Schreibzugriffe auf Dateisystem oder Datenbank. Für den vollständigen 92-Punkt-Deep-Audit (DB-Bloat, PHP-Error-Trace, Hook-Chain-Analyse): WebsiteFix.com.
- * Version:           0.2.0
+ * Description:       5 Kennzahlen, die zeigen wo dein Hoster bremst: Server-Response (TTFB), Heartbeat-API-Last, Datenbank-Größe + Bloat-Tabelle, PHP-Memory-Auslastung, Update-Backlog. Read-Only — keine Schreibzugriffe auf Dateisystem oder Datenbank. Für den vollständigen 92-Punkt-Deep-Audit (DB-Bloat, PHP-Error-Trace, Hook-Chain-Analyse): WebsiteFix.com.
+ * Version:           0.3.0
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -17,7 +17,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Konstanten ─────────────────────────────────────────────────────────────
-define( 'WFHC_VERSION',  '0.2.0' );
+define( 'WFHC_VERSION',  '0.3.0' );
 define( 'WFHC_SLUG',     'websitefix-health-check' );
 define( 'WFHC_BASEURL',  'https://website-fix.com' );
 define( 'WFHC_UTM',      '?utm_source=wp-plugin&utm_medium=marketplace&utm_campaign=health-check' );

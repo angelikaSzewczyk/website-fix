@@ -1,6 +1,9 @@
 # WordPress.org Plugin-Assets — Visual-Briefing
 
 **Plugin:** WebsiteFix Health-Check (Free, WordPress.org)
+**Version:** 0.3.0 (Stand 2026-05-13)
+**Plugin-Source:** `wp-plugin/free/` (readme.txt + Code) — Source of Truth
+**Dist-ZIP:** `wp-plugin/dist/websitefix-health-check-v0.3.0.zip`
 **Brand-Token:**
 - Primary: Lighthouse-Grün `#4ade80` (matched mit dem Hauptprodukt)
 - Secondary: Tiefes Grün `#22c55e`
