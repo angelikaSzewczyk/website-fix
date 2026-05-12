@@ -284,9 +284,10 @@ export default function ProDashboard(props: ProDashboardProps) {
 
   const isAgencyUser = isAgencyPlan(plan);
 
-  // Fetch plugin API key + connected sites for Agency users
+  // Fetch plugin API key + connected sites — ab jedem zahlenden Plan
+  // (Smart-Fix-Pivot 08.05.). API-Routen sind seit Commit 3235820 auf
+  // isPaidPlan gegated, der Frontend-Effect lief aber noch unter isAgency.
   useEffect(() => {
-    if (!isAgencyUser) return;
     fetch("/api/user/plugin-key")
       .then(r => r.json())
       .then((d: { key?: string }) => { if (d.key) setPluginApiKey(d.key); })
@@ -297,7 +298,7 @@ export default function ProDashboard(props: ProDashboardProps) {
         if (d.sites) setConnectedSites(d.sites);
       })
       .catch(() => {});
-  }, [isAgencyUser]);
+  }, []);
 
   async function handleRegenerateKey() {
     setPluginKeyLoading(true);
@@ -2280,26 +2281,27 @@ export default function ProDashboard(props: ProDashboardProps) {
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}
 
-          {/* ⑧ WHITE-LABEL-PLUGIN ANBINDUNG (Agency-only Upsell) — hidden in focus mode.
-               Klare Trennung zum Read-Only-Plugin (oben in PluginDownloadCard, ab Pro
-               inklusive). Diese Sektion bewirbt die WHITE-LABEL-Variante für Kunden-
-               Sites mit Brand-Anpassung + KI-Mass-Fixer (Agency Scale exklusiv). */}
+          {/* ⑧ PLUGIN-ANBINDUNG — API-Key + Connector-Download ab Pro inklusive.
+               KI-Mass-Fixer (Bulk-Fan-Out auf alle Kundensites) bleibt
+               Agency-exklusiv. Pro-User sehen am Ende eine slim Upsell-Pille
+               für die Agency-Erweiterung. */}
           {!isNewScan && <div style={{ marginBottom: 28 }}>
-            <SectionLabel color={isAgency ? "#a78bfa" : D.blueSoft}>
-              {isAgency ? "Agency · Exklusiv" : "Agency Scale Feature"}
+            <SectionLabel color={isAgency ? "#a78bfa" : "#22c55e"}>
+              {isAgency ? "Agency · Exklusiv" : "Pro · Inklusive"}
             </SectionLabel>
-            <SectionHead>White-Label-Plugin für Kunden-Sites</SectionHead>
+            <SectionHead>
+              {isAgency ? "White-Label-Plugin für Kunden-Sites" : "WordPress-Plugin verbinden"}
+            </SectionHead>
             <p style={{ margin: "-10px 0 24px", fontSize: 13, color: D.textMuted, lineHeight: 1.75, maxWidth: 600 }}>
               {isAgency
-                ? <>Das White-Label Helper-Plugin trägt dein Branding und überträgt Fixes per API direkt aus diesem Dashboard. Inkl. KI-Mass-Fixer für Bulk-Operationen über mehrere Kunden.</>
-                : <>Du hast bereits das <strong style={{ color: D.text }}>Read-Only-Plugin</strong> in deinem Pro-Plan. Mit Agency Scale bekommst du zusätzlich die <strong style={{ color: "#a78bfa" }}>White-Label-Variante</strong> — dein Branding beim Endkunden plus KI-Mass-Fixer für Bulk-Operationen über alle Kunden.</>}
+                ? <>Das White-Label-Plugin trägt dein Branding und überträgt Fixes per API direkt aus diesem Dashboard. Inkl. KI-Mass-Fixer für Bulk-Operationen über mehrere Kunden.</>
+                : <>Kopiere deinen API-Key, lade den <strong style={{ color: D.text }}>websitefix-connector.zip</strong> herunter und installiere ihn auf deinen WordPress-Sites. Read-Only-Verbindung — kein FTP, keine Passwörter. Liest Plugin-Konflikte, PHP-Fehler und Datenbank-Health, damit dein Dashboard tiefer schaut als ein externer Crawler.</>}
             </p>
 
-            {isAgency ? (
-              /* ── Agency: full plugin area ── */
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-              {/* ── KI-Mass-Fixer ── */}
+              {/* ── KI-Mass-Fixer (Agency-exklusiv: bulk-fan-out via /api/plugin/batch-fix) ── */}
+              {isAgency && (
               <div style={{
                 padding: "22px 24px", borderRadius: D.radius,
                 background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.2)",
@@ -2428,8 +2430,9 @@ export default function ProDashboard(props: ProDashboardProps) {
                   </div>
                 )}
               </div>
+              )}
 
-              {/* ── API Key + Download grid ── */}
+              {/* ── API Key + Download grid (alle aktiven Pläne) ── */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {/* API Key card */}
                 <div style={{
@@ -2561,84 +2564,39 @@ export default function ProDashboard(props: ProDashboardProps) {
                   </div>
                 </div>
               </div>
-              </div>
-            ) : (
-              /* ── Non-Agency: high-conversion upgrade card ── */
-              <div style={{
-                position: "relative", overflow: "hidden",
-                padding: "32px 36px", borderRadius: D.radius,
-                background: "linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(124,58,237,0.04) 100%)",
-                border: "1px solid rgba(167,139,250,0.22)",
-              }}>
-                {/* Decorative glow blob */}
+
+              {/* ── Slim Agency-Upsell (nur für Pro-User unter API-Key-Grid) ── */}
+              {!isAgency && (
                 <div style={{
-                  position: "absolute", right: -40, top: -40,
-                  width: 220, height: 220, borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)",
-                  pointerEvents: "none",
-                }} />
-                {/* Badge */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 11, flexShrink: 0,
-                    background: "rgba(167,139,250,0.12)",
-                    border: "1px solid rgba(167,139,250,0.28)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                    </svg>
-                  </div>
+                  padding: "16px 20px", borderRadius: D.radius,
+                  background: "linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(124,58,237,0.04) 100%)",
+                  border: "1px solid rgba(167,139,250,0.22)",
+                  display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+                }}>
                   <span style={{
-                    fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                    fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20,
                     background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)",
                     color: "#a78bfa", letterSpacing: "0.07em", textTransform: "uppercase",
+                    flexShrink: 0,
                   }}>
-                    Agency · Exklusiv
+                    Agency · Erweiterung
                   </span>
-                </div>
-                {/* Headline */}
-                <h3 style={{
-                  margin: "0 0 10px", fontSize: 18, fontWeight: 800,
-                  color: "#fff", lineHeight: 1.3, maxWidth: 520,
-                }}>
-                  WordPress-Vollautomatik: Fixe alle{" "}
-                  <span style={{ color: "#a78bfa" }}>
-                    {issues.length > 0 ? `${issues.length}+` : "248+"}
-                  </span>{" "}
-                  Fehler direkt aus diesem Dashboard.
-                </h3>
-                {/* Sub-copy */}
-                <p style={{ margin: "0 0 22px", fontSize: 13, color: D.textMuted, lineHeight: 1.7, maxWidth: 500 }}>
-                  Installiere das White-Label-Plugin einmalig auf Kunden-Seiten und übertrage Korrekturen per API — kein manuelles Copy-Paste, keine FTP-Zugänge, keine Fehler.
-                </p>
-                {/* Feature pills */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-                  {["Auto-Deploy via API", "White-Label ready", "Unbegrenzte Kunden-Sites", "Direkt-Push aus Dashboard"].map(pill => (
-                    <span key={pill} style={{
-                      fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
-                      background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
-                      color: "rgba(167,139,250,0.85)",
-                    }}>{pill}</span>
-                  ))}
-                </div>
-                {/* CTA */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <p style={{ margin: 0, fontSize: 12.5, color: D.textSub, lineHeight: 1.55, flex: "1 1 280px", minWidth: 0 }}>
+                    Mit Agency-Plan kommt der <strong style={{ color: D.text }}>KI-Mass-Fixer</strong> dazu — Bulk-Operationen über alle verbundenen Kunden-Sites + White-Label-Branding beim Endkunden.
+                  </p>
                   <Link href="/fuer-agenturen#pricing" style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "11px 24px", borderRadius: 8,
+                    flexShrink: 0,
+                    padding: "8px 16px", borderRadius: 7,
                     background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
-                    color: "#fff",
-                    fontSize: 13, fontWeight: 800, textDecoration: "none",
-                    boxShadow: "0 4px 20px rgba(124,58,237,0.35)",
-                    whiteSpace: "nowrap",
+                    color: "#fff", fontSize: 12, fontWeight: 800,
+                    textDecoration: "none", whiteSpace: "nowrap",
+                    boxShadow: "0 2px 10px rgba(124,58,237,0.25)",
                   }}>
                     Auf Agency upgraden →
                   </Link>
-                  <span style={{ fontSize: 11, color: D.textMuted }}>ab 249€/Monat · inkl. Plugin + Kunden-Matrix</span>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>}
 
           {!isNewScan && <Divider style={{ marginBottom: 28 }} />}

@@ -176,9 +176,8 @@ export default function StarterDashboard(props: StarterDashboardProps) {
 
   const isAgencyUser = isAgencyPlan(plan);
 
-  // Fetch plugin API key + connected sites for Agency users
+  // Fetch plugin API key + connected sites — ab jedem zahlenden Plan.
   useEffect(() => {
-    if (!isAgencyUser) return;
     fetch("/api/user/plugin-key")
       .then(r => r.json())
       .then((d: { key?: string }) => { if (d.key) setPluginApiKey(d.key); })
@@ -189,7 +188,7 @@ export default function StarterDashboard(props: StarterDashboardProps) {
         if (d.sites) setConnectedSites(d.sites);
       })
       .catch(() => {});
-  }, [isAgencyUser]);
+  }, []);
 
   async function handleRegenerateKey() {
     setPluginKeyLoading(true);
