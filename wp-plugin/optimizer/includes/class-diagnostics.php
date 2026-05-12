@@ -39,6 +39,10 @@ class WFOCO_Diagnostics {
      */
     private static function check_heartbeat() {
         $defaults = array( 'minimalInterval' => 60, 'interval' => 60 );
+        // We probe WordPress core's heartbeat_settings filter to read the
+        // effective runtime state. The hook is WordPress core, not ours —
+        // the PrefixAllGlobals rule's false-positive here.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $settings = apply_filters( 'heartbeat_settings', $defaults );
         $interval = isset( $settings['interval'] ) ? (int) $settings['interval'] : 60;
 
@@ -68,6 +72,9 @@ class WFOCO_Diagnostics {
      * XML-RPC-Status: liest den `xmlrpc_enabled`-Filter.
      */
     private static function check_xmlrpc() {
+        // Probing WordPress core's xmlrpc_enabled filter to read runtime
+        // state. Hook is WP core, not ours — PrefixAllGlobals false-positive.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $enabled = (bool) apply_filters( 'xmlrpc_enabled', true );
         if ( $enabled ) {
             return array(

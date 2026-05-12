@@ -9,6 +9,9 @@
  * wf-optimizer/-Unterordner liegen könnten.
  *
  * Plus: Optionen aufräumen.
+ *
+ * Alle lokalen Variablen mit $wfoco_-Präfix, um WP.org Plugin-Check
+ * Global-Variable-Naming-Convention zu erfüllen.
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
@@ -25,34 +28,43 @@ if ( ! defined( 'WPMU_PLUGIN_DIR' ) ) {
 
 $wfoco_marker = 'WebsiteFix One-Click Optimizer';
 
+// WP_Filesystem initialisieren
+if ( ! function_exists( 'WP_Filesystem' ) ) {
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+}
+global $wp_filesystem;
+WP_Filesystem();
+
 // ── 1. Flache Files unter mu-plugins/ mit wf-optimizer-Präfix ──────────
-if ( is_dir( WPMU_PLUGIN_DIR ) ) {
-    $flat_files = glob( WPMU_PLUGIN_DIR . '/' . WFOCO_FILE_PREFIX . '*.php' );
-    if ( is_array( $flat_files ) ) {
-        foreach ( $flat_files as $file ) {
+if ( $wp_filesystem && $wp_filesystem->is_dir( WPMU_PLUGIN_DIR ) ) {
+    $wfoco_flat_files = glob( WPMU_PLUGIN_DIR . '/' . WFOCO_FILE_PREFIX . '*.php' );
+    if ( is_array( $wfoco_flat_files ) ) {
+        foreach ( $wfoco_flat_files as $wfoco_file ) {
             // Marker-Check: nur löschen, wenn die Datei wirklich von uns ist.
-            $contents = @file_get_contents( $file );
-            if ( $contents && strpos( $contents, $wfoco_marker ) !== false ) {
-                @unlink( $file );
+            $wfoco_contents = $wp_filesystem->get_contents( $wfoco_file );
+            if ( $wfoco_contents && strpos( $wfoco_contents, $wfoco_marker ) !== false ) {
+                wp_delete_file( $wfoco_file );
             }
         }
     }
 }
 
 // ── 2. Legacy: v0.1.0-Files im wf-optimizer/-Unterordner ───────────────
-$legacy_dir = trailingslashit( WPMU_PLUGIN_DIR ) . 'wf-optimizer';
-if ( is_dir( $legacy_dir ) ) {
-    $legacy_files = glob( $legacy_dir . '/*.php' );
-    if ( is_array( $legacy_files ) ) {
-        foreach ( $legacy_files as $file ) {
-            $contents = @file_get_contents( $file );
-            if ( $contents && strpos( $contents, $wfoco_marker ) !== false ) {
-                @unlink( $file );
+$wfoco_legacy_dir = trailingslashit( WPMU_PLUGIN_DIR ) . 'wf-optimizer';
+if ( $wp_filesystem && $wp_filesystem->is_dir( $wfoco_legacy_dir ) ) {
+    $wfoco_legacy_files = glob( $wfoco_legacy_dir . '/*.php' );
+    if ( is_array( $wfoco_legacy_files ) ) {
+        foreach ( $wfoco_legacy_files as $wfoco_file ) {
+            $wfoco_contents = $wp_filesystem->get_contents( $wfoco_file );
+            if ( $wfoco_contents && strpos( $wfoco_contents, $wfoco_marker ) !== false ) {
+                wp_delete_file( $wfoco_file );
             }
         }
     }
-    if ( count( glob( $legacy_dir . '/*' ) ?: array() ) === 0 ) {
-        @rmdir( $legacy_dir );
+    // Leeren Ordner via WP_Filesystem entfernen
+    $wfoco_remaining = glob( $wfoco_legacy_dir . '/*' );
+    if ( is_array( $wfoco_remaining ) && count( $wfoco_remaining ) === 0 ) {
+        $wp_filesystem->rmdir( $wfoco_legacy_dir );
     }
 }
 

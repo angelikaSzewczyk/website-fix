@@ -84,10 +84,13 @@ class WFHC_Dashboard_Widget {
         echo esc_html__( 'Diese 5 Werte zeigen dir, wo dein Hoster oder deine Konfiguration die Site bremst. Lokal erhoben, keine Daten verlassen deine Site.', 'websitefix-health-check' );
         echo '</p>';
         echo '<p style="margin: 0;">';
+        // $report_url is already esc_url()-prepared at the top of the method;
+        // re-escape via esc_attr for the href context to satisfy strict
+        // Plugin-Check (it scans context-by-context, not data-flow).
         printf(
             /* translators: %s: link to the full audit report on WebsiteFix.com */
             esc_html__( 'Tiefer-Audit (92 Parameter inkl. DB-Bloat, PHP-Error-Trace, Hook-Chain-Analyse): %s', 'websitefix-health-check' ),
-            '<a href="' . $report_url . '" target="_blank" rel="noopener" style="color: #15803d; font-weight: 600; text-decoration: none;">WebsiteFix.com →</a>'
+            '<a href="' . esc_url( $report_url ) . '" target="_blank" rel="noopener" style="color: #15803d; font-weight: 600; text-decoration: none;">WebsiteFix.com →</a>'
         );
         echo '</p>';
         echo '</div>';

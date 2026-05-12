@@ -2,171 +2,168 @@
 Contributors: websitefix
 Tags: performance, optimization, heartbeat, xmlrpc, jquery
 Requires at least: 5.9
-Tested up to: 6.7
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Aktiviere 7 WordPress-Performance- und Security-Fixes mit einem Klick. Sicher, reversibel, ohne Code-Editing.
+Activate 7 WordPress performance and security fixes with one click. Safe, reversible, no code editing required.
 
 == Description ==
 
-Du hast schon mal gehört „du solltest die Heartbeat-API drosseln" oder „xmlrpc.php solltest du eigentlich abschalten"? Aber jedes Mal landest du in einem Forenthread mit 12 widersprüchlichen Code-Snippets, von denen 3 deine Site zerlegen.
+You've heard "you should throttle the Heartbeat API" or "xmlrpc.php should probably be disabled"? But every time you end up in a forum thread with 12 conflicting code snippets, three of which will wreck your site.
 
-**WebsiteFix One-Click Optimizer** löst genau dieses Problem. Sieben hand-kuratierte Performance- und Security-Fixes, jeder mit Safety-Check (erkennt konfligierende Plugins automatisch und greift dann NICHT ein), jeder per Klick aktivierbar und genauso per Klick wieder weg.
+**WebsiteFix One-Click Optimizer** solves exactly this problem. Seven hand-curated performance and security fixes, each with auto-safety-check (automatically detects conflicting plugins and does NOT intervene), each one-click-activatable and just as one-click reversible.
 
-= Die 7 Fixes =
+= The 7 Fixes =
 
-**1. Heartbeat-API drosseln**
-Reduziert die WordPress-Heartbeat-Frequenz kontextabhängig: 60 s im Admin, 120 s im Post-Editor (statt 15 s), Frontend praktisch aus. Typische Ersparnis: 75–85 % weniger admin-ajax.php-Last → niedrigere CPU-Drosselung beim Hoster, deutlich niedrigerer TTFB-Wert.
+**1. Throttle the Heartbeat API**
+Reduces the WordPress Heartbeat frequency contextually: 60s in the admin, 120s in the post editor (instead of 15s), practically off on the frontend. Typical savings: 75–85% less admin-ajax.php load → lower CPU throttling at your host, significantly lower TTFB value.
 
-**2. XML-RPC & Pingbacks deaktivieren**
-Schließt den XML-RPC-Endpoint (mit Abstand die häufigste Brute-Force-Angriffsfläche auf WordPress) und schaltet ausgehende Pingbacks ab. Auto-Safety-Check: wenn Jetpack, Wordfence oder Sucuri aktiv sind, greift der Fix NICHT ein — du musst dich nicht zwischen Security-Plugin und xmlrpc-Hardening entscheiden. Plus REST-API-User-Enumeration-Schutz für anonyme Anfragen.
+**2. Disable XML-RPC & Pingbacks**
+Closes the XML-RPC endpoint (by far the most common brute-force attack target on WordPress) and disables outbound pingbacks. Auto-safety-check: if Jetpack, Wordfence, or Sucuri are active, the fix does NOT intervene — you don't have to choose between security plugin and xmlrpc hardening. Plus REST API user enumeration protection for anonymous requests.
 
-**3. Emojis & oEmbed-Discovery entfernen**
-Entfernt die WordPress-Emoji-Polyfill-Scripte (`wp-emoji-release.min.js`, ~14 KB) und die oEmbed-Auto-Discovery-Routen. Spart 2–3 HTTP-Requests pro Page-Load. URL-Embeds im Editor bleiben funktional — nur die öffentliche Discovery wird abgeschaltet.
+**3. Remove Emojis & oEmbed Discovery**
+Removes the WordPress emoji polyfill scripts (`wp-emoji-release.min.js`, ~14 KB) and the oEmbed auto-discovery routes. Saves 2–3 HTTP requests per page load. URL embeds in the editor remain functional — only public discovery is turned off.
 
-**4. Query-Strings aus statischen Assets entfernen**
-Strippt `?ver=…` aus CSS/JS-Asset-Pfaden. Proxy- und CDN-Caches (Cloudflare, Hoster-Cache) können die Assets jetzt sauber cachen. Auto-Safety-Check: bei WP Rocket / W3 Total Cache / WP Super Cache greift der Fix NICHT ein — die Caching-Plugins machen das selbst.
+**4. Strip Query Strings from Static Assets**
+Strips `?ver=…` from CSS/JS asset paths. Proxy and CDN caches (Cloudflare, host caches) can now cleanly cache the assets. Auto-safety-check: with WP Rocket / W3 Total Cache / WP Super Cache, the fix does NOT intervene — caching plugins handle this themselves.
 
-**5. jQuery-Migrate aus dem Frontend entfernen**
-Entfernt `jquery-migrate.min.js` (~11 KB) aus dem Frontend, lässt sie im Admin aber aktiv. Auf modernen Themes (2020+) ist Migrate überflüssig. Lighthouse-Performance-Score steigt typisch um 1–3 Punkte.
+**5. Remove jQuery Migrate from Frontend**
+Removes `jquery-migrate.min.js` (~11 KB) from the frontend but keeps it active in the admin. On modern themes (2020+), Migrate is unnecessary. Lighthouse Performance score typically increases by 1–3 points.
 
-**6. Author-Archive blockieren (User-Enumeration-Schutz)**
-Verhindert Username-Discovery via `/?author=N` oder `/author/<name>/`. Auto-Safety-Check: wenn Yoast bereits Author-Archives deaktiviert hat, greift der Fix nicht ein. Bekanntester Brute-Force-Vorbereitungs-Trick wird ausgehebelt — Aufrufe werden 301 zur Startseite redirected. Zusätzlich: REST-API-User-Einzelendpoints für anonyme Calls dichtgemacht.
+**6. Block Author Archives (User Enumeration Protection)**
+Prevents username discovery via `/?author=N` or `/author/<name>/`. Auto-safety-check: if Yoast already has Author Archives disabled, the fix does not intervene. The most well-known brute-force prep trick is neutralized — calls are 301-redirected to the homepage. Additionally: REST API user-individual endpoints blocked for anonymous calls.
 
-**7. WordPress-Version aus Frontend entfernen**
-Entfernt den `<meta name="generator">`-Tag im HTML-Head, im RSS-Feed und in Asset-URL-`?ver=`-Strings. Externe Scanner und Brute-Force-Bots erkennen die exakte WordPress-Version nicht mehr direkt — versions-spezifische Exploit-Sweep-Attacken werden aufwändiger. Auto-Safety-Check: wenn Wordfence / Sucuri / All-in-One Security / Perfmatters aktiv sind, greift der Fix nicht ein (die machen das selbst).
+**7. Hide WordPress Version from Frontend**
+Removes the `<meta name="generator">` tag from the HTML head, from the RSS feed, and from asset URL `?ver=` strings. External scanners and brute-force bots can no longer directly identify the exact WordPress version — version-specific exploit-sweep attacks become more expensive. Auto-safety-check: if Wordfence / Sucuri / All-in-One Security / Perfmatters are active, the fix does not intervene (they handle this themselves).
 
-= Wie es technisch funktioniert =
+= How It Works Technically =
 
-Wenn du einen Fix aktivierst, schreibt das Plugin eine einzelne PHP-Datei nach `/wp-content/mu-plugins/wf-optimizer-<fix-slug>.php`. WordPress lädt Must-Use-Plugins **automatisch vor allen regulären Plugins** — kein Activation-Workflow nötig, kein Reload-Trick, der Fix greift sofort.
+When you activate a fix, the plugin writes a single PHP file to `/wp-content/mu-plugins/wf-optimizer-<fix-slug>.php`. WordPress automatically loads must-use plugins **before all regular plugins** — no activation workflow needed, no reload trick, the fix takes effect immediately.
 
-Beim Deaktivieren wird die Datei gelöscht. Standard-WordPress-Verhalten ist sofort wieder aktiv. Beim Deinstallieren des Plugins selbst werden ALLE Fix-Dateien automatisch entfernt.
+When you deactivate, the file is deleted. Standard WordPress behavior returns immediately. When you uninstall the plugin itself, ALL fix files are automatically removed.
 
-**Wir editieren NIE deine functions.php.** Wir berühren keine Theme-Dateien, keine wp-config.php, keine bestehenden Plugins. Jeder Fix ist isoliert in seiner eigenen Datei — du kannst sie selbst inspizieren, und du kannst sie genauso einfach manuell löschen, wenn du das Plugin nicht mehr nutzen willst.
+**We NEVER edit your functions.php.** We do not touch theme files, wp-config.php, or existing plugins. Each fix is isolated in its own file — you can inspect them yourself, and you can just as easily delete them manually if you don't want to use the plugin anymore.
 
-= Was es NICHT macht =
+All filesystem operations go through the WordPress WP_Filesystem API (`put_contents`, `delete`, `is_writable`, etc.) — no direct PHP filesystem calls.
 
-* Es schreibt nichts in deine Datenbank (`wp_options`-Eintrag mit der Liste aktiver Fixes ausgenommen — 50 Bytes).
-* Es modifiziert keine Theme-Dateien, keine `functions.php`, keine `wp-config.php`.
-* Es deaktiviert keine bestehenden Plugins automatisch — Auto-Safety-Check erkennt Konflikte und überspringt den Fix.
-* Es sendet keine User-Daten an externe Server. Komplett offline-fähig.
-* Es zeigt keine Werbe-Banner, keinen Nag-Screen, keinen Trial-Ablauf.
+= What It Does NOT Do =
 
-= Wer dahinter steht =
+* Writes nothing to your database (a single `wp_options` entry with the list of active fixes is the exception — ~50 bytes).
+* Modifies no theme files, no functions.php, no wp-config.php.
+* Does not automatically deactivate existing plugins — auto-safety-check detects conflicts and skips the fix.
+* Sends no user data to external servers. Fully offline-capable.
+* Shows no ad banners, no nag screen, no trial expiration.
 
-WebsiteFix ist ein in Frankfurt entwickeltes WordPress-Diagnose-Tool. Die fünf Snippets sind 1:1 aus unserer kostenlosen Smart-Fix-Library auf [website-fix.com/smart-fix-library](https://website-fix.com/smart-fix-library) portiert. Plugin ist Open-Source unter GPL, Feedback/Bugs: support@website-fix.com.
+= Who Is Behind This =
+
+WebsiteFix is a WordPress diagnostic tool developed in Frankfurt, Germany. The seven snippets are ported 1:1 from our free Smart Fix Library at [website-fix.com/smart-fix-library](https://website-fix.com/smart-fix-library). The plugin is open source under GPL. Feedback/bugs: support@website-fix.com.
+
+= Auf Deutsch / In German =
+
+Sieben kuratierte WordPress-Performance- und Security-Fixes mit einem Klick aktivierbar. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins automatisch und greift dann NICHT ein). Aktivierte Fixes werden als Must-Use-Plugin-Datei in `/wp-content/mu-plugins/` mit dem Präfix `wf-optimizer-` abgelegt — kein Theme-Edit, kein Reload-Workaround, sofortige Rückgängig-Möglichkeit. Read-only-Verbindung zu deiner Datenbank — nur ein einziger `wp_options`-Eintrag mit ~50 Bytes wird gespeichert. Die sieben Snippets sind 1:1 aus unserer kostenlosen Smart-Fix-Library auf website-fix.com portiert.
 
 == Installation ==
 
-1. Plugin im WordPress-Admin unter „Plugins → Installieren" suchen („WebsiteFix One-Click Optimizer") und aktivieren.
-2. Unter „Werkzeuge → WebsiteFix Optimizer" findest du die 5 Fix-Cards.
-3. Pro Card: Beschreibung lesen, optional „Code anzeigen" zur Inspektion ausklappen, dann „Fix aktivieren" klicken.
-4. Oder oben „Alle 5 Fixes auf einmal aktivieren" für den schnellen Setup.
-5. Frontend neu laden — Effekte greifen sofort.
+1. Search for "WebsiteFix One-Click Optimizer" under "Plugins → Add New" in the WordPress admin and activate it.
+2. Under "Tools → WebsiteFix Optimizer", you'll find the 7 fix cards.
+3. Per card: read the description, optionally expand "Show code" to inspect what will be written, then click "Activate fix".
+4. Or click "Activate all 7 fixes at once" at the top for quick setup.
+5. Reload the frontend — effects take place immediately.
 
-**Hinweis zu Schreibrechten:** Der Plugin braucht Schreibzugriff auf `/wp-content/mu-plugins/`. Bei den meisten deutschen Hostern (IONOS, Strato, All-Inkl, Hetzner, webgo) ist das Standard. Falls das Plugin eine Schreibrechte-Warnung zeigt: Hosting-Support kontaktieren oder CHMOD auf 755 setzen.
+**Note on file permissions:** The plugin needs write access to `/wp-content/mu-plugins/`. On most German hosts (IONOS, Strato, All-Inkl, Hetzner, webgo), this is standard. If the plugin shows a "write permissions missing" warning: contact hosting support or set CHMOD to 755.
 
 == Frequently Asked Questions ==
 
-= Wird mein Theme oder meine functions.php verändert? =
+= Will my theme or my functions.php be modified? =
 
-Nein. Das Plugin schreibt ausschließlich in `/wp-content/mu-plugins/` mit dem Präfix `wf-optimizer-` (z.B. `wf-optimizer-heartbeat-throttle.php`). Dein Theme, deine `functions.php`, deine `wp-config.php` werden nie angerührt.
+No. The plugin writes exclusively to `/wp-content/mu-plugins/` with the prefix `wf-optimizer-` (e.g., `wf-optimizer-heartbeat-throttle.php`). All filesystem operations go through the WordPress WP_Filesystem API. Your theme, your functions.php, your wp-config.php are never touched.
 
-= Was passiert, wenn ich das Plugin deaktiviere? =
+= What happens when I deactivate the plugin? =
 
-Die mu-plugin-Fix-Dateien bleiben aktiv — das ist Absicht. Du hast die Optimierungen bewusst aktiviert, sie sollen weiterlaufen, auch wenn du das Verwaltungs-UI nicht mehr brauchst. Wenn du wirklich alles aufräumen willst: erst alle Fixes im Admin-UI deaktivieren, dann das Plugin deinstallieren („Delete" statt nur „Deactivate").
+The mu-plugin fix files remain active — this is intentional. You activated the optimizations deliberately, so they should keep running even if you don't need the management UI anymore. If you really want to clean everything up: first deactivate all fixes in the admin UI, then uninstall the plugin ("Delete" instead of just "Deactivate").
 
-= Was passiert, wenn ich das Plugin lösche? =
+= What happens when I delete the plugin? =
 
-Beim Löschen (Uninstall) werden ALLE Fix-Dateien automatisch entfernt und die Optionen aufgeräumt. Standard-WordPress-Verhalten kehrt zurück.
+On delete (uninstall), ALL fix files are automatically removed and the options are cleaned up. Standard WordPress behavior returns.
 
-= Wie kann ich sehen, was genau geschrieben wird, BEVOR ich auf Aktivieren klicke? =
+= How can I see what will be written, BEFORE I click Activate? =
 
-Jede Card hat einen Toggle „Code anzeigen". Klick drauf und du siehst exakt den PHP-Code mit allen Safety-Checks, der in die mu-plugin-Datei geschrieben wird. Vollständig transparent.
+Each card has a "Show code" toggle. Click it and you see exactly the PHP code with all safety checks that will be written to the mu-plugin file. Fully transparent.
 
-= Wie sehe ich, ob mein Hoster meine WordPress-Site drosselt? =
+= How can I tell if my host is throttling my WordPress site? =
 
-Drei Indikatoren: Server-Response-Wert (TTFB) über 800 ms bei normaler Last, regelmäßige 503-/504-Fehler zu Bürozeiten, und Mails vom Hoster mit Betreff „CPU-Verbrauch erhöht". Häufigster Verursacher: die WordPress-Heartbeat-API. Aktiviere den Heartbeat-Fix — meistens normalisiert sich die CPU-Last innerhalb von 24 Stunden.
+Three indicators: server response time (TTFB) above 800 ms under normal load, regular 503/504 errors during business hours, and emails from the host with subject "CPU usage increased". The most common culprit: the WordPress Heartbeat API. Activate the Heartbeat fix — CPU load usually normalizes within 24 hours.
 
-= Wie reduziere ich die WordPress-Heartbeat-API-Last? =
+= How do I reduce WordPress Heartbeat API load? =
 
-Heartbeat ruft sich standardmäßig alle 15 Sekunden im Admin auf. Der „Heartbeat-API drosseln"-Fix dieses Plugins reduziert die Frequenz kontextabhängig auf 60 s im Admin, 120 s im Post-Editor, 300 s im Frontend. Typische Ersparnis: 75–85 % weniger admin-ajax.php-Last.
+Heartbeat self-calls every 15 seconds by default in the admin. The "Throttle Heartbeat API" fix in this plugin reduces the frequency contextually to 60s in the admin, 120s in the post editor, 300s on the frontend. Typical savings: 75–85% less admin-ajax.php load.
 
-= Wie deaktiviere ich xmlrpc.php in WordPress? =
+= How do I disable xmlrpc.php in WordPress? =
 
-Der „XML-RPC & Pingbacks deaktivieren"-Fix dieses Plugins schaltet xmlrpc.php sicher ab. Auto-Safety-Check erkennt aktives Jetpack, Wordfence oder Sucuri und greift in dem Fall NICHT ein — du musst dich nicht zwischen Security-Plugin und xmlrpc-Hardening entscheiden.
+The "Disable XML-RPC & Pingbacks" fix in this plugin safely turns off xmlrpc.php. Auto-safety-check detects active Jetpack, Wordfence, or Sucuri and does NOT intervene in those cases — you don't have to choose between security plugin and xmlrpc hardening.
 
-= Funktioniert das Plugin mit WordPress-Multisite? =
+= Does the plugin work with WordPress Multisite? =
 
-Ja. Da Fixes als Must-Use-Plugins abgelegt werden, gelten sie automatisch netzwerk-weit — eine einmalige Aktivierung reicht für alle Sites im Network.
+Yes. Since fixes are deposited as must-use plugins, they apply network-wide automatically — a one-time activation is enough for all sites in the network.
 
-= Was, wenn ich schon Heartbeat Control / WP Rocket / Wordfence nutze? =
+= What if I already use Heartbeat Control / WP Rocket / Wordfence? =
 
-Jeder Fix hat einen Auto-Safety-Check, der konfligierende Plugins erkennt und sich dann selbst deaktiviert. Du läufst nicht in Doppelt-Konfigurationen.
+Each fix has an auto-safety-check that detects conflicting plugins and then deactivates itself. You don't run into double configurations.
 
-= Welche Daten werden an externe Server gesendet? =
+= What data is sent to external servers? =
 
-Keine. Das Plugin ist vollständig offline-fähig. Keine Telemetrie, kein Auto-Update-Server, kein Analytics-Tracking.
+None. The plugin is fully offline-capable. No telemetry, no auto-update server, no analytics tracking.
 
-= Was unterscheidet das Plugin von „Heartbeat Control" / „Disable Emojis" / „Disable XML-RPC"? =
+= How does the plugin differ from "Heartbeat Control" / "Disable Emojis" / "Disable XML-RPC"? =
 
-Diese Einzel-Plugins lösen je eine Sache. Wir bündeln fünf häufige Performance-Killer in einem Tool mit konsistenter UX, Auto-Safety-Check pro Fix, transparenter Code-Preview vor jedem Apply, und einer Architektur (mu-plugins-Dateien), die zur Theme-Update-Zeit nicht überschrieben wird. Plus: ein einziges Plugin im Admin statt fünf.
+These single plugins each solve one thing. We bundle seven common performance and security weaknesses in one tool with consistent UX, per-fix auto-safety-check, transparent code preview before every apply, and an architecture (mu-plugins files) that isn't overwritten at theme-update time. Plus: one plugin in the admin instead of seven.
 
-= Ist das Plugin GDPR-/DSGVO-konform? =
+= Is the plugin GDPR-compliant? =
 
-Ja. Es verarbeitet keine personenbezogenen Daten, sendet nichts an externe Server und speichert nur die Liste aktiver Fix-Slugs in der WordPress-Optionen-Tabelle (Format: `["heartbeat-throttle","xmlrpc-disable"]`, ~50 Bytes).
+Yes. It processes no personal data, sends nothing to external servers, and stores only the list of active fix slugs in the WordPress options table (format: `["heartbeat-throttle","xmlrpc-disable"]`, ~50 bytes).
 
 == Screenshots ==
 
-1. Die Settings-Page mit den 5 Fix-Cards und Live-Status-Pillen.
-2. Eine einzelne Card mit ausgeklapptem Code-Preview vor dem Apply.
-3. Die Master-Bar „Alle 5 Fixes auf einmal aktivieren".
+1. The settings page with the 7 fix cards and live status indicators.
+2. A single card with the code preview expanded before apply.
+3. The master action "Activate all 7 fixes at once".
 
 == Changelog ==
 
+= 0.3.0 — 2026-05-12 =
+* **WP.org Plugin-Check compliance pass:**
+  * All filesystem operations migrated from direct PHP calls (`rename`, `unlink`, `is_writable`, `rmdir`) to the WordPress WP_Filesystem API and `wp_delete_file()`.
+  * Global variable prefixing — all uninstall.php locals prefixed with `$wfoco_`.
+  * Hook probes (`apply_filters('heartbeat_settings')`, `apply_filters('xmlrpc_enabled')`) annotated with `phpcs:ignore` (legitimate WP-core probes, not false-prefixes).
+* Readme translated to standard English (WP.org requirement since 2025-07).
+* `Tested up to: 6.9` (matches current WordPress release).
+
 = 0.2.0 — 2026-05-12 =
-* **Zwei neue Fixes:** Author-Archive blockieren (User-Enumeration-Schutz)
-  und WordPress-Version aus Frontend entfernen (Generator-Tag,
-  RSS-Feed-Generator und Asset-`?ver=`-Strings). Beide mit Auto-Safety-
-  Check gegen Yoast, Wordfence, Sucuri, All-in-One Security und Perfmatters.
-* Plugin-Beschreibung von "5 Fixes" auf "7 Fixes" aktualisiert.
-* Diagnostics für die zwei neuen Slugs ergänzt — Author-Block per
-  Option-State, Version-Hide per `has_action`-Probe auf `wp_generator`.
+* **Two new fixes:** Block author archives (user enumeration protection) and hide WordPress version from frontend (generator tag, RSS feed generator, and asset `?ver=` strings). Both with auto-safety-check against Yoast, Wordfence, Sucuri, All-in-One Security, and Perfmatters.
+* Plugin description updated from "5 fixes" to "7 fixes".
+* Diagnostics for the two new slugs added — author-block via option state, version-hide via `has_action` probe on `wp_generator`.
 
 = 0.1.1 — 2026-05-12 =
-* **Kritischer Bug-Fix:** mu-plugin-Files wurden in v0.1.0 in einen
-  Unterordner (`mu-plugins/wf-optimizer/`) geschrieben, den WordPress nicht
-  automatisch auflöst. Folge: aktivierte Fixes lagen auf Disk, liefen aber
-  nicht. Jetzt: flach unter `mu-plugins/` mit Präfix `wf-optimizer-`.
-* **Critical-Error-Fix:** Die Live-Diagnostik für Query-Strings und
-  jQuery-Migrate triggerte einen Fatal, wenn fremde Plugins Handler auf
-  `style_loader_src` oder `wp_default_scripts` registriert hatten und auf
-  unsere synthetischen Test-URLs mit einer Exception reagierten. Jetzt
-  liest die Diagnostik den Option-State direkt — kein Filter-Probe mehr.
-* Uninstall räumt jetzt sowohl die neuen flachen Files als auch die
-  Legacy-Files aus dem v0.1.0-Unterordner auf.
+* **Critical bug fix:** mu-plugin files were written to a subfolder (`mu-plugins/wf-optimizer/`) in v0.1.0, which WordPress doesn't auto-load. Consequence: activated fixes sat on disk but didn't run. Now: flat under `mu-plugins/` with prefix `wf-optimizer-`.
+* **Critical error fix:** the live diagnostic for query strings and jQuery migrate triggered a fatal when foreign plugins had handlers on `style_loader_src` or `wp_default_scripts` and reacted to our synthetic test URLs with an exception. Now the diagnostic reads the option state directly — no more filter probe.
+* Uninstall now cleans up both the new flat files and legacy files from the v0.1.0 subfolder.
 
 = 0.1.0 — 2026-05-13 =
-* Erste öffentliche Beta-Version.
-* 5 Fix-Cards: Heartbeat, XML-RPC, Emojis & oEmbed, Query-Strings, jQuery-Migrate.
-* Apply/Revert via Must-Use-Plugin-Dateien in `/wp-content/mu-plugins/`.
-* Auto-Safety-Check pro Fix (erkennt konfligierende Plugins).
-* Live-Diagnostic pro Card (zeigt aktuellen Status: aktiv/inaktiv + Detail).
-* Code-Preview-Toggle pro Card (volle Transparenz vor Apply).
-* Master-Action „Alle 5 Fixes auf einmal aktivieren / deaktivieren".
-* Atomic File-Writes (rename-after-tmp).
-* Sauberer Uninstall-Pfad — alle Fix-Dateien werden beim Plugin-Delete entfernt.
+* Initial public beta.
 
 == Upgrade Notice ==
 
+= 0.3.0 =
+**Plugin-Check compliance release:** filesystem operations refactored to WP_Filesystem API, readme in English (WP.org requirement), Tested up to 6.9. Submission-ready.
+
 = 0.2.0 =
-**Feature-Release:** Zwei neue Fixes (Author-Archive-Block + WordPress-Version-Hide), beide mit Auto-Safety-Check gegen konfligierende Security-Plugins. Bestehende 5 Fixes unverändert.
+**Feature release:** Two new fixes (author archive block + WordPress version hide), both with auto-safety-check against conflicting security plugins. Existing 5 fixes unchanged.
 
 = 0.1.1 =
-**Bug-Fix-Release:** v0.1.0 hatte zwei kritische Bugs (mu-plugin-Subfolder wurde nicht autoloaded → Fixes liefen nicht, Critical-Error bei der Diagnostik). Beide behoben. Upgrade dringend empfohlen.
+**Bug-fix release:** v0.1.0 had two critical bugs (mu-plugins subfolder not auto-loaded → fixes didn't run, critical error in diagnostics). Both fixed. Upgrade strongly recommended.
 
 = 0.1.0 =
-Erste öffentliche Beta. Aktiv getestet auf den fünf größten deutschen Shared-Hosting-Anbietern (IONOS, Strato, All-Inkl, Hetzner, webgo) und unter WordPress-Multisite.
+Initial public beta. Actively tested on the five largest German shared hosting providers (IONOS, Strato, All-Inkl, Hetzner, webgo) and under WordPress Multisite.

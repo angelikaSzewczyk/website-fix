@@ -3,7 +3,7 @@
  * Plugin Name:       WebsiteFix One-Click Performance Optimizer
  * Plugin URI:        https://website-fix.com/plugin
  * Description:       Aktiviere 7 kuratierte WordPress-Performance- und Security-Fixes mit einem Klick: Heartbeat drosseln, XML-RPC abschalten, Emojis & oEmbed entfernen, Query-Strings strippen, jQuery-Migrate aus dem Frontend werfen, Author-Archive blockieren, WordPress-Version verstecken. Jeder Fix kommt mit Safety-Check + sofortiger Rückgängig-Möglichkeit.
- * Version:           0.2.0
+ * Version:           0.3.0
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -16,7 +16,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Konstanten ─────────────────────────────────────────────────────────────
-define( 'WFOCO_VERSION',     '0.2.0' );
+define( 'WFOCO_VERSION',     '0.3.0' );
 define( 'WFOCO_SLUG',        'websitefix-one-click-optimizer' );
 define( 'WFOCO_PATH',        plugin_dir_path( __FILE__ ) );
 define( 'WFOCO_URL',         plugin_dir_url( __FILE__ ) );
@@ -82,15 +82,22 @@ function wfoco_uninstall() {
     delete_option( WFOCO_OPTION_KEY );
 
     // Legacy: wf-optimizer/-Unterordner aus v0.1.0 entfernen, falls vorhanden.
-    if ( is_dir( WFOCO_LEGACY_MU_DIR ) ) {
-        $legacy_files = glob( WFOCO_LEGACY_MU_DIR . '/*.php' );
-        if ( is_array( $legacy_files ) ) {
-            foreach ( $legacy_files as $file ) {
-                @unlink( $file );
+    // Wird über WP_Filesystem-API gemacht (WP.org-Konformität).
+    if ( ! function_exists( 'WP_Filesystem' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+    }
+    global $wp_filesystem;
+    WP_Filesystem();
+    if ( $wp_filesystem && $wp_filesystem->is_dir( WFOCO_LEGACY_MU_DIR ) ) {
+        $wfoco_legacy_files = glob( WFOCO_LEGACY_MU_DIR . '/*.php' );
+        if ( is_array( $wfoco_legacy_files ) ) {
+            foreach ( $wfoco_legacy_files as $wfoco_file ) {
+                wp_delete_file( $wfoco_file );
             }
         }
-        if ( count( glob( WFOCO_LEGACY_MU_DIR . '/*' ) ?: array() ) === 0 ) {
-            @rmdir( WFOCO_LEGACY_MU_DIR );
+        $wfoco_remaining = glob( WFOCO_LEGACY_MU_DIR . '/*' );
+        if ( is_array( $wfoco_remaining ) && count( $wfoco_remaining ) === 0 ) {
+            $wp_filesystem->rmdir( WFOCO_LEGACY_MU_DIR );
         }
     }
 }

@@ -134,7 +134,9 @@ class WFHC_Quick_Check {
         );
 
         // Filter anwenden — wenn ein Plugin oder Snippet die Frequenz
-        // anpasst, sehen wir hier den effektiven Wert.
+        // anpasst, sehen wir hier den effektiven Wert. Hook ist WP-Core,
+        // nicht unser — PrefixAllGlobals-Rule's false-positive.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $settings = apply_filters( 'heartbeat_settings', $defaults );
         $interval = isset( $settings['interval'] ) ? (int) $settings['interval'] : 60;
 
@@ -184,8 +186,20 @@ class WFHC_Quick_Check {
         $largest_table = null;
         $largest_mb    = null;
 
+        // Object-Cache-Wrapper für die information_schema-Queries — eine
+        // Stunde Cache reicht, weil DB-Größe sich nicht minütlich ändert.
+        // Cache-Key inkl. DB_NAME, damit Multi-Site-Setups ihre eigenen
+        // Snapshot-Werte halten.
+        $cache_key   = 'wfhc_db_metrics_' . md5( DB_NAME );
+        $cache_group = 'websitefix_health_check';
+        $cached      = wp_cache_get( $cache_key, $cache_group );
+        if ( false !== $cached && is_array( $cached ) ) {
+            return $cached;
+        }
+
         if ( $wpdb ) {
             try {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 $size_row = $wpdb->get_row( $wpdb->prepare(
                     "SELECT ROUND(SUM(DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS size_mb
                      FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s",
@@ -195,6 +209,7 @@ class WFHC_Quick_Check {
                     $size_mb = (float) $size_row['size_mb'];
                 }
 
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 $largest_row = $wpdb->get_row( $wpdb->prepare(
                     "SELECT TABLE_NAME AS name,
                             ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS size_mb
@@ -213,13 +228,15 @@ class WFHC_Quick_Check {
         }
 
         if ( $size_mb === null ) {
-            return array(
+            $result = array(
                 'size_mb'       => null,
                 'largest_table' => null,
                 'ok'            => true, // unbekannt = nicht negativ markieren
                 'value_text'    => 'n/v',
                 'hint'          => 'Hoster sperrt information_schema — Größe nicht abrufbar',
             );
+            wp_cache_set( $cache_key, $result, $cache_group, HOUR_IN_SECONDS );
+            return $result;
         }
 
         $size_str = $size_mb < 1
@@ -231,7 +248,7 @@ class WFHC_Quick_Check {
             : '';
 
         if ( $size_mb < 200 ) {
-            return array(
+            $result = array(
                 'size_mb'       => $size_mb,
                 'largest_table' => $largest_table,
                 'largest_mb'    => $largest_mb,
@@ -239,9 +256,8 @@ class WFHC_Quick_Check {
                 'value_text'    => $size_str,
                 'hint'          => $largest_hint ?: 'Gesunde Größe',
             );
-        }
-        if ( $size_mb < 500 ) {
-            return array(
+        } elseif ( $size_mb < 500 ) {
+            $result = array(
                 'size_mb'       => $size_mb,
                 'largest_table' => $largest_table,
                 'largest_mb'    => $largest_mb,
@@ -249,15 +265,18 @@ class WFHC_Quick_Check {
                 'value_text'    => $size_str,
                 'hint'          => $largest_hint . ' · moderat',
             );
+        } else {
+            $result = array(
+                'size_mb'       => $size_mb,
+                'largest_table' => $largest_table,
+                'largest_mb'    => $largest_mb,
+                'ok'            => false,
+                'value_text'    => $size_str,
+                'hint'          => $largest_hint . ' · Bloat-Verdacht',
+            );
         }
-        return array(
-            'size_mb'       => $size_mb,
-            'largest_table' => $largest_table,
-            'largest_mb'    => $largest_mb,
-            'ok'            => false,
-            'value_text'    => $size_str,
-            'hint'          => $largest_hint . ' · Bloat-Verdacht',
-        );
+        wp_cache_set( $cache_key, $result, $cache_group, HOUR_IN_SECONDS );
+        return $result;
     }
 
     /**
