@@ -363,6 +363,10 @@ add_filter( 'script_loader_tag', function( $tag, $handle ) {
       "Speichern. Frontend laden, Browser-DevTools → Console: kein jQuery-Migrate-Warning mehr, kein migrate.min.js im Network-Tab.",
     ],
     rollback: "Codeblock löschen — Migrate ist sofort wieder im Frontend aktiv.",
+    blogPost: {
+      slug:       "jquery-migrate-wordpress-entfernen",
+      anchorText: "Frontend-only vs. Plugin-Total-Off — der Unterschied im Detail",
+    },
   },
 ];
 
