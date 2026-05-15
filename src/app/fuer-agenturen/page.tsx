@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
   Layers, BellDot, Globe, ShieldCheck, Zap, Server, Palette,
-  Magnet, Crown, Check,
+  Magnet, Crown, Check, Gem,
   Wallet, Users, Bell, Lock, FileText, AlertTriangle,
 } from "lucide-react";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "../components/BrandIcons";
@@ -87,7 +87,7 @@ const PLANS: Plan[] = [
     features: [
       { text: "2 Projekte · 10 Deep-Scans pro Monat",                highlight: true, key: true },
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",   highlight: true, key: true },
-      { text: "🔒 Inkl. Read-Only Plugin (Hybrid-Scan freischalten)",highlight: true, key: true },
+      { text: "Inkl. Read-Only Plugin (kann nichts ändern — nur diagnostizieren)",highlight: true, key: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true, key: true },
       { text: "Alle Smart-Fix-Anleitungen inklusive (kein Einzelkauf)",highlight: true },
       { text: "Kein White-Label-PDF · Pro startet ab 89 €/Mo",       highlight: false, locked: true },
@@ -111,7 +111,7 @@ const PLANS: Plan[] = [
     features: [
       { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true, key: true },
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",           highlight: true, key: true },
-      { text: "🔒 Deep-Scan Plugin · KI-Analyse aller Befunde",              highlight: true, key: true },
+      { text: "Deep-Scan Plugin + KI-Analyse: was zuerst zu fixen ist",   highlight: true, key: true },
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true, key: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true, key: true },
       { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
@@ -136,7 +136,7 @@ const PLANS: Plan[] = [
     accent: "#A78BFA",
     features: [
       { text: "Bis zu 50 Kunden · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)",             highlight: true, key: true },
-      { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true, key: true },
+      { text: "White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true, key: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true, key: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true, key: true },
       { text: "Kunden-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true, key: true },
@@ -152,7 +152,7 @@ const PLANS: Plan[] = [
     href: undefined,
     recommended: false,
     enterprise: false,
-    badge: "💎 Bester ROI",
+    badge: "Bester ROI",
   },
 ];
 
@@ -1218,8 +1218,17 @@ export default function AgencyPage() {
               </div>
               <div style={{ flex: "1 1 280px", minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: T.amber, letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 8px", background: T.amberBg, border: `1px solid ${T.amberBorder}`, borderRadius: 999 }}>
-                    ⚡ Notfall · ohne Abo
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, color: T.amber,
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    padding: "2px 8px",
+                    background: T.amberBg,
+                    border: `1px solid ${T.amberBorder}`,
+                    borderRadius: 999,
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                  }}>
+                    <Zap size={11} strokeWidth={2.6} aria-hidden="true" />
+                    Notfall · ohne Abo
                   </span>
                   <span style={{ fontSize: 17, fontWeight: 800, color: T.text, letterSpacing: "-0.01em" }}>
                     Pay-per-Fix · 9,90 € einmalig
@@ -1280,7 +1289,9 @@ export default function AgencyPage() {
                         boxShadow: isScale
                           ? "0 4px 14px rgba(124,58,237,0.40)"
                           : "0 4px 14px rgba(37,99,235,0.35)",
+                        display: "inline-flex", alignItems: "center", gap: 6,
                       }}>
+                        {isScale && <Gem size={11} strokeWidth={2.4} aria-hidden="true" />}
                         {p.badge}
                       </div>
                     )}
@@ -1296,22 +1307,60 @@ export default function AgencyPage() {
                       <span style={{ fontSize: 44, fontWeight: 800, color: T.text, letterSpacing: "-0.04em" }}>{p.price} €</span>
                       <span style={{ fontSize: 14, color: T.textMuted }}>{p.per}</span>
                     </div>
-                    <p style={{ margin: "0 0 22px", fontSize: 13.5, color: T.textSub, lineHeight: 1.55 }}>{p.desc}</p>
+                    <p style={{ margin: "0 0 18px", fontSize: 13.5, color: T.textSub, lineHeight: 1.55 }}>{p.desc}</p>
+
+                    {/* Trust-Stripe (15.05.2026 UX-Audit Solo-Pivot):
+                        Konsistent mit page.tsx Plan-Cards — Read-Only-Garantie
+                        beim Tab-Wechsel zwischen Homepage und Agency-Page muss
+                        identisch erscheinen. Beide Pro + Agency haben ein Plugin
+                        mit gleicher Read-Only-Charakteristik (Hybrid-Scan,
+                        Deep-Scan, White-Label). */}
+                    <div style={{
+                      margin: "0 0 18px",
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      background: "rgba(16,185,129,0.06)",
+                      border: "1px solid rgba(16,185,129,0.20)",
+                      display: "flex", alignItems: "flex-start", gap: 8,
+                    }}>
+                      <ShieldCheck
+                        size={14}
+                        strokeWidth={2.2}
+                        color="rgba(16,185,129,0.85)"
+                        style={{ flexShrink: 0, marginTop: 1 }}
+                        aria-hidden="true"
+                      />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(110,231,183,0.92)", lineHeight: 1.45 }}>
+                        <strong style={{ fontWeight: 800 }}>Read-Only Garantie:</strong>{" "}
+                        Unser Plugin liest nur — es verändert niemals ungefragt deinen Code.
+                      </span>
+                    </div>
 
                     <ul style={{ margin: "0 0 20px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
-                      {p.features.map(f => (
-                        <li key={f.text} style={{
-                          display: "flex", gap: 9, alignItems: "flex-start",
-                          fontSize: 13, color: f.locked ? T.textFaint : T.textSub, lineHeight: 1.5,
-                        }}>
-                          {f.locked
-                            ? <span style={{ color: T.textFaint, fontWeight: 700, marginTop: 1, flexShrink: 0 }}>✕</span>
-                            : <Check size={13} color={p.accent} strokeWidth={3} style={{ marginTop: 3, flexShrink: 0 }} />}
-                          <span style={{ fontWeight: f.highlight && !f.locked ? 600 : 400, color: f.highlight && !f.locked ? T.text : "inherit" }}>
-                            {f.text}
-                          </span>
-                        </li>
-                      ))}
+                      {p.features.map(f => {
+                        // Plugin-Bullets kriegen Lucide-Lock-Marker (Solo-Vertrauen)
+                        const hasPluginLock = !f.locked && /Plugin/i.test(f.text);
+                        return (
+                          <li key={f.text} style={{
+                            display: "flex", gap: 9, alignItems: "flex-start",
+                            fontSize: 13, color: f.locked ? T.textFaint : T.textSub, lineHeight: 1.5,
+                          }}>
+                            {f.locked
+                              ? <span style={{ color: T.textFaint, fontWeight: 700, marginTop: 1, flexShrink: 0 }}>✕</span>
+                              : <Check size={13} color={p.accent} strokeWidth={3} style={{ marginTop: 3, flexShrink: 0 }} />}
+                            <span style={{
+                              fontWeight: f.highlight && !f.locked ? 600 : 400,
+                              color: f.highlight && !f.locked ? T.text : "inherit",
+                              display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap",
+                            }}>
+                              {hasPluginLock && (
+                                <Lock size={12} strokeWidth={2.4} style={{ flexShrink: 0, opacity: 0.85 }} aria-hidden="true" />
+                              )}
+                              <span>{f.text}</span>
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
 
                     {p.audienceFootnote && (

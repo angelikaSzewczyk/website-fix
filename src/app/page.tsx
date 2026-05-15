@@ -12,6 +12,7 @@ import PluginStackComparison from "./components/PluginStackComparison";
 import FounderPledge from "./components/FounderPledge";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 import PluginInfobox from "./components/PluginInfobox";
+import { Lock, Zap, Gem, ShieldCheck } from "lucide-react";
 
 // Blog-Teaser-Loader siehe src/lib/blog-loader.ts.
 // Auf der Homepage zeigen wir den jüngsten END-USER-Post (alles außer
@@ -157,7 +158,7 @@ const PLANS = [
     features: [
       { text: "2 Projekte · 10 Deep-Scans pro Monat",                highlight: true },
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",   highlight: true },
-      { text: "🔒 Inkl. Read-Only Plugin (Hybrid-Scan freischalten)",highlight: true },
+      { text: "Inkl. Read-Only Plugin (kann nichts ändern — nur diagnostizieren)",highlight: true },
       { text: "Basis-Monitoring (Uptime + Score-Trend)",             highlight: true },
       { text: "Alle Smart-Fix-Anleitungen inklusive (kein Einzelkauf)",highlight: true },
       { text: "Kein White-Label-PDF · Pro startet ab 89 €/Mo",       highlight: false, locked: true },
@@ -185,7 +186,7 @@ const PLANS = [
     features: [
       { text: "10 WordPress-Projekte · unbegrenzte Scans",                   highlight: true },
       { text: "Voller Deep-Scan: SEO, Technik, Performance, BFSG",           highlight: true },
-      { text: "🔒 Deep-Scan Plugin · KI-Analyse aller Befunde",              highlight: true },
+      { text: "Deep-Scan Plugin + KI-Analyse: was zuerst zu fixen ist",   highlight: true },
       { text: "Smart-Fix-Drawer mit Builder-Anleitung (Elementor / Divi)",   highlight: true },
       { text: "KI-Auto-Fix — Copy-Paste-Code direkt im Drawer",              highlight: true },
       { text: "White-Label PDF (Logo + Brand-Farbe)",                        highlight: true },
@@ -206,14 +207,14 @@ const PLANS = [
     per: "/Monat",
     desc: "Infrastruktur & Profit-Maximierung für Inhaber",
     audienceFootnote: "Für Agentur-Inhaber, die Wartung profitabel skalieren wollen.",
-    badge: "💎 Bester ROI",
+    badge: "Bester ROI",
     accent: "#7C3AED",
     accentBg: "#F5F3FF",
     accentBorder: "#DDD6FE",
     // KEEP SYNCED with /fuer-agenturen PLANS Agency Scale — wortgleich, gleiche Reihenfolge.
     features: [
       { text: "Bis zu 50 Kunden · Scan-Flatrate (Anti-Abuse-Cap 500/Mo)",             highlight: true },
-      { text: "🔒 White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true },
+      { text: "White-Label Plugin (Dein Branding beim Endkunden)",                    highlight: true },
       { text: "Delegations-Hebel im Dashboard (Junior-Lohnkosten-Ersparnis)",            highlight: true },
       { text: "Embeddable Lead-Generator — Scanner mit deinem Logo auf deiner Website",  highlight: true },
       { text: "Kunden-Portal unter Ihrer Custom-Domain (Q3 — Bestandskunden behalten Preis)", highlight: true },
@@ -335,25 +336,59 @@ export default function Page() {
             fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
           }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-            WordPress · Deep Scan · Smart-Fix Drawer
+            WordPress · Sofort-Check · Fix-Anleitung
           </div>
 
-          <h1 style={{ fontSize: "clamp(28px, 4.5vw, 58px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 18px", letterSpacing: "-0.035em", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }}>
-            Website-Fehler &amp; WordPress Probleme sofort beheben.
+          <h1 style={{
+            fontSize: "clamp(24px, 4.5vw, 58px)",
+            fontWeight: 800, lineHeight: 1.1,
+            margin: "0 0 18px",
+            letterSpacing: "-0.035em",
+            maxWidth: 860, marginLeft: "auto", marginRight: "auto",
+            // textWrap: balance balanciert die Zeilen-Längen, sodass auf
+            // Mobile keine einsame "Kunden — und du merkst es nicht."-Restzeile
+            // entsteht. Browser-Support: alle Evergreens seit 2023.
+            // overflowWrap: break-word als Sicherheits-Netz gegen Overflow.
+            textWrap: "balance",
+            overflowWrap: "break-word",
+            paddingLeft: 8, paddingRight: 8,
+          }}>
+            Deine Website verliert gerade Kunden — und du merkst es nicht.
           </h1>
 
-          <p style={{ fontSize: "clamp(16px, 2.1vw, 19px)", color: "rgba(255,255,255,0.78)", lineHeight: 1.6, maxWidth: 720, margin: "0 auto 16px", fontWeight: 600 }}>
-            Wird deine Seite bei Google nicht gefunden? Wir zeigen dir warum — in 60 Sekunden.
+          <p style={{
+            fontSize: "clamp(15px, 2.1vw, 19px)",
+            color: "rgba(255,255,255,0.78)", lineHeight: 1.6,
+            maxWidth: 720, margin: "0 auto 16px",
+            fontWeight: 600,
+            textWrap: "balance",
+            paddingLeft: 8, paddingRight: 8,
+          }}>
+            In 60 Sekunden zeigen wir dir, was Besucher zurückschreckt: langsamer Aufruf, kaputte Links, unsichtbar bei Google.
           </p>
 
           <p style={{ fontSize: "clamp(14px, 1.8vw, 16px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 640, margin: "0 auto 36px", fontWeight: 400 }}>
-            Der Deep-Scanner findet kritische WordPress-Fehler, Indexierungs-Probleme und Hosting-Bremsen — und liefert dir die passende Schritt-für-Schritt-Anleitung.
+            Kein Login, kein Plugin, kein Programmieren nötig — wir führen dich Klick für Klick.
           </p>
 
           {/* URL Input */}
           <div style={{ maxWidth: 580, margin: "0 auto 10px" }}>
             <InlineScan />
           </div>
+
+          {/* Solo-Safety-Hook (15.05.2026 UX-Audit-Pivot zu Solo-Fokus):
+              Direkt unter dem Scan-CTA — fängt die "darf ich das überhaupt
+              selbst?"-Angst von Solo-Inhabern ab, bevor sie den Tab schließen.
+              Bewusst klein gehalten und in muted-Farbe, damit das eigentliche
+              Scan-Versprechen visuell dominant bleibt. */}
+          <p style={{
+            margin: "0 auto 14px", fontSize: 12.5,
+            color: "rgba(255,255,255,0.55)", lineHeight: 1.55,
+            maxWidth: 520,
+          }}>
+            Du musst kein Entwickler sein. Wenn du im Guide hängenbleibst:
+            kostenlose Hilfe per E-Mail an support@website-fix.com.
+          </p>
 
           {/* Social-Proof: aus den 1.561 monatlichen GSC-Impressionen
               destilliert. Suchende sollen sofort sehen, dass die Engine
@@ -983,15 +1018,24 @@ export default function Page() {
               </div>
               <div style={{ flex: "1 1 280px", minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: "#FBBF24", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 8px", background: "rgba(251,191,36,0.14)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 999 }}>
-                    ⚡ Notfall · ohne Abo
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, color: "#FBBF24",
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    padding: "2px 8px",
+                    background: "rgba(251,191,36,0.14)",
+                    border: "1px solid rgba(251,191,36,0.35)",
+                    borderRadius: 999,
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                  }}>
+                    <Zap size={11} strokeWidth={2.6} aria-hidden="true" />
+                    Notfall · ohne Abo
                   </span>
                   <span style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
                     Pay-per-Fix · 9,90 € einmalig
                   </span>
                 </div>
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
-                  Konkretes Problem auf deiner Seite? Hol dir den passenden Fix-Guide einmalig — anonymer Checkout, kein Konto vorab nötig, lebenslanger Zugriff nach Zahlung.
+                  Du hast ein konkretes Problem? Hol dir die Schritt-für-Schritt-Anleitung als PDF — einmal 9,90 €, kein Abo, kein Konto, kein Programmieren. Kommt direkt per Mail.
                 </p>
               </div>
               <Link href="/scan" style={{
@@ -1007,7 +1051,7 @@ export default function Page() {
             </div>
 
             <p style={{ margin: "0 auto 18px", maxWidth: 720, textAlign: "center", fontSize: 12.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
-              Ein Abo lohnt sich ab dem <strong style={{ color: "rgba(255,255,255,0.65)" }}>3. Problem pro Monat</strong> (Starter), oder sofort, wenn mehrere Seiten betreut werden.
+              <strong style={{ color: "rgba(255,255,255,0.65)" }}>Du hast 1 Website?</strong> Pay-per-Fix oder Starter genügen — Professional und Agency sind für Freelancer und Agenturen mit vielen Kunden.
             </p>
 
             <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
@@ -1058,7 +1102,13 @@ export default function Page() {
                             ? "inset 0 -1px 0 rgba(255,255,255,0.08)"
                             : "none",
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: textColor }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: textColor,
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                        }}>
+                          {isPurple && (
+                            <Gem size={12} strokeWidth={2.2} aria-hidden="true" />
+                          )}
                           {label}
                         </span>
                       </div>
@@ -1110,6 +1160,35 @@ export default function Page() {
                       </div>
                     )}
 
+                    {/* Trust-Stripe (15.05.2026 UX-Audit Solo-Pivot):
+                        Read-Only-Garantie aus der FAQ direkt auf jede Plan-Card
+                        ziehen — Solos sehen die "kann meine Seite nicht
+                        kaputtmachen"-Zusicherung, BEVOR sie den Preis verarbeiten.
+                        Funktioniert auf allen 3 Tiers, weil alle Tiers ein
+                        Read-Only-Plugin enthalten (Starter Hybrid-Scan,
+                        Pro Deep-Scan + KI, Agency White-Label) — gleiche
+                        Sicherheits-Garantie, unterschiedliche Feature-Tiefe. */}
+                    <div style={{
+                      margin: "0 0 16px",
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      background: "rgba(16,185,129,0.06)",
+                      border: "1px solid rgba(16,185,129,0.20)",
+                      display: "flex", alignItems: "flex-start", gap: 8,
+                    }}>
+                      <ShieldCheck
+                        size={14}
+                        strokeWidth={2.2}
+                        color="rgba(16,185,129,0.85)"
+                        style={{ flexShrink: 0, marginTop: 1 }}
+                        aria-hidden="true"
+                      />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(110,231,183,0.92)", lineHeight: 1.45 }}>
+                        <strong style={{ fontWeight: 800 }}>Read-Only Garantie:</strong>{" "}
+                        Unser Plugin liest nur — es verändert niemals ungefragt deinen Code.
+                      </span>
+                    </div>
+
                     {/* Divider */}
                     <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
 
@@ -1118,6 +1197,10 @@ export default function Page() {
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
                       {plan.features.map(f => {
                         const locked = "locked" in f && f.locked;
+                        // Plugin-Bullets (Read-Only/Deep-Scan/White-Label) kriegen
+                        // ein Lucide-Lock-Icon als visuellen Vertrauens-Marker —
+                        // ersetzt das frühere 🔒-Emoji für konsistenten Tech-Look.
+                        const hasPluginLock = !locked && /Plugin/i.test(f.text);
                         return (
                           <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <div style={{
@@ -1146,8 +1229,17 @@ export default function Page() {
                               color: locked
                                 ? "rgba(255,255,255,0.30)"
                                 : f.highlight ? "#fff" : "rgba(255,255,255,0.4)",
+                              display: "inline-flex", alignItems: "center", gap: 5,
                             }}>
-                              {f.text}
+                              {hasPluginLock && (
+                                <Lock
+                                  size={12}
+                                  strokeWidth={2.4}
+                                  style={{ flexShrink: 0, opacity: 0.85 }}
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span>{f.text}</span>
                             </span>
                           </div>
                         );

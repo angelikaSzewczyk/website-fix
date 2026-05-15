@@ -1,6 +1,6 @@
 ---
 title: "WordPress Heartbeat drosseln: CPU-Last senken ohne Plugin."
-description: "admin-ajax.php frisst CPU und treibt den TTFB hoch? So drosselst du die WordPress-Heartbeat-API kontextabhängig per PHP-Snippet — ohne Plugin, mit Auto-Safety-Check gegen Plugin-Kollisionen."
+description: "Lädt deine WordPress-Seite zäh, obwohl niemand drauf ist? Eine versteckte Standard-Funktion schickt alle 15 Sekunden eine unnötige Anfrage an deinen Server — und kostet dich Kunden. So schaltest du sie ab: in 5 Minuten, ohne Programmieren, mit Rücknahme-Sicherheit."
 date: "2026-05-13"
 category: "performance"
 tags:
@@ -49,28 +49,35 @@ faq:
 
 # WordPress Heartbeat drosseln: CPU-Last senken ohne Plugin.
 
-Dein Hoster meldet wieder CPU-Überschreitung. Im PHP-Error-Log nichts Auffälliges — aber wenn du `top` auf dem Server laufen lässt, siehst du dauernd PHP-Prozesse, die `admin-ajax.php` verarbeiten. Und das, obwohl niemand im Admin eingeloggt ist.
+Dein Hoster meckert wieder per Mail wegen „CPU-Verbrauch erhöht". Im Backend ist alles ruhig. Die Seite fühlt sich trotzdem zäh an. Besucher landen drauf — und sind weg, bevor sie etwas sehen. Klingt vertraut?
 
-**Willkommen beim wahrscheinlich teuersten Standard-Verhalten von WordPress.** Die Heartbeat-API ruft sich seit 2013 alle 15 Sekunden selbst auf — egal ob du sie brauchst oder nicht. Auf einer einzelnen Site mit zwei Admins, die parallel arbeiten, sind das **8.640 zusätzliche PHP-Requests pro Tag**. Auf 30 Agentur-Sites: über 250.000 Calls, die nichts produzieren außer Hosting-Rechnungen.
+**Du bist nicht alleine.** WordPress hat eine versteckte Standard-Funktion, die alle 15 Sekunden im Hintergrund mit deinem Server „spricht" — auch wenn gerade niemand auf der Seite ist. Bei zwei Personen, die parallel im Backend arbeiten, sind das **8.640 Klicks pro Tag**, die niemand braucht. Dein Hoster zahlst du dafür, dass er das mitmacht.
 
-Die gute Nachricht: du kannst das Verhalten kontextabhängig drosseln. Kein Plugin, kein Risiko fürs Frontend, in 5 Minuten installiert. Diese Anleitung zeigt dir, wann und wie.
+Die gute Nachricht: du kannst das abstellen. **Ohne Plugin, ohne Risiko, in 5 Minuten** — und falls dir der Code-Teil Angst macht, gibt's am Ende eine Klick-für-Klick-Anleitung als PDF, mit eingebauter Rücknahme-Sicherheit.
 
-> ### TL;DR — Heartbeat in 5 Minuten drosseln
-> Die WordPress-Heartbeat-API pollt standardmäßig alle 15 Sekunden auf `admin-ajax.php`. Mit einem einzigen PHP-Snippet in der `functions.php` drosselst du sie kontextabhängig auf **60 s im Admin, 120 s im Post-Editor und 300 s im Frontend** (mit kompletter Deaktivierung auf öffentlichen Seiten optional). Erwarteter Effekt: 75–85 % weniger CPU-Last durch admin-ajax.php, deutlich niedrigerer TTFB auf Shared-Hosting. Der Snippet enthält einen Auto-Safety-Check, der Kollisionen mit Heartbeat Control oder WP Rocket erkennt und sich dann selbst deaktiviert.
+> ### In 30 Sekunden zum Punkt
 >
-> **Direkt zur Lösung:** [Heartbeat-Drossel-Snippet in der Smart-Fix-Library →](/smart-fix-library#snippet-heartbeat-drosselung)
+> Lädt deine Seite über 2 Sekunden? Dann **verlierst du laut Google bis zu 35 % deiner Besucher**, bevor sie überhaupt etwas sehen. Eine der häufigsten Ursachen: WordPress spricht alle 15 Sekunden mit sich selbst — auch wenn niemand auf der Seite ist. Das frisst CPU bei deinem Hoster und kostet dich Antwortzeit auf jeder Seite.
+>
+> Wir zeigen dir, wie du das in **5 Minuten** abstellst — bei dir reduziert sich die unnötige Server-Last typischerweise um 75–85 %. Mit eingebauter Sicherheits-Prüfung, die erkennt, ob bei dir gefährliche Plugin-Kollisionen drohen, und sich dann selbst stoppt.
+>
+> **Drei Wege zur Lösung — wähl, was zu dir passt:**
+>
+> - [Komplette Schritt-für-Schritt-Anleitung als PDF für 9,90 € →](/scan/checkout) (kein Konto nötig, kommt direkt per Mail)
+> - [Erst scannen, ob das wirklich DEIN Problem ist →](/scan) (kostenlos, 60 Sekunden)
+> - [Code-Snippet für Selbst-Macher →](/smart-fix-library#snippet-heartbeat-drosselung) (copy-paste-ready, mit Safety-Wrapper)
 
 ---
 
 ## Symptome — daran erkennst du das Problem
 
-Wenn drei dieser Symptome auf deine Site zutreffen, ist die Heartbeat-API ein heißer Kandidat:
+Wenn drei dieser Punkte auf deine Site zutreffen, ist Heartbeat ein heißer Kandidat:
 
-- **TTFB (Time to First Byte) über 800 ms** auch ohne Traffic-Spitze. WebPageTest oder GTmetrix zeigt einen orangenen oder roten TTFB-Balken, obwohl die Site sonst schnell wirkt.
-- **Hosting-CPU-Limit wird regelmäßig überschritten.** Du bekommst Mails von IONOS, Strato, All-Inkl oder Hetzner mit Betreff *„CPU-Verbrauch erhöht"*. Die Site läuft, aber langsamer als erwartet.
-- **`admin-ajax.php` dominiert das Access-Log.** Jeder zweite Eintrag ist ein POST auf `admin-ajax.php?action=heartbeat`. Pro angemeldetem Benutzer alle 15 Sekunden, parallel zum normalen Traffic.
-- **WooCommerce-Backend wird träge** sobald zwei Admins gleichzeitig im Order-Bereich arbeiten — beide pollen Heartbeat, die DB-Last summiert sich.
-- **Plötzliche 503/504-Fehler** zu Bürozeiten, obwohl der Frontend-Traffic gar nicht hoch ist. Klassisches Zeichen für eine durch Heartbeat ausgereizte PHP-Worker-Pool-Konfiguration.
+- **Deine Seite braucht über eine Sekunde, bis sie reagiert.** Auch ohne dass viel Traffic drauf ist. Du klickst dich durchs Backend und es fühlt sich „schwerfällig" an — als würde dein Server „nachdenken" müssen.
+- **Dein Hoster mailt dir wegen Überlastung.** Betreffzeilen wie *„CPU-Verbrauch erhöht"* (IONOS, Strato, All-Inkl, Hetzner) — vielleicht hast du die längst weggeklickt. Bedeutet aber: dein Account ist auf der internen „Demnächst-Drosseln"-Liste.
+- **Das Speichern-Symbol im Editor dreht sich gefühlt ständig.** WordPress speichert automatisch alle 15 Sekunden — was sich sicher anfühlt, auf langsamen Servern aber bei jedem Speichern 0,3–0,5 Sekunden Verzögerung kostet.
+- **Online-Shop läuft zäh, wenn zwei Personen gleichzeitig im Backend arbeiten.** Bestellungen, Lager, Produkte editieren — alles wird langsam, weil beide Backends gleichzeitig „Lebenszeichen" senden.
+- **Plötzliche „Diese Seite ist nicht verfügbar"-Fehler zu Bürozeiten**, obwohl kaum Besucher da sind. Klassisches Zeichen, dass dein Server überfordert ist.
 
 Wenn keines davon zutrifft, hat dein Hoster wahrscheinlich genug Reserven und du brauchst diese Optimierung nicht zwingend. Wenn mehrere zutreffen: weiterlesen.
 
@@ -131,6 +138,8 @@ Statt Heartbeat global zu deaktivieren (was Autosave und Post-Locking zerstören
 - **Frontend: 300 s** — fast aus. Optional komplett deregistriert, wenn du kein Live-WooCommerce-Cart nutzt.
 
 Die Drosselung greift in den eingebauten Filter `heartbeat_settings`. Der entscheidende Hook:
+
+> **Keine Sorge, falls dir Code Angst macht.** Wenn etwas schiefgeht, nimmst du den Code einfach wieder raus — WordPress kehrt sofort zurück zum Standard-Verhalten, **keine bleibende Änderung an deiner Datenbank, keine Theme-Datei beschädigt**. Falls du dich trotzdem nicht traust: in der [9,90-€-Anleitung](/scan/checkout) führen wir dich Klick für Klick durch jeden Schritt, inklusive Backup-Vorgehen und Rollback-Anleitung.
 
 ```php
 add_filter( 'heartbeat_settings', function( $settings ) {

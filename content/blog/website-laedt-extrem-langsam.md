@@ -38,12 +38,13 @@ Stell dir einen **Ferrari vor, der im Schlamm steckt**. 800 PS unter der Haube, 
 
 Genau das passiert mit den meisten WordPress-Seiten 2026. Du hast einen modernen Hoster gebucht (vielleicht sogar Managed WordPress bei Raidboxes, SiteGround Cloud oder Kinsta) und investierst 25, 50 oder 200 € im Monat. Trotzdem braucht deine Seite 4–6 Sekunden zum Laden. Du beschuldigst den Hoster, wechselst, zahlst mehr — und nichts ändert sich.
 
-**Hier ist die unbequeme Wahrheit:** In **80 % aller Fälle** ist nicht der Hoster das Problem. Der Hoster ist der Ferrari. Dein Code ist der Schlamm. Lass uns die Sache aufräumen — denn sobald du die echten Ladezeit-Killer kennst, sind sie meist in 30–60 Minuten behoben.
-
-> ### ⚡ Du willst sofort wissen, was deine Seite bremst?
-> Statt eine Stunde Plugin- und Hoster-Vergleiche zu lesen, lass den Scanner alle Bremsen messen — DOM-Tiefe, Cart-Fragments, Plugin-Impact, Bilder.
+> ### Keine Zeit zum Lesen?
 >
-> 👉 **[Umsatzverlust in 60 Sekunden messen — Gratis-Scan starten →](/)**
+> **Unser Sofort-Scan findet den wahren Bremsklotz in 60 Sekunden** — Code, Bilder, DOM-Tiefe, Hoster — und sagt dir genau, was zuerst zu fixen ist. Kein Login, kein Plugin, kein Programmieren nötig.
+>
+> [→ Jetzt kostenlos scannen](/scan) · [→ Hosting-Speed-Anleitung als PDF für 9,90 €](/scan/checkout)
+
+**Hier ist die unbequeme Wahrheit:** In **80 % aller Fälle** ist nicht der Hoster das Problem. Der Hoster ist der Ferrari. Dein Code ist der Schlamm. Lass uns die Sache aufräumen — denn sobald du die echten Ladezeit-Killer kennst, sind sie meist in 30–60 Minuten behoben.
 
 ---
 

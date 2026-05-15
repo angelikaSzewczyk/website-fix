@@ -1,6 +1,6 @@
 ---
 title: "jQuery-Migrate aus dem WordPress-Frontend entfernen — ohne den Admin zu brechen (2026)."
-description: "Lighthouse meckert jquery-migrate.min.js als Render-Blocker an? Plugin-Lösungen entfernen es überall und brechen Gutenberg. So entfernst du es chirurgisch nur im Frontend — mit Code-Snippet, Auto-Safety-Check und 2026er Reality-Check."
+description: "Dein WordPress lädt seit Jahren eine veraltete Datei, die deine Seite auf dem Handy 50–150 ms länger laden lässt — Zeit, die Besucher nicht haben. So entfernst du sie aus dem Frontend (und nur dort), ohne deinen Editor zu brechen. In 4 Minuten, mit Rücknahme-Sicherheit."
 date: "2026-05-13"
 category: "performance"
 tags:
@@ -50,18 +50,25 @@ faq:
 
 # jQuery-Migrate aus dem WordPress-Frontend entfernen — ohne den Admin zu brechen (2026).
 
-Lighthouse meldet auf rund 70 % aller WordPress-Sites `jquery-migrate.min.js` als Top-Hit im Audit „Reduce unused JavaScript". Die Browser-Console wirft auf jeder Page das gleiche Notice: `JQMIGRATE: Migrate is installed, version 3.4.x`. Und auf einem ehrlichen Mobile-3G-Test summiert sich der Parse-Cost dieser Bibliothek auf 50 bis 150 ms — für Code, den WordPress-Core seit August 2020 nicht mehr braucht.
+Hast du schon mal aufs Handy geschaut, was deine eigene Website tut, wenn du sie aufrufst? Auf manchen Handys dauert das gefühlt ewig. Auf alten Smartphones noch länger. Und genau die — alte Smartphones, langsames WLAN, U-Bahn-Internet — sind oft deine Kunden, die gerade nach dir googeln.
 
-Die gängige Antwort auf das Problem lautet: „Installier das Plugin *Disable jQuery Migrate*" oder „nimm Perfmatters und klick den Toggle". Beide Lösungen entfernen Migrate dann allerdings **überall** — auch im wp-admin. Das wiederum bricht Gutenberg-Custom-Blöcke, den älteren Elementor-Editor und ein paar Dutzend andere Page-Builder-Admin-UIs, die noch auf jQuery-1.x-Syntax bauen. Du gewinnst 11 KB im Frontend und verlierst dafür die Hälfte deines Editors.
+**Auf rund 7 von 10 WordPress-Seiten lädt 2026 eine Datei mit, die seit 2020 nicht mehr gebraucht wird**: `jquery-migrate.min.js`. Sie kostet **11 KB Datenvolumen** und auf langsamen Verbindungen 50 bis 150 ms zusätzliche Wartezeit — Zeit, in der Besucher den Tab schließen, weil sie denken, deine Seite ist kaputt.
 
-Dieser Post zeigt dir den chirurgischen Mittelweg: ein Code-Snippet, das Migrate **nur im Frontend** entfernt und im Admin aktiv lässt. Lighthouse-Score-Boost ohne Editor-Risiko. Vier Minuten Setup, kein Plugin.
+Die übliche Antwort: „Installier ein Plugin, das das entfernt." Klingt einfach. Hat aber einen Haken: diese Plugins entfernen die Datei **überall** — auch in deinem WordPress-Backend. Und dann brechen plötzlich einige Editor-Funktionen (alter Elementor, älterer Divi, manche Custom-Blöcke). Du gewinnst 11 KB im Frontend und verlierst dafür die Hälfte deines Editors. Schlechter Deal.
 
-> ### TL;DR — Migrate in 4 Minuten sicher aus dem Frontend entfernen
-> 1. **Frontend-only:** Der Snippet aus der Smart-Fix-Library hängt sich in `wp_default_scripts` und entfernt `jquery-migrate` aus den jQuery-Dependencies — aber nur auf öffentlichen Seiten. Im Admin bleibt alles unverändert.
-> 2. **Auto-Safety-Check:** das Snippet erkennt aktive Versionen von „Disable jQuery Migrate" oder Perfmatters und macht in dem Fall ein No-op. Doppel-Konfigurationen ausgeschlossen.
-> 3. **Wirkung:** 11 KB weniger Frontend-JS, keine `JQMIGRATE`-Console-Warnings, Lighthouse-Mobile-Score plus 2 bis 5 Punkte. Editor-Erfahrung im wp-admin unangetastet.
+Dieser Post zeigt dir den sauberen Mittelweg: die Datei **nur dort** entfernen, wo deine Besucher sie laden — im Frontend. Dein Editor bleibt unangetastet. Vier Minuten Setup, kein Plugin, kein Risiko.
+
+> ### In 30 Sekunden zum Punkt
 >
-> **[jQuery-Migrate-Drossel-Code im Lab öffnen →](/smart-fix-library#snippet-jquery-migrate-drosseln)**
+> Lädt deine Seite auf dem Handy zäh? Eine veraltete Datei in deinem WordPress (`jquery-migrate.min.js`) frisst auf jeder Seite **11 KB Datenvolumen + 50–150 ms Wartezeit**. Auf langsamen Verbindungen ist das oft der Unterschied zwischen „Besucher bleibt" und „Tab geschlossen". WordPress selbst braucht die Datei seit August 2020 nicht mehr — Themes und Plugins von nach 2020 auch nicht.
+>
+> Wir zeigen dir, wie du die Datei **nur aus dem Frontend** entfernst (4 Minuten). Dein Editor bleibt unverändert, Lighthouse-Mobile-Score steigt um 2 bis 5 Punkte, kein Plugin nötig.
+>
+> **Drei Wege zur Lösung — wähl, was zu dir passt:**
+>
+> - [Komplette Schritt-für-Schritt-Anleitung als PDF für 9,90 € →](/scan/checkout) (kein Konto nötig, mit Rollback-Anleitung)
+> - [Erst scannen, ob deine Seite das Problem hat →](/scan) (kostenlos, 60 Sekunden)
+> - [Code-Snippet für Selbst-Macher →](/smart-fix-library#snippet-jquery-migrate-drosseln) (copy-paste-ready, mit Safety-Wrapper)
 
 ---
 

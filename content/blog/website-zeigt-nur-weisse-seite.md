@@ -15,9 +15,11 @@ In der Fachwelt nennt man das den **White Screen of Death (WSoD)**. Er ist beson
 
 **Die gute Nachricht:** In den allermeisten Fällen sind Ihre Texte, Bilder und Inhalte vollständig vorhanden — nur ein einzelner technischer Fehler verhindert, dass die Seite lädt. Wie ein Sicherungskasten, der ausgelöst hat, während das Haus selbst völlig in Ordnung ist.
 
-Prüfen Sie Ihre Seite sofort kostenlos mit dem WebsiteFix-Scanner.
-
-👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan findet den Fehler in 60 Sekunden** — Plugin-Konflikt, Theme-Bruch, PHP-Fehler, Memory-Limit überschritten. Kein Login, kein FTP-Zugang nötig für den Check.
+>
+> [→ Jetzt kostenlos scannen](/scan)
 
 ---
 

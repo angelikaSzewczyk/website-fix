@@ -7,11 +7,15 @@ tags: ["website kaputt", "wordpress fehler", "website probleme", "server", "upda
 status: "published"
 ---
 
-„Gestern lief noch alles.“
+„Gestern lief noch alles."
 
-Heute funktioniert die Website nicht mehr.
+Heute funktioniert die Website nicht mehr. Dieses Problem tritt häufiger auf, als viele denken.
 
-Dieses Problem tritt häufiger auf, als viele denken.
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan findet den Fehler in 60 Sekunden** — Plugin-Konflikt, Update-Bruch, Server-Problem oder etwas anderes. Kein Login, keine Anmeldung, du brauchst nur deine URL.
+>
+> [→ Jetzt kostenlos scannen](/scan)
 
 ## Typische Probleme
 

@@ -10,6 +10,12 @@ status: "published"
 Über 70 % der Nutzer kommen **mobil**.  
 Wenn Ihre Website dort kaputt aussieht, verlierst Sie sofort Vertrauen – und Anfragen.
 
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan findet den Fehler in 60 Sekunden** — Layout-Brüche, zu kleine Buttons, Slider-Probleme. Kein Login, keine Anmeldung, du brauchst nur deine URL.
+>
+> [→ Jetzt kostenlos scannen](/scan)
+
 ## Typische Symptome
 - Text läuft über den Rand
 - Buttons zu klein oder nicht klickbar

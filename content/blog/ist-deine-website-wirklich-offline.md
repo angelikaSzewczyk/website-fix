@@ -18,6 +18,12 @@ Das passiert häufiger als man denkt.
 
 Bevor man in Panik gerät, sollte man zuerst prüfen, **wo das Problem wirklich liegt**.
 
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan prüft in 60 Sekunden, ob deine Seite wirklich offline ist** — von außen, wie ein Besucher: Server-Antwort, DNS-Status, HTTPS-Zertifikat, Indexierungs-Stand. Kein Login, kein Hoster-Zugang nötig.
+>
+> [→ Jetzt kostenlos scannen](/scan)
+
 ## 1) Browser-Cache Problem
 
 **Problem:** Der Browser lädt eine alte Version der Seite.

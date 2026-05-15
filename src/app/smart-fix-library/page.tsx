@@ -87,26 +87,36 @@ export default function SmartFixLibraryPage() {
             <p style={{
               margin: "0 0 12px",
               fontSize: 11.5, fontWeight: 700, color: T.green,
-              fontFamily: T.mono, letterSpacing: "0.08em", textTransform: "uppercase",
+              letterSpacing: "0.10em", textTransform: "uppercase",
             }}>
-              // Smart-Fix Library
+              Für Selbst-Macher · Ohne Plugin
             </p>
             <h1 style={{
               margin: "0 0 16px",
               fontSize: "clamp(28px, 4.5vw, 44px)", fontWeight: 800,
               color: T.text, letterSpacing: "-0.025em", lineHeight: 1.15,
             }}>
-              Echte Lösungen statt nur Kritik.
+              7 fertige Lösungen für die häufigsten WordPress-Probleme.
               <br/>
               <span style={{ background: "linear-gradient(90deg,#4ade80,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Copy-paste-ready, ohne Plugin.
+                Ohne Techniker-Stunden.
               </span>
             </h1>
             <p style={{ margin: "0 0 18px", fontSize: 16, color: T.textSub, lineHeight: 1.7, maxWidth: 720 }}>
-              Unsere kuratierten Smart-Fixes sind für 99 % aller WordPress-Installationen sicher —
-              vom Solo-Blog bis zur Multi-Site-Agentur. Jedes Snippet kommt mit Sicherheits-Wrapper,
-              klarem Einbau-Pfad und Rollback-Anleitung. Keine Werbung, keine Tracker, keine
-              versteckten Calls.
+              Jeder Code-Schnipsel ist für 99 % aller WordPress-Installationen sicher — kommt mit
+              eingebauter Prüfung, die erkennt, ob er bei dir gefahrlos angewendet werden kann,
+              und sich sonst selbst stoppt. Plus Klick-für-Klick-Anleitung, wie du ihn jederzeit
+              wieder rausnimmst. Keine Werbung, keine Tracker, keine versteckten Calls.
+            </p>
+            <p style={{
+              margin: "0 0 18px", padding: "10px 14px", borderRadius: 10,
+              fontSize: 13.5, color: T.textSub, lineHeight: 1.6, maxWidth: 720,
+              background: "rgba(74,222,128,0.05)",
+              border: `1px solid ${T.greenBorder}`,
+            }}>
+              <strong style={{ color: T.text }}>Code macht dir trotzdem Angst?</strong>{" "}
+              Hol dir die <a href="/scan/checkout" style={{ color: T.green, textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 700 }}>Klick-für-Klick-Anleitung als PDF für 9,90 €</a>{" "}
+              — kein Code-Editor, kein Konto, kein Risiko.
             </p>
 
             {/* Schnell-Navigation als Pills */}

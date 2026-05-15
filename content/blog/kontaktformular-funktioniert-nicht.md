@@ -11,6 +11,12 @@ Wenn Ihr **Kontaktformular nicht funktioniert**, verlierst Sie im Schlaf Anfrage
 
 Die gute Nachricht: Meist liegt es an **typischen Konfigurationsfehlern**, die Sie in wenigen Minuten selbst lösen kannst.
 
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan findet das Problem in 60 Sekunden** — SPF/DKIM-Fehler, Plugin-Konflikt, Domain-Absender falsch konfiguriert. Kein Login, kein Hoster-Zugang nötig.
+>
+> [→ Jetzt kostenlos scannen](/scan) · [→ Anleitung „Kontaktformular fixen" als PDF für 9,90 €](/scan/checkout)
+
 ## 3-Minuten-Schnellcheck (Zuerst prüfen!)
 Bevor Sie tief in die Technik einsteigst, schließe die "einfachen" Fehler aus:
 

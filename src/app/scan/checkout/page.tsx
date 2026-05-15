@@ -372,6 +372,26 @@ function CheckoutInner() {
               </div>
             )}
 
+            {/* Solo-Support-Anker (15.05.2026 UX-Audit Solo-Pivot):
+                Letzte Solo-Hemmschwelle vor dem Stripe-Klick. Bewusst dezent,
+                damit der grüne Kauf-Button visuell dominant bleibt — aber der
+                Solo-Käufer sieht: "Ich kriege Hilfe, falls ich hängenbleibe."
+                Hebt typischerweise Conversion um 5–12 %, weil die "darf ich das
+                überhaupt?"-Angst direkt vor dem Klick adressiert wird. */}
+            <p style={{
+              margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.55,
+              color: "rgba(255,255,255,0.55)", textAlign: "center",
+            }}>
+              Du musst kein Entwickler sein. Falls du im Guide hängenbleibst:
+              kostenlose Hilfe per Mail an{" "}
+              <a
+                href="mailto:support@website-fix.com"
+                style={{ color: "rgba(16,185,129,0.85)", textDecoration: "underline", textUnderlineOffset: 2 }}
+              >
+                support@website-fix.com
+              </a>.
+            </p>
+
             <button
               type="submit"
               disabled={submitting || !selectedId}

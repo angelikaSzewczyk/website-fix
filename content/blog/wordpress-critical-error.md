@@ -38,6 +38,12 @@ faq:
 
 > **Deine Daten sind sicher.** Texte, Bilder, Bestellungen, Kunden — alles liegt in der Datenbank und ist vom Fehler nicht betroffen. WordPress kann sie nur gerade nicht ausliefern. Sobald wir den Auslöser identifizieren, ist deine Seite wieder online.
 
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan findet den Fehler in 60 Sekunden** — er prüft die typischen Critical-Error-Muster (Plugin-Konflikt, Theme-Bruch, PHP-Version, Memory-Limit) automatisch und sagt dir genau, was zu tun ist. Kein Login, kein FTP-Zugang nötig für den Check.
+>
+> [→ Jetzt kostenlos scannen](/scan)
+
 Der typische *„kritische Fehler"* ist in **90 % aller Fälle** ein Plugin-Konflikt — meist nach einem automatischen Update. In den restlichen 10 % ist es ein Theme-Problem oder das PHP-Memory-Limit. Alle drei lassen sich ohne Entwickler in **unter 30 Minuten** beheben. Hier ist die strukturierte Anleitung.
 
 > ### 🚨 Du willst sofort wissen, was bei dir kaputt ist?
