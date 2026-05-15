@@ -1,6 +1,6 @@
 ---
-title: "Warum findet Google Ihre WordPress-Seite nicht? 7 Ursachen + Request Indexing 2026"
-description: "Google indiziert Ihre Seite nicht? Die 7 häufigsten Ursachen — von noindex bis robots.txt — plus wie Sie den Request Indexing Prozess in der Search Console 2026 korrekt auslösen."
+title: "Warum findet Google meine WordPress-Seite nicht? 7 Ursachen + Sofort-Fix 2026"
+description: "Google ignoriert deine Seite seit Wochen? Konkurrenten werden gefunden, du nicht. In 60 Sekunden findet unser Scan den Blocker — meist ist es nur eine einzelne Einstellung."
 date: "2026-04-13"
 category: "compliance"
 tags: ["google", "indexierung", "search console", "sitemap", "noindex", "request indexing"]
@@ -24,9 +24,11 @@ Wenn Google Ihre Seite nicht indiziert, liegt das selten an einem „schlechten"
 
 Diese beiden Probleme beschreiben dasselbe: Ihre Seite existiert, Google ignoriert sie trotzdem. Der Unterschied: **warum** Google Ihre Seite nicht findet, hat konkrete Ursachen — und jede Ursache hat einen konkreten Fix.
 
-Prüfen Sie Ihre Seite sofort kostenlos mit dem WebsiteFix-Scanner.
-
-👉 **[Jetzt Website kostenlos scannen — in unter 60 Sekunden zum Ergebnis →](/)**
+> ### Keine Zeit zum Lesen?
+>
+> **Unser Sofort-Scan findet den Blocker in 60 Sekunden** — Noindex-Tag, robots.txt, Canonical-Bug, fehlende Sitemap, Thin Content. Kein Login, kein SEO-Wissen nötig, du brauchst nur deine URL.
+>
+> [→ Jetzt kostenlos scannen](/scan)
 
 ---
 

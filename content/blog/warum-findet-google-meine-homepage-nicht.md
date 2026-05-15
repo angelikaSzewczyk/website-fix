@@ -1,6 +1,6 @@
 ---
 title: "Warum findet Google meine Homepage nicht? (Checkliste 2026)"
-description: "Deine Website ist online, aber unsichtbar? Erfahre die 5 häufigsten Ursachen für fehlende Google-Sichtbarkeit und wie du sie mit einem WordPress-Audit sofort fixst."
+description: "Deine Seite ist online, aber Google ignoriert sie? Du verlierst gerade Kunden, die nach dir googeln. In 60 Sekunden zeigt unser Scan, welcher der 5 Blocker bei dir aktiv ist."
 date: "2026-04-26"
 category: "seo"
 tags:
@@ -38,10 +38,11 @@ Sie ist nicht das Problem. Ihre Praxis ist exzellent. Das Problem ist: **Google 
 
 Die gute Nachricht: In 80 % aller Fälle sind es nur **fünf Fehler**, die zwischen dir und Platz 1 stehen. Hier sind sie.
 
-> ### 🔍 Wird auch deine Seite blockiert?
-> Mach jetzt den **60-Sekunden-Check** und finde heraus, welche der fünf Fehler bei dir aktiv sind.
+> ### Keine Zeit zum Lesen?
 >
-> 👉 **[Kostenlos Scannen — Ergebnis sofort →](/)**
+> **Unser Sofort-Scan findet den Blocker in 60 Sekunden** — Noindex-Tag, robots.txt, fehlende Sitemap, Canonical-Bug oder Thin Content. Kein Login, kein SEO-Wissen nötig, du brauchst nur deine URL.
+>
+> [→ Jetzt kostenlos scannen](/scan)
 
 ---
 

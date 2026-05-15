@@ -1,6 +1,6 @@
 ---
-title: "Warum Ihre WordPress-Website plötzlich nicht mehr funktioniert"
-description: "Wenn eine Website plötzlich Fehler zeigt, stecken oft Updates, Plugins oder Serverprobleme dahinter."
+title: "WordPress geht plötzlich nicht mehr? 4 häufige Ursachen + Sofort-Lösung"
+description: "„Gestern lief noch alles" — heute geht nichts mehr? In 60 Sekunden findet unser Scan den Auslöser und zeigt dir den einen Klick, der's behebt. Kein Login, keine Anmeldung."
 date: "2026-03-02"
 category: "wordpress"
 tags: ["website kaputt", "wordpress fehler", "website probleme", "server", "update"]
