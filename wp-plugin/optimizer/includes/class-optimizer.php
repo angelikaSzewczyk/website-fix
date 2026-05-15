@@ -47,7 +47,7 @@ class WFOCO_Optimizer {
         if ( ! $snippet ) {
             return array( 'ok' => false, 'message' => sprintf(
                 /* translators: %s: snippet slug */
-                __( 'Snippet "%s" nicht gefunden.', 'websitefix-one-click-optimizer' ),
+                __( 'Snippet "%s" nicht gefunden.', 'websitefix-one-click-performance-optimizer' ),
                 $slug
             ) );
         }
@@ -57,7 +57,7 @@ class WFOCO_Optimizer {
         if ( ! self::ensure_mu_dir() ) {
             return array( 'ok' => false, 'message' => sprintf(
                 /* translators: %s: path to mu-plugins directory */
-                __( 'Verzeichnis %s konnte nicht angelegt werden. Bitte Schreibrechte auf wp-content/mu-plugins/ prüfen.', 'websitefix-one-click-optimizer' ),
+                __( 'Verzeichnis %s konnte nicht angelegt werden. Bitte Schreibrechte auf wp-content/mu-plugins/ prüfen.', 'websitefix-one-click-performance-optimizer' ),
                 WPMU_PLUGIN_DIR
             ) );
         }
@@ -67,7 +67,7 @@ class WFOCO_Optimizer {
 
         $fs = self::fs();
         if ( ! $fs ) {
-            return array( 'ok' => false, 'message' => __( 'WP_Filesystem konnte nicht initialisiert werden.', 'websitefix-one-click-optimizer' ) );
+            return array( 'ok' => false, 'message' => __( 'WP_Filesystem konnte nicht initialisiert werden.', 'websitefix-one-click-performance-optimizer' ) );
         }
 
         // put_contents() schreibt atomar genug — kein separater tmp+rename
@@ -78,7 +78,7 @@ class WFOCO_Optimizer {
         if ( ! $ok ) {
             return array( 'ok' => false, 'message' => sprintf(
                 /* translators: %s: target file path */
-                __( 'Konnte %s nicht schreiben. Schreibrechte fehlen?', 'websitefix-one-click-optimizer' ),
+                __( 'Konnte %s nicht schreiben. Schreibrechte fehlen?', 'websitefix-one-click-performance-optimizer' ),
                 $target
             ) );
         }
@@ -92,7 +92,7 @@ class WFOCO_Optimizer {
 
         return array( 'ok' => true, 'message' => sprintf(
             /* translators: %s: snippet title */
-            __( '✓ "%s" aktiviert.', 'websitefix-one-click-optimizer' ),
+            __( '✓ "%s" aktiviert.', 'websitefix-one-click-performance-optimizer' ),
             $snippet['title']
         ) );
     }
@@ -107,7 +107,7 @@ class WFOCO_Optimizer {
         if ( ! $snippet ) {
             return array( 'ok' => false, 'message' => sprintf(
                 /* translators: %s: snippet slug */
-                __( 'Snippet "%s" nicht gefunden.', 'websitefix-one-click-optimizer' ),
+                __( 'Snippet "%s" nicht gefunden.', 'websitefix-one-click-performance-optimizer' ),
                 $slug
             ) );
         }
@@ -115,7 +115,7 @@ class WFOCO_Optimizer {
         $target = self::file_path( $slug );
         $fs     = self::fs();
         if ( ! $fs ) {
-            return array( 'ok' => false, 'message' => __( 'WP_Filesystem konnte nicht initialisiert werden.', 'websitefix-one-click-optimizer' ) );
+            return array( 'ok' => false, 'message' => __( 'WP_Filesystem konnte nicht initialisiert werden.', 'websitefix-one-click-performance-optimizer' ) );
         }
 
         if ( $fs->exists( $target ) ) {
@@ -126,7 +126,7 @@ class WFOCO_Optimizer {
             if ( false === $contents || strpos( $contents, 'WebsiteFix One-Click Optimizer' ) === false ) {
                 return array( 'ok' => false, 'message' => sprintf(
                     /* translators: %s: file path */
-                    __( 'Datei %s gehört nicht zum Optimizer — wird nicht angerührt.', 'websitefix-one-click-optimizer' ),
+                    __( 'Datei %s gehört nicht zum Optimizer — wird nicht angerührt.', 'websitefix-one-click-performance-optimizer' ),
                     $target
                 ) );
             }
@@ -135,7 +135,7 @@ class WFOCO_Optimizer {
             if ( $fs->exists( $target ) ) {
                 return array( 'ok' => false, 'message' => sprintf(
                     /* translators: %s: file path */
-                    __( 'Konnte %s nicht löschen. Schreibrechte?', 'websitefix-one-click-optimizer' ),
+                    __( 'Konnte %s nicht löschen. Schreibrechte?', 'websitefix-one-click-performance-optimizer' ),
                     $target
                 ) );
             }
@@ -148,7 +148,7 @@ class WFOCO_Optimizer {
 
         return array( 'ok' => true, 'message' => sprintf(
             /* translators: %s: snippet title */
-            __( '✓ "%s" deaktiviert.', 'websitefix-one-click-optimizer' ),
+            __( '✓ "%s" deaktiviert.', 'websitefix-one-click-performance-optimizer' ),
             $snippet['title']
         ) );
     }

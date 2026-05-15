@@ -1,10 +1,10 @@
 === WebsiteFix One-Click Performance Optimizer ===
-Contributors: websitefix
+Contributors: websitefixcom
 Tags: performance, optimization, heartbeat, xmlrpc, jquery
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -133,6 +133,12 @@ Yes. It processes no personal data, sends nothing to external servers, and store
 
 == Changelog ==
 
+= 0.3.1 — 2026-05-15 =
+* **WP.org review feedback applied:**
+  * Text domain `websitefix-one-click-optimizer` renamed to `websitefix-one-click-performance-optimizer` to match the plugin slug.
+  * Inline `<style>` block in the admin page replaced with `wp_register_style` + `wp_enqueue_style` + `wp_add_inline_style`, loaded only on the plugin's own settings screen via `admin_enqueue_scripts`.
+  * Contributors slug corrected (`websitefix` → `websitefixcom`) to match the WordPress.org account.
+
 = 0.3.0 — 2026-05-12 =
 * **WP.org Plugin-Check compliance pass:**
   * All filesystem operations migrated from direct PHP calls (`rename`, `unlink`, `is_writable`, `rmdir`) to the WordPress WP_Filesystem API and `wp_delete_file()`.
@@ -155,6 +161,9 @@ Yes. It processes no personal data, sends nothing to external servers, and store
 * Initial public beta.
 
 == Upgrade Notice ==
+
+= 0.3.1 =
+**WP.org review feedback:** text domain renamed to match plugin slug, admin CSS migrated to wp_enqueue_style + wp_add_inline_style, contributors slug corrected. No functional changes.
 
 = 0.3.0 =
 **Plugin-Check compliance release:** filesystem operations refactored to WP_Filesystem API, readme in English (WP.org requirement), Tested up to 6.9. Submission-ready.

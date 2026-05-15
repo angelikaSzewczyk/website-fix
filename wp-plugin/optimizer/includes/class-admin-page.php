@@ -25,8 +25,8 @@ class WFOCO_Admin_Page {
      */
     public static function register() {
         add_management_page(
-            __( 'WebsiteFix Optimizer', 'websitefix-one-click-optimizer' ),
-            __( 'WebsiteFix Optimizer', 'websitefix-one-click-optimizer' ),
+            __( 'WebsiteFix Optimizer', 'websitefix-one-click-performance-optimizer' ),
+            __( 'WebsiteFix Optimizer', 'websitefix-one-click-performance-optimizer' ),
             'manage_options',
             WFOCO_SLUG,
             array( __CLASS__, 'render' )
@@ -34,11 +34,31 @@ class WFOCO_Admin_Page {
     }
 
     /**
+     * Asset-Enqueue — hooked on admin_enqueue_scripts.
+     *
+     * Statt eines inline <style>-Tags im Render-Output (was WP.org-Reviewer
+     * korrekterweise als nicht-enqueued CSS rügen) registrieren wir ein
+     * src-loses Handle und hängen unser CSS via wp_add_inline_style daran.
+     * Hook-Suffix-Check stellt sicher, dass das CSS nur auf unserer eigenen
+     * Tools-Page landet, nicht in jedem Admin-Screen.
+     *
+     * @param string $hook_suffix WordPress admin page hook (e.g. 'tools_page_<slug>').
+     */
+    public static function enqueue_assets( $hook_suffix ) {
+        if ( $hook_suffix !== 'tools_page_' . WFOCO_SLUG ) {
+            return;
+        }
+        wp_register_style( 'wfoco-admin', false, array(), WFOCO_VERSION );
+        wp_enqueue_style( 'wfoco-admin' );
+        wp_add_inline_style( 'wfoco-admin', self::get_admin_css() );
+    }
+
+    /**
      * Form-Handler: Apply. Hooked on admin_post_wfoco_apply.
      */
     public static function handle_apply() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'Keine Berechtigung.', 'websitefix-one-click-optimizer' ) );
+            wp_die( esc_html__( 'Keine Berechtigung.', 'websitefix-one-click-performance-optimizer' ) );
         }
         check_admin_referer( 'wfoco_action' );
 
@@ -47,7 +67,7 @@ class WFOCO_Admin_Page {
             $result = WFOCO_Optimizer::apply_all();
             $msg = sprintf(
                 /* translators: 1: success count, 2: total */
-                __( '%1$d von %2$d Fixes aktiviert.', 'websitefix-one-click-optimizer' ),
+                __( '%1$d von %2$d Fixes aktiviert.', 'websitefix-one-click-performance-optimizer' ),
                 $result['ok'],
                 $result['ok'] + $result['fail']
             );
@@ -66,7 +86,7 @@ class WFOCO_Admin_Page {
      */
     public static function handle_revert() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'Keine Berechtigung.', 'websitefix-one-click-optimizer' ) );
+            wp_die( esc_html__( 'Keine Berechtigung.', 'websitefix-one-click-performance-optimizer' ) );
         }
         check_admin_referer( 'wfoco_action' );
 
@@ -75,7 +95,7 @@ class WFOCO_Admin_Page {
             $result = WFOCO_Optimizer::revert_all();
             $msg = sprintf(
                 /* translators: 1: success count, 2: total */
-                __( '%1$d von %2$d Fixes deaktiviert.', 'websitefix-one-click-optimizer' ),
+                __( '%1$d von %2$d Fixes deaktiviert.', 'websitefix-one-click-performance-optimizer' ),
                 $result['ok'],
                 $result['ok'] + $result['fail']
             );
@@ -110,10 +130,10 @@ class WFOCO_Admin_Page {
                         <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
                     </svg>
                 </span>
-                <?php esc_html_e( 'WebsiteFix One-Click Optimizer', 'websitefix-one-click-optimizer' ); ?>
+                <?php esc_html_e( 'WebsiteFix One-Click Optimizer', 'websitefix-one-click-performance-optimizer' ); ?>
             </h1>
             <p class="description" style="max-width: 720px; font-size: 13.5px; color: #475569; line-height: 1.65; margin: 8px 0 24px;">
-                <?php esc_html_e( '7 kuratierte WordPress-Performance- und Security-Fixes mit einem Klick. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins und greift dann nicht ein) und sofortiger Rückgängig-Möglichkeit. Snippets werden als Must-Use-Plugin-Datei in /wp-content/mu-plugins/ (mit wf-optimizer-Präfix) abgelegt — kein Theme-Edit, kein Reload-Workaround.', 'websitefix-one-click-optimizer' ); ?>
+                <?php esc_html_e( '7 kuratierte WordPress-Performance- und Security-Fixes mit einem Klick. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins und greift dann nicht ein) und sofortiger Rückgängig-Möglichkeit. Snippets werden als Must-Use-Plugin-Datei in /wp-content/mu-plugins/ (mit wf-optimizer-Präfix) abgelegt — kein Theme-Edit, kein Reload-Workaround.', 'websitefix-one-click-performance-optimizer' ); ?>
             </p>
 
             <?php if ( $notice ) : ?>
@@ -124,11 +144,11 @@ class WFOCO_Admin_Page {
 
             <?php if ( ! $writable ) : ?>
                 <div class="notice notice-error">
-                    <p><strong><?php esc_html_e( 'Schreibrechte fehlen.', 'websitefix-one-click-optimizer' ); ?></strong>
+                    <p><strong><?php esc_html_e( 'Schreibrechte fehlen.', 'websitefix-one-click-performance-optimizer' ); ?></strong>
                        <?php
                        printf(
                            /* translators: %s: full path to mu-plugins directory */
-                           esc_html__( 'Das Verzeichnis %s ist nicht schreibbar. Bitte CHMOD oder Hosting-Support kontaktieren — sonst können wir keine Fixes aktivieren.', 'websitefix-one-click-optimizer' ),
+                           esc_html__( 'Das Verzeichnis %s ist nicht schreibbar. Bitte CHMOD oder Hosting-Support kontaktieren — sonst können wir keine Fixes aktivieren.', 'websitefix-one-click-performance-optimizer' ),
                            '<code>' . esc_html( WPMU_PLUGIN_DIR ) . '</code>'
                        );
                        ?>
@@ -143,7 +163,7 @@ class WFOCO_Admin_Page {
                     <input type="hidden" name="action" value="wfoco_apply" />
                     <input type="hidden" name="slug"   value="all" />
                     <button type="submit" class="button button-primary" <?php disabled( ! $writable ); ?>>
-                        ⚡ <?php esc_html_e( 'Alle 7 Fixes auf einmal aktivieren', 'websitefix-one-click-optimizer' ); ?>
+                        ⚡ <?php esc_html_e( 'Alle 7 Fixes auf einmal aktivieren', 'websitefix-one-click-performance-optimizer' ); ?>
                     </button>
                 </form>
                 <?php if ( count( $active_list ) > 0 ) : ?>
@@ -152,8 +172,8 @@ class WFOCO_Admin_Page {
                         <input type="hidden" name="action" value="wfoco_revert" />
                         <input type="hidden" name="slug"   value="all" />
                         <button type="submit" class="button"
-                            onclick="return confirm('<?php echo esc_js( __( 'Wirklich alle Fixes deaktivieren? Die mu-plugin-Dateien werden gelöscht — Standard-WordPress-Verhalten kehrt zurück.', 'websitefix-one-click-optimizer' ) ); ?>')">
-                            <?php esc_html_e( 'Alle deaktivieren', 'websitefix-one-click-optimizer' ); ?>
+                            onclick="return confirm('<?php echo esc_js( __( 'Wirklich alle Fixes deaktivieren? Die mu-plugin-Dateien werden gelöscht — Standard-WordPress-Verhalten kehrt zurück.', 'websitefix-one-click-performance-optimizer' ) ); ?>')">
+                            <?php esc_html_e( 'Alle deaktivieren', 'websitefix-one-click-performance-optimizer' ); ?>
                         </button>
                     </form>
                 <?php endif; ?>
@@ -161,7 +181,7 @@ class WFOCO_Admin_Page {
                     <?php
                     printf(
                         /* translators: %1$d: number of active fixes, %2$d: total fixes */
-                        esc_html__( '%1$d von %2$d Fixes aktiv', 'websitefix-one-click-optimizer' ),
+                        esc_html__( '%1$d von %2$d Fixes aktiv', 'websitefix-one-click-performance-optimizer' ),
                         count( $active_list ),
                         count( $snippets )
                     );
@@ -180,8 +200,8 @@ class WFOCO_Admin_Page {
                         <h2 class="wfoco-card-title"><?php echo esc_html( $snippet['title'] ); ?></h2>
                         <span class="wfoco-status-pill <?php echo $is_active ? 'is-on' : 'is-off'; ?>">
                             <?php echo $is_active
-                                ? '● ' . esc_html__( 'aktiv', 'websitefix-one-click-optimizer' )
-                                : '○ ' . esc_html__( 'inaktiv', 'websitefix-one-click-optimizer' ); ?>
+                                ? '● ' . esc_html__( 'aktiv', 'websitefix-one-click-performance-optimizer' )
+                                : '○ ' . esc_html__( 'inaktiv', 'websitefix-one-click-performance-optimizer' ); ?>
                         </span>
                     </div>
                     <p class="wfoco-card-tagline"><?php echo esc_html( $snippet['tagline'] ); ?></p>
@@ -194,32 +214,32 @@ class WFOCO_Admin_Page {
                         </span>
                     </div>
                     <p class="wfoco-effect">
-                        <strong><?php esc_html_e( 'Erwarteter Effekt:', 'websitefix-one-click-optimizer' ); ?></strong>
+                        <strong><?php esc_html_e( 'Erwarteter Effekt:', 'websitefix-one-click-performance-optimizer' ); ?></strong>
                         <?php echo esc_html( $snippet['effect'] ); ?>
                     </p>
 
                     <?php if ( ! empty( $snippet['warning'] ) ) : ?>
                     <div class="wfoco-warning">
-                        <strong>⚠ <?php esc_html_e( 'Hinweis:', 'websitefix-one-click-optimizer' ); ?></strong>
+                        <strong>⚠ <?php esc_html_e( 'Hinweis:', 'websitefix-one-click-performance-optimizer' ); ?></strong>
                         <?php echo esc_html( $snippet['warning'] ); ?>
                     </div>
                     <?php endif; ?>
 
                     <!-- Live-Diagnostic -->
                     <p class="wfoco-diag">
-                        <strong><?php esc_html_e( 'Aktueller Status:', 'websitefix-one-click-optimizer' ); ?></strong>
+                        <strong><?php esc_html_e( 'Aktueller Status:', 'websitefix-one-click-performance-optimizer' ); ?></strong>
                         <code><?php echo esc_html( $diag['label'] ); ?></code> —
                         <?php echo esc_html( $diag['detail'] ); ?>
                     </p>
 
                     <!-- Code-Preview -->
                     <details class="wfoco-preview">
-                        <summary><?php esc_html_e( 'Code anzeigen, der bei Apply geschrieben wird', 'websitefix-one-click-optimizer' ); ?></summary>
+                        <summary><?php esc_html_e( 'Code anzeigen, der bei Apply geschrieben wird', 'websitefix-one-click-performance-optimizer' ); ?></summary>
                         <p class="wfoco-preview-path">
                             <?php
                             printf(
                                 /* translators: %s: target file path */
-                                esc_html__( 'Zieldatei: %s', 'websitefix-one-click-optimizer' ),
+                                esc_html__( 'Zieldatei: %s', 'websitefix-one-click-performance-optimizer' ),
                                 '<code>' . esc_html( WFOCO_Optimizer::file_path( $snippet['slug'] ) ) . '</code>'
                             );
                             ?>
@@ -236,14 +256,14 @@ class WFOCO_Admin_Page {
                             <button type="submit" class="button button-secondary"
                                 onclick="return confirm('<?php echo esc_js( sprintf(
                                     /* translators: %s: snippet title */
-                                    __( '"%s" wirklich deaktivieren? Die mu-plugin-Datei wird gelöscht.', 'websitefix-one-click-optimizer' ),
+                                    __( '"%s" wirklich deaktivieren? Die mu-plugin-Datei wird gelöscht.', 'websitefix-one-click-performance-optimizer' ),
                                     $snippet['title']
                                 ) ); ?>')">
-                                <?php esc_html_e( 'Fix deaktivieren', 'websitefix-one-click-optimizer' ); ?>
+                                <?php esc_html_e( 'Fix deaktivieren', 'websitefix-one-click-performance-optimizer' ); ?>
                             </button>
                         <?php else : ?>
                             <button type="submit" class="button button-primary" <?php disabled( ! $writable ); ?>>
-                                ⚡ <?php esc_html_e( 'Fix aktivieren', 'websitefix-one-click-optimizer' ); ?>
+                                ⚡ <?php esc_html_e( 'Fix aktivieren', 'websitefix-one-click-performance-optimizer' ); ?>
                             </button>
                         <?php endif; ?>
                     </form>
@@ -252,25 +272,23 @@ class WFOCO_Admin_Page {
             </div>
 
             <p style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; line-height: 1.6;">
-                <strong><?php esc_html_e( 'Technische Details:', 'websitefix-one-click-optimizer' ); ?></strong>
-                <?php esc_html_e( 'Aktivierte Fixes liegen als einzelne PHP-Dateien in /wp-content/mu-plugins/ (Präfix wf-optimizer-). WordPress lädt mu-plugins automatisch vor regulären Plugins — kein Activation-Workflow nötig. Deaktivieren = Datei wird gelöscht. Standard-WordPress-Verhalten ist sofort wieder aktiv.', 'websitefix-one-click-optimizer' ); ?>
+                <strong><?php esc_html_e( 'Technische Details:', 'websitefix-one-click-performance-optimizer' ); ?></strong>
+                <?php esc_html_e( 'Aktivierte Fixes liegen als einzelne PHP-Dateien in /wp-content/mu-plugins/ (Präfix wf-optimizer-). WordPress lädt mu-plugins automatisch vor regulären Plugins — kein Activation-Workflow nötig. Deaktivieren = Datei wird gelöscht. Standard-WordPress-Verhalten ist sofort wieder aktiv.', 'websitefix-one-click-performance-optimizer' ); ?>
                 <br/>
                 <a href="https://website-fix.com/smart-fix-library?utm_source=wp-plugin&utm_medium=optimizer&utm_campaign=lab-link" target="_blank" rel="noopener noreferrer">
-                    <?php esc_html_e( 'Hintergrund-Lab zu den Snippets auf website-fix.com →', 'websitefix-one-click-optimizer' ); ?>
+                    <?php esc_html_e( 'Hintergrund-Lab zu den Snippets auf website-fix.com →', 'websitefix-one-click-performance-optimizer' ); ?>
                 </a>
             </p>
         </div>
-
-        <?php self::inline_styles(); ?>
         <?php
     }
 
     /**
-     * Inline-CSS — gezielt klein gehalten, keine externen Assets.
+     * Admin-CSS — gezielt klein gehalten, keine externen Assets.
+     * Wird über wp_add_inline_style() an das Handle 'wfoco-admin' gehängt.
      */
-    private static function inline_styles() {
-        ?>
-        <style>
+    private static function get_admin_css() {
+        return '
         .wfoco-wrap { max-width: 1100px; }
         .wfoco-grid {
             display: grid;
@@ -403,7 +421,6 @@ class WFOCO_Admin_Page {
         .wfoco-form {
             margin-top: 6px;
         }
-        </style>
-        <?php
+        ';
     }
 }

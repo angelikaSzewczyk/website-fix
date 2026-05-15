@@ -52,7 +52,7 @@ class WFOCO_Diagnostics {
                 'label'  => 'gedrosselt',
                 'detail' => sprintf(
                     /* translators: %d: interval in seconds */
-                    __( 'Aktuelle Frequenz: %d s zwischen Polls', 'websitefix-one-click-optimizer' ),
+                    __( 'Aktuelle Frequenz: %d s zwischen Polls', 'websitefix-one-click-performance-optimizer' ),
                     $interval
                 ),
             );
@@ -62,7 +62,7 @@ class WFOCO_Diagnostics {
             'label'  => 'standard',
             'detail' => sprintf(
                 /* translators: %d: interval in seconds */
-                __( 'Aktuelle Frequenz: %d s — admin-ajax.php pollt häufig', 'websitefix-one-click-optimizer' ),
+                __( 'Aktuelle Frequenz: %d s — admin-ajax.php pollt häufig', 'websitefix-one-click-performance-optimizer' ),
                 $interval
             ),
         );
@@ -80,13 +80,13 @@ class WFOCO_Diagnostics {
             return array(
                 'active' => false,
                 'label'  => 'aktiv',
-                'detail' => __( 'xmlrpc.php ist offen — Brute-Force-Angriffsfläche', 'websitefix-one-click-optimizer' ),
+                'detail' => __( 'xmlrpc.php ist offen — Brute-Force-Angriffsfläche', 'websitefix-one-click-performance-optimizer' ),
             );
         }
         return array(
             'active' => true,
             'label'  => 'deaktiviert',
-            'detail' => __( 'xmlrpc.php abgeschaltet — Brute-Force-Surface geschlossen', 'websitefix-one-click-optimizer' ),
+            'detail' => __( 'xmlrpc.php abgeschaltet — Brute-Force-Surface geschlossen', 'websitefix-one-click-performance-optimizer' ),
         );
     }
 
@@ -101,13 +101,13 @@ class WFOCO_Diagnostics {
             return array(
                 'active' => true,
                 'label'  => 'entfernt',
-                'detail' => __( 'wp-emoji-release.min.js wird nicht mehr geladen', 'websitefix-one-click-optimizer' ),
+                'detail' => __( 'wp-emoji-release.min.js wird nicht mehr geladen', 'websitefix-one-click-performance-optimizer' ),
             );
         }
         return array(
             'active' => false,
             'label'  => 'aktiv',
-            'detail' => __( 'Emoji-Polyfill lädt noch ~14 KB pro Page', 'websitefix-one-click-optimizer' ),
+            'detail' => __( 'Emoji-Polyfill lädt noch ~14 KB pro Page', 'websitefix-one-click-performance-optimizer' ),
         );
     }
 
@@ -122,13 +122,13 @@ class WFOCO_Diagnostics {
             return array(
                 'active' => true,
                 'label'  => 'gestrippt',
-                'detail' => __( 'CSS/JS-URLs werden ohne ?ver= ausgeliefert', 'websitefix-one-click-optimizer' ),
+                'detail' => __( 'CSS/JS-URLs werden ohne ?ver= ausgeliefert', 'websitefix-one-click-performance-optimizer' ),
             );
         }
         return array(
             'active' => false,
             'label'  => 'aktiv',
-            'detail' => __( 'WordPress hängt ?ver=X.Y an alle Asset-URLs', 'websitefix-one-click-optimizer' ),
+            'detail' => __( 'WordPress hängt ?ver=X.Y an alle Asset-URLs', 'websitefix-one-click-performance-optimizer' ),
         );
     }
 
@@ -142,13 +142,13 @@ class WFOCO_Diagnostics {
             return array(
                 'active' => true,
                 'label'  => 'blockiert',
-                'detail' => __( '/?author=N und /author/<name>/ werden 301-redirected', 'websitefix-one-click-optimizer' ),
+                'detail' => __( '/?author=N und /author/<name>/ werden 301-redirected', 'websitefix-one-click-performance-optimizer' ),
             );
         }
         return array(
             'active' => false,
             'label'  => 'offen',
-            'detail' => __( '/?author=N verrät Usernames an Brute-Force-Bots', 'websitefix-one-click-optimizer' ),
+            'detail' => __( '/?author=N verrät Usernames an Brute-Force-Bots', 'websitefix-one-click-performance-optimizer' ),
         );
     }
 
@@ -162,13 +162,13 @@ class WFOCO_Diagnostics {
             return array(
                 'active' => true,
                 'label'  => 'versteckt',
-                'detail' => __( 'Generator-Tag aus <head> + RSS entfernt', 'websitefix-one-click-optimizer' ),
+                'detail' => __( 'Generator-Tag aus <head> + RSS entfernt', 'websitefix-one-click-performance-optimizer' ),
             );
         }
         return array(
             'active' => false,
             'label'  => 'sichtbar',
-            'detail' => __( '<meta name="generator" content="WordPress X.Y"> im HTML-Head', 'websitefix-one-click-optimizer' ),
+            'detail' => __( '<meta name="generator" content="WordPress X.Y"> im HTML-Head', 'websitefix-one-click-performance-optimizer' ),
         );
     }
 
@@ -183,13 +183,13 @@ class WFOCO_Diagnostics {
             return array(
                 'active' => true,
                 'label'  => 'entfernt',
-                'detail' => __( 'jquery-migrate.min.js wird im Frontend nicht mehr geladen', 'websitefix-one-click-optimizer' ),
+                'detail' => __( 'jquery-migrate.min.js wird im Frontend nicht mehr geladen', 'websitefix-one-click-performance-optimizer' ),
             );
         }
         return array(
             'active' => false,
             'label'  => 'geladen',
-            'detail' => __( '~11 KB Legacy-jQuery werden auf jeder Frontend-Seite geladen', 'websitefix-one-click-optimizer' ),
+            'detail' => __( '~11 KB Legacy-jQuery werden auf jeder Frontend-Seite geladen', 'websitefix-one-click-performance-optimizer' ),
         );
     }
 }
