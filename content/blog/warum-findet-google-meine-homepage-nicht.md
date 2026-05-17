@@ -1,6 +1,6 @@
 ---
-title: "Warum findet Google meine Homepage nicht? (Checkliste 2026)"
-description: "Deine Seite ist online, aber Google ignoriert sie? Du verlierst gerade Kunden, die nach dir googeln. In 60 Sekunden zeigt unser Scan, welcher der 5 Blocker bei dir aktiv ist."
+title: "Google findet deine Homepage nicht? Sofort-Check 2026"
+description: 'Du bist online, aber unsichtbar? Genau jetzt googeln Kunden nach dir — und finden Konkurrenz. Unser Scan zeigt den Blocker in 60 Sek. Ohne SEO-Wissen.'
 date: "2026-04-26"
 category: "seo"
 tags:

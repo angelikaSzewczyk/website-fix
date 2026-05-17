@@ -1,6 +1,6 @@
 ---
-title: "WordPress Weiße Seite? Alle Ursachen & Fixes — auch nach Website-Umzug (2026)"
-description: "Weiße Fläche statt deiner WordPress-Seite? Deine Daten sind sicher — nur ein einzelner Fehler blockt. In 60 Sekunden findet unser Scan den Auslöser. Ohne FTP, ohne Entwickler."
+title: "Weiße Seite statt Website? Sofort retten ohne FTP"
+description: 'Nur weiße Fläche, kein Login, kein Backup? Keine Panik — deine Daten sind sicher. Unser Scan findet den Fehler in 60 Sek. Ohne FTP, ohne Entwickler.'
 date: "2026-04-13"
 category: "wordpress"
 tags: ["weiße seite", "white screen", "wordpress fehler", "website kaputt", "website reparieren", "wsod", "php error", "wordpress umzug"]

@@ -1,6 +1,6 @@
 ---
-title: "Webhosting zu langsam? Warum WordPress-Seiten 2026 wirklich hängen."
-description: "Du beschuldigst deinen Hoster — aber der echte Bremsklotz ist meist im Code: DOM-Tiefe, Page-Builder-Bloat, Cart-Fragments. So findest du den wahren Schuldigen in 60 Sekunden."
+title: "Website extrem langsam? Wahre Ursache in 60 Sek."
+description: 'Hoster wechseln bringt meist nichts — der echte Bremser sitzt woanders. Unser Sofort-Scan zeigt dir in 60 Sek., was deine Seite wirklich lähmt.'
 date: "2026-04-26"
 category: "performance"
 tags:

@@ -1,6 +1,6 @@
 ---
-title: "WordPress 'Kritischer Fehler'? Keine Panik – So rettest du deine Seite."
-description: 'Weiße Seite oder „Es gab einen kritischen Fehler"? In 60 Sekunden findet unser Sofort-Scan den Auslöser und zeigt dir, was zu tun ist. Ohne Entwickler, ohne Datenverlust.'
+title: "WordPress Kritischer Fehler? In 2 Min. selbst retten"
+description: 'Deine Seite weg, Hoster schweigt? Keine Panik. Unser Sofort-Scan findet den Auslöser in 60 Sek. — ohne Code, ohne Datenverlust. Jetzt prüfen.'
 date: "2026-04-26"
 category: "wordpress"
 tags:
