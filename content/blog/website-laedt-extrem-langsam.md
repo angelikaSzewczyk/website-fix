@@ -295,6 +295,8 @@ Die meisten WordPress-Performance-Probleme 2026 sehen aus wie Hoster-Probleme �
 
 Wer diese Reihenfolge umdreht, zahlt jeden Monat 20–30 € mehr für Hosting, ohne dass die Ladezeit messbar besser wird. Wer sie einhält, kommt mit den ersten 4 Schritten meist auf **PageSpeed-Werte > 85** auf Mobile — und das mit dem ursprünglichen Hosting-Tarif.
 
+**Ladezeit-Probleme eskalieren oft, wenn ein Plugin im Hintergrund den Server überlastet — und plötzlich siehst du nur noch eine [weiße Seite statt deiner Website](/blog/website-zeigt-nur-weisse-seite). Wenn dir das passiert, hier ist die Schritt-für-Schritt-Notfall-Anleitung.**
+
 > ### Bereit, deine echte Bremse zu finden?
 > WebsiteFix scannt deine Seite in 60 Sekunden und liefert den priorisierten Maßnahmenplan. Kein FTP-Frickeln, kein PageSpeed-Insights-Hin-und-Her.
 >

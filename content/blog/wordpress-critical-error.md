@@ -214,6 +214,8 @@ WordPress wirkt in dem Moment, wo die Seite weiß wird, wie ein totales Desaster
 
 Und vor allem: **Backups einrichten**, bevor das nächste Mal etwas knallt. Plugins wie *Updraft* oder *BackWPup* machen automatische Sicherungen, die du im Notfall in 5 Minuten zurückspielen kannst.
 
+**Ein kritischer Fehler verschwindet aus den Suchergebnissen — und selbst nach dem Fix kann es sein, dass [Google deine Website nicht mehr findet](/blog/warum-findet-google-meine-homepage-nicht). Wenn deine Seite wieder läuft, aber bei Google fehlt, hier ist der Sichtbarkeits-Notfall-Guide.**
+
 > ### Bereit, die Diagnose zu starten?
 > 60 Sekunden, keine Anmeldung — du bekommst sofort die Antwort, was deine Seite gerade nicht laden lässt.
 >

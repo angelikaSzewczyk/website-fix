@@ -55,11 +55,12 @@ export default function SiteFooter() {
             </p>
             <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                { href: "/blog/wordpress-critical-error",            label: "WordPress Critical Error" },
+                { href: "/blog/wordpress-critical-error",                label: "WordPress Critical Error" },
+                { href: "/blog/website-zeigt-nur-weisse-seite",          label: "Weiße Seite statt Website" },
                 { href: "/blog/warum-findet-google-meine-homepage-nicht", label: "Google findet mich nicht" },
-                { href: "/blog/website-laedt-extrem-langsam",        label: "Website lädt zu langsam" },
+                { href: "/blog/website-laedt-extrem-langsam",            label: "Website lädt zu langsam" },
                 { href: "/blog/agentur-skalieren-wartung-automatisieren", label: "Agentur skalieren" },
-                { href: "/blog/89-euro-pro-monat-vs-totalausfall",   label: "Wartung vs. Totalausfall" },
+                { href: "/blog/89-euro-pro-monat-vs-totalausfall",       label: "Wartung vs. Totalausfall" },
               ].map(({ href, label }) => (
                 <Link key={href} href={href} className="wf-footer-link">{label}</Link>
               ))}

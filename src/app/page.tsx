@@ -595,6 +595,25 @@ export default function Page() {
               </Link>
             </article>
           </div>
+
+          {/* SEO-LINK-WEAVING — Top-4-Notfall-Posts (GSC-Position ~36) intern
+              verlinken, um Link-Autorität von der Homepage auf die Panik-
+              Cluster zu bündeln. Harte Keyword-Anchors im Fließtext. */}
+          <p style={{
+            maxWidth: 880, margin: "44px auto 0", padding: "0 8px",
+            fontSize: 15, lineHeight: 1.8,
+            color: "rgba(255,255,255,0.62)", textAlign: "center",
+          }}>
+            Andere Symptome? Wir haben Schritt-für-Schritt-Notfall-Guides für jeden Fall. Du kämpfst mit einem{" "}
+            <Link href="/blog/wordpress-critical-error" className="text-amber-400 font-semibold hover:underline underline-offset-4">WordPress Kritischer Fehler</Link>
+            , siehst nur eine{" "}
+            <Link href="/blog/website-zeigt-nur-weisse-seite" className="text-rose-400 font-semibold hover:underline underline-offset-4">weiße Seite statt deiner Website</Link>
+            , wunderst dich, warum{" "}
+            <Link href="/blog/warum-findet-google-meine-homepage-nicht" className="text-blue-400 font-semibold hover:underline underline-offset-4">Google deine Homepage nicht findet</Link>{" "}
+            oder ärgerst dich, dass deine{" "}
+            <Link href="/blog/website-laedt-extrem-langsam" className="text-cyan-400 font-semibold hover:underline underline-offset-4">Website extrem langsam lädt</Link>
+            ? Klick rein — jede Anleitung führt dich in unter 30 Minuten aus dem Notfall.
+          </p>
         </section>
 
         {/* DIVIDER */}
@@ -1343,6 +1362,21 @@ export default function Page() {
           }}>
             <FaqAccordion items={FAQ} />
           </div>
+
+          {/* SEO-LINK-WEAVING #2 — Notfall-Quick-Links unter den FAQs, dort wo
+              der Reader nach Antworten sucht und einen Klick weit ist. Anchor-
+              Variationen bewusst anders als Block #1 (Anchor-Diversity). */}
+          <p style={{
+            margin: "28px 0 0", padding: "20px 24px", borderRadius: 12,
+            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+            fontSize: 14, lineHeight: 1.85, color: "rgba(255,255,255,0.58)", textAlign: "center",
+          }}>
+            Deine Frage nicht dabei? Direkt zu den vier meistgesuchten Notfall-Anleitungen:{" "}
+            <Link href="/blog/wordpress-critical-error" className="text-amber-400 font-semibold hover:underline underline-offset-4">WordPress kritischen Fehler beheben</Link>{" "}·{" "}
+            <Link href="/blog/website-zeigt-nur-weisse-seite" className="text-rose-400 font-semibold hover:underline underline-offset-4">White Screen of Death lösen</Link>{" "}·{" "}
+            <Link href="/blog/warum-findet-google-meine-homepage-nicht" className="text-blue-400 font-semibold hover:underline underline-offset-4">Erfahre, was zu tun ist, wenn Google deine Homepage nicht findet</Link>{" "}·{" "}
+            <Link href="/blog/website-laedt-extrem-langsam" className="text-cyan-400 font-semibold hover:underline underline-offset-4">Website lädt zu langsam — Sofort-Fix</Link>.
+          </p>
         </section>
 
         {/* DIVIDER */}
