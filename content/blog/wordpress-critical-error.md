@@ -149,6 +149,8 @@ Plugin-Auto-Updates sind bequem, aber sie sind die **Hauptursache** für kritisc
 
 **Lösung:** Auto-Updates für kritische Plugins (WooCommerce, Elementor, Yoast, Cache-Plugin) deaktivieren. Updates manuell durchführen, **nach** einem automatischen Backup.
 
+Die häufigste Variante davon: [Plugin aktiviert und Website weg](/blog/wordpress-plugin-zerstoert-seite) — wir zeigen dort die schnellste FTP-Reset-Methode plus, welche Plugin-Sorten besonders häufig krachen.
+
 ### Ursache 2: Veraltete PHP-Version
 
 Hoster, die noch auf PHP 7.4 oder älter laufen, sind tickende Zeitbomben. WordPress 6.x und alle modernen Plugins brauchen mindestens **PHP 8.1**. Ältere Versionen produzieren Inkompatibilitäten.
@@ -172,6 +174,8 @@ Manche Plugins (vor allem schwer gewichtete WooCommerce-Addons, Backup-Tools) br
 Wenn dein Hoster mal abstürzt oder einen unsauberen Reboot hat, kann die MySQL-Datenbank inkonsistent werden. Symptom: Seite läuft, aber WP-Admin zeigt Fragmente oder Fehler.
 
 **Lösung:** Im phpMyAdmin: Tabellen markieren → *„Tabelle reparieren"*. Oder per WP-CLI: `wp db repair`.
+
+Wenn deine Datenbank zwar nicht korrupt, aber über Jahre gewachsen ist und der Critical Error nur der letzte Tropfen war: [WordPress-Datenbank ohne Plugin bereinigen](/blog/wordpress-datenbank-bereinigen-ohne-plugin) ist die Wartungs-Anleitung, die jeder Solo-Site spätestens alle 6 Monate gut tut.
 
 ---
 

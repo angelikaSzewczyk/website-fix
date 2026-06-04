@@ -3,7 +3,7 @@
  * Plugin Name:       WebsiteFix One-Click Performance Optimizer
  * Plugin URI:        https://website-fix.com/plugin/optimizer
  * Description:       Aktiviere 7 kuratierte WordPress-Performance- und Security-Fixes mit einem Klick: Heartbeat drosseln, XML-RPC abschalten, Emojis & oEmbed entfernen, Query-Strings strippen, jQuery-Migrate aus dem Frontend werfen, Author-Archive blockieren, WordPress-Version verstecken. Jeder Fix kommt mit Safety-Check + sofortiger Rückgängig-Möglichkeit.
- * Version:           0.3.2
+ * Version:           0.3.3
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -16,7 +16,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Konstanten ─────────────────────────────────────────────────────────────
-define( 'WFOCO_VERSION',     '0.3.2' );
+define( 'WFOCO_VERSION',     '0.3.3' );
 define( 'WFOCO_SLUG',        'websitefix-one-click-performance-optimizer' );
 define( 'WFOCO_PATH',        plugin_dir_path( __FILE__ ) );
 define( 'WFOCO_URL',         plugin_dir_url( __FILE__ ) );

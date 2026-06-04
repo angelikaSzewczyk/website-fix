@@ -74,6 +74,8 @@ Das sind etwa **500–800 ms** Performance-Vorteil gegenüber einem 4-€-Shared
 
 Diese Probleme kosten **2–5 Sekunden** Ladezeit. Die kannst du nicht mit Hardware kaufen — die musst du im Code aufräumen.
 
+Drei der häufigsten Hidden-Bremser sind im Code unsichtbar, aber messbar: Plugin-induzierte PHP-Notices, die bei jedem Page-Load 30–80 ms kosten ([PHP-Fehlermeldungen deaktivieren](/blog/php-fehlermeldungen-deaktivieren)), und überquellende `wp_options`-Tabellen mit Autoload-Bloat ([WordPress-Datenbank bereinigen ohne Plugin](/blog/wordpress-datenbank-bereinigen-ohne-plugin)). Beides lässt sich in unter einer Stunde fixen, beides senkt TTFB messbar.
+
 **Realistische Verteilung der Ladezeit-Probleme:**
 
 | Ursache | Anteil der Fälle | Lösbar durch Hoster-Wechsel? |
@@ -295,7 +297,7 @@ Die meisten WordPress-Performance-Probleme 2026 sehen aus wie Hoster-Probleme �
 
 Wer diese Reihenfolge umdreht, zahlt jeden Monat 20–30 € mehr für Hosting, ohne dass die Ladezeit messbar besser wird. Wer sie einhält, kommt mit den ersten 4 Schritten meist auf **PageSpeed-Werte > 85** auf Mobile — und das mit dem ursprünglichen Hosting-Tarif.
 
-**Ladezeit-Probleme eskalieren oft, wenn ein Plugin im Hintergrund den Server überlastet — und plötzlich siehst du nur noch eine [weiße Seite statt deiner Website](/blog/website-zeigt-nur-weisse-seite). Wenn dir das passiert, hier ist die Schritt-für-Schritt-Notfall-Anleitung.**
+**Ladezeit-Probleme eskalieren oft, wenn ein Plugin im Hintergrund den Server überlastet — und plötzlich siehst du nur noch eine [weiße Seite statt deiner Website](/blog/website-zeigt-nur-weisse-seite). Wenn dir das passiert, hier ist die Schritt-für-Schritt-Notfall-Anleitung. Wenn deine Seite nach einer Plugin-Aktivierung plötzlich noch langsamer wurde (oder ganz tot ist), startet die Diagnose nicht beim Speed, sondern beim Plugin selbst: [Plugin aktiviert, Website weg](/blog/wordpress-plugin-zerstoert-seite) zeigt den FTP-Reset-Pfad — wenn der Speed danach immer noch schlecht ist, lohnt sich der Performance-Audit hier.**
 
 > ### Bereit, deine echte Bremse zu finden?
 > WebsiteFix scannt deine Seite in 60 Sekunden und liefert den priorisierten Maßnahmenplan. Kein FTP-Frickeln, kein PageSpeed-Insights-Hin-und-Her.

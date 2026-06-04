@@ -4,7 +4,7 @@ Tags: performance, optimization, heartbeat, xmlrpc, jquery
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.2
+Stable tag: 0.3.3
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -65,6 +65,25 @@ WebsiteFix is a WordPress diagnostic tool developed in Frankfurt, Germany. The s
 
 Sieben kuratierte WordPress-Performance- und Security-Fixes mit einem Klick aktivierbar. Jeder Fix kommt mit Safety-Check (erkennt konfligierende Plugins automatisch und greift dann NICHT ein). Aktivierte Fixes werden als Must-Use-Plugin-Datei in `/wp-content/mu-plugins/` mit dem Präfix `wf-optimizer-` abgelegt — kein Theme-Edit, kein Reload-Workaround, sofortige Rückgängig-Möglichkeit. Read-only-Verbindung zu deiner Datenbank — nur ein einziger `wp_options`-Eintrag mit ~50 Bytes wird gespeichert. Die sieben Snippets sind 1:1 aus unserer kostenlosen Smart-Fix-Library auf website-fix.com portiert.
 
+== Want a free diagnosis before fixing? ==
+
+If you're not sure which of the 7 fixes you actually need — start with a free 60-second scan of your live site at [website-fix.com/plugin/optimizer](https://website-fix.com/plugin/optimizer). It runs from outside (no FTP, no login, no admin access required) and tells you exactly which performance leaks are draining your hosting plan:
+
+* Heartbeat API hammering your CPU? Yes/No, with the live frequency.
+* XML-RPC open to brute force? Yes/No, with the current attack surface.
+* Author archives leaking usernames? Yes/No, with the exposed names.
+* jQuery Migrate still loading in your frontend? Yes/No, with the wasted KB.
+
+You get a personalized "activate these 3 first" recommendation — instead of guessing. The scan is free, no signup, no email wall before the result.
+
+After the scan: come back here, hit "Apply" on the matching fix in the plugin's Tools page, done. Two free tools, one workflow.
+
+Want the deeper 92-point audit (database bloat tables, PHP error stack traces, hook-chain conflicts, slow query log)? That's at [website-fix.com](https://website-fix.com) — same place, same no-login policy. Use this plugin for the surface fixes, use the online tool for the diagnosis that needs more than a heuristic.
+
+= Auf Deutsch =
+
+Wenn du nicht sicher bist, welche der 7 Optimierungen du wirklich brauchst, starte mit dem kostenlosen 60-Sekunden-Scan auf [website-fix.com/plugin/optimizer](https://website-fix.com/plugin/optimizer). Der Scan läuft extern — kein FTP, kein Login, kein Backend-Zugang — und zeigt dir konkret, welche Performance-Lecks deinen Hosting-Plan ausquetschen. Du bekommst eine "diese 3 zuerst aktivieren"-Empfehlung statt zu raten. Kostenlos, keine Anmeldung, keine E-Mail-Wall vor dem Ergebnis.
+
 == Installation ==
 
 1. Search for "WebsiteFix One-Click Optimizer" under "Plugins → Add New" in the WordPress admin and activate it.
@@ -76,6 +95,10 @@ Sieben kuratierte WordPress-Performance- und Security-Fixes mit einem Klick akti
 **Note on file permissions:** The plugin needs write access to `/wp-content/mu-plugins/`. On most German hosts (IONOS, Strato, All-Inkl, Hetzner, webgo), this is standard. If the plugin shows a "write permissions missing" warning: contact hosting support or set CHMOD to 755.
 
 == Frequently Asked Questions ==
+
+= Should I just activate all 7 fixes at once? =
+
+You can — but the smarter path is: first run the free scan at [website-fix.com/plugin/optimizer](https://website-fix.com/plugin/optimizer) to see which of the 7 leaks are actually active on your site. On most solo sites, only 3–4 of the 7 fixes deliver measurable impact; the others are no-ops because the matching attack surface or bloat source doesn't exist there. Targeted activation is safer (less to debug if something unexpected happens) and just as effective.
 
 = Will my theme or my functions.php be modified? =
 
@@ -133,6 +156,11 @@ Yes. It processes no personal data, sends nothing to external servers, and store
 
 == Changelog ==
 
+= 0.3.3 — 2026-06-04 =
+* **Readme content expansion:** added a "Want a free diagnosis before fixing?" section with concrete scan-output examples (Heartbeat frequency, XML-RPC status, author archive exposure, jQuery Migrate KB-cost). Helps users decide which of the 7 fixes is relevant for their specific site, instead of activating all blindly.
+* **New FAQ entry:** "Should I just activate all 7 fixes at once?" — explains the targeted-activation workflow.
+* Bilingual (English/German) section structure preserved.
+
 = 0.3.2 — 2026-06-04 =
 * **Listing-page link:** plugin URI now points to a dedicated landing page (https://website-fix.com/plugin/optimizer) instead of the generic site root.
 * `Tested up to: 7.0` (matches the current WordPress release).
@@ -165,6 +193,9 @@ Yes. It processes no personal data, sends nothing to external servers, and store
 * Initial public beta.
 
 == Upgrade Notice ==
+
+= 0.3.3 =
+**Content release:** added "Want a free diagnosis before fixing?" section + a new FAQ entry explaining the targeted-activation workflow. No code changes.
 
 = 0.3.2 =
 **Maintenance release:** dedicated landing page linked from the plugin header, "Tested up to" bumped to WordPress 7.0. No functional changes.
