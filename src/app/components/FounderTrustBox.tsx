@@ -49,10 +49,12 @@ export default function FounderTrustBox() {
           color: "rgba(255,255,255,0.78)",
           lineHeight: 1.65,
         }}>
-          Hinter WebsiteFix steckt kein anonymes KI-Skript. Ich bin Angelika, Entwicklerin aus Frankfurt
-          — und alles hier habe ich selbst gebaut. Mein Free-Plugin{" "}
+          Hinter WebsiteFix steckt kein anonymes KI-Skript. Ich bin Angelika, Entwicklerin aus dem
+          Raum Köln/Leverkusen — und alles hier habe ich selbst gebaut. Mein Free-Plugin{" "}
           <Link
-            href="/plugin/optimizer"
+            href="https://wordpress.org/plugins/websitefix-one-click-performance-optimizer/"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               color: "#22C55E",
               textDecoration: "none",

@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# pre-commit — validiert Blog-Frontmatter, BEVOR Commits Vercel erreichen.
+#
+# Trigger: Läuft nur, wenn .md-Files unter content/blog/ in der Stage liegen
+#   (99% aller Commits = kein Blog-Edit = kein Overhead).
+#
+# Setup-Anleitung: siehe scripts/README.md
+#
+# Bypass im Notfall: git commit --no-verify
+#   (NICHT empfohlen — wenn YAML kaputt ist, blockiert Vercel danach den Push)
+
+set -e
+
+STAGED_BLOG_MD=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^content/blog/.*\.md$' || true)
+
+if [ -z "$STAGED_BLOG_MD" ]; then
+  exit 0
+fi
+
+echo "[pre-commit] Blog-Frontmatter-Check (Staged: $(echo "$STAGED_BLOG_MD" | wc -l | tr -d ' ') Files)..."
+
+if ! npm run --silent check:blog; then
+  echo ""
+  echo "[pre-commit] Frontmatter-Check fehlgeschlagen."
+  echo "[pre-commit] Fix die markierten Files, oder umgehe diesen Check mit"
+  echo "[pre-commit]   git commit --no-verify"
+  echo "[pre-commit] (auf eigenes Risiko — Vercel wird denselben Fehler werfen)."
+  exit 1
+fi
