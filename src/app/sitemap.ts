@@ -32,6 +32,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/kontaktformular-funktioniert-nicht",
     "/google-analytics-funktioniert-nicht",
     "/fuer-agenturen",
+    "/plugin/optimizer",
+    "/plugin/health-check",
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: new Date(),
