@@ -38,18 +38,17 @@ faq:
 
 > **Deine Daten sind sicher.** Texte, Bilder, Bestellungen, Kunden — alles liegt in der Datenbank und ist vom Fehler nicht betroffen. WordPress kann sie nur gerade nicht ausliefern. Sobald wir den Auslöser identifizieren, ist deine Seite wieder online.
 
-> ### Keine Zeit zum Lesen?
+> ### Atme erst mal durch.
 >
-> **Unser Sofort-Scan findet den Fehler in 60 Sekunden** — er prüft die typischen Critical-Error-Muster (Plugin-Konflikt, Theme-Bruch, PHP-Version, Memory-Limit) automatisch und sagt dir genau, was zu tun ist. Kein Login, kein FTP-Zugang nötig für den Check.
+> Deine Kundendaten, Bestellungen und Beitragstexte sind sicher in der Datenbank — auch wenn du gerade nichts davon siehst. Der weiße Bildschirm ist meistens ein Plugin-Konflikt, kein Datenverlust.
 >
-> [→ Jetzt kostenlos scannen](/scan)
+> Bevor du einer Agentur 200–400 € für einen Notfall-Termin überweist oder selbst im Code fummelst: Lass meinen kostenlosen Sofort-Scan in 60 Sekunden den wahrscheinlichen Auslöser identifizieren. Und wenn deine Seite wieder läuft, kannst du mein geprüftes Free-Plugin direkt aus dem WordPress-Repository installieren, damit das nicht wieder passiert.
+>
+> [→ Jetzt kostenlos scannen](/scan) · [→ Plugin auf WordPress.org](https://wordpress.org/plugins/websitefix-one-click-performance-optimizer/)
 
 Der typische *„kritische Fehler"* ist in **90 % aller Fälle** ein Plugin-Konflikt — meist nach einem automatischen Update. In den restlichen 10 % ist es ein Theme-Problem oder das PHP-Memory-Limit. Alle drei lassen sich ohne Entwickler in **unter 30 Minuten** beheben. Hier ist die strukturierte Anleitung.
 
-> ### 🚨 Du willst sofort wissen, was bei dir kaputt ist?
-> Statt blind durch FTP zu klicken, kannst du den Fehler in **60 Sekunden** automatisch identifizieren lassen — Plugin, Theme, PHP-Version, Memory-Limit, alles in einem Bericht.
->
-> 👉 **[Problemdiagnose in 60 Sekunden — Gratis-Scan starten →](/)**
+> Wenn dir FTP-Klicken zu fummelig ist: der Scan oben in der Triage-Box prüft genau dieselben vier Verdächtigen (Plugin, Theme, PHP-Version, Memory-Limit) automatisch von außen — du brauchst nur deine Domain.
 
 ---
 

@@ -38,11 +38,13 @@ Sie ist nicht das Problem. Ihre Praxis ist exzellent. Das Problem ist: **Google 
 
 Die gute Nachricht: In 80 % aller Fälle sind es nur **fünf Fehler**, die zwischen dir und Platz 1 stehen. Hier sind sie.
 
-> ### Keine Zeit zum Lesen?
+> ### Atme erst mal durch.
 >
-> **Unser Sofort-Scan findet den Blocker in 60 Sekunden** — Noindex-Tag, robots.txt, fehlende Sitemap, Canonical-Bug oder Thin Content. Kein Login, kein SEO-Wissen nötig, du brauchst nur deine URL.
+> Wenn Google deine Homepage nicht zeigt, ist das fast nie eine „Strafe" — sondern in 9 von 10 Fällen ein kleiner technischer Blocker: ein vergessener Noindex-Tag, eine kaputte robots.txt, eine fehlende Sitemap. Alles innerhalb von Minuten reparierbar, ohne SEO-Agentur-Vertrag über 12 Monate.
 >
-> [→ Jetzt kostenlos scannen](/scan)
+> Bevor du dich in monatelange „SEO-Beratung" ziehen lässt oder selbst stundenlang durch die Google Search Console klickst: Mein kostenloser Sofort-Scan checkt in 60 Sekunden die 5 häufigsten Indexierungs-Blocker. Und wenn deine Sichtbarkeits-Probleme auch mit Speed zu tun haben (langsame Seiten ranken schlechter), kannst du danach mein geprüftes Free-Plugin direkt aus dem WordPress-Repository installieren.
+>
+> [→ Jetzt kostenlos scannen](/scan) · [→ Plugin auf WordPress.org](https://wordpress.org/plugins/websitefix-one-click-performance-optimizer/)
 
 ---
 

@@ -38,11 +38,13 @@ Stell dir einen **Ferrari vor, der im Schlamm steckt**. 800 PS unter der Haube, 
 
 Genau das passiert mit den meisten WordPress-Seiten 2026. Du hast einen modernen Hoster gebucht (vielleicht sogar Managed WordPress bei Raidboxes, SiteGround Cloud oder Kinsta) und investierst 25, 50 oder 200 € im Monat. Trotzdem braucht deine Seite 4–6 Sekunden zum Laden. Du beschuldigst den Hoster, wechselst, zahlst mehr — und nichts ändert sich.
 
-> ### Keine Zeit zum Lesen?
+> ### Atme erst mal durch.
 >
-> **Unser Sofort-Scan findet den wahren Bremsklotz in 60 Sekunden** — Code, Bilder, DOM-Tiefe, Hoster — und sagt dir genau, was zuerst zu fixen ist. Kein Login, kein Plugin, kein Programmieren nötig.
+> Bevor du 30 €/Monat mehr fürs Hosting ausgibst oder einer Agentur 1.500 € für eine „Performance-Optimierung" überweist: In 80 % aller Fälle ist nicht der Hoster die Bremse, sondern eine Handvoll Code-Stellen, die du in 30 Minuten selbst fixen kannst.
 >
-> [→ Jetzt kostenlos scannen](/scan) · [→ Hosting-Speed-Anleitung als PDF für 9,90 €](/scan/checkout)
+> Mein kostenloser Sofort-Scan zeigt dir in 60 Sekunden, was wirklich bremst — Code, Bilder, DOM-Tiefe, Hoster, in dieser Reihenfolge. Und wenn dabei die typischen WordPress-Performance-Killer (Heartbeat-Last, jQuery-Migrate, XML-RPC, Emojis) auftauchen: Mein geprüftes Free-Plugin auf WordPress.org deaktiviert sie mit einem Klick, reversibel und ohne Datenbank-Eingriff.
+>
+> [→ Jetzt kostenlos scannen](/scan) · [→ Plugin auf WordPress.org](https://wordpress.org/plugins/websitefix-one-click-performance-optimizer/) · [→ Hosting-Speed-PDF für 9,90 €](/scan/checkout)
 
 **Hier ist die unbequeme Wahrheit:** In **80 % aller Fälle** ist nicht der Hoster das Problem. Der Hoster ist der Ferrari. Dein Code ist der Schlamm. Lass uns die Sache aufräumen — denn sobald du die echten Ladezeit-Killer kennst, sind sie meist in 30–60 Minuten behoben.
 

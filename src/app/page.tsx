@@ -10,6 +10,7 @@ import SiteFooter from "./components/SiteFooter";
 import EngineeringSection from "./components/EngineeringSection";
 import PluginStackComparison from "./components/PluginStackComparison";
 import FounderPledge from "./components/FounderPledge";
+import FounderTrustBox from "./components/FounderTrustBox";
 import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
 import PluginInfobox from "./components/PluginInfobox";
 import { Lock, Zap, Gem, ShieldCheck } from "lucide-react";
@@ -336,7 +337,7 @@ export default function Page() {
             fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
           }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-            WordPress · Sofort-Check · Fix-Anleitung
+            Von einer Entwicklerin · Plugin offiziell auf WordPress.org
           </div>
 
           <h1 style={{
@@ -364,11 +365,11 @@ export default function Page() {
             textWrap: "balance",
             paddingLeft: 8, paddingRight: 8,
           }}>
-            In 60 Sekunden zeigen wir dir, was Besucher zurückschreckt: langsamer Aufruf, kaputte Links, unsichtbar bei Google.
+            Ich zeige dir in 60 Sekunden, was Besucher zurückschreckt: langsamer Aufruf, kaputte Links, unsichtbar bei Google — und sage dir genau, womit du anfängst.
           </p>
 
           <p style={{ fontSize: "clamp(14px, 1.8vw, 16px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 640, margin: "0 auto 36px", fontWeight: 400 }}>
-            Kein Login, kein Plugin, kein Programmieren nötig — wir führen dich Klick für Klick.
+            Kein Login, kein Programmieren — und falls du tiefer willst: mein kostenloses, manuell von WordPress.org geprüftes Plugin ist einen Klick entfernt.
           </p>
 
           {/* URL Input */}
@@ -595,6 +596,11 @@ export default function Page() {
               </Link>
             </article>
           </div>
+
+          {/* Entwickler-Ehrenwort — direkt unter den 3 Notfall-Karten, vor dem
+              Link-Weaving. Persönlicher Trust-Anker gegen den glatten KI-SaaS-
+              Eindruck. WP.org-Plugin als harter Code-Review-Beweis. */}
+          <FounderTrustBox />
 
           {/* SEO-LINK-WEAVING — Top-4-Notfall-Posts (GSC-Position ~36) intern
               verlinken, um Link-Autorität von der Homepage auf die Panik-

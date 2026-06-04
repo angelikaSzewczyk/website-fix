@@ -15,11 +15,13 @@ In der Fachwelt nennt man das den **White Screen of Death (WSoD)**. Er ist beson
 
 **Die gute Nachricht:** In den allermeisten Fällen sind Ihre Texte, Bilder und Inhalte vollständig vorhanden — nur ein einzelner technischer Fehler verhindert, dass die Seite lädt. Wie ein Sicherungskasten, der ausgelöst hat, während das Haus selbst völlig in Ordnung ist.
 
-> ### Keine Zeit zum Lesen?
+> ### Atme erst mal durch.
 >
-> **Unser Sofort-Scan findet den Fehler in 60 Sekunden** — Plugin-Konflikt, Theme-Bruch, PHP-Fehler, Memory-Limit überschritten. Kein Login, kein FTP-Zugang nötig für den Check.
+> Eine weiße Seite sieht aus wie ein Totalverlust — ist sie aber fast nie. Deine Beiträge, Bilder, Kunden und Bestellungen liegen unverändert in der Datenbank, WordPress kann sie gerade nur nicht ausliefern. In 95 % aller Fälle ist es ein Plugin-Konflikt, kein Datenverlust.
 >
-> [→ Jetzt kostenlos scannen](/scan)
+> Bevor du irgendwem 200 € für eine Notfall-Stunde zahlst oder selbst per FTP rumprobierst: Lass meinen kostenlosen Sofort-Scan in 60 Sekunden den wahrscheinlichen Auslöser eingrenzen. Wenn die Seite wieder läuft, ist mein geprüftes Free-Plugin auf WordPress.org eine Vorbeugungs-Versicherung gegen die nächste Plugin-Crash-Welle.
+>
+> [→ Jetzt kostenlos scannen](/scan) · [→ Plugin auf WordPress.org](https://wordpress.org/plugins/websitefix-one-click-performance-optimizer/)
 
 ---
 
