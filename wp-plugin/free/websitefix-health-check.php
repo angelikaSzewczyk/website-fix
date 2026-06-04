@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       WebsiteFix Health Check & Deep Audit
- * Plugin URI:        https://website-fix.com
+ * Plugin Name:       WebsiteFix Health Check
+ * Plugin URI:        https://website-fix.com/plugin/health-check
  * Description:       5 Kennzahlen, die zeigen wo dein Hoster bremst: Server-Response (TTFB), Heartbeat-API-Last, Datenbank-Größe + Bloat-Tabelle, PHP-Memory-Auslastung, Update-Backlog. Read-Only — keine Schreibzugriffe auf Dateisystem oder Datenbank. Für den vollständigen 92-Punkt-Deep-Audit (DB-Bloat, PHP-Error-Trace, Hook-Chain-Analyse): WebsiteFix.com.
- * Version:           0.4.0
+ * Version:           0.4.1
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            WebsiteFix
@@ -17,7 +17,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // ── Konstanten ─────────────────────────────────────────────────────────────
-define( 'WFHC_VERSION',  '0.4.0' );
+define( 'WFHC_VERSION',  '0.4.1' );
 define( 'WFHC_SLUG',     'websitefix-health-check' );
 define( 'WFHC_BASEURL',  'https://website-fix.com' );
 define( 'WFHC_UTM',      '?utm_source=wp-plugin&utm_medium=marketplace&utm_campaign=health-check' );
@@ -55,6 +55,7 @@ function wfhc_deactivate() {
 
 // ── Dashboard-Widget registrieren ──────────────────────────────────────────
 add_action( 'wp_dashboard_setup', 'wfhc_register_dashboard_widget' );
+add_action( 'admin_enqueue_scripts', array( 'WFHC_Dashboard_Widget', 'enqueue_assets' ) );
 
 function wfhc_register_dashboard_widget() {
     // Nur User mit manage_options-Capability (Admins) bekommen das Widget.
@@ -65,7 +66,7 @@ function wfhc_register_dashboard_widget() {
 
     wp_add_dashboard_widget(
         WFHC_SLUG . '-widget',
-        __( 'WebsiteFix · Health Check & Deep Audit', 'websitefix-health-check' ),
+        __( 'WebsiteFix Health Check', 'websitefix-health-check' ),
         array( 'WFHC_Dashboard_Widget', 'render' )
     );
 }

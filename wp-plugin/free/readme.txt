@@ -1,10 +1,10 @@
-=== WebsiteFix Health Check & Deep Audit ===
-Contributors: websitefix
+=== WebsiteFix Health Check ===
+Contributors: websitefixcom
 Tags: performance, optimization, monitoring, security, diagnostics
 Requires at least: 5.9
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,13 @@ Yes. On website-fix.com, WebsiteFix offers a Deep Scan with 92 parameters, auto-
 
 == Changelog ==
 
+= 0.4.1 — 2026-06-04 =
+* **WP.org review-feedback applied pre-emptively** (mirroring the One-Click Performance Optimizer review-cycle):
+  * Plugin name shortened from "WebsiteFix Health Check & Deep Audit" to "WebsiteFix Health Check" so the slug matches the text domain `websitefix-health-check`.
+  * Inline `style="..."` attributes in the dashboard widget replaced with `wp_register_style` + `wp_enqueue_style` + `wp_add_inline_style`, loaded only on the WordPress dashboard screen (`index.php` hook).
+  * Contributors slug corrected (`websitefix` → `websitefixcom`) to match the WordPress.org account.
+* Dashboard widget title shortened to "WebsiteFix Health Check" (was: "WebsiteFix · Health Check & Deep Audit"). The deep-audit positioning remains in the description and the in-widget CTA.
+
 = 0.4.0 — 2026-05-12 =
 * **WP.org Plugin-Check compliance pass:**
   * Database queries now wrapped with `wp_cache_get`/`wp_cache_set` (1 hour expiry).
@@ -154,6 +161,9 @@ Yes. On website-fix.com, WebsiteFix offers a Deep Scan with 92 parameters, auto-
 * Initial release. Five quick checks in a dashboard widget. Read-only by design.
 
 == Upgrade Notice ==
+
+= 0.4.1 =
+**WP.org review-feedback applied pre-emptively:** plugin name shortened to match the text-domain slug, inline widget CSS migrated to `wp_enqueue_style` + `wp_add_inline_style`, contributors slug corrected. No functional changes.
 
 = 0.4.0 =
 **Plugin-Check compliance release:** DB queries cached, readme translated to English (WP.org requirement), Tested up to 6.9. No breaking changes.

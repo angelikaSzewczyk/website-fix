@@ -2,9 +2,9 @@
 Contributors: websitefixcom
 Tags: performance, optimization, heartbeat, xmlrpc, jquery
 Requires at least: 5.9
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -133,6 +133,10 @@ Yes. It processes no personal data, sends nothing to external servers, and store
 
 == Changelog ==
 
+= 0.3.2 — 2026-06-04 =
+* **Listing-page link:** plugin URI now points to a dedicated landing page (https://website-fix.com/plugin/optimizer) instead of the generic site root.
+* `Tested up to: 7.0` (matches the current WordPress release).
+
 = 0.3.1 — 2026-05-15 =
 * **WP.org review feedback applied:**
   * Text domain `websitefix-one-click-optimizer` renamed to `websitefix-one-click-performance-optimizer` to match the plugin slug.
@@ -161,6 +165,9 @@ Yes. It processes no personal data, sends nothing to external servers, and store
 * Initial public beta.
 
 == Upgrade Notice ==
+
+= 0.3.2 =
+**Maintenance release:** dedicated landing page linked from the plugin header, "Tested up to" bumped to WordPress 7.0. No functional changes.
 
 = 0.3.1 =
 **WP.org review feedback:** text domain renamed to match plugin slug, admin CSS migrated to wp_enqueue_style + wp_add_inline_style, contributors slug corrected. No functional changes.
