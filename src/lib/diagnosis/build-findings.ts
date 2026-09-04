@@ -376,11 +376,12 @@ export function buildDiagnosis(
     }));
 
     if (scan.robotsBlocked) {
-      evidence.unshift({
-        label: "robots.txt",
-        value: "Crawler-Sperre für / erkannt",
-      });
-    }
+        evidence.unshift({
+          label: "robots.txt",
+          value: "Crawler-Sperre für / erkannt",
+          url: "", // <-- Das hier hat gefehlt!
+        });
+      }
 
     findings.push({
       key: "indexing",

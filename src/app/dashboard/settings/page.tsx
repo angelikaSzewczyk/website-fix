@@ -18,6 +18,8 @@ import ProfileSettingsClient from "./profile-settings-client";
 import FreeSettingsClient from "./free-settings-client";
 import { hasBrandingAccess, getPlanQuota } from "@/lib/plans";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Einstellungen — WebsiteFix",
   robots: { index: false },
