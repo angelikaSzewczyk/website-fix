@@ -3,10 +3,75 @@ import { neon } from "@neondatabase/serverless";
 import { hash } from "bcryptjs";
 import { Resend } from "resend";
 import { logAudit } from "@/lib/audit";
+import { createHash } from "crypto";
 
-// Token-Format-Check identisch zu /invite/[token] — defense-in-depth, falls
-// jemand ein gefälschtes Token-Feld an /register sendet.
+// Token-Format-Check identisch zu /invite/[token]
 const INVITE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,80}$/;
+
+// Hilfsfunktion für IP-Hashing (identisch zu deinem Scan-Rate-Limiter)
+function hashIp(ip: string): string {
+  return createHash("sha256")
+    .update(ip + (process.env.IP_SALT ?? "wf-salt-2024"))
+    .digest("hex");
+}
+
+// Registrierungs-spezifisches Rate Limiting (z.B. max 5 Versuche pro 24h pro IP)
+const REG_LIMIT = 5;
+const WINDOW_MS = 24 * 60 * 60 * 1000;
+
+async function checkRegisterRateLimit(ip: string): Promise<{ allowed: boolean; reason?: string }> {
+  const sql = neon(process.env.DATABASE_URL!);
+  const ipHash = hashIp(ip);
+  const now = Date.now();
+
+  type Row = { first_attempt_at: string; last_attempt_at: string; attempt_count: number };
+  
+  // Hinweis: Falls du eine eigene Tabelle hast oder nutzen möchtest, 
+  // kannst du hier die Tabelle anpassen (z.B. 'free_scan_limits' oder eine neue 'register_limits').
+  // Hier nutzen wir beispielhaft eine Abfrage:
+  const rows = (await sql`
+    SELECT first_scan_at as first_attempt_at, last_scan_at as last_attempt_at, scan_count as attempt_count
+    FROM free_scan_limits
+    WHERE ip_hash = ${ipHash}
+  `) as Row[];
+
+  if (rows.length === 0) {
+    await sql`
+      INSERT INTO free_scan_limits (ip_hash, first_scan_at, last_scan_at, scan_count)
+      VALUES (${ipHash}, NOW(), NOW(), 1)
+    `;
+    return { allowed: true };
+  }
+
+  const entry = rows[0];
+  const firstAttemptAt = new Date(entry.first_attempt_at).getTime();
+  const lastAttemptAt = new Date(entry.last_attempt_at).getTime();
+
+  if (now - firstAttemptAt >= WINDOW_MS) {
+    await sql`
+      UPDATE free_scan_limits
+      SET first_scan_at = NOW(), last_scan_at = NOW(), scan_count = 1
+      WHERE ip_hash = ${ipHash}
+    `;
+    return { allowed: true };
+  }
+
+  // Kurzer Mindestabstand (z.B. 5 Sekunden zwischen Registrierungsversuchen)
+  if (now - lastAttemptAt < 5000) {
+    return { allowed: false, reason: "Bitte warte einen Moment vor dem nächsten Versuch." };
+  }
+
+  if (entry.attempt_count >= REG_LIMIT) {
+    return { allowed: false, reason: "Zu viele Registrierungsversuche von dieser IP. Bitte versuche es morgen erneut." };
+  }
+
+  await sql`
+    UPDATE free_scan_limits
+    SET last_scan_at = NOW(), scan_count = scan_count + 1
+    WHERE ip_hash = ${ipHash}
+  `;
+  return { allowed: true };
+}
 
 function buildWelcomeEmail(firstName: string): string {
   return `<!DOCTYPE html>
@@ -38,12 +103,10 @@ function buildWelcomeEmail(firstName: string): string {
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="padding:0 0 16px;">
-                <div style="display:flex;align-items:flex-start;gap:14px;">
-                  <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);border-radius:8px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#FBBF24;flex-shrink:0;line-height:36px;text-align:center;">1</div>
-                  <div style="padding-top:8px;">
-                    <p style="margin:0;font-size:13px;font-weight:700;color:#ffffff;">Exzellenz-Index abrufen</p>
-                    <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;">Gib deine Website-URL ein — der Score zeigt dir auf einen Blick, wie viel Sichtbarkeits-Potenzial noch ungenutzt ist.</p>
-                  </div>
+                <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);border-radius:8px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#FBBF24;flex-shrink:0;line-height:36px;text-align:center;">1</div>
+                <div style="display:inline-block;vertical-align:top;padding-top:8px;padding-left:14px;width:calc(100% - 64px);">
+                  <p style="margin:0;font-size:13px;font-weight:700;color:#ffffff;">Exzellenz-Index abrufen</p>
+                  <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;">Gib deine Website-URL ein — der Score zeigt dir auf einen Blick, wie viel Sichtbarkeits-Potenzial noch ungenutzt ist.</p>
                 </div>
               </td>
             </tr>
@@ -94,11 +157,29 @@ function buildWelcomeEmail(firstName: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // ── 1. IP-Rate-Limiting (Lokaler Entwicklungsschutz) ────────────────
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
+    
+    // Prüfen, ob es sich um Localhost handelt
+    const isLocalhost = ip === "127.0.0.1" || ip === "::1" || ip.includes("localhost") || ip.includes("192.168.");
+
+    if (!isLocalhost) {
+      const rateLimitCheck = await checkRegisterRateLimit(ip);
+      if (!rateLimitCheck.allowed) {
+        return NextResponse.json(
+          { error: rateLimitCheck.reason || "Zu viele Anfragen. Bitte versuche es später erneut." },
+          { status: 429 }
+        );
+      }
+    }
+
+    // ── 2. Request Body parsen ──────────────────────────────────────────
     const { name, email, password, invite } = await req.json() as {
-      name?:    string;
-      email?:   string;
+      name?:     string;
+      email?:    string;
       password?: string;
-      invite?:  string;  // Optional: Token aus /invite/[token]-Flow
+      invite?:   string;
     };
 
     if (!email || !password || !name) {
@@ -107,14 +188,12 @@ export async function POST(req: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json({ error: "Passwort muss mindestens 8 Zeichen haben." }, { status: 400 });
     }
-    // Optional invite-Token validieren bevor er die DB sieht.
-    const inviteToken = invite && INVITE_TOKEN_PATTERN.test(invite) ? invite : null;
 
+    const inviteToken = invite && INVITE_TOKEN_PATTERN.test(invite) ? invite : null;
     const sql = neon(process.env.DATABASE_URL!);
 
     const existing = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase()}`;
     if (existing.length > 0) {
-      // Google-only account → link password
       const withPwd = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase()} AND password_hash IS NULL`;
       if (withPwd.length > 0) {
         const hashed = await hash(password, 12);
@@ -125,19 +204,12 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await hash(password, 12);
-    // Column is "emailVerified" (camelCase — NextAuth schema)
     await sql`
       INSERT INTO users (name, email, password_hash, "emailVerified")
       VALUES (${name}, ${email.toLowerCase()}, ${hashed}, NOW())
     `;
 
-    // ── Invite-Token-Claim (Phase 9) ────────────────────────────────────
-    // Wenn der User über /invite/[token] kam: jetzt joined_at setzen.
-    // Strenge Match-Conditions: Token muss noch gültig + die Email im Token
-    // muss zur registrierten Email passen. Verhindert "geleakter Token wird
-    // mit fremder Email kombiniert"-Angriff. Token wird beim Claim NICHT
-    // gelöscht (joined_at IS NULL bleibt der Replay-Check) — Audit-Trail
-    // bleibt erhalten.
+    // ── 3. Invite-Token-Claim ───────────────────────────────────────────
     if (inviteToken) {
       try {
         const claimed = await sql`
@@ -158,17 +230,12 @@ export async function POST(req: NextRequest) {
             memberId:    claimed[0].id,
           });
         }
-        // Kein Failure-Path: wenn Token nicht matched (z.B. abgelaufen während
-        // der User das Formular ausfüllte), wird der Account trotzdem erstellt.
-        // User landet als Standard-Free-User; Owner kann erneut einladen.
       } catch (err) {
         console.error("[register] invite-token claim failed:", err);
-        // Non-blocking — Account-Erstellung erfolgreich, Team-Verknüpfung kommt
-        // später per Re-Invite zustande.
       }
     }
 
-    // Send plan-aware welcome email (non-blocking)
+    // ── 4. Willkommens-E-Mail senden ────────────────────────────────────
     const firstName = name.split(" ")[0] ?? name;
     const resend = new Resend(process.env.RESEND_API_KEY);
     resend.emails.send({

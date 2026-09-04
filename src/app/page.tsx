@@ -1,135 +1,43 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { getLatestEndUserPost, categoryTheme } from "@/lib/blog-loader";
-import FaqAccordion from "./components/faq-accordion";
+import Link from "next/link";
 import BrandLogo from "./components/BrandLogo";
 import NavAuthLink from "./components/nav-auth-link";
 import MobileNav from "./components/MobileNav";
 import InlineScan from "./components/inline-scan";
 import SiteFooter from "./components/SiteFooter";
-import EngineeringSection from "./components/EngineeringSection";
-import PluginStackComparison from "./components/PluginStackComparison";
-import FounderPledge from "./components/FounderPledge";
-import FounderTrustBox from "./components/FounderTrustBox";
-import { JiraIcon, AsanaIcon, TrelloIcon, SlackIcon } from "./components/BrandIcons";
-import PluginInfobox from "./components/PluginInfobox";
-import { Lock, Zap, Gem, ShieldCheck } from "lucide-react";
 
 // Blog-Teaser-Loader siehe src/lib/blog-loader.ts.
-// Auf der Homepage zeigen wir den jüngsten END-USER-Post (alles außer
-// Kategorie "agency") — der Endkunde soll Lösungen für seine Website sehen,
-// nicht Skalierungs-Tipps für Agenturen.
+// Auf der Homepage zeigen wir den jüngsten END-USER-Post
+// (alles außer Kategorie "agency").
 
 export const metadata: Metadata = {
-  title: { absolute: "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen" },
-  description: "Deine Website wird bei Google nicht gefunden oder zeigt einen kritischen Fehler? Starte den kostenlosen Scan und fixe technische Probleme sofort.",
-  alternates: { canonical: "https://website-fix.com/" },
+  title: {
+    absolute:
+      "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen",
+  },
+  description:
+    "Deine Website wird bei Google nicht gefunden oder zeigt einen kritischen Fehler? Starte den kostenlosen Scan und finde heraus, was du als Nächstes tun solltest.",
+  alternates: {
+    canonical: "https://website-fix.com/",
+  },
   openGraph: {
-    title:       "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen",
-    description: "Deine Website wird bei Google nicht gefunden oder zeigt einen kritischen Fehler? Starte den kostenlosen Scan und fixe technische Probleme sofort.",
-    url:         "https://website-fix.com/",
-    type:        "website",
+    title:
+      "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen",
+    description:
+      "Deine Website wird bei Google nicht gefunden oder zeigt einen kritischen Fehler? Starte den kostenlosen Scan und finde heraus, was du als Nächstes tun solltest.",
+    url: "https://website-fix.com/",
+    type: "website",
   },
   twitter: {
-    card:        "summary_large_image",
-    title:       "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen",
-    description: "Deine Website wird bei Google nicht gefunden oder zeigt einen kritischen Fehler? Starte den kostenlosen Scan und fixe technische Probleme sofort.",
+    card: "summary_large_image",
+    title:
+      "WebsiteFix – WordPress kritische Fehler beheben & Google Sichtbarkeit prüfen",
+    description:
+      "Deine Website wird bei Google nicht gefunden oder zeigt einen kritischen Fehler? Starte den kostenlosen Scan und finde heraus, was du als Nächstes tun solltest.",
   },
 };
 
-const STEPS = [
-  {
-    num: "01",
-    label: "Schritt 01",
-    title: "URL eingeben — Scan startet",
-    desc: "Trage deine URL ein. Unsere Engine crawlt alle Unterseiten automatisch und erstellt eine interaktive Map deiner Website — SEO, Technik und Zugänglichkeit auf einen Blick.",
-    color: "#7aa6ff",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        <line x1="11" y1="8" x2="11" y2="14"/>
-        <line x1="8" y1="11" x2="14" y2="11"/>
-      </svg>
-    ),
-    pills: ["Kein Login nötig", "Multi-Page-Scan", "Live-Analyse"],
-  },
-  {
-    num: "02",
-    label: "Schritt 02",
-    title: "Interaktive Map — Fehler sehen",
-    desc: "Alle gefundenen Probleme erscheinen auf einer interaktiven Site-Map. Per Klick öffnet sich der Smart-Fix Drawer mit einer Schritt-für-Schritt-Anleitung für dein Page-Builder-System.",
-    color: "#8df3d3",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
-        <line x1="16" y1="8" x2="2" y2="22"/>
-        <line x1="17.5" y1="15" x2="9" y2="15"/>
-      </svg>
-    ),
-    pills: ["Interaktive Site-Map", "Smart-Fix Drawer", "Fehler priorisiert"],
-  },
-  {
-    num: "03",
-    label: "Schritt 03",
-    title: "Fehler beheben — Score steigt",
-    desc: "Folge den Anleitungen für Gutenberg, Elementor oder Divi — kein Entwickler-Wissen nötig. Hake erledigte Punkte ab und beobachte, wie dein Website-Score und dein Google-Ranking steigen.",
-    color: "#c084fc",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <polyline points="10 17 8 17 6 19"/>
-        <polyline points="14 17 16 17 18 19"/>
-      </svg>
-    ),
-    pills: ["Gutenberg · Elementor · Divi", "Score-Tracking", "24/7 Monitoring"],
-  },
-];
-
-const BENEFITS = [
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-      </svg>
-    ),
-    iconBg: "rgba(37,99,235,0.1)",
-    iconBorder: "rgba(37,99,235,0.25)",
-    iconColor: "#7aa6ff",
-    label: "WordPress-Fokus",
-    title: "Spezialisiert auf WordPress-Exzellenz",
-    desc: "Wir scannen nicht alles – wir scannen WordPress tiefer als jeder andere. SEO, Technik, Plugins und Barrierefreiheit in einem Durchlauf.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-      </svg>
-    ),
-    iconBg: "rgba(141,243,211,0.08)",
-    iconBorder: "rgba(141,243,211,0.2)",
-    iconColor: "#8df3d3",
-    label: "Automatisierung",
-    title: "Monitoring ohne Aufwand",
-    desc: "Einmal einrichten, nie wieder manuell prüfen. Die Engine arbeitet 24/7 im Hintergrund und alarmiert dich sofort, wenn neue Fehler auftauchen.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-    ),
-    iconBg: "rgba(234,179,8,0.08)",
-    iconBorder: "rgba(234,179,8,0.22)",
-    iconColor: "#EAB308",
-    label: "Sichtbarkeit",
-    title: "Google-Rankings verbessern",
-    desc: "Jeder behobene Fehler ist ein Signal an Google. Fehlende Alt-Texte, kaputte Links und Ladezeit-Probleme kosten dich Plätze in den Suchergebnissen — website-fix zeigt dir genau, wo.",
-  },
-];
+// ─── PLANS ─────────────────────────────────────────────────────────────
 
 // ─── PLANS ───────────────────────────────────────────────────────────────────
 // Single Source für die Homepage-Pricing-Sektion. KEEP SYNCED with
@@ -288,12 +196,6 @@ const FAQ = [
 ];
 
 export default function Page() {
-  // Dynamischer Blog-Teaser — jüngster Post EXKLUSIVE Kategorie "agency".
-  // End-User-Audience: Notfall, Sichtbarkeit, Speed, Compliance — keine
-  // Agentur-Skalierungs-Themen (die landen auf /fuer-agenturen).
-  // Server-side beim Build evaluiert, kein Client-Roundtrip.
-  const latestPost = getLatestEndUserPost();
-
   return (
     <>
       {/* NAV */}
@@ -327,1193 +229,1102 @@ export default function Page() {
 
       <main>
 
-        {/* HERO */}
-        <section className="wf-hero">
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 28,
-            padding: "5px 14px", borderRadius: 20,
-            border: "1px solid rgba(122,166,255,0.25)",
-            background: "rgba(122,166,255,0.06)",
-            fontSize: 12, color: "#7aa6ff", fontWeight: 600, letterSpacing: "0.04em",
-          }}>
-            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#7aa6ff", boxShadow: "0 0 6px #7aa6ff" }} />
-            Von einer Entwicklerin · Plugin offiziell auf WordPress.org
-          </div>
+        {/* HERO V2 */}
+        <section className="wf-hero" style={{ paddingTop: 64, paddingBottom: 72 }}>
+          <div style={{ maxWidth: 920, margin: "0 auto", textAlign: "center" }}>
+            <p style={{
+              margin: "0 0 18px",
+              fontSize: 12,
+              fontWeight: 650,
+              color: "var(--wf-text-muted)",
+              letterSpacing: "0.04em",
+            }}>
+              WebsiteFix · WordPress-Diagnose
+            </p>
 
-          <h1 style={{
-            fontSize: "clamp(24px, 4.5vw, 58px)",
-            fontWeight: 800, lineHeight: 1.1,
-            margin: "0 0 18px",
-            letterSpacing: "-0.035em",
-            maxWidth: 860, marginLeft: "auto", marginRight: "auto",
-            // textWrap: balance balanciert die Zeilen-Längen, sodass auf
-            // Mobile keine einsame "Kunden — und du merkst es nicht."-Restzeile
-            // entsteht. Browser-Support: alle Evergreens seit 2023.
-            // overflowWrap: break-word als Sicherheits-Netz gegen Overflow.
-            textWrap: "balance",
-            overflowWrap: "break-word",
-            paddingLeft: 8, paddingRight: 8,
-          }}>
-            Deine Website verliert gerade Kunden — und du merkst es nicht.
-          </h1>
+            <h1 style={{
+              fontSize: "clamp(36px, 5vw, 64px)",
+              fontWeight: 760,
+              lineHeight: 1.04,
+              margin: "0 auto 20px",
+              letterSpacing: "-0.045em",
+              maxWidth: 860,
+              textWrap: "balance",
+            }}>
+              Finde heraus, was mit deiner Website nicht stimmt.
+            </h1>
 
-          <p style={{
-            fontSize: "clamp(15px, 2.1vw, 19px)",
-            color: "rgba(255,255,255,0.78)", lineHeight: 1.6,
-            maxWidth: 720, margin: "0 auto 16px",
-            fontWeight: 600,
-            textWrap: "balance",
-            paddingLeft: 8, paddingRight: 8,
-          }}>
-            Ich zeige dir in 60 Sekunden, was Besucher zurückschreckt: langsamer Aufruf, kaputte Links, unsichtbar bei Google — und sage dir genau, womit du anfängst.
-          </p>
+            <p style={{
+              fontSize: "clamp(16px, 2vw, 19px)",
+              color: "var(--wf-text-secondary)",
+              lineHeight: 1.65,
+              maxWidth: 700,
+              margin: "0 auto 34px",
+              fontWeight: 400,
+              textWrap: "balance",
+            }}>
+              WebsiteFix erkennt technische WordPress-Probleme, grenzt mögliche Ursachen ein
+              und zeigt dir, was du als Nächstes tun solltest.
+            </p>
 
-          <p style={{ fontSize: "clamp(14px, 1.8vw, 16px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 640, margin: "0 auto 36px", fontWeight: 400 }}>
-            Kein Login, kein Programmieren — und falls du tiefer willst: mein kostenloses, manuell von WordPress.org geprüftes Plugin ist einen Klick entfernt.
-          </p>
-
-          {/* URL Input */}
-          <div style={{ maxWidth: 580, margin: "0 auto 10px" }}>
-            <InlineScan />
-          </div>
-
-          {/* Solo-Safety-Hook (15.05.2026 UX-Audit-Pivot zu Solo-Fokus):
-              Direkt unter dem Scan-CTA — fängt die "darf ich das überhaupt
-              selbst?"-Angst von Solo-Inhabern ab, bevor sie den Tab schließen.
-              Bewusst klein gehalten und in muted-Farbe, damit das eigentliche
-              Scan-Versprechen visuell dominant bleibt. */}
-          <p style={{
-            margin: "0 auto 14px", fontSize: 12.5,
-            color: "rgba(255,255,255,0.55)", lineHeight: 1.55,
-            maxWidth: 520,
-          }}>
-            Du musst kein Entwickler sein. Wenn du im Guide hängenbleibst:
-            kostenlose Hilfe per E-Mail an support@website-fix.com.
-          </p>
-
-          {/* Social-Proof: aus den 1.561 monatlichen GSC-Impressionen
-              destilliert. Suchende sollen sofort sehen, dass die Engine
-              regelmäßig genutzt wird — Autorität ohne anonyme Zahlen. */}
-          <p style={{
-            margin: "0 auto 32px", fontSize: 12.5, color: "rgba(255,255,255,0.55)",
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "6px 12px", borderRadius: 999,
-            background: "rgba(34,211,238,0.06)",
-            border: "1px solid rgba(34,211,238,0.18)",
-            fontWeight: 600, letterSpacing: "0.01em",
-          }}>
-            <span style={{
-              width: 7, height: 7, borderRadius: "50%",
-              background: "#22d3ee", boxShadow: "0 0 8px #22d3ee",
-            }} />
-            Schon über 1.500 Website-Checks diesen Monat durchgeführt
-          </p>
-
-          {/* ── FEATURE CARDS ── */}
-          <div className="wf-feature-grid">
-
-            {/* Card 1 — SEO & Sichtbarkeit */}
-            <div className="wf-feature-card wf-feature-card--legal">
-              <div className="wf-feature-card__icon" style={{
-                background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.22)",
-                filter: "drop-shadow(0 0 6px rgba(234,179,8,0.3))",
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-              </div>
-              <div className="wf-feature-card__body">
-                <div className="wf-feature-card__label">SEO &amp; Ranking</div>
-                <div className="wf-feature-card__title">SEO &amp; Sichtbarkeit</div>
-                <p className="wf-feature-card__text">Alt-Texte, Meta-Daten, Duplicate Content — alles, was Google sieht (oder eben nicht). Jede fehlende Angabe kostet dich Ranking-Punkte.</p>
-              </div>
+            <div style={{ maxWidth: 640, margin: "0 auto" }}>
+              <InlineScan />
             </div>
 
-            {/* Card 2 — Technik & UX */}
-            <div className="wf-feature-card wf-feature-card--speed">
-              <div className="wf-feature-card__icon" style={{
-                background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.25)",
-                filter: "drop-shadow(0 0 6px rgba(59,130,246,0.3))",
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-              </div>
-              <div className="wf-feature-card__body">
-                <div className="wf-feature-card__label">Technik &amp; UX</div>
-                <div className="wf-feature-card__title">Technik &amp; UX</div>
-                <p className="wf-feature-card__text">404-Fehler, kaputte Links, HTTPS-Probleme — technische Mängel, die Besucher verlieren und Google-Rankings senken.</p>
-              </div>
-            </div>
-
-            {/* Card 3 — Standards & Recht */}
-            <div className="wf-feature-card wf-feature-card--security">
-              <div className="wf-feature-card__icon" style={{
-                background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.22)",
-                filter: "drop-shadow(0 0 6px rgba(34,197,94,0.35))",
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <polyline points="9 12 11 14 15 10"/>
-                </svg>
-              </div>
-              <div className="wf-feature-card__body">
-                <div className="wf-feature-card__label">Standards</div>
-                <div className="wf-feature-card__title">Standards &amp; Recht</div>
-                <p className="wf-feature-card__text">Barrierefreiheit (BFSG/WCAG), fehlende Formular-Labels, Zugänglichkeit — eine der drei Säulen einer gesunden WordPress-Website.</p>
-              </div>
-            </div>
-
+            <p style={{
+              margin: "18px auto 0",
+              fontSize: 12.5,
+              color: "var(--wf-text-muted)",
+              lineHeight: 1.5,
+            }}>
+              Von einer Entwicklerin entwickelt · Plugin auf WordPress.org verfügbar
+            </p>
           </div>
+
+         {/* PRODUCT PROOF — echte WebsiteFix-Diagnose */}
+<div
+  className="mkt-grid"
+  style={{
+    maxWidth: 920,
+    margin: "54px auto 0",
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.55fr) minmax(250px, 0.75fr)",
+    gap: 14,
+    alignItems: "stretch",
+  }}
+>
+  {/* Hauptdiagnose */}
+  <div
+    style={{
+      background: "var(--wf-surface)",
+      border: "1px solid var(--wf-border)",
+      borderRadius: "var(--wf-radius-lg)",
+      overflow: "hidden",
+      boxShadow: "var(--wf-shadow-sm)",
+      textAlign: "left",
+    }}
+  >
+    {/* Window header */}
+    <div
+      style={{
+        minHeight: 48,
+        padding: "0 18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 16,
+        borderBottom: "1px solid var(--wf-border-soft)",
+        background: "var(--wf-surface-subtle)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 9,
+        }}
+      >
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: "var(--wf-danger)",
+            flexShrink: 0,
+          }}
+        />
+
+        <span
+          style={{
+            fontSize: 12,
+            color: "var(--wf-text-secondary)",
+            fontWeight: 650,
+          }}
+        >
+          WebsiteFix Diagnose
+        </span>
+      </div>
+
+      <span
+        style={{
+          fontSize: 11,
+          color: "var(--wf-text-muted)",
+          fontFamily: "var(--font-family-mono, monospace)",
+        }}
+      >
+        beispiel.de
+      </span>
+    </div>
+
+    <div style={{ padding: "24px 24px 22px" }}>
+      {/* Severity */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 13,
+        }}
+      >
+        <span
+          style={{
+            padding: "5px 8px",
+            borderRadius: 6,
+            background: "rgba(239, 68, 68, 0.10)",
+            border: "1px solid rgba(239, 68, 68, 0.18)",
+            color: "#fca5a5",
+            fontSize: 10.5,
+            fontWeight: 750,
+            letterSpacing: "0.08em",
+          }}
+        >
+          KRITISCH
+        </span>
+
+        <span
+          style={{
+            padding: "5px 8px",
+            borderRadius: 6,
+            background: "var(--wf-surface-subtle)",
+            border: "1px solid var(--wf-border-soft)",
+            color: "var(--wf-text-muted)",
+            fontSize: 10.5,
+            fontWeight: 650,
+          }}
+        >
+          WordPress
+        </span>
+
+        <span
+          style={{
+            padding: "5px 8px",
+            borderRadius: 6,
+            background: "var(--wf-surface-subtle)",
+            border: "1px solid var(--wf-border-soft)",
+            color: "var(--wf-text-muted)",
+            fontSize: 10.5,
+            fontWeight: 650,
+          }}
+        >
+          HTTP 500
+        </span>
+      </div>
+
+      <h2
+        style={{
+          margin: "0 0 8px",
+          fontSize: "clamp(23px, 3vw, 31px)",
+          lineHeight: 1.18,
+          fontWeight: 740,
+          letterSpacing: "-0.03em",
+        }}
+      >
+        Kritischer WordPress-Fehler erkannt
+      </h2>
+
+      <p
+        style={{
+          margin: "0 0 24px",
+          color: "var(--wf-text-secondary)",
+          fontSize: 13.5,
+          lineHeight: 1.65,
+          maxWidth: 610,
+        }}
+      >
+        Die Website antwortet mit einem Serverfehler. WordPress ist weiterhin
+        erkennbar, die eigentliche Seite kann aber nicht ausgeliefert werden.
+      </p>
+
+      {/* Evidence */}
+      <div
+        style={{
+          borderTop: "1px solid var(--wf-border-soft)",
+          borderBottom: "1px solid var(--wf-border-soft)",
+          padding: "5px 0",
+        }}
+      >
+        {[
+          {
+            label: "HTTP-Status",
+            value: "500 Internal Server Error",
+            status: "Fehler",
+            statusColor: "var(--wf-danger)",
+          },
+          {
+            label: "CMS",
+            value: "WordPress erkannt",
+            status: "Bestätigt",
+            statusColor: "var(--wf-success)",
+          },
+          {
+            label: "Frontend",
+            value: "Seite nicht erreichbar",
+            status: "Gestört",
+            statusColor: "var(--wf-danger)",
+          },
+        ].map((row, index) => (
+          <div
+            key={row.label}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "120px minmax(0, 1fr) auto",
+              gap: 14,
+              alignItems: "center",
+              minHeight: 42,
+              borderTop:
+                index === 0 ? "none" : "1px solid var(--wf-border-soft)",
+              fontSize: 12.5,
+            }}
+            className="wf-proof-row-v2"
+          >
+            <span style={{ color: "var(--wf-text-muted)" }}>
+              {row.label}
+            </span>
+
+            <span
+              style={{
+                color: "var(--wf-text)",
+                fontFamily:
+                  row.label === "HTTP-Status"
+                    ? "var(--font-family-mono, monospace)"
+                    : undefined,
+              }}
+            >
+              {row.value}
+            </span>
+
+            <span
+              style={{
+                color: row.statusColor,
+                fontSize: 11,
+                fontWeight: 650,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {row.status}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Ursache */}
+      <div
+        style={{
+          marginTop: 22,
+          display: "grid",
+          gridTemplateColumns: "36px minmax(0, 1fr)",
+          gap: 12,
+          alignItems: "start",
+        }}
+      >
+        <div
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--wf-surface-subtle)",
+            border: "1px solid var(--wf-border)",
+            fontFamily: "var(--font-family-mono, monospace)",
+            color: "var(--wf-text-muted)",
+            fontSize: 11,
+          }}
+        >
+          01
+        </div>
+
+        <div>
+          <p
+            style={{
+              margin: "0 0 5px",
+              fontSize: 12,
+              color: "var(--wf-text-muted)",
+              fontWeight: 650,
+            }}
+          >
+            Wahrscheinliche Ursache
+          </p>
+
+          <p
+            style={{
+              margin: 0,
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: "var(--wf-text)",
+            }}
+          >
+            Ein interner PHP-, Plugin- oder Theme-Fehler ist wahrscheinlich.
+            Von außen lässt sich die genaue PHP-Ursache noch nicht sicher
+            bestimmen.
+          </p>
+        </div>
+      </div>
+
+      {/* Nächster Schritt */}
+      <div
+        style={{
+          marginTop: 18,
+          padding: "15px 16px",
+          borderRadius: "var(--wf-radius-md)",
+          border: "1px solid var(--wf-border)",
+          background: "var(--wf-surface-subtle)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 18,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--wf-text-muted)",
+              marginBottom: 4,
+              fontWeight: 650,
+            }}
+          >
+            Empfohlener nächster Schritt
+          </div>
+
+          <div
+            style={{
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: "var(--wf-text)",
+              fontWeight: 620,
+            }}
+          >
+            WordPress-Tiefendiagnose starten
+          </div>
+        </div>
+
+        <Link
+          href="/scan?problem=wordpress-critical-error"
+          style={{
+            minHeight: 40,
+            padding: "0 14px",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "var(--wf-radius-md)",
+            background: "var(--wf-primary)",
+            border: "1px solid var(--wf-primary)",
+            color: "#fff",
+            textDecoration: "none",
+            fontSize: 12.5,
+            fontWeight: 680,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Diagnose vertiefen →
+        </Link>
+      </div>
+    </div>
+  </div>
+
+  {/* Seitenleiste */}
+  <div
+    style={{
+      background: "var(--wf-surface)",
+      border: "1px solid var(--wf-border)",
+      borderRadius: "var(--wf-radius-lg)",
+      padding: "20px",
+      textAlign: "left",
+      boxShadow: "var(--wf-shadow-sm)",
+      display: "flex",
+      flexDirection: "column",
+    }}
+  >
+    <p
+      style={{
+        margin: "0 0 5px",
+        fontSize: 12,
+        color: "var(--wf-text)",
+        fontWeight: 680,
+      }}
+    >
+      Weitere Befunde
+    </p>
+
+    <p
+      style={{
+        margin: "0 0 18px",
+        fontSize: 11.5,
+        lineHeight: 1.5,
+        color: "var(--wf-text-muted)",
+      }}
+    >
+      WebsiteFix priorisiert zusätzliche technische Auffälligkeiten nach
+      Relevanz.
+    </p>
+
+    {[
+      {
+        value: "3",
+        label: "kaputte interne Links",
+        meta: "sollten korrigiert werden",
+        tone: "var(--wf-danger)",
+      },
+      {
+        value: "4,8 s",
+        label: "Largest Contentful Paint",
+        meta: "Startseite ist langsam",
+        tone: "var(--wf-warning)",
+      },
+      {
+        value: "8",
+        label: "Seiten mit noindex",
+        meta: "nicht in Google indexierbar",
+        tone: "var(--wf-warning)",
+      },
+    ].map((item, index) => (
+      <div
+        key={item.label}
+        style={{
+          padding: "16px 0",
+          borderTop:
+            index === 0
+              ? "1px solid var(--wf-border-soft)"
+              : "1px solid var(--wf-border-soft)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 7,
+            marginBottom: 5,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 22,
+              lineHeight: 1,
+              fontWeight: 740,
+              color: item.tone,
+              fontVariantNumeric: "tabular-nums",
+              letterSpacing: "-0.025em",
+            }}
+          >
+            {item.value}
+          </span>
+        </div>
+
+        <div
+          style={{
+            fontSize: 12.5,
+            color: "var(--wf-text)",
+            lineHeight: 1.45,
+            fontWeight: 620,
+          }}
+        >
+          {item.label}
+        </div>
+
+        <div
+          style={{
+            marginTop: 3,
+            fontSize: 11.5,
+            color: "var(--wf-text-muted)",
+            lineHeight: 1.45,
+          }}
+        >
+          {item.meta}
+        </div>
+      </div>
+    ))}
+
+    <div
+      style={{
+        marginTop: "auto",
+        paddingTop: 17,
+        borderTop: "1px solid var(--wf-border-soft)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          fontSize: 11.5,
+          color: "var(--wf-text-muted)",
+          lineHeight: 1.5,
+        }}
+      >
+        <span
+          style={{
+            color: "var(--wf-success)",
+            fontWeight: 800,
+          }}
+        >
+          ✓
+        </span>
+        Ergebnisse nach Schweregrad priorisiert
+      </div>
+    </div>
+  </div>
+</div>
         </section>
 
         {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+        <div style={{ borderTop: "1px solid var(--wf-border-soft)" }} />
 
-        {/* ── DREI-SÄULEN-PANIK-LÖSUNG ── (05.05.2026)
-            Direkt unter Hero — ohne Divider — damit die Top-3 GSC-Queries
-            (warum findet google meine homepage nicht / wordpress kritischer
-            fehler / mein webhosting ist langsam) sofort als matchende
-            Antworten sichtbar sind. Layout-Styles in globals.css unter
-            .wf-seo-anchors / .wf-seo-grid. */}
-        <section id="seo-anchors" className="wf-seo-anchors">
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-              Sofort-Hilfe statt Warteschleife
+        {/* V2 — HÄUFIGE PROBLEME */}
+        <section style={{ maxWidth: 920, margin: "0 auto", padding: "82px 24px 76px" }}>
+          <div style={{ maxWidth: 620, marginBottom: 34 }}>
+            <p style={{
+              margin: "0 0 10px",
+              fontSize: 12,
+              fontWeight: 650,
+              color: "var(--wf-text-muted)",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}>
+              Häufige Probleme
             </p>
-            <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
-              Welches Problem hast du gerade?
+            <h2 style={{
+              margin: "0 0 12px",
+              fontSize: "clamp(28px, 4vw, 40px)",
+              lineHeight: 1.12,
+              letterSpacing: "-0.035em",
+              fontWeight: 740,
+            }}>
+              Starte bei dem Problem, das du gerade siehst.
             </h2>
-            <p style={{ fontSize: "clamp(14px, 1.6vw, 16px)", color: "rgba(255,255,255,0.55)", maxWidth: 620, margin: "0 auto", lineHeight: 1.65 }}>
-              Drei der häufigsten Notfall-Situationen — ein Klick und der Scanner liefert dir die passende Schritt-für-Schritt-Anleitung.
+            <p style={{ margin: 0, color: "var(--wf-text-secondary)", fontSize: 15, lineHeight: 1.7 }}>
+              WebsiteFix ordnet den Check dem konkreten Symptom zu, statt dir nur eine lange Fehlerliste zu zeigen.
             </p>
           </div>
 
-          <div className="wf-seo-grid">
-            {/* Card 1 — WordPress Kritischer Fehler */}
-            <article style={{
-              padding: "28px 26px", borderRadius: 16,
-              background: "linear-gradient(180deg, rgba(251,191,36,0.08), rgba(251,191,36,0.02))",
-              border: "1px solid rgba(251,191,36,0.30)",
-              display: "flex", flexDirection: "column", gap: 14,
-              boxShadow: "0 4px 24px rgba(251,191,36,0.05)",
-            }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 10px", borderRadius: 8, background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.35)", alignSelf: "flex-start" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fbbf24" }} />
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", letterSpacing: "0.08em", textTransform: "uppercase" }}>WordPress · Notfall</span>
-              </div>
-              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.2 }}>
-                WordPress Kritischer Fehler?
-              </h3>
-              <p style={{ margin: 0, fontSize: 14.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
-                Weiße Seite oder Fehlermeldung? Unser Guide führt dich Schritt für Schritt aus dem Blackout.
-              </p>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-                <li>· Recovery-Mail + Debug-Modus aktivieren</li>
-                <li>· Plugin-Konflikte per FTP isolieren</li>
-                <li>· PHP-Update auf 8.2 + Theme-Reset</li>
-              </ul>
+          <div style={{ borderTop: "1px solid var(--wf-border)" }}>
+            {[
+              {
+                num: "01",
+                title: "Kritischer WordPress-Fehler",
+                desc: "Website ist nicht erreichbar, zeigt HTTP 500 oder die WordPress-Meldung zu einem kritischen Fehler.",
+                href: "/scan?problem=wordpress-critical-error",
+                cta: "Fehler untersuchen",
+              },
+              {
+                num: "02",
+                title: "Google findet meine Website nicht",
+                desc: "Indexierbarkeit, noindex, robots.txt, Sitemap und weitere öffentlich erkennbare Signale prüfen.",
+                href: "/scan?problem=visibility",
+                cta: "Sichtbarkeit prüfen",
+              },
+              {
+                num: "03",
+                title: "Website lädt zu langsam",
+                desc: "Antwortzeit und technische Performance-Signale prüfen und die größten Auffälligkeiten priorisieren.",
+                href: "/scan?problem=speed",
+                cta: "Performance prüfen",
+              },
+            ].map((problem) => (
               <Link
-                href="/scan?problem=health"
+                key={problem.num}
+                href={problem.href}
                 style={{
-                  marginTop: "auto", padding: "12px 18px", borderRadius: 10,
-                  background: "rgba(251,191,36,0.20)", border: "1px solid rgba(251,191,36,0.50)",
-                  color: "#fbbf24", fontWeight: 800, fontSize: 13.5, textAlign: "center", textDecoration: "none",
+                  display: "grid",
+                  gridTemplateColumns: "54px minmax(0, 1fr) auto",
+                  gap: 18,
+                  alignItems: "center",
+                  padding: "24px 4px",
+                  borderBottom: "1px solid var(--wf-border)",
+                  textDecoration: "none",
+                  color: "inherit",
                 }}
+                className="wf-problem-row-v2"
               >
-                Jetzt Fehler scannen →
+                <span style={{
+                  fontSize: 12,
+                  color: "var(--wf-text-muted)",
+                  fontFamily: "var(--font-family-mono, monospace)",
+                }}>
+                  {problem.num}
+                </span>
+                <span>
+                  <span style={{
+                    display: "block",
+                    fontSize: 18,
+                    fontWeight: 680,
+                    letterSpacing: "-0.015em",
+                    marginBottom: 5,
+                  }}>
+                    {problem.title}
+                  </span>
+                  <span style={{ display: "block", fontSize: 13.5, color: "var(--wf-text-secondary)", lineHeight: 1.55 }}>
+                    {problem.desc}
+                  </span>
+                </span>
+                <span style={{ fontSize: 13, color: "var(--wf-text-secondary)", whiteSpace: "nowrap" }}>
+                  {problem.cta} →
+                </span>
               </Link>
-            </article>
-
-            {/* Card 2 — Google Sichtbarkeit */}
-            <article style={{
-              padding: "28px 26px", borderRadius: 16,
-              background: "linear-gradient(180deg, rgba(122,166,255,0.08), rgba(122,166,255,0.02))",
-              border: "1px solid rgba(122,166,255,0.30)",
-              display: "flex", flexDirection: "column", gap: 14,
-              boxShadow: "0 4px 24px rgba(122,166,255,0.05)",
-            }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 10px", borderRadius: 8, background: "rgba(122,166,255,0.15)", border: "1px solid rgba(122,166,255,0.35)", alignSelf: "flex-start" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7aa6ff" }} />
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#7aa6ff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Google · Sichtbarkeit</span>
-              </div>
-              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.2 }}>
-                Google Sichtbarkeit
-              </h3>
-              <p style={{ margin: 0, fontSize: 14.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
-                Deine Homepage wird nicht angezeigt? Wir checken Indexierung, Robots.txt und Sitemaps.
-              </p>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-                <li>· Indexierungs-Status pro Seite</li>
-                <li>· Robots.txt + Sitemap.xml-Validierung</li>
-                <li>· noindex-Tags und leere Titles aufdecken</li>
-              </ul>
-              <Link
-                href="/scan?problem=visibility"
-                style={{
-                  marginTop: "auto", padding: "12px 18px", borderRadius: 10,
-                  background: "rgba(122,166,255,0.20)", border: "1px solid rgba(122,166,255,0.50)",
-                  color: "#7aa6ff", fontWeight: 800, fontSize: 13.5, textAlign: "center", textDecoration: "none",
-                }}
-              >
-                Sichtbarkeit prüfen →
-              </Link>
-            </article>
-
-            {/* Card 3 — Speed & Ladezeit */}
-            <article style={{
-              padding: "28px 26px", borderRadius: 16,
-              background: "linear-gradient(180deg, rgba(34,211,238,0.08), rgba(34,211,238,0.02))",
-              border: "1px solid rgba(34,211,238,0.30)",
-              display: "flex", flexDirection: "column", gap: 14,
-              boxShadow: "0 4px 24px rgba(34,211,238,0.05)",
-            }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 10px", borderRadius: 8, background: "rgba(34,211,238,0.15)", border: "1px solid rgba(34,211,238,0.35)", alignSelf: "flex-start" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22d3ee" }} />
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#22d3ee", letterSpacing: "0.08em", textTransform: "uppercase" }}>Hosting · Ladezeit</span>
-              </div>
-              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.2 }}>
-                Speed &amp; Ladezeit
-              </h3>
-              <p style={{ margin: 0, fontSize: 14.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
-                Langsame Website verliert Kunden. Hol dir die technische Analyse für High-Speed Hosting.
-              </p>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-                <li>· Server-Antwortzeit messen + bewerten</li>
-                <li>· PHP-Version + GZIP/Brotli prüfen</li>
-                <li>· Strato / IONOS / All-Inkl / Hostinger / Hetzner-Fixes</li>
-              </ul>
-              <Link
-                href="/scan?problem=speed"
-                style={{
-                  marginTop: "auto", padding: "12px 18px", borderRadius: 10,
-                  background: "rgba(34,211,238,0.20)", border: "1px solid rgba(34,211,238,0.50)",
-                  color: "#22d3ee", fontWeight: 800, fontSize: 13.5, textAlign: "center", textDecoration: "none",
-                }}
-              >
-                Ladezeit messen →
-              </Link>
-            </article>
+            ))}
           </div>
-
-          {/* Entwickler-Ehrenwort — direkt unter den 3 Notfall-Karten, vor dem
-              Link-Weaving. Persönlicher Trust-Anker gegen den glatten KI-SaaS-
-              Eindruck. WP.org-Plugin als harter Code-Review-Beweis. */}
-          <FounderTrustBox />
-
-          {/* SEO-LINK-WEAVING — Top-4-Notfall-Posts (GSC-Position ~36) intern
-              verlinken, um Link-Autorität von der Homepage auf die Panik-
-              Cluster zu bündeln. Harte Keyword-Anchors im Fließtext. */}
-          <p style={{
-            maxWidth: 880, margin: "44px auto 0", padding: "0 8px",
-            fontSize: 15, lineHeight: 1.8,
-            color: "rgba(255,255,255,0.62)", textAlign: "center",
-          }}>
-            Andere Symptome? Wir haben Schritt-für-Schritt-Notfall-Guides für jeden Fall. Du kämpfst mit einem{" "}
-            <Link href="/blog/wordpress-critical-error" className="text-amber-400 font-semibold hover:underline underline-offset-4">WordPress Kritischer Fehler</Link>
-            , siehst nur eine{" "}
-            <Link href="/blog/website-zeigt-nur-weisse-seite" className="text-rose-400 font-semibold hover:underline underline-offset-4">weiße Seite statt deiner Website</Link>
-            , wunderst dich, warum{" "}
-            <Link href="/blog/warum-findet-google-meine-homepage-nicht" className="text-blue-400 font-semibold hover:underline underline-offset-4">Google deine Homepage nicht findet</Link>{" "}
-            oder ärgerst dich, dass deine{" "}
-            <Link href="/blog/website-laedt-extrem-langsam" className="text-cyan-400 font-semibold hover:underline underline-offset-4">Website extrem langsam lädt</Link>
-            ? Klick rein — jede Anleitung führt dich in unter 30 Minuten aus dem Notfall.
-          </p>
         </section>
 
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-        {/* 3 STEPS */}
-        <section className="wf-steps-section" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em", textAlign: "center" }}>
-            So funktioniert es
-          </p>
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 56px", letterSpacing: "-0.02em", textAlign: "center" }}>
-            In drei Schritten zur technisch perfekten Website.
-          </h2>
-
-          <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-            {STEPS.map((step) => (
-              <div key={step.num} style={{
-                padding: "28px 28px 24px",
-                border: `1px solid ${step.color}20`,
-                borderRadius: 14,
-                background: `${step.color}06`,
-                display: "flex", flexDirection: "column", gap: 0,
-                position: "relative", overflow: "hidden",
+        {/* V2 — HYBRID DIAGNOSIS */}
+        <section style={{ borderTop: "1px solid var(--wf-border-soft)", borderBottom: "1px solid var(--wf-border-soft)" }}>
+          <div style={{ maxWidth: 920, margin: "0 auto", padding: "82px 24px" }}>
+            <div style={{ maxWidth: 680, marginBottom: 38 }}>
+              <p style={{
+                margin: "0 0 10px",
+                fontSize: 12,
+                fontWeight: 650,
+                color: "var(--wf-text-muted)",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
               }}>
-                {/* Background number watermark */}
-                <div style={{
-                  position: "absolute", right: 20, top: 16,
-                  fontSize: 64, fontWeight: 900, color: `${step.color}04`,
-                  lineHeight: 1, userSelect: "none", pointerEvents: "none",
-                  letterSpacing: "-0.04em",
+                Zwei Diagnose-Ebenen
+              </p>
+              <h2 style={{
+                margin: "0 0 14px",
+                fontSize: "clamp(28px, 4vw, 40px)",
+                lineHeight: 1.12,
+                letterSpacing: "-0.035em",
+                fontWeight: 740,
+              }}>
+                Von außen prüfen. In WordPress tiefer diagnostizieren.
+              </h2>
+              <p style={{ margin: 0, color: "var(--wf-text-secondary)", fontSize: 15, lineHeight: 1.7 }}>
+                Der Website-Check arbeitet ohne Zugangsdaten. Wenn die Ursache intern liegt, ergänzt das Read-only-Plugin die Diagnose um WordPress-Daten, die ein externer Crawler nicht sehen kann.
+              </p>
+            </div>
+
+            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              {[
+                {
+                  kicker: "Ohne Installation",
+                  title: "Website Check",
+                  desc: "Für alles, was öffentlich messbar oder sichtbar ist.",
+                  items: ["Erreichbarkeit & HTTP-Status", "Links & Weiterleitungen", "Indexierungs-Signale", "Performance-Auffälligkeiten", "öffentliche WordPress-Signale"],
+                },
+                {
+                  kicker: "Read-only Plugin",
+                  title: "WordPress Deep Diagnosis",
+                  desc: "Für interne Ursachen, die von außen verborgen bleiben.",
+                  items: ["PHP- und WordPress-Fehlerdaten", "Plugin- & Theme-Kontext", "Cron- und Systemzustand", "Datenbank-Health", "interne Konfigurationshinweise"],
+                },
+              ].map((mode) => (
+                <div key={mode.title} style={{
+                  padding: "26px",
+                  background: "var(--wf-surface)",
+                  border: "1px solid var(--wf-border)",
+                  borderRadius: "var(--wf-radius-lg)",
                 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 11, color: "var(--wf-text-muted)", fontWeight: 650, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    {mode.kicker}
+                  </p>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 21, fontWeight: 700, letterSpacing: "-0.025em" }}>
+                    {mode.title}
+                  </h3>
+                  <p style={{ margin: "0 0 22px", fontSize: 13.5, color: "var(--wf-text-secondary)", lineHeight: 1.6 }}>
+                    {mode.desc}
+                  </p>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+                    {mode.items.map((item) => (
+                      <li key={item} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13, color: "var(--wf-text-secondary)", lineHeight: 1.5 }}>
+                        <span style={{ color: "var(--wf-success)", marginTop: 1 }}>✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              marginTop: 16,
+              padding: "14px 16px",
+              border: "1px solid var(--wf-border)",
+              borderRadius: "var(--wf-radius-md)",
+              color: "var(--wf-text-secondary)",
+              fontSize: 13,
+              lineHeight: 1.55,
+            }}>
+              <strong style={{ color: "var(--wf-text)", fontWeight: 650 }}>Wichtig:</strong>{" "}
+              Das Plugin ist Read-only. Es liefert Diagnoseinformationen, verändert aber nicht automatisch deine Website.
+            </div>
+          </div>
+        </section>
+
+        {/* V2 — HOW IT WORKS */}
+        <section style={{ maxWidth: 920, margin: "0 auto", padding: "82px 24px 88px" }}>
+          <div style={{ maxWidth: 640, marginBottom: 38 }}>
+            <p style={{
+              margin: "0 0 10px",
+              fontSize: 12,
+              fontWeight: 650,
+              color: "var(--wf-text-muted)",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}>
+              So funktioniert WebsiteFix
+            </p>
+            <h2 style={{
+              margin: 0,
+              fontSize: "clamp(28px, 4vw, 40px)",
+              lineHeight: 1.12,
+              letterSpacing: "-0.035em",
+              fontWeight: 740,
+            }}>
+              Prüfen. Verstehen. Beheben und verifizieren.
+            </h2>
+          </div>
+
+          <div style={{ borderTop: "1px solid var(--wf-border)" }}>
+            {[
+              { num: "01", title: "Prüfen", desc: "URL eingeben. WebsiteFix erfasst Seitenstruktur, technische Antworten und relevante Signale." },
+              { num: "02", title: "Verstehen", desc: "Befunde werden nach Schweregrad und möglicher Ursache geordnet — statt als unpriorisierte Checkliste." },
+              { num: "03", title: "Beheben & verifizieren", desc: "Führe die passende Lösung durch und prüfe anschließend erneut, ob das Problem tatsächlich behoben ist." },
+            ].map((step) => (
+              <div key={step.num} style={{
+                display: "grid",
+                gridTemplateColumns: "70px 190px minmax(0, 1fr)",
+                gap: 20,
+                padding: "24px 0",
+                borderBottom: "1px solid var(--wf-border)",
+                alignItems: "start",
+              }} className="wf-step-row-v2">
+                <span style={{ fontFamily: "var(--font-family-mono, monospace)", fontSize: 12, color: "var(--wf-text-muted)", paddingTop: 3 }}>
                   {step.num}
-                </div>
-
-                {/* Icon */}
-                <div style={{
-                  width: 44, height: 44, borderRadius: 11,
-                  background: `${step.color}15`, border: `1px solid ${step.color}30`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: step.color, marginBottom: 18, flexShrink: 0,
-                }}>
-                  {step.icon}
-                </div>
-
-                <div style={{ fontSize: 11, fontWeight: 700, color: step.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
-                  {step.label}
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 12, letterSpacing: "-0.02em" }}>
-                  {step.title}
-                </div>
-                <p style={{ margin: "0 0 20px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, flexGrow: 1 }}>
-                  {step.desc}
-                </p>
-
-                {/* Pills */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {step.pills.map(pill => (
-                    <span key={pill} style={{
-                      fontSize: 11, padding: "3px 9px", borderRadius: 16,
-                      background: `${step.color}10`, border: `1px solid ${step.color}25`,
-                      color: step.color, fontWeight: 500,
-                    }}>
-                      {pill}
-                    </span>
-                  ))}
-                </div>
+                </span>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 680, letterSpacing: "-0.015em" }}>{step.title}</h3>
+                <p style={{ margin: 0, color: "var(--wf-text-secondary)", fontSize: 13.5, lineHeight: 1.65 }}>{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── AGENTUR-VORTEILE ── */}
-        <section className="wf-benefits-section">
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-                Warum WebsiteFix?
-              </p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Spezialisiert auf WordPress — von SEO bis Barrierefreiheit.
-              </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Kein generischer Scanner. Kein Oberflächencheck. Tiefer Einblick in jede Unterseite — mit konkreten Fix-Anleitungen für dein System.
-              </p>
-            </div>
 
-            <div className="wf-benefits-grid">
-              {BENEFITS.map(b => (
-                <div key={b.label} className="wf-benefit-card">
-                  <div style={{
-                    width: 48, height: 48, borderRadius: 13, flexShrink: 0,
-                    background: b.iconBg, border: `1px solid ${b.iconBorder}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {b.icon}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: b.iconColor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-                      {b.label}
-                    </div>
-                    <h3 style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
-                      {b.title}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>{b.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ──────────────────────────────────────────────────────────────
+            WEBSITEFIX V2 — LOWER HOMEPAGE
+            Weniger Marketing-Flächen, mehr Produktklarheit.
+        ────────────────────────────────────────────────────────────── */}
 
-        {/* ── INTEGRATIONS ── */}
-        <section className="wf-integration-section">
-          <style>{`
-            @keyframes wf-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
-            @keyframes wf-flow {
-              0%   { stroke-dashoffset: 24; opacity: 0.3; }
-              50%  { opacity: 1; }
-              100% { stroke-dashoffset: 0;  opacity: 0.3; }
-            }
-            .wf-flow-line { stroke-dasharray: 6 6; animation: wf-flow 2.2s linear infinite; }
-            .wf-flow-line-2 { animation-delay: 0.55s; }
-            .wf-flow-line-3 { animation-delay: 1.1s; }
-            .wf-flow-line-4 { animation-delay: 1.65s; }
-          `}</style>
-
-          <div className="wf-integration-layout">
-
-            {/* ── Visual column (top on mobile, right on desktop) ── */}
-            <div className="wf-integration-visual">
-              {/* Hub diagram */}
-              <div style={{
-                background: "rgba(8,10,20,0.7)", border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: 20, padding: "28px 20px 20px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 0,
-              }}>
-                {/* Central node */}
-                <div style={{
-                  width: 52, height: 52, borderRadius: "50%",
-                  background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.3)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 0 20px rgba(37,99,235,0.25)",
-                  zIndex: 1,
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7aa6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <polyline points="9 12 11 14 15 10"/>
-                  </svg>
-                </div>
-
-                {/* Animated connection lines SVG */}
-                <svg width="200" height="44" viewBox="0 0 200 44" fill="none" style={{ overflow: "visible", margin: "-2px 0" }}>
-                  <line x1="100" y1="0" x2="22"  y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line"/>
-                  <line x1="100" y1="0" x2="68"  y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line wf-flow-line-2"/>
-                  <line x1="100" y1="0" x2="132" y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line wf-flow-line-3"/>
-                  <line x1="100" y1="0" x2="178" y2="44" stroke="#7aa6ff" strokeWidth="1" className="wf-flow-line wf-flow-line-4"/>
-                </svg>
-
-                {/* Tool logos */}
-                <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                  {/* Brand-SVGs aus shared components/BrandIcons — KEEP SYNCED
-                      mit /fuer-agenturen Workflow-Integration-Sektion. */}
-                  {[
-                    { name: "Slack",  Icon: SlackIcon },
-                    { name: "Jira",   Icon: JiraIcon },
-                    { name: "Trello", Icon: TrelloIcon },
-                    { name: "Asana",  Icon: AsanaIcon },
-                  ].map(({ name, Icon }) => (
-                    <div key={name} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                      <Icon size={28} />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{name}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Flow status */}
-                <div style={{
-                  marginTop: 18, display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "8px 16px", borderRadius: 999,
-                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                  fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: 600,
-                }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", flexShrink: 0, animation: "wf-pulse 2s ease-in-out infinite" }} />
-                  Scan → Ticket erstellt → Team benachrichtigt
-                </div>
-              </div>
-            </div>
-
-            {/* ── Text column ── */}
-            <div className="wf-integration-text">
-              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-                Schnittstellen
-              </p>
-              <h2 style={{ margin: "0 0 16px", fontSize: "clamp(22px, 2.8vw, 34px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-                Gefundene Fehler landen direkt in deinem Workflow.
-              </h2>
-              <p style={{ margin: "0 0 28px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
-                website-fix arbeitet nicht isoliert. Jedes gefundene Problem wird automatisch als Ticket in Jira, Trello oder Asana erstellt — oder als Slack-Alert direkt ans Team gepusht. Kein manuelles Copy-Paste, kein Übersehen.
-              </p>
-              <ul className="wf-integration-bullets">
-                {[
-                  "Scan-Ergebnis → Jira-Ticket in Sekunden",
-                  "Automatisierter Check auf SEO- & Qualitäts-Standards",
-                  "Slack-Alert sobald ein kritischer Fehler auftaucht",
-                ].map(item => (
-                  <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8df3d3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-          </div>
-        </section>
-
-        {/* ── RUNDUM-SCHUTZ ── */}
-        <section className="wf-advantage-section">
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 52 }}>
-              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "rgba(234,179,8,0.65)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-                Das Herzstück
-              </p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Drei Stufen. Ein Ziel: Maximale Sichtbarkeit.
-              </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 540, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
-                Von der ersten Analyse bis zur vollautomatischen Agentur-Pipeline — jede Stufe baut auf der nächsten auf.
-              </p>
-            </div>
-
-            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-              {[
-                /* ── Säule 1: Sofort-Analyse (Starter) ── */
-                {
-                  planLabel: "Starter",
-                  planColor: "#60a5fa",
-                  planBg:   "rgba(96,165,250,0.12)",
-                  planBorder:"rgba(96,165,250,0.28)",
-                  cardBorder:"rgba(96,165,250,0.18)",
-                  cardGlow:  "rgba(96,165,250,0.06)",
-                  icon: (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      {/* Lightning bolt */}
-                      <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                    </svg>
-                  ),
-                  title: "Sofort-Analyse",
-                  desc: "In &lt; 60 Sek. zum vollständigen Ranking-Report. Identifiziere alle Wachstums-Bremsen deiner Website — ohne Installation, ohne Entwickler.",
-                  bullets: [
-                    "< 60 Sek. · bis zu 25 Unterseiten",
-                    "Interaktive Site-Map nach Schweregrad",
-                    "SEO, Technik & BFSG auf einen Blick",
-                  ],
-                },
-                /* ── Säule 2: KI-Smart-Fix (Professional) ── */
-                {
-                  planLabel: "Professional",
-                  planColor: "#FBBF24",
-                  planBg:   "rgba(251,191,36,0.12)",
-                  planBorder:"rgba(251,191,36,0.28)",
-                  cardBorder:"rgba(251,191,36,0.18)",
-                  cardGlow:  "rgba(251,191,36,0.06)",
-                  icon: (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      {/* Wand / sparkle */}
-                      <path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/>
-                      <path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/>
-                      <path d="M17.8 6.2 19 5"/><path d="M3 21l9-9"/>
-                      <path d="M12.2 6.2 11 5"/>
-                    </svg>
-                  ),
-                  title: "KI-Smart-Fix",
-                  desc: "KI-gestützte Schritt-für-Schritt-Guides — priorisiert nach SEO-Impact. Copy-paste-fertiger Code direkt für Gutenberg, Elementor oder Divi.",
-                  bullets: [
-                    "Fix-Guide für dein Page-Builder-System",
-                    "KI-Auto-Fix: fertiger Code, kein Entwickler",
-                    "Priorisierung nach Google-Impact",
-                  ],
-                },
-                /* ── Säule 3: API-Automatisierung (Agency) ── */
-                {
-                  planLabel: "Agency",
-                  planColor: "#a78bfa",
-                  planBg:   "rgba(167,139,250,0.12)",
-                  planBorder:"rgba(167,139,250,0.28)",
-                  cardBorder:"rgba(167,139,250,0.18)",
-                  cardGlow:  "rgba(167,139,250,0.06)",
-                  icon: (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      {/* Cloud + down-arrow */}
-                      <polyline points="8 17 12 21 16 17"/>
-                      <line x1="12" y1="12" x2="12" y2="21"/>
-                      <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>
-                    </svg>
-                  ),
-                  title: "API-Automatisierung",
-                  desc: "Exklusives WP-Plugin für Agenturen. Fixes per Klick direkt aus dem Dashboard auf alle Kunden-Seiten übertragen — ohne manuelles Copy-Paste.",
-                  bullets: [
-                    "WP-Plugin: verbinde unbegrenzte Sites",
-                    "KI-Mass-Fixer: Befehl an alle Sites",
-                    "White-Label Reports für Endkunden",
-                  ],
-                },
-              ].map(f => (
-                <div key={f.title} style={{
-                  background: "rgba(8,10,20,0.75)",
-                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: `1px solid ${f.cardBorder}`,
-                  borderRadius: 20,
-                  padding: "0 0 28px",
-                  boxShadow: `0 2px 32px ${f.cardGlow}, 0 2px 20px rgba(0,0,0,0.3)`,
-                  display: "flex", flexDirection: "column",
-                  overflow: "hidden",
-                  transition: "border-color 0.2s, box-shadow 0.2s",
-                }}>
-                  {/* Plan stripe */}
-                  <div style={{
-                    padding: "8px 26px",
-                    background: f.planBg,
-                    borderBottom: `1px solid ${f.planBorder}`,
-                    display: "flex", alignItems: "center", gap: 6,
-                  }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: f.planColor, boxShadow: `0 0 6px ${f.planColor}`, flexShrink: 0, display: "inline-block" }} />
-                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: f.planColor }}>
-                      {f.planLabel}
-                    </span>
-                  </div>
-
-                  <div style={{ padding: "24px 26px 0", flex: 1, display: "flex", flexDirection: "column" }}>
-                    {/* Icon + title */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-                      <div style={{
-                        width: 48, height: 48, borderRadius: 13, flexShrink: 0,
-                        background: f.planBg, border: `1px solid ${f.planBorder}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        filter: `drop-shadow(0 0 10px ${f.planColor}55)`,
-                      }}>
-                        {f.icon}
-                      </div>
-                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-                        {f.title}
-                      </h3>
-                    </div>
-
-                    <p style={{ margin: "0 0 20px", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, flex: 1 }}
-                      dangerouslySetInnerHTML={{ __html: f.desc }} />
-
-                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
-                      {f.bullets.map(b => (
-                        <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={f.planColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-
-        {/* THE ENGINEERING — Dev-zu-Dev-Trust-Section (11.05.2026,
-            Reaktion auf WordPress-Experten-Kritik "anonymer KI-Content").
-            Eigene Komponente, damit page.tsx schlank bleibt und die Section
-            später bei Bedarf auf /fuer-agenturen oder /engineering verschiebbar
-            ist. Bewusst vor dem Pricing platziert: erst Trust, dann Geld-Frage. */}
-        <EngineeringSection />
-
-        {/* PLUGIN-STACK-VERGLEICH — "Eine SaaS statt 15 Plugins"
-            Strategische Abgrenzung gegen den eigentlichen Konkurrenten:
-            das typische 12-15-Plugin-Sammelsurium des DACH-WP-Solopreneurs. */}
-        <PluginStackComparison />
-
-        {/* FOUNDER-PLEDGE — Pre-Launch-Ersatz für Testimonials.
-            Drei überprüfbare Versprechen + Signatur statt erfundene
-            5-Sterne-Sprechblasen (UWG-konform). */}
-        <FounderPledge />
-
-        {/* PRICING */}
-        <section id="pricing" style={{ padding: "80px 24px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-
-            <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "rgba(74,222,128,0.8)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Preise</p>
-              <h2 style={{ fontSize: "clamp(24px, 3vw, 38px)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.025em", color: "#fff" }}>
-                Einfach. Transparent. Ehrlich.
-              </h2>
-              <p style={{ margin: 0, fontSize: 16, color: "rgba(255,255,255,0.45)" }}>
-                Starte mit einem Einzel-Fix oder wähle eine Flatrate für dauerhafte Sicherheit.
-              </p>
-            </div>
-
-            {/* ─── PAY-PER-FIX HIGHLIGHT-BANNER ──────────────────────────────
-                Vorgelagertes Notfall-Angebot: 9,90 €, kein Abo, anonymer
-                Checkout. Dient als Cashflow-Mitnahme für User mit akutem
-                Einzelproblem — stört den Abo-Vergleich darunter nicht. */}
-            <div style={{
-              maxWidth: 920, margin: "0 auto 36px",
-              padding: "20px 28px", borderRadius: 16,
-              background: "linear-gradient(135deg, rgba(251,191,36,0.10), rgba(245,158,11,0.05))",
-              border: "1px solid rgba(251,191,36,0.32)",
-              boxShadow: "0 0 36px rgba(251,191,36,0.08)",
-              display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap",
-            }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                background: "rgba(251,191,36,0.16)",
-                border: "1px solid rgba(251,191,36,0.40)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }} aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-              </div>
-              <div style={{ flex: "1 1 280px", minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 800, color: "#FBBF24",
-                    letterSpacing: "0.08em", textTransform: "uppercase",
-                    padding: "2px 8px",
-                    background: "rgba(251,191,36,0.14)",
-                    border: "1px solid rgba(251,191,36,0.35)",
-                    borderRadius: 999,
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                  }}>
-                    <Zap size={11} strokeWidth={2.6} aria-hidden="true" />
-                    Notfall · ohne Abo
-                  </span>
-                  <span style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
-                    Pay-per-Fix · 9,90 € einmalig
-                  </span>
-                </div>
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
-                  Du hast ein konkretes Problem? Hol dir die Schritt-für-Schritt-Anleitung als PDF — einmal 9,90 €, kein Abo, kein Konto, kein Programmieren. Kommt direkt per Mail.
-                </p>
-              </div>
-              <Link href="/scan" style={{
-                flexShrink: 0,
-                padding: "12px 24px", borderRadius: 10,
-                background: "linear-gradient(90deg,#F59E0B,#FBBF24)",
-                color: "#1a1300", fontSize: 14, fontWeight: 800,
-                textDecoration: "none", whiteSpace: "nowrap",
-                boxShadow: "0 4px 16px rgba(251,191,36,0.40)",
-              }}>
-                Jetzt fixen →
-              </Link>
-            </div>
-
-            <p style={{ margin: "0 auto 18px", maxWidth: 720, textAlign: "center", fontSize: 12.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
-              <strong style={{ color: "rgba(255,255,255,0.65)" }}>Du hast 1 Website?</strong> Pay-per-Fix oder Starter genügen — Professional und Agency sind für Freelancer und Agenturen mit vielen Kunden.
-            </p>
-
-            <div className="mkt-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, alignItems: "stretch" }}>
-              {PLANS.map(plan => (
-                <div key={plan.name} style={{
-                  background: "rgba(255,255,255,0.04)",
-                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: plan.recommended
-                    ? `2px solid #2563EB`
-                    : ("scale" in plan && plan.scale)
-                      ? `2px solid #7C3AED`
-                      : `1px solid rgba(255,255,255,0.08)`,
-                  borderRadius: 18,
-                  display: "flex", flexDirection: "column",
-                  overflow: "hidden",
-                  boxShadow: plan.recommended
-                    ? "0 8px 40px rgba(37,99,235,0.2)"
-                    : ("scale" in plan && plan.scale)
-                      ? "0 8px 40px rgba(124,58,237,0.2)"
-                      : "0 2px 20px rgba(0,0,0,0.3)",
-                  position: "relative",
-                }}>
-
-                  {/* Top stripe — Badge aus plan.badge.
-                      Starter hat kein Badge → neutrale Spacer-Stripe für
-                      einheitliche Card-Höhe (kein Layout-Shift). */}
-                  {(() => {
-                    const isBlue   = plan.recommended;
-                    const isPurple = "scale" in plan && plan.scale;
-                    const bg = isBlue
-                      ? "linear-gradient(90deg,#1d4ed8,#2563EB)"
-                      : isPurple
-                        ? "linear-gradient(90deg,#6d28d9,#7C3AED)"
-                        : "rgba(255,255,255,0.03)";
-                    const textColor = (isBlue || isPurple) ? "#fff" : "rgba(255,255,255,0.30)";
-                    const label = plan.badge ?? "Basis-Schutz";
-                    return (
-                      <div style={{
-                        padding: "9px 24px",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        background: bg,
-                        borderBottom: (isBlue || isPurple)
-                          ? "none"
-                          : "1px solid rgba(255,255,255,0.06)",
-                        boxShadow: isBlue
-                          ? "inset 0 -1px 0 rgba(255,255,255,0.1)"
-                          : isPurple
-                            ? "inset 0 -1px 0 rgba(255,255,255,0.08)"
-                            : "none",
-                      }}>
-                        <span style={{
-                          fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: textColor,
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                        }}>
-                          {isPurple && (
-                            <Gem size={12} strokeWidth={2.2} aria-hidden="true" />
-                          )}
-                          {label}
-                        </span>
-                      </div>
-                    );
-                  })()}
-
-                  <div style={{ padding: "28px 28px 0", flex: 1, display: "flex", flexDirection: "column" }}>
-                    {/* Plan name + desc */}
-                    <div style={{ marginBottom: 20, minHeight: 128 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.recommended ? "#7aa6ff" : plan.enterprise ? "rgba(255,255,255,0.5)" : plan.accent, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                        {plan.name}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
-                        {plan.enterprise ? (
-                          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>Auf Anfrage</span>
-                        ) : (
-                          <>
-                            <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>{plan.price}€</span>
-                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{plan.per}</span>
-                          </>
-                        )}
-                      </div>
-                      <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>{plan.desc}</p>
-                    </div>
-
-                    {/* BFSG-Hook — nur Starter. Compliance-Trigger ist DAS
-                        DACH-Argument für 2025+: 29 €/Mo vs. Anwalts-Stunde
-                        bei einer Klage. Wird als amber-Pill über den Bullets
-                        gerendert (vor dem Divider), damit das Auge sie liest
-                        bevor es in die Feature-Liste eintaucht. */}
-                    {plan.planKey === "starter" && (
-                      <div style={{
-                        margin: "0 0 16px",
-                        padding: "10px 14px",
-                        borderRadius: 9,
-                        background: "linear-gradient(90deg, rgba(251,191,36,0.14), rgba(245,158,11,0.08))",
-                        border: "1px solid rgba(251,191,36,0.32)",
-                        display: "flex", alignItems: "center", gap: 9,
-                      }}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FBBF24"
-                          strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ flexShrink: 0 }} aria-hidden="true">
-                          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                          <path d="M12 9v4"/><path d="M12 17h.01"/>
-                        </svg>
-                        <span style={{ fontSize: 11.5, fontWeight: 700, color: "#FBBF24", lineHeight: 1.4 }}>
-                          BFSG-Pflicht ab Juni 2025 — 29 €/Mo sind weniger als 1 Stunde Anwalt
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Trust-Stripe (15.05.2026 UX-Audit Solo-Pivot):
-                        Read-Only-Garantie aus der FAQ direkt auf jede Plan-Card
-                        ziehen — Solos sehen die "kann meine Seite nicht
-                        kaputtmachen"-Zusicherung, BEVOR sie den Preis verarbeiten.
-                        Funktioniert auf allen 3 Tiers, weil alle Tiers ein
-                        Read-Only-Plugin enthalten (Starter Hybrid-Scan,
-                        Pro Deep-Scan + KI, Agency White-Label) — gleiche
-                        Sicherheits-Garantie, unterschiedliche Feature-Tiefe. */}
-                    <div style={{
-                      margin: "0 0 16px",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      background: "rgba(16,185,129,0.06)",
-                      border: "1px solid rgba(16,185,129,0.20)",
-                      display: "flex", alignItems: "flex-start", gap: 8,
-                    }}>
-                      <ShieldCheck
-                        size={14}
-                        strokeWidth={2.2}
-                        color="rgba(16,185,129,0.85)"
-                        style={{ flexShrink: 0, marginTop: 1 }}
-                        aria-hidden="true"
-                      />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(110,231,183,0.92)", lineHeight: 1.45 }}>
-                        <strong style={{ fontWeight: 800 }}>Read-Only Garantie:</strong>{" "}
-                        Unser Plugin liest nur — es verändert niemals ungefragt deinen Code.
-                      </span>
-                    </div>
-
-                    {/* Divider */}
-                    <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
-
-                    {/* Feature list — locked: true rendert "✕" in grau (Upsell-
-                        Delta-Hinweis, z.B. "Kein White-Label" in Starter-Card) */}
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                      {plan.features.map(f => {
-                        const locked = "locked" in f && f.locked;
-                        // Plugin-Bullets (Read-Only/Deep-Scan/White-Label) kriegen
-                        // ein Lucide-Lock-Icon als visuellen Vertrauens-Marker —
-                        // ersetzt das frühere 🔒-Emoji für konsistenten Tech-Look.
-                        const hasPluginLock = !locked && /Plugin/i.test(f.text);
-                        return (
-                          <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{
-                              width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                              background: locked
-                                ? "rgba(255,255,255,0.04)"
-                                : f.highlight
-                                  ? (plan.recommended ? "#2563EB" : ("scale" in plan && plan.scale) ? "#7C3AED" : plan.enterprise ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)")
-                                  : "rgba(255,255,255,0.07)",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {locked ? (
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                  <line x1="18" y1="6" x2="6" y2="18"/>
-                                  <line x1="6"  y1="6" x2="18" y2="18"/>
-                                </svg>
-                              ) : (
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={f.highlight ? "#fff" : "rgba(255,255,255,0.3)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                              )}
-                            </div>
-                            <span style={{
-                              fontSize: 13,
-                              fontWeight: locked ? 400 : f.highlight ? 600 : 400,
-                              color: locked
-                                ? "rgba(255,255,255,0.30)"
-                                : f.highlight ? "#fff" : "rgba(255,255,255,0.4)",
-                              display: "inline-flex", alignItems: "center", gap: 5,
-                            }}>
-                              {hasPluginLock && (
-                                <Lock
-                                  size={12}
-                                  strokeWidth={2.4}
-                                  style={{ flexShrink: 0, opacity: 0.85 }}
-                                  aria-hidden="true"
-                                />
-                              )}
-                              <span>{f.text}</span>
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Audience-Footnote — "Für wen ist das?"-Hinweis */}
-                    {plan.audienceFootnote && (
-                      <div style={{
-                        padding: "10px 12px", marginBottom: 16, borderRadius: 8,
-                        background: "rgba(0,0,0,0.25)",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        fontSize: 11.5, color: "rgba(255,255,255,0.55)",
-                        lineHeight: 1.55, fontStyle: "italic",
-                      }}>
-                        {plan.audienceFootnote}
-                      </div>
-                    )}
-
-                    {/* CTA button */}
-                    <div style={{ paddingBottom: 28 }}>
-                      <Link href={plan.href} style={{
-                        display: "block", textAlign: "center",
-                        padding: "13px 20px", borderRadius: 10, fontSize: 14, fontWeight: 700,
-                        textDecoration: "none",
-                        background: plan.recommended
-                          ? "#2563EB"
-                          : ("scale" in plan && plan.scale)
-                            ? "#7C3AED"
-                            : plan.enterprise
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(255,255,255,0.06)",
-                        color: (plan.recommended || ("scale" in plan && plan.scale)) ? "#ffffff" : "rgba(255,255,255,0.7)",
-                        border: (plan.recommended || ("scale" in plan && plan.scale)) ? "none" : "1px solid rgba(255,255,255,0.1)",
-                        boxShadow: plan.recommended
-                          ? "0 4px 14px rgba(37,99,235,0.35)"
-                          : ("scale" in plan && plan.scale)
-                            ? "0 4px 14px rgba(124,58,237,0.35)"
-                            : "none",
-                        transition: "opacity 0.15s",
-                      }}>
-                        {plan.cta}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Trust line */}
-            <div style={{ marginTop: 32, textAlign: "center", display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
-              {["Sichere Zahlung", "Jederzeit kündbar", "DSGVO-konform", "Daten in Deutschland"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  {t}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-        {/* Soft-Launch (06.05.2026): Komplette Testimonials-Sektion + Agency-
-            Trust-Strip entfernt — alle Namen, Quotes und Agentur-Bezeichnungen
-            waren Platzhalter (Michael R., Julia S., Dr. Thomas W., Pixelwerk
-            etc.). Im B2B-Kontext ist Fake-Social-Proof aktiver Trust-Killer.
-            Sobald echte Pilot-Kunden-Zitate + freigegebene Logos vorliegen:
-            hier wieder einsetzen, jeder Quote mit URL/Branche, Logos als
-            <img> nicht als Text. AgencyStats-Komponente (oben im Hero) bleibt
-            als quantifizierte Trust-Quelle bis dahin. */}
-
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-        {/* Read-Only-Plugin Verkaufsblock — Kern-Differenzierung gegenüber
-            billigen Online-Scannern. KEEP SYNCED mit /fuer-agenturen. */}
-        <PluginInfobox />
-
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-        {/* FAQ ACCORDION */}
-        <section id="faq" style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
-          <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>FAQ</p>
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.025em" }}>
-            Häufige Fragen
-          </h2>
-          <p style={{ margin: "0 0 40px", fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
-            Alles, was Sie vor dem Start wissen wollen.
-          </p>
+        {/* TECHNICAL TRUST */}
+        <section style={{ maxWidth: 980, margin: "0 auto", padding: "88px 24px 72px" }}>
           <div style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 18,
-            overflow: "hidden",
-            padding: "0 28px",
-          }}>
-            <FaqAccordion items={FAQ} />
-          </div>
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1.05fr) minmax(0, .95fr)",
+            gap: 56,
+            alignItems: "start",
+          }} className="wf-trust-grid-v2">
+            <div>
+              <p style={{
+                margin: "0 0 12px", fontSize: 11, fontWeight: 700,
+                color: "var(--wf-text-muted)", textTransform: "uppercase",
+                letterSpacing: "0.12em",
+              }}>
+                Technisch nachvollziehbar
+              </p>
+              <h2 style={{
+                margin: "0 0 16px",
+                fontSize: "clamp(28px, 4vw, 40px)",
+                lineHeight: 1.12,
+                letterSpacing: "-0.035em",
+                fontWeight: 740,
+              }}>
+                Diagnose statt Blackbox.
+              </h2>
+              <p style={{
+                margin: 0, maxWidth: 570, fontSize: 15,
+                lineHeight: 1.75, color: "var(--wf-text-secondary)",
+              }}>
+                WebsiteFix trennt messbare Befunde von Erklärungen. Der externe Check
+                arbeitet mit öffentlich sichtbaren Signalen. Für interne WordPress-Ursachen
+                ergänzt das Read-only-Plugin technische Diagnosedaten — ohne deine Website
+                automatisch zu verändern.
+              </p>
+            </div>
 
-          {/* SEO-LINK-WEAVING #2 — Notfall-Quick-Links unter den FAQs, dort wo
-              der Reader nach Antworten sucht und einen Klick weit ist. Anchor-
-              Variationen bewusst anders als Block #1 (Anchor-Diversity). */}
-          <p style={{
-            margin: "28px 0 0", padding: "20px 24px", borderRadius: 12,
-            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
-            fontSize: 14, lineHeight: 1.85, color: "rgba(255,255,255,0.58)", textAlign: "center",
-          }}>
-            Deine Frage nicht dabei? Direkt zu den vier meistgesuchten Notfall-Anleitungen:{" "}
-            <Link href="/blog/wordpress-critical-error" className="text-amber-400 font-semibold hover:underline underline-offset-4">WordPress kritischen Fehler beheben</Link>{" "}·{" "}
-            <Link href="/blog/website-zeigt-nur-weisse-seite" className="text-rose-400 font-semibold hover:underline underline-offset-4">White Screen of Death lösen</Link>{" "}·{" "}
-            <Link href="/blog/warum-findet-google-meine-homepage-nicht" className="text-blue-400 font-semibold hover:underline underline-offset-4">Erfahre, was zu tun ist, wenn Google deine Homepage nicht findet</Link>{" "}·{" "}
-            <Link href="/blog/website-laedt-extrem-langsam" className="text-cyan-400 font-semibold hover:underline underline-offset-4">Website lädt zu langsam — Sofort-Fix</Link>.
-          </p>
+            <div style={{ borderTop: "1px solid var(--wf-border)" }}>
+              {[
+                ["01", "Messbare Befunde", "HTTP-Status, Links, Indexierungs- und Performance-Signale."],
+                ["02", "WordPress-Kontext", "PHP-, Plugin-, Theme-, Cron- und Systemhinweise über das Read-only-Plugin."],
+                ["03", "Konkrete nächste Schritte", "Nicht nur Fehler anzeigen, sondern priorisieren, erklären und anschließend erneut prüfen."],
+              ].map(([num, title, desc]) => (
+                <div key={num} style={{
+                  display: "grid", gridTemplateColumns: "38px minmax(0,1fr)", gap: 12,
+                  padding: "18px 0", borderBottom: "1px solid var(--wf-border)",
+                }}>
+                  <span style={{
+                    fontFamily: "var(--font-family-mono, monospace)",
+                    color: "var(--wf-text-muted)", fontSize: 11, paddingTop: 2,
+                  }}>{num}</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 680, marginBottom: 5 }}>{title}</div>
+                    <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: "var(--wf-text-secondary)" }}>{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+        <div style={{ borderTop: "1px solid var(--wf-border-soft)" }} />
 
-        {/* BLOG TEASER */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+        {/* PRICING V2 */}
+        <section id="pricing" style={{ maxWidth: 980, margin: "0 auto", padding: "88px 24px" }}>
+          <div style={{ maxWidth: 650, marginBottom: 42 }}>
+            <p style={{
+              margin: "0 0 12px", fontSize: 11, fontWeight: 700,
+              color: "var(--wf-text-muted)", textTransform: "uppercase",
+              letterSpacing: "0.12em",
+            }}>
+              Preise
+            </p>
+            <h2 style={{
+              margin: "0 0 14px",
+              fontSize: "clamp(28px, 4vw, 40px)",
+              lineHeight: 1.12,
+              letterSpacing: "-0.035em",
+              fontWeight: 740,
+            }}>
+              Bezahle für das, was du wirklich brauchst.
+            </h2>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: "var(--wf-text-secondary)" }}>
+              Ein akutes Problem kannst du einmalig lösen. Für laufende Diagnose und mehrere Websites gibt es monatliche Pläne.
+            </p>
+          </div>
+
+          <div className="wf-pricing-grid-v2" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            borderTop: "1px solid var(--wf-border)",
+            borderBottom: "1px solid var(--wf-border)",
+          }}>
+            {[
+              {
+                eyebrow: "Ein Problem",
+                name: "Pay-per-Fix",
+                price: "9,90 €",
+                period: "einmalig",
+                desc: "Für ein konkretes akutes Problem ohne Abo.",
+                features: ["Ein Smart-Fix-Guide", "Kein Konto vorab", "Kein Abo"],
+                href: "/scan",
+                cta: "Problem prüfen",
+                primary: false,
+              },
+              {
+                eyebrow: "Eigene Website",
+                name: "Starter",
+                price: "29 €",
+                period: "/ Monat",
+                desc: "Für bis zu zwei WordPress-Websites mit laufender Diagnose.",
+                features: ["2 Projekte", "10 Diagnosen pro Monat", "Read-only-Plugin inklusive", "Monitoring + Smart Fix"],
+                href: "/register?plan=starter",
+                cta: "Starter wählen",
+                primary: true,
+              },
+              {
+                eyebrow: "Freelancer & kleine Agenturen",
+                name: "Professional",
+                price: "89 €",
+                period: "/ Monat",
+                desc: "Für mehrere Kunden-Websites und wiederkehrende Workflows.",
+                features: ["10 Projekte", "Unbegrenzte Scans", "White-Label-Reports", "Alerts & Team-Workflows"],
+                href: "/register?plan=professional",
+                cta: "Professional wählen",
+                primary: false,
+              },
+            ].map((plan, index) => (
+              <article key={plan.name} style={{
+                padding: "30px 26px 28px",
+                borderLeft: index === 0 ? "none" : "1px solid var(--wf-border)",
+                background: plan.primary ? "var(--wf-surface)" : "transparent",
+                display: "flex", flexDirection: "column", minHeight: 430,
+              }} className="wf-price-card-v2">
+                <div style={{
+                  fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: plan.primary ? "var(--wf-brand)" : "var(--wf-text-muted)",
+                  marginBottom: 12,
+                }}>
+                  {plan.eyebrow}
+                </div>
+                <h3 style={{ margin: "0 0 18px", fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>
+                  {plan.name}
+                </h3>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginBottom: 14 }}>
+                  <span style={{ fontSize: 32, fontWeight: 760, letterSpacing: "-0.04em" }}>{plan.price}</span>
+                  <span style={{ fontSize: 12, color: "var(--wf-text-muted)" }}>{plan.period}</span>
+                </div>
+                <p style={{ margin: "0 0 24px", fontSize: 13.5, lineHeight: 1.65, color: "var(--wf-text-secondary)" }}>
+                  {plan.desc}
+                </p>
+
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {plan.features.map(feature => (
+                    <li key={feature} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 12.5, lineHeight: 1.5, color: "var(--wf-text-secondary)" }}>
+                      <span aria-hidden="true" style={{ color: "var(--wf-success)", fontWeight: 800 }}>✓</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href={plan.href} style={{
+                  marginTop: "auto",
+                  minHeight: 44,
+                  padding: "0 16px",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: "var(--wf-radius-md)",
+                  background: plan.primary ? "var(--wf-primary)" : "transparent",
+                  border: plan.primary ? "1px solid var(--wf-primary)" : "1px solid var(--wf-border-strong)",
+                  color: plan.primary ? "#fff" : "var(--wf-text)",
+                  textDecoration: "none", fontSize: 13, fontWeight: 680,
+                }}>
+                  {plan.cta} →
+                </Link>
+              </article>
+            ))}
+          </div>
+
+          <div style={{
+            marginTop: 20,
+            color: "var(--wf-text-muted)",
+            fontSize: 12.5,
+          }}>
+            <span>Monatlich kündbar · Read-only Plugin · kein WordPress-Passwort erforderlich</span>
+          </div>
+        </section>
+
+        <div style={{ borderTop: "1px solid var(--wf-border-soft)" }} />
+
+        {/* TRUST V2 */}
+        <section style={{ maxWidth: 980, margin: "0 auto", padding: "72px 24px" }}>
+          <div style={{
+            display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.2fr)",
+            gap: 56, alignItems: "start",
+          }} className="wf-trust-grid-v2">
             <div>
-              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Experten-Logbuch</p>
-              <h2 style={{ margin: 0, fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, letterSpacing: "-0.025em" }}>
-                WordPress-Wissen: Das Experten-Logbuch
+              <p style={{
+                margin: "0 0 10px", fontSize: 11, fontWeight: 700,
+                color: "var(--wf-text-muted)", textTransform: "uppercase",
+                letterSpacing: "0.12em",
+              }}>
+                Vertrauen
+              </p>
+              <h2 style={{ margin: "0 0 12px", fontSize: "clamp(24px, 3.5vw, 34px)", letterSpacing: "-0.03em", fontWeight: 730 }}>
+                Gebaut mit klaren Grenzen.
               </h2>
+              <p style={{ margin: 0, color: "var(--wf-text-secondary)", fontSize: 14, lineHeight: 1.7 }}>
+                WebsiteFix soll dir zeigen, was messbar ist, was nur wahrscheinlich ist und wann für eine genaue Diagnose interne WordPress-Daten nötig sind.
+              </p>
             </div>
-            <Link href="/blog" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
-              Alle Artikel →
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 1, background: "var(--wf-border)" }} className="wf-trust-points-v2">
+              {[
+                ["Entwicklerin", "Persönlich entwickelt statt anonymer Blackbox."],
+                ["WordPress.org", "Plugin über das offizielle WordPress-Verzeichnis verfügbar."],
+                ["Read-only", "Diagnosedaten lesen; das Plugin benötigt keinen Schreibzugriff."],
+                ["EU-Hosting", "Produkt- und Scan-Infrastruktur mit EU-Fokus."],
+              ].map(([title, desc]) => (
+                <div key={title} style={{ background: "var(--wf-bg)", padding: "18px 20px" }}>
+                  <div style={{ fontSize: 13, fontWeight: 680, marginBottom: 5 }}>{title}</div>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--wf-text-muted)", lineHeight: 1.55 }}>{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div style={{ borderTop: "1px solid var(--wf-border-soft)" }} />
+
+        {/* FAQ V2 — bewusst nur kaufentscheidende Fragen */}
+        <section id="faq" style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px" }}>
+          <p style={{
+            margin: "0 0 10px", fontSize: 11, fontWeight: 700,
+            color: "var(--wf-text-muted)", textTransform: "uppercase",
+            letterSpacing: "0.12em",
+          }}>
+            FAQ
+          </p>
+          <h2 style={{ margin: "0 0 12px", fontSize: "clamp(26px, 4vw, 36px)", fontWeight: 730, letterSpacing: "-0.03em" }}>
+            Was du vor dem Start wissen solltest.
+          </h2>
+          <p style={{ margin: "0 0 34px", fontSize: 14.5, color: "var(--wf-text-secondary)", lineHeight: 1.65 }}>
+            Die wichtigsten Fragen zu Scan, Plugin, Preisen und Datenschutz.
+          </p>
+
+          <div style={{ borderTop: "1px solid var(--wf-border)", borderBottom: "1px solid var(--wf-border)" }}>
+            {FAQ.slice(0, 6).map((item) => (
+              <details key={item.q} style={{ borderBottom: "1px solid var(--wf-border-soft)" }}>
+                <summary style={{
+                  cursor: "pointer",
+                  listStyle: "none",
+                  padding: "22px 0",
+                  fontSize: 14,
+                  fontWeight: 680,
+                  color: "var(--wf-text)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 20,
+                }}>
+                  <span>{item.q}</span>
+                  <span aria-hidden="true" style={{
+                    width: 28,
+                    height: 28,
+                    flexShrink: 0,
+                    border: "1px solid var(--wf-border)",
+                    borderRadius: "50%",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--wf-text-muted)",
+                    fontSize: 18,
+                    fontWeight: 400,
+                    lineHeight: 1,
+                  }}>+</span>
+                </summary>
+                <div style={{
+                  padding: "0 46px 22px 0",
+                  color: "var(--wf-text-secondary)",
+                  fontSize: 13.5,
+                  lineHeight: 1.75,
+                }}>
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* FINAL CTA V2 */}
+        <section style={{ maxWidth: 980, margin: "0 auto", padding: "16px 24px 88px" }}>
+          <div style={{
+            padding: "38px 0",
+            borderTop: "1px solid var(--wf-border)",
+            borderBottom: "1px solid var(--wf-border)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 28, flexWrap: "wrap",
+          }}>
+            <div>
+              <h2 style={{ margin: "0 0 8px", fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 720, letterSpacing: "-0.03em" }}>
+                Was stimmt mit deiner Website nicht?
+              </h2>
+              <p style={{ margin: 0, color: "var(--wf-text-secondary)", fontSize: 13.5 }}>
+                Starte mit dem kostenlosen Website-Check. Kein Login erforderlich.
+              </p>
+            </div>
+            <Link href="/scan" style={{
+              minHeight: 46, padding: "0 20px",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              borderRadius: "var(--wf-radius-md)",
+              background: "var(--wf-primary)", color: "#fff",
+              fontSize: 13.5, fontWeight: 680, textDecoration: "none",
+            }}>
+              Website prüfen →
             </Link>
           </div>
-
-          {/* Dynamischer Teaser: jüngster der PFLICHT_SLUGS. Fallback auf
-              den BFSG-Klassiker, wenn aus irgendeinem Grund keine Pflicht-
-              Datei lesbar ist (defensive). */}
-          {(() => {
-            const teaser = latestPost ?? {
-              slug:        "bfsg-2025-agenturen",
-              title:       "Das BFSG 2025 – Warum WordPress-Agenturen jetzt handeln müssen",
-              description: "Wie Agenturen das Thema Barrierefreiheit als Qualitätsmerkmal positionieren und damit höhere Wartungspauschalen rechtfertigen.",
-              category:    "agency",
-              date:        "2025-05-12",
-            };
-            const theme = categoryTheme(teaser.category);
-            const dateLabel = (() => {
-              try {
-                return new Date(teaser.date).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
-              } catch {
-                return teaser.date;
-              }
-            })();
-            return (
-              <Link href={`/blog/${teaser.slug}`} style={{ textDecoration: "none", display: "block" }}>
-                <div style={{
-                  padding: "28px 32px",
-                  border: `1px solid ${theme.border}`,
-                  borderRadius: 14,
-                  background: theme.bg.replace("0.12", "0.04"),
-                  display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap",
-                  transition: "border-color 0.2s ease, background 0.2s ease",
-                }} className="wf-blog-card">
-                  <div style={{
-                    width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                    background: theme.bg,
-                    border: `1px solid ${theme.border}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 240 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 5,
-                        background: theme.bg, color: theme.color,
-                        border: `1px solid ${theme.border}`, letterSpacing: "0.05em",
-                      }}>
-                        {theme.label}
-                      </span>
-                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{dateLabel}</span>
-                    </div>
-                    <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.3 }}>
-                      {teaser.title}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>
-                      {teaser.description}
-                    </p>
-                  </div>
-                  <span style={{ fontSize: 13, color: theme.color, fontWeight: 600, whiteSpace: "nowrap", alignSelf: "center" }}>
-                    Jetzt lesen →
-                  </span>
-                </div>
-              </Link>
-            );
-          })()}
         </section>
 
-        {/* DIVIDER */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-        {/* CTA BANNER */}
-        <section style={{ maxWidth: 1100, margin: "0 auto 80px", padding: "0 24px" }}>
-          <div className="wf-cta-box" style={{
-            padding: "clamp(40px, 6vw, 72px) clamp(28px, 5vw, 64px)",
-            borderRadius: 20,
-            background: "linear-gradient(135deg, #0d1520 0%, #0b0c10 50%, #0a0f1a 100%)",
-            border: "1px solid rgba(0,123,255,0.2)",
-            boxShadow: "0 0 80px rgba(0,123,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
-            display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 32,
-            position: "relative", overflow: "hidden",
-          }}>
-            {/* Background glow */}
-            <div style={{
-              position: "absolute", top: "-50%", left: "-10%",
-              width: "50%", height: "200%",
-              background: "radial-gradient(ellipse, rgba(0,123,255,0.10) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
-            <div className="wf-cta-text" style={{ position: "relative" }}>
-              <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-                Analysiere deine Website-Exzellenz jetzt.
-              </h2>
-              <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>
-                Ergebnis in unter 60 Sekunden — ohne Installation, ohne Login.<br className="hide-sm" />
-                Sieh sofort, welche Optimierungen deiner Website im Weg stehen.
-              </p>
-            </div>
-            <div className="wf-cta-actions" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", position: "relative" }}>
-              <Link href="/scan?problem=visibility" style={{
-                padding: "15px 36px", borderRadius: 11, fontWeight: 800, fontSize: 16,
-                background: "linear-gradient(90deg, #007BFF, #0057b8)",
-                color: "#fff", textDecoration: "none", whiteSpace: "nowrap",
-                boxShadow: "0 4px 32px rgba(0,123,255,0.55), 0 0 60px rgba(0,123,255,0.20)",
-                letterSpacing: "-0.01em",
-              }}>
-                Ranking-Check starten →
-              </Link>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", paddingLeft: 4 }}>
-                Ergebnis in unter 60 Sekunden. Einmal-Fix ab 9,90 € oder Sorglos-Flatrate.
-              </span>
-            </div>
-          </div>
-        </section>
 
       </main>
 

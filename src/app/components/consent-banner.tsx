@@ -1,4 +1,3 @@
-// app/components/consent-banner.tsx
 "use client";
 
 import { getAnalyticsConsent, setAnalyticsConsent } from "@/lib/track";
@@ -6,13 +5,19 @@ import { useEffect, useState } from "react";
 import BrandLogo from "./BrandLogo";
 
 export default function ConsentBanner() {
-  const [state, setState] = useState<"granted" | "denied" | "unset">("unset");
+  const [mounted, setMounted] = useState(false);
+  const [state, setState] =
+    useState<"granted" | "denied" | "unset">("unset");
 
   useEffect(() => {
     setState(getAnalyticsConsent());
+    setMounted(true);
   }, []);
 
-  if (state !== "unset") return null;
+  // Auf Server + erstem Client-Render absolut identisch: nichts rendern.
+  if (!mounted || state !== "unset") {
+    return null;
+  }
 
   const accept = () => {
     setAnalyticsConsent(true);
@@ -41,31 +46,60 @@ export default function ConsentBanner() {
         borderRadius: 16,
         background: "#ffffff",
         border: "1px solid #E2E8F0",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+        boxShadow:
+          "0 8px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
         padding: "22px 24px",
         fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
       }}
     >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 9,
+          marginBottom: 10,
+        }}
+      >
         <BrandLogo size="sm" theme="light" />
-        <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginLeft: 4 }}>
+
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#0F172A",
+            marginLeft: 4,
+          }}
+        >
           Cookie-Einstellungen
         </span>
       </div>
 
-      {/* Body */}
-      <p style={{ margin: "0 0 16px", fontSize: 12, color: "#64748B", lineHeight: 1.6 }}>
-        Wir nutzen Google Analytics, um die Website zu verbessern. Details in unserer{" "}
-        <a href="/datenschutz" style={{ color: "#2563EB", textDecoration: "none", fontWeight: 500 }}>
+      <p
+        style={{
+          margin: "0 0 16px",
+          fontSize: 12,
+          color: "#64748B",
+          lineHeight: 1.6,
+        }}
+      >
+        Wir nutzen Google Analytics, um die Website zu verbessern. Details in
+        unserer{" "}
+        <a
+          href="/datenschutz"
+          style={{
+            color: "#2563EB",
+            textDecoration: "none",
+            fontWeight: 500,
+          }}
+        >
           Datenschutzerklärung
         </a>
         .
       </p>
 
-      {/* Buttons */}
       <div style={{ display: "flex", gap: 8 }}>
         <button
+          type="button"
           onClick={accept}
           style={{
             flex: 1,
@@ -77,8 +111,6 @@ export default function ConsentBanner() {
             fontWeight: 700,
             background: "#2563EB",
             color: "#ffffff",
-            boxShadow: "0 4px 20px rgba(37,99,235,0.45), 0 1px 6px rgba(37,99,235,0.3)",
-            transition: "background 0.15s",
             fontFamily: "inherit",
           }}
         >
@@ -86,6 +118,7 @@ export default function ConsentBanner() {
         </button>
 
         <button
+          type="button"
           onClick={reject}
           style={{
             flex: 1,
@@ -97,7 +130,6 @@ export default function ConsentBanner() {
             cursor: "pointer",
             fontSize: 13,
             fontWeight: 600,
-            transition: "background 0.15s",
             fontFamily: "inherit",
           }}
         >
